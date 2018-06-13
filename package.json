@@ -1,6 +1,6 @@
 {
   "name": "@wazo/sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Wazo's JavaScript Software Development Kit.",
   "main": "dist/wazo-sdk.js",
   "author": "Wazo (https://wazo.io)",
@@ -38,9 +38,7 @@
   "peerDependencies": {
     "axios": "^0.18.0"
   },
-  "dependencies": {
-    
-  },
+  "dependencies": {},
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged"
