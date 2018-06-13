@@ -1,0 +1,49 @@
+{
+  "name": "@wazo/sdk",
+  "version": "0.1.0",
+  "description": "Wazo's JavaScript Software Development Kit.",
+  "main": "dist/wazo-sdk.js",
+  "author": "Wazo (https://wazo.io)",
+  "maintainers": [
+    "Pierre-Luc Paquin <plpaquin@wazo.io> (https://github.com/plpaquin)"
+  ],
+  "contributors": [
+    "Pierre-Luc Paquin <plpaquin@wazo.io> (https://github.com/plpaquin)"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wazo-pbx/wazo-js-sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/wazo-pbx/wazo-js-sdk/issues"
+  },
+  "scripts": {
+    "build": "webpack --mode=production",
+    "docs": "documentation build src/index.js -f html -o docs",
+    "watch": "webpack --mode=development --watch"
+  },
+  "devDependencies": {
+    "axios": "^0.18.0",
+    "documentation": "^8.0.0",
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.12.0",
+    "husky": "^1.0.0-rc.8",
+    "lint-staged": "^7.1.3",
+    "webpack": "^4.11.0",
+    "webpack-bundle-analyzer": "^2.13.1",
+    "webpack-cli": "^3.0.2"
+  },
+  "peerDependencies": {
+    "axios": "^0.18.0"
+  },
+  "dependencies": {
+    
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  }
+}

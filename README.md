@@ -1,2 +1,1 @@
-# wazo-js-sdk
-Wazo's JavaScript Software Development Kit.
+# Wazo JavaScript Software Development Kit
