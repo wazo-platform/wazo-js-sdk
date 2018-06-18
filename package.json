@@ -21,6 +21,7 @@
   "scripts": {
     "build": "webpack --mode=production",
     "docs": "documentation build src/index.js -f html -o docs",
+    "test": "jest",
     "watch": "webpack --mode=development --watch"
   },
   "devDependencies": {
@@ -30,6 +31,7 @@
     "eslint-config-airbnb-base": "^13.0.0",
     "eslint-plugin-import": "^2.12.0",
     "husky": "^1.0.0-rc.8",
+    "jest": "^23.1.0",
     "lint-staged": "^7.1.3",
     "webpack": "^4.11.0",
     "webpack-bundle-analyzer": "^2.13.1",
