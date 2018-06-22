@@ -3,7 +3,6 @@
   "version": "0.1.4",
   "description": "Wazo's JavaScript Software Development Kit.",
   "main": "dist/wazo-sdk.js",
-  "module": "dist/wazo-sdk.es.js",
   "author": "Wazo (https://wazo.io)",
   "maintainers": [
     "Pierre-Luc Paquin <plpaquin@wazo.io> (https://github.com/plpaquin)"
@@ -24,6 +23,9 @@
     "docs": "documentation build src/index.js -f html -o docs",
     "test": "jest",
     "watch": "webpack --mode=development --watch"
+  },
+  "dependencies": {
+    "axios": "^0.18.0"
   },
   "devDependencies": {
     "babel-core": "^6.26.3",
@@ -48,9 +50,6 @@
     "webpack-cli": "^3.0.8"
   },
   "peerDependencies": {
-    "axios": "^0.18.0"
-  },
-  "dependencies": {
     "axios": "^0.18.0"
   },
   "husky": {
