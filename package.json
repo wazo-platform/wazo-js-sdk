@@ -3,6 +3,7 @@
   "version": "0.1.1",
   "description": "Wazo's JavaScript Software Development Kit.",
   "main": "dist/wazo-sdk.js",
+  "module": "dist/wazo-sdk.es.js",
   "author": "Wazo (https://wazo.io)",
   "maintainers": [
     "Pierre-Luc Paquin <plpaquin@wazo.io> (https://github.com/plpaquin)"
@@ -19,26 +20,37 @@
     "url": "https://github.com/wazo-pbx/wazo-js-sdk/issues"
   },
   "scripts": {
-    "build": "webpack --mode=production",
+    "build": "rollup --config",
     "docs": "documentation build src/index.js -f html -o docs",
+    "test": "jest",
     "watch": "webpack --mode=development --watch"
   },
   "devDependencies": {
     "axios": "^0.18.0",
+    "babel-core": "^6.26.3",
+    "babel-loader": "^7.1.4",
+    "babel-preset-env": "^1.7.0",
     "documentation": "^8.0.0",
     "eslint": "^4.19.1",
     "eslint-config-airbnb-base": "^13.0.0",
     "eslint-plugin-import": "^2.12.0",
+    "flow-bin": "^0.74.0",
     "husky": "^1.0.0-rc.8",
+    "jest": "^23.1.0",
+    "jsonlint": "^1.6.3",
     "lint-staged": "^7.1.3",
+    "rollup": "^0.60.7",
+    "rollup-plugin-node-resolve": "^3.3.0",
+    "rollup-plugin-terser": "^1.0.1",
+    "rollup-plugin-uglify": "^4.0.0",
+    "rollup-plugin-visualizer": "^0.8.0",
     "webpack": "^4.11.0",
     "webpack-bundle-analyzer": "^2.13.1",
     "webpack-cli": "^3.0.8"
   },
-  "peerDependencies": {
+  "dependencies": {
     "axios": "^0.18.0"
   },
-  "dependencies": {},
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged"
