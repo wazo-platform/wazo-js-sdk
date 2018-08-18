@@ -44,6 +44,7 @@ wazo.logIn({
   expiration: // optional integer. Session life in number of seconds. If omitted, defaults to 3600 (an hour).
   username: // required string
   password: // required string
+  backend: // optional string. If omitted, defaults to wazo_user
   callback: // optional callback function to receive token
 });
 ```

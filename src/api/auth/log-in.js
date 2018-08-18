@@ -14,7 +14,7 @@ const handleResponse = (response, callback) => {
 export default (params) => {
   const url = `https://${wazo.server}/api/auth/${version}/token`;
   const data = {
-    backend: 'wazo_user',
+    backend: params.backend || 'wazo_user',
     expiration: params.expiration || 3600,
   };
   const config = {
