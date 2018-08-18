@@ -3,12 +3,12 @@
   "version": "0.1.6",
   "description": "Wazo's JavaScript Software Development Kit.",
   "main": "dist/wazo-sdk.js",
-  "author": "Wazo (https://wazo.io)",
+  "author": "Wazo (http://wazo.io)",
   "maintainers": [
-    "Pierre-Luc Paquin <plpaquin@wazo.io> (https://github.com/plpaquin)"
+    "Wazo Team <dev@wazo.io> (https://github.com/wazo-pbx)"
   ],
   "contributors": [
-    "Pierre-Luc Paquin <plpaquin@wazo.io> (https://github.com/plpaquin)"
+    "Wazo Team <dev@wazo.io> (https://github.com/wazo-pbx)"
   ],
   "license": "MIT",
   "repository": {
