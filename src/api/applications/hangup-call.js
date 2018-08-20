@@ -12,7 +12,7 @@ const handleResponse = (response, callback) => {
 };
 
 export default (params) => {
-  const url = `https://${wazo.server}/api/ctid-ng/${version}/applications/${params.applicationUuid}/calls`;
+  const url = `https://${wazo.server}/api/ctid-ng/${version}/applications/${params.applicationUuid}/calls/${params.callID}`;
   const config = {
     headers: {
       'X-Auth-Token': params.token,
@@ -20,6 +20,6 @@ export default (params) => {
     },
   };
 
-  axios.get(url, config)
+  axios.delete(url, config)
     .then(response => handleResponse(response, params.callback));
 };
