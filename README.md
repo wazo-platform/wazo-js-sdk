@@ -56,3 +56,21 @@ wazo.logOut({
   callback: // optional callback function to receive token
 });
 ```
+
+### WebRTCPhone
+```
+import { WebRTCPhone } from '@wazo/sdk';
+const config = {
+  wsServer: 'my_wazo',
+  displayName: 'My Display Name',
+  authorizationUser: 'user',
+  password: 'password',
+};
+const phone = WebRTCPhone(config, ev_callback);
+phone.call('1234')
+
+function ev_callback(ev_name, ev_value) {
+  console.log(ev_name);
+  console.log(ev_value);
+}
+```
