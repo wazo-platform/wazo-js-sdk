@@ -7,6 +7,9 @@ import calls from './api/applications/calls';
 import hangupCall from './api/applications/hangup-call';
 import answerCall from './api/applications/answer-call';
 import playCall from './api/applications/play';
+import listNodes from './api/applications/nodes';
+import listCallsNodes from './api/applications/nodes-calls';
+import removeCallNodes from './api/applications/nodes-remove-calls';
 
 import WebRTCPhone from './api/phone';
 
@@ -18,6 +21,9 @@ export default {
   calls,
   hangupCall,
   answerCall,
+  listNodes,
+  listCallsNodes,
+  removeCallNodes,
   playCall,
   WebRTCPhone,
 };
