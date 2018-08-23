@@ -13,6 +13,7 @@ const handleResponse = (response, callback) => {
 
 export default (params) => {
   const url = `https://${wazo.server}/api/ctid-ng/${version}/applications/${params.applicationUuid}/nodes`;
+
   const data = {
     calls: [
       {
@@ -20,7 +21,6 @@ export default (params) => {
       },
     ],
   };
-
   const config = {
     headers: {
       'X-Auth-Token': params.token,
@@ -29,5 +29,21 @@ export default (params) => {
   };
 
   axios.post(url, data, config)
-    .then(response => handleResponse(response, params.callback));
+    .then((res) => {
+      const nodeUuid = res.data.uuid;
+      const url2 = `https://${wazo.server}/api/ctid-ng/${version}/applications/${params.applicationUuid}/nodes/${nodeUuid}/calls`;
+      const data2 = {
+        context: 'default',
+        exten: '8000',
+        autoanswer: true,
+      };
+
+      axios.post(url2, data2, config)
+        .then((response) => {
+          console.log(response);
+          handleResponse(response, params.callback);
+        });
+    });
+
+// .then(response => handleResponse(response, params.callback))
 };
