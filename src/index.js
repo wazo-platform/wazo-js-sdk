@@ -7,6 +7,8 @@ import calls from './api/applications/calls';
 import hangupCall from './api/applications/hangup-call';
 import AnswerCall from './api/applications/answer-call';
 
+import WebRTCPhone from './api/phone';
+
 export default {
   client,
   init,
@@ -15,4 +17,5 @@ export default {
   calls,
   hangupCall,
   AnswerCall,
+  WebRTCPhone,
 };
