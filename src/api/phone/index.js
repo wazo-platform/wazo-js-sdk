@@ -9,14 +9,14 @@ const state = [
   'STATUS_COMPLETED',
 ];
 
-export function getCallerID(session) {
+function getCallerID(session) {
   return {
     caller_id_name: session.remoteIdentity.displayName,
     caller_id_number: session.remoteIdentity.uri.user,
   };
 }
 
-export function getAutoAnswer(request) {
+function getAutoAnswer(request) {
   const alertInfo = request.getHeader('alert-info');
   if (alertInfo) {
     return true;
