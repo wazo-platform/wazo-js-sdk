@@ -9,6 +9,22 @@ const state = [
   'STATUS_COMPLETED',
 ];
 
+export function getCallerID(session) {
+  return {
+    caller_id_name: session.remoteIdentity.displayName,
+    caller_id_number: session.remoteIdentity.uri.user,
+  };
+}
+
+export function getAutoAnswer(request) {
+  const alertInfo = request.getHeader('alert-info');
+  if (alertInfo) {
+    return true;
+  }
+
+  return false;
+}
+
 export default class WebRTCPhone {
   constructor(config, callback) {
     this.config = config;
@@ -29,8 +45,8 @@ export default class WebRTCPhone {
 
     ua.on('new', (session) => {
       const info = {
-        callerid: this.getCallerId(session),
-        autoanswer: this.getAutoAnswer(session.request),
+        callerid: getCallerID(session),
+        autoanswer: getAutoAnswer(session.request),
       };
       this.callback('phone-events-new', info);
     });
@@ -80,22 +96,6 @@ export default class WebRTCPhone {
         },
       },
     };
-  }
-
-  static getCallerId(session) {
-    return {
-      caller_id_name: session.remoteIdentity.displayName,
-      caller_id_number: session.remoteIdentity.uri.user,
-    };
-  }
-
-  static getAutoAnswer(request) {
-    const alertInfo = request.getHeader('alert-info');
-    if (alertInfo) {
-      return true;
-    }
-
-    return false;
   }
 
   getState() {

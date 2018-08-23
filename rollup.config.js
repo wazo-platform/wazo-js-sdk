@@ -8,6 +8,10 @@ export default {
     file: 'dist/wazo-sdk.js',
     format: 'umd',
     name: '@wazo/sdk',
+    globals: {
+      'sip.js': 'SIP',
+      axios: 'axios',
+    },
   },
   plugins: [
     resolve({
@@ -17,5 +21,5 @@ export default {
     }),
     terser(),
   ],
-  external: ['axios'],
+  external: ['axios', 'sip.js'],
 };
