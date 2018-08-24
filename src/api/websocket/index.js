@@ -2,9 +2,9 @@ import ReconnectingWebSocket from 'reconnecting-websocket';
 
 
 export default class WazoWebSocket {
-  constructor(params, callback) {
+  constructor(params) {
     this.ws_init = false;
-    this.callback = callback;
+    this.callback = params.callback;
     this.host = params.host;
     this.token = params.token;
   }
