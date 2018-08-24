@@ -74,3 +74,16 @@ function ev_callback(ev_name, ev_value) {
   console.log(ev_value);
 }
 ```
+
+### Wazo Websocket
+```
+import { WazoWebSocket } from '@wazo/sdk';
+const ws = new WazoWebSocket({
+  host: // wazo websocket host
+  token: // valid token
+  callback: (ws) => {
+    console.log(ws);
+  }
+})
+ws.init();
+```
