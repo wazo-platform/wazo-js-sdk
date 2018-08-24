@@ -3,8 +3,9 @@ import axios from 'axios';
 import wazo from '../../config';
 import version from './version';
 
-const handleResponse = (response, callback) => {
+const handleResponse = (response, nodeUuid, callback) => {
   wazo.data = response.data;
+  wazo.data.node_uuid = nodeUuid;
 
   if (callback) {
     callback(wazo.data);
@@ -39,7 +40,7 @@ export default (params) => {
 
       axios.post(`${url}/${nodeUuid}/calls`, call, config)
         .then((response) => {
-          handleResponse(response, params.callback);
+          handleResponse(response, nodeUuid, params.callback);
         });
     });
 };
