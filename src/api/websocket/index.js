@@ -40,7 +40,7 @@ export default class WazoWebSocket {
 
     switch (data.op) {
       case 'init':
-        for (let i = 0; i <= routingKey.length; i += 1) {
+        for (let i = 0; i < routingKey.length; i += 1) {
           const op = {
             op: 'subscribe',
             data: {
