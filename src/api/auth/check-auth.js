@@ -31,5 +31,6 @@ export default (params) => {
       handleResponse(status, params.callback);
     },
   })
-    .then(response => handleResponse(response, params.callback));
+    .then(response => handleResponse(response, params.callback))
+    .catch(error => handleResponse(error, params.callback));
 };
