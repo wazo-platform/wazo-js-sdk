@@ -57,6 +57,14 @@ wazo.logOut({
 });
 ```
 
+### Check token
+```
+wazo.checkToken({
+  token: // token
+  callback: // callback
+});
+```
+
 ### WebRTCPhone
 ```
 import { WebRTCPhone } from '@wazo/sdk';
