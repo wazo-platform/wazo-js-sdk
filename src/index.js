@@ -2,6 +2,7 @@ import client from './application';
 import init from './config/init';
 import logIn from './api/auth/log-in';
 import logOut from './api/auth/log-out';
+import checkAuth from './api/auth/check-auth';
 
 import calls from './api/applications/calls';
 import hangupCall from './api/applications/hangup-call';
@@ -18,6 +19,7 @@ export default {
   init,
   logIn,
   logOut,
+  checkAuth,
   calls,
   hangupCall,
   answerCall,
