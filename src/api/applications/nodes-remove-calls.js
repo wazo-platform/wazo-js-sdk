@@ -12,7 +12,7 @@ const handleResponse = (response, callback) => {
 };
 
 export default (params) => {
-  const url = `https://${wazo.server}/api/ctid-ng/${version}/applications/${params.applicationUuid}/nodes/${params.nodeUuid}/calls/${params.callId}`;
+  const url = `https://${wazo.server}/api/ctid-ng/${version}/applications/${params.applicationUuid}/nodes/${params.nodeUuid}/calls/${params.callID}`;
   const config = {
     headers: {
       'X-Auth-Token': params.token,
