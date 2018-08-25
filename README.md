@@ -65,6 +65,18 @@ wazo.checkToken({
 });
 ```
 
+### Application
+```
+wazo.calls() // list calls
+wazo.hangupCall() // hangup a call
+wazo.answerCall()  // answer a call
+wazo.listNodes() // list nodes
+wazo.listCallsNodes() // list calls in a node
+wazo.removeCallNodes() // remove call from node (no hangup)
+wazo.addCallNodes() // add call in a node
+wazo.playCall() // play a sound into a call
+```
+
 ### WebRTCPhone
 ```
 import { WebRTCPhone } from '@wazo/sdk';
