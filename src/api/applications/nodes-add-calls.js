@@ -20,6 +20,6 @@ export default (params) => {
     },
   };
 
-  axios.put(url, config)
+  axios.put(url, null, config)
     .then(response => handleResponse(response, params.callback));
 };
