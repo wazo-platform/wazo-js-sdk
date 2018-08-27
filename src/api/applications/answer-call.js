@@ -33,9 +33,9 @@ export default (params) => {
     .then((res) => {
       const nodeUuid = res.data.uuid;
       const call = {
-        context: 'default',
-        exten: '8000',
-        autoanswer: true,
+        context: params.context,
+        exten: params.exten,
+        autoanswer: params.autoanswer,
       };
 
       axios.post(`${url}/${nodeUuid}/calls`, call, config)
