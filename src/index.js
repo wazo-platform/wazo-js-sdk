@@ -9,6 +9,7 @@ import hangupCall from './api/applications/hangup-call';
 import answerCall from './api/applications/answer-call';
 import playCall from './api/applications/play';
 import listNodes from './api/applications/nodes';
+import removeNode from './api/applications/nodes-remove';
 import listCallsNodes from './api/applications/nodes-calls';
 import removeCallNodes from './api/applications/nodes-remove-calls';
 import addCallNodes from './api/applications/nodes-add-calls';
@@ -26,6 +27,7 @@ export default {
   hangupCall,
   answerCall,
   listNodes,
+  removeNode,
   listCallsNodes,
   removeCallNodes,
   addCallNodes,
