@@ -13,6 +13,7 @@ import removeNode from './api/applications/nodes-remove';
 import listCallsNodes from './api/applications/nodes-calls';
 import removeCallNodes from './api/applications/nodes-remove-calls';
 import addCallNodes from './api/applications/nodes-add-calls';
+import addNewCallNodes from './api/applications/nodes-add-new-calls';
 
 import WebRTCPhone from './api/phone';
 import WazoWebSocket from './api/websocket';
@@ -31,6 +32,7 @@ export default {
   listCallsNodes,
   removeCallNodes,
   addCallNodes,
+  addNewCallNodes,
   playCall,
   WebRTCPhone,
   WazoWebSocket,
