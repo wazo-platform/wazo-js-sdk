@@ -7,6 +7,7 @@ export default class WazoWebSocket {
     this.callback = params.callback;
     this.host = params.host;
     this.token = params.token;
+    this.events = params.events;
   }
 
   init() {
@@ -36,15 +37,13 @@ export default class WazoWebSocket {
   }
 
   initialize(data, sock) {
-    const routingKey = ['*'];
-
     switch (data.op) {
       case 'init':
-        for (let i = 0; i < routingKey.length; i += 1) {
+        for (let i = 0; i < this.events.length; i += 1) {
           const op = {
             op: 'subscribe',
             data: {
-              event_name: routingKey[i],
+              event_name: this.events[i],
             },
           };
           sock.send(JSON.stringify(op));
