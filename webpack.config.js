@@ -9,5 +9,5 @@ module.exports = {
     libraryTarget: 'umd',
   },
   devtool: 'source-map',
-  externals: ['axios', 'sip.js'],
+  externals: ['axios', 'sip.js', 'reconnecting-websocket'],
 };

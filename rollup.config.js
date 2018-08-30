@@ -11,6 +11,7 @@ export default {
     globals: {
       'sip.js': 'SIP',
       axios: 'axios',
+      'reconnecting-websocket': 'ReconnectingWebSocket',
     },
   },
   plugins: [
@@ -21,5 +22,5 @@ export default {
     }),
     terser(),
   ],
-  external: ['axios', 'sip.js'],
+  external: ['axios', 'sip.js', 'reconnecting-websocket'],
 };
