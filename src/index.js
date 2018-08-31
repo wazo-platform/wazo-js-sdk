@@ -17,6 +17,7 @@ import addNewCallNodes from './api/applications/nodes-add-new-calls';
 
 import listUsers from './api/confd/users';
 import getUser from './api/confd/user';
+import getUserLineSip from './api/confd/user-line';
 
 import WebRTCPhone from './api/phone';
 import WazoWebSocket from './api/websocket';
@@ -39,6 +40,7 @@ export default {
   playCall,
   listUsers,
   getUser,
+  getUserLineSip,
   WebRTCPhone,
   WazoWebSocket,
 };
