@@ -121,4 +121,8 @@ export default class WebRTCPhone {
   hangup() {
     this.ua.hangup();
   }
+
+  close() {
+    this.ua.ua.transport.disconnect();
+  }
 }

@@ -7,9 +7,11 @@ const DEFAULT_BACKEND = 'wazo_user';
 const DEFAULT_EXPIRATION = 3600;
 
 const handleResponse = (response, callback = () => {}) => {
-  wazo.token = response.data.data.token;
+  wazo.data = response.data.data;
 
-  callback(null, wazo.token);
+  if (callback) {
+    callback(wazo.data);
+  }
 };
 
 export default (params = {}) => {
