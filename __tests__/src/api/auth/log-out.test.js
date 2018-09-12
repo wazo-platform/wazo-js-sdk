@@ -1,4 +1,5 @@
 import axios from 'axios';
+
 import logOut from '../../../../src/api/auth/log-out';
 import wazo from '../../../../src/config';
 
