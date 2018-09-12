@@ -8,11 +8,12 @@ jest.mock('axios', () => ({
 }));
 
 it("should call wazo's token API with default values", () => {
-  logIn();
   const defaultServer = null;
   const defaultVersion = '0.1';
   const data = { backend: 'wazo_user', expiration: 3600 };
   const config = { auth: { username: undefined, password: undefined } };
+
+  logIn();
 
   expect(axios.post).toBeCalledWith(
     `https://${defaultServer}/api/auth/${defaultVersion}/token`,

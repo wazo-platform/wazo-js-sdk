@@ -1,21 +1,22 @@
 import axios from 'axios';
 
 import wazo from '../../config';
-import version from './version';
+import apiInfos from '.';
 
-const handleResponse = (response, callback) => {
+const DEFAULT_BACKEND = 'wazo_user';
+const DEFAULT_EXPIRATION = 3600;
+
+const handleResponse = (response, callback = () => {}) => {
   wazo.token = response.data.data.token;
 
-  if (callback) {
-    callback(wazo.token);
-  }
+  callback(null, wazo.token);
 };
 
-export default (params) => {
-  const url = `https://${wazo.server}/api/auth/${version}/token`;
+export default (params = {}) => {
+  const url = `https://${wazo.server}${apiInfos.path}`;
   const data = {
-    backend: params.backend || 'wazo_user',
-    expiration: params.expiration || 3600,
+    backend: params.backend || DEFAULT_BACKEND,
+    expiration: params.expiration || DEFAULT_EXPIRATION,
   };
   const config = {
     auth: {
