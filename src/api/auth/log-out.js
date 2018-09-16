@@ -1,21 +1,20 @@
 import axios from 'axios';
 
 import wazo from '../../config';
-import version from './version';
+import apiInfos from '.';
 
-const handleResponse = (callback) => {
+const handleResponse = (callback = () => {}) => {
   wazo.token = null;
 
-  if (callback) {
-    callback(wazo.token);
-  }
+  callback(null, wazo.token);
 };
 
-export default (params) => {
-  if (wazo.token) {
-    const url = `https://${wazo.server}/api/auth/${version}/token/${wazo.token}`;
-
-    axios.delete(url)
-      .then(handleResponse(params.callback));
+export default (params = { callback: () => {} }) => {
+  if (!wazo.token) {
+    return params.callback("No Wazo's token specified.");
   }
+
+  const url = `https://${wazo.server}${apiInfos.path}/${wazo.token}`;
+
+  return axios.delete(url).then(handleResponse(params.callback));
 };
