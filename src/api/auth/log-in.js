@@ -7,6 +7,7 @@ const DEFAULT_BACKEND = 'wazo_user';
 const DEFAULT_EXPIRATION = 3600;
 
 const handleResponse = (response, callback = () => {}) => {
+  console.log(response);
   wazo.data = response.data.data;
 
   if (callback) {
@@ -28,5 +29,6 @@ export default (params = {}) => {
   };
 
   axios.post(url, data, config)
-    .then(response => handleResponse(response, params.callback));
+    .then(response => handleResponse(response, params.callback))
+    .catch(error => handleResponse(error, params.callback));
 };

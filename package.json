@@ -25,7 +25,6 @@
     "watch": "webpack --mode=development --watch"
   },
   "dependencies": {
-    "@babel/core": "^7.0.1",
     "axios": "^0.18.0",
     "install": "^0.12.1",
     "reconnecting-websocket": "^4.0.0-rc5",
