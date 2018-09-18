@@ -11,15 +11,14 @@ const handleResponse = (response, callback) => {
   }
 };
 
-export default (params) => {
+export default params => {
   const url = `https://${wazo.server}/api/ctid-ng/${version}/applications/${params.applicationUuid}/nodes`;
   const config = {
     headers: {
       'X-Auth-Token': params.token,
-      'Content-Type': 'application/json',
-    },
+      'Content-Type': 'application/json'
+    }
   };
 
-  axios.get(url, config)
-    .then(response => handleResponse(response, params.callback));
+  axios.get(url, config).then(response => handleResponse(response, params.callback));
 };

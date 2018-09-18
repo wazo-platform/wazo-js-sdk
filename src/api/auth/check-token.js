@@ -8,13 +8,13 @@ const handleResponse = (response, callback) => {
 
   if (response === 404) {
     wazo.data = {
-      error: 'Token is not found',
+      error: 'Token is not found'
     };
   }
 
   if (response === 204) {
     wazo.data = {
-      message: 'Token is found',
+      message: 'Token is found'
     };
   }
 
@@ -23,14 +23,15 @@ const handleResponse = (response, callback) => {
   }
 };
 
-export default (params) => {
+export default params => {
   const url = `https://${wazo.server}/api/auth/${version}/token/${params.token}`;
 
-  axios.head(url, {
-    validateStatus: (status) => {
-      handleResponse(status, params.callback);
-    },
-  })
+  axios
+    .head(url, {
+      validateStatus: status => {
+        handleResponse(status, params.callback);
+      }
+    })
     .then(response => handleResponse(response, params.callback))
     .catch(error => handleResponse(error, params.callback));
 };

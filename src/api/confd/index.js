@@ -1,3 +1,3 @@
 export default {
-  path: '/api/confd/1.1/',
+  path: '/api/confd/1.1/'
 };

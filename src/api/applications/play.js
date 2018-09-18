@@ -11,19 +11,20 @@ const handleResponse = (response, callback) => {
   }
 };
 
-export default (params) => {
-  const url = `https://${wazo.server}/api/ctid-ng/${version}/applications/${params.applicationUuid}/calls/${params.callID}/play`;
+export default params => {
+  const url = `https://${wazo.server}/api/ctid-ng/${version}/applications/${params.applicationUuid}/calls/${
+    params.callID
+  }/play`;
   const config = {
     headers: {
       'X-Auth-Token': params.token,
-      'Content-Type': 'application/json',
-    },
+      'Content-Type': 'application/json'
+    }
   };
   const data = {
     language: params.language,
-    uri: params.uri,
+    uri: params.uri
   };
 
-  axios.post(url, data, config)
-    .then(response => handleResponse(response, params.callback));
+  axios.post(url, data, config).then(response => handleResponse(response, params.callback));
 };

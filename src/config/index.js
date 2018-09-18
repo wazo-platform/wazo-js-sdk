@@ -1,4 +1,3 @@
 export default {
-  server: null,
-  token: null,
+  server: null
 };

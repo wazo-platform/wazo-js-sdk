@@ -2,33 +2,27 @@ import axios from 'axios';
 
 import wazo from '../../config';
 import apiInfos from '.';
+import { promiseAndCallback } from '../../utils';
 
 const DEFAULT_BACKEND = 'wazo_user';
 const DEFAULT_EXPIRATION = 3600;
 
-const handleResponse = (response, callback = () => {}) => {
-  console.log(response);
-  wazo.data = response.data.data;
-
-  if (callback) {
-    callback(wazo.data);
-  }
-};
-
-export default (params = {}) => {
+// Supports callback or promise
+export default (params = {}, cb = null) => {
   const url = `https://${wazo.server}${apiInfos.path}`;
   const data = {
     backend: params.backend || DEFAULT_BACKEND,
-    expiration: params.expiration || DEFAULT_EXPIRATION,
+    expiration: params.expiration || DEFAULT_EXPIRATION
   };
   const config = {
     auth: {
       username: params.username,
-      password: params.password,
+      password: params.password
     },
+    validateStatus: status => status < 400 // Throw exception on unsuccessful login
   };
 
-  axios.post(url, data, config)
-    .then(response => handleResponse(response, params.callback))
-    .catch(error => handleResponse(error, params.callback));
+  const promise = axios.post(url, data, config);
+
+  return promiseAndCallback(promise, cb, response => response.data.data);
 };

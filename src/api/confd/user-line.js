@@ -11,15 +11,16 @@ const handleResponse = (response, callback) => {
   }
 };
 
-export default (params) => {
-  const url = `https://${wazo.server}/api/confd/${version}/users/${params.user_uuid}/lines/${params.line_id}/associated/endpoints/sip`;
+export default params => {
+  const url = `https://${wazo.server}/api/confd/${version}/users/${params.user_uuid}/lines/${
+    params.line_id
+  }/associated/endpoints/sip`;
   const config = {
     headers: {
       'X-Auth-Token': params.token,
-      'Content-Type': 'application/json',
-    },
+      'Content-Type': 'application/json'
+    }
   };
 
-  axios.get(url, config)
-    .then(response => handleResponse(response, params.callback));
+  axios.get(url, config).then(response => handleResponse(response, params.callback));
 };

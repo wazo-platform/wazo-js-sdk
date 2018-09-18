@@ -1,28 +1,18 @@
 import SIP from 'sip.js';
 
-
-const state = [
-  'STATUS_NULL',
-  'STATUS_NEW',
-  'STATUS_CONNECTING',
-  'STATUS_CONNECTED',
-  'STATUS_COMPLETED',
-];
+const state = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
 
 function getCallerID(session) {
   return {
     caller_id_name: session.remoteIdentity.displayName,
-    caller_id_number: session.remoteIdentity.uri.user,
+    caller_id_number: session.remoteIdentity.uri.user
   };
 }
 
 function getAutoAnswer(request) {
   const alertInfo = request.getHeader('alert-info');
-  if (alertInfo) {
-    return true;
-  }
 
-  return false;
+  return !!alertInfo;
 }
 
 export default class WebRTCPhone {
@@ -43,10 +33,10 @@ export default class WebRTCPhone {
       this.callback('phone-events-unregistered');
     });
 
-    ua.on('new', (session) => {
+    ua.on('new', session => {
       const info = {
         callerid: getCallerID(session),
-        autoanswer: getAutoAnswer(session.request),
+        autoanswer: getAutoAnswer(session.request)
       };
       this.callback('phone-events-new', info);
     });
@@ -70,8 +60,8 @@ export default class WebRTCPhone {
     return {
       media: {
         remote: {
-          audio: this.config.media.audio,
-        },
+          audio: this.config.media.audio
+        }
       },
       ua: {
         traceSip: false,
@@ -86,15 +76,12 @@ export default class WebRTCPhone {
             rtcpMuxPolicy: 'negotiate',
             rtcConfiguration: {
               iceServers: {
-                urls: [
-                  'stun:stun.l.google.com:19302',
-                  'stun:stun1.l.google.com:19302',
-                ],
-              },
-            },
-          },
-        },
-      },
+                urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302']
+              }
+            }
+          }
+        }
+      }
     };
   }
 

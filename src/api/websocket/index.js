@@ -1,6 +1,5 @@
 import ReconnectingWebSocket from 'reconnecting-websocket';
 
-
 export default class WazoWebSocket {
   constructor(params) {
     this.ws_init = false;
@@ -14,7 +13,7 @@ export default class WazoWebSocket {
     const sock = new ReconnectingWebSocket(`wss://${this.host}/api/websocketd/?token=${this.token}`);
     sock.debug = false;
 
-    sock.onmessage = (e) => {
+    sock.onmessage = e => {
       const ev = JSON.parse(e.data);
       if (!this.ws_init) {
         this.initialize(ev, sock);
@@ -23,7 +22,7 @@ export default class WazoWebSocket {
       }
     };
 
-    sock.onclose = (e) => {
+    sock.onclose = e => {
       switch (e.code) {
         case 4002:
           break;
@@ -43,8 +42,8 @@ export default class WazoWebSocket {
           const op = {
             op: 'subscribe',
             data: {
-              event_name: this.events[i],
-            },
+              event_name: this.events[i]
+            }
           };
           sock.send(JSON.stringify(op));
         }
@@ -56,7 +55,7 @@ export default class WazoWebSocket {
         this.ws_init = true;
         break;
       default:
-        // nothing
+      // nothing
     }
   }
 }

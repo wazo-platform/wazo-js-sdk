@@ -45,5 +45,5 @@ export default {
   getUserLineSip,
   listApplications,
   WebRTCPhone,
-  WazoWebSocket,
+  WazoWebSocket
 };
