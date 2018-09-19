@@ -4,7 +4,7 @@ export default (ApiClient, client) => ({
 
     return ApiClient.callApi(url, 'get', null, ApiClient.getHeaders(token));
   },
-  createSubscription(token, { productSku, name, startDate, contractDate, autoRenew, term, tenantUuid }) {
+  createSubscription(token, { tenantUuid, productSku, name, startDate, contractDate, autoRenew, term }) {
     const url = `${client.accessdUrl}/subscriptions`;
     const body = {
       product_sku: productSku,
@@ -16,7 +16,9 @@ export default (ApiClient, client) => ({
     };
 
     const headers = ApiClient.getHeaders(token);
-    headers['Wazo-Tenant'] = tenantUuid;
+    if (tenantUuid) {
+      headers['Wazo-Tenant'] = tenantUuid;
+    }
 
     return ApiClient.callApi(url, 'post', body, headers);
   },
@@ -25,13 +27,13 @@ export default (ApiClient, client) => ({
 
     return ApiClient.callApi(url, 'get', null, ApiClient.getHeaders(token));
   },
-  listAuthorizations(token) {
-    const url = `${client.accessdUrl}/authorizations?recurse=true`;
+  listAuthorizations(token, subscriptionUuid) {
+    const url = `${client.accessdUrl}/subscriptions/${subscriptionUuid}/authorizations`;
 
     return ApiClient.callApi(url, 'get', null, ApiClient.getHeaders(token));
   },
-  getAuthorization(token, uuid) {
-    const url = `${client.accessdUrl}/authorizations/${uuid}`;
+  getAuthorization(token, subscriptionUuid, uuid) {
+    const url = `${client.accessdUrl}/subscriptions/${subscriptionUuid}/authorizations/${uuid}`;
 
     return ApiClient.callApi(url, 'get', null, ApiClient.getHeaders(token));
   }
