@@ -118,7 +118,7 @@ client.confd.listApplications(token);
 ### Accessd
 ```js
 client.accessd.listSubscriptions(token);
-client.accessd.createSubscription(token, productSku, name, startDate, contractDate, autoRenew, term);
+client.accessd.createSubscription(token, { productSku, name, startDate, contractDate, autoRenew, term });
 client.accessd.getSubscription(token, uuid);
 client.accessd.listAuthorizations(token);
 client.accessd.getAuthorization(token, uuid);

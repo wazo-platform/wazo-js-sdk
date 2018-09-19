@@ -4,7 +4,7 @@ export default (ApiClient, client) => ({
 
     return ApiClient.callApi(url, 'get', null, ApiClient.getHeaders(token));
   },
-  createSubscription(token, productSku, name, startDate, contractDate, autoRenew, term) {
+  createSubscription(token, { productSku, name, startDate, contractDate, autoRenew, term }) {
     const url = `${client.accessdUrl}/subscriptions`;
     const body = {
       product_sku: productSku,
