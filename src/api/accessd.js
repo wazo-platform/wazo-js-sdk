@@ -36,5 +36,15 @@ export default (ApiClient, client) => ({
     const url = `${client.accessdUrl}/subscriptions/${subscriptionUuid}/authorizations/${uuid}`;
 
     return ApiClient.callApi(url, 'get', null, ApiClient.getHeaders(token));
+  },
+  createAuthorization(token, subscriptionUuid, { name, startDate, term }) {
+    const url = `${client.accessdUrl}/subscriptions/${subscriptionUuid}/authorization`;
+    const body = {
+      name,
+      start_date: startDate,
+      term
+    };
+
+    return ApiClient.callApi(url, 'post', body, ApiClient.getHeaders(token));
   }
 });
