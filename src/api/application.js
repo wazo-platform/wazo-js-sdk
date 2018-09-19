@@ -58,6 +58,12 @@ export default (ApiClient, client) => ({
     return ApiClient.callApi(url, 'get', null, ApiClient.getHeaders(token));
   },
 
+  listNodes(token, applicationUuid) {
+    const url = `${client.applicationUrl}/${applicationUuid}/nodes`;
+
+    return ApiClient.callApi(url, 'get', null, ApiClient.getHeaders(token));
+  },
+
   removeNode(token, applicationUuid, nodeUuid) {
     const url = `${client.applicationUrl}/${applicationUuid}/nodes/${nodeUuid}`;
 

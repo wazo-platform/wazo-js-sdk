@@ -63,7 +63,7 @@ client.auth.logIn({
   issued_at,
   utc_issued_at,
   auth_id,
-  expires_at
+  expires_at,
   xivo_user_uuid
 });
 // or
@@ -71,10 +71,10 @@ const result = await client.auth.login(/* ... */);
 ```
 
 ### Log Out
-```
+```js
 client.auth.logOut().then(/* ... */);
 // or
-await client.auth.logOut();
+await client.auth.logOut(token);
 ```
 
 ### Check token
@@ -84,24 +84,45 @@ client.auth.checkToken(token).then(valid);
 const valid = await client.auth.checkToken(token);
 ```
 
-### Application
+### Other auth methods
+
+```js
+client.auth.listTenants(token);
+client.auth.createTenant(token, name);
+client.auth.deleteTenant(token, uuid);
+client.auth.listUsers(token);
+client.auth.listGroups(token);
+client.auth.listPolicies(token);
 ```
-client.application.calls() // list calls
-client.application.hangupCall() // hangup a call
-client.application.answerCall()  // answer a call
-client.application.listNodes() // list nodes
-client.application.listCallsNodes() // list calls in a node
-client.application.removeCallNodes() // remove call from node (no hangup)
-client.application.addCallNodes() // add call in a node
-client.application.playCall() // play a sound into a call
+
+### Application
+```js
+client.application.calls(token, applicationUuid); // list calls
+client.application.hangupCall(token, applicationUuid, callId); // hangup a call
+client.application.answerCall(token, applicationUuid, callId, context, exten, autoanswer);  // answer a call
+client.application.listNodes(token, applicationUuid); // list nodes
+client.application.listCallsNodes(token, applicationUuid, nodeUuid); // list calls in a node
+client.application.removeCallNodes(token, applicationUuid, nodeUuid, callId); // remove call from node (no hangup)
+client.application.addCallNodes(token, applicationUuid, nodeUuid, callId); // add call in a node
+client.application.playCall(token, applicationUuid, callId, language, uri); // play a sound into a call
 ```
 
 ### Confd
+```js
+client.confd.listUsers(token);
+client.confd.getUser(token, userUuid);
+client.confd.getUserLineSip(token, userUuid, lineId);
+client.confd.listApplications(token);
 ```
-client.confd.listUsers()
-client.confd.getUser()
-client.confd.getUserLineSip()
-client.confd.listApplications()
+
+### Accessd
+```js
+client.accessd.listSubscriptions(token);
+client.accessd.createSubscription(token, productSku, name, startDate, contractDate, autoRenew, term);
+client.accessd.getSubscription(token, uuid);
+client.accessd.listAuthorizations(token);
+client.accessd.getAuthorization(token, uuid);
+
 ```
 
 ### WebRTCPhone

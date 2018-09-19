@@ -12,5 +12,5 @@ module.exports = {
     globalObject: "typeof self !== 'undefined' ? self : this",
   },
   devtool: 'source-map',
-  externals: ['cross-fetch', 'sip.js', 'reconnecting-websocket'],
+  externals: ['cross-fetch', 'sip.js', 'reconnecting-websocket', 'js-base64'],
 };
