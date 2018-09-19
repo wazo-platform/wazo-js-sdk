@@ -24,10 +24,11 @@
     "test": "./node_modules/.bin/jest",
     "watch": "./node_modules/.bin/webpack --mode=development --watch",
     "lint": "./node_modules/.bin/eslint src/",
-    "format": "./node_modules/.bin/prettier-eslint --write \"src/**/*.js\" --single-quote --trailing-comma=none"
+    "format": "./node_modules/.bin/prettier-eslint --write \"src/**/*.js\" \"__tests__/**/*.js\" --single-quote --trailing-comma=none"
   },
   "dependencies": {
-    "axios": "^0.18.0",
+    "cross-fetch": "^2.2.2",
+    "js-base64": "^2.4.9",
     "reconnecting-websocket": "^4.0.0-rc5",
     "sip.js": "^0.11.3"
   },

@@ -1,31 +1,31 @@
-import axios from 'axios';
-
-// import WebRTCPhone from './api/phone';
-// import WazoWebSocket from './api/websocket';
+import { Base64 } from 'js-base64';
+import fetch from 'cross-fetch';
 
 const AUTH_VERSION = '0.1';
 const APPLICATION_VERSION = '1.0';
 const CONFD_VERSION = '1.1';
 
 export default class ApiClient {
-  static callApi(url, method = 'get', body = null, options = null, parseResponse = response => response.data.data) {
-    const config = Object.assign({}, options);
+  static callApi(url, method = 'get', body = null, headers = {}, parse = res => res.json().then(data => data.data)) {
+    return fetch(url, { method, body: body ? JSON.stringify(body) : null, headers }).then(response => {
+      // Throw an error if status >= 400
+      if (response.status >= 400) {
+        const isJson = response.headers.get('content-type').indexOf('application/json') !== -1;
+        const promise = isJson ? response.json() : response.text();
 
-    if (!config.validateStatus) {
-      // Throw exception when status code < 400
-      config.validateStatus = status => status < 400;
-    }
+        return promise.then(err => {
+          throw err;
+        });
+      }
 
-    const args = method === 'get' ? [url, config] : [url, body, config];
-    return axios[method].apply(undefined, args).then(parseResponse);
+      return parse(response);
+    });
   }
 
   static getHeaders(token) {
     return {
-      headers: {
-        'X-Auth-Token': token,
-        'Content-Type': 'application/json'
-      }
+      'X-Auth-Token': token,
+      'Content-Type': 'application/json'
     };
   }
 
@@ -41,14 +41,12 @@ export default class ApiClient {
       backend: params.backend || this.backendUser,
       expiration: params.expiration || this.expiration
     };
-    const config = {
-      auth: {
-        username: params.username,
-        password: params.password
-      }
+    const headers = {
+      Authorization: `Basic ${Base64.encode(`${params.username}:${params.password}`)}`,
+      'Content-Type': 'application/json'
     };
 
-    return ApiClient.callApi(this.authUrl, 'post', data, config);
+    return ApiClient.callApi(this.authUrl, 'post', data, headers);
   }
 
   logOut(token) {

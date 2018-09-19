@@ -10,7 +10,7 @@ export default {
     name: '@wazo/sdk',
     globals: {
       'sip.js': 'SIP',
-      axios: 'axios',
+      'cross-fetch': 'cross-fetch',
       'reconnecting-websocket': 'ReconnectingWebSocket',
     },
   },
@@ -22,5 +22,5 @@ export default {
     }),
     terser(),
   ],
-  external: ['axios', 'sip.js', 'reconnecting-websocket'],
+  external: ['cross-fetch', 'sip.js', 'reconnecting-websocket'],
 };
