@@ -4,7 +4,7 @@ export default (ApiClient, client) => ({
 
     return ApiClient.callApi(url, 'get', null, ApiClient.getHeaders(token));
   },
-  createSubscription(token, { productSku, name, startDate, contractDate, autoRenew, term }) {
+  createSubscription(token, { productSku, name, startDate, contractDate, autoRenew, term, tenantUuid }) {
     const url = `${client.accessdUrl}/subscriptions`;
     const body = {
       product_sku: productSku,
@@ -15,7 +15,10 @@ export default (ApiClient, client) => ({
       term
     };
 
-    return ApiClient.callApi(url, 'post', body, ApiClient.getHeaders(token));
+    const headers = ApiClient.getHeaders(token);
+    headers['Wazo-Tenant'] = tenantUuid;
+
+    return ApiClient.callApi(url, 'post', body, headers);
   },
   getSubscription(token, uuid) {
     const url = `${client.accessdUrl}/subscriptions/${uuid}`;
