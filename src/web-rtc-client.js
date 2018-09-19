@@ -2,20 +2,15 @@ import SIP from 'sip.js';
 
 const state = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
 
-function getCallerID(session) {
-  return {
-    caller_id_name: session.remoteIdentity.displayName,
-    caller_id_number: session.remoteIdentity.uri.user
-  };
-}
+const getCallerID = session => ({
+  caller_id_name: session.remoteIdentity.displayName,
+  caller_id_number: session.remoteIdentity.uri.user
+});
 
-function getAutoAnswer(request) {
-  const alertInfo = request.getHeader('alert-info');
+const getAutoAnswer = request => !!request.getHeader('alert-info');
+const DESTINATION_REGEXP = /^\+?[0-9#*]+$/;
 
-  return !!alertInfo;
-}
-
-export default class WebRTCPhone {
+export default class WebRTCClient {
   constructor(config, callback) {
     this.config = config;
     this.ua = this.configureUa();
@@ -90,9 +85,7 @@ export default class WebRTCPhone {
   }
 
   call(destination) {
-    const re = /^\+?[0-9#*]+$/;
-
-    if (re.exec(destination)) {
+    if (DESTINATION_REGEXP.exec(destination)) {
       this.ua.call(destination);
     }
   }
