@@ -1,0 +1,108 @@
+import SIP from 'sip.js';
+
+const state = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
+
+const getCallerID = session => ({
+  caller_id_name: session.remoteIdentity.displayName,
+  caller_id_number: session.remoteIdentity.uri.user
+});
+
+const getAutoAnswer = request => !!request.getHeader('alert-info');
+const DESTINATION_REGEXP = /^\+?[0-9#*]+$/;
+
+export default class WebRTCClient {
+  constructor(config, callback) {
+    this.config = config;
+    this.ua = this.configureUa();
+    this.callback = callback;
+  }
+
+  configureUa() {
+    const ua = new SIP.Web.Simple(this.getConfig());
+
+    ua.on('registered', () => {
+      this.callback('phone-events-registered');
+    });
+
+    ua.on('unregistered', () => {
+      this.callback('phone-events-unregistered');
+    });
+
+    ua.on('new', session => {
+      const info = {
+        callerid: getCallerID(session),
+        autoanswer: getAutoAnswer(session.request)
+      };
+      this.callback('phone-events-new', info);
+    });
+
+    ua.on('ringing', () => {
+      this.callback('phone-events-ringing');
+    });
+
+    ua.on('connected', () => {
+      this.callback('phone-events-connected');
+    });
+
+    ua.on('ended', () => {
+      this.callback('phone-events-ended');
+    });
+
+    return ua;
+  }
+
+  getConfig() {
+    return {
+      media: {
+        remote: {
+          audio: this.config.media.audio
+        }
+      },
+      ua: {
+        traceSip: false,
+        displayName: this.config.displayName,
+        uri: this.config.uri,
+        wsServers: this.config.wsServers,
+        authorizationUser: this.config.authorizationUser,
+        password: this.config.password,
+        sessionDescriptionHandlerFactoryOptions: {
+          peerConnectionOptions: {
+            iceCheckingTimeout: 500,
+            rtcpMuxPolicy: 'negotiate',
+            rtcConfiguration: {
+              iceServers: {
+                urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302']
+              }
+            }
+          }
+        }
+      }
+    };
+  }
+
+  getState() {
+    return state[this.ua.state];
+  }
+
+  call(destination) {
+    if (DESTINATION_REGEXP.exec(destination)) {
+      this.ua.call(destination);
+    }
+  }
+
+  answer() {
+    this.ua.answer();
+  }
+
+  reject() {
+    this.ua.reject();
+  }
+
+  hangup() {
+    this.ua.hangup();
+  }
+
+  close() {
+    this.ua.ua.transport.disconnect();
+  }
+}

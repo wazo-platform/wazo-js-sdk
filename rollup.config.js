@@ -8,6 +8,11 @@ export default {
     file: 'dist/wazo-sdk.js',
     format: 'umd',
     name: '@wazo/sdk',
+    globals: {
+      'sip.js': 'SIP',
+      'cross-fetch': 'cross-fetch',
+      'reconnecting-websocket': 'ReconnectingWebSocket',
+    },
   },
   plugins: [
     resolve({
@@ -17,5 +22,5 @@ export default {
     }),
     terser(),
   ],
-  external: ['axios'],
+  external: ['cross-fetch', 'sip.js', 'reconnecting-websocket', 'js-base64'],
 };

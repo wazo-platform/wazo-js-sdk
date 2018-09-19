@@ -1,11 +1,9 @@
-import client from './application';
-import init from './config/init';
-import logIn from './api/auth/log-in';
-import logOut from './api/auth/log-out';
+import ApiClient from './api-client';
+import WebRTCClient from './web-rtc-client';
+import WebSocketClient from './websocket-client';
 
 export default {
-  client,
-  init,
-  logIn,
-  logOut,
+  WazoApiClient: ApiClient,
+  WazoWebRTCClient: WebRTCClient,
+  WazoWebSocketClient: WebSocketClient
 };

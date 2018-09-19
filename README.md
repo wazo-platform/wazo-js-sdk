@@ -29,30 +29,129 @@ Alternatively, you may load the Wazo SDK from a CDN. If you choose to, you'll al
 
 ### Require / Import
 Depending on your preference, you may require or add the Wazo SDK to your own client application one of the following ways:
-* `const wazo = require('@wazo/sdk');`
-* `import wazo from '@wazo/sdk';`
+* `const { WazoApiClient } = require('@wazo/sdk');`
+* `import { WazoApiClient } from '@wazo/sdk';`
 
 ### Init
-```
-wazo.init({
+```js
+const client = new WazoApiClient({
   server: 'demo.wazo.community' // required string
 });
 ```
 
 ### Log In
-```
-wazo.logIn({
-  expiration: // optional integer. Session life in number of seconds. If omitted, defaults to 3600 (an hour).
-  username: // required string
-  password: // required string
-  backend: // optional string. If omitted, defaults to wazo_user
-  callback: // optional callback function to receive token
+```js
+client.auth.logIn({
+  expiration, // optional integer. Session life in number of seconds. If omitted, defaults to 3600 (an hour).
+  username, // required string
+  password, // required string
+  backend, // optional string. If omitted, defaults to wazo_user
+}).then({
+  metadata: {
+    username,
+    uuid_tenant_uuid,
+    xivo_user_uuid,
+    groups,
+    xivo_uuid,
+    tenants: [{ uuid }],
+    auth_id
+  },
+  token, // should be used for other request
+  acls,
+  utc_expires_at,
+  xivo_uuid,
+  issued_at,
+  utc_issued_at,
+  auth_id,
+  expires_at,
+  xivo_user_uuid
 });
+// or
+const result = await client.auth.login(/* ... */);
 ```
 
 ### Log Out
+```js
+client.auth.logOut().then(/* ... */);
+// or
+await client.auth.logOut(token);
 ```
-wazo.logOut({
-  callback: // optional callback function to receive token
-});
+
+### Check token
+```
+client.auth.checkToken(token).then(valid);
+// or
+const valid = await client.auth.checkToken(token);
+```
+
+### Other auth methods
+
+```js
+client.auth.listTenants(token);
+client.auth.createTenant(token, name);
+client.auth.deleteTenant(token, uuid);
+client.auth.listUsers(token);
+client.auth.listGroups(token);
+client.auth.listPolicies(token);
+```
+
+### Application
+```js
+client.application.calls(token, applicationUuid); // list calls
+client.application.hangupCall(token, applicationUuid, callId); // hangup a call
+client.application.answerCall(token, applicationUuid, callId, context, exten, autoanswer);  // answer a call
+client.application.listNodes(token, applicationUuid); // list nodes
+client.application.listCallsNodes(token, applicationUuid, nodeUuid); // list calls in a node
+client.application.removeCallNodes(token, applicationUuid, nodeUuid, callId); // remove call from node (no hangup)
+client.application.addCallNodes(token, applicationUuid, nodeUuid, callId); // add call in a node
+client.application.playCall(token, applicationUuid, callId, language, uri); // play a sound into a call
+```
+
+### Confd
+```js
+client.confd.listUsers(token);
+client.confd.getUser(token, userUuid);
+client.confd.getUserLineSip(token, userUuid, lineId);
+client.confd.listApplications(token);
+```
+
+### Accessd
+```js
+client.accessd.listSubscriptions(token);
+client.accessd.createSubscription(token, { productSku, name, startDate, contractDate, autoRenew, term });
+client.accessd.getSubscription(token, uuid);
+client.accessd.listAuthorizations(token);
+client.accessd.getAuthorization(token, uuid);
+
+```
+
+### WebRTCPhone
+```
+import { WazoWebRTCClient } from '@wazo/sdk';
+const config = {
+  wsServer: 'my_wazo',
+  displayName: 'My Display Name',
+  authorizationUser: 'user',
+  password: 'password',
+};
+const phone = new WazoWebRTCClient(config, ev_callback);
+phone.call('1234')
+
+function ev_callback(ev_name, ev_value) {
+  console.log(ev_name);
+  console.log(ev_value);
+}
+```
+
+### Wazo Websocket
+```
+import { WazoWebSocketClient } from '@wazo/sdk';
+const ws = new WazoWebSocket({
+  host: // wazo websocket host
+  token: // valid token
+  callback: (ws) => {
+    console.log(ws);
+  }
+})
+ws.init();
 ```
