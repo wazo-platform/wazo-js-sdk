@@ -41,7 +41,7 @@ const client = new WazoApiClient({
 
 ### Log In
 ```js
-client.logIn({
+client.auth.logIn({
   expiration, // optional integer. Session life in number of seconds. If omitted, defaults to 3600 (an hour).
   username, // required string
   password, // required string
@@ -67,33 +67,41 @@ client.logIn({
   xivo_user_uuid
 });
 // or
-const result = await client.login(/* ... */);
+const result = await client.auth.login(/* ... */);
 ```
 
 ### Log Out
 ```
-client.logOut().then(/* ... */);
+client.auth.logOut().then(/* ... */);
 // or
-await client.logOut();
+await client.auth.logOut();
 ```
 
 ### Check token
 ```
-client.checkToken(token).then(valid);
+client.auth.checkToken(token).then(valid);
 // or
-const valid = await client.checkToken(token);
+const valid = await client.auth.checkToken(token);
 ```
 
 ### Application
 ```
-client.calls() // list calls
-client.hangupCall() // hangup a call
-client.answerCall()  // answer a call
-client.listNodes() // list nodes
-client.listCallsNodes() // list calls in a node
-client.removeCallNodes() // remove call from node (no hangup)
-client.addCallNodes() // add call in a node
-client.playCall() // play a sound into a call
+client.application.calls() // list calls
+client.application.hangupCall() // hangup a call
+client.application.answerCall()  // answer a call
+client.application.listNodes() // list nodes
+client.application.listCallsNodes() // list calls in a node
+client.application.removeCallNodes() // remove call from node (no hangup)
+client.application.addCallNodes() // add call in a node
+client.application.playCall() // play a sound into a call
+```
+
+### Confd
+```
+client.confd.listUsers()
+client.confd.getUser()
+client.confd.getUserLineSip()
+client.confd.listApplications()
 ```
 
 ### WebRTCPhone

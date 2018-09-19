@@ -39,7 +39,7 @@ describe('With correct API results', () => {
         'Content-Type': 'application/json'
       };
 
-      const result = await client.logIn({ username, password });
+      const result = await client.auth.logIn({ username, password });
       expect(result.token).toBe(1);
 
       expect(fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token`, {
@@ -53,7 +53,7 @@ describe('With correct API results', () => {
   describe('logOut test', () => {
     it('should delete the specified token', async () => {
       const token = 123;
-      await client.logOut(token);
+      await client.auth.logOut(token);
 
       expect(fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token/${token}`, {
         method: 'delete',
@@ -81,7 +81,7 @@ describe('With erroneous API results', () => {
   it('throw an exception when the response is >= 401', async () => {
     let error = null;
     try {
-      await client.logIn({ username, password });
+      await client.auth.logIn({ username, password });
     } catch (e) {
       error = e;
     }
