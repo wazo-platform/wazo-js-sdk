@@ -1,5 +1,5 @@
 /* @flow */
-import fetch from 'cross-fetch';
+import 'cross-fetch/polyfill';
 
 import type { Token } from './types';
 
