@@ -37,11 +37,14 @@ export default (ApiClient, client) => ({
 
     return ApiClient.callApi(url, 'get', null, ApiClient.getHeaders(token));
   },
-  createAuthorization(token, subscriptionUuid, { startDate, term }) {
+  createAuthorization(token, subscriptionUuid, { startDate, term, service, rules, autoRenew }) {
     const url = `${client.accessdUrl}/subscriptions/${subscriptionUuid}/authorizations`;
     const body = {
       start_date: startDate,
-      term
+      term,
+      service,
+      rules,
+      auto_renew: autoRenew
     };
 
     return ApiClient.callApi(url, 'post', body, ApiClient.getHeaders(token));
