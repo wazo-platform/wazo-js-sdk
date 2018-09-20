@@ -23,5 +23,5 @@ module.exports = {
     ]
   },
   devtool: 'source-map',
-  externals: ['cross-fetch', 'sip.js', 'reconnecting-websocket', 'js-base64'],
+  externals: ['cross-fetch/polyfill', 'sip.js', 'reconnecting-websocket', 'js-base64'],
 };

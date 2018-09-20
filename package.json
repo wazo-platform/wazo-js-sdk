@@ -21,9 +21,10 @@
   "scripts": {
     "build": "./node_modules/.bin/rollup --config",
     "docs:build": "./node_modules/.bin/documentation build src/index.js -f html -o docs",
-    "test": "./node_modules/.bin/jest && npm run lint && npm run typecheck",
+    "test": "./node_modules/.bin/jest && npm run lint && npm run typecheck && npm run checkbuild",
     "watch": "./node_modules/.bin/webpack --mode=development --watch",
     "lint": "./node_modules/.bin/eslint src/",
+    "checkbuild": "npm run build && node dist/wazo-sdk.js",
     "format": "./node_modules/.bin/prettier-eslint --write \"src/**/*.js\" \"__tests__/**/*.js\" --single-quote --trailing-comma=none",
     "typecheck": "./node_modules/.bin/flow",
     "fetch-typedefs": "./node_modules/.bin/flow-typed install"

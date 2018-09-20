@@ -24,5 +24,5 @@ export default {
     }),
     terser(),
   ],
-  external: ['cross-fetch', 'sip.js', 'reconnecting-websocket', 'js-base64'],
+  external: ['cross-fetch/polyfill', 'sip.js', 'reconnecting-websocket', 'js-base64'],
 };
