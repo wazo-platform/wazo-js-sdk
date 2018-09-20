@@ -13,8 +13,8 @@ const ACCESSD_VERSION = '1.0';
 export default class ApiClient {
   static callApi(url, method = 'get', body = null, headers = {}, parse = res => res.json().then(data => data)) {
     return fetch(url, { method, body: body ? JSON.stringify(body) : null, headers }).then(response => {
-      // Throw an error if status >= 400
-      if (response.status >= 400) {
+      // Throw an error only if status >= 500
+      if (response.status >= 500) {
         const isJson = response.headers.get('content-type').indexOf('application/json') !== -1;
         const promise = isJson ? response.json() : response.text();
 
