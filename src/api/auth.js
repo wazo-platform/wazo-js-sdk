@@ -19,9 +19,11 @@ const DETAULT_EXPIRATION = 3600;
 
 export default (baseUrl: string) => ({
   checkToken(token: Token): Promise<Boolean> {
-    const url = `${baseUrl}/token/${token}`;
+    return callApi(`${baseUrl}/token/${token}`, 'head', null, {}, response => response.status === 204);
+  },
 
-    return callApi(url, 'head', null, {}, response => response.status === 204);
+  authenticate(token: Token): Promise<?LoginResponse> {
+    return callApi(`${baseUrl}/token/${token}`, 'get', null, {});
   },
 
   logIn(params: Object = {}): Promise<?LoginResponse> {
@@ -34,11 +36,32 @@ export default (baseUrl: string) => ({
       'Content-Type': 'application/json'
     };
 
-    return callApi(`${baseUrl}/token`, 'post', body, headers, res => res.json().then(data => data.data));
+    return callApi(`${baseUrl}/token`, 'post', body, headers);
   },
 
   logOut(token: Token): Promise<LogoutResponse> {
     return callApi(`${baseUrl}/token/${token}`, 'delete');
+  },
+
+  updatePassword(token: string, userUuid: UUID, oldPassword: string, newPassword: string) {
+    const body = {
+      new_password: newPassword,
+      old_password: oldPassword
+    };
+
+    return callApi(`${baseUrl}/users/${userUuid}/password`, 'put', body, getHeaders(token));
+  },
+
+  sendDeviceToken(token: string, userUuid: UUID, deviceToken: string) {
+    const body = {
+      token: deviceToken
+    };
+
+    return callApi(`${baseUrl}/users/${userUuid}/external/mobile`, 'post', body, getHeaders(token));
+  },
+
+  removeDeviceToken(token: string, userUuid: UUID) {
+    return callApi(`${baseUrl}/users/${userUuid}/external/mobile`, 'delete', null, getHeaders(token));
   },
 
   listTenants(token: Token): Promise<ListTenantsResponse> {

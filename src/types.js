@@ -15,25 +15,27 @@ export type RequestError = {
 };
 
 export type LoginResponse = {
-  metadata: {
-    username: string,
-    uuid: UUID,
-    tenant_uuid: UUID,
-    xivo_user_uuid: UUID,
-    groups: Array<string>,
+  data: {
+    metadata: {
+      username: string,
+      uuid: UUID,
+      tenant_uuid: UUID,
+      xivo_user_uuid: UUID,
+      groups: Array<string>,
+      xivo_uuid: UUID,
+      tenants: Array<{ uuid: UUID }>,
+      auth_id: UUID
+    },
+    token: Token,
+    acls: Array<string>,
+    utc_expires_at: DateString,
     xivo_uuid: UUID,
-    tenants: Array<{ uuid: UUID }>,
-    auth_id: UUID
-  },
-  token: Token,
-  acls: Array<string>,
-  utc_expires_at: DateString,
-  xivo_uuid: UUID,
-  issued_at: DateString,
-  utc_issued_at: DateString,
-  auth_id: UUID,
-  expires_at: DateString,
-  xivo_user_uuid: UUID
+    issued_at: DateString,
+    utc_issued_at: DateString,
+    auth_id: UUID,
+    expires_at: DateString,
+    xivo_user_uuid: UUID
+  }
 };
 
 export type LogoutResponse = {

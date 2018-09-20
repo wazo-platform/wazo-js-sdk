@@ -3,11 +3,13 @@ import authMethods from './api/auth';
 import applicationMethods from './api/application';
 import confdMethods from './api/confd';
 import accessdMethods from './api/accessd';
+import ctidngMethods from './api/ctidng';
 
 const AUTH_VERSION = '0.1';
 const APPLICATION_VERSION = '1.0';
 const CONFD_VERSION = '1.1';
 const ACCESSD_VERSION = '1.0';
+const CTIDNG_VERSION = '1.0';
 
 export default class ApiClient {
   _server: string;
@@ -17,6 +19,7 @@ export default class ApiClient {
   application: Object;
   confd: Object;
   accessd: Object;
+  ctidng: Object;
 
   constructor({ server }: { server: string }) {
     this.server = server;
@@ -27,6 +30,7 @@ export default class ApiClient {
     this.application = applicationMethods(this.applicationUrl);
     this.confd = confdMethods(this.confdUrl);
     this.accessd = accessdMethods(this.accessdUrl);
+    this.ctidng = ctidngMethods(this.ctidngUrl);
   }
 
   set server(server: string) {
@@ -50,6 +54,10 @@ export default class ApiClient {
 
   get accessdUrl(): string {
     return `${this.baseUrl}/accessd/${ACCESSD_VERSION}`;
+  }
+
+  get ctidngUrl(): string {
+    return `${this.baseUrl}/ctid-ng/${CTIDNG_VERSION}`;
   }
 
   get baseUrl(): string {

@@ -45,7 +45,7 @@ describe('With correct API results', () => {
       };
 
       const result = await client.auth.logIn({ username, password });
-      expect(result.token).toBe(1);
+      expect(result.data.token).toBe(1);
 
       expect(fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token`, {
         method: 'post',
