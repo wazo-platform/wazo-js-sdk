@@ -1,18 +1,14 @@
 /* @flow */
-import type ApiClient from '../api-client'; // eslint-disable-line
+import { callApi, getHeaders } from '../utils';
 
-// eslint-disable-next-line
-export default (ApiClient: Class<ApiClient>, client: ApiClient) => ({
+export default (baseUrl: string) => ({
   listSubscriptions(token: string) {
-    const url = `${client.accessdUrl}/subscriptions?recurse=true`;
-
-    return ApiClient.callApi(url, 'get', null, ApiClient.getHeaders(token));
+    return callApi(`${baseUrl}/subscriptions?recurse=true`, 'get', null, getHeaders(token));
   },
   createSubscription(
     token: string,
     { tenantUuid, productSku, name, startDate, contractDate, autoRenew, term }: Object
   ) {
-    const url = `${client.accessdUrl}/subscriptions`;
     const body = {
       product_sku: productSku,
       name,
@@ -22,30 +18,26 @@ export default (ApiClient: Class<ApiClient>, client: ApiClient) => ({
       term
     };
 
-    const headers = ApiClient.getHeaders(token);
+    const headers = getHeaders(token);
     if (tenantUuid) {
       headers['Wazo-Tenant'] = tenantUuid;
     }
 
-    return ApiClient.callApi(url, 'post', body, headers);
+    return callApi(`${baseUrl}/subscriptions`, 'post', body, headers);
   },
   getSubscription(token: string, uuid: string) {
-    const url = `${client.accessdUrl}/subscriptions/${uuid}`;
-
-    return ApiClient.callApi(url, 'get', null, ApiClient.getHeaders(token));
+    return callApi(`${baseUrl}/subscriptions/${uuid}`, 'get', null, getHeaders(token));
   },
   listAuthorizations(token: string, subscriptionUuid: string) {
-    const url = `${client.accessdUrl}/subscriptions/${subscriptionUuid}/authorizations`;
-
-    return ApiClient.callApi(url, 'get', null, ApiClient.getHeaders(token));
+    return callApi(`${baseUrl}/subscriptions/${subscriptionUuid}/authorizations`, 'get', null, getHeaders(token));
   },
   getAuthorization(token: string, subscriptionUuid: string, uuid: string) {
-    const url = `${client.accessdUrl}/subscriptions/${subscriptionUuid}/authorizations/${uuid}`;
+    const url = `${baseUrl}/subscriptions/${subscriptionUuid}/authorizations/${uuid}`;
 
-    return ApiClient.callApi(url, 'get', null, ApiClient.getHeaders(token));
+    return callApi(url, 'get', null, getHeaders(token));
   },
   createAuthorization(token: string, subscriptionUuid: string, { startDate, term, service, rules, autoRenew }: Object) {
-    const url = `${client.accessdUrl}/subscriptions/${subscriptionUuid}/authorizations`;
+    const url = `${baseUrl}/subscriptions/${subscriptionUuid}/authorizations`;
     const body = {
       start_date: startDate,
       term,
@@ -54,6 +46,6 @@ export default (ApiClient: Class<ApiClient>, client: ApiClient) => ({
       auto_renew: autoRenew
     };
 
-    return ApiClient.callApi(url, 'post', body, ApiClient.getHeaders(token));
+    return callApi(url, 'post', body, getHeaders(token));
   }
 });
