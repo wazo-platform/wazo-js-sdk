@@ -2,7 +2,7 @@ import { Base64 } from 'js-base64';
 
 const mockedResponse = { data: { token: 1 } };
 const mockedJson = { json: () => Promise.resolve(mockedResponse) };
-const mockedError = { text: () => Promise.resolve(mockedResponse), status: 401, headers: { get: () => 'text/plain' } };
+const mockedError = { text: () => Promise.resolve(mockedResponse), status: 500, headers: { get: () => 'text/plain' } };
 const server = 'localhost';
 const authVersion = '0.1';
 const username = 'wazo';

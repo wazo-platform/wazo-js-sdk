@@ -46,7 +46,7 @@ client.auth.logIn({
   username, // required string
   password, // required string
   backend, // optional string. If omitted, defaults to wazo_user
-}).then({
+}).then(/* undefined if login failed, or : */{
   metadata: {
     username,
     uuid_tenant_uuid,

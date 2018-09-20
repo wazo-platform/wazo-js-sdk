@@ -2,13 +2,9 @@ import { Base64 } from 'js-base64';
 
 export default (ApiClient, client) => ({
   checkToken(token) {
-    return ApiClient.callApi(
-      `${client.authUrl}/token/${token}`,
-      'head',
-      null,
-      null,
-      response => response.status === 204
-    );
+    const url = `${client.authUrl}/token/${token}`;
+
+    return ApiClient.callApi(url, 'head', null, null, response => response.status === 204);
   },
 
   logIn(params = {}) {
