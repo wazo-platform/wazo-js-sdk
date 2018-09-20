@@ -1,5 +1,6 @@
 import resolve from 'rollup-plugin-node-resolve';
 import { terser } from 'rollup-plugin-terser';
+import flow from 'rollup-plugin-flow';
 // import { uglify } from 'rollup-plugin-uglify';
 
 export default {
@@ -15,6 +16,7 @@ export default {
     },
   },
   plugins: [
+    flow(),
     resolve({
       customResolveOptions: {
         moduleDirectory: 'node_modules',

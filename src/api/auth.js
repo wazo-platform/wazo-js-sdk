@@ -1,13 +1,17 @@
+/* @flow */
 import { Base64 } from 'js-base64';
+import type ApiClient from '../api-client'; // eslint-disable-line
+import type LoginResponse from '../types';
 
-export default (ApiClient, client) => ({
-  checkToken(token) {
+// eslint-disable-next-line
+export default (ApiClient: Class<ApiClient>, client: ApiClient) => ({
+  checkToken(token: string): Promise<Boolean> {
     const url = `${client.authUrl}/token/${token}`;
 
-    return ApiClient.callApi(url, 'head', null, null, response => response.status === 204);
+    return ApiClient.callApi(url, 'head', null, {}, response => response.status === 204);
   },
 
-  logIn(params = {}) {
+  logIn(params: Object = {}): Promise<LoginResponse> {
     const body = {
       backend: params.backend || client.backendUser,
       expiration: params.expiration || client.expiration
@@ -22,31 +26,31 @@ export default (ApiClient, client) => ({
     );
   },
 
-  logOut(token) {
+  logOut(token: string) {
     return ApiClient.callApi(`${client.authUrl}/token/${token}`, 'delete');
   },
 
-  listTenants(token) {
+  listTenants(token: string) {
     return ApiClient.callApi(`${client.authUrl}/tenants`, 'get', null, ApiClient.getHeaders(token));
   },
 
-  createTenant(token, name) {
+  createTenant(token: string, name: string) {
     return ApiClient.callApi(`${client.authUrl}/tenants`, 'post', { name }, ApiClient.getHeaders(token));
   },
 
-  deleteTenant(token, uuid) {
+  deleteTenant(token: string, uuid: string) {
     return ApiClient.callApi(`${client.authUrl}/tenants/${uuid}`, 'delete', null, ApiClient.getHeaders(token));
   },
 
-  listUsers(token) {
+  listUsers(token: string) {
     return ApiClient.callApi(`${client.authUrl}/users`, 'get', null, ApiClient.getHeaders(token));
   },
 
-  listGroups(token) {
+  listGroups(token: string) {
     return ApiClient.callApi(`${client.authUrl}/groups`, 'get', null, ApiClient.getHeaders(token));
   },
 
-  listPolicies(token) {
+  listPolicies(token: string) {
     return ApiClient.callApi(`${client.authUrl}/policies`, 'get', null, ApiClient.getHeaders(token));
   }
 });

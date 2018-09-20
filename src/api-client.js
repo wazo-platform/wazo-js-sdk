@@ -1,9 +1,11 @@
+/* @flow */
 import fetch from 'cross-fetch';
 
 import authMethods from './api/auth';
 import applicationMethods from './api/application';
 import confdMethods from './api/confd';
 import accessdMethods from './api/accessd';
+import type { Token } from './types';
 
 const AUTH_VERSION = '0.1';
 const APPLICATION_VERSION = '1.0';
@@ -11,7 +13,24 @@ const CONFD_VERSION = '1.1';
 const ACCESSD_VERSION = '1.0';
 
 export default class ApiClient {
-  static callApi(url, method = 'get', body = null, headers = {}, parse = res => res.json().then(data => data)) {
+  server: string;
+  backendUser: string;
+  expiration: number;
+  auth: Object;
+  application: Object;
+  confd: Object;
+  accessd: Object;
+
+  callApi: Function;
+  getHeaders: Function;
+
+  static callApi(
+    url: string,
+    method: string = 'get',
+    body: ?Object = null,
+    headers: Object = {},
+    parse: Function = (res: Object) => res.json().then((data: Object) => data)
+  ) {
     return fetch(url, { method, body: body ? JSON.stringify(body) : null, headers }).then(response => {
       // Throw an error only if status >= 500
       if (response.status >= 500) {
@@ -27,14 +46,14 @@ export default class ApiClient {
     });
   }
 
-  static getHeaders(token) {
+  static getHeaders(token: Token): Object {
     return {
       'X-Auth-Token': token,
       'Content-Type': 'application/json'
     };
   }
 
-  constructor({ server }) {
+  constructor({ server }: { server: string}) {
     this.server = server;
     this.backendUser = 'wazo_user';
     this.expiration = 3600;
@@ -46,23 +65,23 @@ export default class ApiClient {
   }
 
   // Getters
-  get authUrl() {
+  get authUrl(): string {
     return `${this.baseUrl}/auth/${AUTH_VERSION}`;
   }
 
-  get applicationUrl() {
+  get applicationUrl(): string {
     return `${this.baseUrl}/ctid-ng/${APPLICATION_VERSION}/applications`;
   }
 
-  get confdUrl() {
+  get confdUrl(): string {
     return `${this.baseUrl}/confd/${CONFD_VERSION}`;
   }
 
-  get accessdUrl() {
+  get accessdUrl(): string {
     return `${this.baseUrl}/accessd/${ACCESSD_VERSION}`;
   }
 
-  get baseUrl() {
+  get baseUrl(): string {
     return `https://${this.server}/api`;
   }
 }
