@@ -1,17 +1,28 @@
 /* @flow */
 import { Base64 } from 'js-base64';
 import type ApiClient from '../api-client'; // eslint-disable-line
-import type LoginResponse from '../types';
+import type {
+  Tenant,
+  Token,
+  UUID,
+  LoginResponse,
+  LogoutResponse,
+  ListTenantsResponse,
+  RequestError,
+  ListUsersResponse,
+  ListGroupsResponse,
+  ListPoliciesResponse
+} from '../types';
 
 // eslint-disable-next-line
 export default (ApiClient: Class<ApiClient>, client: ApiClient) => ({
-  checkToken(token: string): Promise<Boolean> {
+  checkToken(token: Token): Promise<Boolean> {
     const url = `${client.authUrl}/token/${token}`;
 
     return ApiClient.callApi(url, 'head', null, {}, response => response.status === 204);
   },
 
-  logIn(params: Object = {}): Promise<LoginResponse> {
+  logIn(params: Object = {}): Promise<?LoginResponse> {
     const body = {
       backend: params.backend || client.backendUser,
       expiration: params.expiration || client.expiration
@@ -26,31 +37,32 @@ export default (ApiClient: Class<ApiClient>, client: ApiClient) => ({
     );
   },
 
-  logOut(token: string) {
+  logOut(token: Token): Promise<LogoutResponse> {
     return ApiClient.callApi(`${client.authUrl}/token/${token}`, 'delete');
   },
 
-  listTenants(token: string) {
+  listTenants(token: Token): Promise<ListTenantsResponse> {
     return ApiClient.callApi(`${client.authUrl}/tenants`, 'get', null, ApiClient.getHeaders(token));
   },
 
-  createTenant(token: string, name: string) {
+  createTenant(token: Token, name: string): Promise<Tenant | RequestError> {
     return ApiClient.callApi(`${client.authUrl}/tenants`, 'post', { name }, ApiClient.getHeaders(token));
   },
 
-  deleteTenant(token: string, uuid: string) {
-    return ApiClient.callApi(`${client.authUrl}/tenants/${uuid}`, 'delete', null, ApiClient.getHeaders(token));
+  deleteTenant(token: Token, uuid: UUID): Promise<Boolean | RequestError> {
+    const url = `${client.authUrl}/tenants/${uuid}`;
+    return ApiClient.callApi(url, 'delete', null, ApiClient.getHeaders(token), response => response.status === 204);
   },
 
-  listUsers(token: string) {
+  listUsers(token: Token): Promise<ListUsersResponse> {
     return ApiClient.callApi(`${client.authUrl}/users`, 'get', null, ApiClient.getHeaders(token));
   },
 
-  listGroups(token: string) {
+  listGroups(token: Token): Promise<ListGroupsResponse> {
     return ApiClient.callApi(`${client.authUrl}/groups`, 'get', null, ApiClient.getHeaders(token));
   },
 
-  listPolicies(token: string) {
+  listPolicies(token: Token): Promise<ListPoliciesResponse> {
     return ApiClient.callApi(`${client.authUrl}/policies`, 'get', null, ApiClient.getHeaders(token));
   }
 });

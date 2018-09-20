@@ -53,7 +53,7 @@ export default class ApiClient {
     };
   }
 
-  constructor({ server }: { server: string}) {
+  constructor({ server }: { server: string }) {
     this.server = server;
     this.backendUser = 'wazo_user';
     this.expiration = 3600;
