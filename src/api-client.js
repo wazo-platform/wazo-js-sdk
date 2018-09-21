@@ -71,7 +71,7 @@ export default class ApiClient {
   }
 
   get callLogdUrl(): string {
-    return `${this.baseUrl}/dird/${CALL_LOGD_VERSION}`;
+    return `${this.baseUrl}/call-logd/${CALL_LOGD_VERSION}`;
   }
 
   get baseUrl(): string {

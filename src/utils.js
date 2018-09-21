@@ -58,5 +58,6 @@ export const callApi = (
 
 export const getHeaders = (token: Token): Object => ({
   'X-Auth-Token': token,
+  Accept: 'application/json',
   'Content-Type': 'application/json'
 });
