@@ -1,5 +1,5 @@
 /* @flow */
-import { callApi, getHeaders } from '../utils';
+import { callApi, getHeaders, successResponseParser } from '../utils';
 import type { UUID, Token, Contact } from '../types';
 
 const getContactPayload = (contact: Contact) => ({
@@ -26,7 +26,7 @@ export default (baseUrl: string) => ({
     return callApi(`${baseUrl}/personal`, 'post', getContactPayload(contact), getHeaders(token));
   },
 
-  editContact(token: Token, contact: Contact) {
+  editContact(token: Token, contact: Contact): Promise<Object> {
     return callApi(`${baseUrl}/personal/${contact.id}`, 'put', getContactPayload(contact), getHeaders(token));
   },
 
@@ -39,7 +39,8 @@ export default (baseUrl: string) => ({
   },
 
   markAsFavorite(token: Token, source: string, sourceId: string) {
-    return callApi(`${baseUrl}/directories/favorites/${source}/${sourceId}`, 'put', null, getHeaders(token));
+    const url = `${baseUrl}/directories/favorites/${source}/${sourceId}`;
+    return callApi(url, 'put', null, getHeaders(token), successResponseParser);
   },
 
   removeFavorite(token: Token, source: string, sourceId: string) {

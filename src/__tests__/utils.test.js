@@ -3,15 +3,15 @@ import { getQueryString, computeUrl, callApi } from '../utils';
 describe('Generating query string', () => {
   it('should generate a simple query string from an object', () => {
     expect(getQueryString({ a: 1, b: 'someString' })).toBe('a=1&b=someString');
-    expect(getQueryString({ 'bool': true, b: 'booléen' })).toBe('bool=true&b=bool%C3%A9en');
-    expect(getQueryString({ 'nope': undefined, b: 'yep' })).toBe('b=yep');
+    expect(getQueryString({ bool: true, b: 'booléen' })).toBe('bool=true&b=bool%C3%A9en');
+    expect(getQueryString({ nope: undefined, b: 'yep' })).toBe('b=yep');
   });
 });
 
 describe('Computing fetch URL', () => {
   it('should add query string to URL in get method with body', () => {
-    expect(computeUrl('get', 'www.google.ca', { a: 1})).toBe('www.google.ca?a=1');
-    expect(computeUrl('post', 'www.google.ca', { a: 1})).toBe('www.google.ca');
+    expect(computeUrl('get', 'www.google.ca', { a: 1 })).toBe('www.google.ca?a=1');
+    expect(computeUrl('post', 'www.google.ca', { a: 1 })).toBe('www.google.ca');
     expect(computeUrl('get', 'www.google.ca', null)).toBe('www.google.ca');
     expect(computeUrl('get', 'www.google.ca', {})).toBe('www.google.ca');
   });

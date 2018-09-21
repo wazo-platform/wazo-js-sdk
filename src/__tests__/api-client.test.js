@@ -1,13 +1,38 @@
 import { Base64 } from 'js-base64';
 import WazoApiClient from '../api-client';
+import BadResponse from '../domain/BadResponse';
 
 const mockedResponse = { data: { token: 1 } };
-const mockedJson = { json: () => Promise.resolve(mockedResponse) };
-const mockedError = { text: () => Promise.resolve(mockedResponse), status: 500, headers: { get: () => 'text/plain' } };
-const mockedFailure = {
+const mockedNotFoundResponse = {
+  timestamp: 1537529588.789515,
+  message: 'No such user voicemail',
+  error_id: 'no-such-user-voicemail',
+  'details': {
+    user_uuid: 'xxx-xxx-xxx-xxx-xxxx'
+  }
+};
+const mockedJson = {
+  ok: true,
+  json: () => Promise.resolve(mockedResponse),
+  headers: { get: () => 'application/json' }
+};
+const mockedError = {
+  ok: false,
   text: () => Promise.resolve(mockedResponse),
+  status: 500,
+  headers: { get: () => 'text/plain' }
+};
+const mockedUnAuthorized = {
+  text: () => Promise.resolve(mockedResponse),
+  ok: false,
   status: 401,
   headers: { get: () => 'text/plain' }
+};
+const mockedNotFound = {
+  json: () => Promise.resolve(mockedNotFoundResponse),
+  ok: false,
+  status: 404,
+  headers: { get: () => 'application/json' }
 };
 const server = 'localhost';
 const authVersion = '0.1';
@@ -58,11 +83,11 @@ describe('With correct API results', () => {
   });
 });
 
-describe('With erroneous API results', () => {
+describe('With unAuthorizes API results', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    global.fetch = jest.fn(() => Promise.resolve(mockedFailure));
+    global.fetch = jest.fn(() => Promise.resolve(mockedUnAuthorized));
   });
 
   describe('checkLogin test', () => {
@@ -81,6 +106,30 @@ describe('With erroneous API results', () => {
   });
 });
 
+describe('With not found API results', () => {
+  beforeEach(() => {
+    jest.resetModules();
+
+    global.fetch = jest.fn(() => Promise.resolve(mockedNotFound));
+  });
+
+  describe('fetchVoiceMail test', () => {
+    it('should return a BadResponse instance on 404 status', async () => {
+      const token = 123;
+      const result = await client.ctidng.listVoiceMails(token);
+
+      expect(result).toBeInstanceOf(BadResponse);
+      expect(result.message).toBe(mockedNotFoundResponse.message);
+
+      expect(global.fetch).toBeCalledWith(`https://${server}/api/ctid-ng/1.0/users/me/voicemails`, {
+        method: 'get',
+        body: null,
+        headers: { 'X-Auth-Token' : token, 'Content-Type': 'application/json' }
+      });
+    });
+  });
+});
+
 describe('With erroneous API results', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -88,7 +137,7 @@ describe('With erroneous API results', () => {
     global.fetch = jest.fn(() => Promise.resolve(mockedError));
   });
 
-  it('throw an exception when the response is >= 401', async () => {
+  it('throw an exception when the response is >= 500', async () => {
     let error = null;
     try {
       await client.auth.logIn({ username, password });

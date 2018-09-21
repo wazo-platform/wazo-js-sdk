@@ -40,7 +40,7 @@ export default (baseUrl: string) => ({
   },
 
   logOut(token: Token): Promise<LogoutResponse> {
-    return callApi(`${baseUrl}/token/${token}`, 'delete', successResponseParser);
+    return callApi(`${baseUrl}/token/${token}`, 'delete', null, {}, successResponseParser);
   },
 
   updatePassword(token: Token, userUuid: UUID, oldPassword: string, newPassword: string) {
@@ -49,7 +49,7 @@ export default (baseUrl: string) => ({
       old_password: oldPassword
     };
 
-    return callApi(`${baseUrl}/users/${userUuid}/password`, 'put', body, getHeaders(token));
+    return callApi(`${baseUrl}/users/${userUuid}/password`, 'put', body, getHeaders(token), successResponseParser);
   },
 
   sendDeviceToken(token: Token, userUuid: UUID, deviceToken: string) {

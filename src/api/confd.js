@@ -1,5 +1,5 @@
 /* @flow */
-import { callApi, getHeaders } from '../utils';
+import { callApi, getHeaders, successResponseParser } from '../utils';
 import type { UUID, Token, ListConfdUsersResponse, ConfdUser, ListApplicationsResponse } from '../types';
 
 export default (baseUrl: string) => ({
@@ -11,23 +11,31 @@ export default (baseUrl: string) => ({
     return callApi(`${baseUrl}/users/${userUuid}`, 'get', null, getHeaders(token));
   },
 
-  updateUser(token: Token, userUuid: string, { firstName, lastName, email, mobileNumber }: Object): Promise<void> {
+  updateUser(token: Token, userUuid: string, { firstName, lastName, email, mobileNumber }: Object): Promise<Boolean> {
     const body = {
       firstname: firstName,
       lastname: lastName,
       email,
-      mobile_phone_number: mobileNumber,
+      mobile_phone_number: mobileNumber
     };
 
-    return callApi(`${baseUrl}/users/${userUuid}`, 'put', body, getHeaders(token));
+    return callApi(`${baseUrl}/users/${userUuid}`, 'put', body, getHeaders(token), successResponseParser);
   },
 
-  updateForwardOption(token: Token, userUuid: string, key: string, destination: string, enabled: Boolean) {
-    return callApi(`${baseUrl}/users/${userUuid}/forwards/${key}`, 'put', { destination, enabled }, getHeaders(token));
+  updateForwardOption(
+    token: Token,
+    userUuid: string,
+    key: string,
+    destination: string,
+    enabled: Boolean
+  ): Promise<Boolean> {
+    const url = `${baseUrl}/users/${userUuid}/forwards/${key}`;
+    return callApi(url, 'put', { destination, enabled }, getHeaders(token), successResponseParser);
   },
 
-  updateDoNotDisturb(token: Token, userUuid: UUID, enabled: Boolean) {
-    return callApi(`${baseUrl}/users/${userUuid}/services/dnd`, 'put', { enabled }, getHeaders(token));
+  updateDoNotDisturb(token: Token, userUuid: UUID, enabled: Boolean): Promise<Boolean> {
+    const url = `${baseUrl}/users/${userUuid}/services/dnd`;
+    return callApi(url, 'put', { enabled }, getHeaders(token), successResponseParser);
   },
 
   // @TODO: type response
@@ -43,7 +51,7 @@ export default (baseUrl: string) => ({
     return callApi(url, 'get', null, getHeaders(token));
   },
 
-  getSIP(token: Token, userUuid: UUID, lineId: number, ) {
+  getSIP(token: Token, userUuid: UUID, lineId: number) {
     const url = `${baseUrl}/users/${userUuid}/lines/${lineId}/associated/endpoints/sip`;
 
     return callApi(url, 'get', null, getHeaders(token));

@@ -49,7 +49,7 @@ export type User = {
   uuid: UUID,
   firstname: string,
   lastname: string,
-  enabled: Boolean,
+  enabled: boolean,
   tenant_uuid: string,
   emails: Array<string>
 };
@@ -145,19 +145,19 @@ export type ConfdUser = {
   mobile_phone_number: string,
   username: ?string,
   password: ?string,
-  music_on_hold: ?Boolean, // to check
+  music_on_hold: ?boolean, // to check
   preprocess_subroutine: ?string, // to check
-  call_transfer_enabled: Boolean,
-  dtmf_hangup_enabled: Boolean,
-  call_record_enabled: Boolean,
-  online_call_record_enabled: Boolean,
-  supervision_enabled: Boolean,
+  call_transfer_enabled: boolean,
+  dtmf_hangup_enabled: boolean,
+  call_record_enabled: boolean,
+  online_call_record_enabled: boolean,
+  supervision_enabled: boolean,
   ring_seconds: number,
   simultaneous_calls: number,
   call_permission_password: string,
   subscription_type: number,
   created_at: DateString,
-  enabled: Boolean,
+  enabled: boolean,
   tenant_uuid: UUID,
   links: Array<Link>,
   agent: ?string, // to check
@@ -174,25 +174,25 @@ export type ConfdUser = {
   lines: Array<Line>,
   forwards: {
     busy: {
-      enable: Boolean,
+      enable: boolean,
       destination: ?string
     },
     noanswer: {
-      enable: Boolean,
+      enable: boolean,
       destination: ?string
     },
     unconditional: {
-      enable: Boolean,
+      enable: boolean,
       destination: ?string
     }
   },
   schedules: [], // @TODO
   services: {
     dnd: {
-      enabled: Boolean
+      enabled: boolean
     },
     incallfilter: {
-      enabled: Boolean
+      enabled: boolean
     }
   },
   switchboards: Array<Object>, // @TODO
@@ -240,7 +240,7 @@ export type Contact = {
   entreprise: ?string,
   birthday: ?string,
   address: ?string,
-  note: ?string,
+  note: ?string
 };
 
 export type ListNodesResponse = {
@@ -251,3 +251,5 @@ export type ListCallNodesResponse = {
   uuid: UUID,
   items: Array<CallNode>
 };
+
+export type VoiceMail = {};

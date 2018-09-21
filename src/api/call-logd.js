@@ -13,5 +13,5 @@ export default (baseUrl: string) => ({
 
   listCallLogsFromDate(token: Token, from: DateString, number: number) {
     return callApi(`${baseUrl}/users/me/cdr`, 'get', { from, number }, getHeaders(token));
-  },
+  }
 });
