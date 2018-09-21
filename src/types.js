@@ -231,6 +231,18 @@ export type CallNode = {
   // @TODO
 };
 
+export type Contact = {
+  id: number,
+  email: string,
+  firstName: string,
+  lastName: string,
+  phoneNumber: string,
+  entreprise: ?string,
+  birthday: ?string,
+  address: ?string,
+  note: ?string,
+};
+
 export type ListNodesResponse = {
   items: Array<Node>
 };

@@ -1,4 +1,5 @@
 import { Base64 } from 'js-base64';
+import WazoApiClient from '../api-client';
 
 const mockedResponse = { data: { token: 1 } };
 const mockedJson = { json: () => Promise.resolve(mockedResponse) };
@@ -13,27 +14,15 @@ const authVersion = '0.1';
 const username = 'wazo';
 const password = 'zowa';
 
-// Required by jest because we have to require modules after a mock
-// @see https://github.com/facebook/jest/issues/2582
-const getMockedObjects = () => {
-  const fetch = require('cross-fetch'); // eslint-disable-line
-  const WazoApiClient = require('../../src/api-client').default; // eslint-disable-line
+jest.mock('cross-fetch/polyfill', () => {});
 
-  return { WazoApiClient, fetch };
-};
+const client = new WazoApiClient({ server });
 
 describe('With correct API results', () => {
-  let client;
-  let fetch;
-
   beforeEach(() => {
     jest.resetModules();
 
-    jest.mock('cross-fetch', () => jest.fn(() => Promise.resolve(mockedJson)));
-    const objects = getMockedObjects();
-
-    client = new objects.WazoApiClient({ server });
-    fetch = objects.fetch;
+    global.fetch = jest.fn(() => Promise.resolve(mockedJson));
   });
 
   describe('logIn test', () => {
@@ -47,7 +36,7 @@ describe('With correct API results', () => {
       const result = await client.auth.logIn({ username, password });
       expect(result.data.token).toBe(1);
 
-      expect(fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token`, {
+      expect(global.fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token`, {
         method: 'post',
         body: JSON.stringify(data),
         headers
@@ -60,7 +49,7 @@ describe('With correct API results', () => {
       const token = 123;
       await client.auth.logOut(token);
 
-      expect(fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token/${token}`, {
+      expect(global.fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token/${token}`, {
         method: 'delete',
         body: null,
         headers: {}
@@ -70,17 +59,10 @@ describe('With correct API results', () => {
 });
 
 describe('With erroneous API results', () => {
-  let client;
-  let fetch;
-
   beforeEach(() => {
     jest.resetModules();
 
-    jest.mock('cross-fetch', () => jest.fn(() => Promise.resolve(mockedFailure)));
-    const objects = getMockedObjects();
-
-    client = new objects.WazoApiClient({ server });
-    fetch = objects.fetch;
+    global.fetch = jest.fn(() => Promise.resolve(mockedFailure));
   });
 
   describe('checkLogin test', () => {
@@ -90,7 +72,7 @@ describe('With erroneous API results', () => {
 
       expect(result).toBeFalsy();
 
-      expect(fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token/${token}`, {
+      expect(global.fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token/${token}`, {
         method: 'head',
         body: null,
         headers: {}
@@ -100,17 +82,10 @@ describe('With erroneous API results', () => {
 });
 
 describe('With erroneous API results', () => {
-  let client;
-  let fetch;
-
   beforeEach(() => {
     jest.resetModules();
 
-    jest.mock('cross-fetch', () => jest.fn(() => Promise.resolve(mockedError)));
-    const objects = getMockedObjects();
-
-    client = new objects.WazoApiClient({ server });
-    fetch = objects.fetch;
+    global.fetch = jest.fn(() => Promise.resolve(mockedError));
   });
 
   it('throw an exception when the response is >= 401', async () => {

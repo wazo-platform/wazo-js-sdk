@@ -43,7 +43,7 @@ export default (baseUrl: string) => ({
     return callApi(`${baseUrl}/token/${token}`, 'delete');
   },
 
-  updatePassword(token: string, userUuid: UUID, oldPassword: string, newPassword: string) {
+  updatePassword(token: Token, userUuid: UUID, oldPassword: string, newPassword: string) {
     const body = {
       new_password: newPassword,
       old_password: oldPassword
@@ -52,7 +52,7 @@ export default (baseUrl: string) => ({
     return callApi(`${baseUrl}/users/${userUuid}/password`, 'put', body, getHeaders(token));
   },
 
-  sendDeviceToken(token: string, userUuid: UUID, deviceToken: string) {
+  sendDeviceToken(token: Token, userUuid: UUID, deviceToken: string) {
     const body = {
       token: deviceToken
     };
@@ -60,7 +60,7 @@ export default (baseUrl: string) => ({
     return callApi(`${baseUrl}/users/${userUuid}/external/mobile`, 'post', body, getHeaders(token));
   },
 
-  removeDeviceToken(token: string, userUuid: UUID) {
+  removeDeviceToken(token: Token, userUuid: UUID) {
     return callApi(`${baseUrl}/users/${userUuid}/external/mobile`, 'delete', null, getHeaders(token));
   },
 
