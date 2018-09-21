@@ -45,13 +45,5 @@ export default (baseUrl: string) => ({
 
   removeFavorite(token: Token, source: string, sourceId: string) {
     return callApi(`${baseUrl}/directories/favorites/${source}/${sourceId}`, 'delete', null, getHeaders(token));
-  },
-
-  getPresence(token: Token, contactUuid: UUID) {
-    return callApi(`${baseUrl}/users/${contactUuid}/presences`, 'get', null, getHeaders(token));
-  },
-
-  getStatus(token: Token, lineUuid: UUID) {
-    return callApi(`${baseUrl}/lines/${lineUuid}/presences`, 'get', null, getHeaders(token));
   }
 });

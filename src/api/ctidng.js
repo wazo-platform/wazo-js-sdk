@@ -53,5 +53,13 @@ export default (baseUrl: string) => ({
     const url = `${baseUrl}/users/me/voicemails/messages/${voiceMailId}`;
 
     return callApi(url, 'delete', null, getHeaders(token));
+  },
+
+  getPresence(token: Token, contactUuid: UUID) {
+    return callApi(`${baseUrl}/users/${contactUuid}/presences`, 'get', null, getHeaders(token));
+  },
+
+  getStatus(token: Token, lineUuid: UUID) {
+    return callApi(`${baseUrl}/lines/${lineUuid}/presences`, 'get', null, getHeaders(token));
   }
 });
