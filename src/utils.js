@@ -5,6 +5,8 @@ import 'cross-fetch/polyfill';
 
 import type { Token } from './types';
 
+export const successResponseParser = (response: Object) => response.status === 204;
+
 export const getQueryString = (obj: Object): string =>
   Object.keys(obj).filter(key => obj[key]).map(key => `${key}=${encodeURIComponent(obj[key])}`).join('&');
 
@@ -20,6 +22,7 @@ export const callApi = (
 ): Promise<any> => {
   const newUrl = computeUrl(method, url, body);
   const newBody = body && method !== 'get' ? JSON.stringify(body) : null;
+  const newParse = method === 'delete' || method === 'head' ? successResponseParser : parse;
 
   return fetch(newUrl, { method, body: newBody, headers }).then(response => {
     // Throw an error only if status >= 500
@@ -33,7 +36,7 @@ export const callApi = (
       });
     }
 
-    return parse(response);
+    return newParse(response);
   });
 };
 

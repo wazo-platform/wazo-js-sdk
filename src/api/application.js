@@ -28,14 +28,16 @@ export default (baseUrl: string) => ({
   },
 
   hangupCall(token: Token, applicationUuid: string, callId: number) {
-    return callApi(`${baseUrl}/${applicationUuid}/calls/${callId}`, 'delete', null, getHeaders(token));
+    const url = `${baseUrl}/${applicationUuid}/calls/${callId}`;
+
+    return callApi(url, 'delete', null, getHeaders(token));
   },
 
   playCall(token: Token, applicationUuid: string, callId: number, language: string, uri: string) {
     return callApi(`${baseUrl}/${applicationUuid}/calls/${callId}/play`, 'post', { language, uri }, getHeaders(token));
   },
 
-  addCallNodes(token: Token, applicationUuid: string, nodeUuid: string, callId: string): Promise<Object> {
+  addCallNodes(token: Token, applicationUuid: string, nodeUuid: string, callId: string): Promise<Boolean> {
     return callApi(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}/calls/${callId}`, 'put', null, getHeaders(token));
   },
 

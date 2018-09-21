@@ -1,6 +1,6 @@
 /* @flow */
 import { Base64 } from 'js-base64';
-import { callApi, getHeaders } from '../utils';
+import { callApi, getHeaders, successResponseParser } from '../utils';
 import type {
   Tenant,
   Token,
@@ -19,7 +19,7 @@ const DETAULT_EXPIRATION = 3600;
 
 export default (baseUrl: string) => ({
   checkToken(token: Token): Promise<Boolean> {
-    return callApi(`${baseUrl}/token/${token}`, 'head', null, {}, response => response.status === 204);
+    return callApi(`${baseUrl}/token/${token}`, 'head', null, {});
   },
 
   authenticate(token: Token): Promise<?LoginResponse> {
@@ -40,7 +40,7 @@ export default (baseUrl: string) => ({
   },
 
   logOut(token: Token): Promise<LogoutResponse> {
-    return callApi(`${baseUrl}/token/${token}`, 'delete');
+    return callApi(`${baseUrl}/token/${token}`, 'delete', successResponseParser);
   },
 
   updatePassword(token: Token, userUuid: UUID, oldPassword: string, newPassword: string) {
@@ -73,8 +73,7 @@ export default (baseUrl: string) => ({
   },
 
   deleteTenant(token: Token, uuid: UUID): Promise<Boolean | RequestError> {
-    const url = `${baseUrl}/tenants/${uuid}`;
-    return callApi(url, 'delete', null, getHeaders(token), response => response.status === 204);
+    return callApi(`${baseUrl}/tenants/${uuid}`, 'delete', null, getHeaders(token));
   },
 
   listUsers(token: Token): Promise<ListUsersResponse> {

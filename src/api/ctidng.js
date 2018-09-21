@@ -1,10 +1,10 @@
 /* @flow */
-import { callApi, getHeaders } from '../utils';
+import { callApi, getHeaders, successResponseParser } from '../utils';
 import type { UUID, Token } from '../types';
 
 export default (baseUrl: string) => ({
-  updatePresence(token: Token, presence: string) {
-    return callApi(`${baseUrl}/users/me/presences`, 'put', { presence }, getHeaders(token));
+  updatePresence(token: Token, presence: string): Promise<Boolean> {
+    return callApi(`${baseUrl}/users/me/presences`, 'put', { presence }, getHeaders(token), successResponseParser);
   },
 
   listMessages(token: Token, participantUuid: ?UUID) {
@@ -23,7 +23,7 @@ export default (baseUrl: string) => ({
      return callApi(`${baseUrl}/users/me/calls`, 'post', { from_mobile: true, extension }, getHeaders(token));
   },
 
-  cancelCall(token: Token, callId: number) {
+  cancelCall(token: Token, callId: number): Promise<Boolean> {
      return callApi(`${baseUrl}/users/me/calls/${callId}`, 'delete', null, getHeaders(token));
   },
 
@@ -49,7 +49,9 @@ export default (baseUrl: string) => ({
     return callApi(`${baseUrl}/users/me/voicemails`, 'get', null, getHeaders(token));
   },
 
-  deleteVoice(token: Token, voiceMailId: number) {
-    return callApi(`${baseUrl}/users/me/voicemails/messages/${voiceMailId}`, 'delete', null, getHeaders(token));
+  deleteVoice(token: Token, voiceMailId: number): Promise<Boolean> {
+    const url = `${baseUrl}/users/me/voicemails/messages/${voiceMailId}`;
+
+    return callApi(url, 'delete', null, getHeaders(token));
   }
 });
