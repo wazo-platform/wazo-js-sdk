@@ -3,7 +3,7 @@ import authMethods from './api/auth';
 import applicationMethods from './api/application';
 import confdMethods from './api/confd';
 import accessdMethods from './api/accessd';
-import ctidngMethods from './api/ctidng';
+import ctidngMethods from './api/ctid-ng';
 import dirdMethods from './api/dird';
 import callLogdMethods from './api/call-logd';
 

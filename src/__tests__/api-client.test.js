@@ -113,10 +113,10 @@ describe('With not found API results', () => {
     global.fetch = jest.fn(() => Promise.resolve(mockedNotFound));
   });
 
-  describe('fetchVoiceMail test', () => {
+  describe('fetchVoicemail test', () => {
     it('should return a BadResponse instance on 404 status', async () => {
       const token = 123;
-      const result = await client.ctidng.listVoiceMails(token);
+      const result = await client.ctidng.listVoicemails(token);
 
       expect(result).toBeInstanceOf(BadResponse);
       expect(result.message).toBe(mockedNotFoundResponse.message);

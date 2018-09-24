@@ -252,4 +252,4 @@ export type ListCallNodesResponse = {
   items: Array<CallNode>
 };
 
-export type VoiceMail = {};
+export type Voicemail = {};
