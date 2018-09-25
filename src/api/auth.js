@@ -1,5 +1,4 @@
 /* @flow */
-import { Base64 } from 'js-base64';
 import ApiRequester from '../utils/api-requester';
 import type {
   Tenant,
@@ -34,7 +33,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
       expiration: params.expiration || DETAULT_EXPIRATION
     };
     const headers = {
-      Authorization: `Basic ${Base64.encode(`${params.username}:${params.password}`)}`,
+      Authorization: `Basic ${ApiRequester.base64Encode(`${params.username}:${params.password}`)}`,
       'Content-Type': 'application/json'
     };
 

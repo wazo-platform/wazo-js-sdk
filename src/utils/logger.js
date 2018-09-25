@@ -2,7 +2,7 @@
 
 export default class Logger {
   static hasDebug() {
-    return +process.env.DEBUG === 1 || process.env.DEBUG === 'true';
+    return typeof(process) !== 'undefined' && (+process.env.DEBUG === 1 || process.env.DEBUG === 'true');
   }
 
   static logRequest(url: string, { method, body, headers }: Object, response: Object) {
