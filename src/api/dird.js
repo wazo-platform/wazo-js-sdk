@@ -18,17 +18,20 @@ const getContactPayload = (contact: NewContact | Contact) => ({
 
 export default (client: ApiRequester, baseUrl: string) => ({
   search(token: Token, context: string, term: string): Promise<Array<Contact> | BadResponse> {
-    return client.get(`${baseUrl}/directories/lookup/${context}`, { term }, token)
+    return client
+      .get(`${baseUrl}/directories/lookup/${context}`, { term }, token)
       .then(ApiRequester.parseBadResponse(response => Contact.parseMany(response)));
   },
 
   listPersonalContacts(token: Token): Promise<Array<Contact> | BadResponse> {
-    return client.get(`${baseUrl}/personal`, null, token)
+    return client
+      .get(`${baseUrl}/personal`, null, token)
       .then(ApiRequester.parseBadResponse(response => Contact.parseManyPersonal(response)));
   },
 
   addContact(token: Token, contact: NewContact): Promise<Contact | BadResponse> {
-    return client.post(`${baseUrl}/personal`, getContactPayload(contact), token)
+    return client
+      .post(`${baseUrl}/personal`, getContactPayload(contact), token)
       .then(ApiRequester.parseBadResponse(response => Contact.parsePersonal(response)));
   },
 
@@ -41,7 +44,8 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
 
   listFavorites(token: Token, context: string): Promise<Array<Contact> | BadResponse> {
-    return client.get(`${baseUrl}/directories/favorites/${context}`, null, token)
+    return client
+      .get(`${baseUrl}/directories/favorites/${context}`, null, token)
       .then(ApiRequester.parseBadResponse(response => Contact.parseMany(response)));
   },
 

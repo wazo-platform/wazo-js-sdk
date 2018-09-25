@@ -11,7 +11,7 @@ export default {
     globals: {
       'sip.js': 'SIP',
       'cross-fetch': 'cross-fetch',
-      'immutable': 'immutable',
+      'immutable': 'Immutable',
       'moment': 'moment',
       'reconnecting-websocket': 'ReconnectingWebSocket',
     },
@@ -23,7 +23,7 @@ export default {
         moduleDirectory: 'node_modules',
       },
     }),
-    terser(),
+    // terser(),
   ],
   external: ['cross-fetch/polyfill', 'sip.js', 'reconnecting-websocket', 'js-base64', 'immutable', 'moment'],
 };

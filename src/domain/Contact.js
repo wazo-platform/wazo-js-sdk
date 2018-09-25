@@ -12,7 +12,7 @@ export type NewContact = {
   address: ?string,
   entreprise: ?string,
   birthday: ?string,
-  note: ?string,
+  note: ?string
 };
 
 type ContactResponse = {

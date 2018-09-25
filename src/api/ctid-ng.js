@@ -14,7 +14,8 @@ export default (client: ApiRequester, baseUrl: string) => ({
   listMessages(token: Token, participantUuid: ?UUID): Promise<Array<ChatMessage> | BadResponse> {
     const body = participantUuid ? { participant_user_uuid: participantUuid } : null;
 
-    return client.get(`${baseUrl}/users/me/chats`, body, token)
+    return client
+      .get(`${baseUrl}/users/me/chats`, body, token)
       .then(ApiRequester.parseBadResponse(response => ChatMessage.parseMany(response)));
   },
 
@@ -33,7 +34,8 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
 
   listCalls(token: Token): Promise<Array<Call> | BadResponse> {
-    return client.get(`${baseUrl}/users/me/calls`, null, token)
+    return client
+      .get(`${baseUrl}/users/me/calls`, null, token)
       .then(ApiRequester.parseBadResponse(response => Call.parseMany(response.items)));
   },
 
@@ -52,7 +54,8 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
 
   listVoicemails(token: Token): Promise<RequestError | Array<Voicemail>> {
-    return client.get(`${baseUrl}/users/me/voicemails`, null, token)
+    return client
+      .get(`${baseUrl}/users/me/voicemails`, null, token)
       .then(ApiRequester.parseBadResponse(response => Voicemail.parseMany(response)));
   },
 

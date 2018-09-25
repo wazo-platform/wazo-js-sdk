@@ -26,7 +26,7 @@ export default class ApiRequester {
   }
 
   static parseBadResponse(parse: Function) {
-    return (response: Object) => response instanceof BadResponse ? response : parse(response);
+    return (response: Object) => (response instanceof BadResponse ? response : parse(response));
   }
 
   static defaultParser(response: Object, isJson: boolean) {
@@ -59,7 +59,7 @@ export default class ApiRequester {
   }
 
   static base64Encode(str: string): string {
-    return btoa ? btoa(str) : Base64.encode(str);
+    return typeof btoa !== 'undefined' ? btoa(str) : Base64.encode(str);
   }
 
   // @see https://github.com/facebook/flow/issues/183#issuecomment-358607052

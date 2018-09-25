@@ -25,7 +25,8 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
 
   authenticate(token: Token): Promise<Session | BadResponse> {
-    return client.get(`${baseUrl}/token/${token}`, null, {})
+    return client
+      .get(`${baseUrl}/token/${token}`, null, {})
       .then(ApiRequester.parseBadResponse(response => Session.parse(response)));
   },
 
@@ -39,7 +40,8 @@ export default (client: ApiRequester, baseUrl: string) => ({
       'Content-Type': 'application/json'
     };
 
-    return client.post(`${baseUrl}/token`, body, headers)
+    return client
+      .post(`${baseUrl}/token`, body, headers)
       .then(ApiRequester.parseBadResponse(response => Session.parse(response)));
   },
 

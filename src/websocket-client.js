@@ -1,25 +1,34 @@
+// @flow
 import ReconnectingWebSocket from 'reconnecting-websocket';
 
+type ConstructorParams = { callback: Function, host: string, token: string, events: Array<string> };
+
 export default class WebSocketClient {
-  constructor(params) {
-    this.ws_init = false;
-    this.callback = params.callback;
-    this.host = params.host;
-    this.token = params.token;
-    this.events = params.events;
+  initialized: boolean;
+  callback: Function;
+  host: string;
+  token: string;
+  events: Array<string>;
+
+  constructor({ callback, host, token, events = [] }: ConstructorParams) {
+    this.initialized = false;
+    this.callback = callback;
+    this.host = host;
+    this.token = token;
+    this.events = events;
   }
 
-  init() {
+  connect() {
     const sock = new ReconnectingWebSocket(`wss://${this.host}/api/websocketd/?token=${this.token}`);
     sock.debug = false;
 
-    sock.onmessage = e => {
-      const ev = JSON.parse(e.data);
+    sock.onmessage = (event: MessageEvent) => {
+      const message = JSON.parse(typeof event.data === 'string' ? event.data : '{}');
 
-      if (!this.ws_init) {
-        this.initialize(ev, sock);
+      if (!this.initialized) {
+        this.handleMessage(message, sock);
       } else {
-        this.callback(ev);
+        this.callback(message);
       }
     };
 
@@ -36,8 +45,8 @@ export default class WebSocketClient {
     return sock;
   }
 
-  initialize(data, sock) {
-    switch (data.op) {
+  handleMessage(message: Object, sock: WebSocket) {
+    switch (message.op) {
       case 'init':
         this.events.forEach(event => {
           const op = {
@@ -53,7 +62,7 @@ export default class WebSocketClient {
       case 'subscribe':
         break;
       case 'start':
-        this.ws_init = true;
+        this.initialized = true;
         break;
       default:
       // nothing
