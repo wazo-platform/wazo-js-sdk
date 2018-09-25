@@ -13,17 +13,15 @@ You may install the Wazo JavaScript Software Development Kit to your project one
 * `yarn add @wazo/sdk`
 
 ### Content Delivery Networks
-Alternatively, you may load the Wazo SDK from a CDN. If you choose to, you'll also have to load Axios as the SDK depends on it. Use one of the following Content Delivery Networks:
+Alternatively, you may load the Wazo SDK from a CDN. Use one of the following Content Delivery Networks:
 
 #### UNPKG
 ```
-<script src="https://unpkg.com/axios"></script>
 <script src="https://unpkg.com/@wazo/sdk"></script>
 ```
 
 #### jsDelivr
 ```
-<script src="https://cdn.jsdelivr.net/npm/axios"></script>
 <script src="https://cdn.jsdelivr.net/npm/@wazo/sdk"></script>
 ```
 
@@ -73,7 +71,7 @@ const result = await client.auth.login(/* ... */);
 
 ### Log Out
 ```js
-client.auth.logOut().then(/* ... */);
+client.auth.logOut(token).then(/* ... */);
 // or
 await client.auth.logOut(token);
 ```

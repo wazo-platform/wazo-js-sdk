@@ -253,3 +253,11 @@ export type ListCallNodesResponse = {
 };
 
 export type Voicemail = {};
+
+export type GetTenantResponse = {
+  // @TODO
+};
+
+export type GetUserResponse = {
+  // @TODO
+};

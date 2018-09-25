@@ -11,7 +11,9 @@ import type {
   RequestError,
   ListUsersResponse,
   ListGroupsResponse,
-  ListPoliciesResponse
+  ListPoliciesResponse,
+  GetTenantResponse,
+  GetUserResponse
 } from '../types';
 
 const DEFAULT_BACKEND_USER = 'wazo_user';
@@ -64,8 +66,16 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.delete(`${baseUrl}/users/${userUuid}/external/mobile`, null, token);
   },
 
+  getUser(token: Token, userUuid: UUID): Promise<GetUserResponse> {
+    return client.get(`${baseUrl}/users/${userUuid}`, null, token);
+  },
+
   listTenants(token: Token): Promise<ListTenantsResponse> {
     return client.get(`${baseUrl}/tenants`, null, token);
+  },
+
+  getTenant(token: Token, tenantUuid: UUID): Promise<GetTenantResponse> {
+    return client.get(`${baseUrl}/tenants/${tenantUuid}`,  null, token);
   },
 
   createTenant(token: Token, name: string): Promise<Tenant | RequestError> {
