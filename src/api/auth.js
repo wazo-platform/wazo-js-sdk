@@ -1,6 +1,6 @@
 /* @flow */
 import { Base64 } from 'js-base64';
-import { callApi, getHeaders, successResponseParser } from '../utils';
+import ApiRequester from '../utils/api-requester';
 import type {
   Tenant,
   Token,
@@ -17,13 +17,13 @@ import type {
 const DEFAULT_BACKEND_USER = 'wazo_user';
 const DETAULT_EXPIRATION = 3600;
 
-export default (baseUrl: string) => ({
+export default (client: ApiRequester, baseUrl: string) => ({
   checkToken(token: Token): Promise<Boolean> {
-    return callApi(`${baseUrl}/token/${token}`, 'head', null, {});
+    return client.head(`${baseUrl}/token/${token}`, null, {});
   },
 
   authenticate(token: Token): Promise<?LoginResponse> {
-    return callApi(`${baseUrl}/token/${token}`, 'get', null, {});
+    return client.get(`${baseUrl}/token/${token}`, null, {});
   },
 
   logIn(params: Object = {}): Promise<?LoginResponse> {
@@ -36,11 +36,11 @@ export default (baseUrl: string) => ({
       'Content-Type': 'application/json'
     };
 
-    return callApi(`${baseUrl}/token`, 'post', body, headers);
+    return client.post(`${baseUrl}/token`, body, headers);
   },
 
   logOut(token: Token): Promise<LogoutResponse> {
-    return callApi(`${baseUrl}/token/${token}`, 'delete', null, {}, successResponseParser);
+    return client.delete(`${baseUrl}/token/${token}`, null, {}, ApiRequester.successResponseParser);
   },
 
   updatePassword(token: Token, userUuid: UUID, oldPassword: string, newPassword: string) {
@@ -49,7 +49,7 @@ export default (baseUrl: string) => ({
       old_password: oldPassword
     };
 
-    return callApi(`${baseUrl}/users/${userUuid}/password`, 'put', body, getHeaders(token), successResponseParser);
+    return client.put(`${baseUrl}/users/${userUuid}/password`, body, token, ApiRequester.successResponseParser);
   },
 
   sendDeviceToken(token: Token, userUuid: UUID, deviceToken: string) {
@@ -57,34 +57,34 @@ export default (baseUrl: string) => ({
       token: deviceToken
     };
 
-    return callApi(`${baseUrl}/users/${userUuid}/external/mobile`, 'post', body, getHeaders(token));
+    return client.post(`${baseUrl}/users/${userUuid}/external/mobile`, body, token);
   },
 
   removeDeviceToken(token: Token, userUuid: UUID) {
-    return callApi(`${baseUrl}/users/${userUuid}/external/mobile`, 'delete', null, getHeaders(token));
+    return client.delete(`${baseUrl}/users/${userUuid}/external/mobile`, null, token);
   },
 
   listTenants(token: Token): Promise<ListTenantsResponse> {
-    return callApi(`${baseUrl}/tenants`, 'get', null, getHeaders(token));
+    return client.get(`${baseUrl}/tenants`, null, token);
   },
 
   createTenant(token: Token, name: string): Promise<Tenant | RequestError> {
-    return callApi(`${baseUrl}/tenants`, 'post', { name }, getHeaders(token));
+    return client.post(`${baseUrl}/tenants`, { name }, token);
   },
 
   deleteTenant(token: Token, uuid: UUID): Promise<Boolean | RequestError> {
-    return callApi(`${baseUrl}/tenants/${uuid}`, 'delete', null, getHeaders(token));
+    return client.delete(`${baseUrl}/tenants/${uuid}`, null, token);
   },
 
   listUsers(token: Token): Promise<ListUsersResponse> {
-    return callApi(`${baseUrl}/users`, 'get', null, getHeaders(token));
+    return client.get(`${baseUrl}/users`, 'get', null, token);
   },
 
   listGroups(token: Token): Promise<ListGroupsResponse> {
-    return callApi(`${baseUrl}/groups`, 'get', null, getHeaders(token));
+    return client.get(`${baseUrl}/groups`, null, token);
   },
 
   listPolicies(token: Token): Promise<ListPoliciesResponse> {
-    return callApi(`${baseUrl}/policies`, 'get', null, getHeaders(token));
+    return client.get(`${baseUrl}/policies`, null, token);
   }
 });

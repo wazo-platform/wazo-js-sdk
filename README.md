@@ -35,7 +35,8 @@ Depending on your preference, you may require or add the Wazo SDK to your own cl
 ### Init
 ```js
 const client = new WazoApiClient({
-  server: 'demo.wazo.community' // required string
+  server: 'demo.wazo.community', // required string
+  agent: null // http(s).Agent instance, allows custom proxy, unsecured https, certificate etc.
 });
 ```
 

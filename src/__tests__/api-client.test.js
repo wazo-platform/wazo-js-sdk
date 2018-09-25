@@ -7,7 +7,7 @@ const mockedNotFoundResponse = {
   timestamp: 1537529588.789515,
   message: 'No such user voicemail',
   error_id: 'no-such-user-voicemail',
-  'details': {
+  details: {
     user_uuid: 'xxx-xxx-xxx-xxx-xxxx'
   }
 };
@@ -64,7 +64,8 @@ describe('With correct API results', () => {
       expect(global.fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token`, {
         method: 'post',
         body: JSON.stringify(data),
-        headers
+        headers,
+        agent: null
       });
     });
   });
@@ -77,7 +78,8 @@ describe('With correct API results', () => {
       expect(global.fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token/${token}`, {
         method: 'delete',
         body: null,
-        headers: {}
+        headers: {},
+        agent: null
       });
     });
   });
@@ -100,7 +102,8 @@ describe('With unAuthorizes API results', () => {
       expect(global.fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token/${token}`, {
         method: 'head',
         body: null,
-        headers: {}
+        headers: {},
+        agent: null
       });
     });
   });
@@ -124,7 +127,8 @@ describe('With not found API results', () => {
       expect(global.fetch).toBeCalledWith(`https://${server}/api/ctid-ng/1.0/users/me/voicemails`, {
         method: 'get',
         body: null,
-        headers: { 'X-Auth-Token' : token, 'Content-Type': 'application/json', Accept: 'application/json' }
+        headers: { 'X-Auth-Token': token, 'Content-Type': 'application/json', Accept: 'application/json' },
+        agent: null
       });
     });
   });

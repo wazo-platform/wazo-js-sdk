@@ -1,9 +1,9 @@
 /* @flow */
-import { callApi, getHeaders } from '../utils';
+import ApiRequester from '../utils/api-requester';
 
-export default (baseUrl: string) => ({
+export default (client: ApiRequester, baseUrl: string) => ({
   listSubscriptions(token: string) {
-    return callApi(`${baseUrl}/subscriptions?recurse=true`, 'get', null, getHeaders(token));
+    return client.get(`${baseUrl}/subscriptions?recurse=true`, null, token);
   },
   createSubscription(
     token: string,
@@ -18,23 +18,21 @@ export default (baseUrl: string) => ({
       term
     };
 
-    const headers = getHeaders(token);
+    const headers: Object = { 'X-Auth-Token': token };
     if (tenantUuid) {
       headers['Wazo-Tenant'] = tenantUuid;
     }
 
-    return callApi(`${baseUrl}/subscriptions`, 'post', body, headers);
+    return client.post(`${baseUrl}/subscriptions`, body, headers);
   },
   getSubscription(token: string, uuid: string) {
-    return callApi(`${baseUrl}/subscriptions/${uuid}`, 'get', null, getHeaders(token));
+    return client.get(`${baseUrl}/subscriptions/${uuid}`, null, token);
   },
   listAuthorizations(token: string, subscriptionUuid: string) {
-    return callApi(`${baseUrl}/subscriptions/${subscriptionUuid}/authorizations`, 'get', null, getHeaders(token));
+    return client.get(`${baseUrl}/subscriptions/${subscriptionUuid}/authorizations`, null, token);
   },
   getAuthorization(token: string, subscriptionUuid: string, uuid: string) {
-    const url = `${baseUrl}/subscriptions/${subscriptionUuid}/authorizations/${uuid}`;
-
-    return callApi(url, 'get', null, getHeaders(token));
+    return client.get(`${baseUrl}/subscriptions/${subscriptionUuid}/authorizations/${uuid}`, null, token);
   },
   createAuthorization(token: string, subscriptionUuid: string, { startDate, term, service, rules, autoRenew }: Object) {
     const url = `${baseUrl}/subscriptions/${subscriptionUuid}/authorizations`;
@@ -46,6 +44,6 @@ export default (baseUrl: string) => ({
       auto_renew: autoRenew
     };
 
-    return callApi(url, 'post', body, getHeaders(token));
+    return client.post(url, body, token);
   }
 });
