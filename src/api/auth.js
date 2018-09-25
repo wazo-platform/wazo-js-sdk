@@ -4,7 +4,6 @@ import type {
   Tenant,
   Token,
   UUID,
-  LoginResponse,
   LogoutResponse,
   ListTenantsResponse,
   RequestError,
@@ -13,7 +12,9 @@ import type {
   ListPoliciesResponse,
   GetTenantResponse,
   GetUserResponse
-} from '../types';
+} from '../domain/types';
+import Session from '../domain/Session';
+import BadResponse from '../domain/BadResponse';
 
 const DEFAULT_BACKEND_USER = 'wazo_user';
 const DETAULT_EXPIRATION = 3600;
@@ -23,11 +24,12 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.head(`${baseUrl}/token/${token}`, null, {});
   },
 
-  authenticate(token: Token): Promise<?LoginResponse> {
-    return client.get(`${baseUrl}/token/${token}`, null, {});
+  authenticate(token: Token): Promise<Session | BadResponse> {
+    return client.get(`${baseUrl}/token/${token}`, null, {})
+      .then(ApiRequester.parseBadResponse(response => Session.parse(response)));
   },
 
-  logIn(params: Object = {}): Promise<?LoginResponse> {
+  logIn(params: Object = {}): Promise<Session | BadResponse> {
     const body = {
       backend: params.backend || DEFAULT_BACKEND_USER,
       expiration: params.expiration || DETAULT_EXPIRATION
@@ -37,14 +39,15 @@ export default (client: ApiRequester, baseUrl: string) => ({
       'Content-Type': 'application/json'
     };
 
-    return client.post(`${baseUrl}/token`, body, headers);
+    return client.post(`${baseUrl}/token`, body, headers)
+      .then(ApiRequester.parseBadResponse(response => Session.parse(response)));
   },
 
-  logOut(token: Token): Promise<LogoutResponse> {
+  logOut(token: Token): Promise<LogoutResponse | BadResponse> {
     return client.delete(`${baseUrl}/token/${token}`, null, {}, ApiRequester.successResponseParser);
   },
 
-  updatePassword(token: Token, userUuid: UUID, oldPassword: string, newPassword: string) {
+  updatePassword(token: Token, userUuid: UUID, oldPassword: string, newPassword: string): Promise<Boolean> {
     const body = {
       new_password: newPassword,
       old_password: oldPassword
@@ -74,7 +77,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
 
   getTenant(token: Token, tenantUuid: UUID): Promise<GetTenantResponse> {
-    return client.get(`${baseUrl}/tenants/${tenantUuid}`,  null, token);
+    return client.get(`${baseUrl}/tenants/${tenantUuid}`, null, token);
   },
 
   createTenant(token: Token, name: string): Promise<Tenant | RequestError> {

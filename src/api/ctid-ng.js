@@ -1,16 +1,21 @@
 /* @flow */
 import ApiRequester from '../utils/api-requester';
-import type { UUID, Token, RequestError, Voicemail } from '../types';
+import type { UUID, Token, RequestError } from '../domain/types';
+import ChatMessage from '../domain/ChatMessage';
+import Voicemail from '../domain/Voicemail';
+import Call from '../domain/Call';
+import BadResponse from '../domain/BadResponse';
 
 export default (client: ApiRequester, baseUrl: string) => ({
   updatePresence(token: Token, presence: string): Promise<Boolean> {
     return client.put(`${baseUrl}/users/me/presences`, { presence }, token, ApiRequester.successResponseParser);
   },
 
-  listMessages(token: Token, participantUuid: ?UUID) {
+  listMessages(token: Token, participantUuid: ?UUID): Promise<Array<ChatMessage> | BadResponse> {
     const body = participantUuid ? { participant_user_uuid: participantUuid } : null;
 
-    return client.get(`${baseUrl}/users/me/chats`, body, token);
+    return client.get(`${baseUrl}/users/me/chats`, body, token)
+      .then(ApiRequester.parseBadResponse(response => ChatMessage.parseMany(response)));
   },
 
   sendMessage(token: Token, alias: string, message: string, toUserId: string) {
@@ -27,8 +32,9 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.delete(`${baseUrl}/users/me/calls/${callId}`, null, token);
   },
 
-  listCalls(token: Token) {
-    return client.get(`${baseUrl}/users/me/calls`, null, token);
+  listCalls(token: Token): Promise<Array<Call> | BadResponse> {
+    return client.get(`${baseUrl}/users/me/calls`, null, token)
+      .then(ApiRequester.parseBadResponse(response => Call.parseMany(response.items)));
   },
 
   relocateCall(token: Token, callId: number, destination: string, lineId: ?number) {
@@ -46,11 +52,12 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
 
   listVoicemails(token: Token): Promise<RequestError | Array<Voicemail>> {
-    return client.get(`${baseUrl}/users/me/voicemails`, null, token);
+    return client.get(`${baseUrl}/users/me/voicemails`, null, token)
+      .then(ApiRequester.parseBadResponse(response => Voicemail.parseMany(response)));
   },
 
   deleteVoicemail(token: Token, voicemailId: number): Promise<Boolean> {
-    return client.delete(`${baseUrl}/users/me/voicemails/messages/${voicemailId}`,  null, token);
+    return client.delete(`${baseUrl}/users/me/voicemails/messages/${voicemailId}`, null, token);
   },
 
   getPresence(token: Token, contactUuid: UUID) {

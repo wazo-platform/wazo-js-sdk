@@ -1,6 +1,7 @@
 /* @flow */
 import ApiRequester from '../utils/api-requester';
-import type { UUID, Token, ListConfdUsersResponse, ConfdUser, ListApplicationsResponse } from '../types';
+import type { UUID, Token, ListConfdUsersResponse, ConfdUser, ListApplicationsResponse } from '../domain/types';
+import Profile from '../domain/Profile';
 
 export default (client: ApiRequester, baseUrl: string) => ({
   listUsers(token: Token): Promise<ListConfdUsersResponse> {
@@ -11,12 +12,12 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.get(`${baseUrl}/users/${userUuid}`, null, token);
   },
 
-  updateUser(token: Token, userUuid: string, { firstName, lastName, email, mobileNumber }: Object): Promise<Boolean> {
+  updateUser(token: Token, userUuid: string, profile: Profile): Promise<Boolean> {
     const body = {
-      firstname: firstName,
-      lastname: lastName,
-      email,
-      mobile_phone_number: mobileNumber
+      firstname: profile.firstName,
+      lastname: profile.lastName,
+      email: profile.profile,
+      mobile_phone_number: profile.mobileNumber
     };
 
     return client.put(`${baseUrl}/users/${userUuid}`, body, token, ApiRequester.successResponseParser);
