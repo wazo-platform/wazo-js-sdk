@@ -1,7 +1,8 @@
 /* @flow */
-/* global fetch */
+/* global fetch, btoa */
 // $FlowFixMe: can't find `cross-fetch/polyfill`.
 import 'cross-fetch/polyfill';
+import { Base64 } from 'js-base64';
 
 import BadResponse from '../domain/BadResponse';
 import Logger from './logger';
@@ -51,6 +52,10 @@ export default class ApiRequester {
       .filter(key => obj[key])
       .map(key => `${key}=${encodeURIComponent(obj[key])}`)
       .join('&');
+  }
+
+  static base64Encode(str: string): string {
+    return btoa ? btoa(str) : Base64.encode(str);
   }
 
   // @see https://github.com/facebook/flow/issues/183#issuecomment-358607052
