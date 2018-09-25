@@ -7,6 +7,8 @@ import ctidngMethods from './api/ctid-ng';
 import dirdMethods from './api/dird';
 import callLogdMethods from './api/call-logd';
 
+import ApiRequester from './utils/api-requester';
+
 const AUTH_VERSION = '0.1';
 const APPLICATION_VERSION = '1.0';
 const CONFD_VERSION = '1.1';
@@ -16,7 +18,7 @@ const DIRD_VERSION = '0.1';
 const CALL_LOGD_VERSION = '1.0';
 
 export default class ApiClient {
-  _server: string;
+  client: ApiRequester;
   auth: Object;
   application: Object;
   confd: Object;
@@ -25,56 +27,24 @@ export default class ApiClient {
   dird: Object;
   callLogd: Object;
 
-  constructor({ server }: { server: string }) {
-    this.server = server;
+  // @see https://github.com/facebook/flow/issues/183#issuecomment-358607052
+  constructor({ server, agent = null }: $Subtype<{ server: string, agent?: ?Object }>) {
+    this.updatePatemers({ server, agent });
   }
 
   initializeEndpoints(): void {
-    this.auth = authMethods(this.authUrl);
-    this.application = applicationMethods(this.applicationUrl);
-    this.confd = confdMethods(this.confdUrl);
-    this.accessd = accessdMethods(this.accessdUrl);
-    this.ctidng = ctidngMethods(this.ctidngUrl);
-    this.dird = dirdMethods(this.dirdUrl);
-    this.callLogd = callLogdMethods(this.callLogdUrl);
+    this.auth = authMethods(this.client, `auth/${AUTH_VERSION}`);
+    this.application = applicationMethods(this.client, `ctid-ng/${APPLICATION_VERSION}/applications`);
+    this.confd = confdMethods(this.client, `confd/${CONFD_VERSION}`);
+    this.accessd = accessdMethods(this.client, `accessd/${ACCESSD_VERSION}`);
+    this.ctidng = ctidngMethods(this.client, `ctid-ng/${CTIDNG_VERSION}`);
+    this.dird = dirdMethods(this.client, `dird/${DIRD_VERSION}`);
+    this.callLogd = callLogdMethods(this.client, `call-logd/${CALL_LOGD_VERSION}`);
   }
 
-  set server(server: string) {
-    this._server = server;
+  updatePatemers({ server, agent }: { server: string, agent: ?Object }) {
+    this.client = new ApiRequester({ server, agent });
 
     this.initializeEndpoints();
-  }
-
-  // Getters
-  get authUrl(): string {
-    return `${this.baseUrl}/auth/${AUTH_VERSION}`;
-  }
-
-  get applicationUrl(): string {
-    return `${this.baseUrl}/ctid-ng/${APPLICATION_VERSION}/applications`;
-  }
-
-  get confdUrl(): string {
-    return `${this.baseUrl}/confd/${CONFD_VERSION}`;
-  }
-
-  get accessdUrl(): string {
-    return `${this.baseUrl}/accessd/${ACCESSD_VERSION}`;
-  }
-
-  get ctidngUrl(): string {
-    return `${this.baseUrl}/ctid-ng/${CTIDNG_VERSION}`;
-  }
-
-  get dirdUrl(): string {
-    return `${this.baseUrl}/dird/${DIRD_VERSION}`;
-  }
-
-  get callLogdUrl(): string {
-    return `${this.baseUrl}/call-logd/${CALL_LOGD_VERSION}`;
-  }
-
-  get baseUrl(): string {
-    return `https://${this._server}/api`;
   }
 }

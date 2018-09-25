@@ -1,34 +1,34 @@
 /* @flow */
-import { callApi, getHeaders, successResponseParser } from '../utils';
+import ApiRequester from '../utils/api-requester';
 import type { UUID, Token, RequestError, Voicemail } from '../types';
 
-export default (baseUrl: string) => ({
+export default (client: ApiRequester, baseUrl: string) => ({
   updatePresence(token: Token, presence: string): Promise<Boolean> {
-    return callApi(`${baseUrl}/users/me/presences`, 'put', { presence }, getHeaders(token), successResponseParser);
+    return client.put(`${baseUrl}/users/me/presences`, { presence }, token, ApiRequester.successResponseParser);
   },
 
   listMessages(token: Token, participantUuid: ?UUID) {
     const body = participantUuid ? { participant_user_uuid: participantUuid } : null;
 
-    return callApi(`${baseUrl}/users/me/chats`, 'get', body, getHeaders(token));
+    return client.get(`${baseUrl}/users/me/chats`, body, token);
   },
 
   sendMessage(token: Token, alias: string, message: string, toUserId: string) {
     const body = { alias, message, to: toUserId };
 
-    return callApi(`${baseUrl}/users/me/chats`, 'post', body, getHeaders(token));
+    return client.post(`${baseUrl}/users/me/chats`, body, token);
   },
 
   makeCall(token: Token, extension: string) {
-    return callApi(`${baseUrl}/users/me/calls`, 'post', { from_mobile: true, extension }, getHeaders(token));
+    return client.post(`${baseUrl}/users/me/calls`, { from_mobile: true, extension }, token);
   },
 
   cancelCall(token: Token, callId: number): Promise<Boolean> {
-    return callApi(`${baseUrl}/users/me/calls/${callId}`, 'delete', null, getHeaders(token));
+    return client.delete(`${baseUrl}/users/me/calls/${callId}`, null, token);
   },
 
   listCalls(token: Token) {
-    return callApi(`${baseUrl}/users/me/calls`, 'get', null, getHeaders(token));
+    return client.get(`${baseUrl}/users/me/calls`, null, token);
   },
 
   relocateCall(token: Token, callId: number, destination: string, lineId: ?number) {
@@ -42,24 +42,22 @@ export default (baseUrl: string) => ({
       body.location = { line_id: lineId };
     }
 
-    return callApi(`${baseUrl}/users/me/relocates`, 'post', body, getHeaders(token));
+    return client.post(`${baseUrl}/users/me/relocates`, body, token);
   },
 
   listVoicemails(token: Token): Promise<RequestError | Array<Voicemail>> {
-    return callApi(`${baseUrl}/users/me/voicemails`, 'get', null, getHeaders(token));
+    return client.get(`${baseUrl}/users/me/voicemails`, null, token);
   },
 
   deleteVoicemail(token: Token, voicemailId: number): Promise<Boolean> {
-    const url = `${baseUrl}/users/me/voicemails/messages/${voicemailId}`;
-
-    return callApi(url, 'delete', null, getHeaders(token));
+    return client.delete(`${baseUrl}/users/me/voicemails/messages/${voicemailId}`,  null, token);
   },
 
   getPresence(token: Token, contactUuid: UUID) {
-    return callApi(`${baseUrl}/users/${contactUuid}/presences`, 'get', null, getHeaders(token));
+    return client.get(`${baseUrl}/users/${contactUuid}/presences`, null, token);
   },
 
   getStatus(token: Token, lineUuid: UUID) {
-    return callApi(`${baseUrl}/lines/${lineUuid}/presences`, 'get', null, getHeaders(token));
+    return client.get(`${baseUrl}/lines/${lineUuid}/presences`, null, token);
   }
 });

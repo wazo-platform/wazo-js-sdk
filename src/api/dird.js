@@ -1,5 +1,5 @@
 /* @flow */
-import { callApi, getHeaders, successResponseParser } from '../utils';
+import ApiRequester from '../utils/api-requester';
 import type { UUID, Token, Contact } from '../types';
 
 const getContactPayload = (contact: Contact) => ({
@@ -13,37 +13,37 @@ const getContactPayload = (contact: Contact) => ({
   note: contact.note
 });
 
-export default (baseUrl: string) => ({
+export default (client: ApiRequester, baseUrl: string) => ({
   search(token: Token, context: string, term: string) {
-    return callApi(`${baseUrl}/directories/lookup/${context}`, 'get', { term }, getHeaders(token));
+    return client.get(`${baseUrl}/directories/lookup/${context}`, { term }, token);
   },
 
   listPersonalContacts(token: Token) {
-    return callApi(`${baseUrl}/personal`, 'get', null, getHeaders(token));
+    return client.get(`${baseUrl}/personal`, null, token);
   },
 
   addContact(token: Token, contact: Contact) {
-    return callApi(`${baseUrl}/personal`, 'post', getContactPayload(contact), getHeaders(token));
+    return client.post(`${baseUrl}/personal`, getContactPayload(contact), token);
   },
 
   editContact(token: Token, contact: Contact): Promise<Object> {
-    return callApi(`${baseUrl}/personal/${contact.id}`, 'put', getContactPayload(contact), getHeaders(token));
+    return client.put(`${baseUrl}/personal/${contact.id}`, getContactPayload(contact), token);
   },
 
   deleteContact(token: Token, contactUuid: UUID) {
-    return callApi(`${baseUrl}/personal/${contactUuid}`, 'delete', null, getHeaders(token));
+    return client.delete(`${baseUrl}/personal/${contactUuid}`, null, token);
   },
 
   listFavorites(token: Token, context: string): Promise<Array<Contact>> {
-    return callApi(`${baseUrl}/directories/favorites/${context}`, 'get', null, getHeaders(token));
+    return client.get(`${baseUrl}/directories/favorites/${context}`, null, token);
   },
 
   markAsFavorite(token: Token, source: string, sourceId: string) {
     const url = `${baseUrl}/directories/favorites/${source}/${sourceId}`;
-    return callApi(url, 'put', null, getHeaders(token), successResponseParser);
+    return client.put(url, 'put', null, token, ApiRequester.successResponseParser);
   },
 
   removeFavorite(token: Token, source: string, sourceId: string) {
-    return callApi(`${baseUrl}/directories/favorites/${source}/${sourceId}`, 'delete', null, getHeaders(token));
+    return client.delete(`${baseUrl}/directories/favorites/${source}/${sourceId}`, null, token);
   }
 });

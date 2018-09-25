@@ -1,14 +1,14 @@
 /* @flow */
-import { callApi, getHeaders, successResponseParser } from '../utils';
+import ApiRequester from '../utils/api-requester';
 import type { UUID, Token, ListConfdUsersResponse, ConfdUser, ListApplicationsResponse } from '../types';
 
-export default (baseUrl: string) => ({
+export default (client: ApiRequester, baseUrl: string) => ({
   listUsers(token: Token): Promise<ListConfdUsersResponse> {
-    return callApi(`${baseUrl}/users`, 'get', null, getHeaders(token));
+    return client.get(`${baseUrl}/users`, null, token);
   },
 
   getUser(token: Token, userUuid: string): Promise<ConfdUser> {
-    return callApi(`${baseUrl}/users/${userUuid}`, 'get', null, getHeaders(token));
+    return client.get(`${baseUrl}/users/${userUuid}`, null, token);
   },
 
   updateUser(token: Token, userUuid: string, { firstName, lastName, email, mobileNumber }: Object): Promise<Boolean> {
@@ -19,7 +19,7 @@ export default (baseUrl: string) => ({
       mobile_phone_number: mobileNumber
     };
 
-    return callApi(`${baseUrl}/users/${userUuid}`, 'put', body, getHeaders(token), successResponseParser);
+    return client.put(`${baseUrl}/users/${userUuid}`, body, token, ApiRequester.successResponseParser);
   },
 
   updateForwardOption(
@@ -30,30 +30,27 @@ export default (baseUrl: string) => ({
     enabled: Boolean
   ): Promise<Boolean> {
     const url = `${baseUrl}/users/${userUuid}/forwards/${key}`;
-    return callApi(url, 'put', { destination, enabled }, getHeaders(token), successResponseParser);
+    return client.put(url, { destination, enabled }, token, ApiRequester.successResponseParser);
   },
 
   updateDoNotDisturb(token: Token, userUuid: UUID, enabled: Boolean): Promise<Boolean> {
     const url = `${baseUrl}/users/${userUuid}/services/dnd`;
-    return callApi(url, 'put', { enabled }, getHeaders(token), successResponseParser);
+
+    return client.put(url, { enabled }, token, ApiRequester.successResponseParser);
   },
 
   // @TODO: type response
   getUserLineSip(token: Token, userUuid: string, lineId: string) {
-    const url = `${baseUrl}/users/${userUuid}/lines/${lineId}/associated/endpoints/sip`;
-
-    return callApi(url, 'get', null, getHeaders(token));
+    return client.put(`${baseUrl}/users/${userUuid}/lines/${lineId}/associated/endpoints/sip`, null, token);
   },
 
   listApplications(token: Token): Promise<ListApplicationsResponse> {
     const url = `${baseUrl}/applications?recurse=true`;
 
-    return callApi(url, 'get', null, getHeaders(token));
+    return client.get(url, null, token);
   },
 
   getSIP(token: Token, userUuid: UUID, lineId: number) {
-    const url = `${baseUrl}/users/${userUuid}/lines/${lineId}/associated/endpoints/sip`;
-
-    return callApi(url, 'get', null, getHeaders(token));
+    return client.get(`${baseUrl}/users/${userUuid}/lines/${lineId}/associated/endpoints/sip`, null, token);
   }
 });

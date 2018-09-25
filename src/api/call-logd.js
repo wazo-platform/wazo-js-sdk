@@ -1,17 +1,17 @@
 /* @flow */
-import { callApi, getHeaders } from '../utils';
+import ApiRequester from '../utils/api-requester';
 import type { Token, Contact, DateString } from '../types';
 
-export default (baseUrl: string) => ({
+export default (client: ApiRequester, baseUrl: string) => ({
   search(token: Token, search: string, limit: number = 5): Promise<Array<Contact>> {
-    return callApi(`${baseUrl}/users/me/cdr`, 'get', { search, limit }, getHeaders(token));
+    return client.get(`${baseUrl}/users/me/cdr`, { search, limit }, token);
   },
 
   listCallLogs(token: Token, offset: number, limit: number = 5) {
-    return callApi(`${baseUrl}/users/me/cdr`, 'get', { offset, limit }, getHeaders(token));
+    return client.get(`${baseUrl}/users/me/cdr`, { offset, limit }, token);
   },
 
   listCallLogsFromDate(token: Token, from: DateString, number: number) {
-    return callApi(`${baseUrl}/users/me/cdr`, 'get', { from, number }, getHeaders(token));
+    return client.get(`${baseUrl}/users/me/cdr`, { from, number }, token);
   }
 });
