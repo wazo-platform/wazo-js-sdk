@@ -1,78 +1,74 @@
-export default (ApiClient, client) => ({
-  answerCall(token, applicationUuid, callId, context, exten, autoanswer) {
-    const url = `${client.applicationUrl}/${applicationUuid}/nodes`;
-    const body = { calls: [{ id: callId }] };
-    const headers = ApiClient.getHeaders(token);
+/* @flow */
+import { callApi, getHeaders } from '../utils';
+import type { Token, ListNodesResponse, ListCallNodesResponse } from '../types';
 
-    return ApiClient.callApi(url, 'post', body, headers, res => res.data.uuid).then(nodeUuid =>
-      ApiClient.callApi(`${url}/${nodeUuid}/calls`, 'post', { context, exten, autoanswer }, headers).then(data => ({
+export default (baseUrl: string) => ({
+  answerCall(
+    token: string,
+    applicationUuid: string,
+    callId: number,
+    context: string,
+    exten: string,
+    autoanswer: string
+  ) {
+    const url = `${baseUrl}/${applicationUuid}/nodes`;
+    const body = { calls: [{ id: callId }] };
+    const headers = getHeaders(token);
+
+    return callApi(url, 'post', body, headers, res => res.data.uuid).then(nodeUuid =>
+      callApi(`${url}/${nodeUuid}/calls`, 'post', { context, exten, autoanswer }, headers).then(data => ({
         nodeUuid,
         data
       }))
     );
   },
 
-  calls(token, applicationUuid) {
-    return ApiClient.callApi(
-      `${client.applicationUrl}/${applicationUuid}/calls`,
-      'get',
-      null,
-      ApiClient.getHeaders(token)
-    );
+  calls(token: Token, applicationUuid: string) {
+    return callApi(`${baseUrl}/${applicationUuid}/calls`, 'get', null, getHeaders(token));
   },
 
-  hangupCall(token, applicationUuid, callId) {
-    const url = `${client.applicationUrl}/${applicationUuid}/calls/${callId}`;
+  hangupCall(token: Token, applicationUuid: string, callId: number) {
+    const url = `${baseUrl}/${applicationUuid}/calls/${callId}`;
 
-    return ApiClient.callApi(url, 'delete', null, ApiClient.getHeaders(token));
+    return callApi(url, 'delete', null, getHeaders(token));
   },
 
-  nodes(token, applicationUuid) {
-    const url = `${client.applicationUrl}/${applicationUuid}/nodes`;
-
-    return ApiClient.callApi(url, 'get', null, ApiClient.getTokenHeaders(token));
+  playCall(token: Token, applicationUuid: string, callId: number, language: string, uri: string) {
+    return callApi(`${baseUrl}/${applicationUuid}/calls/${callId}/play`, 'post', { language, uri }, getHeaders(token));
   },
 
-  playCall(token, applicationUuid, callId, language, uri) {
-    const url = `${client.applicationUrl}/${applicationUuid}/calls/${callId}/play`;
-
-    return ApiClient.callApi(url, 'post', { language, uri }, ApiClient.getHeaders(token));
+  addCallNodes(token: Token, applicationUuid: string, nodeUuid: string, callId: string): Promise<Boolean> {
+    return callApi(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}/calls/${callId}`, 'put', null, getHeaders(token));
   },
 
-  addCallNodes(token, applicationUuid, nodeUuid, callId) {
-    const url = `${client.applicationUrl}/${applicationUuid}/nodes/${nodeUuid}/calls/${callId}`;
-
-    return ApiClient.callApi(url, 'put', null, ApiClient.getHeaders(token));
-  },
-
-  addNewCallNodes(token, applicationUuid, nodeUuid, context, exten, autoanswer) {
-    const url = `${client.applicationUrl}/${applicationUuid}/nodes/${nodeUuid}/calls`;
+  addNewCallNodes(
+    token: Token,
+    applicationUuid: string,
+    nodeUuid: string,
+    context: string,
+    exten: string,
+    autoanswer: string
+  ) {
     const data = { context, exten, autoanswer };
 
-    return ApiClient.callApi(url, 'post', data, ApiClient.getHeaders(token));
+    return callApi(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}/calls`, 'post', data, getHeaders(token));
   },
 
-  listCallsNodes(token, applicationUuid, nodeUuid) {
-    const url = `${client.applicationUrl}/${applicationUuid}/nodes/${nodeUuid}`;
-
-    return ApiClient.callApi(url, 'get', null, ApiClient.getHeaders(token));
+  listCallsNodes(token: Token, applicationUuid: string, nodeUuid: string): Promise<ListCallNodesResponse> {
+    return callApi(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}`, 'get', null, getHeaders(token));
   },
 
-  listNodes(token, applicationUuid) {
-    const url = `${client.applicationUrl}/${applicationUuid}/nodes`;
-
-    return ApiClient.callApi(url, 'get', null, ApiClient.getHeaders(token));
+  listNodes(token: Token, applicationUuid: string): Promise<ListNodesResponse> {
+    return callApi(`${baseUrl}/${applicationUuid}/nodes`, 'get', null, getHeaders(token));
   },
 
-  removeNode(token, applicationUuid, nodeUuid) {
-    const url = `${client.applicationUrl}/${applicationUuid}/nodes/${nodeUuid}`;
-
-    return ApiClient.callApi(url, 'delete', null, ApiClient.getHeaders(token));
+  removeNode(token: Token, applicationUuid: string, nodeUuid: string) {
+    return callApi(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}`, 'delete', null, getHeaders(token));
   },
 
-  removeCallNodes(token, applicationUuid, nodeUuid, callId) {
-    const url = `${client.applicationUrl}/${applicationUuid}/nodes/${nodeUuid}/calls/${callId}`;
+  removeCallNodes(token: Token, applicationUuid: string, nodeUuid: string, callId: string) {
+    const url = `${baseUrl}/${applicationUuid}/nodes/${nodeUuid}/calls/${callId}`;
 
-    return ApiClient.callApi(url, 'delete', null, ApiClient.getHeaders(token));
+    return callApi(url, 'delete', null, getHeaders(token));
   }
 });

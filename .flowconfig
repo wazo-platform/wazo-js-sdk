@@ -1,0 +1,23 @@
+[ignore]
+<PROJECT_ROOT>/node_modules/.*
+
+[include]
+<PROJECT_ROOT>/src
+
+[libs]
+<PROJECT_ROOT>/flow-typed/
+
+[options]
+emoji=true
+suppress_comment= \\(.\\|\n\\)*\\$FlowFixMe
+
+# allows for import import type {Config} from 'types/Config'; when
+# type is stored in <PROJECT_ROOT>/types
+module.name_mapper='^types/\(.*\)$' -> '<PROJECT_ROOT>/types/\1.js'
+
+# allows for import import type {Hosts} from 'algoliasearch'; when
+# type is stored in <PROJECT_ROOT>/packages/algoliasearch/src/types.js
+module.name_mapper='\(algoliasearch[-^/]*\)' -> '<PROJECT_ROOT>/packages/\1/src/types.js'
+
+[version]
+0.81.0
