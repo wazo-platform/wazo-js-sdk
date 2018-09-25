@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 
 module.exports = {
   entry: './src/index.js',
@@ -22,6 +23,14 @@ module.exports = {
       }
     ]
   },
+  plugins: [
+  new webpack.DefinePlugin({
+    'process.env': {
+      'NODE_ENV': `"${process.env.NODE_ENV}"`,
+      'DEBUG': `"${process.env.DEBUG}"`
+      }
+    }),
+  ],
   devtool: 'source-map',
   externals: ['cross-fetch/polyfill', 'sip.js', 'reconnecting-websocket', 'js-base64'],
 };

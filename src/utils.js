@@ -6,6 +6,29 @@ import 'cross-fetch/polyfill';
 import type { Token } from './types';
 import BadResponse from './domain/BadResponse';
 
+export const hasDebug = +process.env.DEBUG === 1 || process.env.DEBUG === 'true';
+
+export const logRequest = (url: string, { method, body, headers }: Object, response: Object) => {
+  if (!hasDebug) {
+    return;
+  }
+
+  const { status } = response;
+
+  let curl = `${status} - curl ${method !== 'get' ? `-X ${method.toUpperCase()}` : ''}`;
+  Object.keys(headers).forEach(headerName => {
+    curl += ` -H '${headerName}: ${headers[headerName]}'`;
+  });
+
+  curl += ` ${url}`;
+
+  if (body) {
+    curl += ` -d '${body}'`;
+  }
+
+  console.info(curl);
+};
+
 // eslint-disable-next-line
 export const successResponseParser = (response: Object, isJson: boolean) => response.status === 204;
 
@@ -38,10 +61,13 @@ export const callApi = (
   const newUrl = computeUrl(method, url, body);
   const newBody = body && method !== 'get' ? JSON.stringify(body) : null;
   const newParse = method === 'delete' || method === 'head' ? successResponseParser : parse;
+  const options = { method, body: newBody, headers };
 
-  return fetch(newUrl, { method, body: newBody, headers }).then(response => {
+  return fetch(newUrl, options).then(response => {
     const contentType = response.headers.get('content-type') || '';
     const isJson = contentType.indexOf('application/json') !== -1;
+
+    logRequest(newUrl, options, response);
 
     // Throw an error only if status >= 500
     if (response.status >= 500) {
