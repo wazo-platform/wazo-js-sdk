@@ -129,17 +129,22 @@ client.accessd.getAuthorization(token, uuid);
 import { WazoWebRTCClient } from '@wazo/sdk';
 
 const config = {
-  wsServer: 'my_wazo', // document this
+  wsServer: 'wss://path.to/asterisk/ws',
   displayName: 'My Display Name',
-  authorizationUser: 'user',
-  password: 'password',
+  authorizationUser: 'line username',
+  password: 'line password',
+  uri: 'user@server.com',
   media: {
-    audio: document.getElementById('audio'), // Pointing to a <audio id="audio" /> element
-    video: document.getElementById('video'), // optional, pointing to a <audio id="video" /> element
+    audio: document.getElementById('audio'), // Pointing to a `<audio id="audio" />` element
+    video: document.getElementById('video'), // optional, pointing to a `<video id="video" />` element
+    localAudio: document.getElementById('local-audio'), // optional, pointing to a `<audio id="local-audio" />` element
+    localVideo: document.getElementById('local-video') // optional, pointing to a `<video id="local-video" />` element
   }
 };
 
 const phone = new WazoWebRTCClient(config, callback);
+// eventName can be on the of events here: https://sipjs.com/api/0.11.0/simple/#events
+// You can also use a wildcard: phone.on('*', (event, eventName) => {}) to catch all events
 phone.on('eventName', (event) => {
 });
 
@@ -153,12 +158,10 @@ import { WazoWebSocketClient } from '@wazo/sdk';
 const ws = new WazoWebSocket({
   host, // wazo websocket host
   token, // valid Wazo token
-  // @TODO remove this
-  callback: (event) => {
-    console.log(event);
-  }
 });
 
+// eventName can be on the of events here: http://documentation.wazo.community/en/stable/api_sdk/websocket.html
+// You can also use a wildcard: ws.on('*', (event, eventName) => {}) to catch all events
 ws.on('eventName', (event) => {
 });
 
