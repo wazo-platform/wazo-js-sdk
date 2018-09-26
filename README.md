@@ -129,21 +129,21 @@ client.accessd.getAuthorization(token, uuid);
 import { WazoWebRTCClient } from '@wazo/sdk';
 
 const config = {
-  wsServer: 'my_wazo',
+  wsServer: 'my_wazo', // document this
   displayName: 'My Display Name',
   authorizationUser: 'user',
   password: 'password',
   media: {
-    audio: document.getElementById('audio') // Pointing to a <audio id="audio" /> element
+    audio: document.getElementById('audio'), // Pointing to a <audio id="audio" /> element
+    video: document.getElementById('video'), // optional, pointing to a <audio id="video" /> element
   }
 };
 
-const callback = (ev_name, ev_value) => {
-  console.log('WebRTC event', ev_name, ev_value);
-};
-
 const phone = new WazoWebRTCClient(config, callback);
-phone.call('1234')
+phone.on('eventName', (event) => {
+});
+
+phone.call('1234');
 ```
 
 ### Wazo Websocket
@@ -153,9 +153,13 @@ import { WazoWebSocketClient } from '@wazo/sdk';
 const ws = new WazoWebSocket({
   host, // wazo websocket host
   token, // valid Wazo token
+  // @TODO remove this
   callback: (event) => {
     console.log(event);
   }
+});
+
+ws.on('eventName', (event) => {
 });
 
 ws.connect();

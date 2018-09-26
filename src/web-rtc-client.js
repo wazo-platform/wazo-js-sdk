@@ -2,7 +2,24 @@
 
 import SIP from 'sip.js';
 
+import CallbacksHandler from './utils/CallbacksHandler';
+
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
+const events = [
+  'registered',
+  'unregistered',
+  'new',
+  'ringing',
+  'connecting',
+  'connected',
+  'ended',
+  'hold',
+  'unhold',
+  'mute',
+  'unmute',
+  'dtmf',
+  'message'
+];
 
 const getCallerID = session => ({
   caller_id_name: session.remoteIdentity.displayName,
@@ -23,60 +40,55 @@ type WebRtcConfig = {
   }
 };
 
-const defaultCallback = () => {
-  console.warn('Please set a callback for WazoWebRTCClient');
-};
-
 export default class WebRTCClient {
   config: Object;
   userAgent: Object;
-  callback: Function;
+  callbacksHandler: CallbacksHandler;
 
-  constructor(config: WebRtcConfig, callback: Function = defaultCallback) {
+  constructor(config: WebRtcConfig) {
     this.config = config;
     this.userAgent = this.configureUserAgent();
-    this.callback = callback;
+    this.callbacksHandler = new CallbacksHandler();
   }
 
   configureUserAgent() {
     const userAgent = new SIP.Web.Simple(this.getConfig());
 
-    userAgent.on('registered', () => {
-      this.callback('phone-events-registered');
+    events.filter(eventName => eventName !== 'new').forEach(eventName => {
+      userAgent.on(eventName, event => {
+        this.callbacksHandler.triggerCallback(eventName, event);
+      });
     });
 
-    userAgent.on('unregistered', () => {
-      this.callback('phone-events-unregistered');
-    });
-
+    // Particular case for `new` event
     userAgent.on('new', session => {
-      const info = {
+      this.callbacksHandler.triggerCallback('new', {
         callerid: getCallerID(session),
         autoanswer: getAutoAnswer(session.request)
-      };
-      this.callback('phone-events-new', info);
-    });
-
-    userAgent.on('ringing', () => {
-      this.callback('phone-events-ringing');
-    });
-
-    userAgent.on('connected', () => {
-      this.callback('phone-events-connected');
-    });
-
-    userAgent.on('ended', () => {
-      this.callback('phone-events-ended');
+      });
     });
 
     return userAgent;
   }
 
+  on(event: string, callback: Function) {
+    this.callbacksHandler.on(event, callback);
+  }
+
   getConfig() {
+    const {
+      media: { audio, video, localAudio, localVideo }
+    } = this.config;
+
     return {
       media: {
         remote: {
-          audio: this.config.media.audio
+          audio: video || audio,
+          video
+        },
+        local: {
+          audio: localVideo || localAudio,
+          video: localVideo
         }
       },
       ua: {

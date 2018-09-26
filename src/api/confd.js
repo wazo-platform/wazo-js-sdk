@@ -42,7 +42,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   // @TODO: type response
   getUserLineSip(token: Token, userUuid: string, lineId: string) {
-    return client.put(`${baseUrl}/users/${userUuid}/lines/${lineId}/associated/endpoints/sip`, null, token);
+    return client.get(`${baseUrl}/users/${userUuid}/lines/${lineId}/associated/endpoints/sip`, null, token);
   },
 
   listApplications(token: Token): Promise<ListApplicationsResponse> {

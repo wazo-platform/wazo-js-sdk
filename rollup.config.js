@@ -23,7 +23,7 @@ export default {
         moduleDirectory: 'node_modules',
       },
     }),
-    // terser(),
+    terser(),
   ],
   external: ['cross-fetch/polyfill', 'sip.js', 'reconnecting-websocket', 'js-base64', 'immutable', 'moment'],
 };

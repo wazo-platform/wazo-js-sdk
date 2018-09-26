@@ -1,18 +1,19 @@
 // @flow
 import ReconnectingWebSocket from 'reconnecting-websocket';
 
-type ConstructorParams = { callback: Function, host: string, token: string, events: Array<string> };
+import CallbacksHandler from './utils/CallbacksHandler';
 
 export default class WebSocketClient {
   initialized: boolean;
-  callback: Function;
   host: string;
   token: string;
   events: Array<string>;
+  callbacksHandler: CallbacksHandler;
 
-  constructor({ callback, host, token, events = [] }: ConstructorParams) {
+  constructor({ host, token, events = [] }: { host: string, token: string, events: Array<string> }) {
     this.initialized = false;
-    this.callback = callback;
+    this.callbacksHandler = new CallbacksHandler();
+
     this.host = host;
     this.token = token;
     this.events = events;
@@ -28,7 +29,7 @@ export default class WebSocketClient {
       if (!this.initialized) {
         this.handleMessage(message, sock);
       } else {
-        this.callback(message);
+        this.callbacksHandler.triggerCallback(message.name, message);
       }
     };
 
@@ -43,6 +44,10 @@ export default class WebSocketClient {
     };
 
     return sock;
+  }
+
+  on(event: string, callback: Function) {
+    this.callbacksHandler.on(event, callback);
   }
 
   handleMessage(message: Object, sock: WebSocket) {
