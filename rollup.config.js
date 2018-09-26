@@ -11,7 +11,7 @@ export default {
     globals: {
       'sip.js': 'SIP',
       'cross-fetch': 'cross-fetch',
-      'immutable': 'immutable',
+      'immutable': 'Immutable',
       'moment': 'moment',
       'reconnecting-websocket': 'ReconnectingWebSocket',
     },

@@ -1,6 +1,25 @@
+// @flow
+
 import SIP from 'sip.js';
 
-const state = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
+import CallbacksHandler from './utils/CallbacksHandler';
+
+const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
+const events = [
+  'registered',
+  'unregistered',
+  'new',
+  'ringing',
+  'connecting',
+  'connected',
+  'ended',
+  'hold',
+  'unhold',
+  'mute',
+  'unmute',
+  'dtmf',
+  'message'
+];
 
 const getCallerID = session => ({
   caller_id_name: session.remoteIdentity.displayName,
@@ -10,52 +29,66 @@ const getCallerID = session => ({
 const getAutoAnswer = request => !!request.getHeader('alert-info');
 const DESTINATION_REGEXP = /^\+?[0-9#*]+$/;
 
+type WebRtcConfig = {
+  displayName: string,
+  wsServers: Array<string>,
+  authorizationUser: string,
+  password: string,
+  uri: string,
+  media: {
+    audio: string
+  }
+};
+
 export default class WebRTCClient {
-  constructor(config, callback) {
+  config: Object;
+  userAgent: Object;
+  callbacksHandler: CallbacksHandler;
+
+  constructor(config: WebRtcConfig) {
     this.config = config;
-    this.ua = this.configureUa();
-    this.callback = callback;
+    this.userAgent = this.configureUserAgent();
+    this.callbacksHandler = new CallbacksHandler();
   }
 
-  configureUa() {
-    const ua = new SIP.Web.Simple(this.getConfig());
+  configureUserAgent() {
+    const userAgent = new SIP.Web.Simple(this.getConfig());
 
-    ua.on('registered', () => {
-      this.callback('phone-events-registered');
+    events.filter(eventName => eventName !== 'new').forEach(eventName => {
+      userAgent.on(eventName, event => {
+        this.callbacksHandler.triggerCallback(eventName, event);
+      });
     });
 
-    ua.on('unregistered', () => {
-      this.callback('phone-events-unregistered');
-    });
-
-    ua.on('new', session => {
-      const info = {
+    // Particular case for `new` event
+    userAgent.on('new', session => {
+      this.callbacksHandler.triggerCallback('new', {
         callerid: getCallerID(session),
         autoanswer: getAutoAnswer(session.request)
-      };
-      this.callback('phone-events-new', info);
+      });
     });
 
-    ua.on('ringing', () => {
-      this.callback('phone-events-ringing');
-    });
+    return userAgent;
+  }
 
-    ua.on('connected', () => {
-      this.callback('phone-events-connected');
-    });
-
-    ua.on('ended', () => {
-      this.callback('phone-events-ended');
-    });
-
-    return ua;
+  on(event: string, callback: Function) {
+    this.callbacksHandler.on(event, callback);
   }
 
   getConfig() {
+    const {
+      media: { audio, video, localAudio, localVideo }
+    } = this.config;
+
     return {
       media: {
         remote: {
-          audio: this.config.media.audio
+          audio: video || audio,
+          video
+        },
+        local: {
+          audio: localVideo || localAudio,
+          video: localVideo
         }
       },
       ua: {
@@ -81,28 +114,28 @@ export default class WebRTCClient {
   }
 
   getState() {
-    return state[this.ua.state];
+    return states[this.userAgent.state];
   }
 
-  call(destination) {
+  call(destination: string) {
     if (DESTINATION_REGEXP.exec(destination)) {
-      this.ua.call(destination);
+      this.userAgent.call(destination);
     }
   }
 
   answer() {
-    this.ua.answer();
+    this.userAgent.answer();
   }
 
   reject() {
-    this.ua.reject();
+    this.userAgent.reject();
   }
 
   hangup() {
-    this.ua.hangup();
+    this.userAgent.hangup();
   }
 
   close() {
-    this.ua.ua.transport.disconnect();
+    this.userAgent.transport.disconnect();
   }
 }

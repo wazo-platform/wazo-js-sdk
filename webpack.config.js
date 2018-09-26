@@ -32,5 +32,11 @@ module.exports = {
     }),
   ],
   devtool: 'source-map',
-  externals: ['cross-fetch/polyfill', 'sip.js', 'reconnecting-websocket', 'js-base64'],
+  externals: {
+    'sip.js': 'SIP',
+    'cross-fetch': 'cross-fetch',
+    'immutable': 'Immutable',
+    'moment': 'moment',
+    'reconnecting-websocket': 'ReconnectingWebSocket',
+  },
 };

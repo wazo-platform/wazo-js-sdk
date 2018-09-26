@@ -26,7 +26,7 @@ type Response = {
       xivo_uuid: UUID,
       tenants: Array<{ uuid: UUID }>,
       auth_id: UUID
-    },
+    }
   }
 };
 
