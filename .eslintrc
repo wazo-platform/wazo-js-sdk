@@ -16,6 +16,7 @@
     "max-len": ["error", 120],
     "lines-between-class-members": ["error", "always", { "exceptAfterSingleLine": true }],
     "no-underscore-dangle": ["error", { "allowAfterThis": true }],
-    "no-console": ["error", { "allow": ["info", "warn", "error"] }]
+    "no-console": ["error", { "allow": ["info", "warn", "error"] }],
+    "import/no-cycle": 0
   }
 }
