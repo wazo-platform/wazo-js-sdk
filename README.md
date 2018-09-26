@@ -137,7 +137,6 @@ const config = {
   media: {
     audio: document.getElementById('audio'), // Pointing to a `<audio id="audio" />` element
     video: document.getElementById('video'), // optional, pointing to a `<video id="video" />` element
-    localAudio: document.getElementById('local-audio'), // optional, pointing to a `<audio id="local-audio" />` element
     localVideo: document.getElementById('local-video') // optional, pointing to a `<video id="local-video" />` element
   }
 };

@@ -77,7 +77,7 @@ export default class WebRTCClient {
 
   getConfig() {
     const {
-      media: { audio, video, localAudio, localVideo }
+      media: { audio, video, localVideo }
     } = this.config;
 
     return {
@@ -87,7 +87,6 @@ export default class WebRTCClient {
           video
         },
         local: {
-          audio: localVideo || localAudio,
           video: localVideo
         }
       },
