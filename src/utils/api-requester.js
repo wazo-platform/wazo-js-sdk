@@ -6,7 +6,7 @@ import { Base64 } from 'js-base64';
 
 import BadResponse from '../domain/BadResponse';
 import Logger from './logger';
-import type { Token } from '../types';
+import type { Token } from '../domain/types';
 
 const methods = ['head', 'get', 'post', 'put', 'delete'];
 
@@ -23,6 +23,10 @@ export default class ApiRequester {
   // eslint-disable-next-line
   static successResponseParser(response: Object, isJson: boolean) {
     return response.status === 204;
+  }
+
+  static parseBadResponse(parse: Function) {
+    return (response: Object) => response instanceof BadResponse ? response : parse(response);
   }
 
   static defaultParser(response: Object, isJson: boolean) {

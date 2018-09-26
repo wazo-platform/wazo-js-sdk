@@ -3,7 +3,7 @@ import authMethods from './api/auth';
 import applicationMethods from './api/application';
 import confdMethods from './api/confd';
 import accessdMethods from './api/accessd';
-import ctidngMethods from './api/ctid-ng';
+import ctidNgMethods from './api/ctid-ng';
 import dirdMethods from './api/dird';
 import callLogdMethods from './api/call-logd';
 
@@ -23,7 +23,7 @@ export default class ApiClient {
   application: Object;
   confd: Object;
   accessd: Object;
-  ctidng: Object;
+  ctidNg: Object;
   dird: Object;
   callLogd: Object;
 
@@ -37,7 +37,7 @@ export default class ApiClient {
     this.application = applicationMethods(this.client, `ctid-ng/${APPLICATION_VERSION}/applications`);
     this.confd = confdMethods(this.client, `confd/${CONFD_VERSION}`);
     this.accessd = accessdMethods(this.client, `accessd/${ACCESSD_VERSION}`);
-    this.ctidng = ctidngMethods(this.client, `ctid-ng/${CTIDNG_VERSION}`);
+    this.ctidNg = ctidNgMethods(this.client, `ctid-ng/${CTIDNG_VERSION}`);
     this.dird = dirdMethods(this.client, `dird/${DIRD_VERSION}`);
     this.callLogd = callLogdMethods(this.client, `call-logd/${CALL_LOGD_VERSION}`);
   }

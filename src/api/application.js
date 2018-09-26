@@ -1,6 +1,6 @@
 /* @flow */
 import ApiRequester from '../utils/api-requester';
-import type { Token, ListNodesResponse, ListCallNodesResponse } from '../types';
+import type { Token, ListNodesResponse, ListCallNodesResponse } from '../domain/types';
 
 export default (client: ApiRequester, baseUrl: string) => ({
   answerCall(

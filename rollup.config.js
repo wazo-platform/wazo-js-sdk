@@ -1,7 +1,6 @@
 import resolve from 'rollup-plugin-node-resolve';
 import { terser } from 'rollup-plugin-terser';
 import flow from 'rollup-plugin-flow';
-// import { uglify } from 'rollup-plugin-uglify';
 
 export default {
   input: 'src/index.js',
@@ -12,6 +11,8 @@ export default {
     globals: {
       'sip.js': 'SIP',
       'cross-fetch': 'cross-fetch',
+      'immutable': 'immutable',
+      'moment': 'moment',
       'reconnecting-websocket': 'ReconnectingWebSocket',
     },
   },
@@ -24,5 +25,5 @@ export default {
     }),
     terser(),
   ],
-  external: ['cross-fetch/polyfill', 'sip.js', 'reconnecting-websocket', 'js-base64'],
+  external: ['cross-fetch/polyfill', 'sip.js', 'reconnecting-websocket', 'js-base64', 'immutable', 'moment'],
 };

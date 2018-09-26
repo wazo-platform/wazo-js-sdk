@@ -1,6 +1,7 @@
 import { Base64 } from 'js-base64';
 import WazoApiClient from '../api-client';
 import BadResponse from '../domain/BadResponse';
+import Session from '../domain/Session';
 
 const mockedResponse = { data: { token: 1 } };
 const mockedNotFoundResponse = {
@@ -59,7 +60,8 @@ describe('With correct API results', () => {
       };
 
       const result = await client.auth.logIn({ username, password });
-      expect(result.data.token).toBe(1);
+      expect(result).toBeInstanceOf(Session);
+      expect(result.token).toBe(1);
 
       expect(global.fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token`, {
         method: 'post',
@@ -119,7 +121,7 @@ describe('With not found API results', () => {
   describe('fetchVoicemail test', () => {
     it('should return a BadResponse instance on 404 status', async () => {
       const token = 123;
-      const result = await client.ctidng.listVoicemails(token);
+      const result = await client.ctidNg.listVoicemails(token);
 
       expect(result).toBeInstanceOf(BadResponse);
       expect(result.message).toBe(mockedNotFoundResponse.message);
