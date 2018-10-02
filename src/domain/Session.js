@@ -1,7 +1,5 @@
 // @flow
 
-import { Record } from 'immutable';
-
 import Profile from './Profile';
 import Contact from './Contact';
 import Line from './Line';
@@ -30,16 +28,16 @@ type Response = {
   }
 };
 
-const SessionRecord = Record({
-  token: undefined,
-  uuid: undefined,
-  profile: undefined
-});
+type SessionArguments = {
+  token: string,
+  uuid: string,
+  profile?: Profile
+};
 
-export default class Session extends SessionRecord {
+export default class Session {
   token: string;
   uuid: string;
-  profile: Profile;
+  profile: ?Profile;
 
   static parse(plain: Response): Session {
     return new Session({
@@ -48,27 +46,39 @@ export default class Session extends SessionRecord {
     });
   }
 
-  static using(profile: Profile): Session {
-    return this.set('profile', profile);
+  constructor({ token, uuid, profile }: SessionArguments) {
+    this.token = token;
+    this.uuid = uuid;
+    this.profile = profile;
   }
 
   is(contact: Contact): boolean {
     return Boolean(contact) && this.uuid === contact.uuid;
   }
 
+  using(profile: Profile): Session {
+    this.profile = profile;
+
+    return this;
+  }
+
   displayName(): string {
-    return `${this.profile.firstname} ${this.profile.lastname}`;
+    return this.profile ? `${this.profile.firstName} ${this.profile.lastName}` : '';
   }
 
-  primaryLine(): Line {
-    return this.profile.lines[0];
+  primaryLine(): ?Line {
+    return this.profile ? this.profile.lines[0] : null;
   }
 
-  primaryContext(): string {
-    return this.primaryLine().extensions[0].context;
+  primaryContext(): ?string {
+    const line = this.primaryLine();
+
+    return line ? line.extensions[0].context : null;
   }
 
-  primaryNumber(): string {
-    return this.primaryLine().extensions[0].exten;
+  primaryNumber(): ?string {
+    const line = this.primaryLine();
+
+    return line ? line .extensions[0].exten : null;
   }
 }

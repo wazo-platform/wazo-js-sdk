@@ -2,17 +2,22 @@
 
 import Voicemail from '../Voicemail';
 
+const defaultCaller = {
+  name: 'john doe',
+  number: '0101010101'
+};
+
 describe('Voicemail', () => {
   it('is the same voicemail given the same id', () => {
-    const voicemail = new Voicemail({ id: 'ref-abc' });
-    const anotherVoicemail = new Voicemail({ id: 'ref-abc' });
+    const voicemail = new Voicemail({ id: 'ref-abc', caller: defaultCaller });
+    const anotherVoicemail = new Voicemail({ id: 'ref-abc', caller: defaultCaller });
 
     expect(voicemail.is(anotherVoicemail)).toBeTruthy();
   });
 
   it('is not the same voicemail given different ids', () => {
-    const voicemail = new Voicemail({ id: 'ref-abc' });
-    const anotherVoicemail = new Voicemail({ id: 'ref-123' });
+    const voicemail = new Voicemail({ id: 'ref-abc', caller: defaultCaller });
+    const anotherVoicemail = new Voicemail({ id: 'ref-123', caller: defaultCaller });
 
     expect(voicemail.is(anotherVoicemail)).toBeFalsy();
   });

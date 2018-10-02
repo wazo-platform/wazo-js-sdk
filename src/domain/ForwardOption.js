@@ -1,7 +1,5 @@
 // @flow
 
-import { Record } from 'immutable';
-
 type Response = {
   destination: string,
   enabled: boolean
@@ -13,13 +11,13 @@ export const FORWARD_KEYS = {
   UNCONDITIONAL: 'unconditional'
 };
 
-const ForwardOptionRecord = Record({
-  destination: undefined,
-  enabled: undefined,
-  key: undefined
-});
+type ForwardOptionArguments = {
+  destination: string,
+  enabled: boolean,
+  key: string
+};
 
-export default class ForwardOption extends ForwardOptionRecord {
+export default class ForwardOption {
   destination: string;
   enabled: boolean;
   key: string;
@@ -32,8 +30,16 @@ export default class ForwardOption extends ForwardOptionRecord {
     });
   }
 
-  setDestination(number: string) {
-    return this.set('destination', number);
+  constructor({ destination, enabled, key }: ForwardOptionArguments) {
+    this.destination = destination;
+    this.enabled = enabled;
+    this.key = key;
+  }
+
+  setDestination(number: string): ForwardOption {
+    this.destination = number;
+
+    return this;
   }
 
   is(other: ForwardOption) {

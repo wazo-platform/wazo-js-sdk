@@ -4,7 +4,7 @@ import Contact from '../Contact';
 
 describe('Contact domain', () => {
   it('is extern when given no uuid', () => {
-    const boba = new Contact();
+    const boba = new Contact({});
 
     expect(boba.isIntern()).toBeFalsy();
   });
@@ -16,22 +16,22 @@ describe('Contact domain', () => {
   });
 
   it('is the same contact when it has the same uuid and sourceId', () => {
-    const john = new Contact({ uuid: '12345', sourceId: '800' });
-    const sam = new Contact({ uuid: '12345', sourceId: '800' });
+    const john = new Contact({ uuid: '12345', sourceId: 800 });
+    const sam = new Contact({ uuid: '12345', sourceId: 800 });
 
     expect(john.is(sam)).toBe(true);
   });
 
   it('is not the same contact when it has different uuid', () => {
-    const john = new Contact({ uuid: 'abc', sourceId: '800' });
-    const sam = new Contact({ uuid: '12345', sourceId: '800' });
+    const john = new Contact({ uuid: 'abc', sourceId: 800 });
+    const sam = new Contact({ uuid: '12345', sourceId: 800 });
 
     expect(john.is(sam)).toBe(false);
   });
 
   it('is not the same contact when it has different sourceId', () => {
-    const john = new Contact({ uuid: '12345', sourceId: '100' });
-    const sam = new Contact({ uuid: '12345', sourceId: '800' });
+    const john = new Contact({ uuid: '12345', sourceId: 100 });
+    const sam = new Contact({ uuid: '12345', sourceId: 800 });
 
     expect(john.is(sam)).toBe(false);
   });
@@ -138,7 +138,7 @@ describe('Contact domain', () => {
         endpointId: 8,
         personal: false,
         source: 'internal',
-        sourceId: '8',
+        sourceId: 8,
         uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54'
       })
     );
