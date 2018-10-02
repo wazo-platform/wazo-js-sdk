@@ -17,6 +17,28 @@ const CTIDNG_VERSION = '1.0';
 const DIRD_VERSION = '0.1';
 const CALL_LOGD_VERSION = '1.0';
 
+/**
+ * # Overview
+ * Helps to use Wazo's rest APIs. Each API is namespaced with the name of it's service:
+ * - `client.accessd`: actions related to use subscriptions: `listSubscriptions`, `listAuthorizations`, ...
+ * - `client.application`: actions related to phone actions: `answerCall`, `hangupCall`, `addNewCallNodes` ...
+ * - `client.auth`: actions specific to an user account, such as `login`, `checkToken`, `updatePassword`, ...
+ * - `client.callLogd`: search and retrieve call logs: `search`, `listCallLogs`, ...
+ * - `client.confd`: operation for managing users: `listUsers`, `updateUser`, `getSIP` ...
+ * - `client.ctidNg`: allow to manage list events: `listMessages`, `listCalls`, `getPresence` ...
+ * - `client.dird`:
+ *
+ * @name ApiClient
+ * @param {Object} options
+ * @param {String} options.server Wazo's server host (eg: `demo.wazo.community`).
+ * @param {Object} options.agent [http(s).Agent](https://nodejs.org/api/https.html#https_class_https_agent) instance,
+ * allows custom proxy, unsecured https, certificate etc.
+ * @example
+ * const client = new WazoApiClient({
+ *   server: 'demo.wazo.community',
+ *   agent: new https.Agent({ rejectUnauthorized: false }) // Allow unsecured https calls
+ * });
+ */
 export default class ApiClient {
   client: ApiRequester;
   auth: Object;
@@ -27,12 +49,24 @@ export default class ApiClient {
   dird: Object;
   callLogd: Object;
 
+  _server: string;
+  _agent: ?Object;
+
   // @see https://github.com/facebook/flow/issues/183#issuecomment-358607052
   constructor({ server, agent = null }: $Subtype<{ server: string, agent?: ?Object }>) {
-    this.updatePatemers({ server, agent });
+    this._server = server;
+    this._agent = agent;
+
+    this._updateClient();
   }
 
-  initializeEndpoints(): void {
+  _updateClient() {
+    this.client = new ApiRequester({ server: this._server, agent: this._agent });
+
+    this._initializeEndpoints();
+  }
+
+  _initializeEndpoints(): void {
     this.auth = authMethods(this.client, `auth/${AUTH_VERSION}`);
     this.application = applicationMethods(this.client, `ctid-ng/${APPLICATION_VERSION}/applications`);
     this.confd = confdMethods(this.client, `confd/${CONFD_VERSION}`);
@@ -40,11 +74,5 @@ export default class ApiClient {
     this.ctidNg = ctidNgMethods(this.client, `ctid-ng/${CTIDNG_VERSION}`);
     this.dird = dirdMethods(this.client, `dird/${DIRD_VERSION}`);
     this.callLogd = callLogdMethods(this.client, `call-logd/${CALL_LOGD_VERSION}`);
-  }
-
-  updatePatemers({ server, agent }: { server: string, agent: ?Object }) {
-    this.client = new ApiRequester({ server, agent });
-
-    this.initializeEndpoints();
   }
 }

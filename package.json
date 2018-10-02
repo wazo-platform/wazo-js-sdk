@@ -20,7 +20,7 @@
   },
   "scripts": {
     "build": "./node_modules/.bin/rollup --config",
-    "docs:build": "./node_modules/.bin/documentation build src/index.js -f html -o docs",
+    "docs:build": "./node_modules/.bin/esdoc",
     "test": "npm run jest && npm run lint && npm run typecheck && npm run checkbuild",
     "watch": "./node_modules/.bin/webpack --mode=development --watch",
     "lint": "./node_modules/.bin/eslint src/",
@@ -32,6 +32,9 @@
   },
   "dependencies": {
     "cross-fetch": "^2.2.2",
+    "esdoc": "^1.1.0",
+    "esdoc-flow-type-plugin": "^1.1.0",
+    "esdoc-standard-plugin": "^1.0.0",
     "js-base64": "^2.4.9",
     "reconnecting-websocket": "^4.0.0-rc5",
     "sip.js": "^0.11.3"
@@ -45,7 +48,6 @@
     "babel-jest": "^23.6.0",
     "babel-loader": "^8.0.0",
     "babel-preset-flow": "^6.23.0",
-    "documentation": "^8.1.2",
     "eslint": "^5.6.0",
     "eslint-config-airbnb-base": "^13.0.0",
     "eslint-config-prettier": "^3.0.1",
