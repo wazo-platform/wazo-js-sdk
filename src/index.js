@@ -11,21 +11,22 @@ import Call from './domain/Call';
 import CallLog from './domain/CallLog';
 import ChatMessage from './domain/ChatMessage';
 import Contact from './domain/Contact';
-import Country from './domain/Country';
-import ForwardOption from './domain/ForwardOption';
+import COUNTRIES from './domain/Country';
+import ForwardOption, { FORWARD_KEYS } from './domain/ForwardOption';
 import Line from './domain/Line';
 import NotificationOptions from './domain/NotificationOptions';
-import Profile from './domain/Profile';
+import Profile, { PRESENCE } from './domain/Profile';
 import Session from './domain/Session';
 import Voicemail from './domain/Voicemail';
 import type { NewContact as NewContactType } from './domain/Contact';
-import type { Phone as PhoneType } from './domain/Phone/Phone';
+import type { Phone as PhoneType, PhoneEventCallbacks as PhoneEventCallbacksType } from './domain/Phone/Phone';
 import DebugPhone from './domain/Phone/DebugPhone';
 import type { Device as DeviceType } from './domain/Device/Device';
 import DebugDevice from './domain/Device/DebugDevice';
 
 export type NewContact = NewContactType;
 export type Phone = PhoneType;
+export type PhoneEventCallbacks = PhoneEventCallbacksType;
 export type Device = DeviceType;
 
 export default {
@@ -38,7 +39,7 @@ export default {
   CallLog,
   ChatMessage,
   Contact,
-  Country,
+  COUNTRIES,
   ForwardOption,
   Line,
   NotificationOptions,
@@ -46,5 +47,7 @@ export default {
   Session,
   Voicemail,
   DebugPhone,
-  DebugDevice
+  DebugDevice,
+  PRESENCE,
+  FORWARD_KEYS
 };

@@ -51,7 +51,7 @@ export default class Session {
     });
   }
 
-  constructor({ token, uuid, profile }: SessionArguments) {
+  constructor({ token, uuid, profile }: SessionArguments = {}) {
     this.token = token;
     this.uuid = uuid;
     this.profile = profile;

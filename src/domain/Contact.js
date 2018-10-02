@@ -168,7 +168,7 @@ export default class Contact {
     status,
     endpointId,
     personal
-  }: ContactArguments) {
+  }: ContactArguments = {}) {
     this.id = id;
     this.uuid = uuid;
     this.name = name;

@@ -71,7 +71,7 @@ export default class Voicemail {
     return [...unread, ...read];
   }
 
-  constructor({ id, date, duration, caller }: VoicemailArguments) {
+  constructor({ id, date, duration, caller }: VoicemailArguments = {}) {
     this.id = id;
     this.date = date;
     this.duration = duration;

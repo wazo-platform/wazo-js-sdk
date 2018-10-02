@@ -101,7 +101,7 @@ export default class Profile {
     forwards,
     doNotDisturb,
     presence
-  }: ProfileArguments) {
+  }: ProfileArguments = {}) {
     this.id = id;
     this.firstName = firstName;
     this.lastName = lastName;
