@@ -1,6 +1,7 @@
 // @flow
 
 import Session from './Session';
+import BadResponse from './BadResponse';
 
 type CallLogResponse = {
   answer: string,
@@ -70,7 +71,11 @@ export default class CallLog {
     return onlyUniqueIds.map(id => allLogs.find(log => log.id === id));
   }
 
-  static parseMany(plain: Response): Array<CallLog> {
+  static parseMany(plain: Response | BadResponse): Array<CallLog> {
+    if (plain instanceof BadResponse) {
+      return [];
+    }
+
     return plain.items.map(item => CallLog.parse(item));
   }
 

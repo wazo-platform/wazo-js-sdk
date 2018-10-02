@@ -14,7 +14,6 @@ import type {
   GetUserResponse
 } from '../domain/types';
 import Session from '../domain/Session';
-import BadResponse from '../domain/BadResponse';
 
 const DEFAULT_BACKEND_USER = 'wazo_user';
 const DETAULT_EXPIRATION = 3600;
@@ -24,13 +23,11 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.head(`${baseUrl}/token/${token}`, null, {});
   },
 
-  authenticate(token: Token): Promise<Session | BadResponse> {
-    return client
-      .get(`${baseUrl}/token/${token}`, null, {})
-      .then(ApiRequester.parseBadResponse(response => Session.parse(response)));
+  authenticate(token: Token): Promise<?Session> {
+    return client.get(`${baseUrl}/token/${token}`, null, {}).then(response => Session.parse(response));
   },
 
-  logIn(params: Object = {}): Promise<Session | BadResponse> {
+  logIn(params: Object = {}): Promise<?Session> {
     const body = {
       backend: params.backend || DEFAULT_BACKEND_USER,
       expiration: params.expiration || DETAULT_EXPIRATION
@@ -40,12 +37,10 @@ export default (client: ApiRequester, baseUrl: string) => ({
       'Content-Type': 'application/json'
     };
 
-    return client
-      .post(`${baseUrl}/token`, body, headers)
-      .then(ApiRequester.parseBadResponse(response => Session.parse(response)));
+    return client.post(`${baseUrl}/token`, body, headers).then(response => Session.parse(response));
   },
 
-  logOut(token: Token): Promise<LogoutResponse | BadResponse> {
+  logOut(token: Token): Promise<LogoutResponse> {
     return client.delete(`${baseUrl}/token/${token}`, null, {}, ApiRequester.successResponseParser);
   },
 

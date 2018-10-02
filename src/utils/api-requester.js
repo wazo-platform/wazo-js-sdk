@@ -5,6 +5,7 @@ import 'cross-fetch/polyfill';
 import { Base64 } from 'js-base64';
 
 import BadResponse from '../domain/BadResponse';
+import ServerError from '../domain/ServerError';
 import Logger from './logger';
 import type { Token } from '../domain/types';
 
@@ -23,10 +24,6 @@ export default class ApiRequester {
   // eslint-disable-next-line
   static successResponseParser(response: Object, isJson: boolean) {
     return response.status === 204;
-  }
-
-  static parseBadResponse(parse: Function) {
-    return (response: Object) => (response instanceof BadResponse ? response : parse(response));
   }
 
   static defaultParser(response: Object, isJson: boolean) {
@@ -106,7 +103,7 @@ export default class ApiRequester {
         const promise = isJson ? response.json() : response.text();
 
         return promise.then(err => {
-          throw err;
+          throw typeof err === 'string' ? ServerError.fromText(err) : ServerError.fromResponse(err);
         });
       }
 

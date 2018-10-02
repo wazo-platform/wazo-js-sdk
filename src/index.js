@@ -6,6 +6,7 @@ import WebSocketClient from './websocket-client';
 
 // Domain
 import BadResponse from './domain/BadResponse';
+import ServerError from './domain/ServerError';
 import Call from './domain/Call';
 import CallLog from './domain/CallLog';
 import ChatMessage from './domain/ChatMessage';
@@ -32,6 +33,7 @@ export default {
   WazoWebRTCClient: WebRTCClient,
   WazoWebSocketClient: WebSocketClient,
   BadResponse,
+  ServerError,
   Call,
   CallLog,
   ChatMessage,

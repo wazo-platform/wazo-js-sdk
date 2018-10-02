@@ -1,5 +1,7 @@
 // @flow
 
+import BadResponse from './BadResponse';
+
 type MessageResponse = {
   caller_id_name: string,
   caller_id_num: string,
@@ -22,17 +24,17 @@ type Response = {
 };
 
 type VoicemailArguments = {
-  id?: string;
-  date?: Date;
-  duration?: number;
+  id?: string,
+  date?: Date,
+  duration?: number,
   caller: {
     name: string,
     number: string
-  };
-  unread?: ?boolean;
-}
+  },
+  unread?: ?boolean
+};
 
-export default class Voicemail  {
+export default class Voicemail {
   id: ?string;
   date: ?Date;
   duration: ?number;
@@ -55,7 +57,11 @@ export default class Voicemail  {
     });
   }
 
-  static parseMany(plain: Response): Array<Voicemail> {
+  static parseMany(plain: Response | BadResponse): Array<Voicemail> {
+    if (plain instanceof BadResponse) {
+      return [];
+    }
+
     const plainUnread = plain.folders.filter(folder => folder.type === 'new')[0].messages;
     const plainRead = plain.folders.filter(folder => folder.type === 'old')[0].messages;
 
