@@ -16,7 +16,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     const body = {
       firstname: profile.firstName,
       lastname: profile.lastName,
-      email: profile.profile,
+      email: profile.email,
       mobile_phone_number: profile.mobileNumber
     };
 

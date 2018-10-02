@@ -1,7 +1,5 @@
 // @flow
 
-import { Record } from 'immutable';
-
 type Extension = {
   context: string,
   exten: string,
@@ -16,12 +14,12 @@ type LineResponse = {
   id: number
 };
 
-const LineRecord = Record({
-  id: undefined,
-  extensions: []
-});
+type LineArguments = {
+  id: number,
+  extensions: Array<Extension>
+};
 
-export default class Line extends LineRecord {
+export default class Line {
   id: number;
   extensions: Array<Extension>;
 
@@ -30,5 +28,10 @@ export default class Line extends LineRecord {
       id: plain.id,
       extensions: plain.extensions
     });
+  }
+
+  constructor({ id, extensions }: LineArguments) {
+    this.id = id;
+    this.extensions = extensions;
   }
 }

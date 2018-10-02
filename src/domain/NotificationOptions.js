@@ -1,24 +1,22 @@
 // @flow
 
-import { Record } from 'immutable';
-
 type NotificationOptionResponse = {
-  sound: string,
-  vibration: string
+  sound: boolean,
+  vibration: boolean
 };
 
-const NotificationOptionsRecord = Record({
-  sound: true,
-  vibration: true
-});
+type NotificationOptionsArguments = {
+  sound: boolean,
+  vibration: boolean
+};
 
-export default class NotificationOptions extends NotificationOptionsRecord {
+export default class NotificationOptions {
   sound: boolean;
   vibration: boolean;
 
   static parse(plain: NotificationOptionResponse): NotificationOptions {
     if (!plain) {
-      return new NotificationOptions();
+      return new NotificationOptions({ sound: true, vibration: true });
     }
 
     return new NotificationOptions({
@@ -27,20 +25,35 @@ export default class NotificationOptions extends NotificationOptionsRecord {
     });
   }
 
-  setSound(sound: boolean): boolean {
-    return this.set('sound', sound);
+  constructor({ sound = true, vibration = true }: NotificationOptionsArguments) {
+    this.sound = sound;
+    this.vibration = vibration;
   }
 
-  setVibration(vibration: boolean) {
-    return this.set('vibration', vibration);
+  setSound(sound: boolean): NotificationOptions {
+    this.sound = sound;
+
+    return this;
+  }
+
+  setVibration(vibration: boolean): NotificationOptions {
+    this.vibration = vibration;
+
+    return this;
   }
 
   enable() {
-    return this.set('vibration', true).set('sound', true);
+    this.vibration = true;
+    this.sound = true;
+
+    return this;
   }
 
   disable() {
-    return this.set('vibration', false).set('sound', false);
+    this.vibration = false;
+    this.sound = false;
+
+    return this;
   }
 
   isEnabled() {

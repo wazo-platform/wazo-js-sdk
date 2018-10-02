@@ -1,7 +1,5 @@
 // @flow
 
-import { Record } from 'immutable';
-
 import Session from './Session';
 
 export type NewContact = {
@@ -17,7 +15,7 @@ export type NewContact = {
 
 type ContactResponse = {
   source: string,
-  column_values: Array<?string | boolean>,
+  column_values: Array<any>,
   relations: {
     user_id: number,
     xivo_id: string,
@@ -50,49 +48,51 @@ type ContactPersonalResponse = {
   lastname: ?string
 };
 
-const ContactRecord = Record({
-  name: undefined,
-  number: undefined,
-  favorited: undefined,
-  email: undefined,
-  endpointId: undefined,
-  entreprise: undefined,
-  birthday: undefined,
-  address: undefined,
-  note: undefined,
-  personal: undefined,
-  presence: undefined,
-  source: undefined,
-  sourceId: undefined,
-  status: undefined,
-  uuid: undefined
-});
+type ContactArguments = {
+  id?: string,
+  uuid?: string,
+  name?: string,
+  number?: string,
+  favorited?: boolean,
+  email?: string,
+  entreprise?: string,
+  birthday?: string,
+  address?: string,
+  note?: string,
+  endpointId?: number,
+  personal?: boolean,
+  presence?: string,
+  source?: string,
+  sourceId?: number,
+  status?: number,
+  endpointId?: number,
+  uuid?: string
+};
 
-export default class Contact extends ContactRecord {
-  name: string;
-  number: string;
-  favorited: boolean;
-  email: string;
-  entreprise: string;
-  birthday: string;
-  address: string;
-  note: string;
-  endpointId: number;
-  personal: boolean;
-  presence: string;
-  source: string;
-  sourceId: string;
-  status: number;
-  uuid: string;
+export default class Contact {
+  id: ?string;
+  uuid: ?string;
+  name: ?string;
+  number: ?string;
+  favorited: ?boolean;
+  email: ?string;
+  entreprise: ?string;
+  birthday: ?string;
+  address: ?string;
+  note: ?string;
+  endpointId: ?number;
+  personal: ?boolean;
+  presence: ?string;
+  source: ?string;
+  sourceId: ?number;
+  status: ?number;
+  uuid: ?string;
 
   static merge(oldContacts: Array<Contact>, newContacts: Array<Contact>): Array<Contact> {
     return newContacts.map(current => {
       const old = oldContacts.find(contact => contact.is(current));
-      if (old !== undefined) {
-        return current.merge(old);
-      }
 
-      return current;
+      return typeof old !== 'undefined' ? current.merge(old) : current;
     });
   }
 
@@ -113,8 +113,8 @@ export default class Contact extends ContactRecord {
       endpointId: plain.relations.endpoint_id,
       personal: plain.column_values[columns.indexOf('personal')],
       source: plain.source,
-      sourceId: plain.relations.source_entry_id,
-      uuid: plain.relations.user_uuid
+      sourceId: +plain.relations.source_entry_id,
+      uuid: plain.relations.user_uuid,
     });
   }
 
@@ -132,12 +132,48 @@ export default class Contact extends ContactRecord {
       entreprise: plain.entreprise || '',
       birthday: plain.birthday || '',
       address: plain.address || '',
-      note: plain.note || ''
+      note: plain.note || '',
+      favorited: false,
+      personal: true
     });
   }
 
+  constructor({
+    id,
+    uuid,
+    name,
+    number,
+    email,
+    source,
+    sourceId,
+    entreprise,
+    birthday,
+    address,
+    note,
+    presence,
+    status,
+    endpointId,
+    personal
+  }: ContactArguments) {
+    this.id = id;
+    this.uuid = uuid;
+    this.name = name;
+    this.number = number;
+    this.email = email;
+    this.source = source;
+    this.sourceId = sourceId;
+    this.entreprise = entreprise;
+    this.birthday = birthday;
+    this.address = address;
+    this.note = note;
+    this.presence = presence;
+    this.status = status;
+    this.endpointId = endpointId;
+    this.personal = personal;
+  }
+
   setFavorite(value: boolean) {
-    return this.set('favorited', value);
+    this.favorited = value;
   }
 
   is(other: Contact): boolean {
@@ -169,7 +205,10 @@ export default class Contact extends ContactRecord {
   }
 
   merge(old: Contact): Contact {
-    return this.set('presence', old.presence).set('status', old.status);
+    this.presence = old.presence;
+    this.status = old.status;
+
+    return this;
   }
 
   isIntern(): boolean {

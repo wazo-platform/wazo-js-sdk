@@ -1,8 +1,5 @@
 // @flow
 
-import { Record } from 'immutable';
-import moment from 'moment';
-
 type CallResponse = {
   call_id: string,
   peer_caller_id_name: string,
@@ -11,20 +8,20 @@ type CallResponse = {
   creation_time: string
 };
 
-const CallRecord = Record({
-  id: undefined,
-  calleeName: undefined,
-  calleeNumber: undefined,
-  status: undefined,
-  startingTime: undefined
-});
+type CallArguments = {
+  id: number,
+  calleeName: string,
+  calleeNumber: string,
+  status: string,
+  startingTime: Date
+};
 
-export default class Call extends CallRecord {
+export default class Call {
   id: number;
   calleeName: string;
   calleeNumber: string;
   status: string;
-  startingTime: moment;
+  startingTime: Date;
 
   static parseMany(plain: Array<CallResponse>): Array<Call> {
     return plain.map((plainCall: CallResponse) => Call.parse(plainCall));
@@ -32,12 +29,20 @@ export default class Call extends CallRecord {
 
   static parse(plain: CallResponse): Call {
     return new Call({
-      id: plain.call_id,
+      id: +plain.call_id,
       calleeName: plain.peer_caller_id_name,
       calleeNumber: plain.peer_caller_id_number,
       status: plain.status,
-      startingTime: moment(plain.creation_time)
+      startingTime: new Date(plain.creation_time)
     });
+  }
+
+  constructor({ id, calleeName, calleeNumber, status, startingTime }: CallArguments) {
+    this.id = id;
+    this.calleeName = calleeName;
+    this.calleeNumber = calleeNumber;
+    this.status = status;
+    this.startingTime = startingTime;
   }
 
   separateCalleeName(): { firstName: string, lastName: string } {
