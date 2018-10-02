@@ -47,7 +47,7 @@
     "babel-jest": "^23.6.0",
     "babel-loader": "^8.0.0",
     "babel-preset-flow": "^6.23.0",
-    "documentation": "^8.1.2",
+    "documentation": "git+ssh://github.com/vicapow/documentation#update-babel-dist",
     "eslint": "^5.6.0",
     "eslint-config-airbnb-base": "^13.0.0",
     "eslint-config-prettier": "^3.0.1",
