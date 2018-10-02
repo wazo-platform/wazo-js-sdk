@@ -1,8 +1,5 @@
 // @flow
 
-import { Record } from 'immutable';
-import moment from 'moment';
-
 import Session from './Session';
 
 type CallLogResponse = {
@@ -25,21 +22,27 @@ type Response = {
   total: number
 };
 
-const CallLogRecord = Record({
-  answer: undefined,
-  answered: undefined,
-  newMissedCall: false,
-  callDirection: undefined,
-  destination: undefined,
-  source: undefined,
-  id: undefined,
-  duration: undefined,
-  start: undefined,
-  end: undefined
-});
+type CallLogArguments = {
+  answer: Date,
+  answered: boolean,
+  newMissedCall?: boolean,
+  callDirection: string,
+  destination: {
+    extension: string,
+    name: string
+  },
+  source: {
+    extension: string,
+    name: string
+  },
+  id: number,
+  duration: number,
+  start: Date,
+  end: Date
+};
 
-export default class CallLog extends CallLogRecord {
-  answer: moment;
+export default class CallLog {
+  answer: Date;
   answered: boolean;
   newMissedCall: boolean;
   callDirection: string;
@@ -54,9 +57,9 @@ export default class CallLog extends CallLogRecord {
   };
 
   id: number;
-  duration: Number;
-  start: moment;
-  end: moment;
+  duration: number;
+  start: Date;
+  end: Date;
 
   static merge(current: Array<CallLog>, toMerge: Array<CallLog>): Array<?CallLog> {
     const onlyUnique = (value, index, self) => self.indexOf(value) === index;
@@ -73,12 +76,12 @@ export default class CallLog extends CallLogRecord {
 
   static parse(plain: CallLogResponse): CallLog {
     return new CallLog({
-      answer: moment(plain.answer),
+      answer: new Date(plain.answer),
       answered: plain.answered,
       callDirection: plain.call_direction,
       destination: {
         extension: plain.destination_extension,
-        name: plain.destination_name
+        name: plain.destination_name || ''
       },
       source: {
         extension: plain.source_extension,
@@ -86,19 +89,19 @@ export default class CallLog extends CallLogRecord {
       },
       id: plain.id,
       duration: (plain.duration || 0) * 1000, // duration is in seconds
-      start: moment(plain.start),
-      end: moment(plain.end)
+      start: new Date(plain.start),
+      end: new Date(plain.end)
     });
   }
 
   static parseNew(plain: CallLogResponse, session: Session): CallLog {
     return new CallLog({
-      answer: moment(plain.answer),
+      answer: new Date(plain.answer),
       answered: plain.answered,
       callDirection: plain.call_direction,
       destination: {
         extension: plain.destination_extension,
-        name: plain.destination_name
+        name: plain.destination_name || ''
       },
       source: {
         extension: plain.source_extension,
@@ -106,11 +109,23 @@ export default class CallLog extends CallLogRecord {
       },
       id: plain.id,
       duration: (plain.duration || 0) * 1000, // duration is in seconds
-      start: moment(plain.start),
-      end: moment(plain.end),
+      start: new Date(plain.start),
+      end: new Date(plain.end),
       // @TODO: FIXME add verification declined vs missed call
       newMissedCall: plain.destination_extension === session.primaryNumber() && !plain.answered
     });
+  }
+
+  constructor({ answer, answered, callDirection, destination, source, id, duration, start, end }: CallLogArguments) {
+    this.answer = answer;
+    this.answered = answered;
+    this.callDirection = callDirection;
+    this.destination = destination;
+    this.source = source;
+    this.id = id;
+    this.duration = duration;
+    this.start = start;
+    this.end = end;
   }
 
   isFromSameParty(other: CallLog, session: Session): boolean {
@@ -129,7 +144,9 @@ export default class CallLog extends CallLogRecord {
   }
 
   acknowledgeCall(): CallLog {
-    return this.set('newMissedCall', false);
+    this.newMissedCall = false;
+
+    return this;
   }
 
   isAcknowledged(): boolean {

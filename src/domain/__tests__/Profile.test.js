@@ -9,8 +9,8 @@ describe('Profile domain', () => {
     const plain = {
       id: 10,
       uuid: 'xxx-xxx-xxx-xx',
-      firstname: 'John',
-      lastname: 'Doe',
+      firstName: 'John',
+      lastName: 'Doe',
       email: 'john.doe@acme.com',
       lines: [
         { id: 9012, extensions: [{ id: 1, exten: '8000', context: 'default' }], endpoint_custom: null },
@@ -47,8 +47,8 @@ describe('Profile domain', () => {
     expect(profile).toEqual(
       new Profile({
         id: 'xxx-xxx-xxx-xx',
-        firstname: 'John',
-        lastname: 'Doe',
+        firstName: 'John',
+        lastName: 'Doe',
         email: 'john.doe@acme.com',
         forwards: [
           new ForwardOption({ destination: '12', enabled: true, key: FORWARD_KEYS.UNCONDITIONAL }),

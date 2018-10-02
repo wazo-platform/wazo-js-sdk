@@ -1,7 +1,5 @@
 // @flow
 
-import { Record } from 'immutable';
-
 import Line from './Line';
 import ForwardOption, { FORWARD_KEYS } from './ForwardOption';
 
@@ -13,8 +11,8 @@ export const PRESENCE = {
 
 type ProfileResponse = {
   groups: Array<{ id: number, name: string }>,
-  firstname: string,
-  lastname: string,
+  firstName: string,
+  lastName: string,
   uuid: string,
   lines: Array<{
     id: number,
@@ -49,36 +47,36 @@ type ProfileResponse = {
   }
 };
 
-const ProfileRecord = Record({
-  id: undefined,
-  firstname: undefined,
-  lastname: undefined,
-  email: undefined,
-  lines: undefined,
-  username: undefined,
-  mobileNumber: undefined,
-  forwards: undefined,
-  doNotDisturb: undefined,
-  presence: PRESENCE.AVAILABLE
-});
+type ProfileArguments = {
+  id: string,
+  firstName: string,
+  lastName: string,
+  email: string,
+  lines: Array<Line>,
+  username: string,
+  mobileNumber: string,
+  forwards: Array<ForwardOption>,
+  doNotDisturb: boolean,
+  presence?: string
+};
 
-export default class Profile extends ProfileRecord {
+export default class Profile {
   id: string;
-  firstname: string;
-  lastname: string;
+  firstName: string;
+  lastName: string;
   email: string;
   lines: Array<Line>;
   username: string;
   mobileNumber: string;
   forwards: Array<ForwardOption>;
   doNotDisturb: boolean;
-  presence: string;
+  presence: ?string;
 
   static parse(plain: ProfileResponse): Profile {
     return new Profile({
       id: plain.uuid,
-      firstname: plain.firstname,
-      lastname: plain.lastname,
+      firstName: plain.firstName,
+      lastName: plain.lastName,
       email: plain.email,
       lines: plain.lines.map(line => Line.parse(line)),
       username: plain.username,
@@ -92,26 +90,59 @@ export default class Profile extends ProfileRecord {
     });
   }
 
+  constructor({
+    id,
+    firstName,
+    lastName,
+    email,
+    lines,
+    username,
+    mobileNumber,
+    forwards,
+    doNotDisturb,
+    presence
+  }: ProfileArguments) {
+    this.id = id;
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.email = email;
+    this.lines = lines;
+    this.username = username;
+    this.mobileNumber = mobileNumber;
+    this.forwards = forwards;
+    this.doNotDisturb = doNotDisturb;
+    this.presence = presence;
+  }
+
   hasId(id: string) {
     return id === this.id;
   }
 
   setMobileNumber(number: string) {
-    return this.set('mobileNumber', number);
+    this.mobileNumber = number;
+
+    return this;
   }
 
   setForwardOption(forwardOption: ForwardOption) {
     const updatedForwardOptions = this.forwards.slice();
     const index = updatedForwardOptions.findIndex(forward => forward.is(forwardOption));
     updatedForwardOptions.splice(index, 1, forwardOption);
-    return this.set('forwards', updatedForwardOptions);
+
+    this.forwards = updatedForwardOptions;
+
+    return this;
   }
 
   setDoNotDisturb(enabled: boolean) {
-    return this.set('doNotDisturb', enabled);
+    this.doNotDisturb = enabled;
+
+    return this;
   }
 
   setPresence(presence: string) {
-    return this.set('presence', presence);
+    this.presence = presence;
+
+    return this;
   }
 }

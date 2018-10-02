@@ -35,8 +35,6 @@ module.exports = {
   externals: {
     'sip.js': 'SIP',
     'cross-fetch': 'cross-fetch',
-    'immutable': 'Immutable',
-    'moment': 'moment',
     'reconnecting-websocket': 'ReconnectingWebSocket',
   },
 };

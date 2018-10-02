@@ -1,6 +1,5 @@
 // @flow
 
-import moment from 'moment';
 import CallLog from '../CallLog';
 
 describe('CallLog domain', () => {
@@ -29,12 +28,12 @@ describe('CallLog domain', () => {
 
     expect(logs).toEqual([
       new CallLog({
-        answer: moment('2017-08-07T13:51:18.892002+00:00'),
+        answer: new Date('2017-08-07T13:51:18.892002+00:00'),
         answered: true,
         callDirection: 'outbound',
         destination: {
           extension: '4182250459',
-          name: null
+          name: ''
         },
         source: {
           extension: '8020',
@@ -42,8 +41,8 @@ describe('CallLog domain', () => {
         },
         id: 215,
         duration: 4000,
-        start: moment('2017-08-06T13:50:55.819057+00:00'),
-        end: moment('2017-08-08T13:51:23.822529+00:00')
+        start: new Date('2017-08-06T13:50:55.819057+00:00'),
+        end: new Date('2017-08-08T13:51:23.822529+00:00')
       })
     ]);
   });

@@ -1,8 +1,5 @@
 // @flow
 
-import { Record } from 'immutable';
-import moment from 'moment';
-
 type ChatResponse = {
   date: string,
   destination_server_uuid: string,
@@ -11,6 +8,22 @@ type ChatResponse = {
   msg: string,
   source_server_uuid: string,
   source_user_uuid: string
+};
+
+type ChatMessageArguments = {
+  id: string,
+  date: Date,
+  message: string,
+  direction: string,
+  destination: {
+    serverId: string,
+    userId: string
+  },
+  source: {
+    serverId: string,
+    userId: string
+  },
+  read: boolean
 };
 
 type PlainMessageResponse = {
@@ -32,25 +45,9 @@ const uuid = () => {
   return `${s4()}${s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`;
 };
 
-const ChatMessageRecord = Record({
-  id: undefined,
-  date: undefined,
-  message: undefined,
-  direction: undefined,
-  destination: {
-    serverId: undefined,
-    userId: undefined
-  },
-  source: {
-    serverId: undefined,
-    userId: undefined
-  },
-  read: true
-});
-
-export default class ChatMessage extends ChatMessageRecord {
+export default class ChatMessage {
   id: string;
-  date: moment;
+  date: Date;
   message: string;
   direction: string;
   destination: {
@@ -72,7 +69,7 @@ export default class ChatMessage extends ChatMessageRecord {
   static parse(plain: ChatResponse): ChatMessage {
     return new ChatMessage({
       id: uuid(),
-      date: moment(plain.date),
+      date: new Date(plain.date),
       message: plain.msg,
       direction: plain.direction,
       destination: {
@@ -82,14 +79,15 @@ export default class ChatMessage extends ChatMessageRecord {
       source: {
         serverId: plain.source_server_uuid,
         userId: plain.source_user_uuid
-      }
+      },
+      read: true
     });
   }
 
   static parseMessageSent(plain: PlainMessageResponse): ChatMessage {
     return new ChatMessage({
       id: uuid(),
-      date: moment(),
+      date: new Date(),
       message: plain.msg,
       direction: 'sent',
       destination: {
@@ -107,7 +105,7 @@ export default class ChatMessage extends ChatMessageRecord {
   static parseMessageReceived(plain: PlainMessageResponse): ChatMessage {
     return new ChatMessage({
       id: uuid(),
-      date: moment(),
+      date: new Date(),
       message: plain.msg,
       direction: 'received',
       destination: {
@@ -122,6 +120,16 @@ export default class ChatMessage extends ChatMessageRecord {
     });
   }
 
+  constructor({ id, date, message, direction, destination, source, read = true }: ChatMessageArguments) {
+    this.id = id;
+    this.date = date;
+    this.message = message;
+    this.direction = direction;
+    this.destination = destination;
+    this.source = source;
+    this.read = read;
+  }
+
   is(other: ChatMessage) {
     return this.id === other.id;
   }
@@ -131,7 +139,7 @@ export default class ChatMessage extends ChatMessageRecord {
   }
 
   acknowledge() {
-    return this.set('read', true);
+    this.read = true;
   }
 
   getTheOtherParty() {
