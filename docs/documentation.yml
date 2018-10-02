@@ -1,6 +1,0 @@
-toc:
-  - name: ApiClient
-    children:
-      - auth
-  - name: WebsocketClient
-  - name: WebRTCClient
