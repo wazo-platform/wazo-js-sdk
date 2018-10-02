@@ -28,6 +28,7 @@ const CALL_LOGD_VERSION = '1.0';
  * - `client.ctidNg`: allow to manage list events: `listMessages`, `listCalls`, `getPresence` ...
  * - `client.dird`:
  *
+ * @name ApiClient
  * @param {Object} options
  * @param {String} options.server Wazo's server host (eg: `demo.wazo.community`).
  * @param {Object} options.agent [http(s).Agent](https://nodejs.org/api/https.html#https_class_https_agent) instance,
