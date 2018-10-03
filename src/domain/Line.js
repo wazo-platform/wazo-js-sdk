@@ -30,7 +30,7 @@ export default class Line {
     });
   }
 
-  constructor({ id, extensions }: LineArguments) {
+  constructor({ id, extensions }: LineArguments = {}) {
     this.id = id;
     this.extensions = extensions;
   }

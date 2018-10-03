@@ -116,7 +116,17 @@ export default class CallLog {
     });
   }
 
-  constructor({ answer, answered, callDirection, destination, source, id, duration, start, end }: CallLogArguments) {
+  constructor({
+    answer,
+    answered,
+    callDirection,
+    destination,
+    source,
+    id,
+    duration,
+    start,
+    end
+  }: CallLogArguments = {}) {
     this.answer = answer;
     this.answered = answered;
     this.callDirection = callDirection;

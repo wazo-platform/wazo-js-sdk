@@ -25,7 +25,7 @@ export default class NotificationOptions {
     });
   }
 
-  constructor({ sound = true, vibration = true }: NotificationOptionsArguments) {
+  constructor({ sound = true, vibration = true }: NotificationOptionsArguments = {}) {
     this.sound = sound;
     this.vibration = vibration;
   }

@@ -37,7 +37,7 @@ export default class Call {
     });
   }
 
-  constructor({ id, calleeName, calleeNumber, status, startingTime }: CallArguments) {
+  constructor({ id, calleeName, calleeNumber, status, startingTime }: CallArguments = {}) {
     this.id = id;
     this.calleeName = calleeName;
     this.calleeNumber = calleeNumber;

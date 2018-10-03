@@ -22,17 +22,17 @@ type Response = {
 };
 
 type VoicemailArguments = {
-  id?: string;
-  date?: Date;
-  duration?: number;
+  id?: string,
+  date?: Date,
+  duration?: number,
   caller: {
     name: string,
     number: string
-  };
-  unread?: ?boolean;
-}
+  },
+  unread?: ?boolean
+};
 
-export default class Voicemail  {
+export default class Voicemail {
   id: ?string;
   date: ?Date;
   duration: ?number;
@@ -65,7 +65,7 @@ export default class Voicemail  {
     return [...unread, ...read];
   }
 
-  constructor({ id, date, duration, caller }: VoicemailArguments) {
+  constructor({ id, date, duration, caller }: VoicemailArguments = {}) {
     this.id = id;
     this.date = date;
     this.duration = duration;

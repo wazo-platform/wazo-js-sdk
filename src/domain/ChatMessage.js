@@ -1,5 +1,4 @@
 // @flow
-
 type ChatResponse = {
   date: string,
   destination_server_uuid: string,
@@ -120,7 +119,7 @@ export default class ChatMessage {
     });
   }
 
-  constructor({ id, date, message, direction, destination, source, read = true }: ChatMessageArguments) {
+  constructor({ id, date, message, direction, destination, source, read = true }: ChatMessageArguments = {}) {
     this.id = id;
     this.date = date;
     this.message = message;

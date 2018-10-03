@@ -30,7 +30,7 @@ export default class ForwardOption {
     });
   }
 
-  constructor({ destination, enabled, key }: ForwardOptionArguments) {
+  constructor({ destination, enabled, key }: ForwardOptionArguments = {}) {
     this.destination = destination;
     this.enabled = enabled;
     this.key = key;

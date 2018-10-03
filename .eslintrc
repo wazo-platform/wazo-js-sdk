@@ -6,11 +6,6 @@
   "env": {
     "jest": true
   },
-  "settings": {
-    "import/core-modules": [
-      "axios"
-    ]
-  },
   "rules": {
     // Soft some rules.
     "max-len": ["error", 120],

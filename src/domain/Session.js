@@ -39,14 +39,14 @@ export default class Session {
   uuid: string;
   profile: ?Profile;
 
-  static parse(plain: Response): Session {
+  static parse(plain: Response): ?Session {
     return new Session({
       token: plain.data.token,
       uuid: plain.data.xivo_user_uuid
     });
   }
 
-  constructor({ token, uuid, profile }: SessionArguments) {
+  constructor({ token, uuid, profile }: SessionArguments = {}) {
     this.token = token;
     this.uuid = uuid;
     this.profile = profile;
@@ -79,6 +79,6 @@ export default class Session {
   primaryNumber(): ?string {
     const line = this.primaryLine();
 
-    return line ? line .extensions[0].exten : null;
+    return line ? line.extensions[0].exten : null;
   }
 }

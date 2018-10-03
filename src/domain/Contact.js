@@ -114,15 +114,15 @@ export default class Contact {
       personal: plain.column_values[columns.indexOf('personal')],
       source: plain.source,
       sourceId: +plain.relations.source_entry_id,
-      uuid: plain.relations.user_uuid,
+      uuid: plain.relations.user_uuid
     });
   }
 
-  static parseManyPersonal(results: Array<ContactPersonalResponse>): Array<Contact> {
+  static parseManyPersonal(results: Array<ContactPersonalResponse>): Array<?Contact> {
     return results.map(r => Contact.parsePersonal(r));
   }
 
-  static parsePersonal(plain: ContactPersonalResponse): Contact {
+  static parsePersonal(plain: ContactPersonalResponse): ?Contact {
     return new Contact({
       name: `${plain.firstName || plain.firstname || ''} ${plain.lastName || plain.lastname || ''}`,
       number: plain.number || '',
@@ -154,7 +154,7 @@ export default class Contact {
     status,
     endpointId,
     personal
-  }: ContactArguments) {
+  }: ContactArguments = {}) {
     this.id = id;
     this.uuid = uuid;
     this.name = name;
