@@ -16,7 +16,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
       .then(response => CallLog.parseMany(response));
   },
 
-  listCallLogsFromDate(token: Token, from: Date, number: number): Promise<Array<CallLog>> {
+  listCallLogsFromDate(token: Token, from: Date, number: string): Promise<Array<CallLog>> {
     return client
       .get(`${baseUrl}/users/me/cdr`, { fromfrom: from.toISOString(), number }, token)
       .then(response => CallLog.parseMany(response));

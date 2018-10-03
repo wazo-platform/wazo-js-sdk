@@ -34,7 +34,7 @@ type ContactsResponse = {
 };
 
 type ContactPersonalResponse = {
-  id: number,
+  id: string,
   firstName: ?string,
   lastName: ?string,
   number: ?string,
@@ -63,7 +63,7 @@ type ContactArguments = {
   personal?: boolean,
   presence?: string,
   source?: string,
-  sourceId?: number,
+  sourceId?: string,
   status?: number,
   endpointId?: number,
   uuid?: string
@@ -84,7 +84,7 @@ export default class Contact {
   personal: ?boolean;
   presence: ?string;
   source: ?string;
-  sourceId: ?number;
+  sourceId: string;
   status: ?number;
   uuid: ?string;
 
@@ -113,7 +113,7 @@ export default class Contact {
       endpointId: plain.relations.endpoint_id,
       personal: plain.column_values[columns.indexOf('personal')],
       source: plain.source,
-      sourceId: +plain.relations.source_entry_id,
+      sourceId: plain.relations.source_entry_id,
       uuid: plain.relations.user_uuid
     });
   }
@@ -161,7 +161,7 @@ export default class Contact {
     this.number = number;
     this.email = email;
     this.source = source;
-    this.sourceId = sourceId;
+    this.sourceId = sourceId || '';
     this.entreprise = entreprise;
     this.birthday = birthday;
     this.address = address;
