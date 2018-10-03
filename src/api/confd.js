@@ -1,6 +1,6 @@
 /* @flow */
 import ApiRequester from '../utils/api-requester';
-import type { UUID, Token, ListConfdUsersResponse, ConfdUser, ListApplicationsResponse } from '../domain/types';
+import type { UUID, Token, ListConfdUsersResponse, ListApplicationsResponse } from '../domain/types';
 import Profile from '../domain/Profile';
 
 export default (client: ApiRequester, baseUrl: string) => ({
@@ -8,8 +8,8 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.get(`${baseUrl}/users`, null, token);
   },
 
-  getUser(token: Token, userUuid: string): Promise<ConfdUser> {
-    return client.get(`${baseUrl}/users/${userUuid}`, null, token);
+  getUser(token: Token, userUuid: string): Promise<Profile> {
+    return client.get(`${baseUrl}/users/${userUuid}`, null, token).then(response => Profile.parse(response));
   },
 
   updateUser(token: Token, userUuid: string, profile: Profile): Promise<Boolean> {
