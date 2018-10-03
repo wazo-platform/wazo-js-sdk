@@ -1,10 +1,13 @@
 import { Base64 } from 'js-base64';
 import WazoApiClient from '../api-client';
 import ServerError from '../domain/ServerError';
+import BadResponse from '../domain/BadResponse';
 import Session from '../domain/Session';
 
 const mockedResponse = { data: { token: 1 } };
-const mockedNotFoundResponse = {};
+const mockedNotFoundResponse = {
+  message: 'No such user voicemail'
+};
 const mockedTextErrorPayload = {
   message: 'No such user voicemail'
 };
@@ -130,11 +133,20 @@ describe('With not found API results', () => {
   });
 
   describe('fetchVoicemail test', () => {
-    it('should return a BadResponse instance on 404 status', async () => {
+    it('should throw a BadResponse instance on 404 status', async () => {
       const token = 123;
-      const result = await client.ctidNg.listVoicemails(token);
 
-      expect(result).toEqual([]);
+      let error = null;
+      try {
+        await client.ctidNg.listVoicemails(token);
+      } catch (e) {
+        error = e;
+      }
+
+      expect(error).not.toBeNull();
+      expect(error).toBeInstanceOf(BadResponse);
+      expect(error.message).toBe(mockedNotFoundResponse.message);
+      expect(error.status).toBe(404);
 
       expect(global.fetch).toBeCalledWith(`https://${server}/api/ctid-ng/1.0/users/me/voicemails`, {
         method: 'get',
@@ -164,6 +176,7 @@ describe('With erroneous text API results', () => {
     expect(error).not.toBeNull();
     expect(error).toBeInstanceOf(ServerError);
     expect(error.message).toBe(mockedTextErrorPayload.message);
+    expect(error.status).toBe(500);
   });
 });
 
@@ -186,5 +199,6 @@ describe('With erroneous json API results', () => {
     expect(error).toBeInstanceOf(ServerError);
     expect(error.message).toBe(mockedJsonErrorPayload.message);
     expect(error.timestamp).toBe(mockedJsonErrorPayload.timestamp);
+    expect(error.status).toBe(500);
   });
 });

@@ -1,7 +1,5 @@
 // @flow
 
-import BadResponse from './BadResponse';
-
 type CallResponse = {
   call_id: string,
   peer_caller_id_name: string,
@@ -25,11 +23,7 @@ export default class Call {
   status: string;
   startingTime: Date;
 
-  static parseMany(plain: Array<CallResponse> | BadResponse): Array<Call> {
-    if (plain instanceof BadResponse) {
-      return [];
-    }
-
+  static parseMany(plain: Array<CallResponse>): Array<Call> {
     return plain.map((plainCall: CallResponse) => Call.parse(plainCall));
   }
 

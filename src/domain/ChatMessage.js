@@ -1,6 +1,4 @@
 // @flow
-import BadResponse from './BadResponse';
-
 type ChatResponse = {
   date: string,
   destination_server_uuid: string,
@@ -63,11 +61,7 @@ export default class ChatMessage {
 
   read: boolean;
 
-  static parseMany(plain: Response | BadResponse): Array<ChatMessage> {
-    if (plain instanceof BadResponse) {
-      return [];
-    }
-
+  static parseMany(plain: Response): Array<ChatMessage> {
     return plain.items.map(item => ChatMessage.parse(item));
   }
 

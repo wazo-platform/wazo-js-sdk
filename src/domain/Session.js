@@ -3,7 +3,6 @@
 import Profile from './Profile';
 import Contact from './Contact';
 import Line from './Line';
-import BadResponse from './BadResponse';
 import type { UUID, Token } from './types';
 
 type Response = {
@@ -40,11 +39,7 @@ export default class Session {
   uuid: string;
   profile: ?Profile;
 
-  static parse(plain: Response | BadResponse): ?Session {
-    if (plain instanceof BadResponse) {
-      return null;
-    }
-
+  static parse(plain: Response): ?Session {
     return new Session({
       token: plain.data.token,
       uuid: plain.data.xivo_user_uuid

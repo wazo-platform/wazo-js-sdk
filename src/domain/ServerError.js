@@ -2,11 +2,11 @@
 import BadResponse from './BadResponse';
 
 export default class ServerError extends BadResponse {
-  static fromResponse(response: Object) {
-    return new ServerError(response.message, response.timestamp, response.error_id, response.details);
+  static fromResponse(error: Object, status: number) {
+    return new ServerError(error.message, status, error.timestamp, error.error_id, error.details);
   }
 
-  static fromText(response: string) {
-    return new ServerError(response);
+  static fromText(response: string, status: number) {
+    return new ServerError(response, status);
   }
 }

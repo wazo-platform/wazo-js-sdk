@@ -26,13 +26,7 @@ export default class ApiRequester {
     return response.status === 204;
   }
 
-  static defaultParser(response: Object, isJson: boolean) {
-    if (!response.ok) {
-      return (isJson ? response.json() : response.text()).then(
-        error => (isJson ? BadResponse.fromResponse(error) : BadResponse.fromText(error))
-      );
-    }
-
+  static defaultParser(response: Object) {
     return response.json().then((data: Object) => data);
   }
 
@@ -84,7 +78,9 @@ export default class ApiRequester {
   ): Promise<any> {
     const url = this.computeUrl(method, path, body);
     const newBody = body && method !== 'get' ? JSON.stringify(body) : null;
-    const newParse = method === 'delete' || method === 'head' ? ApiRequester.successResponseParser : parse;
+    const isHead = method === 'head';
+    const hasEmptyResponse = method === 'delete' || isHead;
+    const newParse = hasEmptyResponse ? ApiRequester.successResponseParser : parse;
     const options = {
       method,
       body: newBody,
@@ -99,11 +95,14 @@ export default class ApiRequester {
       Logger.logRequest(url, options, response);
 
       // Throw an error only if status >= 500
-      if (response.status >= 500) {
+      if ((isHead && response.status >= 500) || (!isHead && response.status >= 400)) {
         const promise = isJson ? response.json() : response.text();
+        const exceptionClass = response.status >= 500 ? ServerError : BadResponse;
 
         return promise.then(err => {
-          throw typeof err === 'string' ? ServerError.fromText(err) : ServerError.fromResponse(err);
+          throw typeof err === 'string'
+            ? exceptionClass.fromText(err, response.status)
+            : exceptionClass.fromResponse(err, response.status);
         });
       }
 

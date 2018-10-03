@@ -1,7 +1,5 @@
 // @flow
 
-import BadResponse from './BadResponse';
-
 type MessageResponse = {
   caller_id_name: string,
   caller_id_num: string,
@@ -57,11 +55,7 @@ export default class Voicemail {
     });
   }
 
-  static parseMany(plain: Response | BadResponse): Array<Voicemail> {
-    if (plain instanceof BadResponse) {
-      return [];
-    }
-
+  static parseMany(plain: Response): Array<Voicemail> {
     const plainUnread = plain.folders.filter(folder => folder.type === 'new')[0].messages;
     const plainRead = plain.folders.filter(folder => folder.type === 'old')[0].messages;
 

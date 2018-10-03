@@ -1,7 +1,6 @@
 // @flow
 
 import Session from './Session';
-import BadResponse from './BadResponse';
 
 export type NewContact = {
   firstName: string,
@@ -97,12 +96,7 @@ export default class Contact {
     });
   }
 
-  static parseMany(response: ContactsResponse | BadResponse): Array<Contact> {
-    if (response instanceof BadResponse) {
-      return [];
-    }
-
-    // $FlowFixMe
+  static parseMany(response: ContactsResponse): Array<Contact> {
     return response.results.map(r => Contact.parse(r, response.column_types));
   }
 
@@ -124,19 +118,11 @@ export default class Contact {
     });
   }
 
-  static parseManyPersonal(results: Array<ContactPersonalResponse> | BadResponse): Array<?Contact> {
-    if (results instanceof BadResponse) {
-      return [];
-    }
-
+  static parseManyPersonal(results: Array<ContactPersonalResponse>): Array<?Contact> {
     return results.map(r => Contact.parsePersonal(r));
   }
 
-  static parsePersonal(plain: ContactPersonalResponse | BadResponse): ?Contact {
-    if (plain instanceof BadResponse) {
-      return null;
-    }
-
+  static parsePersonal(plain: ContactPersonalResponse): ?Contact {
     return new Contact({
       name: `${plain.firstName || plain.firstname || ''} ${plain.lastName || plain.lastname || ''}`,
       number: plain.number || '',
