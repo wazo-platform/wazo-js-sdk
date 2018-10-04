@@ -174,6 +174,8 @@ export default class Contact {
 
   setFavorite(value: boolean) {
     this.favorited = value;
+
+    return this;
   }
 
   is(other: Contact): boolean {

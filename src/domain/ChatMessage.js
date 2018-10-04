@@ -139,6 +139,8 @@ export default class ChatMessage {
 
   acknowledge() {
     this.read = true;
+
+    return this;
   }
 
   getTheOtherParty() {

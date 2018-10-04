@@ -56,7 +56,7 @@ type ProfileArguments = {
   username: string,
   mobileNumber: string,
   forwards: Array<ForwardOption>,
-  doNotDisturb: boolean,
+  doNotDisturb?: boolean,
   presence?: string
 };
 
@@ -69,7 +69,7 @@ export default class Profile {
   username: string;
   mobileNumber: string;
   forwards: Array<ForwardOption>;
-  doNotDisturb: boolean;
+  doNotDisturb: ?boolean;
   presence: ?string;
 
   static parse(plain: ProfileResponse): Profile {
@@ -88,6 +88,16 @@ export default class Profile {
       ],
       doNotDisturb: plain.services.dnd.enabled
     });
+  }
+
+  static newFrom(profile: Profile) {
+    const args = {};
+    Object.getOwnPropertyNames(profile).forEach((prop) => {
+      // $FlowFixMe
+      args[prop] = profile[prop];
+    });
+
+    return new Profile(args);
   }
 
   constructor({

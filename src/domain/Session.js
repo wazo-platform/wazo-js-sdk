@@ -39,6 +39,16 @@ export default class Session {
   uuid: string;
   profile: ?Profile;
 
+  static newFrom(profile: Session) {
+    const args = {};
+    Object.getOwnPropertyNames(profile).forEach((prop) => {
+      // $FlowFixMe
+      args[prop] = profile[prop];
+    });
+
+    return new Session(args);
+  }
+
   static parse(plain: Response): ?Session {
     return new Session({
       token: plain.data.token,

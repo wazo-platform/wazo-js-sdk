@@ -4,7 +4,29 @@ import Profile from '../Profile';
 import Line from '../Line';
 import ForwardOption, { FORWARD_KEYS } from '../ForwardOption';
 
+
 describe('Profile domain', () => {
+  it('should create a new Profile from another one', () => {
+    const attributes = {
+      id: '123',
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john.doe@acme.com',
+      lines: [
+        new Line({ id: 9012, extensions: [{ id: 1, exten: '8000', context: 'default' }], endpoint_custom: null }),
+      ],
+      username: 'john.doe',
+      forwards: [],
+      mobileNumber: '123'
+    };
+    const oldProfile = new Profile(attributes);
+    const newProfile = Profile.newFrom(oldProfile);
+
+    expect(newProfile.firstName).toBe(attributes.firstName);
+    expect(newProfile.email).toBe(attributes.email);
+    expect(newProfile.lines[0].extensions[0].exten).toBe('8000');
+  });
+
   it('can parse a plain profile to domain', () => {
     const plain = {
       id: 10,
@@ -39,9 +61,9 @@ describe('Profile domain', () => {
       groups: [],
       language: 'FR',
       mobile_phone_number: null,
-      timezone: null
+      timezone: null,
+      mobileNumber: '1234'
     };
-
     const profile = Profile.parse(plain);
 
     expect(profile).toEqual(
