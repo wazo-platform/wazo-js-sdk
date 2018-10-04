@@ -49,7 +49,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   markAsFavorite(token: Token, source: string, sourceId: string): Promise<Boolean> {
     const url = `${baseUrl}/directories/favorites/${source}/${sourceId}`;
 
-    return client.put(url, 'put', null, token, ApiRequester.successResponseParser);
+    return client.put(url, null, token, ApiRequester.successResponseParser);
   },
 
   removeFavorite(token: Token, source: string, sourceId: string) {

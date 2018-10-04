@@ -86,7 +86,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
 
   listUsers(token: Token): Promise<ListUsersResponse> {
-    return client.get(`${baseUrl}/users`, 'get', null, token);
+    return client.get(`${baseUrl}/users`, null, token);
   },
 
   listGroups(token: Token): Promise<ListGroupsResponse> {
