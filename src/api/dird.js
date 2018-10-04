@@ -23,7 +23,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
 
   listPersonalContacts(token: Token): Promise<Array<Contact>> {
-    return client.get(`${baseUrl}/personal`, null, token).then(response => Contact.parseManyPersonal(response));
+    return client.get(`${baseUrl}/personal`, null, token).then(response => Contact.parseManyPersonal(response.items));
   },
 
   addContact(token: Token, contact: NewContact): Promise<Contact> {
