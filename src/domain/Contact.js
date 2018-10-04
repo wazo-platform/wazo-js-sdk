@@ -1,6 +1,7 @@
 // @flow
 
 import Session from './Session';
+import newFrom from '../utils/new-from';
 
 export type NewContact = {
   firstName: string,
@@ -136,6 +137,10 @@ export default class Contact {
       favorited: false,
       personal: true
     });
+  }
+
+  static newFrom(profile: Contact) {
+    return newFrom(profile, Contact);
   }
 
   constructor({

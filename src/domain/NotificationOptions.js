@@ -1,4 +1,5 @@
 // @flow
+import newFrom from '../utils/new-from';
 
 type NotificationOptionResponse = {
   sound: boolean,
@@ -23,6 +24,10 @@ export default class NotificationOptions {
       sound: plain.sound,
       vibration: plain.vibration
     });
+  }
+
+  static newFrom(profile: NotificationOptions) {
+    return newFrom(profile, NotificationOptions);
   }
 
   constructor({ sound = true, vibration = true }: NotificationOptionsArguments = {}) {

@@ -1,5 +1,7 @@
 // @flow
 
+import newFrom from '../utils/new-from';
+
 type Response = {
   destination: string,
   enabled: boolean
@@ -28,6 +30,10 @@ export default class ForwardOption {
       enabled: plain.enabled,
       key
     });
+  }
+
+  static newFrom(profile: ForwardOption) {
+    return newFrom(profile, ForwardOption);
   }
 
   constructor({ destination, enabled, key }: ForwardOptionArguments = {}) {

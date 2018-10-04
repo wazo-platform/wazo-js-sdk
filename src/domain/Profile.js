@@ -2,6 +2,7 @@
 
 import Line from './Line';
 import ForwardOption, { FORWARD_KEYS } from './ForwardOption';
+import newFrom from '../utils/new-from';
 
 export const PRESENCE = {
   AVAILABLE: 'available',
@@ -91,13 +92,7 @@ export default class Profile {
   }
 
   static newFrom(profile: Profile) {
-    const args = {};
-    Object.getOwnPropertyNames(profile).forEach((prop) => {
-      // $FlowFixMe
-      args[prop] = profile[prop];
-    });
-
-    return new Profile(args);
+    return newFrom(profile, Profile);
   }
 
   constructor({

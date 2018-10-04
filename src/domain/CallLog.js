@@ -1,6 +1,7 @@
 // @flow
 
 import Session from './Session';
+import newFrom from '../utils/new-from';
 
 type CallLogResponse = {
   answer: string,
@@ -114,6 +115,10 @@ export default class CallLog {
       // @TODO: FIXME add verification declined vs missed call
       newMissedCall: plain.destination_extension === session.primaryNumber() && !plain.answered
     });
+  }
+
+  static newFrom(profile: CallLog) {
+    return newFrom(profile, CallLog);
   }
 
   constructor({

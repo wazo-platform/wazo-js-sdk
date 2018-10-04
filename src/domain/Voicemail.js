@@ -1,4 +1,5 @@
 // @flow
+import newFrom from '../utils/new-from';
 
 type MessageResponse = {
   caller_id_name: string,
@@ -63,6 +64,10 @@ export default class Voicemail {
     const read = plainRead.map(message => Voicemail.parse(message)).map(voicemail => voicemail.acknowledge());
 
     return [...unread, ...read];
+  }
+
+  static newFrom(profile: Voicemail) {
+    return newFrom(profile, Voicemail);
   }
 
   constructor({ id, date, duration, caller }: VoicemailArguments = {}) {

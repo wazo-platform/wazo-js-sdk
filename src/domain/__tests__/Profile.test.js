@@ -4,7 +4,6 @@ import Profile from '../Profile';
 import Line from '../Line';
 import ForwardOption, { FORWARD_KEYS } from '../ForwardOption';
 
-
 describe('Profile domain', () => {
   it('should create a new Profile from another one', () => {
     const attributes = {
@@ -13,7 +12,7 @@ describe('Profile domain', () => {
       lastName: 'Doe',
       email: 'john.doe@acme.com',
       lines: [
-        new Line({ id: 9012, extensions: [{ id: 1, exten: '8000', context: 'default' }], endpoint_custom: null }),
+        new Line({ id: 9012, extensions: [{ id: 1, exten: '8000', context: 'default' }], endpoint_custom: null })
       ],
       username: 'john.doe',
       forwards: [],
@@ -22,6 +21,7 @@ describe('Profile domain', () => {
     const oldProfile = new Profile(attributes);
     const newProfile = Profile.newFrom(oldProfile);
 
+    expect(newProfile).toBeInstanceOf(Profile);
     expect(newProfile.firstName).toBe(attributes.firstName);
     expect(newProfile.email).toBe(attributes.email);
     expect(newProfile.lines[0].extensions[0].exten).toBe('8000');
