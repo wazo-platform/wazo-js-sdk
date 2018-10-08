@@ -27,7 +27,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.get(`${baseUrl}/token/${token}`, null, {}).then(response => Session.parse(response));
   },
 
-  logIn(params: Object = {}): Promise<?Session> {
+  logIn(params: { username: string, password: string, backend: string, expiration: number }): Promise<?Session> {
     const body = {
       backend: params.backend || DEFAULT_BACKEND_USER,
       expiration: params.expiration || DETAULT_EXPIRATION
