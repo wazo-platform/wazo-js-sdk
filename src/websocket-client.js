@@ -3,37 +3,56 @@ import ReconnectingWebSocket from 'reconnecting-websocket';
 
 import CallbacksHandler from './utils/CallbacksHandler';
 
+type WebSocketClientArguments = {
+  host: string,
+  token: string,
+  events: Array<string>
+}
+
 export default class WebSocketClient {
   initialized: boolean;
   host: string;
   token: string;
   events: Array<string>;
   callbacksHandler: CallbacksHandler;
+  options: Object;
+  socket: ?ReconnectingWebSocket;
 
-  constructor({ host, token, events = [] }: { host: string, token: string, events: Array<string> }) {
+  /**
+   *
+   * @param host
+   * @param token
+   * @param events
+   * @param options @see https://github.com/pladaria/reconnecting-websocket#available-options
+   */
+  constructor({ host, token, events = [] }: WebSocketClientArguments, options: Object = {}) {
     this.initialized = false;
     this.callbacksHandler = new CallbacksHandler();
 
+    this.socket = null;
     this.host = host;
     this.token = token;
     this.events = events;
+    this.options = options;
   }
 
   connect() {
-    const sock = new ReconnectingWebSocket(`wss://${this.host}/api/websocketd/?token=${this.token}`);
-    sock.debug = false;
+    this.socket = new ReconnectingWebSocket(`wss://${this.host}/api/websocketd/?token=${this.token}`, [], this.options);
+    if (this.options.binaryType) {
+      this.socket.binaryType = this.options.binaryType;
+    }
 
-    sock.onmessage = (event: MessageEvent) => {
+    this.socket.onmessage = (event: MessageEvent) => {
       const message = JSON.parse(typeof event.data === 'string' ? event.data : '{}');
 
       if (!this.initialized) {
-        this.handleMessage(message, sock);
+        this.handleMessage(message, this.socket);
       } else {
         this.callbacksHandler.triggerCallback(message.name, message);
       }
     };
 
-    sock.onclose = e => {
+    this.socket.onclose = e => {
       switch (e.code) {
         case 4002:
           break;
@@ -42,15 +61,21 @@ export default class WebSocketClient {
         default:
       }
     };
+  }
 
-    return sock;
+  close(): void {
+    if (!this.socket) {
+      return;
+    }
+
+    this.socket.close();
   }
 
   on(event: string, callback: Function) {
     this.callbacksHandler.on(event, callback);
   }
 
-  handleMessage(message: Object, sock: WebSocket) {
+  handleMessage(message: Object, sock: ReconnectingWebSocket) {
     switch (message.op) {
       case 'init':
         this.events.forEach(event => {
@@ -70,7 +95,7 @@ export default class WebSocketClient {
         this.initialized = true;
         break;
       default:
-      // nothing
+        this.callbacksHandler.triggerCallback('message', message);
     }
   }
 }
