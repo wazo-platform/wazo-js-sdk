@@ -1,4 +1,6 @@
 // @flow
+import newFrom from '../utils/new-from';
+
 type ChatResponse = {
   date: string,
   destination_server_uuid: string,
@@ -119,6 +121,10 @@ export default class ChatMessage {
     });
   }
 
+  static newFrom(profile: ChatMessage) {
+    return newFrom(profile, ChatMessage);
+  }
+
   constructor({ id, date, message, direction, destination, source, read = true }: ChatMessageArguments = {}) {
     this.id = id;
     this.date = date;
@@ -139,6 +145,8 @@ export default class ChatMessage {
 
   acknowledge() {
     this.read = true;
+
+    return this;
   }
 
   getTheOtherParty() {

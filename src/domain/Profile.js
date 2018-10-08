@@ -2,6 +2,7 @@
 
 import Line from './Line';
 import ForwardOption, { FORWARD_KEYS } from './ForwardOption';
+import newFrom from '../utils/new-from';
 
 export const PRESENCE = {
   AVAILABLE: 'available',
@@ -56,7 +57,7 @@ type ProfileArguments = {
   username: string,
   mobileNumber: string,
   forwards: Array<ForwardOption>,
-  doNotDisturb: boolean,
+  doNotDisturb?: boolean,
   presence?: string
 };
 
@@ -69,7 +70,7 @@ export default class Profile {
   username: string;
   mobileNumber: string;
   forwards: Array<ForwardOption>;
-  doNotDisturb: boolean;
+  doNotDisturb: ?boolean;
   presence: ?string;
 
   static parse(plain: ProfileResponse): Profile {
@@ -88,6 +89,10 @@ export default class Profile {
       ],
       doNotDisturb: plain.services.dnd.enabled
     });
+  }
+
+  static newFrom(profile: Profile) {
+    return newFrom(profile, Profile);
   }
 
   constructor({

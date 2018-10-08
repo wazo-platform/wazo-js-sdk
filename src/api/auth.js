@@ -27,7 +27,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.get(`${baseUrl}/token/${token}`, null, {}).then(response => Session.parse(response));
   },
 
-  logIn(params: Object = {}): Promise<?Session> {
+  logIn(params: { username: string, password: string, backend: string, expiration: number }): Promise<?Session> {
     const body = {
       backend: params.backend || DEFAULT_BACKEND_USER,
       expiration: params.expiration || DETAULT_EXPIRATION
@@ -86,7 +86,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
 
   listUsers(token: Token): Promise<ListUsersResponse> {
-    return client.get(`${baseUrl}/users`, 'get', null, token);
+    return client.get(`${baseUrl}/users`, null, token);
   },
 
   listGroups(token: Token): Promise<ListGroupsResponse> {

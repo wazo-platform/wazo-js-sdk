@@ -29,7 +29,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   hangupCall(token: Token, applicationUuid: string, callId: number) {
     const url = `${baseUrl}/${applicationUuid}/calls/${callId}`;
 
-    return client.delete(url, 'delete', null, token);
+    return client.delete(url, null, token);
   },
 
   playCall(token: Token, applicationUuid: string, callId: number, language: string, uri: string) {
@@ -66,6 +66,6 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
 
   removeCallNodes(token: Token, applicationUuid: string, nodeUuid: string, callId: string) {
-    return client.delete(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}/calls/${callId}`, 'delete', null, token);
+    return client.delete(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}/calls/${callId}`, null, token);
   }
 });

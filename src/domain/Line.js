@@ -1,4 +1,5 @@
 // @flow
+import newFrom from '../utils/new-from';
 
 type Extension = {
   context: string,
@@ -28,6 +29,10 @@ export default class Line {
       id: plain.id,
       extensions: plain.extensions
     });
+  }
+
+  static newFrom(profile: Line) {
+    return newFrom(profile, Line);
   }
 
   constructor({ id, extensions }: LineArguments = {}) {

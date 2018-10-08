@@ -16,8 +16,8 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.get(`${baseUrl}/users/me/chats`, body, token).then(response => ChatMessage.parseMany(response));
   },
 
-  sendMessage(token: Token, alias: string, message: string, toUserId: string) {
-    const body = { alias, message, to: toUserId };
+  sendMessage(token: Token, alias: string, msg: string, toUserId: string) {
+    const body = { alias, msg, to: toUserId };
 
     return client.post(`${baseUrl}/users/me/chats`, body, token);
   },

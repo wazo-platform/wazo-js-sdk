@@ -4,6 +4,7 @@ import Profile from './Profile';
 import Contact from './Contact';
 import Line from './Line';
 import type { UUID, Token } from './types';
+import newFrom from '../utils/new-from';
 
 type Response = {
   data: {
@@ -44,6 +45,10 @@ export default class Session {
       token: plain.data.token,
       uuid: plain.data.xivo_user_uuid
     });
+  }
+
+  static newFrom(profile: Session) {
+    return newFrom(profile, Session);
   }
 
   constructor({ token, uuid, profile }: SessionArguments = {}) {

@@ -1,5 +1,7 @@
 // @flow
 
+import newFrom from '../utils/new-from';
+
 type CallResponse = {
   call_id: string,
   peer_caller_id_name: string,
@@ -35,6 +37,10 @@ export default class Call {
       status: plain.status,
       startingTime: new Date(plain.creation_time)
     });
+  }
+
+  static newFrom(profile: Call) {
+    return newFrom(profile, Call);
   }
 
   constructor({ id, calleeName, calleeNumber, status, startingTime }: CallArguments = {}) {
