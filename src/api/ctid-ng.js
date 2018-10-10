@@ -56,7 +56,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.delete(`${baseUrl}/users/me/voicemails/messages/${voicemailId}`, null, token);
   },
 
-  getPresence(token: Token, contactUuid: UUID) {
+  getPresence(token: Token, contactUuid: UUID): Promise<{ presence: string, user_uuid: string, xivo_uuid: string }> {
     return client.get(`${baseUrl}/users/${contactUuid}/presences`, null, token);
   },
 
