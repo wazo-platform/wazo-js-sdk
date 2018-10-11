@@ -7,7 +7,7 @@ type WebSocketClientArguments = {
   host: string,
   token: string,
   events: Array<string>
-}
+};
 
 export default class WebSocketClient {
   initialized: boolean;
