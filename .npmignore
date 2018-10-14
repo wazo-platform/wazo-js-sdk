@@ -6,6 +6,7 @@ src/
 *.config.js
 *.js.map
 .*rc
+.idea
 
 .eslintignore
 .travis.yml

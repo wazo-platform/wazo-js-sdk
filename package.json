@@ -1,6 +1,6 @@
 {
   "name": "@wazo/sdk",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Wazo's JavaScript Software Development Kit.",
   "main": "dist/wazo-sdk.js",
   "author": "Wazo (http://wazo.io)",
@@ -11,6 +11,11 @@
     "Wazo Team <dev@wazo.io> (https://github.com/wazo-pbx)"
   ],
   "license": "MIT",
+  "homepage": "https://github.com/wazo-pbx/wazo-js-sdk",
+  "files": [
+    "dist/*.js",
+    "src/**/*.js"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/wazo-pbx/wazo-js-sdk"
