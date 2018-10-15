@@ -223,3 +223,15 @@ export type GetTenantResponse = {
 export type GetUserResponse = {
   // @TODO
 };
+
+export type WebRtcConfig = {
+  id: number,
+  host: string,
+  line: { id: number, links: Array<Link> },
+  links: Array<Link>,
+  options: Array<Array<string>>,
+  secret: string,
+  tenant_uuid: string,
+  type: string,
+  username: string,
+};
