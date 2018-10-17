@@ -1,6 +1,6 @@
 /* @flow */
 import ApiRequester from '../utils/api-requester';
-import type { UUID, Token, ListConfdUsersResponse, ListApplicationsResponse } from '../domain/types';
+import type { UUID, Token, ListConfdUsersResponse, ListApplicationsResponse, WebRtcConfig } from '../domain/types';
 import Profile from '../domain/Profile';
 
 export default (client: ApiRequester, baseUrl: string) => ({
@@ -51,7 +51,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.get(url, null, token);
   },
 
-  getSIP(token: Token, userUuid: UUID, lineId: number) {
+  getSIP(token: Token, userUuid: UUID, lineId: number): Promise<WebRtcConfig> {
     return client.get(`${baseUrl}/users/${userUuid}/lines/${lineId}/associated/endpoints/sip`, null, token);
   }
 });
