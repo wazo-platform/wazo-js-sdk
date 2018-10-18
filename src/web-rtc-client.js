@@ -288,7 +288,7 @@ export default class WebRTCClient {
     let remoteStream;
 
     if (pc.getReceivers) {
-      remoteStream = typeof global !== 'undefined' ? new global.window.MediaStream() : window.MediaStream();
+      remoteStream = typeof global !== 'undefined' ? new global.window.MediaStream() : new window.MediaStream();
       pc.getReceivers().forEach(receiver => {
         const { track } = receiver;
         if (track) {
@@ -314,7 +314,7 @@ export default class WebRTCClient {
       let localStream;
 
       if (pc.getSenders) {
-        localStream = typeof global !== 'undefined' ? new global.window.MediaStream() : window.MediaStream();
+        localStream = typeof global !== 'undefined' ? new global.window.MediaStream() : new window.MediaStream();
         pc.getSenders().forEach(sender => {
           const { track } = sender;
           if (track && track.kind === 'video') {
