@@ -1,6 +1,7 @@
 // @flow
 /* eslint-disable class-methods-use-this */
 /* global window */
+import 'webrtc-adapter';
 import SIP from 'sip.js';
 import CallbacksHandler from './utils/CallbacksHandler';
 
@@ -117,7 +118,10 @@ export default class WebRTCClient {
       this.localVideo.volume = 0;
     }
 
-    return this.userAgent.invite(number, this._getMediaConfiguration());
+    const session = this.userAgent.invite(number, this._getMediaConfiguration());
+    this._setupSession(session);
+
+    return session;
   }
 
   answer(session: SIP.sessionDescriptionHandler) {
@@ -281,6 +285,8 @@ export default class WebRTCClient {
     session.sessionDescriptionHandler.on('addStream', () => {
       this._setupRemoteMedia(session);
     });
+
+    this.callbacksHandler.triggerCallback('accepted', session);
   }
 
   _setupRemoteMedia(session: SIP.sessionDescriptionHandler) {
@@ -310,26 +316,28 @@ export default class WebRTCClient {
   }
 
   _setupLocalMedia(session: SIP.sessionDescriptionHandler) {
-    if (this.localVideo) {
-      const pc = session.sessionDescriptionHandler.peerConnection;
-      let localStream;
-
-      if (pc.getSenders) {
-        localStream = typeof global !== 'undefined' ? new global.window.MediaStream() : new window.MediaStream();
-        pc.getSenders().forEach(sender => {
-          const { track } = sender;
-          if (track && track.kind === 'video') {
-            localStream.addTrack(track);
-          }
-        });
-      } else {
-        [localStream] = pc.getLocalStreams();
-      }
-
-      this.localVideo.srcObject = localStream;
-      this.localVideo.volume = 0;
-      this.localVideo.play();
+    if (!this.localVideo) {
+      return;
     }
+
+    const pc = session.sessionDescriptionHandler.peerConnection;
+    let localStream;
+
+    if (pc.getSenders) {
+      localStream = typeof global !== 'undefined' ? new global.window.MediaStream() : new window.MediaStream();
+      pc.getSenders().forEach(sender => {
+        const { track } = sender;
+        if (track && track.kind === 'video') {
+          localStream.addTrack(track);
+        }
+      });
+    } else {
+      [localStream] = pc.getLocalStreams();
+    }
+
+    this.localVideo.srcObject = localStream;
+    this.localVideo.volume = 0;
+    this.localVideo.play();
   }
 
   _cleanupMedia() {
