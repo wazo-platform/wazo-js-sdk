@@ -19,7 +19,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   sendMessage(token: Token, alias: string, msg: string, toUserId: string) {
     const body = { alias, msg, to: toUserId };
 
-    return client.post(`${baseUrl}/users/me/chats`, body, token);
+    return client.post(`${baseUrl}/users/me/chats`, body, token, ApiRequester.successResponseParser);
   },
 
   makeCall(token: Token, extension: string) {
