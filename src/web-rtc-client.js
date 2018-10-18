@@ -237,6 +237,7 @@ export default class WebRTCClient {
             video: false
           },
           rtcConfiguration: {
+            rtcpMuxPolicy: 'negotiate',
             iceServers: WebRTCClient.getIceServers(this.config.host),
             mandatory: {
               OfferToReceiveAudio: true,
