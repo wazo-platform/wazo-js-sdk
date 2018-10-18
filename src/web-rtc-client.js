@@ -1,7 +1,6 @@
 // @flow
 
 import SIP from 'sip.js';
-
 import CallbacksHandler from './utils/CallbacksHandler';
 
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];

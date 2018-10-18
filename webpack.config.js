@@ -31,10 +31,5 @@ module.exports = {
       }
     }),
   ],
-  devtool: 'source-map',
-  externals: {
-    'sip.js': 'SIP',
-    'cross-fetch': 'cross-fetch',
-    'reconnecting-websocket': 'ReconnectingWebSocket',
-  },
+  devtool: 'source-map'
 };

@@ -1,5 +1,6 @@
 import resolve from 'rollup-plugin-node-resolve';
 import { terser } from 'rollup-plugin-terser';
+import commonjs from 'rollup-plugin-commonjs';
 import flow from 'rollup-plugin-flow';
 
 export default {
@@ -8,20 +9,19 @@ export default {
     file: 'dist/wazo-sdk.js',
     format: 'umd',
     name: '@wazo/sdk',
-    globals: {
-      'sip.js': 'SIP',
-      'cross-fetch': 'cross-fetch',
-      'reconnecting-websocket': 'ReconnectingWebSocket',
-    },
+    sourcemap: true
   },
   plugins: [
     flow(),
     resolve({
+      jsnext: true,
+      main: false,
+      include: ['node_modules/**'],
       customResolveOptions: {
         moduleDirectory: 'node_modules',
-      },
+      }
     }),
+    commonjs(),
     terser(),
-  ],
-  external: ['cross-fetch/polyfill', 'sip.js', 'reconnecting-websocket', 'js-base64'],
+  ]
 };

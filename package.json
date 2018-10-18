@@ -24,7 +24,7 @@
     "url": "https://github.com/wazo-pbx/wazo-js-sdk/issues"
   },
   "scripts": {
-    "build": "./node_modules/.bin/rollup --config",
+    "build": "./node_modules/.bin/rollup --config --extend",
     "docs:build": "./node_modules/.bin/documentation build src/index.js -f html -o docs",
     "test": "npm run jest && npm run lint && npm run typecheck && npm run checkbuild",
     "watch": "./node_modules/.bin/webpack --mode=development --watch",
@@ -63,6 +63,7 @@
     "jsonlint": "^1.6.3",
     "prettier-eslint-cli": "^4.7.1",
     "rollup": "^0.66.0",
+    "rollup-plugin-commonjs": "^9.2.0",
     "rollup-plugin-flow": "^1.1.1",
     "rollup-plugin-node-resolve": "^3.4.0",
     "rollup-plugin-terser": "^3.0.0",
