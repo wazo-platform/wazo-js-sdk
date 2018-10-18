@@ -141,13 +141,95 @@ const config = {
   }
 };
 
-const phone = new WazoWebRTCClient(config, callback);
-// eventName can be on the of events here: https://sipjs.com/api/0.11.0/simple/#events
-// You can also use a wildcard: phone.on('*', (event, eventName) => {}) to catch all events
-phone.on('eventName', (event) => {
+const phone = new WazoWebRTCClient({
+  displayName: 'From WEB',
+  host: 'quintana.wazo.community',
+  authorizationUser: lineData.username,
+  password: lineData.secret,
+  media: {
+    audio: boolean | document.getElementById('audio'), // Pointing to a `<audio id="audio" />` element
+    video: boolean | document.getElementById('video'), // pointing to a `<video id="video" />` element
+    localVideo: boolean | document.getElementById('video'), // pointing to a `<video id="video" />` element
+  }
+});
+// eventName can be on the of events : `connected`, `disconnected`, `registered`, `unregistered`, `registrationFailed`, `invite`, `inviteSent`, `transportCreated`, `newTransaction`, `transactionDestroyed`, `notify`, `outOfDialogReferRequested`, `message`.
+phone.on('invite', (session: SIP.sessionDescriptionHandler) => {
+  this.currentSession = session;
+  // ...
+});
+// or a wildcard : `*`
+phone.on('*', (data: mixed, eventName: string) => {
+  
 });
 
 phone.call('1234');
+```
+
+### Calling a number
+```js
+phone.call(number: string);
+```
+
+### Be notified to a phone call
+```js
+phone.on('invite', (session: SIP.sessionDescriptionHandler) => {
+  this.currentSession = session;
+});
+```
+
+### Answering a call
+```js
+phone.answer(session: SIP.sessionDescriptionHandler);
+```
+
+## Hangup a call
+```js
+phone.hangup(session: SIP.sessionDescriptionHandler);
+```
+
+## Rejecting a call
+```js
+phone.reject(session: SIP.sessionDescriptionHandler);
+```
+
+## Muting a call
+```js
+phone.mute(session: SIP.sessionDescriptionHandler);
+```
+
+## Umuting a call
+```js
+phone.unmute(session: SIP.sessionDescriptionHandler);
+```
+
+## Holding a call
+```js
+phone.hold(session: SIP.sessionDescriptionHandler);
+```
+
+## Unholding a call
+```js
+phone.unhold(session: SIP.sessionDescriptionHandler);
+```
+
+## Transferring a call
+```js
+phone.transfert(session: SIP.sessionDescriptionHandler, target: string);
+```
+
+## Sending a DTMF tone
+```js
+phone.sendDTMF(session: SIP.sessionDescriptionHandler, tone: string);
+```
+
+## Sending a message
+```js
+phone.sendDTMF(message: string, destination: string);
+```
+
+## Closing the RTC connection
+```js
+phone.close();
 ```
 
 ### Wazo Websocket
@@ -160,9 +242,17 @@ const ws = new WazoWebSocket({
 });
 
 // eventName can be on the of events here: http://documentation.wazo.community/en/stable/api_sdk/websocket.html
-// You can also use a wildcard: ws.on('*', (event, eventName) => {}) to catch all events
-ws.on('eventName', (event) => {
+ws.on('eventName', (data: mixed) => {
+});
+
+// You can also use a wildcard to catch all events
+ws.on('*', (data: mixed, eventName: string) => {
 });
 
 ws.connect();
+```
+
+## Closing the socket
+```js
+ws.close();
 ```
