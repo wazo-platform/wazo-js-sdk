@@ -1,6 +1,5 @@
 /* @flow */
 /* global btoa, fetch */
-// $FlowFixMe: can't find `cross-fetch/polyfill`.
 import { Base64 } from 'js-base64';
 
 import BadResponse from '../domain/BadResponse';
@@ -10,7 +9,9 @@ import type { Token } from '../domain/types';
 
 const methods = ['head', 'get', 'post', 'put', 'delete'];
 
-const realFetch = typeof(fetch) === 'undefined' ? require('node-fetch/lib/index') : fetch;
+// Use a function here to be able to mock it in tests
+// eslint-disable-next-line
+const realFetch = () => typeof(fetch) === 'undefined' ? require('node-fetch/lib/index') : fetch;
 
 export default class ApiRequester {
   server: string;
@@ -89,7 +90,7 @@ export default class ApiRequester {
       agent: this.agent
     };
 
-    return realFetch(url, options).then(response => {
+    return realFetch()(url, options).then(response => {
       const contentType = response.headers.get('content-type') || '';
       const isJson = contentType.indexOf('application/json') !== -1;
 
