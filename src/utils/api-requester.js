@@ -1,5 +1,7 @@
 /* @flow */
-/* global btoa, fetch */
+/* global btoa, window, navigator */
+/* eslint-disable global-require */
+/* eslint-disable import/no-dynamic-require */
 import { Base64 } from 'js-base64';
 
 import BadResponse from '../domain/BadResponse';
@@ -10,8 +12,23 @@ import type { Token } from '../domain/types';
 const methods = ['head', 'get', 'post', 'put', 'delete'];
 
 // Use a function here to be able to mock it in tests
-// eslint-disable-next-line
-const realFetch = () => typeof(fetch) === 'undefined' ? require('node-fetch/lib/index') : fetch;
+const realFetch = () => {
+  if (typeof document !== 'undefined') {
+    // Browser
+    return window.fetch;
+  }
+
+  if (typeof navigator !== 'undefined' && navigator.product === 'ReactNative') {
+    // React native
+
+    require('whatwg-fetch');
+    return window.fetch;
+  }
+
+  // nodejs
+  // this package is disable for react-native in package.json because it requires nodejs modules
+  return require('node-fetch/lib/index');
+};
 
 export default class ApiRequester {
   server: string;

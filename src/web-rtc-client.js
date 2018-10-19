@@ -237,15 +237,15 @@ export default class WebRTCClient {
         peerConnectionOptions: {
           iceCheckingTimeout: 500,
           constraints: {
-            audio: true,
-            video: false
+            audio: this._hasAudio(),
+            video: this._hasVideo()
           },
           rtcConfiguration: {
             rtcpMuxPolicy: 'negotiate',
             iceServers: WebRTCClient.getIceServers(this.config.host),
             mandatory: {
-              OfferToReceiveAudio: true,
-              OfferToReceiveVideo: false
+              OfferToReceiveAudio: this._hasAudio(),
+              OfferToReceiveVideo: this._hasVideo()
             }
           }
         }
@@ -306,10 +306,10 @@ export default class WebRTCClient {
       [remoteStream] = pc.getRemoteStreams();
     }
 
-    if (this._hasVideo()) {
+    if (this._hasVideo() && this._isWeb()) {
       this.video.srcObject = remoteStream;
       this.video.play();
-    } else if (this._hasAudio()) {
+    } else if (this._hasAudio() && this._isWeb()) {
       this.audio.srcObject = remoteStream;
       this.audio.play();
     }
