@@ -20,9 +20,7 @@ const realFetch = () => {
 
   if (typeof navigator !== 'undefined' && navigator.product === 'ReactNative') {
     // React native
-
-    require('whatwg-fetch');
-    return window.fetch;
+    return fetch;
   }
 
   // nodejs

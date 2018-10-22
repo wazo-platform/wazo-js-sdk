@@ -1,6 +1,6 @@
 {
   "name": "@wazo/sdk",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Wazo's JavaScript Software Development Kit.",
   "main": "dist/wazo-sdk.js",
   "author": "Wazo (http://wazo.io)",
@@ -40,8 +40,7 @@
     "node-fetch": "^2.2.0",
     "reconnecting-websocket": "^4.1.5",
     "sip.js": "^0.11.4",
-    "webrtc-adapter": "^6.4.3",
-    "whatwg-fetch": "^3.0.0"
+    "webrtc-adapter": "^6.4.3"
   },
   "devDependencies": {
     "@babel/core": "^7.1.0",
