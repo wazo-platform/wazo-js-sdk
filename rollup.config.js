@@ -16,12 +16,16 @@ export default {
     resolve({
       jsnext: true,
       main: false,
+      browser: true,
       include: ['node_modules/**'],
       customResolveOptions: {
         moduleDirectory: 'node_modules',
       }
     }),
-    commonjs(),
-    terser(),
-  ]
+    commonjs({
+
+    }),
+    // terser(),
+  ],
+  moduleContext: { 'node_modules/node-fetch/lib/index': 'window' },
 };

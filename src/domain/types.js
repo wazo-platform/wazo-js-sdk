@@ -233,5 +233,5 @@ export type WebRtcConfig = {
   secret: string,
   tenant_uuid: string,
   type: string,
-  username: string,
+  username: string
 };

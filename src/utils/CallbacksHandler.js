@@ -17,7 +17,7 @@ export default class CallbacksHandler {
     args.push(eventName);
 
     if (this.callbacks['*']) {
-      return this.callbacks['*'].apply(undefined, args);
+      this.callbacks['*'].apply(undefined, args);
     }
 
     if (!(eventName in this.callbacks)) {

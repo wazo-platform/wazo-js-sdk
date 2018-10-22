@@ -54,7 +54,7 @@ const authVersion = '0.1';
 const username = 'wazo';
 const password = 'zowa';
 
-jest.mock('cross-fetch/polyfill', () => {});
+jest.mock('node-fetch/lib/index', () => {});
 
 const client = new WazoApiClient({ server });
 

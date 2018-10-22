@@ -21,7 +21,7 @@ describe('Computing fetch URL', () => {
 
 describe('Calling fetch', () => {
   it('should call fetch without body but query string in get method', () => {
-    jest.mock('cross-fetch/polyfill', () => {});
+    jest.mock('node-fetch/lib/index', () => {});
     global.fetch = jest.fn(() => Promise.resolve({ json: () => Promise.resolve({}) }));
 
     const server = 'localhost';
