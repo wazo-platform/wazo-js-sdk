@@ -1251,7 +1251,10 @@
 	      term
 	    };
 
-	    const headers         = { 'X-Auth-Token': token };
+	    const headers         = {
+	      'X-Auth-Token': token,
+	      'Content-Type': 'application/json'
+	    };
 	    if (tenantUuid) {
 	      headers['Wazo-Tenant'] = tenantUuid;
 	    }
