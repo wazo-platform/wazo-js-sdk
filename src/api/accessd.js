@@ -18,7 +18,10 @@ export default (client: ApiRequester, baseUrl: string) => ({
       term
     };
 
-    const headers: Object = { 'X-Auth-Token': token };
+    const headers: Object = {
+      'X-Auth-Token': token,
+      'Content-Type': 'application/json'
+    };
     if (tenantUuid) {
       headers['Wazo-Tenant'] = tenantUuid;
     }
