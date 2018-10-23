@@ -320,9 +320,7 @@
 
 	  if (typeof navigator !== 'undefined' && navigator.product === 'ReactNative') {
 	    // React native
-
-	    require('whatwg-fetch');
-	    return window.fetch;
+	    return fetch;
 	  }
 
 	  // nodejs
@@ -1595,6 +1593,11 @@
 	    this.startingTime = startingTime;
 	  }
 
+	  getElapsedTimeInSeconds()         {
+	    const now = Date.now();
+	    return (now - this.startingTime) / 1000;
+	  }
+
 	  separateCalleeName()                                          {
 	    const names = this.calleeName.split(' ');
 	    const firstName = names[0];
@@ -1611,12 +1614,20 @@
 	    return this.calleeName.length > 0;
 	  }
 
+	  hasNumber(number        )          {
+	    return this.calleeNumber === number;
+	  }
+
 	  isUp()          {
 	    return this.status === 'Up';
 	  }
 
 	  isDown()          {
 	    return this.status === 'Down';
+	  }
+
+	  isRinging()          {
+	    return this.isRingingIncoming() || this.isRingingOutgoing();
 	  }
 
 	  isRingingIncoming()          {

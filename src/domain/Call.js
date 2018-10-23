@@ -51,6 +51,11 @@ export default class Call {
     this.startingTime = startingTime;
   }
 
+  getElapsedTimeInSeconds(): number {
+    const now = Date.now();
+    return (now - this.startingTime) / 1000;
+  }
+
   separateCalleeName(): { firstName: string, lastName: string } {
     const names = this.calleeName.split(' ');
     const firstName = names[0];
@@ -67,12 +72,20 @@ export default class Call {
     return this.calleeName.length > 0;
   }
 
+  hasNumber(number: string): boolean {
+    return this.calleeNumber === number;
+  }
+
   isUp(): boolean {
     return this.status === 'Up';
   }
 
   isDown(): boolean {
     return this.status === 'Down';
+  }
+
+  isRinging(): boolean {
+    return this.isRingingIncoming() || this.isRingingOutgoing();
   }
 
   isRingingIncoming(): boolean {
