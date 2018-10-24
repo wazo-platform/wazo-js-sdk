@@ -7,21 +7,24 @@ type CallResponse = {
   peer_caller_id_name: string,
   peer_caller_id_number: string,
   status: string,
-  creation_time: string
+  creation_time: string,
+  on_hold: boolean,
 };
 
 type CallArguments = {
   id: number,
   calleeName: string,
   calleeNumber: string,
+  onHold: boolean,
   status: string,
-  startingTime: Date
+  startingTime: Date,
 };
 
 export default class Call {
   id: number;
   calleeName: string;
   calleeNumber: string;
+  onHold: boolean;
   status: string;
   startingTime: Date;
 
@@ -34,6 +37,7 @@ export default class Call {
       id: +plain.call_id,
       calleeName: plain.peer_caller_id_name,
       calleeNumber: plain.peer_caller_id_number,
+      onHold: plain.on_hold,
       status: plain.status,
       startingTime: new Date(plain.creation_time)
     });
@@ -43,10 +47,11 @@ export default class Call {
     return newFrom(profile, Call);
   }
 
-  constructor({ id, calleeName, calleeNumber, status, startingTime }: CallArguments = {}) {
+  constructor({ id, calleeName, calleeNumber, onHold, status, startingTime }: CallArguments = {}) {
     this.id = id;
     this.calleeName = calleeName;
     this.calleeNumber = calleeNumber;
+    this.onHold = onHold;
     this.status = status;
     this.startingTime = startingTime;
   }
@@ -98,5 +103,17 @@ export default class Call {
 
   isFromTransfer(): boolean {
     return this.status === 'Down' || this.status === 'Ringing';
+  }
+
+  isOnHold(): boolean {
+    return this.onHold;
+  }
+
+  putOnHold(): void {
+    this.onHold = true;
+  }
+
+  resume(): void {
+    this.onHold = false;
   }
 }
