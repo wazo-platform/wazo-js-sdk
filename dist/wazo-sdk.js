@@ -1554,21 +1554,24 @@
 	                              
 	                                
 	                 
-	                       
+	                        
+	                   
 	  
 
 	                      
 	             
 	                     
 	                       
+	                  
 	                 
-	                    
+	                     
 	  
 
 	class Call {
 	             
 	                     
 	                       
+	                  
 	                 
 	                     
 
@@ -1581,6 +1584,7 @@
 	      id: +plain.call_id,
 	      calleeName: plain.peer_caller_id_name,
 	      calleeNumber: plain.peer_caller_id_number,
+	      onHold: plain.on_hold,
 	      status: plain.status,
 	      startingTime: new Date(plain.creation_time)
 	    });
@@ -1590,10 +1594,11 @@
 	    return newFrom(profile, Call);
 	  }
 
-	  constructor({ id, calleeName, calleeNumber, status, startingTime }                = {}) {
+	  constructor({ id, calleeName, calleeNumber, onHold, status, startingTime }                = {}) {
 	    this.id = id;
 	    this.calleeName = calleeName;
 	    this.calleeNumber = calleeNumber;
+	    this.onHold = onHold;
 	    this.status = status;
 	    this.startingTime = startingTime;
 	  }
@@ -1645,6 +1650,18 @@
 
 	  isFromTransfer()          {
 	    return this.status === 'Down' || this.status === 'Ringing';
+	  }
+
+	  isOnHold()          {
+	    return this.onHold;
+	  }
+
+	  putOnHold()       {
+	    this.onHold = true;
+	  }
+
+	  resume()       {
+	    this.onHold = false;
 	  }
 	}
 
