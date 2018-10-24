@@ -15,7 +15,7 @@ type CallArguments = {
   id: number,
   calleeName: string,
   calleeNumber: string,
-  onHold: booleam,
+  onHold: boolean,
   status: string,
   startingTime: Date,
 };
