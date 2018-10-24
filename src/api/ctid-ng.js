@@ -10,10 +10,18 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.put(`${baseUrl}/users/me/presences`, { presence }, token, ApiRequester.successResponseParser);
   },
 
-  listMessages(token: Token, participantUuid: ?UUID): Promise<Array<ChatMessage>> {
-    const body = participantUuid ? { participant_user_uuid: participantUuid } : null;
+  listMessages(token: Token, participantUuid: ?UUID, limit?: number): Promise<Array<ChatMessage>> {
+      const body: Object = {};
 
-    return client.get(`${baseUrl}/users/me/chats`, body, token).then(response => ChatMessage.parseMany(response));
+      if (participantUuid) {
+          body.participant_user_uuid = participantUuid;
+      }
+
+      if (limit) {
+          body.limit = limit;
+      }
+
+      return client.get(`${baseUrl}/users/me/chats`, body, token).then(response => ChatMessage.parseMany(response));
   },
 
   sendMessage(token: Token, alias: string, msg: string, toUserId: string) {
