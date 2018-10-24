@@ -12,8 +12,10 @@ export const PRESENCE = {
 
 type ProfileResponse = {
   groups: Array<{ id: number, name: string }>,
-  firstName: string,
-  lastName: string,
+  firstName: ?string,
+  firstname: ?string,
+  lastName: ?string,
+  lastname: ?string,
   uuid: string,
   lines: Array<{
     id: number,
@@ -76,8 +78,8 @@ export default class Profile {
   static parse(plain: ProfileResponse): Profile {
     return new Profile({
       id: plain.uuid,
-      firstName: plain.firstName,
-      lastName: plain.lastName,
+      firstName: plain.firstName || plain.firstname,
+      lastName: plain.lastName || plain.lastname,
       email: plain.email,
       lines: plain.lines.map(line => Line.parse(line)),
       username: plain.username,
