@@ -1515,11 +1515,12 @@
 	    return newFrom(profile, Voicemail);
 	  }
 
-	  constructor({ id, date, duration, caller }                     = {}) {
+	  constructor({ id, date, duration, caller, unread }                     = {}) {
 	    this.id = id;
 	    this.date = date;
 	    this.duration = duration;
 	    this.caller = caller;
+	    this.unread = unread;
 	  }
 
 	  is(other           )          {
