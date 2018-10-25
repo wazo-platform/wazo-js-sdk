@@ -70,11 +70,12 @@ export default class Voicemail {
     return newFrom(profile, Voicemail);
   }
 
-  constructor({ id, date, duration, caller }: VoicemailArguments = {}) {
+  constructor({ id, date, duration, caller, unread }: VoicemailArguments = {}) {
     this.id = id;
     this.date = date;
     this.duration = duration;
     this.caller = caller;
+    this.unread = unread;
   }
 
   is(other: Voicemail): boolean {
