@@ -7,6 +7,8 @@ export type PhoneEventCallbacks = {
   onCallAccepted?: () => void,
   onCallHeld?: () => void,
   onCallResumed?: () => void,
+  onCallMuted?: () => void,
+  onCallUnmuted?: () => void,
   onCallEnded?: () => {},
   onCallFailed?: (message: string) => {}
 };
