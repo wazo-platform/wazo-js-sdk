@@ -6,13 +6,13 @@ import type { NewContact } from '../domain/Contact';
 
 const getContactPayload = (contact: NewContact | Contact) => ({
   email: contact.email,
-  firstname: contact.firstName ? contact.firstName : null,
-  lastname: contact.lastName ? contact.lastName : null,
-  number: contact.phoneNumber ? contact.phoneNumber : null,
-  entreprise: contact.entreprise,
-  birthday: contact.birthday,
-  address: contact.address,
-  note: contact.note
+  firstname: contact.firstName ? contact.firstName : '',
+  lastname: contact.lastName ? contact.lastName : '',
+  number: contact.phoneNumber ? contact.phoneNumber : '',
+  entreprise: contact.entreprise ? contact.entreprise : '',
+  birthday: contact.birthday ? contact.birthday : '',
+  address: contact.address ? contact.address : '',
+  note: contact.note ? contact.note : '',
 });
 
 export default (client: ApiRequester, baseUrl: string) => ({
@@ -33,7 +33,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
 
   editContact(token: Token, contact: Contact): Promise<Contact> {
-    return client.put(`${baseUrl}/personal/${contact.id || ''}`, getContactPayload(contact), token);
+    return client.put(`${baseUrl}/personal/${contact.sourceId || ''}`, getContactPayload(contact), token);
   },
 
   deleteContact(token: Token, contactUuid: UUID) {
