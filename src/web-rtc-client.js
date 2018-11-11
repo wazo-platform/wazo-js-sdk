@@ -234,11 +234,7 @@ export default class WebRTCClient {
     pc.onicecandidate = () => {
       if (count > 0 && !fixed) {
         fixed = true;
-        pc.createOffer()
-          .then(
-            (offer) => pc.setLocalDescription(offer),
-            (error) => console.log(error)
-          );
+        pc.createOffer().then((offer) => pc.setLocalDescription(offer));
       }
       count += 1;
     }
