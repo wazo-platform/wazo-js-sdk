@@ -2,7 +2,7 @@
 /* eslint-disable class-methods-use-this */
 /* global window */
 import 'webrtc-adapter';
-import SIP from './lib/sip-0.11.6';
+import SIP from './lib/sip-0.11.1';
 import CallbacksHandler from './utils/CallbacksHandler';
 
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
@@ -259,13 +259,13 @@ export default class WebRTCClient {
       },
       sessionDescriptionHandlerFactoryOptions: {
         peerConnectionOptions: {
-          iceCheckingTimeout: 500,
+          iceCheckingTimeout: 5000,
           constraints: {
             audio: this._hasAudio(),
             video: this._hasVideo()
           },
           rtcConfiguration: {
-            rtcpMuxPolicy: 'negotiate',
+            rtcpMuxPolicy: 'require',
             iceServers: WebRTCClient.getIceServers(this.config.host),
             mandatory: {
               OfferToReceiveAudio: this._hasAudio(),
