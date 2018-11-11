@@ -1,5 +1,5 @@
 /* @flow */
-/* global btoa, window, navigator */
+/* global btoa, window, navigator, fetch */
 /* eslint-disable global-require */
 /* eslint-disable import/no-dynamic-require */
 import { Base64 } from 'js-base64';
