@@ -2,7 +2,7 @@
 /* eslint-disable class-methods-use-this */
 /* global window */
 import 'webrtc-adapter';
-import SIP from 'sip.js';
+import SIP from './lib/sip-0.11.6';
 import CallbacksHandler from './utils/CallbacksHandler';
 
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
@@ -119,6 +119,8 @@ export default class WebRTCClient {
     }
 
     const session = this.userAgent.invite(number, this._getMediaConfiguration());
+    this._fixLocalDescription(session);
+
     this._setupSession(session);
 
     return session;
@@ -218,6 +220,28 @@ export default class WebRTCClient {
 
   _hasLocalVideo() {
     return !!this.localVideo;
+  }
+
+  _fixLocalDescription(session: SIP.sessionDescriptionHandler) {
+    if (!session.sessionDescriptionHandler) {
+      return;
+    }
+
+    const pc = session.sessionDescriptionHandler.peerConnection;
+    let count = 0;
+    let fixed = false;
+
+    pc.onicecandidate = () => {
+      if (count > 0 && !fixed) {
+        fixed = true;
+        pc.createOffer()
+          .then(
+            (offer) => pc.setLocalDescription(offer),
+            (error) => console.log(error)
+          );
+      }
+      count += 1;
+    }
   }
 
   _createWebRTCConfiguration() {

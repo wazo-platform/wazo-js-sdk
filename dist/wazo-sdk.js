@@ -554,9 +554,9 @@
 
 	                        
 	                                              
-	                     
-	                     
 	                    
+	                     
+	                   
 	                    
 	               
 	                
@@ -620,8 +620,8 @@
 	  static parse(plain                 )          {
 	    return new Profile({
 	      id: plain.uuid,
-	      firstName: plain.firstName || plain.firstname,
-	      lastName: plain.lastName || plain.lastname,
+	      firstName: plain.firstName || plain.firstname || '',
+	      lastName: plain.lastName || plain.lastname || '',
 	      email: plain.email,
 	      lines: plain.lines.map(line => Line.parse(line)),
 	      username: plain.username,
@@ -1741,13 +1741,13 @@
 
 	const getContactPayload = (contact                      ) => ({
 	  email: contact.email,
-	  firstname: contact.firstName ? contact.firstName : null,
-	  lastname: contact.lastName ? contact.lastName : null,
-	  number: contact.phoneNumber ? contact.phoneNumber : null,
-	  entreprise: contact.entreprise,
-	  birthday: contact.birthday,
-	  address: contact.address,
-	  note: contact.note
+	  firstname: contact.firstName ? contact.firstName : '',
+	  lastname: contact.lastName ? contact.lastName : '',
+	  number: contact.phoneNumber ? contact.phoneNumber : '',
+	  entreprise: contact.entreprise ? contact.entreprise : '',
+	  birthday: contact.birthday ? contact.birthday : '',
+	  address: contact.address ? contact.address : '',
+	  note: contact.note ? contact.note : '',
 	});
 
 	var dirdMethods = (client              , baseUrl        ) => ({
@@ -1768,7 +1768,7 @@
 	  },
 
 	  editContact(token       , contact         )                   {
-	    return client.put(`${baseUrl}/personal/${contact.id || ''}`, getContactPayload(contact), token);
+	    return client.put(`${baseUrl}/personal/${contact.sourceId || ''}`, getContactPayload(contact), token);
 	  },
 
 	  deleteContact(token       , contactUuid      ) {
@@ -7297,7 +7297,7 @@
 
 	var adapter_core = adapter_factory({window: commonjsGlobal.window});
 
-	var sip = createCommonjsModule(function (module, exports) {
+	var sip0_11_6 = createCommonjsModule(function (module, exports) {
 	/*!
 	 * 
 	 *  SIP version 0.11.6
@@ -15891,10 +15891,11 @@
 	            } },
 	        // Creates an RTCSessionDescriptionInit from an RTCSessionDescription
 	        createRTCSessionDescriptionInit: { writable: true, value: function createRTCSessionDescriptionInit(RTCSessionDescription) {
-	                return {
+	            // Hack for reactnative-webrtc
+	            return new this.WebRTC.RTCSessionDescription({
 	                    type: RTCSessionDescription.type,
 	                    sdp: RTCSessionDescription.sdp
-	                };
+	                });
 	            } },
 	        addDefaultIceCheckingTimeout: { writable: true, value: function addDefaultIceCheckingTimeout(peerConnectionOptions) {
 	                if (peerConnectionOptions.iceCheckingTimeout === undefined) {
@@ -19566,7 +19567,7 @@
 	});
 	});
 
-	var SIP = unwrapExports(sip);
+	var SIP = unwrapExports(sip0_11_6);
 
 	//      
 
@@ -19714,6 +19715,8 @@
 	    }
 
 	    const session = this.userAgent.invite(number, this._getMediaConfiguration());
+	    this._fixLocalDescription(session);
+
 	    this._setupSession(session);
 
 	    return session;
@@ -19813,6 +19816,28 @@
 
 	  _hasLocalVideo() {
 	    return !!this.localVideo;
+	  }
+
+	  _fixLocalDescription(session                               ) {
+	    if (!session.sessionDescriptionHandler) {
+	      return;
+	    }
+
+	    const pc = session.sessionDescriptionHandler.peerConnection;
+	    let count = 0;
+	    let fixed = false;
+
+	    pc.onicecandidate = () => {
+	      if (count > 0 && !fixed) {
+	        fixed = true;
+	        pc.createOffer()
+	          .then(
+	            (offer) => pc.setLocalDescription(offer),
+	            (error) => console.log(error)
+	          );
+	      }
+	      count += 1;
+	    };
 	  }
 
 	  _createWebRTCConfiguration() {
