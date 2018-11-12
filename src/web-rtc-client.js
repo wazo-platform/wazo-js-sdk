@@ -34,7 +34,8 @@ type WebRtcConfig = {
   port?: number,
   authorizationUser: string,
   password: string,
-  media: MediaConfig
+  media: MediaConfig,
+  log?: Object
 };
 
 // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
@@ -135,22 +136,20 @@ export default class WebRTCClient {
       this.video.autoplay = true;
     }
 
-    session.accept(this._getMediaConfiguration());
+    return session.accept(this._getMediaConfiguration());
   }
 
   hangup(session: SIP.sessionDescriptionHandler) {
     if (session.hasAnswer && session.bye) {
-      session.bye();
-      return;
+      return session.bye();
     }
 
     if (!session.hasAnswer && session.cancel) {
-      session.cancel();
-      return;
+      return session.cancel();
     }
 
     if (session.reject) {
-      session.reject();
+      return session.reject();
     }
   }
 
@@ -179,11 +178,11 @@ export default class WebRTCClient {
   }
 
   sendDTMF(session: SIP.sessionDescriptionHandler, tone: string) {
-    session.dtmf(tone);
+    return session.dtmf(tone);
   }
 
   message(destination: string, message: string) {
-    this.userAgent.message(destination, message);
+    return this.userAgent.message(destination, message);
   }
 
   transfert(session: SIP.sessionDescriptionHandler, target: string) {
@@ -203,7 +202,8 @@ export default class WebRTCClient {
     this._cleanupMedia();
 
     this.userAgent.transport.disconnect();
-    this.userAgent.stop();
+
+    return this.userAgent.stop();
   }
 
   _isWeb() {
@@ -246,7 +246,7 @@ export default class WebRTCClient {
       displayName: this.config.displayName,
       hackIpInContact: true,
       hackWssInTransport: true,
-      log: { builtinEnabled: false },
+      log: this.config.log || { builtinEnabled: false },
       password: this.config.password,
       uri: `${this.config.authorizationUser}@${this.config.host}`,
       transportOptions: {
@@ -262,6 +262,7 @@ export default class WebRTCClient {
           },
           rtcConfiguration: {
             rtcpMuxPolicy: 'require',
+            bundlePolicy: 'balanced',
             iceServers: WebRTCClient.getIceServers(this.config.host),
             mandatory: {
               OfferToReceiveAudio: this._hasAudio(),

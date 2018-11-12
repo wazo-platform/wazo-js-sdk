@@ -16928,7 +16928,7 @@
 
 	        return SIP.Utils.Promise.resolve().then(function () {
 	          if (this.shouldAcquireMedia) {
-	            return this.acquire(this.constrains).then(function () {
+	            return this.acquire(this.constraints).then(function () {
 	              this.shouldAcquireMedia = false;
 	            }.bind(this));
 	          }
@@ -17037,10 +17037,10 @@
 
 	    // Creates an RTCSessionDescriptionInit from an RTCSessionDescription
 	    createRTCSessionDescriptionInit: { writable: true, value: function createRTCSessionDescriptionInit(RTCSessionDescription) {
-	        return {
+	        return new this.WebRTC.RTCSessionDescription({
 	          type: RTCSessionDescription.type,
 	          sdp: RTCSessionDescription.sdp
-	        };
+	        });
 	      } },
 
 	    addDefaultIceCheckingTimeout: { writable: true, value: function addDefaultIceCheckingTimeout(peerConnectionOptions) {
@@ -20838,7 +20838,8 @@
 	                
 	                            
 	                   
-	                    
+	                     
+	              
 	  
 
 	// @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
@@ -20939,22 +20940,20 @@
 	      this.video.autoplay = true;
 	    }
 
-	    session.accept(this._getMediaConfiguration());
+	    return session.accept(this._getMediaConfiguration());
 	  }
 
 	  hangup(session                               ) {
 	    if (session.hasAnswer && session.bye) {
-	      session.bye();
-	      return;
+	      return session.bye();
 	    }
 
 	    if (!session.hasAnswer && session.cancel) {
-	      session.cancel();
-	      return;
+	      return session.cancel();
 	    }
 
 	    if (session.reject) {
-	      session.reject();
+	      return session.reject();
 	    }
 	  }
 
@@ -20983,11 +20982,11 @@
 	  }
 
 	  sendDTMF(session                               , tone        ) {
-	    session.dtmf(tone);
+	    return session.dtmf(tone);
 	  }
 
 	  message(destination        , message        ) {
-	    this.userAgent.message(destination, message);
+	    return this.userAgent.message(destination, message);
 	  }
 
 	  transfert(session                               , target        ) {
@@ -21007,7 +21006,8 @@
 	    this._cleanupMedia();
 
 	    this.userAgent.transport.disconnect();
-	    this.userAgent.stop();
+
+	    return this.userAgent.stop();
 	  }
 
 	  _isWeb() {
@@ -21050,7 +21050,7 @@
 	      displayName: this.config.displayName,
 	      hackIpInContact: true,
 	      hackWssInTransport: true,
-	      log: { builtinEnabled: false },
+	      log: this.config.log || { builtinEnabled: false },
 	      password: this.config.password,
 	      uri: `${this.config.authorizationUser}@${this.config.host}`,
 	      transportOptions: {
@@ -21066,6 +21066,7 @@
 	          },
 	          rtcConfiguration: {
 	            rtcpMuxPolicy: 'require',
+	            bundlePolicy: 'balanced',
 	            iceServers: WebRTCClient.getIceServers(this.config.host),
 	            mandatory: {
 	              OfferToReceiveAudio: this._hasAudio(),
