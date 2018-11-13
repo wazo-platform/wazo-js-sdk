@@ -23,9 +23,9 @@ type Response = {
 };
 
 type VoicemailArguments = {
-  id?: string,
-  date?: Date,
-  duration?: number,
+  id: string,
+  date: Date,
+  duration: number,
   caller: {
     name: string,
     number: string
@@ -34,9 +34,9 @@ type VoicemailArguments = {
 };
 
 export default class Voicemail {
-  id: ?string;
-  date: ?Date;
-  duration: ?number;
+  id: string;
+  date: Date;
+  duration: number;
   unread: ?boolean;
   caller: {
     name: string,

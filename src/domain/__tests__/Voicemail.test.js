@@ -9,49 +9,58 @@ const defaultCaller = {
 
 describe('Voicemail', () => {
   it('is the same voicemail given the same id', () => {
-    const voicemail = new Voicemail({ id: 'ref-abc', caller: defaultCaller });
-    const anotherVoicemail = new Voicemail({ id: 'ref-abc', caller: defaultCaller });
+    const voicemail = new Voicemail({ id: 'ref-abc', caller: defaultCaller, date: new Date(), duration: 0 });
+    const anotherVoicemail = new Voicemail({ id: 'ref-abc', caller: defaultCaller, date: new Date(), duration: 0 });
 
     expect(voicemail.is(anotherVoicemail)).toBeTruthy();
   });
 
   it('is not the same voicemail given different ids', () => {
-    const voicemail = new Voicemail({ id: 'ref-abc', caller: defaultCaller });
-    const anotherVoicemail = new Voicemail({ id: 'ref-123', caller: defaultCaller });
+    const voicemail = new Voicemail({ id: 'ref-abc', caller: defaultCaller, date: new Date(), duration: 0 });
+    const anotherVoicemail = new Voicemail({ id: 'ref-123', caller: defaultCaller, date: new Date(), duration: 0 });
 
     expect(voicemail.is(anotherVoicemail)).toBeFalsy();
   });
 
-  it("matches when the query includes the caller's name", () => {
+  it('matches when the query includes the caller\'s name', () => {
     const voicemail = new Voicemail({
       caller: {
         name: 'john doe',
         number: '0101010101'
-      }
+      },
+      date: new Date(),
+      duration: 0,
+      id: 'ref-1234',
     });
     const query = 'john';
 
     expect(voicemail.contains(query)).toBeTruthy();
   });
 
-  it("matches when the query includes the uppercased caller's name", () => {
+  it('matches when the query includes the uppercased caller\'s name', () => {
     const voicemail = new Voicemail({
       caller: {
         name: 'John Doe',
         number: '0101010101'
-      }
+      },
+      date: new Date(),
+      duration: 0,
+      id: 'ref-1234',
     });
     const query = 'jOHn';
 
     expect(voicemail.contains(query)).toBeTruthy();
   });
 
-  it("matches when the query includes the caller's number", () => {
+  it('matches when the query includes the caller\'s number', () => {
     const voicemail = new Voicemail({
       caller: {
         name: 'john doe',
         number: '0101010101'
-      }
+      },
+      date: new Date(),
+      duration: 0,
+      id: 'ref-1234',
     });
     const query = '010101';
 
@@ -70,7 +79,7 @@ describe('Voicemail', () => {
 
       const voicemail = Voicemail.parse(raw);
 
-      expect(voicemail.date).toEqual(new Date(2018, 6, 5, 16, 36, 57));
+      expect(voicemail.date.toISOString()).toBe('2018-07-05T20:36:57.000Z');
     });
   });
 });
