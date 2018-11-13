@@ -62,7 +62,7 @@ describe('Voicemail', () => {
     it('can convert the date to unix timestamp', () => {
       const raw = {
         duration: 5,
-        timestamp: 1530823017,
+        timestamp: 1530823017, // Thu Jul 05 2018 16:36:57 GMT-0400 (GMT-04:00)
         id: "1530823017-00000000",
         caller_id_name: "Cl\u00e9ment Bourgeois",
         caller_id_num: "8005",
@@ -70,7 +70,6 @@ describe('Voicemail', () => {
 
       const voicemail = Voicemail.parse(raw);
 
-      // Thu Jul 05 2018 16:36:57 GMT-0400 (GMT-04:00)
       expect(voicemail.date).toEqual(new Date(2018, 6, 5, 16, 36, 57));
     });
   });
