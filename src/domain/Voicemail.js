@@ -6,7 +6,7 @@ type MessageResponse = {
   caller_id_num: string,
   duration: number,
   id: string,
-  folder: Object,
+  folder?: Object,
   timestamp: number
 };
 
@@ -23,9 +23,9 @@ type Response = {
 };
 
 type VoicemailArguments = {
-  id?: string,
-  date?: Date,
-  duration?: number,
+  id: string,
+  date: Date,
+  duration: number,
   caller: {
     name: string,
     number: string
@@ -34,9 +34,9 @@ type VoicemailArguments = {
 };
 
 export default class Voicemail {
-  id: ?string;
-  date: ?Date;
-  duration: ?number;
+  id: string;
+  date: Date;
+  duration: number;
   unread: ?boolean;
   caller: {
     name: string,
@@ -46,7 +46,7 @@ export default class Voicemail {
   static parse(plain: MessageResponse): Voicemail {
     return new Voicemail({
       id: plain.id,
-      date: new Date(plain.timestamp),
+      date: new Date(plain.timestamp * 1000),
       duration: plain.duration * 1000,
       caller: {
         name: plain.caller_id_name,
