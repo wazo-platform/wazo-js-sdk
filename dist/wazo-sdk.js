@@ -21926,7 +21926,8 @@
 	            this.emit('userMediaRequest', constraints);
 
 	            if (constraints.audio || constraints.video) {
-	              this.WebRTC.getUserMedia(constraints)
+	              // Avoid exception on immutable object
+	              this.WebRTC.getUserMedia({...constraints})
 	                .then(
 	                  function(streams) {
 	                    this.observer.trackAdded();
