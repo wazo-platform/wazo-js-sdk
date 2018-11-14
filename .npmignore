@@ -1,7 +1,6 @@
 __tests__/
 docs/
 node_modules/
-src/
 
 *.config.js
 *.js.map
@@ -10,3 +9,4 @@ src/
 
 .eslintignore
 .travis.yml
+.babelrc

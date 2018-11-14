@@ -37,9 +37,9 @@
   },
   "dependencies": {
     "js-base64": "^2.4.9",
-    "node-fetch": "^2.1.0",
+    "node-fetch": "^2.2.0",
     "reconnecting-websocket": "^4.1.10",
-    "sip.js": "^0.11.6",
+    "sip.js": "0.11.1",
     "webrtc-adapter": "^6.4.4"
   },
   "devDependencies": {

@@ -12,7 +12,7 @@ const getContactPayload = (contact: NewContact | Contact) => ({
   entreprise: contact.entreprise ? contact.entreprise : '',
   birthday: contact.birthday ? contact.birthday : '',
   address: contact.address ? contact.address : '',
-  note: contact.note ? contact.note : '',
+  note: contact.note ? contact.note : ''
 });
 
 export default (client: ApiRequester, baseUrl: string) => ({
