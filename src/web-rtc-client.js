@@ -3,7 +3,10 @@
 /* global window */
 import 'webrtc-adapter';
 import SIP from 'sip.js';
+import WebSessionDescriptionHandler from 'sip.js/src/Web/SessionDescriptionHandler';
+
 import CallbacksHandler from './utils/CallbacksHandler';
+import MobileSessionDescriptionHandler from './lib/MobileSessionDescriptionHandler';
 
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
 const events = [
@@ -34,7 +37,8 @@ type WebRtcConfig = {
   port?: number,
   authorizationUser: string,
   password: string,
-  media: MediaConfig
+  media: MediaConfig,
+  log?: Object
 };
 
 // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
@@ -86,11 +90,13 @@ export default class WebRTCClient {
     const webRTCConfiguration = this._createWebRTCConfiguration();
     const userAgent = new SIP.UA(webRTCConfiguration);
 
-    events.filter(eventName => eventName !== 'invite').forEach(eventName => {
-      userAgent.on(eventName, event => {
-        this.callbacksHandler.triggerCallback(eventName, event);
+    events
+      .filter(eventName => eventName !== 'invite')
+      .forEach(eventName => {
+        userAgent.on(eventName, event => {
+          this.callbacksHandler.triggerCallback(eventName, event);
+        });
       });
-    });
 
     // Particular case for `invite` event
     userAgent.on('invite', (session: SIP.sessionDescriptionHandler) => {
@@ -119,6 +125,8 @@ export default class WebRTCClient {
     }
 
     const session = this.userAgent.invite(number, this._getMediaConfiguration());
+    this._fixLocalDescription(session);
+
     this._setupSession(session);
 
     return session;
@@ -133,23 +141,23 @@ export default class WebRTCClient {
       this.video.autoplay = true;
     }
 
-    session.accept(this._getMediaConfiguration());
+    return session.accept(this._getMediaConfiguration());
   }
 
   hangup(session: SIP.sessionDescriptionHandler) {
     if (session.hasAnswer && session.bye) {
-      session.bye();
-      return;
+      return session.bye();
     }
 
     if (!session.hasAnswer && session.cancel) {
-      session.cancel();
-      return;
+      return session.cancel();
     }
 
     if (session.reject) {
-      session.reject();
+      return session.reject();
     }
+
+    return null;
   }
 
   reject(session: SIP.sessionDescriptionHandler) {
@@ -177,11 +185,11 @@ export default class WebRTCClient {
   }
 
   sendDTMF(session: SIP.sessionDescriptionHandler, tone: string) {
-    session.dtmf(tone);
+    return session.dtmf(tone);
   }
 
   message(destination: string, message: string) {
-    this.userAgent.message(destination, message);
+    return this.userAgent.message(destination, message);
   }
 
   transfert(session: SIP.sessionDescriptionHandler, target: string) {
@@ -201,7 +209,8 @@ export default class WebRTCClient {
     this._cleanupMedia();
 
     this.userAgent.transport.disconnect();
-    this.userAgent.stop();
+
+    return this.userAgent.stop();
   }
 
   _isWeb() {
@@ -220,28 +229,51 @@ export default class WebRTCClient {
     return !!this.localVideo;
   }
 
+  _fixLocalDescription(session: SIP.sessionDescriptionHandler) {
+    if (!session.sessionDescriptionHandler) {
+      return;
+    }
+
+    const pc = session.sessionDescriptionHandler.peerConnection;
+    let count = 0;
+    let fixed = false;
+
+    pc.onicecandidate = () => {
+      if (count > 0 && !fixed) {
+        fixed = true;
+        pc.createOffer().then(offer => pc.setLocalDescription(offer));
+      }
+      count += 1;
+    };
+  }
+
   _createWebRTCConfiguration() {
     return {
       authorizationUser: this.config.authorizationUser,
       displayName: this.config.displayName,
       hackIpInContact: true,
       hackWssInTransport: true,
-      log: { builtinEnabled: false },
+      log: this.config.log || { builtinEnabled: false },
       password: this.config.password,
       uri: `${this.config.authorizationUser}@${this.config.host}`,
       transportOptions: {
         traceSip: false,
         wsServers: `wss://${this.config.host}:${this.config.port || 443}/api/asterisk/ws`
       },
+      sessionDescriptionHandlerFactory: (session: SIP.sessionDescriptionHandler, options: Object) =>
+        this._isWeb()
+          ? WebSessionDescriptionHandler(SIP).defaultFactory(session, options)
+          : MobileSessionDescriptionHandler(SIP).defaultFactory(session, options),
       sessionDescriptionHandlerFactoryOptions: {
+        constraints: {
+          audio: this._hasAudio(),
+          video: this._hasVideo()
+        },
         peerConnectionOptions: {
-          iceCheckingTimeout: 500,
-          constraints: {
-            audio: this._hasAudio(),
-            video: this._hasVideo()
-          },
+          iceCheckingTimeout: 5000,
           rtcConfiguration: {
-            rtcpMuxPolicy: 'negotiate',
+            rtcpMuxPolicy: 'require',
+            bundlePolicy: 'balanced',
             iceServers: WebRTCClient.getIceServers(this.config.host),
             mandatory: {
               OfferToReceiveAudio: this._hasAudio(),

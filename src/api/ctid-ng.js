@@ -11,17 +11,17 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
 
   listMessages(token: Token, participantUuid: ?UUID, limit?: number): Promise<Array<ChatMessage>> {
-      const query: Object = {};
+    const query: Object = {};
 
-      if (participantUuid) {
-          query.participant_user_uuid = participantUuid;
-      }
+    if (participantUuid) {
+      query.participant_user_uuid = participantUuid;
+    }
 
-      if (limit) {
-          query.limit = limit;
-      }
+    if (limit) {
+      query.limit = limit;
+    }
 
-      return client.get(`${baseUrl}/users/me/chats`, query, token).then(response => ChatMessage.parseMany(response));
+    return client.get(`${baseUrl}/users/me/chats`, query, token).then(response => ChatMessage.parseMany(response));
   },
 
   sendMessage(token: Token, alias: string, msg: string, toUserId: string) {
