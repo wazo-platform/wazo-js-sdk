@@ -2,7 +2,7 @@
 /* eslint-disable class-methods-use-this */
 /* global window */
 import 'webrtc-adapter';
-import SIP from 'sip.js';
+import SIP from 'sip.js/dist/sip-0.11.1';
 import WebSessionDescriptionHandler from 'sip.js/src/Web/SessionDescriptionHandler';
 
 import CallbacksHandler from './utils/CallbacksHandler';
