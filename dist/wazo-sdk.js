@@ -8060,6 +8060,8 @@
 	      this.modifiers = [this.modifiers];
 	    }
 
+	    this.modifiers.push(MobileSessionDescriptionHandler.fixMissingBundleModifier);
+
 	    const environment = global.window || global;
 	    this.WebRTC = {
 	      MediaStream: environment.MediaStream,
@@ -8087,6 +8089,16 @@
 	    const observer = new SessionDescriptionHandlerObserver_1(session, options);
 
 	    return new MobileSessionDescriptionHandler(logger, observer, options);
+	  };
+
+	  MobileSessionDescriptionHandler.fixMissingBundleModifier = function(description) {
+	    // Fix to allow incoming calls in iOS devices
+	    // @see https://github.com/oney/react-native-webrtc/issues/293
+	    if (description.sdp.indexOf('BUNDLE audio') === -1 && type === 'offer') {
+	      description.sdp = description.sdp.replace('\r\nm=audio', '\r\na=group:BUNDLE audio\r\nm=audio');
+	    }
+
+	    return SIP$$1.Utils.Promise.resolve(description);
 	  };
 
 	  MobileSessionDescriptionHandler.prototype = Object.create(SessionDescriptionHandler(SIP$$1).prototype, {
@@ -8244,12 +8256,6 @@
 	          modifiers = [modifiers];
 	        }
 	        modifiers = modifiers.concat(this.modifiers);
-
-	        // Fix to allow incoming calls in iOS devices
-	        // @see https://github.com/oney/react-native-webrtc/issues/293
-	        if (sessionDescription.indexOf('BUNDLE audio') === -1 && type === 'offer') {
-	          sessionDescription = sessionDescription.replace('\r\nm=audio', '\r\na=group:BUNDLE audio\r\nm=audio');
-	        }
 
 	        var description = {
 	          type,
