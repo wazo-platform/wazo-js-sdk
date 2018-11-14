@@ -486,8 +486,8 @@ export default SIP => {
             this.emit('userMediaRequest', constraints);
 
             if (constraints.audio || constraints.video) {
-              // Avoid exception on immutable object
-              this.WebRTC.getUserMedia({...constraints})
+              // Avoid exception on immutable object, can't use destructuring because android crashes
+              this.WebRTC.getUserMedia({ audio: constraints.audio, video: constraints.video })
                 .then(
                   function(streams) {
                     this.observer.trackAdded();
