@@ -14,7 +14,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     const url = `${baseUrl}/${applicationUuid}/nodes`;
     const body = { calls: [{ id: callId }] };
 
-    return client.post(url, body, token, res => res.data.uuid).then(nodeUuid =>
+    return client.post(url, body, token).then(nodeUuid =>
       client.post(`${url}/${nodeUuid}/calls`, { context, exten, autoanswer }, token).then(data => ({
         nodeUuid,
         data
