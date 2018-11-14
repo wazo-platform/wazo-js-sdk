@@ -8,7 +8,7 @@ type CallResponse = {
   peer_caller_id_number: string,
   status: string,
   creation_time: string,
-  on_hold: boolean,
+  on_hold: boolean
 };
 
 type CallArguments = {
@@ -17,7 +17,7 @@ type CallArguments = {
   calleeNumber: string,
   onHold: boolean,
   status: string,
-  startingTime: Date,
+  startingTime: Date
 };
 
 export default class Call {
