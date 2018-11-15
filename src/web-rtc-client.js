@@ -2,8 +2,7 @@
 /* eslint-disable class-methods-use-this */
 /* global window */
 import 'webrtc-adapter';
-import SIP from 'sip.js';
-import WebSessionDescriptionHandler from 'sip.js/src/Web/SessionDescriptionHandler';
+import SIP from 'sip.js/dist/sip-0.11.1';
 
 import CallbacksHandler from './utils/CallbacksHandler';
 import MobileSessionDescriptionHandler from './lib/MobileSessionDescriptionHandler';
@@ -248,7 +247,7 @@ export default class WebRTCClient {
   }
 
   _createWebRTCConfiguration() {
-    return {
+    const config: Object = {
       authorizationUser: this.config.authorizationUser,
       displayName: this.config.displayName,
       hackIpInContact: true,
@@ -260,10 +259,6 @@ export default class WebRTCClient {
         traceSip: false,
         wsServers: `wss://${this.config.host}:${this.config.port || 443}/api/asterisk/ws`
       },
-      sessionDescriptionHandlerFactory: (session: SIP.sessionDescriptionHandler, options: Object) =>
-        this._isWeb()
-          ? WebSessionDescriptionHandler(SIP).defaultFactory(session, options)
-          : MobileSessionDescriptionHandler(SIP).defaultFactory(session, options),
       sessionDescriptionHandlerFactoryOptions: {
         constraints: {
           audio: this._hasAudio(),
@@ -273,7 +268,7 @@ export default class WebRTCClient {
           iceCheckingTimeout: 5000,
           rtcConfiguration: {
             rtcpMuxPolicy: 'require',
-            bundlePolicy: 'balanced',
+            bundlePolicy: 'max-compat',
             iceServers: WebRTCClient.getIceServers(this.config.host),
             mandatory: {
               OfferToReceiveAudio: this._hasAudio(),
@@ -283,6 +278,13 @@ export default class WebRTCClient {
         }
       }
     };
+
+    // Use custom SessionDescription handler for mobile
+    if (!this._isWeb()) {
+      config.sessionDescriptionHandlerFactory = MobileSessionDescriptionHandler(SIP).defaultFactory;
+    }
+
+    return config;
   }
 
   _getMediaConfiguration() {
