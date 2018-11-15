@@ -71,6 +71,13 @@ export default class Session {
     return this.profile ? `${this.profile.firstName} ${this.profile.lastName}` : '';
   }
 
+  hasAccessToVoicemail(): boolean {
+    if (!this.profile) {
+      return false;
+    }
+    return !!this.profile.voicemail;
+  }
+
   primaryLine(): ?Line {
     return this.profile ? this.profile.lines[0] : null;
   }
