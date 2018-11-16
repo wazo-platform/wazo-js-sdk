@@ -1,5 +1,6 @@
 // @flow
 
+import SIP from 'sip.js/dist/sip-0.11.1';
 import ApiClient from './api-client';
 import WebRTCClient from './web-rtc-client';
 import WebSocketClient from './websocket-client';
@@ -30,6 +31,7 @@ export type PhoneEventCallbacks = PhoneEventCallbacksType;
 export type Device = DeviceType;
 
 export default {
+  SIP,
   WazoApiClient: ApiClient,
   WazoWebRTCClient: WebRTCClient,
   WazoWebSocketClient: WebSocketClient,
