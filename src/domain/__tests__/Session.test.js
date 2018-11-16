@@ -1,6 +1,7 @@
 // @flow
 
 import Session from '../Session';
+import Profile from '../Profile';
 
 describe('Session domain', () => {
   it('can parse a plain session to domain', () => {
@@ -59,5 +60,40 @@ describe('Session domain', () => {
         uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54'
       })
     );
+  });
+
+  describe('about voicemails', () => {
+    it('has access to voicemail given there is a voicemail configured', () => {
+      const session = new Session({
+        token: 'ref-12345',
+        uuid: '1234',
+        profile: new Profile({
+          voicemail: {
+            id: 1234,
+            name: 'inbox',
+          },
+        }),
+      });
+
+      expect(session.hasAccessToVoicemail()).toBeTruthy();
+    });
+
+    it('does not have access to voicemail given there is no voicemail configured', () => {
+      const session = new Session({
+        token: 'ref-12345',
+        uuid: '1234',
+        profile: new Profile({
+          voicemail: undefined,
+        }),
+      });
+
+      expect(session.hasAccessToVoicemail()).toBeFalsy();
+    });
+
+    it('does not have access to voicemail given there is no profile', () => {
+      const session = new Session({ token: 'ref-12345', uuid: '1234' });
+
+      expect(session.hasAccessToVoicemail()).toBeFalsy();
+    });
   });
 });

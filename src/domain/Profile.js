@@ -47,7 +47,11 @@ type ProfileResponse = {
     dnd: {
       enabled: boolean
     }
-  }
+  },
+  voicemail?: {
+    id: number,
+    name: string,
+  },
 };
 
 type ProfileArguments = {
@@ -60,7 +64,11 @@ type ProfileArguments = {
   mobileNumber: string,
   forwards: Array<ForwardOption>,
   doNotDisturb?: boolean,
-  presence?: string
+  presence?: string,
+  voicemail?: {
+    id: number,
+    name: string,
+  },
 };
 
 export default class Profile {
@@ -74,6 +82,7 @@ export default class Profile {
   forwards: Array<ForwardOption>;
   doNotDisturb: ?boolean;
   presence: ?string;
+  voicemail: ?{ id: number, name: string };
 
   static parse(plain: ProfileResponse): Profile {
     return new Profile({
@@ -89,7 +98,8 @@ export default class Profile {
         ForwardOption.parse(plain.forwards.noanswer, FORWARD_KEYS.NO_ANSWER),
         ForwardOption.parse(plain.forwards.busy, FORWARD_KEYS.BUSY)
       ],
-      doNotDisturb: plain.services.dnd.enabled
+      doNotDisturb: plain.services.dnd.enabled,
+      voicemail: plain.voicemail,
     });
   }
 
@@ -107,8 +117,9 @@ export default class Profile {
     mobileNumber,
     forwards,
     doNotDisturb,
-    presence
-  }: ProfileArguments = {}) {
+    presence,
+    voicemail,
+  }: $Shape<ProfileArguments> = {}) {
     this.id = id;
     this.firstName = firstName;
     this.lastName = lastName;
@@ -119,6 +130,7 @@ export default class Profile {
     this.forwards = forwards;
     this.doNotDisturb = doNotDisturb;
     this.presence = presence;
+    this.voicemail = voicemail;
   }
 
   hasId(id: string) {
