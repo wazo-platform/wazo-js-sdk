@@ -1,4 +1,5 @@
 // @flow
+import moment from 'moment';
 
 import Session from './Session';
 import newFrom from '../utils/new-from';
@@ -77,7 +78,7 @@ export default class CallLog {
 
   static parse(plain: CallLogResponse): CallLog {
     return new CallLog({
-      answer: new Date(plain.answer),
+      answer: moment(plain.answer).toDate(),
       answered: plain.answered,
       callDirection: plain.call_direction,
       destination: {
@@ -90,14 +91,14 @@ export default class CallLog {
       },
       id: plain.id,
       duration: (plain.duration || 0) * 1000, // duration is in seconds
-      start: new Date(plain.start),
-      end: new Date(plain.end)
+      start: moment(plain.start).toDate(),
+      end: moment(plain.end).toDate()
     });
   }
 
   static parseNew(plain: CallLogResponse, session: Session): CallLog {
     return new CallLog({
-      answer: new Date(plain.answer),
+      answer: moment(plain.answer).toDate(),
       answered: plain.answered,
       callDirection: plain.call_direction,
       destination: {
@@ -110,8 +111,8 @@ export default class CallLog {
       },
       id: plain.id,
       duration: (plain.duration || 0) * 1000, // duration is in seconds
-      start: new Date(plain.start),
-      end: new Date(plain.end),
+      start: moment(plain.start).toDate(),
+      end: moment(plain.end).toDate(),
       // @TODO: FIXME add verification declined vs missed call
       newMissedCall: plain.destination_extension === session.primaryNumber() && !plain.answered
     });

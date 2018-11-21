@@ -1,4 +1,6 @@
 // @flow
+import moment from 'moment';
+
 import newFrom from '../utils/new-from';
 
 type MessageResponse = {
@@ -46,7 +48,7 @@ export default class Voicemail {
   static parse(plain: MessageResponse): Voicemail {
     return new Voicemail({
       id: plain.id,
-      date: new Date(plain.timestamp * 1000),
+      date: moment(plain.timestamp * 1000).toDate(),
       duration: plain.duration * 1000,
       caller: {
         name: plain.caller_id_name,

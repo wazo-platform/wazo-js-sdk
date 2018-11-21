@@ -37,6 +37,7 @@
   },
   "dependencies": {
     "js-base64": "^2.4.9",
+    "moment": "^2.22.2",
     "node-fetch": "^2.2.0",
     "reconnecting-websocket": "^4.1.10",
     "sip.js": "0.11.1",

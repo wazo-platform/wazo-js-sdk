@@ -1,4 +1,5 @@
 // @flow
+import moment from 'moment';
 
 import CallLog from '../CallLog';
 
@@ -8,7 +9,7 @@ describe('CallLog domain', () => {
       filtered: 6,
       items: [
         {
-          answer: '2017-08-07T13:51:18.892002+00:00',
+          answer: moment('2017-08-07T13:51:18.892002+00:00').toDate(),
           answered: true,
           call_direction: 'outbound',
           source_extension: '8020',
@@ -28,7 +29,7 @@ describe('CallLog domain', () => {
 
     expect(logs).toEqual([
       new CallLog({
-        answer: new Date('2017-08-07T13:51:18.892002+00:00'),
+        answer: moment('2017-08-07T13:51:18.892002+00:00').toDate(),
         answered: true,
         callDirection: 'outbound',
         destination: {
@@ -41,8 +42,8 @@ describe('CallLog domain', () => {
         },
         id: 215,
         duration: 4000,
-        start: new Date('2017-08-06T13:50:55.819057+00:00'),
-        end: new Date('2017-08-08T13:51:23.822529+00:00')
+        start: moment('2017-08-06T13:50:55.819057+00:00').toDate(),
+        end: moment('2017-08-08T13:51:23.822529+00:00').toDate()
       })
     ]);
   });
