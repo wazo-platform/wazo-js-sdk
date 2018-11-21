@@ -1,4 +1,6 @@
 // @flow
+import moment from 'moment';
+
 import newFrom from '../utils/new-from';
 
 type ChatResponse = {
@@ -70,7 +72,7 @@ export default class ChatMessage {
   static parse(plain: ChatResponse): ChatMessage {
     return new ChatMessage({
       id: uuid(),
-      date: new Date(plain.date),
+      date: moment(plain.date).toDate(),
       message: plain.msg,
       direction: plain.direction,
       destination: {

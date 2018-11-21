@@ -1,5 +1,6 @@
 // @flow
 
+import moment from 'moment';
 import newFrom from '../utils/new-from';
 
 type CallResponse = {
@@ -39,12 +40,12 @@ export default class Call {
       calleeNumber: plain.peer_caller_id_number,
       onHold: plain.on_hold,
       status: plain.status,
-      startingTime: new Date(plain.creation_time)
+      startingTime: moment(plain.creation_time).toDate()
     });
   }
 
-  static newFrom(profile: Call) {
-    return newFrom(profile, Call);
+  static newFrom(call: Call) {
+    return newFrom(call, Call);
   }
 
   constructor({ id, calleeName, calleeNumber, onHold, status, startingTime }: CallArguments = {}) {
