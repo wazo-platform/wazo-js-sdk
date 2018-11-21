@@ -69,8 +69,8 @@ export default class Call {
     return { firstName, lastName };
   }
 
-  is(other: Call): boolean {
-    return this.id === other.id;
+  is(other: ?Call): boolean {
+    return !!other && this.id === other.id;
   }
 
   hasACalleeName(): boolean {
