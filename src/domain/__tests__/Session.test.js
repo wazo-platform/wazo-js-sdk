@@ -57,7 +57,8 @@ describe('Session domain', () => {
     expect(session).toEqual(
       new Session({
         token: 'b93ae6bd-08d7-4001-9e61-057e72bbc4b3',
-        uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54'
+        uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54',
+        utcExpiresAt: '2017-07-19T21:27:53.086990',
       })
     );
   });
@@ -72,7 +73,8 @@ describe('Session domain', () => {
             id: 1234,
             name: 'inbox'
           }
-        })
+        }),
+        utcExpiresAt: '2999-07-19T21:27:53.086990'
       });
 
       expect(session.hasAccessToVoicemail()).toBeTruthy();
@@ -84,16 +86,58 @@ describe('Session domain', () => {
         uuid: '1234',
         profile: new Profile({
           voicemail: undefined
-        })
+        }),
+        utcExpiresAt: '2999-07-19T21:27:53.086990'
       });
 
       expect(session.hasAccessToVoicemail()).toBeFalsy();
     });
 
     it('does not have access to voicemail given there is no profile', () => {
-      const session = new Session({ token: 'ref-12345', uuid: '1234' });
+      const session = new Session({ 
+        token: 'ref-12345',
+        uuid: '1234',
+        utcExpiresAt: '2999-07-19T21:27:53.086990'
+      });
 
       expect(session.hasAccessToVoicemail()).toBeFalsy();
+    });
+  });
+
+  describe('Session expiration', () => {
+    const EXPIRATION_DATE = '2006-06-06T14:30:01.000000';
+    
+    it('session should be expired given date is equal to expiration date', () => {
+      const session = new Session({
+        token: 'ref-12345',
+        uuid: '1234',
+        utcExpiresAt: EXPIRATION_DATE
+      });
+      const currentDate = new Date(2006,5,6,14,30,1);
+
+      expect(session.hasExpired(currentDate)).toBeTruthy();
+    })
+
+    it('session should be expired given date is after expiration', () => {
+      const session = new Session({
+        token: 'ref-12345',
+        uuid: '1234',
+        utcExpiresAt: EXPIRATION_DATE
+      });
+      const currentDate = new Date(2006,5,6,14,32,0);
+
+      expect(session.hasExpired(currentDate)).toBeTruthy();
+    })
+
+    it('session should not be expired given date is before expiration', () => {
+      const session = new Session({
+        token: 'ref-12345',
+        uuid: '1234',
+        utcExpiresAt: EXPIRATION_DATE
+      });
+      const currentDate = new Date(2006,5,6,14,29,0);
+
+      expect(session.hasExpired(currentDate)).toBeFalsy();
     });
   });
 });

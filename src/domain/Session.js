@@ -32,18 +32,21 @@ type Response = {
 type SessionArguments = {
   token: string,
   uuid: string,
-  profile?: Profile
+  profile?: Profile,
+  utcExpiresAt: string
 };
 
 export default class Session {
   token: string;
   uuid: string;
   profile: ?Profile;
+  utcExpiresAt: string;
 
   static parse(plain: Response): ?Session {
     return new Session({
       token: plain.data.token,
-      uuid: plain.data.xivo_user_uuid
+      uuid: plain.data.xivo_user_uuid,
+      utcExpiresAt: plain.data.utc_expires_at
     });
   }
 
@@ -51,10 +54,15 @@ export default class Session {
     return newFrom(profile, Session);
   }
 
-  constructor({ token, uuid, profile }: SessionArguments = {}) {
+  constructor({ token, uuid, profile, utcExpiresAt }: SessionArguments = {}) {
     this.token = token;
     this.uuid = uuid;
     this.profile = profile;
+    this.utcExpiresAt = utcExpiresAt;
+  }
+
+  hasExpired(date: Date = new Date()): boolean {
+    return date >= Date.parse(this.utcExpiresAt);
   }
 
   is(contact: Contact): boolean {
