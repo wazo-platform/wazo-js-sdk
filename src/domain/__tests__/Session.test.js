@@ -139,5 +139,15 @@ describe('Session domain', () => {
 
       expect(session.hasExpired(currentDate)).toBeFalsy();
     });
+
+    it('session should be expired because current date is > 2006', () => {
+      const session = new Session({
+        token: 'ref-12345',
+        uuid: '1234',
+        utcExpiresAt: EXPIRATION_DATE
+      });
+
+      expect(session.hasExpired()).toBeTruthy();
+    });
   });
 });

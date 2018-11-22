@@ -13279,8 +13279,10 @@
 	    this.utcExpiresAt = utcExpiresAt;
 	  }
 
-	  hasExpired(date      )          {
-	    return date >= Date.parse(this.utcExpiresAt);
+	  hasExpired(date       = new Date())          {
+	    // throw new Error(`hasExpired => (date)${(+date).toString()} >= 
+	    // ${Date.parse(this.utcExpiresAt).toString()}(utcExpiresAt)`);
+	    return +date >= Date.parse(this.utcExpiresAt);
 	  }
 
 	  is(contact         )          {
