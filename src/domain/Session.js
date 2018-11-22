@@ -62,7 +62,7 @@ export default class Session {
   }
 
   hasExpired(date: Date = new Date()): boolean {
-    return date >= Date.parse(this.utcExpiresAt);
+    return date >= new Date(this.utcExpiresAt);
   }
 
   is(contact: Contact): boolean {
