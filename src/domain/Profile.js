@@ -50,8 +50,8 @@ type ProfileResponse = {
   },
   voicemail?: {
     id: number,
-    name: string,
-  },
+    name: string
+  }
 };
 
 type ProfileArguments = {
@@ -67,8 +67,8 @@ type ProfileArguments = {
   presence?: string,
   voicemail?: {
     id: number,
-    name: string,
-  },
+    name: string
+  }
 };
 
 export default class Profile {
@@ -99,7 +99,7 @@ export default class Profile {
         ForwardOption.parse(plain.forwards.busy, FORWARD_KEYS.BUSY)
       ],
       doNotDisturb: plain.services.dnd.enabled,
-      voicemail: plain.voicemail,
+      voicemail: plain.voicemail
     });
   }
 
@@ -118,7 +118,7 @@ export default class Profile {
     forwards,
     doNotDisturb,
     presence,
-    voicemail,
+    voicemail
   }: $Shape<ProfileArguments> = {}) {
     this.id = id;
     this.firstName = firstName;

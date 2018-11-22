@@ -22,7 +22,7 @@ describe('Voicemail', () => {
     expect(voicemail.is(anotherVoicemail)).toBeFalsy();
   });
 
-  it('matches when the query includes the caller\'s name', () => {
+  it("matches when the query includes the caller's name", () => {
     const voicemail = new Voicemail({
       caller: {
         name: 'john doe',
@@ -30,14 +30,14 @@ describe('Voicemail', () => {
       },
       date: new Date(),
       duration: 0,
-      id: 'ref-1234',
+      id: 'ref-1234'
     });
     const query = 'john';
 
     expect(voicemail.contains(query)).toBeTruthy();
   });
 
-  it('matches when the query includes the uppercased caller\'s name', () => {
+  it("matches when the query includes the uppercased caller's name", () => {
     const voicemail = new Voicemail({
       caller: {
         name: 'John Doe',
@@ -45,14 +45,14 @@ describe('Voicemail', () => {
       },
       date: new Date(),
       duration: 0,
-      id: 'ref-1234',
+      id: 'ref-1234'
     });
     const query = 'jOHn';
 
     expect(voicemail.contains(query)).toBeTruthy();
   });
 
-  it('matches when the query includes the caller\'s number', () => {
+  it("matches when the query includes the caller's number", () => {
     const voicemail = new Voicemail({
       caller: {
         name: 'john doe',
@@ -60,7 +60,7 @@ describe('Voicemail', () => {
       },
       date: new Date(),
       duration: 0,
-      id: 'ref-1234',
+      id: 'ref-1234'
     });
     const query = '010101';
 
@@ -72,9 +72,9 @@ describe('Voicemail', () => {
       const raw = {
         duration: 5,
         timestamp: 1530823017, // Thu Jul 05 2018 16:36:57 GMT-0400 (GMT-04:00)
-        id: "1530823017-00000000",
-        caller_id_name: "Cl\u00e9ment Bourgeois",
-        caller_id_num: "8005",
+        id: '1530823017-00000000',
+        caller_id_name: 'Cl\u00e9ment Bourgeois',
+        caller_id_num: '8005'
       };
 
       const voicemail = Voicemail.parse(raw);

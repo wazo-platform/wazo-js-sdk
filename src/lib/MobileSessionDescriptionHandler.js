@@ -31,7 +31,7 @@ export default SIP => {
       INACTIVE: 'inactive'
     };
 
-    this.logger.log(`SessionDescriptionHandlerOptions: ${JSON.stringify(this.options)}`);
+    this.logger.log('SessionDescriptionHandlerOptions: ' + JSON.stringify(this.options));
 
     this.direction = this.C.DIRECTION.NULL;
 
@@ -40,9 +40,7 @@ export default SIP => {
       this.modifiers = [this.modifiers];
     }
 
-    this.modifiers.push(MobileSessionDescriptionHandler.fixMissingBundleModifier);
-
-    const environment = global.window || global;
+    var environment = global.window || global;
     this.WebRTC = {
       MediaStream: environment.MediaStream,
       getUserMedia: environment.navigator.mediaDevices.getUserMedia.bind(environment.navigator.mediaDevices),
@@ -77,7 +75,7 @@ export default SIP => {
     if (description.sdp.indexOf('BUNDLE audio') === -1 && description.type === 'offer') {
       description.sdp = description.sdp.replace('\r\nm=audio', '\r\na=group:BUNDLE audio\r\nm=audio');
     }
-     return SIP.Utils.Promise.resolve(description);
+    return SIP.Utils.Promise.resolve(description);
   };
 
   MobileSessionDescriptionHandler.prototype = Object.create(SessionDescriptionHandler(SIP).prototype, {
@@ -145,6 +143,10 @@ export default SIP => {
         // Merge passed constraints with saved constraints and save
         var newConstraints = Object.assign({}, this.constraints, options.constraints);
         newConstraints = this.checkAndDefaultConstraints(newConstraints);
+        if (JSON.stringify(newConstraints) !== JSON.stringify(this.constraints)) {
+          this.constraints = newConstraints;
+          this.shouldAcquireMedia = true;
+        }
 
         modifiers = modifiers || [];
         if (!Array.isArray(modifiers)) {
@@ -170,9 +172,10 @@ export default SIP => {
             }.bind(this)
           )
           .then(
-            function(sdp) {
+            function(description) {
+              this.emit('getDescription', description);
               return {
-                body: sdp,
+                body: description.sdp,
                 contentType: this.CONTENT_TYPE
               };
             }.bind(this)
@@ -223,7 +226,6 @@ export default SIP => {
       writable: true,
       value: function setDescription(sessionDescription, options, modifiers) {
         var self = this;
-        const type = this.hasOffer('local') ? 'answer' : 'offer';
 
         options = options || {};
         if (options.peerConnectionOptions) {
@@ -237,14 +239,15 @@ export default SIP => {
         modifiers = modifiers.concat(this.modifiers);
 
         var description = {
-          type,
+          type: this.hasOffer('local') ? 'answer' : 'offer',
           sdp: sessionDescription
         };
 
         return SIP.Utils.Promise.resolve()
           .then(
             function() {
-              if (this.shouldAcquireMedia) {
+              // Media should be acquired in getDescription unless we need to do it sooner for some reason (FF61+)
+              if (this.shouldAcquireMedia && this.options.alwaysAcquireMediaFirst) {
                 return this.acquire(this.constraints).then(
                   function() {
                     this.shouldAcquireMedia = false;
@@ -256,19 +259,39 @@ export default SIP => {
           .then(function() {
             return SIP.Utils.reducePromises(modifiers, description);
           })
-          .catch(function modifierError(e) {
-            self.logger.error('The modifiers did not resolve successfully');
-            self.logger.error(e);
-            throw e;
+          .catch(e => {
+            if (e instanceof SIP.Exceptions.SessionDescriptionHandlerError) {
+              throw e;
+            }
+            const error = new SIP.Exceptions.SessionDescriptionHandlerError(
+              'setDescription',
+              e,
+              'The modifiers did not resolve successfully'
+            );
+            this.logger.error(error.message);
+            self.emit('peerConnection-setRemoteDescriptionFailed', error);
+            throw error;
           })
           .then(function(modifiedDescription) {
-            self.emit('setDescription', description);
+            self.emit('setDescription', modifiedDescription);
+
             return self.peerConnection.setRemoteDescription(new self.WebRTC.RTCSessionDescription(modifiedDescription));
           })
-          .catch(function setRemoteDescriptionError(e) {
-            self.logger.error(e);
-            self.emit('peerConnection-setRemoteDescriptionFailed', e);
-            throw e;
+          .catch(e => {
+            if (e instanceof SIP.Exceptions.SessionDescriptionHandlerError) {
+              throw e;
+            }
+            // Check the original SDP for video, and ensure that we have want to do audio fallback
+            if (/^m=video.+$/gm.test(sessionDescription) && !options.disableAudioFallback) {
+              // Do not try to audio fallback again
+              options.disableAudioFallback = true;
+              // Remove video first, then do the other modifiers
+              return this.setDescription(sessionDescription, options, [SIP.Web.Modifiers.stripVideo].concat(modifiers));
+            }
+            const error = new SIP.Exceptions.SessionDescriptionHandlerError('setDescription', e);
+            this.logger.error(error.error);
+            this.emit('peerConnection-setRemoteDescriptionFailed', error);
+            throw error;
           })
           .then(function setRemoteDescriptionSuccess() {
             if (self.peerConnection.getReceivers) {
@@ -278,6 +301,48 @@ export default SIP => {
             }
             self.emit('confirmed', self);
           });
+      }
+    },
+
+    /**
+     * Send DTMF via RTP (RFC 4733)
+     * @param {String} tones A string containing DTMF digits
+     * @param {Object} [options] Options object to be used by sendDtmf
+     * @returns {boolean} true if DTMF send is successful, false otherwise
+     */
+    sendDtmf: {
+      writable: true,
+      value: function sendDtmf(tones, options) {
+        if (!this.dtmfSender && this.hasBrowserGetSenderSupport()) {
+          var senders = this.peerConnection.getSenders();
+          if (senders.length > 0) {
+            this.dtmfSender = senders[0].dtmf;
+          }
+        }
+        if (!this.dtmfSender && this.hasBrowserTrackSupport()) {
+          var streams = this.peerConnection.getLocalStreams();
+          if (streams.length > 0) {
+            var audioTracks = streams[0].getAudioTracks();
+            if (audioTracks.length > 0) {
+              this.dtmfSender = this.peerConnection.createDTMFSender(audioTracks[0]);
+            }
+          }
+        }
+        if (!this.dtmfSender) {
+          return false;
+        }
+        try {
+          this.dtmfSender.insertDTMF(tones, options.duration, options.interToneGap);
+        } catch (e) {
+          if (e.type === 'InvalidStateError' || e.type === 'InvalidCharacterError') {
+            this.logger.error(e);
+            return false;
+          } else {
+            throw e;
+          }
+        }
+        this.logger.log('DTMF sent via RTP: ' + tones.toString());
+        return true;
       }
     },
 
@@ -301,9 +366,17 @@ export default SIP => {
         methodName = self.hasOffer('remote') ? 'createAnswer' : 'createOffer';
 
         return pc[methodName](RTCOfferOptions)
-          .catch(function methodError(e) {
-            self.emit('peerConnection-' + methodName + 'Failed', e);
-            throw e;
+          .catch(e => {
+            if (e instanceof SIP.Exceptions.SessionDescriptionHandlerError) {
+              throw e;
+            }
+            const error = new SIP.Exceptions.SessionDescriptionHandlerError(
+              'createOfferOrAnswer',
+              e,
+              'peerConnection-' + methodName + 'Failed'
+            );
+            this.emit('peerConnection-' + methodName + 'Failed', error);
+            throw error;
           })
           .then(function(sdp) {
             return SIP.Utils.reducePromises(modifiers, self.createRTCSessionDescriptionInit(sdp));
@@ -312,9 +385,17 @@ export default SIP => {
             self.resetIceGatheringComplete();
             return pc.setLocalDescription(new self.WebRTC.RTCSessionDescription(sdp));
           })
-          .catch(function localDescError(e) {
-            self.emit('peerConnection-SetLocalDescriptionFailed', e);
-            throw e;
+          .catch(e => {
+            if (e instanceof SIP.Exceptions.SessionDescriptionHandlerError) {
+              throw e;
+            }
+            const error = new SIP.Exceptions.SessionDescriptionHandlerError(
+              'createOfferOrAnswer',
+              e,
+              'peerConnection-SetLocalDescriptionFailed'
+            );
+            this.emit('peerConnection-SetLocalDescriptionFailed', error);
+            throw error;
           })
           .then(function onSetLocalDescriptionSuccess() {
             return self.waitForIceGatheringComplete();
@@ -324,14 +405,16 @@ export default SIP => {
             return SIP.Utils.reducePromises(modifiers, localDescription);
           })
           .then(function(localDescription) {
-            self.emit('getDescription', localDescription);
             self.setDirection(localDescription.sdp);
-            return localDescription.sdp;
+            return localDescription;
           })
-          .catch(function createOfferOrAnswerError(e) {
-            self.logger.error(e);
-            // TODO: Not sure if this is correct
-            throw new SIP.Exceptions.GetDescriptionError(e);
+          .catch(e => {
+            if (e instanceof SIP.Exceptions.SessionDescriptionHandlerError) {
+              throw e;
+            }
+            const error = new SIP.Exceptions.SessionDescriptionHandlerError('createOfferOrAnswer', e);
+            this.logger.error(error);
+            throw error;
           });
       }
     },
@@ -340,10 +423,10 @@ export default SIP => {
     createRTCSessionDescriptionInit: {
       writable: true,
       value: function createRTCSessionDescriptionInit(RTCSessionDescription) {
-        return new this.WebRTC.RTCSessionDescription({
+        return {
           type: RTCSessionDescription.type,
           sdp: RTCSessionDescription.sdp
-        });
+        };
       }
     },
 
@@ -357,16 +440,41 @@ export default SIP => {
       }
     },
 
+    addDefaultIceServers: {
+      writable: true,
+      value: function addDefaultIceServers(rtcConfiguration) {
+        if (!rtcConfiguration.iceServers) {
+          rtcConfiguration.iceServers = [{ urls: 'stun:stun.l.google.com:19302' }];
+        }
+        return rtcConfiguration;
+      }
+    },
+
     checkAndDefaultConstraints: {
       writable: true,
       value: function checkAndDefaultConstraints(constraints) {
-        var defaultConstraints = { audio: true, video: true };
+        var defaultConstraints = { audio: true, video: !this.options.alwaysAcquireMediaFirst };
+
         constraints = constraints || defaultConstraints;
         // Empty object check
         if (Object.keys(constraints).length === 0 && constraints.constructor === Object) {
           return defaultConstraints;
         }
         return constraints;
+      }
+    },
+
+    hasBrowserTrackSupport: {
+      writable: true,
+      value: function hasBrowserTrackSupport() {
+        return Boolean(this.peerConnection.addTrack);
+      }
+    },
+
+    hasBrowserGetSenderSupport: {
+      writable: true,
+      value: function hasBrowserGetSenderSupport() {
+        return Boolean(this.peerConnection.getSenders);
       }
     },
 
@@ -411,11 +519,11 @@ export default SIP => {
             self.logger.log(
               'ICE candidate received: ' + (e.candidate.candidate === null ? null : e.candidate.candidate.trim())
             );
+          } else if (e.candidate === null) {
+            // indicates the end of candidate gathering
+            self.logger.log('ICE candidate gathering complete');
+            self.triggerIceGatheringComplete();
           }
-        };
-
-        this.peerConnection.onnegotiationneeded = function(e) {
-          console.log('onnegotiationneeded', e);
         };
 
         this.peerConnection.onicegatheringstatechange = function() {
@@ -512,13 +620,16 @@ export default SIP => {
             }
           }.bind(this)
         )
-          .catch(
-            function acquireFailed(err) {
-              this.logger.error('unable to acquire streams');
-              this.logger.error(err);
-              return SIP.Utils.Promise.reject(err);
-            }.bind(this)
-          )
+          .catch(e => {
+            // TODO: This propogates downwards
+            if (e instanceof SIP.Exceptions.SessionDescriptionHandlerError) {
+              throw e;
+            }
+            const error = new SIP.Exceptions.SessionDescriptionHandlerError('acquire', e, 'unable to acquire streams');
+            this.logger.error(error.message);
+            this.logger.error(error.error);
+            throw error;
+          })
           .then(
             function acquireSucceeded(streams) {
               this.logger.log('acquired local media streams');
@@ -527,7 +638,7 @@ export default SIP => {
                 if (this.peerConnection.removeTrack) {
                   this.peerConnection.getSenders().forEach(function(sender) {
                     this.peerConnection.removeTrack(sender);
-                  });
+                  }, this);
                 }
                 return streams;
               } catch (e) {
@@ -535,13 +646,15 @@ export default SIP => {
               }
             }.bind(this)
           )
-          .catch(
-            function removeStreamsFailed(err) {
-              this.logger.error('error removing streams');
-              this.logger.error(err);
-              return SIP.Utils.Promise.reject(err);
-            }.bind(this)
-          )
+          .catch(e => {
+            if (e instanceof SIP.Exceptions.SessionDescriptionHandlerError) {
+              throw e;
+            }
+            const error = new SIP.Exceptions.SessionDescriptionHandlerError('acquire', e, 'error removing streams');
+            this.logger.error(error.message);
+            this.logger.error(error.error);
+            throw error;
+          })
           .then(
             function addStreams(streams) {
               try {
@@ -562,13 +675,15 @@ export default SIP => {
               return SIP.Utils.Promise.resolve();
             }.bind(this)
           )
-          .catch(
-            function addStreamsFailed(err) {
-              this.logger.error('error adding stream');
-              this.logger.error(err);
-              return SIP.Utils.Promise.reject(err);
-            }.bind(this)
-          );
+          .catch(e => {
+            if (e instanceof SIP.Exceptions.SessionDescriptionHandlerError) {
+              throw e;
+            }
+            const error = new SIP.Exceptions.SessionDescriptionHandlerError('acquire', e, 'error adding stream');
+            this.logger.error(error.message);
+            this.logger.error(error.error);
+            throw error;
+          });
       }
     },
 

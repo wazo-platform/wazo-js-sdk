@@ -110,7 +110,7 @@ export default class WebRTCClient {
     this.callbacksHandler.on(event, callback);
   }
 
-  call(number: string): SIP.sessionDescriptionHandler {
+  call(number: string): SIP.InviteClientContext {
     // Safari hack, because you cannot call .play() from a non user action
     if (this.audio && this._isWeb()) {
       this.audio.autoplay = true;
@@ -123,12 +123,12 @@ export default class WebRTCClient {
       this.localVideo.volume = 0;
     }
 
-    const session = this.userAgent.invite(number, this._getMediaConfiguration());
-    this._fixLocalDescription(session);
+    const context = this.userAgent.invite(number, this._getMediaConfiguration());
+    this._fixLocalDescription(context);
 
-    this._setupSession(session);
+    this._setupSession(context);
 
-    return session;
+    return context;
   }
 
   answer(session: SIP.sessionDescriptionHandler) {
@@ -228,22 +228,20 @@ export default class WebRTCClient {
     return !!this.localVideo;
   }
 
-  _fixLocalDescription(session: SIP.sessionDescriptionHandler) {
-    if (!session.sessionDescriptionHandler) {
-      return;
-    }
-
-    const pc = session.sessionDescriptionHandler.peerConnection;
+  _fixLocalDescription(context: SIP.InviteClientContext) {
     let count = 0;
     let fixed = false;
 
-    pc.onicecandidate = () => {
-      if (count > 0 && !fixed) {
-        fixed = true;
-        pc.createOffer().then(offer => pc.setLocalDescription(offer));
-      }
-      count += 1;
-    };
+    context.on('SessionDescriptionHandler-created', (sdh) => {
+      sdh.on('iceCandidate', () => {
+        if (count > 0 && !fixed) {
+          const pc = sdh.peerConnection;
+          fixed = true;
+          pc.createOffer().then(offer => pc.setLocalDescription(offer));
+        }
+        count += 1;
+      })
+    });
   }
 
   _createWebRTCConfiguration() {
