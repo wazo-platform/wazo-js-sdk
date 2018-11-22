@@ -62,6 +62,7 @@ export default class Session {
   }
 
   hasExpired(date: Date = new Date()): boolean {
+    console.log(`hasExpired => (date)${date.toString()} >= ${new Date(this.utcExpiresAt).toString()}(utcExpiresAt)`);
     return date >= new Date(this.utcExpiresAt);
   }
 
