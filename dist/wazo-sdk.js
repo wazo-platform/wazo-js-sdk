@@ -13251,20 +13251,20 @@
 	                
 	               
 	                    
-	                      
+	                    
 	  
 
 	class Session {
 	                
 	               
 	                    
-	                       
+	                     
 
 	  static parse(plain          )           {
 	    return new Session({
 	      token: plain.data.token,
 	      uuid: plain.data.xivo_user_uuid,
-	      utcExpiresAt: plain.data.utc_expires_at
+	      utcExpiresAt: new Date(`${plain.data.utc_expires_at}z`),
 	    });
 	  }
 
@@ -13280,7 +13280,7 @@
 	  }
 
 	  hasExpired(date       = new Date())          {
-	    return date >= new Date(`${this.utcExpiresAt}z`);
+	    return date >= this.utcExpiresAt;
 	  }
 
 	  is(contact         )          {
