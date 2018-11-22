@@ -70,9 +70,9 @@ describe('Session domain', () => {
         profile: new Profile({
           voicemail: {
             id: 1234,
-            name: 'inbox',
-          },
-        }),
+            name: 'inbox'
+          }
+        })
       });
 
       expect(session.hasAccessToVoicemail()).toBeTruthy();
@@ -83,8 +83,8 @@ describe('Session domain', () => {
         token: 'ref-12345',
         uuid: '1234',
         profile: new Profile({
-          voicemail: undefined,
-        }),
+          voicemail: undefined
+        })
       });
 
       expect(session.hasAccessToVoicemail()).toBeFalsy();

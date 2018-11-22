@@ -1,6 +1,6 @@
 // @flow
 
-import SIP from 'sip.js/dist/sip-0.11.1';
+import SIP from 'sip.js';
 import ApiClient from './api-client';
 import WebRTCClient from './web-rtc-client';
 import WebSocketClient from './websocket-client';

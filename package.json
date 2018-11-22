@@ -40,7 +40,7 @@
     "moment": "^2.22.2",
     "node-fetch": "^2.2.0",
     "reconnecting-websocket": "^4.1.10",
-    "sip.js": "0.11.1",
+    "sip.js": "0.11.6",
     "webrtc-adapter": "^6.4.4"
   },
   "devDependencies": {
