@@ -13252,18 +13252,21 @@
 	                         
 	                
 	               
-	                   
+	                    
+	                 
 	  
 
 	class Session {
 	                
 	               
 	                    
+	                  
 
 	  static parse(plain          )           {
 	    return new Session({
 	      token: plain.data.token,
-	      uuid: plain.data.xivo_user_uuid
+	      uuid: plain.data.xivo_user_uuid,
+	      expiresAt: new Date(`${plain.data.utc_expires_at}z`),
 	    });
 	  }
 
@@ -13271,10 +13274,15 @@
 	    return newFrom(profile, Session);
 	  }
 
-	  constructor({ token, uuid, profile }                   = {}) {
+	  constructor({ token, uuid, profile, expiresAt }                   = {}) {
 	    this.token = token;
 	    this.uuid = uuid;
 	    this.profile = profile;
+	    this.expiresAt = expiresAt;
+	  }
+
+	  hasExpired(date       = new Date())          {
+	    return date >= this.expiresAt;
 	  }
 
 	  is(contact         )          {
@@ -20126,7 +20134,8 @@
 	  },
 
 	  shimGetDisplayMedia: function(window, getSourceId) {
-	    if ('getDisplayMedia' in window.navigator) {
+	    if (!window.navigator || !window.navigator.mediaDevices ||
+	        'getDisplayMedia' in window.navigator.mediaDevices) {
 	      return;
 	    }
 	    // getSourceId is a function that returns a promise resolving with
@@ -20136,7 +20145,7 @@
 	          'a function');
 	      return;
 	    }
-	    navigator.getDisplayMedia = function(constraints) {
+	    window.navigator.mediaDevices.getDisplayMedia = function(constraints) {
 	      return getSourceId(constraints)
 	        .then(function(sourceId) {
 	          var widthSpecified = constraints.video && constraints.video.width;
@@ -20156,8 +20165,13 @@
 	          if (heightSpecified) {
 	            constraints.video.mandatory.maxHeight = heightSpecified;
 	          }
-	          return navigator.mediaDevices.getUserMedia(constraints);
+	          return window.navigator.mediaDevices.getUserMedia(constraints);
 	        });
+	    };
+	    window.navigator.getDisplayMedia = function(constraints) {
+	      utils.deprecated('navigator.getDisplayMedia',
+	          'navigator.mediaDevices.getDisplayMedia');
+	      return window.navigator.mediaDevices.getDisplayMedia(constraints);
 	    };
 	  }
 	};
@@ -22857,6 +22871,22 @@
 	      window.RTCRtpSender.prototype.replaceTrack =
 	          window.RTCRtpSender.prototype.setTrack;
 	    }
+	  },
+	  shimGetDisplayMedia: function(window, preferredMediaSource) {
+	    if (!('getDisplayMedia' in window.navigator) ||
+	        !window.navigator.mediaDevices ||
+	        'getDisplayMedia' in window.navigator.mediaDevices) {
+	      return;
+	    }
+	    var origGetDisplayMedia = window.navigator.getDisplayMedia;
+	    window.navigator.mediaDevices.getDisplayMedia = function(constraints) {
+	      return origGetDisplayMedia(constraints);
+	    };
+	    window.navigator.getDisplayMedia = function(constraints) {
+	      utils.deprecated('navigator.getDisplayMedia',
+	          'navigator.mediaDevices.getDisplayMedia');
+	      return origGetDisplayMedia(constraints);
+	    };
 	  }
 	};
 
@@ -23337,10 +23367,11 @@
 	  },
 
 	  shimGetDisplayMedia: function(window, preferredMediaSource) {
-	    if ('getDisplayMedia' in window.navigator) {
+	    if (!window.navigator || !window.navigator.mediaDevices ||
+	        'getDisplayMedia' in window.navigator.mediaDevices) {
 	      return;
 	    }
-	    navigator.getDisplayMedia = function(constraints) {
+	    window.navigator.mediaDevices.getDisplayMedia = function(constraints) {
 	      if (!(constraints && constraints.video)) {
 	        var err = new DOMException('getDisplayMedia without video ' +
 	            'constraints is undefined');
@@ -23354,7 +23385,12 @@
 	      } else {
 	        constraints.video.mediaSource = preferredMediaSource;
 	      }
-	      return navigator.mediaDevices.getUserMedia(constraints);
+	      return window.navigator.mediaDevices.getUserMedia(constraints);
+	    };
+	    window.navigator.getDisplayMedia = function(constraints) {
+	      utils.deprecated('navigator.getDisplayMedia',
+	          'navigator.mediaDevices.getDisplayMedia');
+	      return window.navigator.mediaDevices.getDisplayMedia(constraints);
 	    };
 	  }
 	};
@@ -24049,6 +24085,7 @@
 	      edgeShim.shimGetUserMedia(window);
 	      edgeShim.shimPeerConnection(window);
 	      edgeShim.shimReplaceTrack(window);
+	      edgeShim.shimGetDisplayMedia(window);
 
 	      // the edge shim implements the full RTCIceCandidate object.
 
