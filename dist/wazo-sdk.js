@@ -13251,20 +13251,20 @@
 	                
 	               
 	                    
-	                    
+	                 
 	  
 
 	class Session {
 	                
 	               
 	                    
-	                     
+	                  
 
 	  static parse(plain          )           {
 	    return new Session({
 	      token: plain.data.token,
 	      uuid: plain.data.xivo_user_uuid,
-	      utcExpiresAt: new Date(`${plain.data.utc_expires_at}z`),
+	      expiresAt: new Date(`${plain.data.utc_expires_at}z`),
 	    });
 	  }
 
@@ -13272,15 +13272,15 @@
 	    return newFrom(profile, Session);
 	  }
 
-	  constructor({ token, uuid, profile, utcExpiresAt }                   = {}) {
+	  constructor({ token, uuid, profile, expiresAt }                   = {}) {
 	    this.token = token;
 	    this.uuid = uuid;
 	    this.profile = profile;
-	    this.utcExpiresAt = utcExpiresAt;
+	    this.expiresAt = expiresAt;
 	  }
 
 	  hasExpired(date       = new Date())          {
-	    return date >= this.utcExpiresAt;
+	    return date >= this.expiresAt;
 	  }
 
 	  is(contact         )          {

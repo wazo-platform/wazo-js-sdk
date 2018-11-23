@@ -58,13 +58,13 @@ describe('Session domain', () => {
       new Session({
         token: 'b93ae6bd-08d7-4001-9e61-057e72bbc4b3',
         uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54',
-        utcExpiresAt: new Date('2017-07-19T21:27:53.086990z'),
+        expiresAt: new Date('2017-07-19T21:27:53.086990z'),
       })
     );
   });
 
   describe('about voicemails', () => {
-    const UNREACHABLE_DATE = new Date(2999,5,6,14,30,1);
+    const A_DATE = new Date(2999,5,6,14,30,1);
     it('has access to voicemail given there is a voicemail configured', () => {
       const session = new Session({
         token: 'ref-12345',
@@ -75,7 +75,7 @@ describe('Session domain', () => {
             name: 'inbox'
           }
         }),
-        utcExpiresAt: UNREACHABLE_DATE
+        expiresAt: A_DATE
       });
 
       expect(session.hasAccessToVoicemail()).toBeTruthy();
@@ -88,7 +88,7 @@ describe('Session domain', () => {
         profile: new Profile({
           voicemail: undefined
         }),
-        utcExpiresAt: UNREACHABLE_DATE
+        expiresAt: A_DATE
       });
 
       expect(session.hasAccessToVoicemail()).toBeFalsy();
@@ -98,7 +98,7 @@ describe('Session domain', () => {
       const session = new Session({ 
         token: 'ref-12345',
         uuid: '1234',
-        utcExpiresAt: UNREACHABLE_DATE
+        expiresAt: A_DATE
       });
 
       expect(session.hasAccessToVoicemail()).toBeFalsy();
@@ -112,7 +112,7 @@ describe('Session domain', () => {
       const session = new Session({
         token: 'ref-12345',
         uuid: '1234',
-        utcExpiresAt: EXPIRATION_DATE
+        expiresAt: EXPIRATION_DATE
       });
       const currentDate = new Date(2006,5,6,14,30,1);
 
@@ -123,7 +123,7 @@ describe('Session domain', () => {
       const session = new Session({
         token: 'ref-12345',
         uuid: '1234',
-        utcExpiresAt: EXPIRATION_DATE
+        expiresAt: EXPIRATION_DATE
       });
       const currentDate = new Date(2006,5,6,14,32,0);
 
@@ -134,7 +134,7 @@ describe('Session domain', () => {
       const session = new Session({
         token: 'ref-12345',
         uuid: '1234',
-        utcExpiresAt: EXPIRATION_DATE
+        expiresAt: EXPIRATION_DATE
       });
       const currentDate = new Date(2006,5,6,14,29,0);
 
