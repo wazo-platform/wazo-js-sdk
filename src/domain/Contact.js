@@ -158,7 +158,8 @@ export default class Contact {
     presence,
     status,
     endpointId,
-    personal
+    personal,
+    favorited
   }: ContactArguments = {}) {
     this.id = id;
     this.uuid = uuid;
@@ -175,6 +176,7 @@ export default class Contact {
     this.status = status;
     this.endpointId = endpointId;
     this.personal = personal;
+    this.favorited = favorited;
   }
 
   setFavorite(value: boolean) {

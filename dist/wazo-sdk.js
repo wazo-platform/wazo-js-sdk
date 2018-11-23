@@ -13136,7 +13136,8 @@
 	    presence,
 	    status,
 	    endpointId,
-	    personal
+	    personal,
+	    favorited
 	  }                   = {}) {
 	    this.id = id;
 	    this.uuid = uuid;
@@ -13153,6 +13154,7 @@
 	    this.status = status;
 	    this.endpointId = endpointId;
 	    this.personal = personal;
+	    this.favorited = favorited;
 	  }
 
 	  setFavorite(value         ) {
