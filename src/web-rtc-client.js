@@ -100,6 +100,7 @@ export default class WebRTCClient {
     // Particular case for `invite` event
     userAgent.on('invite', (session: SIP.sessionDescriptionHandler) => {
       this._setupSession(session);
+      this._fixLocalDescription(session);
 
       this.callbacksHandler.triggerCallback('invite', session);
     });
@@ -228,20 +229,30 @@ export default class WebRTCClient {
     return !!this.localVideo;
   }
 
-  _fixLocalDescription(context: SIP.InviteClientContext) {
-    let count = 0;
-    let fixed = false;
+  _once(func) {
+    var ran = false, memo;
+    return function() {
+      if (ran) return memo;
+      ran = true;
+      memo = func.apply(this, arguments);
+      func = null;
+      return memo;
+    };
+  }
 
-    context.on('SessionDescriptionHandler-created', (sdh) => {
-      sdh.on('iceCandidate', () => {
-        if (count > 0 && !fixed) {
-          const pc = sdh.peerConnection;
-          fixed = true;
-          pc.createOffer().then(offer => pc.setLocalDescription(offer));
-        }
-        count += 1;
-      })
-    });
+  _fixLocalDescription(context: SIP.InviteClientContext) {
+    context.on('SessionDescriptionHandler-created', this._once((sdh) => {
+      sdh.on('iceCandidate', this._once(() => {
+        const pc = sdh.peerConnection;
+        const constraints = this._getRtcOptions();
+
+        pc.createOffer(constraints).then(this._once(offer => {
+          setTimeout(() => {
+            pc.setLocalDescription(offer);
+          }, 3000);
+        }));
+      }));
+    }));
   }
 
   _createWebRTCConfiguration() {
@@ -268,10 +279,7 @@ export default class WebRTCClient {
             rtcpMuxPolicy: 'require',
             bundlePolicy: 'max-compat',
             iceServers: WebRTCClient.getIceServers(this.config.host),
-            mandatory: {
-              OfferToReceiveAudio: this._hasAudio(),
-              OfferToReceiveVideo: this._hasVideo()
-            }
+            ...this._getRtcOptions()
           }
         }
       }
@@ -283,6 +291,15 @@ export default class WebRTCClient {
     }
 
     return config;
+  }
+
+  _getRtcOptions() {
+    return {
+      mandatory: {
+        OfferToReceiveAudio: this._hasAudio(),
+        OfferToReceiveVideo: this._hasVideo()
+      }
+    }
   }
 
   _getMediaConfiguration() {
