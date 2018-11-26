@@ -25630,6 +25630,24 @@
 	};
 
 	//      
+	/* eslint-disable */
+
+	// Can't use arrow function here due to `apply`
+	function once (func           ) {
+	  let ran = false;
+	  let memo;
+
+	  return function() {
+	    if (ran) return memo;
+	    ran = true;
+	    memo = func && func.apply(this, arguments);
+	    func = null;
+
+	    return memo;
+	  };
+	}
+
+	//      
 
 	const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
 	const events = [
@@ -25657,6 +25675,7 @@
 	                     
 	                      
 	               
+	              
 	                
 	                            
 	                   
@@ -25724,6 +25743,7 @@
 	    // Particular case for `invite` event
 	    userAgent.on('invite', (session                               ) => {
 	      this._setupSession(session);
+	      this._fixLocalDescription(session, 'answer');
 
 	      this.callbacksHandler.triggerCallback('invite', session);
 	    });
@@ -25748,7 +25768,7 @@
 	    }
 
 	    const context = this.userAgent.invite(number, this._getMediaConfiguration());
-	    this._fixLocalDescription(context);
+	    this._fixLocalDescription(context, 'call');
 
 	    this._setupSession(context);
 
@@ -25852,20 +25872,19 @@
 	    return !!this.localVideo;
 	  }
 
-	  _fixLocalDescription(context                         ) {
-	    let count = 0;
-	    let fixed = false;
 
-	    context.on('SessionDescriptionHandler-created', (sdh) => {
-	      sdh.on('iceCandidate', () => {
-	        if (count > 0 && !fixed) {
-	          const pc = sdh.peerConnection;
-	          fixed = true;
-	          pc.createOffer().then(offer => pc.setLocalDescription(offer));
-	        }
-	        count += 1;
-	      });
-	    });
+
+	  _fixLocalDescription(context                         , direction        ) {
+	    const eventName = direction === 'answer' && this.config.os === 'ios' ? 'iceGatheringComplete' : 'iceCandidate';
+
+	    context.on('SessionDescriptionHandler-created', once((sdh) => {
+	      sdh.on(eventName, once(() => {
+	        const pc = sdh.peerConnection;
+	        const constraints = this._getRtcOptions();
+
+	        pc.createOffer(constraints).then(offer => pc.setLocalDescription(offer));
+	      }));
+	    }));
 	  }
 
 	  _createWebRTCConfiguration() {
@@ -25892,10 +25911,7 @@
 	            rtcpMuxPolicy: 'require',
 	            bundlePolicy: 'max-compat',
 	            iceServers: WebRTCClient.getIceServers(this.config.host),
-	            mandatory: {
-	              OfferToReceiveAudio: this._hasAudio(),
-	              OfferToReceiveVideo: this._hasVideo()
-	            }
+	            ...this._getRtcOptions()
 	          }
 	        }
 	      }
@@ -25907,6 +25923,15 @@
 	    }
 
 	    return config;
+	  }
+
+	  _getRtcOptions() {
+	    return {
+	      mandatory: {
+	        OfferToReceiveAudio: this._hasAudio(),
+	        OfferToReceiveVideo: this._hasVideo()
+	      }
+	    }
 	  }
 
 	  _getMediaConfiguration() {

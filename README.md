@@ -131,6 +131,7 @@ import { WazoWebRTCClient } from '@wazo/sdk';
 const config = {
   wsServer: 'wss://path.to/asterisk/ws',
   displayName: 'My Display Name',
+  os: Platform.OS, // Only required for react-native. Platform comes from 'react-native' lib.
   authorizationUser: 'line username',
   password: 'line password',
   uri: 'user@server.com',
