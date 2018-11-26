@@ -6,6 +6,7 @@ import SIP from 'sip.js';
 
 import CallbacksHandler from './utils/CallbacksHandler';
 import MobileSessionDescriptionHandler from './lib/MobileSessionDescriptionHandler';
+import once from './utils/once';
 
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
 const events = [
@@ -33,6 +34,7 @@ type MediaConfig = {
 type WebRtcConfig = {
   displayName: string,
   host: string,
+  os: ?string,
   port?: number,
   authorizationUser: string,
   password: string,
@@ -100,7 +102,7 @@ export default class WebRTCClient {
     // Particular case for `invite` event
     userAgent.on('invite', (session: SIP.sessionDescriptionHandler) => {
       this._setupSession(session);
-      this._fixLocalDescription(session);
+      this._fixLocalDescription(session, 'answer');
 
       this.callbacksHandler.triggerCallback('invite', session);
     });
@@ -125,7 +127,7 @@ export default class WebRTCClient {
     }
 
     const context = this.userAgent.invite(number, this._getMediaConfiguration());
-    this._fixLocalDescription(context);
+    this._fixLocalDescription(context, 'call');
 
     this._setupSession(context);
 
@@ -229,28 +231,17 @@ export default class WebRTCClient {
     return !!this.localVideo;
   }
 
-  _once(func) {
-    var ran = false, memo;
-    return function() {
-      if (ran) return memo;
-      ran = true;
-      memo = func.apply(this, arguments);
-      func = null;
-      return memo;
-    };
-  }
 
-  _fixLocalDescription(context: SIP.InviteClientContext) {
-    context.on('SessionDescriptionHandler-created', this._once((sdh) => {
-      sdh.on('iceCandidate', this._once(() => {
+
+  _fixLocalDescription(context: SIP.InviteClientContext, direction: string) {
+    const eventName = direction === 'answer' && this.config.os === 'ios' ? 'iceGatheringComplete' : 'iceCandidate';
+
+    context.on('SessionDescriptionHandler-created', once((sdh) => {
+      sdh.on(eventName, once(() => {
         const pc = sdh.peerConnection;
         const constraints = this._getRtcOptions();
 
-        pc.createOffer(constraints).then(this._once(offer => {
-          setTimeout(() => {
-            pc.setLocalDescription(offer);
-          }, 3000);
-        }));
+        pc.createOffer(constraints).then(offer => pc.setLocalDescription(offer));
       }));
     }));
   }
