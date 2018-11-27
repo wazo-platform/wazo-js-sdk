@@ -49,6 +49,45 @@ type ContactPersonalResponse = {
   lastname: ?string
 };
 
+// @see: https://github.com/rt2zz/react-native-contacts#example-contact-record
+type ContactMobileResponse = {
+  recordID: string,
+  company: string,
+  emailAddresses: Array<{
+    label: string,
+    email: string
+  }>,
+  givenName: string,
+  familyName: string,
+  middleName: string,
+  jobTitle: string,
+  note: string,
+  urlAddresses: Array<{
+    label: string,
+    url: string
+  }>,
+  phoneNumbers: Array<{
+    label: string,
+    number: string
+  }>,
+  hasThumbnail: boolean,
+  thumbnailPath: string,
+  postalAddresses: Array<{
+    street: string,
+    city: string,
+    state: string,
+    region: string,
+    postCode: string,
+    country: string,
+    label: string
+  }>,
+  birthday: {
+    year: number,
+    month: number,
+    day: number
+  }
+};
+
 type ContactArguments = {
   id?: string,
   uuid?: string,
@@ -69,6 +108,8 @@ type ContactArguments = {
   endpointId?: number,
   uuid?: string
 };
+
+const SOURCE_MOBILE = 'mobile';
 
 export default class Contact {
   id: ?string;
@@ -123,7 +164,7 @@ export default class Contact {
     return results.map(r => Contact.parsePersonal(r));
   }
 
-  static parsePersonal(plain: ContactPersonalResponse): ?Contact {
+  static parsePersonal(plain: ContactPersonalResponse): Contact {
     return new Contact({
       name: `${plain.firstName || plain.firstname || ''} ${plain.lastName || plain.lastname || ''}`,
       number: plain.number || '',
@@ -133,6 +174,28 @@ export default class Contact {
       entreprise: plain.entreprise || '',
       birthday: plain.birthday || '',
       address: plain.address || '',
+      note: plain.note || '',
+      favorited: false,
+      personal: true
+    });
+  }
+
+  static parseMobile(plain: ContactMobileResponse): Contact {
+    let address = '';
+    if (plain.postalAddresses.length) {
+      const postalAddress = plain.postalAddresses[0];
+
+      address = `${postalAddress.street} ${postalAddress.city} ${postalAddress.postCode} ${postalAddress.country}`;
+    }
+
+    return new Contact({
+      name: `${plain.givenName} ${plain.familyName}`,
+      number: plain.phoneNumbers.length ? plain.phoneNumbers[0].number : '',
+      email: plain.emailAddresses.length ? plain.emailAddresses[0].email : '',
+      source: SOURCE_MOBILE,
+      sourceId: plain.recordID,
+      birthday: plain.birthday ? `${plain.birthday.year}-${plain.birthday.month}-${plain.birthday.day}` : '',
+      address,
       note: plain.note || '',
       favorited: false,
       personal: true
@@ -226,6 +289,10 @@ export default class Contact {
 
   isCallable(session: Session): boolean {
     return !!this.number && !!session && !session.is(this);
+  }
+
+  isFromMobile() {
+    return this.source === SOURCE_MOBILE;
   }
 
   separateName(): { firstName: string, lastName: string } {

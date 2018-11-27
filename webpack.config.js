@@ -15,6 +15,12 @@ module.exports = {
   module: {
     rules: [
       {
+          test: /\.jsx?$/,
+          enforce: "pre",
+          use: ["remove-flow-types-loader"],
+          include: path.join(__dirname, "src")
+      },
+      {
         test: /\.mjs$/,
         type: 'javascript/auto',
         use: []
