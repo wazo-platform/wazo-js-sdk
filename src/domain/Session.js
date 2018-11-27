@@ -46,7 +46,7 @@ export default class Session {
     return new Session({
       token: plain.data.token,
       uuid: plain.data.xivo_user_uuid,
-      expiresAt: new Date(`${plain.data.utc_expires_at}z`),
+      expiresAt: new Date(`${plain.data.utc_expires_at}z`)
     });
   }
 

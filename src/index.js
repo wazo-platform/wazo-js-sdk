@@ -19,13 +19,23 @@ import NotificationOptions from './domain/NotificationOptions';
 import Profile, { PRESENCE } from './domain/Profile';
 import Session from './domain/Session';
 import Voicemail from './domain/Voicemail';
-import type { NewContact as NewContactType } from './domain/Contact';
+import type {
+  NewContact as NewContactType,
+  ContactResponse as ContactResponseType,
+  ContactsResponse as ContactsResponseType,
+  ContactPersonalResponse as ContactPersonalResponseType,
+  ContactMobileResponse as ContactMobileResponseType
+} from './domain/Contact';
 import type { Phone as PhoneType, PhoneEventCallbacks as PhoneEventCallbacksType } from './domain/Phone/Phone';
 import DebugPhone from './domain/Phone/DebugPhone';
 import type { Device as DeviceType } from './domain/Device/Device';
 import DebugDevice from './domain/Device/DebugDevice';
 
 export type NewContact = NewContactType;
+export type ContactResponse = ContactResponseType;
+export type ContactsResponse = ContactsResponseType;
+export type ContactPersonalResponse = ContactPersonalResponseType;
+export type ContactMobileResponse = ContactMobileResponseType;
 export type Phone = PhoneType;
 export type PhoneEventCallbacks = PhoneEventCallbacksType;
 export type Device = DeviceType;

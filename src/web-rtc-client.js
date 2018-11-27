@@ -231,19 +231,23 @@ export default class WebRTCClient {
     return !!this.localVideo;
   }
 
-
-
   _fixLocalDescription(context: SIP.InviteClientContext, direction: string) {
     const eventName = direction === 'answer' && this.config.os === 'ios' ? 'iceGatheringComplete' : 'iceCandidate';
 
-    context.on('SessionDescriptionHandler-created', once((sdh) => {
-      sdh.on(eventName, once(() => {
-        const pc = sdh.peerConnection;
-        const constraints = this._getRtcOptions();
+    context.on(
+      'SessionDescriptionHandler-created',
+      once(sdh => {
+        sdh.on(
+          eventName,
+          once(() => {
+            const pc = sdh.peerConnection;
+            const constraints = this._getRtcOptions();
 
-        pc.createOffer(constraints).then(offer => pc.setLocalDescription(offer));
-      }));
-    }));
+            pc.createOffer(constraints).then(offer => pc.setLocalDescription(offer));
+          })
+        );
+      })
+    );
   }
 
   _createWebRTCConfiguration() {
@@ -290,7 +294,7 @@ export default class WebRTCClient {
         OfferToReceiveAudio: this._hasAudio(),
         OfferToReceiveVideo: this._hasVideo()
       }
-    }
+    };
   }
 
   _getMediaConfiguration() {

@@ -12992,7 +12992,7 @@
 	               
 	  
 
-	                        
+	                               
 	                 
 	                            
 	              
@@ -13005,14 +13005,14 @@
 	   
 	  
 
-	                         
+	                                
 	                               
 	               
 	                                
 	                                 
 	  
 
-	                                
+	                                       
 	             
 	                     
 	                    
@@ -13028,7 +13028,7 @@
 	  
 
 	// @see: https://github.com/rt2zz/react-native-contacts#example-contact-record
-	                              
+	                                     
 	                   
 	                  
 	                         
@@ -13333,7 +13333,7 @@
 	    return new Session({
 	      token: plain.data.token,
 	      uuid: plain.data.xivo_user_uuid,
-	      expiresAt: new Date(`${plain.data.utc_expires_at}z`),
+	      expiresAt: new Date(`${plain.data.utc_expires_at}z`)
 	    });
 	  }
 
@@ -25671,7 +25671,7 @@
 	/* eslint-disable */
 
 	// Can't use arrow function here due to `apply`
-	function once (func           ) {
+	function once(func           ) {
 	  let ran = false;
 	  let memo;
 
@@ -25910,19 +25910,23 @@
 	    return !!this.localVideo;
 	  }
 
-
-
 	  _fixLocalDescription(context                         , direction        ) {
 	    const eventName = direction === 'answer' && this.config.os === 'ios' ? 'iceGatheringComplete' : 'iceCandidate';
 
-	    context.on('SessionDescriptionHandler-created', once((sdh) => {
-	      sdh.on(eventName, once(() => {
-	        const pc = sdh.peerConnection;
-	        const constraints = this._getRtcOptions();
+	    context.on(
+	      'SessionDescriptionHandler-created',
+	      once(sdh => {
+	        sdh.on(
+	          eventName,
+	          once(() => {
+	            const pc = sdh.peerConnection;
+	            const constraints = this._getRtcOptions();
 
-	        pc.createOffer(constraints).then(offer => pc.setLocalDescription(offer));
-	      }));
-	    }));
+	            pc.createOffer(constraints).then(offer => pc.setLocalDescription(offer));
+	          })
+	        );
+	      })
+	    );
 	  }
 
 	  _createWebRTCConfiguration() {
@@ -25969,7 +25973,7 @@
 	        OfferToReceiveAudio: this._hasAudio(),
 	        OfferToReceiveVideo: this._hasVideo()
 	      }
-	    }
+	    };
 	  }
 
 	  _getMediaConfiguration() {
@@ -26912,6 +26916,10 @@
 	//      
 
 	                                        
+	                                                  
+	                                                    
+	                                                                  
+	                                                              
 	                              
 	                                                          
 	                                

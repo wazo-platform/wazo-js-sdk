@@ -2,7 +2,7 @@
 /* eslint-disable */
 
 // Can't use arrow function here due to `apply`
-export default function (func: ?Function) {
+export default function(func: ?Function) {
   let ran = false;
   let memo;
 

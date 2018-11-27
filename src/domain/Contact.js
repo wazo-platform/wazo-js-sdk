@@ -14,7 +14,7 @@ export type NewContact = {
   note: ?string
 };
 
-type ContactResponse = {
+export type ContactResponse = {
   source: string,
   column_values: Array<any>,
   relations: {
@@ -27,14 +27,14 @@ type ContactResponse = {
   }
 };
 
-type ContactsResponse = {
+export type ContactsResponse = {
   column_types: Array<?string>,
   term: string,
   column_headers: Array<string>,
   results: Array<ContactResponse>
 };
 
-type ContactPersonalResponse = {
+export type ContactPersonalResponse = {
   id: string,
   firstName: ?string,
   lastName: ?string,
@@ -50,7 +50,7 @@ type ContactPersonalResponse = {
 };
 
 // @see: https://github.com/rt2zz/react-native-contacts#example-contact-record
-type ContactMobileResponse = {
+export type ContactMobileResponse = {
   recordID: string,
   company: string,
   emailAddresses: Array<{
