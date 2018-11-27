@@ -13116,6 +13116,20 @@
 	    });
 	  }
 
+	  static sortContacts(a         , b         ) {
+	    const aNames = a.separateName();
+	    const bNames = b.separateName();
+	    const aLastName = aNames.lastName;
+	    const bLastName = bNames.lastName;
+
+	    // last Name can be empty
+	    if (aLastName === bLastName) {
+	      return aNames.firstName.localeCompare(bNames.firstName);
+	    }
+
+	    return aLastName.localeCompare(bLastName);
+	  }
+
 	  static parseMany(response                  )                 {
 	    return response.results.map(r => Contact.parse(r, response.column_types));
 	  }
