@@ -13027,6 +13027,45 @@
 	                   
 	  
 
+	// @see: https://github.com/rt2zz/react-native-contacts#example-contact-record
+	                              
+	                   
+	                  
+	                         
+	                  
+	                 
+	     
+	                    
+	                     
+	                     
+	                   
+	               
+	                       
+	                  
+	               
+	     
+	                       
+	                  
+	                  
+	     
+	                        
+	                        
+	                          
+	                   
+	                 
+	                  
+	                   
+	                     
+	                    
+	                 
+	     
+	             
+	                 
+	                  
+	               
+	   
+	  
+
 	                         
 	              
 	                
@@ -13047,6 +13086,8 @@
 	                      
 	               
 	  
+
+	const SOURCE_MOBILE = 'mobile';
 
 	class Contact {
 	              
@@ -13101,7 +13142,7 @@
 	    return results.map(r => Contact.parsePersonal(r));
 	  }
 
-	  static parsePersonal(plain                         )           {
+	  static parsePersonal(plain                         )          {
 	    return new Contact({
 	      name: `${plain.firstName || plain.firstname || ''} ${plain.lastName || plain.lastname || ''}`,
 	      number: plain.number || '',
@@ -13111,6 +13152,28 @@
 	      entreprise: plain.entreprise || '',
 	      birthday: plain.birthday || '',
 	      address: plain.address || '',
+	      note: plain.note || '',
+	      favorited: false,
+	      personal: true
+	    });
+	  }
+
+	  static parseMobile(plain                       )          {
+	    let address = '';
+	    if (plain.postalAddresses.length) {
+	      const postalAddress = plain.postalAddresses[0];
+
+	      address = `${postalAddress.street} ${postalAddress.city} ${postalAddress.postCode} ${postalAddress.country}`;
+	    }
+
+	    return new Contact({
+	      name: `${plain.givenName} ${plain.familyName}`,
+	      number: plain.phoneNumbers.length ? plain.phoneNumbers[0].number : '',
+	      email: plain.emailAddresses.length ? plain.emailAddresses[0].email : '',
+	      source: SOURCE_MOBILE,
+	      sourceId: plain.recordID,
+	      birthday: plain.birthday ? `${plain.birthday.year}-${plain.birthday.month}-${plain.birthday.day}` : '',
+	      address,
 	      note: plain.note || '',
 	      favorited: false,
 	      personal: true
@@ -13204,6 +13267,10 @@
 
 	  isCallable(session         )          {
 	    return !!this.number && !!session && !session.is(this);
+	  }
+
+	  isFromMobile() {
+	    return this.source === SOURCE_MOBILE;
 	  }
 
 	  separateName()                                          {
@@ -20134,8 +20201,7 @@
 	  },
 
 	  shimGetDisplayMedia: function(window, getSourceId) {
-	    if (!window.navigator || !window.navigator.mediaDevices ||
-	        'getDisplayMedia' in window.navigator.mediaDevices) {
+	    if ('getDisplayMedia' in window.navigator) {
 	      return;
 	    }
 	    // getSourceId is a function that returns a promise resolving with
@@ -20145,7 +20211,7 @@
 	          'a function');
 	      return;
 	    }
-	    window.navigator.mediaDevices.getDisplayMedia = function(constraints) {
+	    navigator.getDisplayMedia = function(constraints) {
 	      return getSourceId(constraints)
 	        .then(function(sourceId) {
 	          var widthSpecified = constraints.video && constraints.video.width;
@@ -20165,13 +20231,8 @@
 	          if (heightSpecified) {
 	            constraints.video.mandatory.maxHeight = heightSpecified;
 	          }
-	          return window.navigator.mediaDevices.getUserMedia(constraints);
+	          return navigator.mediaDevices.getUserMedia(constraints);
 	        });
-	    };
-	    window.navigator.getDisplayMedia = function(constraints) {
-	      utils.deprecated('navigator.getDisplayMedia',
-	          'navigator.mediaDevices.getDisplayMedia');
-	      return window.navigator.mediaDevices.getDisplayMedia(constraints);
 	    };
 	  }
 	};
@@ -22871,22 +22932,6 @@
 	      window.RTCRtpSender.prototype.replaceTrack =
 	          window.RTCRtpSender.prototype.setTrack;
 	    }
-	  },
-	  shimGetDisplayMedia: function(window, preferredMediaSource) {
-	    if (!('getDisplayMedia' in window.navigator) ||
-	        !window.navigator.mediaDevices ||
-	        'getDisplayMedia' in window.navigator.mediaDevices) {
-	      return;
-	    }
-	    var origGetDisplayMedia = window.navigator.getDisplayMedia;
-	    window.navigator.mediaDevices.getDisplayMedia = function(constraints) {
-	      return origGetDisplayMedia(constraints);
-	    };
-	    window.navigator.getDisplayMedia = function(constraints) {
-	      utils.deprecated('navigator.getDisplayMedia',
-	          'navigator.mediaDevices.getDisplayMedia');
-	      return origGetDisplayMedia(constraints);
-	    };
 	  }
 	};
 
@@ -23367,11 +23412,10 @@
 	  },
 
 	  shimGetDisplayMedia: function(window, preferredMediaSource) {
-	    if (!window.navigator || !window.navigator.mediaDevices ||
-	        'getDisplayMedia' in window.navigator.mediaDevices) {
+	    if ('getDisplayMedia' in window.navigator) {
 	      return;
 	    }
-	    window.navigator.mediaDevices.getDisplayMedia = function(constraints) {
+	    navigator.getDisplayMedia = function(constraints) {
 	      if (!(constraints && constraints.video)) {
 	        var err = new DOMException('getDisplayMedia without video ' +
 	            'constraints is undefined');
@@ -23385,12 +23429,7 @@
 	      } else {
 	        constraints.video.mediaSource = preferredMediaSource;
 	      }
-	      return window.navigator.mediaDevices.getUserMedia(constraints);
-	    };
-	    window.navigator.getDisplayMedia = function(constraints) {
-	      utils.deprecated('navigator.getDisplayMedia',
-	          'navigator.mediaDevices.getDisplayMedia');
-	      return window.navigator.mediaDevices.getDisplayMedia(constraints);
+	      return navigator.mediaDevices.getUserMedia(constraints);
 	    };
 	  }
 	};
@@ -24085,7 +24124,6 @@
 	      edgeShim.shimGetUserMedia(window);
 	      edgeShim.shimPeerConnection(window);
 	      edgeShim.shimReplaceTrack(window);
-	      edgeShim.shimGetDisplayMedia(window);
 
 	      // the edge shim implements the full RTCIceCandidate object.
 

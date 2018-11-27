@@ -3946,7 +3946,7 @@ flow-bin@^0.81.0:
   resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.81.0.tgz#7f0a733dce1dad3cb1447c692639292dc3d60bf5"
   integrity sha512-5e8oL3/5rm3G0Eet3yDCne2R/TLo5Fkn+Z5MtHd4wtz+1miLC35Sgo8XvnbTmiZ9epdTZ1q6GLmJWYh7tUlfGg==
 
-flow-remove-types@^1.1.0:
+flow-remove-types@^1.0.0, flow-remove-types@^1.1.0:
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/flow-remove-types/-/flow-remove-types-1.2.3.tgz#6131aefc7da43364bb8b479758c9dec7735d1a18"
   integrity sha512-ypq/U3V+t9atYiOuSJd40tekCra03EHKoRsiK/wXGrsZimuum0kdwVY7Yv0HTaoXgHW1WiayomYd+Q3kkvPl9Q==
@@ -7684,6 +7684,14 @@ remove-bom-stream@^1.2.0:
     remove-bom-buffer "^3.0.0"
     safe-buffer "^5.1.0"
     through2 "^2.0.3"
+
+remove-flow-types-loader@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/remove-flow-types-loader/-/remove-flow-types-loader-1.1.0.tgz#ded5012e09022af408ec190c9d23e10204f6412a"
+  integrity sha512-9diL4hIexIzoql2q2G9DrYjvM3hId+56QrkJJwnRmynXZ102pHAPyMfgyoPo3bgUeDIHR5lJLVWTX3GAbvAuoQ==
+  dependencies:
+    flow-remove-types "^1.0.0"
+    loader-utils "^1.1.0"
 
 remove-trailing-separator@^1.0.1:
   version "1.1.0"
