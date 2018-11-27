@@ -36,6 +36,7 @@
     "fetch-typedefs": "./node_modules/.bin/flow-typed install"
   },
   "dependencies": {
+    "google-libphonenumber": "^3.1.15",
     "js-base64": "^2.4.9",
     "moment": "^2.22.2",
     "node-fetch": "^2.2.0",

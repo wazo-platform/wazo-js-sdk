@@ -25,7 +25,7 @@ export default {
     commonjs({
 
     }),
-    // terser(),
+    terser(),
   ],
   moduleContext: { 'node_modules/node-fetch/lib/index': 'window' },
 };

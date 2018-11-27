@@ -30,6 +30,13 @@ import type { Phone as PhoneType, PhoneEventCallbacks as PhoneEventCallbacksType
 import DebugPhone from './domain/Phone/DebugPhone';
 import type { Device as DeviceType } from './domain/Device/Device';
 import DebugDevice from './domain/Device/DebugDevice';
+import {
+  PhoneNumberUtil,
+  PhoneNumberFormat,
+  AsYouTypeFormatter,
+  getDisplayableNumber,
+  getCallableNumber
+} from './utils/PhoneNumberUtil';
 
 export type NewContact = NewContactType;
 export type ContactResponse = ContactResponseType;
@@ -41,6 +48,11 @@ export type PhoneEventCallbacks = PhoneEventCallbacksType;
 export type Device = DeviceType;
 
 export default {
+  PhoneNumberUtil,
+  PhoneNumberFormat,
+  AsYouTypeFormatter,
+  getDisplayableNumber,
+  getCallableNumber,
   SIP,
   WazoApiClient: ApiClient,
   WazoWebRTCClient: WebRTCClient,

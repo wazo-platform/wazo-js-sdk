@@ -4268,6 +4268,11 @@ globby@^6.1.0:
     pify "^2.0.0"
     pinkie-promise "^2.0.0"
 
+google-libphonenumber@^3.1.15:
+  version "3.1.15"
+  resolved "https://registry.yarnpkg.com/google-libphonenumber/-/google-libphonenumber-3.1.15.tgz#534d923bc7dcaf0235d4320f631229c1c78de2c8"
+  integrity sha512-KmGOCMoeSMlXauNgBNmscpygZkqu9W4brL1JfEo+dvbCYXIfLUZVPS4MXGlE5BuLE+HBEPwSX4LEyu1PwgKWvw==
+
 got@^7.1.0:
   version "7.1.0"
   resolved "https://registry.yarnpkg.com/got/-/got-7.1.0.tgz#05450fd84094e6bbea56f451a43a9c289166385a"
