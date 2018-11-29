@@ -399,6 +399,11 @@ export default SIP => {
             self.setDirection(localDescription.sdp);
             return localDescription;
           })
+          .then((localDescription) =>
+            // @see https://github.com/oney/react-native-webrtc/issues/242#issuecomment-290452014
+            // @see https://github.com/oney/RCTWebRTCDemo/blob/master/main.js#L103
+            methodName === 'createOffer' ? pc[methodName](RTCOfferOptions) : localDescription
+          )
           .catch(e => {
             if (e instanceof SIP.Exceptions.SessionDescriptionHandlerError) {
               throw e;
