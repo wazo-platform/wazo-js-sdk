@@ -6,7 +6,6 @@ import SIP from 'sip.js';
 
 import CallbacksHandler from './utils/CallbacksHandler';
 import MobileSessionDescriptionHandler from './lib/MobileSessionDescriptionHandler';
-import once from './utils/once';
 
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
 const events = [
@@ -102,7 +101,6 @@ export default class WebRTCClient {
     // Particular case for `invite` event
     userAgent.on('invite', (session: SIP.sessionDescriptionHandler) => {
       this._setupSession(session);
-      this._fixLocalDescription(session, 'answer');
 
       this.callbacksHandler.triggerCallback('invite', session);
     });
@@ -127,7 +125,6 @@ export default class WebRTCClient {
     }
 
     const context = this.userAgent.invite(number, this._getMediaConfiguration());
-    this._fixLocalDescription(context, 'call');
 
     this._setupSession(context);
 
@@ -229,25 +226,6 @@ export default class WebRTCClient {
 
   _hasLocalVideo() {
     return !!this.localVideo;
-  }
-
-  _fixLocalDescription(context: SIP.InviteClientContext, direction: string) {
-    const eventName = direction === 'answer' ? 'iceGatheringComplete' : 'iceCandidate';
-
-    context.on(
-      'SessionDescriptionHandler-created',
-      once(sdh => {
-        sdh.on(
-          eventName,
-          once(() => {
-            const pc = sdh.peerConnection;
-            const constraints = this._getRtcOptions();
-
-            pc.createOffer(constraints).then(offer => pc.setLocalDescription(offer));
-          })
-        );
-      })
-    );
   }
 
   _createWebRTCConfiguration() {
