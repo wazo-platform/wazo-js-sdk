@@ -8,7 +8,7 @@ const { PhoneNumberFormat, AsYouTypeFormatter } = LibPhoneNumber;
 const EXTRA_CHAR_REGEXP = /\(|\)|\-|\s/g;
 
 const getDisplayableNumber = (number: string, country: string, asYouType: boolean = false): string => {
-  if(number && number[0] === '*') {
+  if (number && number[0] === '*') {
     return number;
   }
 

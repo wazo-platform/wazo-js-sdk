@@ -232,7 +232,7 @@ export default class WebRTCClient {
   }
 
   _fixLocalDescription(context: SIP.InviteClientContext, direction: string) {
-    const eventName = direction === 'answer' && this.config.os === 'ios' ? 'iceGatheringComplete' : 'iceCandidate';
+    const eventName = direction === 'answer' ? 'iceGatheringComplete' : 'iceCandidate';
 
     context.on(
       'SessionDescriptionHandler-created',
