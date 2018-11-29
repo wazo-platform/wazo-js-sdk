@@ -69,15 +69,6 @@ export default SIP => {
     return new MobileSessionDescriptionHandler(logger, observer, options);
   };
 
-  MobileSessionDescriptionHandler.fixMissingBundleModifier = function(description) {
-    // Fix to allow incoming calls in iOS devices
-    // @see https://github.com/oney/react-native-webrtc/issues/293
-    if (description.sdp.indexOf('BUNDLE audio') === -1 && description.type === 'offer') {
-      description.sdp = description.sdp.replace('\r\nm=audio', '\r\na=group:BUNDLE audio\r\nm=audio');
-    }
-    return SIP.Utils.Promise.resolve(description);
-  };
-
   MobileSessionDescriptionHandler.prototype = Object.create(SessionDescriptionHandler(SIP).prototype, {
     // Functions the sesssion can use
 
