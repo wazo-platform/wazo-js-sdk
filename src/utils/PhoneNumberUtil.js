@@ -7,8 +7,16 @@ const { PhoneNumberFormat, AsYouTypeFormatter } = LibPhoneNumber;
 // eslint-disable-next-line
 const EXTRA_CHAR_REGEXP = /\(|\)|\-|\s/g;
 
+const shouldBeFormatted = (number: ?string) => {
+  if (!number || number.length <= 5) {
+    return false;
+  }
+
+  return !number.includes('#') && !number.includes('*');
+};
+
 const getDisplayableNumber = (number: string, country: string, asYouType: boolean = false): string => {
-  if (number && number[0] === '*') {
+  if (!shouldBeFormatted(number)) {
     return number;
   }
 
