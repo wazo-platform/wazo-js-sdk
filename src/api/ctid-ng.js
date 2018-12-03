@@ -30,8 +30,14 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.post(`${baseUrl}/users/me/chats`, body, token, ApiRequester.successResponseParser);
   },
 
-  makeCall(token: Token, extension: string) {
-    return client.post(`${baseUrl}/users/me/calls`, { from_mobile: true, extension }, token);
+  makeCall(token: Token, extension: string, fromMobile: boolean, lineId: ?number) {
+    const query: Object = {};
+    query.from_mobile = fromMobile;
+    query.extension = extension;
+    if (lineId){
+      query.line_id = lineId;
+    }
+    return client.post(`${baseUrl}/users/me/calls`, query, token);
   },
 
   cancelCall(token: Token, callId: number): Promise<Boolean> {
