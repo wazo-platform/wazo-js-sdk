@@ -218,6 +218,10 @@ export default class WebRTCClient {
     return states[this.userAgent.state];
   }
 
+  getContactName() {
+    return this.userAgent.configuration.contactName;
+  }
+
   close() {
     this._cleanupMedia();
 
