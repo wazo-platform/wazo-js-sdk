@@ -9,7 +9,8 @@ type CallResponse = {
   peer_caller_id_number: string,
   status: string,
   creation_time: string,
-  on_hold: boolean
+  on_hold: boolean,
+  user_uuid: string,
 };
 
 type CallArguments = {
@@ -18,7 +19,8 @@ type CallArguments = {
   calleeNumber: string,
   onHold: boolean,
   status: string,
-  startingTime: Date
+  startingTime: Date,
+  originUuid: string,
 };
 
 export default class Call {
@@ -28,6 +30,7 @@ export default class Call {
   onHold: boolean;
   status: string;
   startingTime: Date;
+  originUuid: string;
 
   static parseMany(plain: Array<CallResponse>): Array<Call> {
     return plain.map((plainCall: CallResponse) => Call.parse(plainCall));
@@ -40,7 +43,8 @@ export default class Call {
       calleeNumber: plain.peer_caller_id_number,
       onHold: plain.on_hold,
       status: plain.status,
-      startingTime: moment(plain.creation_time).toDate()
+      startingTime: moment(plain.creation_time).toDate(),
+      originUuid: plain.user_uuid,
     });
   }
 
@@ -48,13 +52,14 @@ export default class Call {
     return newFrom(call, Call);
   }
 
-  constructor({ id, calleeName, calleeNumber, onHold, status, startingTime }: CallArguments = {}) {
+  constructor({ id, calleeName, calleeNumber, onHold, status, startingTime, originUuid }: CallArguments = {}) {
     this.id = id;
     this.calleeName = calleeName;
     this.calleeNumber = calleeNumber;
     this.onHold = onHold;
     this.status = status;
     this.startingTime = startingTime;
+    this.originUuid = originUuid;
   }
 
   getElapsedTimeInSeconds(): number {
@@ -80,6 +85,10 @@ export default class Call {
 
   hasNumber(number: string): boolean {
     return this.calleeNumber === number;
+  }
+
+  isFrom(uuid: string): boolean {
+    return this.originUuid === uuid;
   }
 
   isUp(): boolean {
