@@ -5,35 +5,32 @@ import newFrom from '../utils/new-from';
 
 type CallResponse = {
   call_id: string,
-  caller_id_number: string,
   peer_caller_id_name: string,
   peer_caller_id_number: string,
   status: string,
+  is_caller: boolean,
   creation_time: string,
   on_hold: boolean,
-  user_uuid: string,
 };
 
 type CallArguments = {
   id: number,
-  callerNumber: string,
+  isCaller: boolean,
   calleeName: string,
   calleeNumber: string,
   onHold: boolean,
   status: string,
   startingTime: Date,
-  originUuid: string,
 };
 
 export default class Call {
   id: number;
-  callerNumber: string;
   calleeName: string;
   calleeNumber: string;
+  isCaller: boolean;
   onHold: boolean;
   status: string;
   startingTime: Date;
-  originUuid: string;
 
   static parseMany(plain: Array<CallResponse>): Array<Call> {
     return plain.map((plainCall: CallResponse) => Call.parse(plainCall));
@@ -42,13 +39,12 @@ export default class Call {
   static parse(plain: CallResponse): Call {
     return new Call({
       id: +plain.call_id,
-      callerNumber: plain.caller_id_number,
       calleeName: plain.peer_caller_id_name,
       calleeNumber: plain.peer_caller_id_number,
+      isCaller: plain.is_caller, 
       onHold: plain.on_hold,
       status: plain.status,
       startingTime: moment(plain.creation_time).toDate(),
-      originUuid: plain.user_uuid,
     });
   }
 
@@ -56,15 +52,14 @@ export default class Call {
     return newFrom(call, Call);
   }
 
-  constructor({ id, callerNumber, calleeName, calleeNumber, onHold, status, startingTime, originUuid }: CallArguments = {}) {
+  constructor({ id, calleeName, calleeNumber, isCaller, onHold, status, startingTime }: CallArguments = {}) {
     this.id = id;
-    this.callerNumber = callerNumber;
     this.calleeName = calleeName;
     this.calleeNumber = calleeNumber;
     this.onHold = onHold;
+    this.isCaller = isCaller;
     this.status = status;
     this.startingTime = startingTime;
-    this.originUuid = originUuid;
   }
 
   getElapsedTimeInSeconds(): number {
@@ -90,10 +85,6 @@ export default class Call {
 
   hasNumber(number: string): boolean {
     return this.calleeNumber === number;
-  }
-
-  isFrom(uuid: string): boolean {
-    return this.originUuid === uuid;
   }
 
   isUp(): boolean {
