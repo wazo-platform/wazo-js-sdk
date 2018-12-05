@@ -5,6 +5,7 @@ import newFrom from '../utils/new-from';
 
 type CallResponse = {
   call_id: string,
+  caller_id_number: string,
   peer_caller_id_name: string,
   peer_caller_id_number: string,
   status: string,
@@ -15,6 +16,7 @@ type CallResponse = {
 
 type CallArguments = {
   id: number,
+  callerNumber: string,
   calleeName: string,
   calleeNumber: string,
   onHold: boolean,
@@ -25,6 +27,7 @@ type CallArguments = {
 
 export default class Call {
   id: number;
+  callerNumber: string;
   calleeName: string;
   calleeNumber: string;
   onHold: boolean;
@@ -39,6 +42,7 @@ export default class Call {
   static parse(plain: CallResponse): Call {
     return new Call({
       id: +plain.call_id,
+      callerNumber: plain.caller_id_number,
       calleeName: plain.peer_caller_id_name,
       calleeNumber: plain.peer_caller_id_number,
       onHold: plain.on_hold,
@@ -52,8 +56,9 @@ export default class Call {
     return newFrom(call, Call);
   }
 
-  constructor({ id, calleeName, calleeNumber, onHold, status, startingTime, originUuid }: CallArguments = {}) {
+  constructor({ id, callerNumber, calleeName, calleeNumber, onHold, status, startingTime, originUuid }: CallArguments = {}) {
     this.id = id;
+    this.callerNumber = callerNumber;
     this.calleeName = calleeName;
     this.calleeNumber = calleeNumber;
     this.onHold = onHold;
