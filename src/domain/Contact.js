@@ -316,7 +316,7 @@ export default class Contact {
         lastName: ''
       };
     }
-    const names = this.name.split(' ');
+    const names = this.name.split(/\s+/);
     const firstName = names[0];
     const lastName = names.slice(1).join(' ');
 
