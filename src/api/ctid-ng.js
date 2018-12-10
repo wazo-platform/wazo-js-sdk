@@ -36,7 +36,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
       extension,
     };
    
-    if (lineId){
+    if (lineId) {
       query.line_id = lineId;
     }
     return client.post(`${baseUrl}/users/me/calls`, query, token);
