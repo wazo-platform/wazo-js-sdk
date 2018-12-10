@@ -31,9 +31,11 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
 
   makeCall(token: Token, extension: string, fromMobile: boolean, lineId: ?number) {
-    const query: Object = {};
-    query.from_mobile = fromMobile;
-    query.extension = extension;
+    const query = {
+      from_mobile: fromMobile,
+      extension,
+    };
+   
     if (lineId){
       query.line_id = lineId;
     }
