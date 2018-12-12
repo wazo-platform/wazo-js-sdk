@@ -279,6 +279,9 @@ export default class WebRTCClient {
     // Use custom SessionDescription handler for mobile
     if (!this._isWeb()) {
       config.sessionDescriptionHandlerFactory = MobileSessionDescriptionHandler(SIP).defaultFactory;
+      config.registerOptions = {
+        extraContactHeaderParams: ['mobile=yes']
+      };
     }
 
     return config;
