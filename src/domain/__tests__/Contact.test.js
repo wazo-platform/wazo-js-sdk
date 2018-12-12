@@ -48,6 +48,22 @@ describe('Contact domain', () => {
     expect(contact.hasId('uuid-dummy')).toBeFalsy();
   });
 
+  it('does separate names with a single space', () => {
+    const contact = new Contact({ name: 'John Smith' });
+    const { firstName, lastName } = contact.separateName();
+
+    expect(firstName).toBe('John');
+    expect(lastName).toBe('Smith');
+  });
+
+  it('does separate names with multiple spaces', () => {
+    const contact = new Contact({ name: 'John  Smith' });
+    const { firstName, lastName } = contact.separateName();
+
+    expect(firstName).toBe('John');
+    expect(lastName).toBe('Smith');
+  });
+
   it('is available given an available presence', () => {
     const contact = new Contact({ uuid: 'uuid-12345', presence: 'available' });
 
