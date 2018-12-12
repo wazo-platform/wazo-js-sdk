@@ -280,7 +280,7 @@ export default class WebRTCClient {
     if (!this._isWeb()) {
       config.sessionDescriptionHandlerFactory = MobileSessionDescriptionHandler(SIP).defaultFactory;
       config.registerOptions = {
-        extraContactHeaderParams: ['mobile=yes']
+        extraContactHeaderParams: ['mobility=mobile']
       };
     }
 
