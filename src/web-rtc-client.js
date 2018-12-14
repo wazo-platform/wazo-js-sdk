@@ -109,16 +109,16 @@ export default class WebRTCClient {
     return userAgent;
   }
 
-  _fixLocalDescription(context: SIP.InviteClientContext, direction: string) {
-    const eventName = direction === 'answer' ? 'iceGatheringComplete' : 'iceCandidate';
-     context.on('SessionDescriptionHandler-created', once(sdh => {
-        sdh.on(eventName, once(() => {
-          const pc = sdh.peerConnection;
-          const constraints = this._getRtcOptions();
-           pc.createOffer(constraints).then(offer => pc.setLocalDescription(offer));
-        }));
-      })
-    );
+  isRegistered(): Boolean {
+    return this.userAgent && this.userAgent.isRegistered();
+  }
+
+  register() {
+    if (!this.userAgent) {
+      return;
+    }
+
+    this.userAgent.register();
   }
 
   on(event: string, callback: Function) {
@@ -177,6 +177,15 @@ export default class WebRTCClient {
     return session.reject();
   }
 
+  getNumber(session: SIP.sessionDescriptionHandler): ?String {
+    if (!session) {
+      return null;
+    }
+
+    // eslint-disable-next-line
+    return session.remoteIdentity.uri._normal.user;
+  }
+
   mute(session: SIP.sessionDescriptionHandler) {
     this._toggleMute(session, true);
   }
@@ -218,12 +227,35 @@ export default class WebRTCClient {
     return states[this.userAgent.state];
   }
 
+  getContactIdentifier() {
+    return this.userAgent
+      ? `${this.userAgent.configuration.contactName}/${this.userAgent.configuration.contact.ui}`
+      : null;
+  }
+
   close() {
     this._cleanupMedia();
 
     this.userAgent.transport.disconnect();
 
     return this.userAgent.stop();
+  }
+
+  _fixLocalDescription(context: SIP.InviteClientContext, direction: string) {
+    const eventName = direction === 'answer' ? 'iceGatheringComplete' : 'iceCandidate';
+    context.on(
+      'SessionDescriptionHandler-created',
+      once(sdh => {
+        sdh.on(
+          eventName,
+          once(() => {
+            const pc = sdh.peerConnection;
+            const constraints = this._getRtcOptions();
+            pc.createOffer(constraints).then(offer => pc.setLocalDescription(offer));
+          })
+        );
+      })
+    );
   }
 
   _isWeb() {
@@ -275,6 +307,9 @@ export default class WebRTCClient {
     // Use custom SessionDescription handler for mobile
     if (!this._isWeb()) {
       config.sessionDescriptionHandlerFactory = MobileSessionDescriptionHandler(SIP).defaultFactory;
+      config.registerOptions = {
+        extraContactHeaderParams: ['mobility=mobile']
+      };
     }
 
     return config;
