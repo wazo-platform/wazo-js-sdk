@@ -34,6 +34,10 @@ export default class Line {
   static newFrom(profile: Line) {
     return newFrom(profile, Line);
   }
+  
+  is(line: Line) {
+    return this.id === line.id;
+  }
 
   constructor({ id, extensions }: LineArguments = {}) {
     this.id = id;
