@@ -5,6 +5,12 @@ import ChatMessage from '../domain/ChatMessage';
 import Voicemail from '../domain/Voicemail';
 import Call from '../domain/Call';
 
+type CallQuery = {
+  from_mobile: boolean,
+  extension: string,
+  line_id?: number,
+}
+
 export default (client: ApiRequester, baseUrl: string) => ({
   updatePresence(token: Token, presence: string): Promise<Boolean> {
     return client.put(`${baseUrl}/users/me/presences`, { presence }, token, ApiRequester.successResponseParser);
@@ -31,7 +37,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
 
   makeCall(token: Token, extension: string, fromMobile: boolean, lineId: ?number) {
-    const query = {
+    const query: CallQuery = {
       from_mobile: fromMobile,
       extension,
     };
