@@ -8,23 +8,26 @@ type CallResponse = {
   peer_caller_id_name: string,
   peer_caller_id_number: string,
   status: string,
+  is_caller: boolean,
   creation_time: string,
-  on_hold: boolean
+  on_hold: boolean,
 };
 
 type CallArguments = {
   id: number,
+  isCaller: boolean,
   calleeName: string,
   calleeNumber: string,
   onHold: boolean,
   status: string,
-  startingTime: Date
+  startingTime: Date,
 };
 
 export default class Call {
   id: number;
   calleeName: string;
   calleeNumber: string;
+  isCaller: boolean;
   onHold: boolean;
   status: string;
   startingTime: Date;
@@ -38,9 +41,10 @@ export default class Call {
       id: +plain.call_id,
       calleeName: plain.peer_caller_id_name,
       calleeNumber: plain.peer_caller_id_number,
+      isCaller: plain.is_caller, 
       onHold: plain.on_hold,
       status: plain.status,
-      startingTime: moment(plain.creation_time).toDate()
+      startingTime: moment(plain.creation_time).toDate(),
     });
   }
 
@@ -48,11 +52,12 @@ export default class Call {
     return newFrom(call, Call);
   }
 
-  constructor({ id, calleeName, calleeNumber, onHold, status, startingTime }: CallArguments = {}) {
+  constructor({ id, calleeName, calleeNumber, isCaller, onHold, status, startingTime }: CallArguments = {}) {
     this.id = id;
     this.calleeName = calleeName;
     this.calleeNumber = calleeNumber;
     this.onHold = onHold;
+    this.isCaller = isCaller;
     this.status = status;
     this.startingTime = startingTime;
   }

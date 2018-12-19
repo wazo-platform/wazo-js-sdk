@@ -290,6 +290,10 @@ export default class Contact {
     return this.presence === 'disconnected';
   }
 
+  isInCall(): boolean {
+    return this.status === 1;
+  }
+
   merge(old: Contact): Contact {
     this.presence = old.presence;
     this.status = old.status;
