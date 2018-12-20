@@ -17,7 +17,7 @@ Alternatively, you may load the Wazo SDK from a CDN. Use one of the following Co
 
 #### UNPKG
 ```
-<script src="https://unpkg.com/@wazo/sdk"></script>
+<script src="https://unpkg.com/@wazo/sdk/dist/wazo-sdk.js"></script>
 ```
 
 #### jsDelivr
@@ -153,7 +153,9 @@ const phone = new WazoWebRTCClient({
     localVideo: boolean | document.getElementById('video'), // pointing to a `<video id="video" />` element
   }
 });
-// eventName can be on the of events : `connected`, `disconnected`, `registered`, `unregistered`, `registrationFailed`, `invite`, `inviteSent`, `transportCreated`, `newTransaction`, `transactionDestroyed`, `notify`, `outOfDialogReferRequested`, `message`.
+// eventName can be on the of events : 
+// - transport: `connected`, `disconnected`, `transportError`, `message`, `closed`, `keepAliveDebounceTimeout`
+// - webrtc: `registered`, `unregistered`, `registrationFailed`, `invite`, `inviteSent`, `transportCreated`, `newTransaction`, `transactionDestroyed`, `notify`, `outOfDialogReferRequested`, `message`.
 phone.on('invite', (session: SIP.sessionDescriptionHandler) => {
   this.currentSession = session;
   // ...

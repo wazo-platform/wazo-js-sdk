@@ -10,8 +10,6 @@ import MobileSessionDescriptionHandler from './lib/MobileSessionDescriptionHandl
 
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
 const events = [
-  'connected',
-  'disconnected',
   'registered',
   'unregistered',
   'registrationFailed',
@@ -23,6 +21,14 @@ const events = [
   'notify',
   'outOfDialogReferRequested',
   'message'
+];
+const transportEvents = [
+  'connected',
+  'disconnected',
+  'transportError',
+  'message',
+  'closed',
+  'keepAliveDebounceTimeout'
 ];
 
 type MediaConfig = {
@@ -106,6 +112,13 @@ export default class WebRTCClient {
 
       this.callbacksHandler.triggerCallback('invite', session);
     });
+
+    transportEvents.forEach(eventName => {
+      userAgent.transport.on(eventName, event => {
+        this.callbacksHandler.triggerCallback(eventName, event);
+      });
+    });
+
     return userAgent;
   }
 
