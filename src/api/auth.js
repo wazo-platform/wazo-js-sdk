@@ -61,6 +61,34 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.post(`${baseUrl}/users/${userUuid}/external/mobile`, body, token);
   },
 
+  /**
+   * `username` or `email` should be set.
+   */
+  sendResetPasswordEmail({ username, email }: { username: ?string, email: ?string }) {
+    const body = {};
+    if (username) {
+      body.username = username;
+    }
+    if (email) {
+      body.email = email;
+    }
+
+    return client.get(`${baseUrl}/users/password/reset`, body, {}, ApiRequester.successResponseParser);
+  },
+
+  resetPassword(token: string, userUuid: string, password: string) {
+    const body = {
+      password
+    };
+
+    return client.post(
+      `${baseUrl}/users/password/reset?user_uuid=${userUuid}`,
+      body,
+      token,
+      ApiRequester.successResponseParser
+    );
+  },
+
   removeDeviceToken(token: Token, userUuid: UUID) {
     return client.delete(`${baseUrl}/users/${userUuid}/external/mobile`, null, token);
   },
