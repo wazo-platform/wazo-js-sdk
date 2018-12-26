@@ -242,7 +242,7 @@ export default class WebRTCClient {
 
   getContactIdentifier() {
     return this.userAgent
-      ? `${this.userAgent.configuration.contactName}/${this.userAgent.configuration.contact.ui}`
+      ? `${this.userAgent.configuration.contactName}/${this.userAgent.contact.uri}`
       : null;
   }
 
