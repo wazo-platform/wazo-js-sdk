@@ -1,6 +1,7 @@
 import resolve from 'rollup-plugin-node-resolve';
 import { terser } from 'rollup-plugin-terser';
 import commonjs from 'rollup-plugin-commonjs';
+import json from 'rollup-plugin-json';
 import flow from 'rollup-plugin-flow';
 
 export default {
@@ -22,9 +23,8 @@ export default {
         moduleDirectory: 'node_modules',
       }
     }),
-    commonjs({
-
-    }),
+    json(),
+    commonjs(),
     terser(),
   ],
   moduleContext: { 'node_modules/node-fetch/lib/index': 'window' },
