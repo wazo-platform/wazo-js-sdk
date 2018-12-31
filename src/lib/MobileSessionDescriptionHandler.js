@@ -70,7 +70,7 @@ export default SIP => {
   };
 
   MobileSessionDescriptionHandler.prototype = Object.create(SessionDescriptionHandler(SIP).prototype, {
-    // Functions the sesssion can use
+    // Functions the session can use
 
     /**
      * Destructor
@@ -145,7 +145,7 @@ export default SIP => {
         }
         modifiers = modifiers.concat(this.modifiers);
 
-        return SIP.Utils.Promise.resolve()
+        return Promise.resolve()
           .then(
             function() {
               if (this.shouldAcquireMedia) {
@@ -200,7 +200,7 @@ export default SIP => {
           description.sdp = description.sdp.replace(/a=sendrecv\r\n/g, 'a=sendonly\r\n');
           description.sdp = description.sdp.replace(/a=recvonly\r\n/g, 'a=inactive\r\n');
         }
-        return SIP.Utils.Promise.resolve(description);
+        return Promise.resolve(description);
       }
     },
 
@@ -234,7 +234,7 @@ export default SIP => {
           sdp: sessionDescription
         };
 
-        return SIP.Utils.Promise.resolve()
+        return Promise.resolve()
           .then(
             function() {
               // Media should be acquired in getDescription unless we need to do it sooner for some reason (FF61+)
@@ -529,7 +529,7 @@ export default SIP => {
               self.emit('iceGathering', this);
               if (!self.iceGatheringTimer && options.iceCheckingTimeout) {
                 self.iceGatheringTimeout = false;
-                self.iceGatheringTimer = SIP.Timers.setTimeout(function() {
+                self.iceGatheringTimer = setTimeout(function() {
                   self.logger.log(
                     'RTCIceChecking Timeout Triggered after ' + options.iceCheckingTimeout + ' milliseconds'
                   );
@@ -585,7 +585,7 @@ export default SIP => {
         // Default audio & video to true
         constraints = this.checkAndDefaultConstraints(constraints);
 
-        return new SIP.Utils.Promise(
+        return new Promise(
           function(resolve, reject) {
             /*
              * Make the call asynchronous, so that ICCs have a chance
@@ -638,7 +638,7 @@ export default SIP => {
                 }
                 return streams;
               } catch (e) {
-                return SIP.Utils.Promise.reject(e);
+                return Promise.reject(e);
               }
             }.bind(this)
           )
@@ -666,9 +666,9 @@ export default SIP => {
                   }
                 }, this);
               } catch (e) {
-                return SIP.Utils.Promise.reject(e);
+                return Promise.reject(e);
               }
-              return SIP.Utils.Promise.resolve();
+              return Promise.resolve();
             }.bind(this)
           )
           .catch(e => {
@@ -707,7 +707,7 @@ export default SIP => {
         this.iceGatheringTimeout = false;
 
         if (this.iceGatheringTimer) {
-          SIP.Timers.clearTimeout(this.iceGatheringTimer);
+          clearTimeout(this.iceGatheringTimer);
           this.iceGatheringTimer = null;
         }
 
@@ -750,7 +750,7 @@ export default SIP => {
           this.emit('iceGatheringComplete', this);
 
           if (this.iceGatheringTimer) {
-            SIP.Timers.clearTimeout(this.iceGatheringTimer);
+            clearTimeout(this.iceGatheringTimer);
             this.iceGatheringTimer = null;
           }
 
@@ -766,7 +766,7 @@ export default SIP => {
       writable: true,
       value: function waitForIceGatheringComplete() {
         if (this.isIceGatheringComplete()) {
-          return SIP.Utils.Promise.resolve();
+          return Promise.resolve();
         } else if (!this.isIceGatheringDeferred) {
           this.iceGatheringDeferred = SIP.Utils.defer();
         }

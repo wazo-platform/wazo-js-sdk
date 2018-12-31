@@ -1,6 +1,6 @@
 {
   "name": "@wazo/sdk",
-  "version": "0.9.11",
+  "version": "0.10.0",
   "description": "Wazo's JavaScript Software Development Kit.",
   "main": "dist/wazo-sdk.js",
   "author": "Wazo (http://wazo.io)",
@@ -41,7 +41,7 @@
     "moment": "^2.22.2",
     "node-fetch": "^2.2.0",
     "reconnecting-websocket": "^4.1.10",
-    "sip.js": "0.11.6",
+    "sip.js": "0.12.0",
     "webrtc-adapter": "^6.4.4"
   },
   "devDependencies": {
@@ -70,6 +70,7 @@
     "rollup-plugin-babel": "^4.0.3",
     "rollup-plugin-commonjs": "^9.2.0",
     "rollup-plugin-flow": "^1.1.1",
+    "rollup-plugin-json": "^3.1.0",
     "rollup-plugin-node-resolve": "^3.4.0",
     "rollup-plugin-terser": "^3.0.0",
     "rollup-plugin-visualizer": "^0.9.0",
