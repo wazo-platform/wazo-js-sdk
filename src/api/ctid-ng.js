@@ -8,8 +8,8 @@ import Call from '../domain/Call';
 type CallQuery = {
   from_mobile: boolean,
   extension: string,
-  line_id?: number,
-}
+  line_id?: number
+};
 
 export default (client: ApiRequester, baseUrl: string) => ({
   updatePresence(token: Token, presence: string): Promise<Boolean> {
@@ -41,7 +41,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
       from_mobile: fromMobile,
       extension,
     };
-   
+
     if (lineId) {
       query.line_id = lineId;
     }

@@ -227,7 +227,7 @@ export default class WebRTCClient {
     return this.userAgent.message(destination, message);
   }
 
-  transfert(session: SIP.sessionDescriptionHandler, target: string) {
+  transfer(session: SIP.sessionDescriptionHandler, target: string) {
     this.hold(session);
 
     setTimeout(() => {
@@ -241,9 +241,7 @@ export default class WebRTCClient {
   }
 
   getContactIdentifier() {
-    return this.userAgent
-      ? `${this.userAgent.configuration.contactName}/${this.userAgent.contact.uri}`
-      : null;
+    return this.userAgent ? `${this.userAgent.configuration.contactName}/${this.userAgent.contact.uri}` : null;
   }
 
   close() {

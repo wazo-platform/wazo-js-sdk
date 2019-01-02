@@ -36,6 +36,8 @@ export interface Phone {
 
   endCall(): void;
 
+  isInCall(): boolean;
+
   onConnectionMade(): void;
 
   close(): void;
