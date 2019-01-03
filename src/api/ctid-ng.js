@@ -39,7 +39,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   makeCall(token: Token, extension: string, fromMobile: boolean, lineId: ?number) {
     const query: CallQuery = {
       from_mobile: fromMobile,
-      extension,
+      extension
     };
 
     if (lineId) {
