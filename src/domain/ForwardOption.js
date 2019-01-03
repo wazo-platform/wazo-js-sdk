@@ -48,6 +48,12 @@ export default class ForwardOption {
     return this;
   }
 
+  setEnabled(enabled: boolean): ForwardOption {
+    this.enabled = enabled;
+
+    return this;
+  }
+
   is(other: ForwardOption) {
     return this.key === other.key;
   }

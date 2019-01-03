@@ -48,6 +48,10 @@ export default class DebugPhone implements Phone {
     console.info('DebugPhone - Hang up');
   }
 
+  isInCall(): boolean {
+    return false;
+  }
+
   onConnectionMade() {
     console.info('DebugPhone - Connection made');
   }

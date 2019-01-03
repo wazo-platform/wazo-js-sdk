@@ -10,7 +10,7 @@ type CallResponse = {
   status: string,
   is_caller: boolean,
   creation_time: string,
-  on_hold: boolean,
+  on_hold: boolean
 };
 
 type CallArguments = {
@@ -20,7 +20,7 @@ type CallArguments = {
   calleeNumber: string,
   onHold: boolean,
   status: string,
-  startingTime: Date,
+  startingTime: Date
 };
 
 export default class Call {
@@ -41,10 +41,10 @@ export default class Call {
       id: +plain.call_id,
       calleeName: plain.peer_caller_id_name,
       calleeNumber: plain.peer_caller_id_number,
-      isCaller: plain.is_caller, 
+      isCaller: plain.is_caller,
       onHold: plain.on_hold,
       status: plain.status,
-      startingTime: moment(plain.creation_time).toDate(),
+      startingTime: moment(plain.creation_time).toDate()
     });
   }
 
