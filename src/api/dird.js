@@ -33,7 +33,9 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
 
   editContact(token: Token, contact: Contact): Promise<Contact> {
-    return client.put(`${baseUrl}/personal/${contact.sourceId || contact.id || ''}`, getContactPayload(contact), token);
+    return client
+      .put(`${baseUrl}/personal/${contact.sourceId || contact.id || ''}`, getContactPayload(contact), token)
+      .then(response => Contact.parsePersonal(response));
   },
 
   deleteContact(token: Token, contactUuid: UUID) {
