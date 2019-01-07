@@ -293,10 +293,9 @@ export default class Contact {
   isInCall(): boolean {
     // Codes AST
     const INUSE = 1; // 1 << 0, One or more devices INUSE
-    const RINGING = 8; // 1 << 3, All devices RINGING
     const ONHOLD = 16; // 1 << 4, All devices ONHOLD
 
-    return this.status === INUSE || this.status === RINGING || this.status === ONHOLD;
+    return this.status === INUSE || this.status === ONHOLD;
   }
 
   merge(old: Contact): Contact {
