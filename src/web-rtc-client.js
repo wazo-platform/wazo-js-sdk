@@ -1,6 +1,6 @@
 // @flow
 /* eslint-disable class-methods-use-this */
-/* global window */
+/* global window, document */
 import 'webrtc-adapter';
 import SIP from 'sip.js';
 import once from './utils/once';
@@ -30,6 +30,7 @@ const transportEvents = [
   'closed',
   'keepAliveDebounceTimeout'
 ];
+const MAX_MERGE_SESSIONS = 4;
 
 type MediaConfig = {
   audio: Object & boolean,
@@ -45,6 +46,7 @@ type WebRtcConfig = {
   authorizationUser: string,
   password: string,
   media: MediaConfig,
+  maxMergeSessions: number,
   log?: Object
 };
 
@@ -53,9 +55,12 @@ export default class WebRTCClient {
   config: WebRtcConfig;
   userAgent: SIP.UA;
   callbacksHandler: CallbacksHandler;
-  audio: Object & boolean;
+  audio: boolean;
   video: Object & boolean;
   localVideo: ?Object & ?boolean;
+  audioContext: AudioContext;
+  audioStreams: Array<Object>;
+  mergeDestination: ?MediaStream;
 
   static isAPrivateIp(ip: string): boolean {
     const regex = /^(?:10|127|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\..*/;
@@ -91,6 +96,8 @@ export default class WebRTCClient {
     this.audio = media.audio;
     this.video = media.video;
     this.localVideo = media.localVideo;
+    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    this.audioStreams = [];
   }
 
   createUserAgent(): SIP.UA {
@@ -236,6 +243,48 @@ export default class WebRTCClient {
     }, 50);
   }
 
+  merge(rawSessions: Array<SIP.InviteClientContext>): Array<Promise<any>> {
+    this.mergeDestination = this.audioContext.createMediaStreamDestination();
+    const sessions = this._limitMergeSessions(rawSessions);
+
+    if (this.audioContext.state === 'suspended') {
+      this.audioContext.resume();
+    }
+
+    return sessions.map(session => {
+      const sdh = session.sessionDescriptionHandler;
+      const pc = sdh.peerConnection;
+
+      const localStream = pc.getLocalStreams()[0];
+      this._addAudioStream(localStream, true);
+
+      if (session.local_hold) {
+        this.unhold(session);
+
+        sdh.on('addTrack', e => {
+          const [remoteStream] = e.streams;
+          this._addAudioStream(remoteStream);
+          pc.removeStream(remoteStream);
+        });
+      } else {
+        const [remoteStream] = pc.getRemoteStreams();
+        this._addAudioStream(remoteStream);
+        pc.removeStream(remoteStream);
+      }
+
+      pc.removeStream(localStream);
+      pc.addStream(this.mergeDestination.stream);
+
+      return pc.createOffer(this._getRtcOptions()).then(offer => pc.setLocalDescription(offer));
+    });
+  }
+
+  unmerge(sessions: Array<SIP.InviteClientContext>) {
+    sessions.forEach(session => this._removeAudioStream(session));
+
+    this.mergeDestination = null;
+  }
+
   getState() {
     return states[this.userAgent.state];
   }
@@ -250,6 +299,12 @@ export default class WebRTCClient {
     this.userAgent.transport.disconnect();
 
     return this.userAgent.stop();
+  }
+
+  _limitMergeSessions(sessions: Array<SIP.InviteClientContext>): Array<SIP.InviteClientContext> {
+    const maxSessions = this.config.maxMergeSessions || MAX_MERGE_SESSIONS;
+
+    return sessions.slice(0, maxSessions);
   }
 
   _fixLocalDescription(context: SIP.InviteClientContext, direction: string) {
@@ -270,7 +325,7 @@ export default class WebRTCClient {
   }
 
   _isWeb() {
-    return typeof this.audio === 'object' || typeof this.video === 'object';
+    return typeof window === 'object' && typeof document === 'object';
   }
 
   _hasAudio() {
@@ -392,8 +447,32 @@ export default class WebRTCClient {
       this.video.srcObject = remoteStream;
       this.video.play();
     } else if (this._hasAudio() && this._isWeb()) {
-      this.audio.srcObject = remoteStream;
-      this.audio.play();
+      const audio = document.createElement('audio');
+      if (document.body) {
+        document.body.appendChild(audio);
+      }
+
+      audio.srcObject = remoteStream;
+      audio.play();
+    }
+  }
+
+  _addAudioStream(mediaStream: MediaStream, isLocal: boolean = false) {
+    const { id } = mediaStream;
+    const audioSource = this.audioContext.createMediaStreamSource(mediaStream);
+    audioSource.connect(this.mergeDestination);
+
+    if (!isLocal) {
+      this.audioStreams.push({ id, audioSource, mediaStream });
+    }
+  }
+
+  _removeAudioStream(mediaStream: MediaStream) {
+    for (let i = 0; i < this.audioStreams.length; i++) {
+      if (this.audioStreams[i].id === mediaStream.id) {
+        this.audioStreams[i].audioSource.disconnect(this.mergeDestination);
+        this.audioStreams.splice(i, 1);
+      }
     }
   }
 
