@@ -292,7 +292,7 @@ export default class Contact {
 
   isInCall(): boolean {
     // Codes AST
-    const INUSE = 0; // 1 << 0, One or more devices INUSE
+    const INUSE = 1; // 1 << 0, One or more devices INUSE
     const RINGING = 8; // 1 << 3, All devices RINGING
     const ONHOLD = 16; // 1 << 4, All devices ONHOLD
 
