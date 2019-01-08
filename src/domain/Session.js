@@ -101,4 +101,16 @@ export default class Session {
 
     return line ? line.extensions[0].exten : null;
   }
+
+  allLines(): ?Line[] {
+    return this.profile ? this.profile.lines : null;
+  }
+
+  allNumbers(): ?string[] {
+    const lines = this.allLines();
+
+    const numbers = lines.map(line => line.extensions.map(extension => extension.exten));
+
+    return lines ? numbers : null;
+  }
 }
