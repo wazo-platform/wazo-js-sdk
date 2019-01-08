@@ -14,7 +14,7 @@ type CallResponse = {
 };
 
 type CallArguments = {
-  id: number,
+  id: string,
   isCaller: boolean,
   calleeName: string,
   calleeNumber: string,
@@ -24,7 +24,7 @@ type CallArguments = {
 };
 
 export default class Call {
-  id: number;
+  id: string;
   calleeName: string;
   calleeNumber: string;
   isCaller: boolean;
@@ -38,7 +38,7 @@ export default class Call {
 
   static parse(plain: CallResponse): Call {
     return new Call({
-      id: +plain.call_id,
+      id: plain.call_id,
       calleeName: plain.peer_caller_id_name,
       calleeNumber: plain.peer_caller_id_number,
       isCaller: plain.is_caller,
