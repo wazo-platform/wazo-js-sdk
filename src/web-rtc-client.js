@@ -1,6 +1,6 @@
 // @flow
 /* eslint-disable class-methods-use-this */
-/* global window, document */
+/* global window, document, navigator */
 import 'webrtc-adapter';
 import SIP from 'sip.js';
 import once from './utils/once';
@@ -55,12 +55,13 @@ export default class WebRTCClient {
   config: WebRtcConfig;
   userAgent: SIP.UA;
   callbacksHandler: CallbacksHandler;
-  audio: boolean;
+  hasAudio: boolean;
+  audioElements: { [string]: HTMLAudioElement };
   video: Object & boolean;
   localVideo: ?Object & ?boolean;
   audioContext: AudioContext;
   audioStreams: Array<Object>;
-  mergeDestination: ?MediaStream;
+  mergeDestination: ?MediaStreamAudioDestinationNode;
 
   static isAPrivateIp(ip: string): boolean {
     const regex = /^(?:10|127|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\..*/;
@@ -93,11 +94,12 @@ export default class WebRTCClient {
   }
 
   configureMedia(media: MediaConfig) {
-    this.audio = media.audio;
+    this.hasAudio = !!media.audio;
     this.video = media.video;
     this.localVideo = media.localVideo;
     this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
     this.audioStreams = [];
+    this.audioElements = {};
   }
 
   createUserAgent(): SIP.UA {
@@ -146,18 +148,6 @@ export default class WebRTCClient {
   }
 
   call(number: string): SIP.InviteClientContext {
-    // Safari hack, because you cannot call .play() from a non user action
-    if (this.audio && this._isWeb()) {
-      this.audio.autoplay = true;
-    }
-    if (this.video && this._isWeb()) {
-      this.video.autoplay = true;
-    }
-    if (this.localVideo && this._isWeb()) {
-      this.localVideo.autoplay = true;
-      this.localVideo.volume = 0;
-    }
-
     const context = this.userAgent.invite(number, this._getMediaConfiguration());
 
     this._setupSession(context);
@@ -166,14 +156,6 @@ export default class WebRTCClient {
   }
 
   answer(session: SIP.sessionDescriptionHandler) {
-    // Safari hack, because you cannot call .play() from a non user action
-    if (this.audio && this._isWeb()) {
-      this.audio.autoplay = true;
-    }
-    if (this.video && this._isWeb()) {
-      this.video.autoplay = true;
-    }
-
     return session.accept(this._getMediaConfiguration());
   }
 
@@ -189,6 +171,8 @@ export default class WebRTCClient {
     if (session.reject) {
       return session.reject();
     }
+
+    this._cleanupMedia(session);
 
     return null;
   }
@@ -246,6 +230,7 @@ export default class WebRTCClient {
   merge(rawSessions: Array<SIP.InviteClientContext>): Array<Promise<any>> {
     this.mergeDestination = this.audioContext.createMediaStreamDestination();
     const sessions = this._limitMergeSessions(rawSessions);
+    const isFirefox = this._isWeb() && navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
 
     if (this.audioContext.state === 'suspended') {
       this.audioContext.resume();
@@ -258,7 +243,7 @@ export default class WebRTCClient {
       const localStream = pc.getLocalStreams()[0];
       this._addAudioStream(localStream, true);
 
-      if (session.local_hold) {
+      if (session.local_hold && !isFirefox) {
         this.unhold(session);
 
         sdh.on('addTrack', e => {
@@ -273,16 +258,43 @@ export default class WebRTCClient {
       }
 
       pc.removeStream(localStream);
-      pc.addStream(this.mergeDestination.stream);
+      if (this.mergeDestination) {
+        pc.addStream(this.mergeDestination.stream);
+      }
 
       return pc.createOffer(this._getRtcOptions()).then(offer => pc.setLocalDescription(offer));
     });
   }
 
-  unmerge(sessions: Array<SIP.InviteClientContext>) {
-    sessions.forEach(session => this._removeAudioStream(session));
+  unmerge(sessions: Array<SIP.InviteClientContext>): Promise<boolean> {
+    const nbSessions = sessions.length;
 
-    this.mergeDestination = null;
+    const promises = sessions.map((session, i) => {
+      const sdh = session.sessionDescriptionHandler;
+      const pc = sdh.peerConnection;
+      const [remoteStream] = pc.getRemoteStreams();
+
+      this._removeAudioStream(remoteStream);
+
+      return pc.createOffer(this._getRtcOptions()).then(offer => {
+        const result = pc.setLocalDescription(offer);
+
+        if (i < nbSessions - 1) {
+          this.hold(session);
+        }
+
+        return result;
+      });
+    });
+
+    return new Promise((resolve, reject) => {
+      Promise.all(promises)
+        .then(() => {
+          this.mergeDestination = null;
+          resolve(true);
+        })
+        .catch(reject);
+    });
   }
 
   getState() {
@@ -293,8 +305,16 @@ export default class WebRTCClient {
     return this.userAgent ? `${this.userAgent.configuration.contactName}/${this.userAgent.contact.uri}` : null;
   }
 
-  close() {
-    this._cleanupMedia();
+  close(session: SIP) {
+    this._cleanupMedia(session);
+
+    (Object.values(this.audioElements): any).forEach((audioElement: HTMLAudioElement) => {
+      // eslint-disable-next-line
+      audioElement.srcObject = null;
+      audioElement.pause();
+    });
+
+    this.audioElements = {};
 
     this.userAgent.transport.disconnect();
 
@@ -329,7 +349,7 @@ export default class WebRTCClient {
   }
 
   _hasAudio() {
-    return !!this.audio;
+    return this.hasAudio;
   }
 
   _hasVideo() {
@@ -447,11 +467,7 @@ export default class WebRTCClient {
       this.video.srcObject = remoteStream;
       this.video.play();
     } else if (this._hasAudio() && this._isWeb()) {
-      const audio = document.createElement('audio');
-      if (document.body) {
-        document.body.appendChild(audio);
-      }
-
+      const audio = this.audioElements[session.id];
       audio.srcObject = remoteStream;
       audio.play();
     }
@@ -460,7 +476,9 @@ export default class WebRTCClient {
   _addAudioStream(mediaStream: MediaStream, isLocal: boolean = false) {
     const { id } = mediaStream;
     const audioSource = this.audioContext.createMediaStreamSource(mediaStream);
-    audioSource.connect(this.mergeDestination);
+    if (this.mergeDestination) {
+      audioSource.connect(this.mergeDestination);
+    }
 
     if (!isLocal) {
       this.audioStreams.push({ id, audioSource, mediaStream });
@@ -477,6 +495,19 @@ export default class WebRTCClient {
   }
 
   _setupLocalMedia(session: SIP.sessionDescriptionHandler) {
+    // Safari hack, because you cannot call .play() from a non user action
+    if (this._hasAudio() && this._isWeb()) {
+      const audio = document.createElement('audio');
+      if (document.body) {
+        document.body.appendChild(audio);
+      }
+      audio.autoplay = true;
+      this.audioElements[session.id] = audio;
+    }
+    if (this.video && this._isWeb()) {
+      this.video.autoplay = true;
+    }
+
     if (!this.localVideo) {
       return;
     }
@@ -498,10 +529,11 @@ export default class WebRTCClient {
 
     this.localVideo.srcObject = localStream;
     this.localVideo.volume = 0;
+    this.localVideo.autoplay = true;
     this.localVideo.play();
   }
 
-  _cleanupMedia() {
+  _cleanupMedia(session: SIP.sessionDescriptionHandler) {
     if (this.video && this._isWeb()) {
       this.video.srcObject = null;
       this.video.pause();
@@ -512,9 +544,11 @@ export default class WebRTCClient {
       }
     }
 
-    if (this.audio && this._isWeb()) {
-      this.audio.srcObject = null;
-      this.audio.pause();
+    if (this._hasAudio() && this._isWeb()) {
+      this.audioElements[session.id].srcObject = null;
+      this.audioElements[session.id].pause();
+
+      delete this.audioElements[session.id];
     }
   }
 
