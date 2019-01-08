@@ -109,8 +109,6 @@ export default class Session {
   allNumbers(): ?string[] {
     const lines = this.allLines();
 
-    const numbers = lines ? lines.map(line => line.extensions.map(extension => extension.exten)[0]) : null;
-
-    return numbers;
+    return lines ? lines.map(line => line.extensions.map(extension => extension.exten)[0]) : null;;
   }
 }
