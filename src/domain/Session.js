@@ -102,13 +102,11 @@ export default class Session {
     return line ? line.extensions[0].exten : null;
   }
 
-  allLines(): ?Line[] {
-    return this.profile ? this.profile.lines : null;
+  allLines(): Line[] {
+    return this.profile ? this.profile.lines : [];
   }
 
-  allNumbers(): ?string[] {
-    const lines = this.allLines();
-
-    return lines ? lines.map(line => line.extensions.map(extension => extension.exten)[0]) : null;;
+  allNumbers(): string[] {
+    return this.allLines().map(line => line.extensions.map(extension => extension.exten)[0]);
   }
 }

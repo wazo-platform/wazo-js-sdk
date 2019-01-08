@@ -182,8 +182,6 @@ export default class CallLog {
   }
 
   isADeclinedCall(session: Session): boolean {
-    const allNumbers = session.allNumbers();
-    return allNumbers ? allNumbers
-      .filter(number => number === this.destination.extension).length > 0 && !this.answered : true;
+    return !this.answered && session.allNumbers().some(number => number === this.destination.extension);
   }
 }
