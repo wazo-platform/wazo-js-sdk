@@ -109,7 +109,7 @@ export default class Session {
   allNumbers(): ?string[] {
     const lines = this.allLines();
 
-    const numbers = lines.map(line => line.extensions.map(extension => extension.exten[0]));
+    const numbers = lines.map(line => line.extensions.map(extension => extension.exten));
 
     return lines ? numbers : null;
   }
