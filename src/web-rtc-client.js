@@ -331,6 +331,17 @@ export default class WebRTCClient {
     });
   }
 
+  atxtransfer(session: SIP.sessionDescriptionHandler, target: string) {
+    const holded_session = session;
+    this.hold(session);
+
+    const session = this.call(target);
+
+    session.once('bye', (request) => {
+      session.refer(holded_session);
+    }
+  }
+
   getState() {
     return states[this.userAgent.state];
   }
