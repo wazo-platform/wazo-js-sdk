@@ -60,7 +60,7 @@ export default class WebRTCClient {
   video: Object & boolean;
   localVideo: ?Object & ?boolean;
   audioContext: AudioContext;
-  audioStreams: Array<Object>;
+  audioStreams: Object;
   mergeDestination: ?MediaStreamAudioDestinationNode;
 
   static isAPrivateIp(ip: string): boolean {
@@ -98,7 +98,7 @@ export default class WebRTCClient {
     this.video = media.video;
     this.localVideo = media.localVideo;
     this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    this.audioStreams = [];
+    this.audioStreams = {};
     this.audioElements = {};
   }
 
@@ -227,65 +227,84 @@ export default class WebRTCClient {
     }, 50);
   }
 
-  merge(rawSessions: Array<SIP.InviteClientContext>): Array<Promise<any>> {
+  merge(rawSessions: Array<SIP.InviteClientContext>): Array<Promise<boolean>> {
     this.mergeDestination = this.audioContext.createMediaStreamDestination();
     const sessions = this._limitMergeSessions(rawSessions);
-    const isFirefox = this._isWeb() && navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
 
     if (this.audioContext.state === 'suspended') {
       this.audioContext.resume();
     }
 
-    return sessions.map(session => {
-      const sdh = session.sessionDescriptionHandler;
-      const pc = sdh.peerConnection;
+    return sessions.map(this.addToMerge.bind(this));
+  }
 
+  addToMerge(session: SIP.InviteClientContext): Promise<boolean> {
+    const isFirefox = this._isWeb() && navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+    const sdh = session.sessionDescriptionHandler;
+    const pc = sdh.peerConnection;
+
+    const bindStreams = remoteStream => {
       const localStream = pc.getLocalStreams()[0];
-      this._addAudioStream(localStream, true);
+      const localAudioSource = this._addAudioStream(localStream);
+      const remoteAudioSource = this._addAudioStream(remoteStream);
 
-      if (session.local_hold && !isFirefox) {
-        this.unhold(session);
-
-        sdh.on('addTrack', e => {
-          const [remoteStream] = e.streams;
-          this._addAudioStream(remoteStream);
-          pc.removeStream(remoteStream);
-        });
-      } else {
-        const [remoteStream] = pc.getRemoteStreams();
-        this._addAudioStream(remoteStream);
-        pc.removeStream(remoteStream);
-      }
-
+      pc.removeStream(remoteStream);
       pc.removeStream(localStream);
       if (this.mergeDestination) {
         pc.addStream(this.mergeDestination.stream);
       }
 
-      return pc.createOffer(this._getRtcOptions()).then(offer => pc.setLocalDescription(offer));
+      return pc.createOffer(this._getRtcOptions()).then(offer => {
+        this.audioStreams[session.id] = { localAudioSource, remoteAudioSource };
+
+        pc.setLocalDescription(offer);
+      });
+    };
+
+    if (session.local_hold && !isFirefox) {
+      this.unhold(session);
+
+      // When call is hold we lost the current track. Wait for another one.
+      return sdh.once('addTrack', e => bindStreams(e.streams[0]));
+    }
+
+    return bindStreams(pc.getRemoteStreams()[0]);
+  }
+
+  removeFromMerge(session: SIP.InviteClientContext, shouldHold: boolean = true) {
+    const sdh = session.sessionDescriptionHandler;
+    const pc = sdh.peerConnection;
+    const { localAudioSource, remoteAudioSource } = this.audioStreams[session.id];
+
+    remoteAudioSource.disconnect(this.mergeDestination);
+    localAudioSource.disconnect(this.mergeDestination);
+
+    const newDestination = this.audioContext.createMediaStreamDestination();
+    localAudioSource.connect(newDestination);
+    remoteAudioSource.connect(newDestination);
+
+    if (this.mergeDestination) {
+      pc.removeStream(this.mergeDestination.stream);
+    }
+    pc.addStream(newDestination.stream);
+
+    delete this.audioStreams[session.id];
+
+    return pc.createOffer(this._getRtcOptions()).then(offer => {
+      const result = pc.setLocalDescription(offer);
+
+      if (shouldHold) {
+        this.hold(session);
+      }
+
+      return result;
     });
   }
 
   unmerge(sessions: Array<SIP.InviteClientContext>): Promise<boolean> {
     const nbSessions = sessions.length;
 
-    const promises = sessions.map((session, i) => {
-      const sdh = session.sessionDescriptionHandler;
-      const pc = sdh.peerConnection;
-      const [remoteStream] = pc.getRemoteStreams();
-
-      this._removeAudioStream(remoteStream);
-
-      return pc.createOffer(this._getRtcOptions()).then(offer => {
-        const result = pc.setLocalDescription(offer);
-
-        if (i < nbSessions - 1) {
-          this.hold(session);
-        }
-
-        return result;
-      });
-    });
+    const promises = sessions.map((session, i) => this.removeFromMerge(session, i < nbSessions - 1));
 
     return new Promise((resolve, reject) => {
       Promise.all(promises)
@@ -473,25 +492,13 @@ export default class WebRTCClient {
     }
   }
 
-  _addAudioStream(mediaStream: MediaStream, isLocal: boolean = false) {
-    const { id } = mediaStream;
+  _addAudioStream(mediaStream: MediaStream) {
     const audioSource = this.audioContext.createMediaStreamSource(mediaStream);
-    if (this.mergeDestination) {
+    if (this.mergeDestination){
       audioSource.connect(this.mergeDestination);
     }
 
-    if (!isLocal) {
-      this.audioStreams.push({ id, audioSource, mediaStream });
-    }
-  }
-
-  _removeAudioStream(mediaStream: MediaStream) {
-    for (let i = 0; i < this.audioStreams.length; i++) {
-      if (this.audioStreams[i].id === mediaStream.id) {
-        this.audioStreams[i].audioSource.disconnect(this.mergeDestination);
-        this.audioStreams.splice(i, 1);
-      }
-    }
+    return audioSource;
   }
 
   _setupLocalMedia(session: SIP.sessionDescriptionHandler) {
