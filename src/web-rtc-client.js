@@ -232,6 +232,25 @@ export default class WebRTCClient {
     }, 50);
   }
 
+  // check https://sipjs.com/api/0.12.0/refer/referClientContext/
+  atxfer(session: SIP.sessionDescriptionHandler) {
+    this.hold(session);
+
+    return {
+      init: (target: string) => {
+        return this.call(target);
+      },
+      complete: (new_session) => {
+        const options = {
+          receiveResponse: () => {console.log('Call transfered')},
+        };
+
+        this.unhold(session);
+        new_session.refer(session, options)
+      },
+    }
+  }
+
   merge(sessions: Array<SIP.InviteClientContext>): Array<Promise<boolean>> {
     this._checkMaxMergeSessions(sessions.length);
     if (this.audioContext) {
@@ -329,23 +348,6 @@ export default class WebRTCClient {
         })
         .catch(reject);
     });
-  }
-
-  // check https://sipjs.com/api/0.12.0/refer/referClientContext/
-  atxfer(session: SIP.sessionDescriptionHandler, target: string) {
-    const holded_session = session;
-    this.hold(session);
-
-    const session = this.call(target);
-
-    session.once('bye', (request) => {
-      const options = {
-        receiveResponse: () => console.log('Call transfered');
-      }
-      session.refer(holded_session, options);
-    }
-
-    session.once('referRequested', (context) => console.log(context));
   }
 
   getState() {
