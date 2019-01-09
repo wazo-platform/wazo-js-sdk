@@ -232,6 +232,7 @@ export default class WebRTCClient {
     }, 50);
   }
 
+<<<<<<< HEAD
   merge(sessions: Array<SIP.InviteClientContext>): Array<Promise<boolean>> {
     this._checkMaxMergeSessions(sessions.length);
     if (this.audioContext) {
@@ -331,15 +332,20 @@ export default class WebRTCClient {
     });
   }
 
-  atxtransfer(session: SIP.sessionDescriptionHandler, target: string) {
+  atxfer(session: SIP.sessionDescriptionHandler, target: string) {
     const holded_session = session;
     this.hold(session);
 
     const session = this.call(target);
 
     session.once('bye', (request) => {
-      session.refer(holded_session);
+      const options = {
+        receiveResponse: () => console.log('Call transfered');
+      }
+      session.refer(holded_session, options);
     }
+
+    session.once('referRequested', (context) => console.log(context));
   }
 
   getState() {
