@@ -12,6 +12,7 @@
     "lines-between-class-members": ["error", "always", { "exceptAfterSingleLine": true }],
     "no-underscore-dangle": ["error", { "allowAfterThis": true }],
     "no-console": ["error", { "allow": ["info", "warn", "error"] }],
-    "import/no-cycle": 0
+    "import/no-cycle": 0,
+    "no-plusplus": 0
   }
 }

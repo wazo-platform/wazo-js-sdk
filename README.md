@@ -235,6 +235,27 @@ phone.sendDTMF(message: string, destination: string);
 phone.close();
 ```
 
+## Merging sessions in one conference
+```js
+phone.merge(sessions: Array<SIP.InviteClientContext>);
+```
+
+## Add a session to a conference
+```js
+phone.addToMerge(session: SIP.InviteClientContext);
+```
+
+## Remove a session from a conference
+```js
+phone.removeFromMerge(session: SIP.InviteClientContext, shouldHold: boolean);
+// shouldHold indicate if the session should be held after removed from session
+```
+
+## Unmerge a sessions from a conference
+```js
+phone.unmerge(sessions: Array<SIP.InviteClientContext>)
+```
+
 ### Wazo Websocket
 ```js
 import { WazoWebSocketClient } from '@wazo/sdk';

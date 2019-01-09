@@ -112,14 +112,14 @@ type ContactArguments = {
 const SOURCE_MOBILE = 'mobile';
 
 const AST_STATUS_CODES = {
-    REMOVED: -2, // Extension removed
-    DEACTIVATED: -1, // Extension hint removed
-    NOTINUSE: 0, // No device INUSE or BUSY
-    INUSE: 1, // Bitwise: 1 << 0 | One or more devices INUSE
-    BUSY: 2, // Bitwise: 1 << 1 | All devices BUSY
-    UNAVAILABLE: 4, // Bitwise: 1 << 2 | All devices UNAVAILABLE/UNREGISTERED
-    RINGING: 8, // Bitwise: 1 << 3 | All devices RINGING
-    ONHOLD: 16 // Bitwise: 1 << 4 | All devices ONHOLD
+  REMOVED: -2, // Extension removed
+  DEACTIVATED: -1, // Extension hint removed
+  NOTINUSE: 0, // No device INUSE or BUSY
+  INUSE: 1, // Bitwise: 1 << 0 | One or more devices INUSE
+  BUSY: 2, // Bitwise: 1 << 1 | All devices BUSY
+  UNAVAILABLE: 4, // Bitwise: 1 << 2 | All devices UNAVAILABLE/UNREGISTERED
+  RINGING: 8, // Bitwise: 1 << 3 | All devices RINGING
+  ONHOLD: 16 // Bitwise: 1 << 4 | All devices ONHOLD
 };
 
 export default class Contact {
