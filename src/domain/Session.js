@@ -107,6 +107,6 @@ export default class Session {
   }
 
   allNumbers(): string[] {
-    return this.allLines().map(line => line.extensions.map(extension => extension.exten)[0]);
+    return this.allLines().map(line => line.extensions.map(extension => extension.exten).reduce((a, b) => a.concat(b)));
   }
 }
