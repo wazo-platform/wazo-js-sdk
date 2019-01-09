@@ -326,8 +326,8 @@ export default class WebRTCClient {
     return this.userAgent ? `${this.userAgent.configuration.contactName}/${this.userAgent.contact.uri}` : null;
   }
 
-  close(session: SIP) {
-    this._cleanupMedia(session);
+  close() {
+    this._cleanupMedia();
 
     (Object.values(this.audioElements): any).forEach((audioElement: HTMLAudioElement) => {
       // eslint-disable-next-line
@@ -546,7 +546,7 @@ export default class WebRTCClient {
     this.localVideo.play();
   }
 
-  _cleanupMedia(session: SIP.sessionDescriptionHandler) {
+  _cleanupMedia(session: ?SIP.sessionDescriptionHandler) {
     if (this.video && this._isWeb()) {
       this.video.srcObject = null;
       this.video.pause();
@@ -557,11 +557,19 @@ export default class WebRTCClient {
       }
     }
 
-    if (this._hasAudio() && this._isWeb()) {
-      this.audioElements[session.id].srcObject = null;
-      this.audioElements[session.id].pause();
+    const cleanAudio = id => {
+      this.audioElements[id].srcObject = null;
+      this.audioElements[id].pause();
 
-      delete this.audioElements[session.id];
+      delete this.audioElements[id];
+    };
+
+    if (this._hasAudio() && this._isWeb()) {
+      if (session) {
+        cleanAudio(session.id);
+      } else {
+        Object.keys(this.audioElements).forEach(sessionId => cleanAudio(sessionId));
+      }
     }
   }
 
