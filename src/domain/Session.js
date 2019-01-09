@@ -101,4 +101,12 @@ export default class Session {
 
     return line ? line.extensions[0].exten : null;
   }
+
+  allLines(): Line[] {
+    return this.profile ? this.profile.lines : [];
+  }
+
+  allNumbers(): string[] {
+    return this.allLines().map(line => line.extensions.map(extension => extension.exten).reduce((a, b) => a.concat(b)));
+  }
 }
