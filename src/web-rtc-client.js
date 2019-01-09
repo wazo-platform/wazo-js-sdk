@@ -232,7 +232,6 @@ export default class WebRTCClient {
     }, 50);
   }
 
-<<<<<<< HEAD
   merge(sessions: Array<SIP.InviteClientContext>): Array<Promise<boolean>> {
     this._checkMaxMergeSessions(sessions.length);
     if (this.audioContext) {
@@ -332,6 +331,7 @@ export default class WebRTCClient {
     });
   }
 
+  // check https://sipjs.com/api/0.12.0/refer/referClientContext/
   atxfer(session: SIP.sessionDescriptionHandler, target: string) {
     const holded_session = session;
     this.hold(session);
