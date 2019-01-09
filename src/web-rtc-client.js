@@ -248,6 +248,9 @@ export default class WebRTCClient {
         this.unhold(session);
         new_session.refer(session, options)
       },
+      cancel: () => {
+        this.unhold(session);
+      }
     }
   }
 
