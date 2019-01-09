@@ -246,9 +246,14 @@ export default class WebRTCClient {
         };
 
         this.unhold(session);
-        new_session.refer(session, options)
+
+        setTimeout(() => {
+          new_session.refer(session);
+          this.hangup(session);
+        }, 50);
       },
-      cancel: () => {
+      cancel: (new_session) => {
+        this.hangup(new_session);
         this.unhold(session);
       }
     }
