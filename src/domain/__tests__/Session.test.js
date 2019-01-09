@@ -2,6 +2,7 @@
 
 import Session from '../Session';
 import Profile from '../Profile';
+import Line from '../Line';
 
 describe('Session domain', () => {
   it('can parse a plain session to domain', () => {
@@ -79,6 +80,42 @@ describe('Session domain', () => {
       });
 
       expect(session.hasAccessToVoicemail()).toBeTruthy();
+    });
+
+    describe('When getting all numbers', () => {
+      describe('and the user has multiple lines', () => {
+        it('should return multiple extensions', () => {
+          const session = new Session({
+            token: 'ref-12345',
+            uuid: '1234',
+            profile: new Profile({
+              lines: [
+                new Line({ id: 9012, extensions: [{ id: 1, exten: '8000', context: 'default' }] }),
+                new Line({ id: 3421, extensions: [{ id: 2, exten: '9980', context: 'internal' }] })
+              ],
+            }),
+            expiresAt: A_DATE
+          });
+
+          expect(session.allNumbers().length).toBeGreaterThan(1);
+        });
+      });
+      describe('and the user has one line', () => {
+        it('should return only one extension', () => {
+          const session = new Session({
+            token: 'ref-12345',
+            uuid: '1234',
+            profile: new Profile({
+              lines: [
+                new Line({ id: 9012, extensions: [{ id: 1, exten: '8000', context: 'default' }] }),
+              ],
+            }),
+            expiresAt: A_DATE
+          });
+
+          expect(session.allNumbers().length).toEqual(1);
+        });
+      });
     });
 
     it('does not have access to voicemail given there is no voicemail configured', () => {
