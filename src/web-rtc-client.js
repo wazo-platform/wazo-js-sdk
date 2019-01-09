@@ -227,9 +227,9 @@ export default class WebRTCClient {
     }, 50);
   }
 
-  merge(rawSessions: Array<SIP.InviteClientContext>): Array<Promise<boolean>> {
+  merge(sessions: Array<SIP.InviteClientContext>): Array<Promise<boolean>> {
+    this._checkMaxMergeSessions(sessions.length);
     this.mergeDestination = this.audioContext.createMediaStreamDestination();
-    const sessions = this._limitMergeSessions(rawSessions);
 
     if (this.audioContext.state === 'suspended') {
       this.audioContext.resume();
@@ -239,6 +239,8 @@ export default class WebRTCClient {
   }
 
   addToMerge(session: SIP.InviteClientContext): Promise<boolean> {
+    this._checkMaxMergeSessions(Object.keys(this.audioStreams).length + 1);
+
     const isFirefox = this._isWeb() && navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
     const sdh = session.sessionDescriptionHandler;
     const pc = sdh.peerConnection;
@@ -340,10 +342,14 @@ export default class WebRTCClient {
     return this.userAgent.stop();
   }
 
-  _limitMergeSessions(sessions: Array<SIP.InviteClientContext>): Array<SIP.InviteClientContext> {
-    const maxSessions = this.config.maxMergeSessions || MAX_MERGE_SESSIONS;
+  _checkMaxMergeSessions(nbSessions: number) {
+    if (nbSessions < MAX_MERGE_SESSIONS) {
+      return;
+    }
 
-    return sessions.slice(0, maxSessions);
+    console.warn(
+      `Merging more than ${MAX_MERGE_SESSIONS} session is not recommended, it will consume too many resources.`
+    );
   }
 
   _fixLocalDescription(context: SIP.InviteClientContext, direction: string) {
@@ -494,7 +500,7 @@ export default class WebRTCClient {
 
   _addAudioStream(mediaStream: MediaStream) {
     const audioSource = this.audioContext.createMediaStreamSource(mediaStream);
-    if (this.mergeDestination){
+    if (this.mergeDestination) {
       audioSource.connect(this.mergeDestination);
     }
 
