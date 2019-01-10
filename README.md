@@ -128,27 +128,13 @@ client.accessd.getAuthorization(token, uuid);
 ```js
 import { WazoWebRTCClient } from '@wazo/sdk';
 
-const config = {
-  wsServer: 'wss://path.to/asterisk/ws',
-  displayName: 'My Display Name',
-  os: Platform.OS, // Only required for react-native. Platform comes from 'react-native' lib.
-  authorizationUser: 'line username',
-  password: 'line password',
-  uri: 'user@server.com',
-  media: {
-    audio: document.getElementById('audio'), // Pointing to a `<audio id="audio" />` element
-    video: document.getElementById('video'), // optional, pointing to a `<video id="video" />` element
-    localVideo: document.getElementById('local-video') // optional, pointing to a `<video id="local-video" />` element
-  }
-};
-
 const phone = new WazoWebRTCClient({
   displayName: 'From WEB',
   host: 'quintana.wazo.community',
   authorizationUser: lineData.username,
   password: lineData.secret,
   media: {
-    audio: boolean | document.getElementById('audio'), // Pointing to a `<audio id="audio" />` element
+    audio: boolean,
     video: boolean | document.getElementById('video'), // pointing to a `<video id="video" />` element
     localVideo: boolean | document.getElementById('video'), // pointing to a `<video id="video" />` element
   }
