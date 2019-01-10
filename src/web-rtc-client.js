@@ -41,7 +41,6 @@ type MediaConfig = {
 type WebRtcConfig = {
   displayName: string,
   host: string,
-  os: ?string,
   port?: number,
   authorizationUser: string,
   password: string,
@@ -160,6 +159,12 @@ export default class WebRTCClient {
   }
 
   hangup(session: SIP.sessionDescriptionHandler) {
+    session.stop();
+
+    if (session.id in this.audioStreams) {
+      this.removeFromMerge(session);
+    }
+
     if (session.hasAnswer && session.bye) {
       return session.bye();
     }
@@ -284,6 +289,10 @@ export default class WebRTCClient {
     const newDestination = this.audioContext.createMediaStreamDestination();
     localAudioSource.connect(newDestination);
     remoteAudioSource.connect(newDestination);
+
+    if (pc.signalingState === 'closed' || pc.iceConnectionState === 'closed') {
+      return null;
+    }
 
     if (this.mergeDestination) {
       pc.removeStream(this.mergeDestination.stream);
@@ -454,6 +463,25 @@ export default class WebRTCClient {
 
   _setupSession(session: SIP.sessionDescriptionHandler) {
     session.on('accepted', () => this._onAccepted(session));
+
+    session.on('terminated', () => {
+      session.stop();
+
+      if (session.id in this.audioStreams) {
+        this.removeFromMerge(session);
+      }
+    });
+
+    session.on('SessionDescriptionHandler-created', (sdh) => {
+      sdh.on('userMedia', (stream) => {
+        // eslint-disable-next-line
+        session.stop = () => {
+          stream.getAudioTracks().forEach(track => {
+            track.stop();
+          });
+        };
+      });
+    });
   }
 
   _onAccepted(session: SIP.sessionDescriptionHandler) {
