@@ -116,6 +116,7 @@ client.confd.listApplications(token);
 
 ### Dird
 ```js
+client.dird.search(token, context, term);
 client.dird.listPersonalContacts(token);
 client.dird.addContact(token, newContact);
 client.dird.editContact(token, contact);
