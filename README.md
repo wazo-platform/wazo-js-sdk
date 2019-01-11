@@ -114,6 +114,17 @@ client.confd.getUserLineSip(token, userUuid, lineId);
 client.confd.listApplications(token);
 ```
 
+### Dird
+```js
+client.dird.listPersonalContacts(token);
+client.dird.addContact(token, newContact);
+client.dird.editContact(token, contact);
+client.dird.deleteContact(token, contactUuid);
+client.dird.listFavorites(token, context);
+client.dird.markAsFavorite(token, source, sourceId);
+client.dird.removeFavorite(token, source, sourceId);
+```
+
 ### Accessd
 ```js
 client.accessd.listSubscriptions(token);
@@ -121,7 +132,6 @@ client.accessd.createSubscription(token, { productSku, name, startDate, contract
 client.accessd.getSubscription(token, uuid);
 client.accessd.listAuthorizations(token);
 client.accessd.getAuthorization(token, uuid);
-
 ```
 
 ### WebRTCPhone
