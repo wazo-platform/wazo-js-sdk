@@ -133,6 +133,21 @@ client.callLogd.listCallLogs(token, offset, limit);
 client.callLogd.listCallLogsFromDate(token, from, number);
 ```
 
+### Ctid Ng
+```js
+client.ctidNg.updatePresence(token, presence);
+client.ctidNg.listMessages(token, participantUuid, limit);
+client.ctidNg.sendMessage(token, alias, msg, toUserId);
+client.ctidNg.makeCall(token, extension, fromMobile, lineId);
+client.ctidNg.cancelCall(token, callId);
+client.ctidNg.listCalls(token);
+client.ctidNg.relocateCall(token, callId, destination, lineId);
+client.ctidNg.listVoicemails(token);
+client.ctidNg.deleteVoicemail(token, voicemailId);
+client.ctidNg.getPresence(token, contactUuid};
+client.ctidNg.getStatus(token, lineUuid);
+```
+
 ### Accessd
 ```js
 client.accessd.listSubscriptions(token);
