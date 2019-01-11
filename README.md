@@ -130,7 +130,7 @@ import { WazoWebRTCClient } from '@wazo/sdk';
 
 const phone = new WazoWebRTCClient({
   displayName: 'From WEB',
-  host: 'quintana.wazo.community',
+  host: 'demo.wazo.community',
   authorizationUser: lineData.username,
   password: lineData.secret,
   media: {
