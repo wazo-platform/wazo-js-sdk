@@ -213,7 +213,7 @@ phone.sendDTMF(session: SIP.sessionDescriptionHandler, tone: string);
 
 ## Sending a message
 ```js
-phone.sendDTMF(message: string, destination: string);
+phone.message(message: string, destination: string);
 ```
 
 ## Closing the RTC connection
