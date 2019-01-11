@@ -125,6 +125,13 @@ client.dird.markAsFavorite(token, source, sourceId);
 client.dird.removeFavorite(token, source, sourceId);
 ```
 
+### Call Logd
+```js
+client.callLogd.search(token, search, limit);
+client.callLogd.listCallLogs(token, offset, limit);
+client.callLogd.listCallLogsFromDate(token, from, number);
+```
+
 ### Accessd
 ```js
 client.accessd.listSubscriptions(token);
