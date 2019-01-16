@@ -92,7 +92,7 @@ describe('Session domain', () => {
               lines: [
                 new Line({ id: 9012, extensions: [{ id: 1, exten: '8000', context: 'default' }] }),
                 new Line({ id: 3421, extensions: [{ id: 2, exten: '9980', context: 'internal' }] })
-              ],
+              ]
             }),
             expiresAt: A_DATE
           });
@@ -106,9 +106,7 @@ describe('Session domain', () => {
             token: 'ref-12345',
             uuid: '1234',
             profile: new Profile({
-              lines: [
-                new Line({ id: 9012, extensions: [{ id: 1, exten: '8000', context: 'default' }] }),
-              ],
+              lines: [new Line({ id: 9012, extensions: [{ id: 1, exten: '8000', context: 'default' }] })]
             }),
             expiresAt: A_DATE
           });
