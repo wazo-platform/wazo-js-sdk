@@ -58,7 +58,7 @@ export default class WebRTCClient {
   audioElements: { [string]: HTMLAudioElement };
   video: Object & boolean;
   localVideo: ?Object & ?boolean;
-  audioContext: AudioContext;
+  audioContext: ?AudioContext;
   audioStreams: Object;
   mergeDestination: ?MediaStreamAudioDestinationNode;
 
@@ -96,7 +96,7 @@ export default class WebRTCClient {
     this.hasAudio = !!media.audio;
     this.video = media.video;
     this.localVideo = media.localVideo;
-    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    this.audioContext = this._isWeb() ? new (window.AudioContext || window.webkitAudioContext)() : null;
     this.audioStreams = {};
     this.audioElements = {};
   }
@@ -234,9 +234,11 @@ export default class WebRTCClient {
 
   merge(sessions: Array<SIP.InviteClientContext>): Array<Promise<boolean>> {
     this._checkMaxMergeSessions(sessions.length);
-    this.mergeDestination = this.audioContext.createMediaStreamDestination();
+    if (this.audioContext) {
+      this.mergeDestination = this.audioContext.createMediaStreamDestination();
+    }
 
-    if (this.audioContext.state === 'suspended') {
+    if (this.audioContext && this.audioContext.state === 'suspended') {
       this.audioContext.resume();
     }
 
@@ -279,6 +281,7 @@ export default class WebRTCClient {
   }
 
   removeFromMerge(session: SIP.InviteClientContext, shouldHold: boolean = true) {
+
     const sdh = session.sessionDescriptionHandler;
     const pc = sdh.peerConnection;
     const { localAudioSource, remoteAudioSource } = this.audioStreams[session.id];
@@ -286,18 +289,20 @@ export default class WebRTCClient {
     remoteAudioSource.disconnect(this.mergeDestination);
     localAudioSource.disconnect(this.mergeDestination);
 
-    const newDestination = this.audioContext.createMediaStreamDestination();
-    localAudioSource.connect(newDestination);
-    remoteAudioSource.connect(newDestination);
+    if (this.audioContext) {
+      const newDestination = this.audioContext.createMediaStreamDestination();
+      localAudioSource.connect(newDestination);
+      remoteAudioSource.connect(newDestination);
 
-    if (pc.signalingState === 'closed' || pc.iceConnectionState === 'closed') {
-      return null;
-    }
+      if (pc.signalingState === 'closed' || pc.iceConnectionState === 'closed') {
+        return null;
+      }
 
-    if (this.mergeDestination) {
-      pc.removeStream(this.mergeDestination.stream);
+      if (this.mergeDestination) {
+        pc.removeStream(this.mergeDestination.stream);
+      }
+      pc.addStream(newDestination.stream);
     }
-    pc.addStream(newDestination.stream);
 
     delete this.audioStreams[session.id];
 
@@ -410,7 +415,7 @@ export default class WebRTCClient {
       sessionDescriptionHandlerFactoryOptions: {
         constraints: {
           audio: this._hasAudio(),
-          video: this._hasVideo()
+          video: this.video
         },
         peerConnectionOptions: {
           iceCheckingTimeout: 5000,
@@ -465,15 +470,17 @@ export default class WebRTCClient {
     session.on('accepted', () => this._onAccepted(session));
 
     session.on('terminated', () => {
-      session.stop();
+      if ('stop' in session) {
+        session.stop();
+      }
 
       if (session.id in this.audioStreams) {
         this.removeFromMerge(session);
       }
     });
 
-    session.on('SessionDescriptionHandler-created', (sdh) => {
-      sdh.on('userMedia', (stream) => {
+    session.on('SessionDescriptionHandler-created', sdh => {
+      sdh.on('userMedia', stream => {
         // eslint-disable-next-line
         session.stop = () => {
           stream.getAudioTracks().forEach(track => {
@@ -527,6 +534,9 @@ export default class WebRTCClient {
   }
 
   _addAudioStream(mediaStream: MediaStream) {
+    if (!this.audioContext) {
+      return null;
+    }
     const audioSource = this.audioContext.createMediaStreamSource(mediaStream);
     if (this.mergeDestination) {
       audioSource.connect(this.mergeDestination);
@@ -542,7 +552,6 @@ export default class WebRTCClient {
       if (document.body) {
         document.body.appendChild(audio);
       }
-      audio.autoplay = true;
       this.audioElements[session.id] = audio;
     }
     if (this.video && this._isWeb()) {
@@ -568,10 +577,12 @@ export default class WebRTCClient {
       [localStream] = pc.getLocalStreams();
     }
 
-    this.localVideo.srcObject = localStream;
-    this.localVideo.volume = 0;
-    this.localVideo.autoplay = true;
-    this.localVideo.play();
+    if (this._isWeb() && this.localVideo) {
+      this.localVideo.srcObject = localStream;
+      this.localVideo.volume = 0;
+      this.localVideo.autoplay = true;
+      this.localVideo.play();
+    }
   }
 
   _cleanupMedia(session: ?SIP.sessionDescriptionHandler) {
@@ -586,8 +597,13 @@ export default class WebRTCClient {
     }
 
     const cleanAudio = id => {
-      this.audioElements[id].srcObject = null;
-      this.audioElements[id].pause();
+      const element = this.audioElements[id];
+
+      element.pause();
+      if (element.parentNode) {
+        element.parentNode.removeChild(element);
+      }
+      element.srcObject = null;
 
       delete this.audioElements[id];
     };

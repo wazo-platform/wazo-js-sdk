@@ -131,13 +131,7 @@ export default SIP => {
           this.initPeerConnection(options.peerConnectionOptions);
         }
 
-        // Merge passed constraints with saved constraints and save
-        var newConstraints = Object.assign({}, this.constraints, options.constraints);
-        newConstraints = this.checkAndDefaultConstraints(newConstraints);
-        if (JSON.stringify(newConstraints) !== JSON.stringify(this.constraints)) {
-          this.constraints = newConstraints;
-          this.shouldAcquireMedia = true;
-        }
+        this.shouldAcquireMedia = true;
 
         modifiers = modifiers || [];
         if (!Array.isArray(modifiers)) {
@@ -149,7 +143,7 @@ export default SIP => {
           .then(
             function() {
               if (this.shouldAcquireMedia) {
-                return this.acquire(this.constraints).then(
+                return this.acquire(JSON.parse(JSON.stringify(this.constraints))).then(
                   function() {
                     this.shouldAcquireMedia = false;
                   }.bind(this)
@@ -449,13 +443,14 @@ export default SIP => {
     checkAndDefaultConstraints: {
       writable: true,
       value: function checkAndDefaultConstraints(constraints) {
-        var defaultConstraints = { audio: true, video: !this.options.alwaysAcquireMediaFirst };
+        let defaultConstraints = { audio: true, video: constraints.video };
 
         constraints = constraints || defaultConstraints;
         // Empty object check
         if (Object.keys(constraints).length === 0 && constraints.constructor === Object) {
           return defaultConstraints;
         }
+
         return constraints;
       }
     },
@@ -596,7 +591,7 @@ export default SIP => {
 
             if (constraints.audio || constraints.video) {
               // Avoid exception on immutable object, can't use destructuring because android crashes
-              this.WebRTC.getUserMedia({ audio: constraints.audio, video: constraints.video })
+              this.WebRTC.getUserMedia(JSON.parse(JSON.stringify(constraints)))
                 .then(
                   function(streams) {
                     this.observer.trackAdded();
