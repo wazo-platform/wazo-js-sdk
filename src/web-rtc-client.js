@@ -159,7 +159,9 @@ export default class WebRTCClient {
   }
 
   hangup(session: SIP.sessionDescriptionHandler) {
-    session.stop();
+    if ('stop' in session) {
+      session.stop();
+    }
 
     if (session.id in this.audioStreams) {
       this.removeFromMerge(session);
@@ -281,7 +283,6 @@ export default class WebRTCClient {
   }
 
   removeFromMerge(session: SIP.InviteClientContext, shouldHold: boolean = true) {
-
     const sdh = session.sessionDescriptionHandler;
     const pc = sdh.peerConnection;
     const { localAudioSource, remoteAudioSource } = this.audioStreams[session.id];
