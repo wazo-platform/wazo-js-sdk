@@ -244,7 +244,7 @@ export default class WebRTCClient {
       this.audioContext.resume();
     }
 
-    return sessions.map(session => this.addToMerge(session, shouldResume));
+    return sessions.map(session => this.addToMerge.bind(this, [session, shouldResume]));
   }
 
   addToMerge(session: SIP.InviteClientContext, shouldResume: boolean = true): Promise<boolean> {
