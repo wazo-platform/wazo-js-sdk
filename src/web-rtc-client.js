@@ -234,7 +234,7 @@ export default class WebRTCClient {
     }, 50);
   }
 
-  merge(sessions: Array<SIP.InviteClientContext>, shouldResume: boolean = true): Array<Promise<boolean>> {
+  merge(sessions: Array<SIP.InviteClientContext>): Array<Promise<boolean>> {
     this._checkMaxMergeSessions(sessions.length);
     if (this.audioContext) {
       this.mergeDestination = this.audioContext.createMediaStreamDestination();
@@ -244,10 +244,10 @@ export default class WebRTCClient {
       this.audioContext.resume();
     }
 
-    return sessions.map(session => this.addToMerge(session, shouldResume), this);
+    return sessions.map(this.addToMerge.bind(this));
   }
 
-  addToMerge(session: SIP.InviteClientContext, shouldResume: boolean = true): Promise<boolean> {
+  addToMerge(session: SIP.InviteClientContext): Promise<boolean> {
     this._checkMaxMergeSessions(Object.keys(this.audioStreams).length + 1);
 
     const isFirefox = this._isWeb() && navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
@@ -272,9 +272,7 @@ export default class WebRTCClient {
       });
     };
 
-    if (shouldResume && session.local_hold && !isFirefox) {
-      this.unhold(session);
-
+    if (session.local_hold && !isFirefox) {
       // When call is hold we lost the current track. Wait for another one.
       return sdh.once('addTrack', e => bindStreams(e.streams[0]));
     }
