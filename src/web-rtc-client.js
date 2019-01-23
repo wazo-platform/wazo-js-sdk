@@ -247,14 +247,14 @@ export default class WebRTCClient {
     return sessions.map(this.addToMerge.bind(this));
   }
 
-  addToMerge(session: SIP.InviteClientContext): Promise<boolean> {
+  async addToMerge(session: SIP.InviteClientContext): Promise<void> {
     this._checkMaxMergeSessions(Object.keys(this.audioStreams).length + 1);
 
     const isFirefox = this._isWeb() && navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
     const sdh = session.sessionDescriptionHandler;
     const pc = sdh.peerConnection;
 
-    const bindStreams = remoteStream => {
+    const bindStreams = async remoteStream => {
       const localStream = pc.getLocalStreams()[0];
       const localAudioSource = this._addAudioStream(localStream);
       const remoteAudioSource = this._addAudioStream(remoteStream);
@@ -265,11 +265,11 @@ export default class WebRTCClient {
         pc.addStream(this.mergeDestination.stream);
       }
 
-      return pc.createOffer(this._getRtcOptions()).then(offer => {
-        this.audioStreams[session.id] = { localAudioSource, remoteAudioSource };
+      const offer = await pc.createOffer(this._getRtcOptions());
 
-        pc.setLocalDescription(offer);
-      });
+      this.audioStreams[session.id] = { localAudioSource, remoteAudioSource };
+
+      pc.setLocalDescription(offer);;
     };
 
     if (session.local_hold && !isFirefox) {
