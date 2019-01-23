@@ -272,11 +272,6 @@ export default class WebRTCClient {
       });
     };
 
-    if (session.local_hold && !isFirefox) {
-      // When call is hold we lost the current track. Wait for another one.
-      return sdh.once('addTrack', e => bindStreams(e.streams[0]));
-    }
-
     return bindStreams(pc.getRemoteStreams()[0]);
   }
 
