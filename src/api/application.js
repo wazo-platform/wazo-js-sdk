@@ -1,4 +1,5 @@
 /* @flow */
+/* eslint-disable camelcase */
 import ApiRequester from '../utils/api-requester';
 import type { Token, ListNodesResponse, ListCallNodesResponse } from '../domain/types';
 
@@ -9,18 +10,21 @@ export default (client: ApiRequester, baseUrl: string) => ({
     callId: number,
     context: string,
     exten: string,
-    autoanswer: string
+    autoanswer: string,
+    displayed_caller_id_number: ?string
   ) {
     const url = `${baseUrl}/${applicationUuid}/nodes`;
     const body = { calls: [{ id: callId }] };
 
     return client
-      .post(url, body, token, res => res.uuid)
+      .post(url, body, token, res => res.json().then(response => response.uuid))
       .then(nodeUuid =>
-        client.post(`${url}/${nodeUuid}/calls`, { context, exten, autoanswer }, token).then(data => ({
-          nodeUuid,
-          data
-        }))
+        client
+          .post(`${url}/${nodeUuid}/calls`, { context, exten, autoanswer, displayed_caller_id_number }, token)
+          .then(data => ({
+            nodeUuid,
+            data
+          }))
       );
   },
 
@@ -35,7 +39,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
 
   playCall(token: Token, applicationUuid: string, callId: number, language: string, uri: string) {
-    return client.post(`${baseUrl}/${applicationUuid}/calls/${callId}/play`, { language, uri }, token);
+    return client.post(`${baseUrl}/${applicationUuid}/calls/${callId}/playbacks`, { language, uri }, token);
   },
 
   addCallNodes(token: Token, applicationUuid: string, nodeUuid: string, callId: string): Promise<Boolean> {
