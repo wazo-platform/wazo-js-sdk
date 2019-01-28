@@ -616,6 +616,10 @@ export default class WebRTCClient {
     }
   }
 
+  changeAudioOutputDevice(id: string) {
+    Object.values(this.audioElements).forEach(audioElement => audioElement.setSinkId(id));
+  }
+
   _toggleMute(session: SIP.sessionDescriptionHandler, mute: boolean) {
     const pc = session.sessionDescriptionHandler.peerConnection;
 
