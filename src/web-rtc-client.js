@@ -46,6 +46,7 @@ type WebRtcConfig = {
   password: string,
   media: MediaConfig,
   maxMergeSessions: number,
+  iceCheckingTimeout: ?number,
   log?: Object
 };
 
@@ -419,7 +420,7 @@ export default class WebRTCClient {
           video: this.video
         },
         peerConnectionOptions: {
-          iceCheckingTimeout: 5000,
+          iceCheckingTimeout: this.config.iceCheckingTimeout || 5000,
           rtcConfiguration: {
             rtcpMuxPolicy: 'require',
             bundlePolicy: 'max-compat',

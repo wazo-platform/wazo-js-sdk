@@ -214,7 +214,7 @@ export default class Contact {
     }
 
     return new Contact({
-      name: `${plain.givenName} ${plain.familyName}`,
+      name: `${plain.givenName || ''} ${plain.familyName || ''}`,
       number: plain.phoneNumbers.length ? plain.phoneNumbers[0].number : '',
       email: plain.emailAddresses.length ? plain.emailAddresses[0].email : '',
       source: SOURCE_MOBILE,
