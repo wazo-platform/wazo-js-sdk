@@ -119,6 +119,7 @@ const AST_STATUS_CODES = {
   BUSY: 2, // Bitwise: 1 << 1 | All devices BUSY
   UNAVAILABLE: 4, // Bitwise: 1 << 2 | All devices UNAVAILABLE/UNREGISTERED
   RINGING: 8, // Bitwise: 1 << 3 | All devices RINGING
+  INUSE_AND_RINGING: 9, // In use and ringing
   ONHOLD: 16 // Bitwise: 1 << 4 | All devices ONHOLD
 };
 
@@ -307,6 +308,10 @@ export default class Contact {
 
   isRinging(): boolean {
     return this.status === AST_STATUS_CODES.RINGING;
+  }
+
+  isInUseOrRinging(): boolean {
+    return this.status === AST_STATUS_CODES.INUSE_AND_RINGING;
   }
 
   merge(old: Contact): Contact {
