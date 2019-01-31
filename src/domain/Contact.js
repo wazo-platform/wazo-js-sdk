@@ -305,6 +305,10 @@ export default class Contact {
     return this.status === AST_STATUS_CODES.INUSE || this.status === AST_STATUS_CODES.ONHOLD;
   }
 
+  isRinging(): boolean {
+    return this.status === AST_STATUS_CODES.RINGING;
+  }
+
   merge(old: Contact): Contact {
     this.presence = old.presence;
     this.status = old.status;

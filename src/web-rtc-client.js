@@ -355,6 +355,20 @@ export default class WebRTCClient {
     return this.userAgent.stop();
   }
 
+  changeAudioOutputDevice(id: string) {
+    Object.values(this.audioElements).forEach(audioElement => {
+      // `setSinkId` method is not included in any flow type definitions for HTMLAudioElements but is a valid method
+      // audioElement is an array of HTMLAudioElements, and HTMLAudioElement inherits the method from HTMLMediaElement
+      // https://developer.mozilla.org/en-US/docs/Web/API/HTMLAudioElement
+      // https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
+
+      // $FlowFixMe
+      if (audioElement.setSinkId) {
+        audioElement.setSinkId(id);
+      }
+    });
+  }
+
   _checkMaxMergeSessions(nbSessions: number) {
     if (nbSessions < MAX_MERGE_SESSIONS) {
       return;
