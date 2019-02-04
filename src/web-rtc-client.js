@@ -232,6 +232,27 @@ export default class WebRTCClient {
     }, 50);
   }
 
+  // check https://sipjs.com/api/0.12.0/refer/referClientContext/
+  atxfer(session: SIP.sessionDescriptionHandler) {
+    this.hold(session);
+
+    return {
+      init: (target: string) => this.call(target),
+      complete: (newSession: SIP.sessionDescriptionHandler) => {
+        this.unhold(session);
+
+        setTimeout(() => {
+          newSession.refer(session);
+          this.hangup(session);
+        }, 50);
+      },
+      cancel: (newSession: SIP.sessionDescriptionHandler) => {
+        this.hangup(newSession);
+        this.unhold(session);
+      }
+    }
+  }
+
   merge(sessions: Array<SIP.InviteClientContext>): Array<Promise<boolean>> {
     this._checkMaxMergeSessions(sessions.length);
     if (this.audioContext) {
