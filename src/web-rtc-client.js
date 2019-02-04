@@ -237,23 +237,17 @@ export default class WebRTCClient {
     this.hold(session);
 
     return {
-      init: (target: string) => {
-        return this.call(target);
-      },
-      complete: (new_session) => {
-        const options = {
-          receiveResponse: () => {console.log('Call transfered')},
-        };
-
+      init: (target: string) => this.call(target),
+      complete: (newSession: SIP.sessionDescriptionHandler) => {
         this.unhold(session);
 
         setTimeout(() => {
-          new_session.refer(session);
+          newSession.refer(session);
           this.hangup(session);
         }, 50);
       },
-      cancel: (new_session) => {
-        this.hangup(new_session);
+      cancel: (newSession: SIP.sessionDescriptionHandler) => {
+        this.hangup(newSession);
         this.unhold(session);
       }
     }
