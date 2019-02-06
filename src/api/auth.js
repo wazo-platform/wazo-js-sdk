@@ -130,7 +130,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
 
   getMicrosoftAuthUrl(token: Token, userUuid: UUID) {
-    return client.post(`${baseUrl}/users/${userUuid}/external/microsoft`, null, token);
+    return client.post(`${baseUrl}/users/${userUuid}/external/microsoft`, {}, token);
   },
 
   deleteMicrosoftToken(token: Token, userUuid: UUID) {
