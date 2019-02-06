@@ -333,6 +333,10 @@ export default class Contact {
     return this.source === SOURCE_MOBILE;
   }
 
+  isFavorite() {
+    return this.favorited;
+  }
+
   separateName(): { firstName: string, lastName: string } {
     if (!this.name) {
       return {
