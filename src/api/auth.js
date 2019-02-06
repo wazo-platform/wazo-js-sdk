@@ -125,16 +125,16 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.get(`${baseUrl}/policies`, null, token);
   },
 
-  getMicrosoftToken(token: Token, userUuid: UUID) {
-    return client.get(`${baseUrl}/users/${userUuid}/external/microsoft`, null, token);
+  getProviderToken(token: Token, userUuid: UUID, provider: string) {
+    return client.get(`${baseUrl}/users/${userUuid}/external/${provider}`, null, token);
   },
 
-  getMicrosoftAuthUrl(token: Token, userUuid: UUID) {
-    return client.post(`${baseUrl}/users/${userUuid}/external/microsoft`, {}, token);
+  getProviderAuthUrl(token: Token, userUuid: UUID, provider: string) {
+    return client.post(`${baseUrl}/users/${userUuid}/external/${provider}`, {}, token);
   },
 
-  deleteMicrosoftToken(token: Token, userUuid: UUID) {
-    return client.delete(`${baseUrl}/users/${userUuid}/external/microsoft`, null, token);
+  deleteProviderToken(token: Token, userUuid: UUID, provider: string) {
+    return client.delete(`${baseUrl}/users/${userUuid}/external/${provider}`, null, token);
   },
 
 });
