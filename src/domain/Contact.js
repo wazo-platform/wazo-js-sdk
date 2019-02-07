@@ -93,8 +93,10 @@ type ContactArguments = {
   uuid?: string,
   name?: string,
   number?: string,
+  numbers?: Array<{label: string, number: string}>,
   favorited?: boolean,
   email?: string,
+  emails?: Array<{label: string, email: string}>,
   entreprise?: string,
   birthday?: string,
   address?: string,
@@ -240,7 +242,9 @@ export default class Contact {
     uuid,
     name,
     number,
+    numbers,
     email,
+    emails,
     source,
     sourceId,
     entreprise,
@@ -257,7 +261,9 @@ export default class Contact {
     this.uuid = uuid;
     this.name = name;
     this.number = number;
+    this.numbers = numbers;
     this.email = email;
+    this.emails = emails;
     this.source = source;
     this.sourceId = sourceId || '';
     this.entreprise = entreprise;

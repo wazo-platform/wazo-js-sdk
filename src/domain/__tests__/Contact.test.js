@@ -145,8 +145,10 @@ describe('Contact domain', () => {
       new Contact({
         name: 'Jonathan Lessard',
         number: '8020',
+        numbers: [{label: 'primary', number: '8020'}],
         favorited: false,
         email: 'contact@nexapp.ca',
+        emails: [{label: 'primary', email: 'contact@nexapp.ca'}],
         address: '',
         entreprise: '',
         birthday: '',
