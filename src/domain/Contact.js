@@ -93,8 +93,10 @@ type ContactArguments = {
   uuid?: string,
   name?: string,
   number?: string,
+  numbers?: Array<{label: string, number: string}>,
   favorited?: boolean,
   email?: string,
+  emails?: Array<{label: string, email: string}>,
   entreprise?: string,
   birthday?: string,
   address?: string,
@@ -128,8 +130,10 @@ export default class Contact {
   uuid: ?string;
   name: ?string;
   number: ?string;
+  numbers: ?Array<{label: string, number: string}>;
   favorited: ?boolean;
   email: ?string;
+  emails: ?Array<{label: string, email: string}>;
   entreprise: ?string;
   birthday: ?string;
   address: ?string;
@@ -140,7 +144,6 @@ export default class Contact {
   source: ?string;
   sourceId: string;
   status: ?number;
-  uuid: ?string;
 
   static merge(oldContacts: Array<Contact>, newContacts: Array<Contact>): Array<Contact> {
     return newContacts.map(current => {
@@ -172,8 +175,10 @@ export default class Contact {
     return new Contact({
       name: plain.column_values[columns.indexOf('name')],
       number: plain.column_values[columns.indexOf('number')] || '',
+      numbers: [{label: 'primary', number: plain.column_values[columns.indexOf('number')]}] || [],
       favorited: plain.column_values[columns.indexOf('favorite')],
       email: plain.column_values[columns.indexOf('email')] || '',
+      emails: [{label: 'primary', email: plain.column_values[columns.indexOf('email')]}] || [],
       entreprise: plain.column_values[columns.indexOf('entreprise')] || '',
       birthday: plain.column_values[columns.indexOf('birthday')] || '',
       address: plain.column_values[columns.indexOf('address')] || '',
@@ -237,7 +242,9 @@ export default class Contact {
     uuid,
     name,
     number,
+    numbers,
     email,
+    emails,
     source,
     sourceId,
     entreprise,
@@ -254,7 +261,9 @@ export default class Contact {
     this.uuid = uuid;
     this.name = name;
     this.number = number;
+    this.numbers = numbers;
     this.email = email;
+    this.emails = emails;
     this.source = source;
     this.sourceId = sourceId || '';
     this.entreprise = entreprise;
@@ -331,6 +340,10 @@ export default class Contact {
 
   isFromMobile() {
     return this.source === SOURCE_MOBILE;
+  }
+
+  isFavorite() {
+    return this.favorited;
   }
 
   separateName(): { firstName: string, lastName: string } {

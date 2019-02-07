@@ -123,5 +123,18 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   listPolicies(token: Token): Promise<ListPoliciesResponse> {
     return client.get(`${baseUrl}/policies`, null, token);
-  }
+  },
+
+  getProviderToken(token: Token, userUuid: UUID, provider: string) {
+    return client.get(`${baseUrl}/users/${userUuid}/external/${provider}`, null, token);
+  },
+
+  getProviderAuthUrl(token: Token, userUuid: UUID, provider: string) {
+    return client.post(`${baseUrl}/users/${userUuid}/external/${provider}`, {}, token);
+  },
+
+  deleteProviderToken(token: Token, userUuid: UUID, provider: string) {
+    return client.delete(`${baseUrl}/users/${userUuid}/external/${provider}`, null, token);
+  },
+
 });
