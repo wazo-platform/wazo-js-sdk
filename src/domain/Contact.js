@@ -128,8 +128,10 @@ export default class Contact {
   uuid: ?string;
   name: ?string;
   number: ?string;
+  numbers: ?Array<{label: string, number: string}>;
   favorited: ?boolean;
   email: ?string;
+  emails: ?Array<{label: string, email: string}>;
   entreprise: ?string;
   birthday: ?string;
   address: ?string;
@@ -140,7 +142,6 @@ export default class Contact {
   source: ?string;
   sourceId: string;
   status: ?number;
-  uuid: ?string;
 
   static merge(oldContacts: Array<Contact>, newContacts: Array<Contact>): Array<Contact> {
     return newContacts.map(current => {
@@ -172,8 +173,10 @@ export default class Contact {
     return new Contact({
       name: plain.column_values[columns.indexOf('name')],
       number: plain.column_values[columns.indexOf('number')] || '',
+      numbers: [{label: 'primary', number: plain.column_values[columns.indexOf('number')]}] || [],
       favorited: plain.column_values[columns.indexOf('favorite')],
       email: plain.column_values[columns.indexOf('email')] || '',
+      emails: [{label: 'primary', email: plain.column_values[columns.indexOf('email')]}] || [],
       entreprise: plain.column_values[columns.indexOf('entreprise')] || '',
       birthday: plain.column_values[columns.indexOf('birthday')] || '',
       address: plain.column_values[columns.indexOf('address')] || '',
