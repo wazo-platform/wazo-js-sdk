@@ -140,6 +140,14 @@ export default class WebRTCClient {
     this.userAgent.register();
   }
 
+  unregister() {
+    if (!this.userAgent) {
+      return;
+    }
+
+    this.userAgent.unregister();
+  }
+
   on(event: string, callback: Function) {
     this.callbacksHandler.on(event, callback);
   }
