@@ -53,9 +53,10 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.put(`${baseUrl}/users/${userUuid}/password`, body, token, ApiRequester.successResponseParser);
   },
 
-  sendDeviceToken(token: Token, userUuid: UUID, deviceToken: string) {
+  sendDeviceToken(token: Token, userUuid: UUID, deviceToken: string, platform: ?string) {
     const body = {
-      token: deviceToken
+      token: deviceToken,
+      platform
     };
 
     return client.post(`${baseUrl}/users/${userUuid}/external/mobile`, body, token);
@@ -135,6 +136,5 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   deleteProviderToken(token: Token, userUuid: UUID, provider: string) {
     return client.delete(`${baseUrl}/users/${userUuid}/external/${provider}`, null, token);
-  },
-
+  }
 });
