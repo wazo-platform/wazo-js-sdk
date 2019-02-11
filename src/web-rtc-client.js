@@ -46,6 +46,7 @@ type WebRtcConfig = {
   password: string,
   media: MediaConfig,
   maxMergeSessions: number,
+  iceCheckingTimeout: ?number,
   log?: Object
 };
 
@@ -73,9 +74,6 @@ export default class WebRTCClient {
         {
           urls: [
             'stun:stun.l.google.com:19302',
-            'stun:stun1.l.google.com:19302',
-            'stun:stun2.l.google.com:19302',
-            'stun:stun3.l.google.com:19302',
             'stun:stun4.l.google.com:19302'
           ]
         }
@@ -234,6 +232,27 @@ export default class WebRTCClient {
     }, 50);
   }
 
+  // check https://sipjs.com/api/0.12.0/refer/referClientContext/
+  atxfer(session: SIP.sessionDescriptionHandler) {
+    this.hold(session);
+
+    return {
+      init: (target: string) => this.call(target),
+      complete: (newSession: SIP.sessionDescriptionHandler) => {
+        this.unhold(session);
+
+        setTimeout(() => {
+          newSession.refer(session);
+          this.hangup(session);
+        }, 50);
+      },
+      cancel: (newSession: SIP.sessionDescriptionHandler) => {
+        this.hangup(newSession);
+        this.unhold(session);
+      }
+    }
+  }
+
   merge(sessions: Array<SIP.InviteClientContext>): Array<Promise<boolean>> {
     this._checkMaxMergeSessions(sessions.length);
     if (this.audioContext) {
@@ -355,6 +374,20 @@ export default class WebRTCClient {
     return this.userAgent.stop();
   }
 
+  changeAudioOutputDevice(id: string) {
+    Object.values(this.audioElements).forEach(audioElement => {
+      // `setSinkId` method is not included in any flow type definitions for HTMLAudioElements but is a valid method
+      // audioElement is an array of HTMLAudioElements, and HTMLAudioElement inherits the method from HTMLMediaElement
+      // https://developer.mozilla.org/en-US/docs/Web/API/HTMLAudioElement
+      // https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
+
+      // $FlowFixMe
+      if (audioElement.setSinkId) {
+        audioElement.setSinkId(id);
+      }
+    });
+  }
+
   _checkMaxMergeSessions(nbSessions: number) {
     if (nbSessions < MAX_MERGE_SESSIONS) {
       return;
@@ -417,7 +450,7 @@ export default class WebRTCClient {
           video: this.video
         },
         peerConnectionOptions: {
-          iceCheckingTimeout: 5000,
+          iceCheckingTimeout: this.config.iceCheckingTimeout || 5000,
           rtcConfiguration: {
             rtcpMuxPolicy: 'require',
             bundlePolicy: 'max-compat',

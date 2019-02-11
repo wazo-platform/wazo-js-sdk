@@ -93,8 +93,10 @@ type ContactArguments = {
   uuid?: string,
   name?: string,
   number?: string,
+  numbers?: Array<{label: string, number: string}>,
   favorited?: boolean,
   email?: string,
+  emails?: Array<{label: string, email: string}>,
   entreprise?: string,
   birthday?: string,
   address?: string,
@@ -119,6 +121,7 @@ const AST_STATUS_CODES = {
   BUSY: 2, // Bitwise: 1 << 1 | All devices BUSY
   UNAVAILABLE: 4, // Bitwise: 1 << 2 | All devices UNAVAILABLE/UNREGISTERED
   RINGING: 8, // Bitwise: 1 << 3 | All devices RINGING
+  INUSE_AND_RINGING: 9, // In use and ringing
   ONHOLD: 16 // Bitwise: 1 << 4 | All devices ONHOLD
 };
 
@@ -127,8 +130,10 @@ export default class Contact {
   uuid: ?string;
   name: ?string;
   number: ?string;
+  numbers: ?Array<{label: string, number: string}>;
   favorited: ?boolean;
   email: ?string;
+  emails: ?Array<{label: string, email: string}>;
   entreprise: ?string;
   birthday: ?string;
   address: ?string;
@@ -139,7 +144,6 @@ export default class Contact {
   source: ?string;
   sourceId: string;
   status: ?number;
-  uuid: ?string;
 
   static merge(oldContacts: Array<Contact>, newContacts: Array<Contact>): Array<Contact> {
     return newContacts.map(current => {
@@ -171,8 +175,10 @@ export default class Contact {
     return new Contact({
       name: plain.column_values[columns.indexOf('name')],
       number: plain.column_values[columns.indexOf('number')] || '',
+      numbers: [{label: 'primary', number: plain.column_values[columns.indexOf('number')]}] || [],
       favorited: plain.column_values[columns.indexOf('favorite')],
       email: plain.column_values[columns.indexOf('email')] || '',
+      emails: [{label: 'primary', email: plain.column_values[columns.indexOf('email')]}] || [],
       entreprise: plain.column_values[columns.indexOf('entreprise')] || '',
       birthday: plain.column_values[columns.indexOf('birthday')] || '',
       address: plain.column_values[columns.indexOf('address')] || '',
@@ -214,7 +220,7 @@ export default class Contact {
     }
 
     return new Contact({
-      name: `${plain.givenName} ${plain.familyName}`,
+      name: `${plain.givenName || ''} ${plain.familyName || ''}`,
       number: plain.phoneNumbers.length ? plain.phoneNumbers[0].number : '',
       email: plain.emailAddresses.length ? plain.emailAddresses[0].email : '',
       source: SOURCE_MOBILE,
@@ -236,7 +242,9 @@ export default class Contact {
     uuid,
     name,
     number,
+    numbers,
     email,
+    emails,
     source,
     sourceId,
     entreprise,
@@ -253,7 +261,9 @@ export default class Contact {
     this.uuid = uuid;
     this.name = name;
     this.number = number;
+    this.numbers = numbers;
     this.email = email;
+    this.emails = emails;
     this.source = source;
     this.sourceId = sourceId || '';
     this.entreprise = entreprise;
@@ -305,6 +315,14 @@ export default class Contact {
     return this.status === AST_STATUS_CODES.INUSE || this.status === AST_STATUS_CODES.ONHOLD;
   }
 
+  isRinging(): boolean {
+    return this.status === AST_STATUS_CODES.RINGING;
+  }
+
+  isInUseOrRinging(): boolean {
+    return this.status === AST_STATUS_CODES.INUSE_AND_RINGING;
+  }
+
   merge(old: Contact): Contact {
     this.presence = old.presence;
     this.status = old.status;
@@ -322,6 +340,10 @@ export default class Contact {
 
   isFromMobile() {
     return this.source === SOURCE_MOBILE;
+  }
+
+  isFavorite() {
+    return this.favorited;
   }
 
   separateName(): { firstName: string, lastName: string } {

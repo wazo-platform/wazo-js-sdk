@@ -1,6 +1,6 @@
 {
   "name": "@wazo/sdk",
-  "version": "0.12.1",
+  "version": "0.14.1",
   "description": "Wazo's JavaScript Software Development Kit.",
   "main": "dist/wazo-sdk.js",
   "author": "Wazo (http://wazo.io)",
@@ -33,7 +33,8 @@
     "checkbuild": "npm run build && node dist/wazo-sdk.js",
     "format": "./node_modules/.bin/prettier-eslint --write \"src/**/*.js\" \"__tests__/**/*.js\" --single-quote",
     "typecheck": "./node_modules/.bin/flow",
-    "fetch-typedefs": "./node_modules/.bin/flow-typed install"
+    "fetch-typedefs": "./node_modules/.bin/flow-typed install",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "google-libphonenumber": "^3.1.15",
