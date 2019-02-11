@@ -72,10 +72,7 @@ export default class WebRTCClient {
     if (WebRTCClient.isAPrivateIp(ip)) {
       return [
         {
-          urls: [
-            'stun:stun.l.google.com:19302',
-            'stun:stun4.l.google.com:19302'
-          ]
+          urls: ['stun:stun.l.google.com:19302', 'stun:stun4.l.google.com:19302']
         }
       ];
     }
@@ -138,6 +135,14 @@ export default class WebRTCClient {
     }
 
     this.userAgent.register();
+  }
+
+  unregister() {
+    if (!this.userAgent) {
+      return;
+    }
+
+    this.userAgent.unregister();
   }
 
   on(event: string, callback: Function) {
@@ -250,7 +255,7 @@ export default class WebRTCClient {
         this.hangup(newSession);
         this.unhold(session);
       }
-    }
+    };
   }
 
   merge(sessions: Array<SIP.InviteClientContext>): Array<Promise<boolean>> {
