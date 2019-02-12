@@ -3,9 +3,10 @@
 /* global window, document, navigator */
 import 'webrtc-adapter';
 import SIP from 'sip.js';
+import Emitter from './utils/Emitter';
+
 import once from './utils/once';
 
-import CallbacksHandler from './utils/CallbacksHandler';
 import MobileSessionDescriptionHandler from './lib/MobileSessionDescriptionHandler';
 
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
@@ -51,10 +52,9 @@ type WebRtcConfig = {
 };
 
 // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
-export default class WebRTCClient {
+export default class WebRTCClient extends Emitter {
   config: WebRtcConfig;
   userAgent: SIP.UA;
-  callbacksHandler: CallbacksHandler;
   hasAudio: boolean;
   audioElements: { [string]: HTMLAudioElement };
   video: Object & boolean;
@@ -80,8 +80,8 @@ export default class WebRTCClient {
   }
 
   constructor(config: WebRtcConfig) {
+    super();
     this.config = config;
-    this.callbacksHandler = new CallbacksHandler();
 
     this.configureMedia(config.media);
     this.userAgent = this.createUserAgent();
@@ -104,7 +104,7 @@ export default class WebRTCClient {
       .filter(eventName => eventName !== 'invite')
       .forEach(eventName => {
         userAgent.on(eventName, event => {
-          this.callbacksHandler.triggerCallback(eventName, event);
+          this.eventEmitter.emit(eventName, event);
         });
       });
 
@@ -113,12 +113,12 @@ export default class WebRTCClient {
       this._setupSession(session);
       this._fixLocalDescription(session, 'answer');
 
-      this.callbacksHandler.triggerCallback('invite', session);
+      this.eventEmitter.emit('invite', session);
     });
 
     transportEvents.forEach(eventName => {
       userAgent.transport.on(eventName, event => {
-        this.callbacksHandler.triggerCallback(eventName, event);
+        this.eventEmitter.emit(eventName, event);
       });
     });
 
@@ -143,10 +143,6 @@ export default class WebRTCClient {
     }
 
     this.userAgent.unregister();
-  }
-
-  on(event: string, callback: Function) {
-    this.callbacksHandler.on(event, callback);
   }
 
   call(number: string): SIP.InviteClientContext {
@@ -542,7 +538,7 @@ export default class WebRTCClient {
       this._setupRemoteMedia(session);
     });
 
-    this.callbacksHandler.triggerCallback('accepted', session);
+    this.eventEmitter.emit('accepted', session);
   }
 
   _setupRemoteMedia(session: SIP.sessionDescriptionHandler) {

@@ -1,7 +1,6 @@
 // @flow
 import ReconnectingWebSocket from 'reconnecting-websocket';
-
-import CallbacksHandler from './utils/CallbacksHandler';
+import Emitter from './utils/Emitter';
 
 type WebSocketClientArguments = {
   host: string,
@@ -9,12 +8,11 @@ type WebSocketClientArguments = {
   events: Array<string>
 };
 
-export default class WebSocketClient {
+export default class WebSocketClient extends Emitter {
   initialized: boolean;
   host: string;
   token: string;
   events: Array<string>;
-  callbacksHandler: CallbacksHandler;
   options: Object;
   socket: ?ReconnectingWebSocket;
 
@@ -26,8 +24,8 @@ export default class WebSocketClient {
    * @param options @see https://github.com/pladaria/reconnecting-websocket#available-options
    */
   constructor({ host, token, events = [] }: WebSocketClientArguments, options: Object = {}) {
+    super();
     this.initialized = false;
-    this.callbacksHandler = new CallbacksHandler();
 
     this.socket = null;
     this.host = host;
@@ -48,7 +46,7 @@ export default class WebSocketClient {
       if (!this.initialized) {
         this.handleMessage(message, this.socket);
       } else {
-        this.callbacksHandler.triggerCallback(message.name, message);
+        this.eventEmitter.emit(message.name, message);
       }
     };
 
@@ -72,10 +70,6 @@ export default class WebSocketClient {
     this.socket.close();
   }
 
-  on(event: string, callback: Function) {
-    this.callbacksHandler.on(event, callback);
-  }
-
   handleMessage(message: Object, sock: ReconnectingWebSocket) {
     switch (message.op) {
       case 'init':
@@ -96,7 +90,7 @@ export default class WebSocketClient {
         this.initialized = true;
         break;
       default:
-        this.callbacksHandler.triggerCallback('message', message);
+        this.eventEmitter.emit('message', message);
     }
   }
 }
