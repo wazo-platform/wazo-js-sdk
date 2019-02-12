@@ -54,10 +54,13 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
 
   sendDeviceToken(token: Token, userUuid: UUID, deviceToken: string, apnsToken: ?string) {
-    const body = {
+    const body: Object = {
       token: deviceToken,
-      apns_token: apnsToken
     };
+
+    if (apnsToken) {
+      body.apns_token = apnsToken;
+    }
 
     return client.post(`${baseUrl}/users/${userUuid}/external/mobile`, body, token);
   },
