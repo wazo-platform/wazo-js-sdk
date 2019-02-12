@@ -53,6 +53,7 @@ export default class WebSocketClient {
     };
 
     this.socket.onclose = e => {
+      this.initialized = false;
       switch (e.code) {
         case 4002:
           break;
