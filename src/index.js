@@ -1,9 +1,11 @@
 // @flow
 
 import SIP from 'sip.js';
+
 import ApiClient from './api-client';
 import WebRTCClient from './web-rtc-client';
 import WebSocketClient from './websocket-client';
+import Emitter from './utils/Emitter';
 
 // Domain
 import BadResponse from './domain/BadResponse';
@@ -48,6 +50,7 @@ export type PhoneEventCallbacks = PhoneEventCallbacksType;
 export type Device = DeviceType;
 
 export default {
+  Emitter,
   PhoneNumberUtil,
   PhoneNumberFormat,
   AsYouTypeFormatter,

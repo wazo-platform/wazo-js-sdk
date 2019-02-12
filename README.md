@@ -179,10 +179,6 @@ phone.on('invite', (session: SIP.sessionDescriptionHandler) => {
   this.currentSession = session;
   // ...
 });
-// or a wildcard : `*`
-phone.on('*', (data: mixed, eventName: string) => {
-  
-});
 
 phone.call('1234');
 ```
@@ -286,10 +282,6 @@ const ws = new WazoWebSocket({
 
 // eventName can be on the of events here: http://documentation.wazo.community/en/stable/api_sdk/websocket.html
 ws.on('eventName', (data: mixed) => {
-});
-
-// You can also use a wildcard to catch all events
-ws.on('*', (data: mixed, eventName: string) => {
 });
 
 ws.connect();
