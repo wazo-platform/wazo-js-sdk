@@ -51,6 +51,17 @@ export default class WebSocketClient {
         this.callbacksHandler.triggerCallback(message.name, message);
       }
     };
+
+    this.socket.onclose = e => {
+      this.initialized = false;
+      switch (e.code) {
+        case 4002:
+          break;
+        case 4003:
+          break;
+        default:
+      }
+    };
   }
 
   close(): void {
