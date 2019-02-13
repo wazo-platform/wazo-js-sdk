@@ -45,6 +45,7 @@ client.auth.logIn({
   username, // required string
   password, // required string
   backend, // optional string. If omitted, defaults to wazo_user
+  mobile, // optional boolean. If omitted, defaults to false: tells if the current user uses a mobile application
 }).then(/* undefined if login failed, or : */{
   metadata: {
     username,
