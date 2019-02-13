@@ -56,6 +56,7 @@ export default class WebRTCClient extends Emitter {
   config: WebRtcConfig;
   userAgent: SIP.UA;
   hasAudio: boolean;
+  audio: Object;
   audioElements: { [string]: HTMLAudioElement };
   video: Object & boolean;
   localVideo: ?Object & ?boolean;
@@ -90,6 +91,7 @@ export default class WebRTCClient extends Emitter {
   configureMedia(media: MediaConfig) {
     this.hasAudio = !!media.audio;
     this.video = media.video;
+    this.audio = media.audio;
     this.localVideo = media.localVideo;
     this.audioContext = this._isWeb() ? new (window.AudioContext || window.webkitAudioContext)() : null;
     this.audioStreams = {};
@@ -449,7 +451,7 @@ export default class WebRTCClient extends Emitter {
       },
       sessionDescriptionHandlerFactoryOptions: {
         constraints: {
-          audio: this._hasAudio(),
+          audio: this.audio,
           video: this.video
         },
         peerConnectionOptions: {
