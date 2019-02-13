@@ -48,7 +48,8 @@ type WebRtcConfig = {
   media: MediaConfig,
   maxMergeSessions: number,
   iceCheckingTimeout: ?number,
-  log?: Object
+  log?: Object,
+  audioOutputDeviceId?: string,
 };
 
 // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
@@ -63,6 +64,7 @@ export default class WebRTCClient extends Emitter {
   audioContext: ?AudioContext;
   audioStreams: Object;
   mergeDestination: ?MediaStreamAudioDestinationNode;
+  audioOutputDeviceId: ?string;
 
   static isAPrivateIp(ip: string): boolean {
     const regex = /^(?:10|127|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\..*/;
@@ -83,6 +85,7 @@ export default class WebRTCClient extends Emitter {
   constructor(config: WebRtcConfig) {
     super();
     this.config = config;
+    this.audioOutputDeviceId = config.audioOutputDeviceId;
 
     this.configureMedia(config.media);
     this.userAgent = this.createUserAgent();
@@ -585,7 +588,12 @@ export default class WebRTCClient extends Emitter {
   _setupLocalMedia(session: SIP.sessionDescriptionHandler) {
     // Safari hack, because you cannot call .play() from a non user action
     if (this._hasAudio() && this._isWeb()) {
-      const audio = document.createElement('audio');
+      const audio: any = document.createElement('audio');
+
+      if (audio.setSinkId && this.audioOutputDeviceId) {
+          audio.setSinkId(this.audioOutputDeviceId);
+      }
+
       if (document.body) {
         document.body.appendChild(audio);
       }
