@@ -27,15 +27,25 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.get(`${baseUrl}/token/${token}`, null, {}).then(response => Session.parse(response));
   },
 
-  logIn(params: { username: string, password: string, backend: string, expiration: number }): Promise<?Session> {
+  logIn(params: {
+    username: string,
+    password: string,
+    backend: string,
+    expiration: number,
+    mobile?: boolean
+  }): Promise<?Session> {
     const body = {
       backend: params.backend || DEFAULT_BACKEND_USER,
       expiration: params.expiration || DETAULT_EXPIRATION
     };
-    const headers = {
+    const headers: Object = {
       Authorization: `Basic ${ApiRequester.base64Encode(`${params.username}:${params.password}`)}`,
       'Content-Type': 'application/json'
     };
+
+    if (params.mobile) {
+      headers['Wazo-Session-Type'] = 'mobile';
+    }
 
     return client.post(`${baseUrl}/token`, body, headers).then(response => Session.parse(response));
   },
@@ -55,7 +65,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   sendDeviceToken(token: Token, userUuid: UUID, deviceToken: string, apnsToken: ?string) {
     const body: Object = {
-      token: deviceToken,
+      token: deviceToken
     };
 
     if (apnsToken) {
