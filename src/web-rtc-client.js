@@ -493,7 +493,7 @@ export default class WebRTCClient extends Emitter {
     return {
       sessionDescriptionHandlerOptions: {
         constraints: {
-          audio: this._hasAudio(),
+          audio: this.audio,
           video: this._hasVideo()
         },
         RTCOfferOptions: {
