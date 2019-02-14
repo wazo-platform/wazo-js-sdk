@@ -396,6 +396,11 @@ export default class WebRTCClient extends Emitter {
     });
   }
 
+  changeAudioInputDevice(id: string) {
+    this.audio = id ? { deviceId: { exact: id } } : true;
+    this.userAgent = this.createUserAgent()
+  }
+
   _checkMaxMergeSessions(nbSessions: number) {
     if (nbSessions < MAX_MERGE_SESSIONS) {
       return;
