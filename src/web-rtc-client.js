@@ -57,7 +57,7 @@ export default class WebRTCClient extends Emitter {
   config: WebRtcConfig;
   userAgent: SIP.UA;
   hasAudio: boolean;
-  audio: Object;
+  audio: Object | boolean;
   audioElements: { [string]: HTMLAudioElement };
   video: Object & boolean;
   localVideo: ?Object & ?boolean;
