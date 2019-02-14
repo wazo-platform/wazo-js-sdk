@@ -1,5 +1,7 @@
 // @flow
 
+import flatten from 'lodash/flatten';
+
 import Profile from './Profile';
 import Contact from './Contact';
 import Line from './Line';
@@ -107,7 +109,7 @@ export default class Session {
   }
 
   allNumbers(): string[] {
-    return this.allLines()
-        .map(line => line.extensions.map(extension => extension.exten).reduce((a, b) => a.concat(b), []));
+    return flatten(this.allLines()
+        .map(line => line.extensions.map(extension => extension.exten).reduce((a, b) => a.concat(b), [])));
   }
 }
