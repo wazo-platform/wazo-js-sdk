@@ -431,6 +431,10 @@ export default class WebRTCClient extends Emitter {
     return this.hasAudio;
   }
 
+  _getAudioConstraints() {
+    return this.audio && this.audio.deviceId && this.audio.deviceId.exact ? this.audio : true;
+  }
+
   _hasVideo() {
     return !!this.video;
   }
@@ -454,7 +458,7 @@ export default class WebRTCClient extends Emitter {
       },
       sessionDescriptionHandlerFactoryOptions: {
         constraints: {
-          audio: this.audio,
+          audio: this._getAudioConstraints(),
           video: this.video
         },
         peerConnectionOptions: {
@@ -493,7 +497,7 @@ export default class WebRTCClient extends Emitter {
     return {
       sessionDescriptionHandlerOptions: {
         constraints: {
-          audio: this.audio,
+          audio: this._getAudioConstraints(),
           video: this._hasVideo()
         },
         RTCOfferOptions: {
