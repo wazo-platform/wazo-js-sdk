@@ -103,10 +103,15 @@ export default class Session {
   }
 
   allLines(): Line[] {
-    return this.profile ? this.profile.lines : [];
+    return this.profile ? this.profile.lines || [] : [];
   }
 
   allNumbers(): string[] {
-    return this.allLines().map(line => line.extensions.map(extension => extension.exten).reduce((a, b) => a.concat(b)));
+    const extensions = this.allLines().map(line => line.extensions.map(extension => extension.exten));
+    if (!extensions.length) {
+      return [];
+    }
+
+    return extensions.reduce((a, b) => a.concat(b));
   }
 }
