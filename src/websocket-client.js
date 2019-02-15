@@ -110,10 +110,15 @@ WebSocketClient.eventLists = [
   'users_forwards_unconditional_updated',
   'users_services_dnd_updated',
   'user_voicemail_message_created',
+  'user_voicemail_message_deleted',
+  'call_log_user_created',
   'call_created',
   'call_ended',
   'call_updated',
-  'call_log_user_created',
+  'call_held',
+  'call_resumed',
+  'auth_user_external_auth_added',
+  'auth_user_external_auth_deleted',
 ];
 
 export default WebSocketClient
