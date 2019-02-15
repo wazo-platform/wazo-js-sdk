@@ -8,13 +8,15 @@ type WebSocketClientArguments = {
   events: Array<string>
 };
 
-export default class WebSocketClient extends Emitter {
+class WebSocketClient extends Emitter {
   initialized: boolean;
   host: string;
   token: string;
   events: Array<string>;
   options: Object;
   socket: ?ReconnectingWebSocket;
+
+  static eventLists: Array<string>;
 
   /**
    *
@@ -94,3 +96,24 @@ export default class WebSocketClient extends Emitter {
     }
   }
 }
+
+// Can't use static
+WebSocketClient.eventLists = [
+  'favorite_added',
+  'favorite_deleted',
+  'user_status_update',
+  'chat_message_sent',
+  'chat_message_received',
+  'endpoint_status_update',
+  'users_forwards_busy_updated',
+  'users_forwards_noanswer_updated',
+  'users_forwards_unconditional_updated',
+  'users_services_dnd_updated',
+  'user_voicemail_message_created',
+  'call_created',
+  'call_ended',
+  'call_updated',
+  'call_log_user_created',
+];
+
+export default WebSocketClient
