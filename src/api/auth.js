@@ -1,6 +1,7 @@
 /* @flow */
 import ApiRequester from '../utils/api-requester';
 import type {
+  User,
   Tenant,
   Token,
   UUID,
@@ -107,20 +108,41 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.delete(`${baseUrl}/users/${userUuid}/external/mobile`, null, token);
   },
 
-  createUser(token: Token, username: string, password: string, firstname: string, lastname: string, email: string) {
+  createUser(token: Token, username: string, password: string, firstname: string, lastname: string): Promise<User | RequestError> {
     const body = {
       username,
       password,
       firstname,
-      lastname,
-      email
+      lastname
     };
 
     return client.post(
-      `${baseUrl}/users/`,
+      `${baseUrl}/users`,
       body,
-      token,
-      ApiRequester.successResponseParser
+      token
+    );
+  },
+
+  addUserEmail(token: Token, userUuid: UUID, email: string, main?: boolean) {
+    const body = {
+      emails: [{
+          address: email,
+          main: main
+      }]
+    };
+
+    return client.put(
+      `${baseUrl}/users/${userUuid}/emails`,
+      body,
+      token
+    );
+  },
+
+  addUserPolicy(token: Token, userUuid: UUID, policyUuid: UUID) {
+    return client.put(
+      `${baseUrl}/users/${userUuid}/policies/${policyUuid}`,
+      null,
+      token
     );
   },
 
@@ -132,7 +154,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.get(`${baseUrl}/users`, null, token);
   },
 
-  deleteUser(token: Token, userUuid: UUID) {
+  deleteUser(token: Token, userUuid: UUID): Promise<Boolean | RequestError> {
     return client.delete(`${baseUrl}/users/${userUuid}`, null, token);
   },
 
@@ -156,8 +178,28 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.get(`${baseUrl}/groups`, null, token);
   },
 
+  createPolicy(token: Token, name: string, description: string, acl_templates: string) {
+    const body = {
+      name,
+      description,
+      acl_templates: [
+        acl_templates
+      ]
+    };
+
+    return client.post(
+      `${baseUrl}/policies`,
+      body,
+      token
+    );
+  },
+
   listPolicies(token: Token): Promise<ListPoliciesResponse> {
     return client.get(`${baseUrl}/policies`, null, token);
+  },
+
+  deletePolicy(token: Token, policyUuid: UUID): Promise<Boolean | RequestError> {
+    return client.delete(`${baseUrl}/policies/${policyUuid}`, null, token);
   },
 
   getProviderToken(token: Token, userUuid: UUID, provider: string) {
