@@ -107,8 +107,33 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.delete(`${baseUrl}/users/${userUuid}/external/mobile`, null, token);
   },
 
+  createUser(token: Token, username: string, password: string, firstname: string, lastname: string, email: string) {
+    const body = {
+      username,
+      password,
+      firstname,
+      lastname,
+      email
+    };
+
+    return client.post(
+      `${baseUrl}/users/`,
+      body,
+      token,
+      ApiRequester.successResponseParser
+    );
+  },
+
   getUser(token: Token, userUuid: UUID): Promise<GetUserResponse> {
     return client.get(`${baseUrl}/users/${userUuid}`, null, token);
+  },
+
+  listUsers(token: Token): Promise<ListUsersResponse> {
+    return client.get(`${baseUrl}/users`, null, token);
+  },
+
+  deleteUser(token: Token, userUuid: UUID) {
+    return client.delete(`${baseUrl}/users/${userUuid}`, null, token);
   },
 
   listTenants(token: Token): Promise<ListTenantsResponse> {
@@ -125,10 +150,6 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   deleteTenant(token: Token, uuid: UUID): Promise<Boolean | RequestError> {
     return client.delete(`${baseUrl}/tenants/${uuid}`, null, token);
-  },
-
-  listUsers(token: Token): Promise<ListUsersResponse> {
-    return client.get(`${baseUrl}/users`, null, token);
   },
 
   listGroups(token: Token): Promise<ListGroupsResponse> {

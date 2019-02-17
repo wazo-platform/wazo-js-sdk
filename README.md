@@ -90,6 +90,8 @@ const valid = await client.auth.checkToken(token);
 client.auth.listTenants(token);
 client.auth.createTenant(token, name);
 client.auth.deleteTenant(token, uuid);
+client.auth.createUser(token, username, password, firstname, lastname, email);
+client.auth.deleteUser(token);
 client.auth.listUsers(token);
 client.auth.listGroups(token);
 client.auth.listPolicies(token);
