@@ -114,4 +114,8 @@ export default class Session {
 
     return extensions.reduce((a, b) => a.concat(b));
   }
+
+  hasExtension(extension: string): boolean {
+    return this.allNumbers().some(number => number === extension);
+  }
 }
