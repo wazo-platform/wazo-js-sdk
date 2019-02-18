@@ -176,4 +176,30 @@ describe('Session domain', () => {
       expect(session.hasExpired(currentDate)).toBeFalsy();
     });
   });
+
+  describe('when checking if session has a specific extension', () => {
+    const session = new Session({
+      token: 'ref-12345',
+      uuid: '1234',
+      profile: new Profile({
+        lines: [
+          new Line({ id: 9012, extensions: [{ id: 1, exten: '8000', context: 'default' }] }),
+          new Line({ id: 3421, extensions: [{ id: 2, exten: '9980', context: 'internal' }] })
+        ]
+      }),
+      expiresAt: new Date(9999,0,1),
+    });
+
+    it('should return true given it owns the extension', () => {
+      expect(session.hasExtension('8000')).toBeTruthy();
+    });
+
+    it('should return true given it owns the extension even if it\'s not the default one', () => {
+      expect(session.hasExtension('9980')).toBeTruthy();
+    });
+
+    it('should return false given it does\'t own the extension', () => {
+      expect(session.hasExtension('12')).toBeFalsy();
+    })
+  })
 });
