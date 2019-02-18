@@ -32,6 +32,7 @@ type Response = {
 type SessionArguments = {
   token: string,
   uuid: string,
+  tenantUuid: string,
   profile?: Profile,
   expiresAt: Date
 };
@@ -39,6 +40,7 @@ type SessionArguments = {
 export default class Session {
   token: string;
   uuid: string;
+  tenantUuid: string;
   profile: ?Profile;
   expiresAt: Date;
 
@@ -46,6 +48,7 @@ export default class Session {
     return new Session({
       token: plain.data.token,
       uuid: plain.data.xivo_user_uuid,
+      tenantUuid: plain.data.metadata.tenant_uuid,
       expiresAt: new Date(`${plain.data.utc_expires_at}z`)
     });
   }
@@ -54,9 +57,10 @@ export default class Session {
     return newFrom(profile, Session);
   }
 
-  constructor({ token, uuid, profile, expiresAt }: SessionArguments = {}) {
+  constructor({ token, uuid, tenantUuid, profile, expiresAt }: SessionArguments = {}) {
     this.token = token;
     this.uuid = uuid;
+    this.tenantUuid = tenantUuid;
     this.profile = profile;
     this.expiresAt = expiresAt;
   }
