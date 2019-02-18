@@ -114,7 +114,7 @@ export default class CallLog {
       start: moment(plain.start).toDate(),
       end: moment(plain.end).toDate(),
       // @TODO: FIXME add verification declined vs missed call
-      newMissedCall: plain.destination_extension === session.primaryNumber() && !plain.answered
+      newMissedCall: session.hasExtension(plain.destination_extension) && !plain.answered
     });
   }
 
@@ -149,7 +149,7 @@ export default class CallLog {
   }
 
   theOtherParty(session: Session): { extension: string, name: string } {
-    if (this.source.extension === session.primaryNumber()) {
+    if (session.hasExtension(this.source.extension)) {
       return this.destination;
     }
     return this.source;
@@ -170,18 +170,18 @@ export default class CallLog {
   }
 
   isAnOutgoingCall(session: Session): boolean {
-    return this.source.extension === session.primaryNumber() && this.answered;
+    return session.hasExtension(this.source.extension) && this.answered;
   }
 
   isAMissedOutgoingCall(session: Session): boolean {
-    return this.source.extension === session.primaryNumber() && !this.answered;
+    return session.hasExtension(this.source.extension) && !this.answered;
   }
 
   isAnIncomingCall(session: Session): boolean {
-    return this.destination.extension === session.primaryNumber() && this.answered;
+    return session.hasExtension(this.destination.extension) && this.answered;
   }
 
   isADeclinedCall(session: Session): boolean {
-    return !this.answered && session.allNumbers().some(number => number === this.destination.extension);
+    return !this.answered && session.hasExtension(this.destination.extension);
   }
 }
