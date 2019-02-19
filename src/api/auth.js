@@ -162,6 +162,14 @@ export default (client: ApiRequester, baseUrl: string) => ({
     );
   },
 
+  listUsersGroup(token: Token, groupUuid: UUID) {
+    return client.get(
+      `${baseUrl}/groups/${groupUuid}/users`,
+      null,
+      token
+    );
+  },
+
   deleteUserGroup(token: Token, userUuid: UUID, groupUuid: UUID) {
     return client.delete(
       `${baseUrl}/groups/${groupUuid}/users/${userUuid}`,
@@ -210,13 +218,11 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.delete(`${baseUrl}/groups/${uuid}`, null, token);
   },
 
-  createPolicy(token: Token, name: string, description: string, acl_templates: string) {
+  createPolicy(token: Token, name: string, description: string, acl_templates: array) {
     const body = {
       name,
       description,
-      acl_templates: [
-        acl_templates
-      ]
+      acl_templates: acl_templates
     };
 
     return client.post(
