@@ -146,6 +146,30 @@ export default (client: ApiRequester, baseUrl: string) => ({
     );
   },
 
+  deleteUserPolicy(token: Token, userUuid: UUID, policyUuid: UUID) {
+    return client.delete(
+      `${baseUrl}/users/${userUuid}/policies/${policyUuid}`,
+      null,
+      token
+    );
+  },
+
+  addUserGroup(token: Token, userUuid: UUID, groupUuid: UUID) {
+    return client.put(
+      `${baseUrl}/groups/${groupUuid}/users/${userUuid}`,
+      null,
+      token
+    );
+  },
+
+  deleteUserGroup(token: Token, userUuid: UUID, groupUuid: UUID) {
+    return client.delete(
+      `${baseUrl}/groups/${groupUuid}/users/${userUuid}`,
+      null,
+      token
+    );
+  },
+
   getUser(token: Token, userUuid: UUID): Promise<GetUserResponse> {
     return client.get(`${baseUrl}/users/${userUuid}`, null, token);
   },
@@ -174,8 +198,16 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.delete(`${baseUrl}/tenants/${uuid}`, null, token);
   },
 
+  createGroup(token: Token, name: string) {
+    return client.post(`${baseUrl}/groups`, { name }, token);
+  },
+
   listGroups(token: Token): Promise<ListGroupsResponse> {
     return client.get(`${baseUrl}/groups`, null, token);
+  },
+
+  deleteGroup(token: Token, uuid: UUID): Promise<Boolean | RequestError> {
+    return client.delete(`${baseUrl}/groups/${uuid}`, null, token);
   },
 
   createPolicy(token: Token, name: string, description: string, acl_templates: string) {
