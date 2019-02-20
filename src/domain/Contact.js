@@ -199,6 +199,7 @@ export default class Contact {
     return new Contact({
       name: `${plain.firstName || plain.firstname || ''} ${plain.lastName || plain.lastname || ''}`,
       number: plain.number || '',
+      numbers: [{ label: 'primary', number: plain.number }] || [],
       email: plain.email || '',
       source: 'personal',
       sourceId: plain.id,
@@ -222,6 +223,7 @@ export default class Contact {
     return new Contact({
       name: `${plain.givenName || ''} ${plain.familyName || ''}`,
       number: plain.phoneNumbers.length ? plain.phoneNumbers[0].number : '',
+      numbers: plain.phoneNumbers.length ? [{ label: 'primary', number: plain.phoneNumbers[0].number }] : [],
       email: plain.emailAddresses.length ? plain.emailAddresses[0].email : '',
       source: SOURCE_MOBILE,
       sourceId: plain.recordID,
