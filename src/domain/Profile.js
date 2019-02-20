@@ -43,6 +43,7 @@ type ProfileResponse = {
     }
   },
   mobile_phone_number: ?string,
+  subscription_type: ?number,
   services: {
     dnd: {
       enabled: boolean
@@ -65,6 +66,7 @@ type ProfileArguments = {
   forwards: Array<ForwardOption>,
   doNotDisturb?: boolean,
   presence?: string,
+  subscriptionType: ?number,
   voicemail?: {
     id: number,
     name: string
@@ -83,6 +85,7 @@ export default class Profile {
   doNotDisturb: ?boolean;
   presence: ?string;
   voicemail: ?{ id: number, name: string };
+  subscriptionType: ?number;
 
   static parse(plain: ProfileResponse): Profile {
     return new Profile({
@@ -99,6 +102,7 @@ export default class Profile {
         ForwardOption.parse(plain.forwards.busy, FORWARD_KEYS.BUSY)
       ],
       doNotDisturb: plain.services.dnd.enabled,
+      subscriptionType: plain.subscription_type,
       voicemail: plain.voicemail
     });
   }
@@ -118,6 +122,7 @@ export default class Profile {
     forwards,
     doNotDisturb,
     presence,
+    subscriptionType,
     voicemail
   }: $Shape<ProfileArguments> = {}) {
     this.id = id;
@@ -131,6 +136,7 @@ export default class Profile {
     this.doNotDisturb = doNotDisturb;
     this.presence = presence;
     this.voicemail = voicemail;
+    this.subscriptionType = subscriptionType;
   }
 
   hasId(id: string) {
