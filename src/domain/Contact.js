@@ -39,7 +39,9 @@ export type ContactPersonalResponse = {
   firstName: ?string,
   lastName: ?string,
   number: ?string,
+  numbers: ?Array<{ label: string, number: string }>;
   email: ?string,
+  numbers: ?Array<{ label: string, email: string }>;
   entreprise: ?string,
   birthday: ?string,
   address: ?string,
@@ -199,9 +201,9 @@ export default class Contact {
     return new Contact({
       name: `${plain.firstName || plain.firstname || ''} ${plain.lastName || plain.lastname || ''}`,
       number: plain.number || '',
-      numbers: [{ label: 'primary', number: plain.number }] || [],
+      numbers: plain.number ? [{ label: 'primary', number: plain.number }] : [],
       email: plain.email || '',
-      emails: [{ label: 'primary', email: plain.email }] || [],
+      emails: plain.email ? [{ label: 'primary', email: plain.email }] : [],
       source: 'personal',
       sourceId: plain.id,
       entreprise: plain.entreprise || '',
