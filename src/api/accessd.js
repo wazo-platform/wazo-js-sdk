@@ -23,6 +23,9 @@ export default (client: ApiRequester, baseUrl: string) => ({
   getSubscription(token: string, uuid: string) {
     return client.get(`${baseUrl}/subscriptions/${uuid}`, null, token);
   },
+  deleteSubscription(token: string, uuid: string) {
+    return client.delete(`${baseUrl}/subscriptions/${uuid}`, null, token);
+  },
   createSubscriptionToken(token: string) {
     return client.post(`${baseUrl}/subscriptions/token`, null, token);
   },
