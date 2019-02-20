@@ -1,6 +1,7 @@
 // @flow
 
 import Session from './Session';
+import { LINE_STATE } from './Profile';
 import newFrom from '../utils/new-from';
 
 export type NewContact = {
@@ -114,18 +115,6 @@ type ContactArguments = {
 };
 
 const SOURCE_MOBILE = 'mobile';
-
-const AST_STATUS_CODES = {
-  REMOVED: -2, // Extension removed
-  DEACTIVATED: -1, // Extension hint removed
-  NOTINUSE: 0, // No device INUSE or BUSY
-  INUSE: 1, // Bitwise: 1 << 0 | One or more devices INUSE
-  BUSY: 2, // Bitwise: 1 << 1 | All devices BUSY
-  UNAVAILABLE: 4, // Bitwise: 1 << 2 | All devices UNAVAILABLE/UNREGISTERED
-  RINGING: 8, // Bitwise: 1 << 3 | All devices RINGING
-  INUSE_AND_RINGING: 9, // In use and ringing
-  ONHOLD: 16 // Bitwise: 1 << 4 | All devices ONHOLD
-};
 
 export default class Contact {
   id: ?string;
@@ -318,15 +307,15 @@ export default class Contact {
   }
 
   isInCall(): boolean {
-    return this.status === AST_STATUS_CODES.INUSE || this.status === AST_STATUS_CODES.ONHOLD;
+    return this.status === LINE_STATE.TALKING;
   }
 
   isRinging(): boolean {
-    return this.status === AST_STATUS_CODES.RINGING;
+    return this.status === LINE_STATE.RINGING;
   }
 
   isInUseOrRinging(): boolean {
-    return this.status === AST_STATUS_CODES.INUSE_AND_RINGING;
+    return this.status === LINE_STATE.TALKING || this.status === LINE_STATE.RINGING;
   }
 
   merge(old: Contact): Contact {
