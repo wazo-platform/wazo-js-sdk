@@ -18,24 +18,22 @@ export default (client: ApiRequester, baseUrl: string) => ({
       term
     };
 
-    const headers: Object = {
-      'X-Auth-Token': token,
-      'Content-Type': 'application/json'
-    };
-    if (tenantUuid) {
-      headers['Wazo-Tenant'] = tenantUuid;
-    }
-
-    return client.post(`${baseUrl}/subscriptions`, body, headers);
+    return client.post(`${baseUrl}/subscriptions`, body, token);
   },
   getSubscription(token: string, uuid: string) {
     return client.get(`${baseUrl}/subscriptions/${uuid}`, null, token);
+  },
+  createSubscriptionToken(token: string) {
+    return client.post(`${baseUrl}/subscriptions/token`, null, token);
   },
   listAuthorizations(token: string, subscriptionUuid: string) {
     return client.get(`${baseUrl}/subscriptions/${subscriptionUuid}/authorizations`, null, token);
   },
   getAuthorization(token: string, subscriptionUuid: string, uuid: string) {
     return client.get(`${baseUrl}/subscriptions/${subscriptionUuid}/authorizations/${uuid}`, null, token);
+  },
+  deleteAuthorization(token: string, subscriptionUuid: string, uuid: string) {
+    return client.delete(`${baseUrl}/subscriptions/${subscriptionUuid}/authorizations/${uuid}`, null, token);
   },
   createAuthorization(token: string, subscriptionUuid: string, { startDate, term, service, rules, autoRenew }: Object) {
     const url = `${baseUrl}/subscriptions/${subscriptionUuid}/authorizations`;
