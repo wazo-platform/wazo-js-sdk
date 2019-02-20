@@ -108,7 +108,13 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.delete(`${baseUrl}/users/${userUuid}/external/mobile`, null, token);
   },
 
-  createUser(token: Token, username: string, password: string, firstname: string, lastname: string): Promise<User | RequestError> {
+  createUser(
+    token: Token,
+    username: string,
+    password: string,
+    firstname: string,
+    lastname: string
+  ): Promise<User | RequestError> {
     const body = {
       username,
       password,
@@ -116,66 +122,40 @@ export default (client: ApiRequester, baseUrl: string) => ({
       lastname
     };
 
-    return client.post(
-      `${baseUrl}/users`,
-      body,
-      token
-    );
+    return client.post(`${baseUrl}/users`, body, token);
   },
 
   addUserEmail(token: Token, userUuid: UUID, email: string, main?: boolean) {
     const body = {
-      emails: [{
+      emails: [
+        {
           address: email,
-          main: main
-      }]
+          main
+        }
+      ]
     };
 
-    return client.put(
-      `${baseUrl}/users/${userUuid}/emails`,
-      body,
-      token
-    );
+    return client.put(`${baseUrl}/users/${userUuid}/emails`, body, token);
   },
 
   addUserPolicy(token: Token, userUuid: UUID, policyUuid: UUID) {
-    return client.put(
-      `${baseUrl}/users/${userUuid}/policies/${policyUuid}`,
-      null,
-      token
-    );
+    return client.put(`${baseUrl}/users/${userUuid}/policies/${policyUuid}`, null, token);
   },
 
   deleteUserPolicy(token: Token, userUuid: UUID, policyUuid: UUID) {
-    return client.delete(
-      `${baseUrl}/users/${userUuid}/policies/${policyUuid}`,
-      null,
-      token
-    );
+    return client.delete(`${baseUrl}/users/${userUuid}/policies/${policyUuid}`, null, token);
   },
 
   addUserGroup(token: Token, userUuid: UUID, groupUuid: UUID) {
-    return client.put(
-      `${baseUrl}/groups/${groupUuid}/users/${userUuid}`,
-      null,
-      token
-    );
+    return client.put(`${baseUrl}/groups/${groupUuid}/users/${userUuid}`, null, token);
   },
 
   listUsersGroup(token: Token, groupUuid: UUID) {
-    return client.get(
-      `${baseUrl}/groups/${groupUuid}/users`,
-      null,
-      token
-    );
+    return client.get(`${baseUrl}/groups/${groupUuid}/users`, null, token);
   },
 
   deleteUserGroup(token: Token, userUuid: UUID, groupUuid: UUID) {
-    return client.delete(
-      `${baseUrl}/groups/${groupUuid}/users/${userUuid}`,
-      null,
-      token
-    );
+    return client.delete(`${baseUrl}/groups/${groupUuid}/users/${userUuid}`, null, token);
   },
 
   getUser(token: Token, userUuid: UUID): Promise<GetUserResponse> {
@@ -218,18 +198,14 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.delete(`${baseUrl}/groups/${uuid}`, null, token);
   },
 
-  createPolicy(token: Token, name: string, description: string, acl_templates: array) {
+  createPolicy(token: Token, name: string, description: string, aclTemplates: Array<Object>) {
     const body = {
       name,
       description,
-      acl_templates: acl_templates
+      acl_templates: aclTemplates
     };
 
-    return client.post(
-      `${baseUrl}/policies`,
-      body,
-      token
-    );
+    return client.post(`${baseUrl}/policies`, body, token);
   },
 
   listPolicies(token: Token): Promise<ListPoliciesResponse> {

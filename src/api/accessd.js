@@ -7,7 +7,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
   createSubscription(
     token: string,
-    { tenantUuid, productSku, name, startDate, contractDate, autoRenew, term }: Object
+    { productSku, name, startDate, contractDate, autoRenew, term }: Object
   ) {
     const body = {
       product_sku: productSku,

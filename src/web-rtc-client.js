@@ -49,7 +49,7 @@ type WebRtcConfig = {
   maxMergeSessions: number,
   iceCheckingTimeout: ?number,
   log?: Object,
-  audioOutputDeviceId?: string,
+  audioOutputDeviceId?: string
 };
 
 // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
@@ -398,7 +398,7 @@ export default class WebRTCClient extends Emitter {
 
   changeAudioInputDevice(id: string) {
     this.audio = id ? { deviceId: { exact: id } } : true;
-    this.userAgent = this.createUserAgent()
+    this.userAgent = this.createUserAgent();
   }
 
   _checkMaxMergeSessions(nbSessions: number) {
@@ -600,7 +600,7 @@ export default class WebRTCClient extends Emitter {
       const audio: any = document.createElement('audio');
 
       if (audio.setSinkId && this.audioOutputDeviceId) {
-          audio.setSinkId(this.audioOutputDeviceId);
+        audio.setSinkId(this.audioOutputDeviceId);
       }
 
       if (document.body) {
