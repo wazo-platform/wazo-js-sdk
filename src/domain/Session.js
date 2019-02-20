@@ -19,17 +19,17 @@ type Response = {
     issued_at: string,
     auth_id: string,
     expires_at: string,
-    xivo_user_uuid: string,
+    xivo_user_uuid: ?string,
     metadata: ?{
-      jwt: string,
-      username: string,
+      jwt?: string,
+      username?: string,
       uuid: UUID,
-      tenant_uuid: UUID,
-      xivo_user_uuid: UUID,
-      groups: Array<string>,
-      xivo_uuid: UUID,
-      tenants: Array<{ uuid: UUID }>,
-      auth_id: UUID
+      tenant_uuid?: UUID,
+      xivo_user_uuid?: UUID,
+      groups?: Array<string>,
+      xivo_uuid?: UUID,
+      tenants?: Array<{ uuid: UUID }>,
+      auth_id?: UUID
     }
   }
 };
@@ -46,7 +46,7 @@ type SessionArguments = {
   tenantUuid?: string,
   profile?: Profile,
   expiresAt: Date,
-  authorizations: Array<Authorization>
+  authorizations?: Array<Authorization>
 };
 
 export default class Session {
@@ -89,7 +89,7 @@ export default class Session {
     this.tenantUuid = tenantUuid || null;
     this.profile = profile;
     this.expiresAt = expiresAt;
-    this.authorizations = authorizations;
+    this.authorizations = authorizations || [];
   }
 
   hasExpired(date: Date = new Date()): boolean {
