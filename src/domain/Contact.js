@@ -39,7 +39,9 @@ export type ContactPersonalResponse = {
   firstName: ?string,
   lastName: ?string,
   number: ?string,
+  numbers: ?Array<{ label: string, number: string }>;
   email: ?string,
+  numbers: ?Array<{ label: string, email: string }>;
   entreprise: ?string,
   birthday: ?string,
   address: ?string,
@@ -199,7 +201,9 @@ export default class Contact {
     return new Contact({
       name: `${plain.firstName || plain.firstname || ''} ${plain.lastName || plain.lastname || ''}`,
       number: plain.number || '',
+      numbers: plain.number ? [{ label: 'primary', number: plain.number }] : [],
       email: plain.email || '',
+      emails: plain.email ? [{ label: 'primary', email: plain.email }] : [],
       source: 'personal',
       sourceId: plain.id,
       entreprise: plain.entreprise || '',
@@ -222,7 +226,9 @@ export default class Contact {
     return new Contact({
       name: `${plain.givenName || ''} ${plain.familyName || ''}`,
       number: plain.phoneNumbers.length ? plain.phoneNumbers[0].number : '',
+      numbers: plain.phoneNumbers.length ? [{ label: 'primary', number: plain.phoneNumbers[0].number }] : [],
       email: plain.emailAddresses.length ? plain.emailAddresses[0].email : '',
+      emails: plain.emailAddresses.length ? [{ label: 'primary', email: plain.emailAddresses[0].email }] : [],
       source: SOURCE_MOBILE,
       sourceId: plain.recordID,
       birthday: plain.birthday ? `${plain.birthday.year}-${plain.birthday.month}-${plain.birthday.day}` : '',
