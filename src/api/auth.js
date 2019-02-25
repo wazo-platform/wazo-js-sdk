@@ -1,6 +1,6 @@
 /* @flow */
 import ApiRequester from '../utils/api-requester';
-import type {
+itmport type {
   User,
   Tenant,
   Token,
@@ -148,10 +148,6 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   addUserGroup(token: Token, userUuid: UUID, groupUuid: UUID) {
     return client.put(`${baseUrl}/groups/${groupUuid}/users/${userUuid}`, null, token);
-  },
-
-  deleteUserGroup(token: Token, userUuid: UUID, groupUuid: UUID) {
-    return client.delete(`${baseUrl}/groups/${groupUuid}/users/${userUuid}`, null, token);
   },
 
   listUsersGroup(token: Token, groupUuid: UUID) {
