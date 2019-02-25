@@ -162,6 +162,10 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.get(`${baseUrl}/users/${userUuid}`, null, token);
   },
 
+  getUserSession(token: Token, userUuid: UUID) {
+    return client.get(`${baseUrl}/users/${userUuid}/sessions`, null, token);
+  },
+
   listUsers(token: Token): Promise<ListUsersResponse> {
     return client.get(`${baseUrl}/users`, null, token);
   },
