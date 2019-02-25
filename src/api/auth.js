@@ -1,6 +1,6 @@
 /* @flow */
 import ApiRequester from '../utils/api-requester';
-itmport type {
+import type {
   User,
   Tenant,
   Token,
