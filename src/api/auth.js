@@ -150,6 +150,10 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.put(`${baseUrl}/groups/${groupUuid}/users/${userUuid}`, null, token);
   },
 
+  deleteUserGroup(token: Token, userUuid: UUID, groupUuid: UUID) {
+    return client.delete(`${baseUrl}/groups/${groupUuid}/users/${userUuid}`, null, token);
+  },
+
   listUsersGroup(token: Token, groupUuid: UUID) {
     return client.get(`${baseUrl}/groups/${groupUuid}/users`, null, token);
   },
