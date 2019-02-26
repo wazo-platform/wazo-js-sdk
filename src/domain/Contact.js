@@ -307,7 +307,7 @@ export default class Contact {
   }
 
   isInCall(): boolean {
-    return this.status === LINE_STATE.TALKING;
+    return this.status === LINE_STATE.TALKING || this.status === LINE_STATE.HOLDING;
   }
 
   isRinging(): boolean {

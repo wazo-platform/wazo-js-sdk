@@ -13,7 +13,7 @@ export const PRESENCE = {
 export const STATE = {
   AVAILABLE: 'available',
   UNAVAILABLE: 'unavailable',
-  INVISIBILE: 'invisible'
+  INVISIBLE: 'invisible'
 };
 
 export const LINE_STATE = {
