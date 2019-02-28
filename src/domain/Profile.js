@@ -10,6 +10,20 @@ export const PRESENCE = {
   DISCONNECTED: 'disconnected'
 };
 
+export const STATE = {
+  AVAILABLE: 'available',
+  UNAVAILABLE: 'unavailable',
+  INVISIBLE: 'invisible'
+};
+
+export const LINE_STATE = {
+  AVAILABLE: 'available',
+  HOLDING: 'holding',
+  RINGING: 'ringing',
+  TALKING: 'talking',
+  UNAVAILABLE: 'unavailable'
+};
+
 type ProfileResponse = {
   groups: Array<{ id: number, name: string }>,
   firstName: string,
@@ -137,6 +151,29 @@ export default class Profile {
     this.presence = presence;
     this.voicemail = voicemail;
     this.subscriptionType = subscriptionType;
+  }
+
+  static getLinesState(lines: Array<Object>) {
+    let result = LINE_STATE.UNAVAILABLE;
+
+    // eslint-disable-next-line
+    for (const line of lines) {
+      if (line.state === LINE_STATE.RINGING) {
+        result = LINE_STATE.RINGING;
+        break;
+      }
+
+      if (line.state === LINE_STATE.TALKING) {
+        result = LINE_STATE.TALKING;
+        break;
+      }
+
+      if (line.state === LINE_STATE.AVAILABLE) {
+        result = LINE_STATE.AVAILABLE;
+      }
+    }
+
+    return result;
   }
 
   hasId(id: string) {
