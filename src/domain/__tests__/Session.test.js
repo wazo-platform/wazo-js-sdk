@@ -42,14 +42,16 @@ describe('Session domain', () => {
           'websocketd',
           'call-logd.users.me.cdr.read'
         ],
-        metadata: null,
         utc_expires_at: '2017-07-19T21:27:53.086990',
         xivo_uuid: '6cd695d2-cdb9-4444-8b2d-27425ab85fa8',
         issued_at: '2017-07-19T16:27:53.086990',
         utc_issued_at: '2017-07-19T20:27:53.086990',
         auth_id: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54',
+        metadata: {
+          uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54'
+        },
         expires_at: '2017-07-19T17:27:53.086990',
-        xivo_user_uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54'
+        xivo_user_uuid: null
       }
     };
 
@@ -187,19 +189,19 @@ describe('Session domain', () => {
           new Line({ id: 3421, extensions: [{ id: 2, exten: '9980', context: 'internal' }] })
         ]
       }),
-      expiresAt: new Date(9999,0,1),
+      expiresAt: new Date(9999, 0, 1)
     });
 
     it('should return true given it owns the extension', () => {
       expect(session.hasExtension('8000')).toBeTruthy();
     });
 
-    it('should return true given it owns the extension even if it\'s not the default one', () => {
+    it("should return true given it owns the extension even if it's not the default one", () => {
       expect(session.hasExtension('9980')).toBeTruthy();
     });
 
-    it('should return false given it does\'t own the extension', () => {
+    it("should return false given it does't own the extension", () => {
       expect(session.hasExtension('12')).toBeFalsy();
-    })
-  })
+    });
+  });
 });

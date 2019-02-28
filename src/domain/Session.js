@@ -1,10 +1,14 @@
 // @flow
+import { KEYUTIL, jws, b64utoutf8 } from 'jsrsasign';
 
+import { swarmPublicKey } from '../../config';
 import Profile from './Profile';
 import Contact from './Contact';
 import Line from './Line';
 import type { UUID, Token } from './types';
 import newFrom from '../utils/new-from';
+
+const swarmKey = KEYUTIL.getKey(swarmPublicKey);
 
 type Response = {
   data: {
@@ -15,39 +19,61 @@ type Response = {
     issued_at: string,
     auth_id: string,
     expires_at: string,
-    xivo_user_uuid: string,
+    xivo_user_uuid: ?string,
     metadata: ?{
-      username: string,
+      jwt?: string,
+      username?: string,
       uuid: UUID,
-      tenant_uuid: UUID,
-      xivo_user_uuid: UUID,
-      groups: Array<string>,
-      xivo_uuid: UUID,
-      tenants: Array<{ uuid: UUID }>,
-      auth_id: UUID
+      tenant_uuid?: UUID,
+      xivo_user_uuid?: UUID,
+      groups?: Array<string>,
+      xivo_uuid?: UUID,
+      tenants?: Array<{ uuid: UUID }>,
+      auth_id?: UUID
     }
   }
 };
 
+type Authorization = {
+  uuid: string,
+  rules: Array<{ name: string, options: Object }>,
+  service: ?string
+};
+
 type SessionArguments = {
   token: string,
-  uuid: string,
+  uuid: ?string,
   tenantUuid?: string,
   profile?: Profile,
-  expiresAt: Date
+  expiresAt: Date,
+  authorizations?: Array<Authorization>
 };
 
 export default class Session {
   token: string;
-  uuid: string;
+  uuid: ?string;
   tenantUuid: ?string;
   profile: ?Profile;
   expiresAt: Date;
+  authorizations: Array<Authorization>;
 
   static parse(plain: Response): ?Session {
+    const token = plain.data.metadata ? plain.data.metadata.jwt : null;
+    let authorizations = [];
+
+    // Add authorizations from JWT
+    if (token) {
+      const isValid = jws.JWS.verifyJWT(token, swarmKey, { alg: ['RS256'], verifyAt: new Date() });
+      if (isValid) {
+        const decodedToken = jws.JWS.readSafeJSONString(b64utoutf8(token.split('.')[1]));
+        authorizations = decodedToken ? decodedToken.authorizations : [];
+      }
+    }
+
     return new Session({
       token: plain.data.token,
-      uuid: plain.data.xivo_user_uuid,
+      uuid: plain.data.metadata ? plain.data.metadata.uuid : null,
+      authorizations,
       tenantUuid: plain.data.metadata ? plain.data.metadata.tenant_uuid : undefined,
       expiresAt: new Date(`${plain.data.utc_expires_at}z`)
     });
@@ -57,12 +83,13 @@ export default class Session {
     return newFrom(profile, Session);
   }
 
-  constructor({ token, uuid, tenantUuid, profile, expiresAt }: SessionArguments = {}) {
+  constructor({ token, uuid, tenantUuid, profile, expiresAt, authorizations }: SessionArguments = {}) {
     this.token = token;
     this.uuid = uuid;
     this.tenantUuid = tenantUuid || null;
     this.profile = profile;
     this.expiresAt = expiresAt;
+    this.authorizations = authorizations || [];
   }
 
   hasExpired(date: Date = new Date()): boolean {
@@ -77,6 +104,10 @@ export default class Session {
     this.profile = profile;
 
     return this;
+  }
+
+  hasAuthorizations() {
+    return this.authorizations && !!this.authorizations.length;
   }
 
   displayName(): string {
