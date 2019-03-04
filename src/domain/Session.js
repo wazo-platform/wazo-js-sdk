@@ -10,6 +10,10 @@ import newFrom from '../utils/new-from';
 
 const swarmKey = KEYUTIL.getKey(swarmPublicKey);
 
+const Authorizations = {
+  DESKTOP: 'application-client-access'
+};
+
 type Response = {
   data: {
     token: Token,
@@ -119,6 +123,17 @@ export default class Session {
       return false;
     }
     return !!this.profile.voicemail;
+  }
+
+  hasDesktopAuthorizations(): boolean {
+    const desktopRule = rule => rule.name === Authorizations.DESKTOP;
+    const desktopAuthorization = (authorization: Authorization) => authorization.rules.find(desktopRule);
+
+    return this.authorizations.find(desktopAuthorization);
+  }
+
+  hasSubscription(): boolean {
+    return this.profile.subscriptionType <= 0;
   }
 
   primaryLine(): ?Line {
