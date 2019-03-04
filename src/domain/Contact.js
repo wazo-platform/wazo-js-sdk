@@ -134,7 +134,7 @@ export default class Contact {
   presence: ?string;
   source: ?string;
   sourceId: string;
-  status: ?number;
+  status: ?string;
 
   static merge(oldContacts: Array<Contact>, newContacts: Array<Contact>): Array<Contact> {
     return newContacts.map(current => {
