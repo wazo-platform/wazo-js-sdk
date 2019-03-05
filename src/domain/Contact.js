@@ -109,7 +109,7 @@ type ContactArguments = {
   presence?: string,
   source?: string,
   sourceId?: string,
-  status?: number,
+  status?: string,
   endpointId?: number,
   uuid?: string
 };
