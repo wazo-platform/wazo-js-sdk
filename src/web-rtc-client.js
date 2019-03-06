@@ -60,6 +60,7 @@ export default class WebRTCClient extends Emitter {
   audio: Object | boolean;
   audioElements: { [string]: HTMLAudioElement };
   video: Object & boolean;
+  videoCallId: ?string;
   localVideo: ?Object & ?boolean;
   audioContext: ?AudioContext;
   audioStreams: Object;
@@ -444,6 +445,15 @@ export default class WebRTCClient extends Emitter {
     return !!this.video;
   }
 
+  hasVideoCall() {
+    if (!this.video || !this.video.srcObject)
+    {
+      return false;
+    }
+
+    return !!this.video.srcObject.getVideoTracks().length;
+  }
+
   _hasLocalVideo() {
     return !!this.localVideo;
   }
@@ -573,6 +583,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     if (this._hasVideo() && this._isWeb()) {
+      this.videoCallId = session.id;
       this.video.srcObject = remoteStream;
       this.video.play();
     } else if (this._hasAudio() && this._isWeb()) {
@@ -642,6 +653,7 @@ export default class WebRTCClient extends Emitter {
   _cleanupMedia(session: ?SIP.sessionDescriptionHandler) {
     if (this.video && this._isWeb()) {
       this.video.srcObject = null;
+      this.videoCallId = null;
       this.video.pause();
 
       if (this.localVideo) {
