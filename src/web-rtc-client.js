@@ -66,8 +66,7 @@ export default class WebRTCClient extends Emitter {
   audioStreams: Object;
   mergeDestination: ?MediaStreamAudioDestinationNode;
   audioOutputDeviceId: ?string;
-  localVideoStream: any;
-  remoteVideoStream: any;
+  videoSessions: Object;
 
   static isAPrivateIp(ip: string): boolean {
     const regex = /^(?:10|127|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\..*/;
@@ -93,8 +92,7 @@ export default class WebRTCClient extends Emitter {
     this.configureMedia(config.media);
     this.userAgent = this.createUserAgent();
 
-    this.localVideoStream = null;
-    this.remoteVideoStream = null;
+    this.videoSessions = {};
   }
 
   configureMedia(media: MediaConfig) {
@@ -450,13 +448,37 @@ export default class WebRTCClient extends Emitter {
     return !!this.video;
   }
 
-  hasVideoCall() {
-    if (!this.video || !this.video.srcObject)
-    {
-      return false;
-    }
+  doSessionHasVideo(sessionId: string) {
+    return Object.keys(this.videoSessions).some(key => key === sessionId);
+  }
 
-    return !!this.video.srcObject.getVideoTracks().length;
+  getRemoteVideoStreamsForSession(sessionId: string) {
+    const streams = this.videoSessions[sessionId];
+    if (!streams || !streams.remotes) {
+      return [];
+    }
+    return streams.remotes;
+  }
+
+  _initializeVideoSession(sessionId: string) {
+    if (!this.doSessionHasVideo(sessionId)) {
+      this.videoSessions[sessionId] = {
+        local: null,
+        remotes: [],
+      };
+    }
+  }
+
+  _addLocalToVideoSession(sessionId: string, stream: any) {
+    this._initializeVideoSession(sessionId);
+
+    this.videoSessions[sessionId].local = stream;
+  }
+
+  _addRemoteToVideoSession(sessionId: string, stream: any) {
+    this._initializeVideoSession(sessionId);
+    
+    this.videoSessions[sessionId].remotes.push(stream);
   }
 
   _hasLocalVideo() {
@@ -588,8 +610,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     if (this._hasVideo() && this._isWeb()) {
-      this.videoCallId = session.id;
-      this.remoteVideoStream = remoteStream;
+      this._addLocalToVideoSession(session.id, remoteStream);
     } else if (this._hasAudio() && this._isWeb()) {
       const audio = this.audioElements[session.id];
       audio.srcObject = remoteStream;
@@ -647,14 +668,13 @@ export default class WebRTCClient extends Emitter {
     }
 
     if (this._isWeb() && this.localVideo) {
-      this.localVideoStream = localStream;
+      this._addLocalToVideoSession(session.id, localStream);
     }
   }
 
   _cleanupMedia(session: ?SIP.sessionDescriptionHandler) {
     if (this.video && this._isWeb()) {
       this.video.srcObject = null;
-      this.videoCallId = null;
       this.video.pause();
 
       if (this.localVideo) {
