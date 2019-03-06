@@ -66,6 +66,8 @@ export default class WebRTCClient extends Emitter {
   audioStreams: Object;
   mergeDestination: ?MediaStreamAudioDestinationNode;
   audioOutputDeviceId: ?string;
+  localVideoStream: any;
+  remoteVideoStream: any;
 
   static isAPrivateIp(ip: string): boolean {
     const regex = /^(?:10|127|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\..*/;
@@ -90,6 +92,9 @@ export default class WebRTCClient extends Emitter {
 
     this.configureMedia(config.media);
     this.userAgent = this.createUserAgent();
+
+    this.localVideoStream = null;
+    this.remoteVideoStream = null;
   }
 
   configureMedia(media: MediaConfig) {
@@ -584,8 +589,7 @@ export default class WebRTCClient extends Emitter {
 
     if (this._hasVideo() && this._isWeb()) {
       this.videoCallId = session.id;
-      this.video.srcObject = remoteStream;
-      this.video.play();
+      this.remoteVideoStream = remoteStream;
     } else if (this._hasAudio() && this._isWeb()) {
       const audio = this.audioElements[session.id];
       audio.srcObject = remoteStream;
@@ -643,10 +647,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     if (this._isWeb() && this.localVideo) {
-      this.localVideo.srcObject = localStream;
-      this.localVideo.volume = 0;
-      this.localVideo.autoplay = true;
-      this.localVideo.play();
+      this.localVideoStream = localStream;
     }
   }
 
