@@ -60,7 +60,6 @@ export default class WebRTCClient extends Emitter {
   audio: Object | boolean;
   audioElements: { [string]: HTMLAudioElement };
   video: Object & boolean;
-  videoCallId: ?string;
   localVideo: ?Object & ?boolean;
   audioContext: ?AudioContext;
   audioStreams: Object;
@@ -448,7 +447,7 @@ export default class WebRTCClient extends Emitter {
     return !!this.video;
   }
 
-  doSessionHasVideo(sessionId: string) {
+  sessionHasVideo(sessionId: string) {
     return Object.keys(this.videoSessions).some(key => key === sessionId);
   }
 
@@ -461,7 +460,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   _initializeVideoSession(sessionId: string) {
-    if (!this.doSessionHasVideo(sessionId)) {
+    if (!this.videoSessions[sessionId]) {
       this.videoSessions[sessionId] = {
         local: null,
         remotes: [],
@@ -610,7 +609,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     if (this._hasVideo() && this._isWeb()) {
-      this._addLocalToVideoSession(session.id, remoteStream);
+      this._addRemoteToVideoSession(session.id, remoteStream);
     } else if (this._hasAudio() && this._isWeb()) {
       const audio = this.audioElements[session.id];
       audio.srcObject = remoteStream;
