@@ -85,7 +85,8 @@ type ProfileArguments = {
   voicemail?: {
     id: number,
     name: string
-  }
+  },
+  switchboards: Array<any>
 };
 
 export default class Profile {

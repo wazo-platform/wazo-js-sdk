@@ -63,8 +63,10 @@ describe('Profile domain', () => {
       language: 'FR',
       mobile_phone_number: null,
       timezone: null,
-      mobileNumber: '1234'
+      mobileNumber: '1234',
+      switchboards: []
     };
+
     const profile = Profile.parse(plain);
 
     expect(profile).toEqual(
@@ -85,7 +87,8 @@ describe('Profile domain', () => {
         mobileNumber: '',
         username: 'john.doe',
         doNotDisturb: false,
-        subscriptionType: 2
+        subscriptionType: 2,
+        switchboards: []
       })
     );
   });
