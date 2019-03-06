@@ -63,6 +63,7 @@ type ProfileResponse = {
       enabled: boolean
     }
   },
+  switchboards: Array<any>,
   voicemail?: {
     id: number,
     name: string
@@ -100,6 +101,7 @@ export default class Profile {
   presence: ?string;
   voicemail: ?{ id: number, name: string };
   subscriptionType: ?number;
+  switchboards: Array<any>;
 
   static parse(plain: ProfileResponse): Profile {
     return new Profile({
@@ -117,7 +119,8 @@ export default class Profile {
       ],
       doNotDisturb: plain.services.dnd.enabled,
       subscriptionType: plain.subscription_type,
-      voicemail: plain.voicemail
+      voicemail: plain.voicemail,
+      switchboards: plain.switchboards || []
     });
   }
 
@@ -137,7 +140,8 @@ export default class Profile {
     doNotDisturb,
     presence,
     subscriptionType,
-    voicemail
+    voicemail,
+    switchboards
   }: $Shape<ProfileArguments> = {}) {
     this.id = id;
     this.firstName = firstName;
@@ -151,6 +155,7 @@ export default class Profile {
     this.presence = presence;
     this.voicemail = voicemail;
     this.subscriptionType = subscriptionType;
+    this.switchboards = switchboards;
   }
 
   static getLinesState(lines: Array<Object>) {
