@@ -677,13 +677,9 @@ export default class WebRTCClient extends Emitter {
   }
 
   _cleanupMedia(session: ?SIP.sessionDescriptionHandler) {
-    if (this._hasVideo() && this._isWeb()) {
-      // this.video.srcObject = null;
-      // this.video.pause();
-
-      if (this.localVideo) {
-        // this.localVideo.srcObject = null;
-        // this.localVideo.pause();
+    if (!!session && this._isWeb()) {
+      if (this.sessionHasVideo(session.id)){
+        delete this.videoSessions[session.id];
       }
     }
 
