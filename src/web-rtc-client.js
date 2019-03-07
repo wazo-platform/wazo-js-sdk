@@ -409,9 +409,6 @@ export default class WebRTCClient extends Emitter {
 
   changeVideo(enabled: boolean) {
     this.video = enabled;
-    this.userAgent.transport.disconnect();
-    this.userAgent.stop();
-    this.userAgent = this.createUserAgent();
   }
 
   _checkMaxMergeSessions(nbSessions: number) {
