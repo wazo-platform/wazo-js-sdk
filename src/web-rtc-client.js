@@ -678,7 +678,9 @@ export default class WebRTCClient extends Emitter {
   }
 
   _cleanupMedia(session: ?SIP.sessionDescriptionHandler) {
+    console.log('In _cleanupMedia');
     if (session && session.id in this.videoSessions){
+      console.log('In removing videoSessions for session');
       delete this.videoSessions[session.id];
     }
 
