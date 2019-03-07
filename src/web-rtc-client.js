@@ -651,11 +651,8 @@ export default class WebRTCClient extends Emitter {
       }
       this.audioElements[session.id] = audio;
     }
-    if (this.video && this._isWeb()) {
-      this.video.autoplay = true;
-    }
 
-    if (!this.localVideo) {
+    if (!this._hasVideo()) {
       return;
     }
 
@@ -674,13 +671,13 @@ export default class WebRTCClient extends Emitter {
       [localStream] = pc.getLocalStreams();
     }
 
-    if (this._isWeb() && this.localVideo) {
+    if (this._isWeb() && this._hasVideo()) {
       this._addLocalToVideoSession(session.id, localStream);
     }
   }
 
   _cleanupMedia(session: ?SIP.sessionDescriptionHandler) {
-    if (this.video && this._isWeb()) {
+    if (this._hasVideo() && this._isWeb()) {
       // this.video.srcObject = null;
       // this.video.pause();
 
