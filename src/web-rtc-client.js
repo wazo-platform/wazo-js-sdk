@@ -176,8 +176,6 @@ export default class WebRTCClient extends Emitter {
     if (session.id in this.audioStreams) {
       this.removeFromMerge(session);
     }
-    
-    this._cleanupMedia(session);
 
     if (session.hasAnswer && session.bye) {
       return session.bye();
@@ -190,6 +188,8 @@ export default class WebRTCClient extends Emitter {
     if (session.reject) {
       return session.reject();
     }
+
+    this._cleanupMedia(session);
 
     return null;
   }
@@ -456,7 +456,8 @@ export default class WebRTCClient extends Emitter {
   }
 
   sessionHasVideo(sessionId: string) {
-    return Object.keys(this.videoSessions).some(key => key === sessionId);
+    // Should use remoteStreams.length in the future
+    return sessionId in this.videoSessions;
   }
 
   getRemoteVideoStreamsForSession(sessionId: string) {
@@ -677,10 +678,8 @@ export default class WebRTCClient extends Emitter {
   }
 
   _cleanupMedia(session: ?SIP.sessionDescriptionHandler) {
-    if (!!session && this._isWeb()) {
-      if (this.sessionHasVideo(session.id)){
-        delete this.videoSessions[session.id];
-      }
+    if (session && session.id in this.videoSessions){
+      delete this.videoSessions[session.id];
     }
 
     const cleanAudio = id => {
