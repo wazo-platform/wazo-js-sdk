@@ -49,7 +49,7 @@ type WebRtcConfig = {
   maxMergeSessions: number,
   iceCheckingTimeout: ?number,
   log?: Object,
-  audioOutputDeviceId?: string
+  audioOutputDeviceId?: string,
 };
 
 // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
@@ -59,13 +59,14 @@ export default class WebRTCClient extends Emitter {
   hasAudio: boolean;
   audio: Object | boolean;
   audioElements: { [string]: HTMLAudioElement };
-  video: Object & boolean;
+  video: boolean;
   localVideo: ?Object & ?boolean;
   audioContext: ?AudioContext;
   audioStreams: Object;
   mergeDestination: ?MediaStreamAudioDestinationNode;
   audioOutputDeviceId: ?string;
   videoSessions: Object;
+  cameraDeviceId: string;
 
   static isAPrivateIp(ip: string): boolean {
     const regex = /^(?:10|127|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\..*/;
@@ -404,6 +405,11 @@ export default class WebRTCClient extends Emitter {
     this.userAgent = this.createUserAgent();
   }
 
+  changeVideo(enabled: boolean) {
+    this.video = enabled;
+    this.userAgent = this.createUserAgent();
+  }
+
   _checkMaxMergeSessions(nbSessions: number) {
     if (nbSessions < MAX_MERGE_SESSIONS) {
       return;
@@ -444,7 +450,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   _hasVideo() {
-    return true;
+    return this.video;
   }
 
   sessionHasVideo(sessionId: string) {
@@ -500,7 +506,7 @@ export default class WebRTCClient extends Emitter {
       sessionDescriptionHandlerFactoryOptions: {
         constraints: {
           audio: this._getAudioConstraints(),
-          video: this.video
+          video: this.video ? this.cameraDeviceId || true : false
         },
         peerConnectionOptions: {
           iceCheckingTimeout: this.config.iceCheckingTimeout || 5000,
@@ -508,7 +514,7 @@ export default class WebRTCClient extends Emitter {
             rtcpMuxPolicy: 'require',
             bundlePolicy: 'max-compat',
             iceServers: WebRTCClient.getIceServers(this.config.host),
-            ...this._getRtcOptions(true)
+            ...this._getRtcOptions(this.video)
           }
         }
       }
@@ -539,7 +545,7 @@ export default class WebRTCClient extends Emitter {
       sessionDescriptionHandlerOptions: {
         constraints: {
           audio: this._getAudioConstraints(),
-          video: enableVideo
+          video: enableVideo ? this.cameraDeviceId || true : false
         },
         RTCOfferOptions: {
           mandatory: {
