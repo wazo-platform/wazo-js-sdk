@@ -155,6 +155,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   call(number: string, enableVideo?: boolean): SIP.InviteClientContext {
+    this.changeVideo(enableVideo || false);
     const context = this.userAgent.invite(number, this._getMediaConfiguration(enableVideo || false));
 
     this._setupSession(context);
@@ -162,8 +163,9 @@ export default class WebRTCClient extends Emitter {
     return context;
   }
 
-  answer(session: SIP.sessionDescriptionHandler) {
-    return session.accept(this._getMediaConfiguration(true));
+  answer(session: SIP.sessionDescriptionHandler, enableVideo?: boolean) {
+    this.changeVideo(enableVideo || false);
+    return session.accept(this._getMediaConfiguration(enableVideo || false));
   }
 
   hangup(session: SIP.sessionDescriptionHandler) {
