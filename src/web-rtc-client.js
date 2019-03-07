@@ -153,8 +153,8 @@ export default class WebRTCClient extends Emitter {
     this.userAgent.unregister();
   }
 
-  call(number: string): SIP.InviteClientContext {
-    const context = this.userAgent.invite(number, this._getMediaConfiguration());
+  call(number: string, enableVideo?: boolean): SIP.InviteClientContext {
+    const context = this.userAgent.invite(number, this._getMediaConfiguration(enableVideo || false));
 
     this._setupSession(context);
 
@@ -162,7 +162,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   answer(session: SIP.sessionDescriptionHandler) {
-    return session.accept(this._getMediaConfiguration());
+    return session.accept(this._getMediaConfiguration(true));
   }
 
   hangup(session: SIP.sessionDescriptionHandler) {
@@ -293,7 +293,7 @@ export default class WebRTCClient extends Emitter {
         pc.addStream(this.mergeDestination.stream);
       }
 
-      return pc.createOffer(this._getRtcOptions()).then(offer => {
+      return pc.createOffer(this._getRtcOptions(false)).then(offer => {
         this.audioStreams[session.id] = { localAudioSource, remoteAudioSource };
 
         pc.setLocalDescription(offer);
@@ -335,7 +335,7 @@ export default class WebRTCClient extends Emitter {
 
     delete this.audioStreams[session.id];
 
-    return pc.createOffer(this._getRtcOptions()).then(offer => {
+    return pc.createOffer(this._getRtcOptions(false)).then(offer => {
       const result = pc.setLocalDescription(offer);
 
       if (shouldHold) {
@@ -423,7 +423,7 @@ export default class WebRTCClient extends Emitter {
           eventName,
           once(() => {
             const pc = sdh.peerConnection;
-            const constraints = this._getRtcOptions();
+            const constraints = this._getRtcOptions(true);
             pc.createOffer(constraints).then(offer => pc.setLocalDescription(offer));
           })
         );
@@ -444,7 +444,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   _hasVideo() {
-    return !!this.video;
+    return true;
   }
 
   sessionHasVideo(sessionId: string) {
@@ -508,7 +508,7 @@ export default class WebRTCClient extends Emitter {
             rtcpMuxPolicy: 'require',
             bundlePolicy: 'max-compat',
             iceServers: WebRTCClient.getIceServers(this.config.host),
-            ...this._getRtcOptions()
+            ...this._getRtcOptions(true)
           }
         }
       }
@@ -525,26 +525,26 @@ export default class WebRTCClient extends Emitter {
     return config;
   }
 
-  _getRtcOptions() {
+  _getRtcOptions(enableVideo: boolean) {
     return {
       mandatory: {
         OfferToReceiveAudio: this._hasAudio(),
-        OfferToReceiveVideo: this._hasVideo()
+        OfferToReceiveVideo: enableVideo
       }
     };
   }
 
-  _getMediaConfiguration() {
+  _getMediaConfiguration(enableVideo: boolean) {
     return {
       sessionDescriptionHandlerOptions: {
         constraints: {
           audio: this._getAudioConstraints(),
-          video: this._hasVideo()
+          video: enableVideo
         },
         RTCOfferOptions: {
           mandatory: {
             OfferToReceiveAudio: this._hasAudio(),
-            OfferToReceiveVideo: this._hasVideo()
+            OfferToReceiveVideo: enableVideo
           }
         }
       }
