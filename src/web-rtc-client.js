@@ -431,7 +431,7 @@ export default class WebRTCClient extends Emitter {
           eventName,
           once(() => {
             const pc = sdh.peerConnection;
-            const constraints = this._getRtcOptions(true);
+            const constraints = this._getRtcOptions(this._hasVideo());
             pc.createOffer(constraints).then(offer => pc.setLocalDescription(offer));
           })
         );
