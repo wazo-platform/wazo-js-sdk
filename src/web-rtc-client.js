@@ -176,6 +176,8 @@ export default class WebRTCClient extends Emitter {
     if (session.id in this.audioStreams) {
       this.removeFromMerge(session);
     }
+    
+    this._cleanupMedia(session);
 
     if (session.hasAnswer && session.bye) {
       return session.bye();
@@ -188,8 +190,6 @@ export default class WebRTCClient extends Emitter {
     if (session.reject) {
       return session.reject();
     }
-
-    this._cleanupMedia(session);
 
     return null;
   }
