@@ -538,7 +538,7 @@ export default class WebRTCClient extends Emitter {
     return {
       mandatory: {
         OfferToReceiveAudio: this._hasAudio(),
-        OfferToReceiveVideo: true,
+        OfferToReceiveVideo: enableVideo,
       }
     };
   }
@@ -553,7 +553,7 @@ export default class WebRTCClient extends Emitter {
         RTCOfferOptions: {
           mandatory: {
             OfferToReceiveAudio: this._hasAudio(),
-            OfferToReceiveVideo: true
+            OfferToReceiveVideo: enableVideo
           }
         }
       }
