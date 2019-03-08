@@ -533,11 +533,12 @@ export default class WebRTCClient extends Emitter {
     return config;
   }
 
+  // eslint-disable-next-line no-unused-vars
   _getRtcOptions(enableVideo: boolean) {
     return {
       mandatory: {
         OfferToReceiveAudio: this._hasAudio(),
-        OfferToReceiveVideo: enableVideo
+        OfferToReceiveVideo: true,
       }
     };
   }
@@ -552,7 +553,7 @@ export default class WebRTCClient extends Emitter {
         RTCOfferOptions: {
           mandatory: {
             OfferToReceiveAudio: this._hasAudio(),
-            OfferToReceiveVideo: enableVideo
+            OfferToReceiveVideo: true
           }
         }
       }
