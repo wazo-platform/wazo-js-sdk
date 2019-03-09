@@ -18,7 +18,7 @@ import COUNTRIES from './domain/Country';
 import ForwardOption, { FORWARD_KEYS } from './domain/ForwardOption';
 import Line from './domain/Line';
 import NotificationOptions from './domain/NotificationOptions';
-import Profile, { PRESENCE } from './domain/Profile';
+import Profile, { PRESENCE, STATE as PROFILE_STATE, LINE_STATE } from './domain/Profile';
 import Session from './domain/Session';
 import Voicemail from './domain/Voicemail';
 import type {
@@ -76,5 +76,7 @@ export default {
   DebugPhone,
   DebugDevice,
   PRESENCE,
-  FORWARD_KEYS
+  PROFILE_STATE,
+  FORWARD_KEYS,
+  LINE_STATE
 };

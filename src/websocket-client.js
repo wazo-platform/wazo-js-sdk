@@ -118,7 +118,8 @@ WebSocketClient.eventLists = [
   'call_held',
   'call_resumed',
   'auth_user_external_auth_added',
-  'auth_user_external_auth_deleted'
+  'auth_user_external_auth_deleted',
+  'chatd_presence_updated',
 ];
 
 export default WebSocketClient;

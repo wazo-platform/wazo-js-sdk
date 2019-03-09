@@ -34,6 +34,7 @@ describe('Profile domain', () => {
       firstName: 'John',
       lastName: 'Doe',
       email: 'john.doe@acme.com',
+      subscription_type: 2,
       lines: [
         { id: 9012, extensions: [{ id: 1, exten: '8000', context: 'default' }], endpoint_custom: null },
         { id: 3421, extensions: [{ id: 2, exten: '9980', context: 'internal' }], endpoint_custom: null }
@@ -62,8 +63,10 @@ describe('Profile domain', () => {
       language: 'FR',
       mobile_phone_number: null,
       timezone: null,
-      mobileNumber: '1234'
+      mobileNumber: '1234',
+      switchboards: []
     };
+
     const profile = Profile.parse(plain);
 
     expect(profile).toEqual(
@@ -83,7 +86,9 @@ describe('Profile domain', () => {
         ],
         mobileNumber: '',
         username: 'john.doe',
-        doNotDisturb: false
+        doNotDisturb: false,
+        subscriptionType: 2,
+        switchboards: []
       })
     );
   });
