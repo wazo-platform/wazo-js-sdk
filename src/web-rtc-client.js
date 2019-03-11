@@ -215,6 +215,14 @@ export default class WebRTCClient extends Emitter {
     this._toggleMute(session, false);
   }
 
+  toggleCameraOn(session: SIP.sessionDescriptionHandler) {
+    this._toggleCamera(session, false);
+  }
+
+  toggleCameraOff(session: SIP.sessionDescriptionHandler) {
+    this._toggleCamera(session, true);
+  }
+
   hold(session: SIP.sessionDescriptionHandler) {
     this.mute(session);
 
@@ -703,25 +711,41 @@ export default class WebRTCClient extends Emitter {
     }
   }
 
-  _toggleMute(session: SIP.sessionDescriptionHandler, mute: boolean) {
+  _toggleMute(session: SIP.sessionDescriptionHandler, muteAudio: boolean) {
     const pc = session.sessionDescriptionHandler.peerConnection;
 
     if (pc.getSenders) {
       pc.getSenders().forEach(sender => {
         if (sender.track) {
           // eslint-disable-next-line
-          sender.track.enabled = !mute;
+          sender.track.enabled = !muteAudio;
         }
       });
     } else {
       pc.getLocalStreams().forEach(stream => {
         stream.getAudioTracks().forEach(track => {
           // eslint-disable-next-line
-          track.enabled = !mute;
+          track.enabled = !muteAudio;
         });
+      });
+    }
+  }
+
+  _toggleCamera(session: SIP.sessionDescriptionHandler, muteCamera: boolean) {
+    const pc = session.sessionDescriptionHandler.peerConnection;
+
+    if (pc.getSenders) {
+      pc.getSenders().forEach(sender => {
+        if (sender.track) {
+          // eslint-disable-next-line
+          sender.track.enabled = !muteCamera;
+        }
+      });
+    } else {
+      pc.getLocalStreams().forEach(stream => {
         stream.getVideoTracks().forEach(track => {
           // eslint-disable-next-line
-          track.enabled = !mute;
+          track.enabled = !muteCamera;
         });
       });
     }
