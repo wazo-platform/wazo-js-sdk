@@ -122,7 +122,7 @@ export default class WebRTCClient extends Emitter {
       this._setupSession(session);
       this._fixLocalDescription(session, 'answer');
 
-      this.eventEmitter.emit('invite', session);
+      this.eventEmitter.emit('invite', session, this.sessionWantsToDoVideo(session));
     });
 
     transportEvents.forEach(eventName => {
@@ -152,6 +152,12 @@ export default class WebRTCClient extends Emitter {
     }
 
     this.userAgent.unregister();
+  }
+
+  // eslint-disable-next-line no-unused-vars
+  sessionWantsToDoVideo(session: SIP.sessionDescriptionHandler) {
+    // We have to find a way to check if the invite has the video configuration true...
+    return false;
   }
 
   call(number: string, enableVideo?: boolean): SIP.InviteClientContext {
