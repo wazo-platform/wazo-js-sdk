@@ -5,10 +5,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   listSubscriptions(token: string) {
     return client.get(`${baseUrl}/subscriptions?recurse=true`, null, token);
   },
-  createSubscription(
-    token: string,
-    { productSku, name, startDate, contractDate, autoRenew, term }: Object
-  ) {
+  createSubscription(token: string, { productSku, name, startDate, contractDate, autoRenew, term }: Object) {
     const body = {
       product_sku: productSku,
       name,

@@ -162,6 +162,10 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.get(`${baseUrl}/users/${userUuid}`, null, token);
   },
 
+  getUserSession(token: Token, userUuid: UUID) {
+    return client.get(`${baseUrl}/users/${userUuid}/sessions`, null, token);
+  },
+
   listUsers(token: Token): Promise<ListUsersResponse> {
     return client.get(`${baseUrl}/users`, null, token);
   },
@@ -180,6 +184,24 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   createTenant(token: Token, name: string): Promise<Tenant | RequestError> {
     return client.post(`${baseUrl}/tenants`, { name }, token);
+  },
+
+  updateTenant(
+    token: Token,
+    uuid: UUID,
+    name: string,
+    contact: string,
+    phone: string,
+    address: Array<Object>
+  ): Promise<Tenant | RequestError> {
+    const body = {
+      name,
+      contact,
+      phone,
+      address
+    };
+
+    return client.put(`${baseUrl}/tenants/${uuid}`, body, token);
   },
 
   deleteTenant(token: Token, uuid: UUID): Promise<Boolean | RequestError> {
