@@ -216,19 +216,19 @@ export default class WebRTCClient extends Emitter {
   }
 
   mute(session: SIP.sessionDescriptionHandler) {
-    this._toggleMute(session, true);
+    this._toggleAudio(session, true);
   }
 
   unmute(session: SIP.sessionDescriptionHandler) {
-    this._toggleMute(session, false);
+    this._toggleAudio(session, false);
   }
 
   toggleCameraOn(session: SIP.sessionDescriptionHandler) {
-    this._toggleCamera(session, false);
+    this._toggleVideo(session, false);
   }
 
   toggleCameraOff(session: SIP.sessionDescriptionHandler) {
-    this._toggleCamera(session, true);
+    this._toggleVideo(session, true);
   }
 
   hold(session: SIP.sessionDescriptionHandler) {
@@ -735,12 +735,12 @@ export default class WebRTCClient extends Emitter {
     }
   }
 
-  _toggleMute(session: SIP.sessionDescriptionHandler, muteAudio: boolean) {
+  _toggleAudio(session: SIP.sessionDescriptionHandler, muteAudio: boolean) {
     const pc = session.sessionDescriptionHandler.peerConnection;
 
     if (pc.getSenders) {
       pc.getSenders().forEach(sender => {
-        if (sender.track) {
+        if (sender.track && sender.track.kind === 'audio') {
           // eslint-disable-next-line
           sender.track.enabled = !muteAudio;
         }
@@ -755,12 +755,12 @@ export default class WebRTCClient extends Emitter {
     }
   }
 
-  _toggleCamera(session: SIP.sessionDescriptionHandler, muteCamera: boolean) {
+  _toggleVideo(session: SIP.sessionDescriptionHandler, muteCamera: boolean) {
     const pc = session.sessionDescriptionHandler.peerConnection;
 
     if (pc.getSenders) {
       pc.getSenders().forEach(sender => {
-        if (sender.track) {
+        if (sender.track && sender.track.kind === 'video') {
           // eslint-disable-next-line
           sender.track.enabled = !muteCamera;
         }
