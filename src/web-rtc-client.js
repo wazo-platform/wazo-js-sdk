@@ -156,8 +156,10 @@ export default class WebRTCClient extends Emitter {
 
   // eslint-disable-next-line no-unused-vars
   sessionWantsToDoVideo(session: SIP.sessionDescriptionHandler) {
-    // We have to find a way to check if the invite has the video configuration true...
-    return false;
+    const sdp = session.request.body;
+    const sessionHasVideo = (/\r\nm=video /).test(sdp);
+
+    return sessionHasVideo;
   }
 
   call(number: string, enableVideo?: boolean): SIP.InviteClientContext {
@@ -514,7 +516,7 @@ export default class WebRTCClient extends Emitter {
 
   _addRemoteToVideoSession(sessionId: string, stream: any) {
     this._initializeVideoSession(sessionId);
-    
+
     this.videoSessions[sessionId].remotes.push(stream);
   }
 
@@ -578,7 +580,7 @@ export default class WebRTCClient extends Emitter {
       sessionDescriptionHandlerOptions: {
         constraints: {
           audio: this._getAudioConstraints(),
-          video: enableVideo ? this.cameraDeviceId || true : false
+          video: enableVideo
         },
         RTCOfferOptions: {
           mandatory: {
