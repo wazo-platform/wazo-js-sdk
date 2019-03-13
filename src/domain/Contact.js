@@ -40,9 +40,9 @@ export type ContactPersonalResponse = {
   firstName: ?string,
   lastName: ?string,
   number: ?string,
-  numbers: ?Array<{ label: string, number: string }>;
+  numbers: ?Array<{ label: string, number: string }>,
   email: ?string,
-  numbers: ?Array<{ label: string, email: string }>;
+  numbers: ?Array<{ label: string, email: string }>,
   entreprise: ?string,
   birthday: ?string,
   address: ?string,

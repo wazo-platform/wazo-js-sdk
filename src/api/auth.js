@@ -186,12 +186,19 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.post(`${baseUrl}/tenants`, { name }, token);
   },
 
-  updateTenant(token: Token, uuid: UUID, name: string, contact: string, phone: string, address: List<Object> ): Promise<Tenant | RequestError> {
+  updateTenant(
+    token: Token,
+    uuid: UUID,
+    name: string,
+    contact: string,
+    phone: string,
+    address: Array<Object>
+  ): Promise<Tenant | RequestError> {
     const body = {
       name,
       contact,
       phone,
-      address,
+      address
     };
 
     return client.put(`${baseUrl}/tenants/${uuid}`, body, token);
