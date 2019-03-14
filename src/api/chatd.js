@@ -11,6 +11,12 @@ type PresenceResponse = {
   user_uuid: string
 };
 
+type PresenceListResponse = {
+  filtered: number,
+  total: number,
+  items: Array<PresenceResponse>
+};
+
 export default (client: ApiRequester, baseUrl: string) => ({
   updatePresence: (token: Token, contactUuid: UUID, state: string): Promise<Boolean> =>
     client.put(`${baseUrl}/users/${contactUuid}/presences`, { state }, token, ApiRequester.successResponseParser),
@@ -26,5 +32,10 @@ export default (client: ApiRequester, baseUrl: string) => ({
   getLineState: async (token: Token, contactUuid: UUID): Promise<string> =>
     client
       .get(`${baseUrl}/users/${contactUuid}/presences`, null, token)
-      .then((response: PresenceResponse) => Profile.getLinesState(response.lines))
+      .then((response: PresenceResponse) => Profile.getLinesState(response.lines)),
+
+  getMultipleLineState: async (token: Token, contactUuids: Array<UUID>): Promise<string> =>
+    client
+      .get(`${baseUrl}/users/presences`, { user_uuid: contactUuids.join(',') }, token)
+      .then((response: PresenceListResponse) => response.items)
 });
