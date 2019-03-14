@@ -491,6 +491,30 @@ export default class WebRTCClient extends Emitter {
       this.sessionHasRemoteVideo(sessionId);
   }
 
+  sessionHasAudio(session: Session) {
+    const pc = session.sessionDescriptionHandler.peerConnection;
+    let hasAudio = false;
+    if (pc.getSenders) {
+      pc.getSenders().forEach(sender => {
+        if (sender.track && sender.track.kind === 'audio') {
+          if (sender.track.enabled) {
+            hasAudio = true;
+          }
+        }
+      });
+    } else {
+      pc.getLocalStreams().forEach(stream => {
+        stream.getAudioTracks().forEach(track => {
+          if (track.kind === 'audio' && track.enabled) {
+            hasAudio = true;
+          }
+        });
+      });
+    }
+
+    return hasAudio;
+  }
+
   getRemoteVideoStreamsForSession(sessionId: string) {
     const streams = this.videoSessions[sessionId];
     if (!streams || !streams.remotes) {
