@@ -14,7 +14,8 @@
   "homepage": "https://github.com/wazo-pbx/wazo-js-sdk",
   "files": [
     "dist/*.js",
-    "src/**/*.js"
+    "src/**/*.js",
+    "config.js"
   ],
   "repository": {
     "type": "git",
