@@ -15,6 +15,7 @@
   "files": [
     "dist/*.js",
     "src/**/*.js",
+    "esm/**/*.js",
     "config.js"
   ],
   "repository": {
@@ -39,6 +40,7 @@
   },
   "dependencies": {
     "events": "^3.0.0",
+    "globby": "^9.1.0",
     "google-libphonenumber": "^3.1.15",
     "js-base64": "^2.4.9",
     "jsrsasign": "^8.0.12",

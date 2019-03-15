@@ -1,10 +1,20 @@
+import globby from 'globby';
 import resolve from 'rollup-plugin-node-resolve';
 import { terser } from 'rollup-plugin-terser';
 import commonjs from 'rollup-plugin-commonjs';
 import json from 'rollup-plugin-json';
 import flow from 'rollup-plugin-flow';
 
-export default {
+const configs = globby.sync('src/**/*.js').map(inputFile => ({
+  entry: inputFile,
+  dest: inputFile.replace('src', 'esm'),
+  format: 'esm',
+  plugins: [
+    flow(),
+  ]
+}));
+
+configs.push({
   input: 'src/index.js',
   output: {
     file: 'dist/wazo-sdk.js',
@@ -28,4 +38,6 @@ export default {
     terser(),
   ],
   moduleContext: { 'node_modules/node-fetch/lib/index': 'window' },
-};
+});
+
+export default configs;
