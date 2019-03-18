@@ -34,6 +34,7 @@ class WebSocketClient extends Emitter {
     this.token = token;
     this.events = events;
     this.options = options;
+    this.listeners = [];
   }
 
   connect() {
@@ -41,6 +42,14 @@ class WebSocketClient extends Emitter {
     if (this.options.binaryType) {
       this.socket.binaryType = this.options.binaryType;
     }
+
+    this.socket.onopen = () => {
+      this.publish('onopen');
+    };
+
+    this.socket.onerror = () => {
+      this.publish('onerror');
+    };
 
     this.socket.onmessage = (event: MessageEvent) => {
       const message = JSON.parse(typeof event.data === 'string' ? event.data : '{}');
@@ -54,6 +63,8 @@ class WebSocketClient extends Emitter {
 
     this.socket.onclose = e => {
       this.initialized = false;
+      this.publish('onclose');
+
       switch (e.code) {
         case 4002:
           break;
@@ -61,6 +72,24 @@ class WebSocketClient extends Emitter {
           break;
         default:
       }
+    };
+  }
+
+  addListener(eventname: string, callback: Function) {
+    this.listeners.push({name: eventname, callback});
+  }
+
+  publish(eventname: string) {
+    this.listeners
+        .filter(listener => listener.name === eventname)
+        .forEach(listener => listener.callback());
+  }
+
+  bindToSocketEvent(socketEvent: string, callback: Function) {
+      const newVar = this.socket[socketEvent];
+      this.socket[socketEvent] = () => {
+        newVar.apply(this);
+        callback();
     };
   }
 
