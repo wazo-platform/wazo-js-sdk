@@ -166,10 +166,14 @@ export default class Contact {
     return new Contact({
       name: plain.column_values[columns.indexOf('name')],
       number: plain.column_values[columns.indexOf('number')] || '',
-      numbers: [{ label: 'primary', number: plain.column_values[columns.indexOf('number')] }] || [],
+      numbers: plain.column_values[columns.indexOf('number')] ?
+        [{ label: 'primary', number: plain.column_values[columns.indexOf('number')] }] :
+        [],
       favorited: plain.column_values[columns.indexOf('favorite')],
       email: plain.column_values[columns.indexOf('email')] || '',
-      emails: [{ label: 'primary', email: plain.column_values[columns.indexOf('email')] }] || [],
+      emails: plain.column_values[columns.indexOf('email')] ?
+        [{ label: 'primary', email: plain.column_values[columns.indexOf('email')] }] :
+        [],
       entreprise: plain.column_values[columns.indexOf('entreprise')] || '',
       birthday: plain.column_values[columns.indexOf('birthday')] || '',
       address: plain.column_values[columns.indexOf('address')] || '',
