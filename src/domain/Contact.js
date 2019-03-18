@@ -163,17 +163,15 @@ export default class Contact {
   }
 
   static parse(plain: ContactResponse, columns: Array<?string>): Contact {
+    const number = plain.column_values[columns.indexOf('number')];
+    const email = plain.column_values[columns.indexOf('email')];
     return new Contact({
       name: plain.column_values[columns.indexOf('name')],
-      number: plain.column_values[columns.indexOf('number')] || '',
-      numbers: plain.column_values[columns.indexOf('number')] ?
-        [{ label: 'primary', number: plain.column_values[columns.indexOf('number')] }] :
-        [],
+      number: number || '',
+      numbers: number ? [{ label: 'primary', number }] : [],
       favorited: plain.column_values[columns.indexOf('favorite')],
-      email: plain.column_values[columns.indexOf('email')] || '',
-      emails: plain.column_values[columns.indexOf('email')] ?
-        [{ label: 'primary', email: plain.column_values[columns.indexOf('email')] }] :
-        [],
+      email: email || '',
+      emails: email ? [{ label: 'primary', email }] : [],
       entreprise: plain.column_values[columns.indexOf('entreprise')] || '',
       birthday: plain.column_values[columns.indexOf('birthday')] || '',
       address: plain.column_values[columns.indexOf('address')] || '',
