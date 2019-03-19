@@ -92,16 +92,6 @@ class WebSocketClient extends Emitter {
         .forEach(listener => listener.callback());
   }
 
-  bindToSocketEvent(socketEvent: string, callback: Function) {
-    if (this.socket) {
-      const newVar = this.socket[socketEvent];
-      this.socket[socketEvent] = () => {
-        newVar.apply(this);
-        callback();
-      };
-    }
-  }
-
   close(): void {
     if (!this.socket) {
       return;
