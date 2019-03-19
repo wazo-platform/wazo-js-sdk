@@ -84,5 +84,25 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   getStatus(token: Token, lineUuid: UUID) {
     return client.get(`${baseUrl}/lines/${lineUuid}/presences`, null, token);
-  }
+  },
+
+  fetchSwitchboardHeldCalls(token, switchboardUuid: UUID) {
+    return client.get(`${baseUrl}/switchboards/${switchboardUuid}/calls/held`, null, token);
+  },
+
+  holdSwitchboardCall(token, switchboardUuid: UUID, callId: string) {
+    return client.put(`${baseUrl}/switchboards/${switchboardUuid}/calls/held/${callId}`, null, token);
+  },
+
+  answerSwitchboardHeldCall(token, switchboardUuid: UUID, callId: string) {
+    return client.put(`${baseUrl}/switchboards/${switchboardUuid}/calls/held/${callId}/answer`, null, token);
+  },
+
+  fetchSwitchboardQueuedCalls(token, switchboardUuid: UUID) {
+    return client.get(`${baseUrl}/switchboards/${switchboardUuid}/calls/queued`, null, token);
+  },
+
+  answerSwitchboardQueuedCall(token, switchboardUuid: UUID, callId: string) {
+    return client.put(`${baseUrl}/switchboards/${switchboardUuid}/calls/queued/${callId}/answer`, null, token);
+  },
 });
