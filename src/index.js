@@ -4,7 +4,7 @@ import SIP from 'sip.js';
 
 import ApiClient from './api-client';
 import WebRTCClient from './web-rtc-client';
-import WebSocketClient from './websocket-client';
+import WebSocketClient, {SOCKET_EVENTS} from './websocket-client';
 import Emitter from './utils/Emitter';
 
 // Domain
@@ -78,5 +78,6 @@ export default {
   PRESENCE,
   PROFILE_STATE,
   FORWARD_KEYS,
-  LINE_STATE
+  LINE_STATE,
+  SOCKET_EVENTS
 };

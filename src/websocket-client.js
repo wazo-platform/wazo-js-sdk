@@ -2,6 +2,12 @@
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import Emitter from './utils/Emitter';
 
+export const SOCKET_EVENTS = {
+  ON_OPEN: 'onopen',
+  ON_ERROR: 'onerror',
+  ON_CLOSE: 'onclose'
+};
+
 type WebSocketClientArguments = {
   host: string,
   token: string,
@@ -42,6 +48,14 @@ class WebSocketClient extends Emitter {
       this.socket.binaryType = this.options.binaryType;
     }
 
+    this.socket.onopen = () => {
+      this.eventEmitter.emit(SOCKET_EVENTS.ON_OPEN);
+    };
+
+    this.socket.onerror = () => {
+      this.eventEmitter.emit(SOCKET_EVENTS.ON_ERROR);
+    };
+
     this.socket.onmessage = (event: MessageEvent) => {
       const message = JSON.parse(typeof event.data === 'string' ? event.data : '{}');
 
@@ -54,6 +68,8 @@ class WebSocketClient extends Emitter {
 
     this.socket.onclose = e => {
       this.initialized = false;
+      this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE);
+
       switch (e.code) {
         case 4002:
           break;
