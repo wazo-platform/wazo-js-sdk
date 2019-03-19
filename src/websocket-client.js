@@ -2,6 +2,12 @@
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import Emitter from './utils/Emitter';
 
+export const SOCKET_EVENTS = {
+  ON_OPEN: 'onopen',
+  ON_ERROR: 'onerror',
+  ON_CLOSE: 'onclose'
+};
+
 type WebSocketClientArguments = {
   host: string,
   token: string,
@@ -15,6 +21,7 @@ class WebSocketClient extends Emitter {
   events: Array<string>;
   options: Object;
   socket: ?ReconnectingWebSocket;
+  listeners: Array<{name: string, callback: Function}>;
 
   static eventLists: Array<string>;
 
@@ -44,11 +51,11 @@ class WebSocketClient extends Emitter {
     }
 
     this.socket.onopen = () => {
-      this.publish('onopen');
+      this.publish(SOCKET_EVENTS.ON_OPEN);
     };
 
     this.socket.onerror = () => {
-      this.publish('onerror');
+      this.publish(SOCKET_EVENTS.ON_ERROR);
     };
 
     this.socket.onmessage = (event: MessageEvent) => {
@@ -63,7 +70,7 @@ class WebSocketClient extends Emitter {
 
     this.socket.onclose = e => {
       this.initialized = false;
-      this.publish('onclose');
+      this.publish(SOCKET_EVENTS.ON_CLOSE);
 
       switch (e.code) {
         case 4002:
@@ -86,11 +93,13 @@ class WebSocketClient extends Emitter {
   }
 
   bindToSocketEvent(socketEvent: string, callback: Function) {
+    if (this.socket) {
       const newVar = this.socket[socketEvent];
       this.socket[socketEvent] = () => {
         newVar.apply(this);
         callback();
-    };
+      };
+    }
   }
 
   close(): void {
