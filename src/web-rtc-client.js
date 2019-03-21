@@ -420,6 +420,10 @@ export default class WebRTCClient extends Emitter {
 
   changeAudioInputDevice(id: string) {
     this.audio = id ? { deviceId: { exact: id } } : true;
+    if (this.userAgent) {
+      this.userAgent.transport.disconnect();
+      this.userAgent.stop();
+    }
     this.userAgent = this.createUserAgent();
   }
 
