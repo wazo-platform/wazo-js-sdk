@@ -28,7 +28,7 @@ export default SIP => {
       SENDRECV: 'sendrecv',
       SENDONLY: 'sendonly',
       RECVONLY: 'recvonly',
-      INACTIVE: 'inactive'
+      INACTIVE: 'inactive',
     };
 
     this.logger.log('SessionDescriptionHandlerOptions: ' + JSON.stringify(this.options));
@@ -45,7 +45,7 @@ export default SIP => {
       MediaStream: environment.MediaStream,
       getUserMedia: environment.navigator.mediaDevices.getUserMedia.bind(environment.navigator.mediaDevices),
       RTCPeerConnection: environment.RTCPeerConnection,
-      RTCSessionDescription: environment.RTCSessionDescription
+      RTCSessionDescription: environment.RTCSessionDescription,
     };
 
     this.iceGatheringDeferred = null;
@@ -112,7 +112,7 @@ export default SIP => {
           this.resetIceGatheringComplete();
           this.peerConnection.close();
         }
-      }
+      },
     },
 
     /**
@@ -161,11 +161,11 @@ export default SIP => {
               this.emit('getDescription', description);
               return {
                 body: description.sdp,
-                contentType: this.CONTENT_TYPE
+                contentType: this.CONTENT_TYPE,
               };
             }.bind(this)
           );
-      }
+      },
     },
 
     /**
@@ -177,7 +177,7 @@ export default SIP => {
       writable: true,
       value: function hasDescription(contentType) {
         return contentType === this.CONTENT_TYPE;
-      }
+      },
     },
 
     /**
@@ -195,7 +195,7 @@ export default SIP => {
           description.sdp = description.sdp.replace(/a=recvonly\r\n/g, 'a=inactive\r\n');
         }
         return SIP.Utils.Promise.resolve(description);
-      }
+      },
     },
 
     /**
@@ -225,7 +225,7 @@ export default SIP => {
 
         var description = {
           type: this.hasOffer('local') ? 'answer' : 'offer',
-          sdp: sessionDescription
+          sdp: sessionDescription,
         };
 
         return SIP.Utils.Promise.resolve()
@@ -286,7 +286,7 @@ export default SIP => {
             }
             self.emit('confirmed', self);
           });
-      }
+      },
     },
 
     /**
@@ -328,14 +328,14 @@ export default SIP => {
         }
         this.logger.log('DTMF sent via RTP: ' + tones.toString());
         return true;
-      }
+      },
     },
 
     getDirection: {
       writable: true,
       value: function getDirection() {
         return this.direction;
-      }
+      },
     },
 
     // Internal functions
@@ -406,7 +406,7 @@ export default SIP => {
             this.logger.error(error);
             throw error;
           });
-      }
+      },
     },
 
     // Creates an RTCSessionDescriptionInit from an RTCSessionDescription
@@ -415,9 +415,9 @@ export default SIP => {
       value: function createRTCSessionDescriptionInit(RTCSessionDescription) {
         return {
           type: RTCSessionDescription.type,
-          sdp: RTCSessionDescription.sdp
+          sdp: RTCSessionDescription.sdp,
         };
-      }
+      },
     },
 
     addDefaultIceCheckingTimeout: {
@@ -427,7 +427,7 @@ export default SIP => {
           peerConnectionOptions.iceCheckingTimeout = 5000;
         }
         return peerConnectionOptions;
-      }
+      },
     },
 
     addDefaultIceServers: {
@@ -437,7 +437,7 @@ export default SIP => {
           rtcConfiguration.iceServers = [{ urls: 'stun:stun.l.google.com:19302' }];
         }
         return rtcConfiguration;
-      }
+      },
     },
 
     checkAndDefaultConstraints: {
@@ -452,21 +452,21 @@ export default SIP => {
         }
 
         return constraints;
-      }
+      },
     },
 
     hasBrowserTrackSupport: {
       writable: true,
       value: function hasBrowserTrackSupport() {
         return Boolean(this.peerConnection.addTrack);
-      }
+      },
     },
 
     hasBrowserGetSenderSupport: {
       writable: true,
       value: function hasBrowserGetSenderSupport() {
         return Boolean(this.peerConnection.getSenders);
-      }
+      },
     },
 
     initPeerConnection: {
@@ -571,7 +571,7 @@ export default SIP => {
           }
           self.emit(stateEvent, this);
         };
-      }
+      },
     },
 
     acquire: {
@@ -675,7 +675,7 @@ export default SIP => {
             this.logger.error(error.error);
             throw error;
           });
-      }
+      },
     },
 
     hasOffer: {
@@ -684,7 +684,7 @@ export default SIP => {
         var offerState = 'have-' + where + '-offer';
 
         return this.peerConnection.signalingState === offerState;
-      }
+      },
     },
 
     // ICE gathering state handling
@@ -693,7 +693,7 @@ export default SIP => {
       writable: true,
       value: function isIceGatheringComplete() {
         return this.peerConnection.iceGatheringState === 'complete' || this.iceGatheringTimeout;
-      }
+      },
     },
 
     resetIceGatheringComplete: {
@@ -710,7 +710,7 @@ export default SIP => {
           this.iceGatheringDeferred.reject();
           this.iceGatheringDeferred = null;
         }
-      }
+      },
     },
 
     setDirection: {
@@ -735,7 +735,7 @@ export default SIP => {
             break;
         }
         this.observer.directionChanged();
-      }
+      },
     },
 
     triggerIceGatheringComplete: {
@@ -754,7 +754,7 @@ export default SIP => {
             this.iceGatheringDeferred = null;
           }
         }
-      }
+      },
     },
 
     waitForIceGatheringComplete: {
@@ -766,8 +766,8 @@ export default SIP => {
           this.iceGatheringDeferred = SIP.Utils.defer();
         }
         return this.iceGatheringDeferred.promise;
-      }
-    }
+      },
+    },
   });
 
   return MobileSessionDescriptionHandler;

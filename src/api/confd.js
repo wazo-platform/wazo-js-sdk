@@ -17,7 +17,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
       firstname: profile.firstName,
       lastname: profile.lastName,
       email: profile.email,
-      mobile_phone_number: profile.mobileNumber
+      mobile_phone_number: profile.mobileNumber,
     };
 
     return client.put(`${baseUrl}/users/${userUuid}`, body, token, ApiRequester.successResponseParser);
@@ -53,5 +53,5 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   getSIP(token: Token, userUuid: UUID, lineId: number): Promise<WebRtcConfig> {
     return client.get(`${baseUrl}/users/${userUuid}/lines/${lineId}/associated/endpoints/sip`, null, token);
-  }
+  },
 });

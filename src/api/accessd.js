@@ -12,7 +12,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
       start_date: startDate,
       contract_date: contractDate,
       auto_renew: autoRenew,
-      term
+      term,
     };
 
     return client.post(`${baseUrl}/subscriptions`, body, token);
@@ -42,9 +42,9 @@ export default (client: ApiRequester, baseUrl: string) => ({
       term,
       service,
       rules,
-      auto_renew: autoRenew
+      auto_renew: autoRenew,
     };
 
     return client.post(url, body, token);
-  }
+  },
 });

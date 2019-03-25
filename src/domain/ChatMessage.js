@@ -3,158 +3,115 @@ import moment from 'moment';
 
 import newFrom from '../utils/new-from';
 
-type ChatResponse = {
-  date: string,
-  destination_server_uuid: string,
-  destination_user_uuid: string,
-  direction: string,
-  msg: string,
-  source_server_uuid: string,
-  source_user_uuid: string
+export type ChatUser = {
+  tenant_uuid: string,
+  uuid: string,
+  wazo_uuid: string,
 };
 
-type ChatMessageArguments = {
-  id: string,
-  date: Date,
-  message: string,
-  direction: string,
-  destination: {
-    serverId: string,
-    userId: string
-  },
-  source: {
-    serverId: string,
-    userId: string
-  },
-  read: boolean
+export type ChatMessageResponse = {
+  alias: string,
+  content: string,
+  created_at: string,
+  tenant_uuid: string,
+  user_uuid: string,
+  uuid: string,
+  wazo_uuid: string,
 };
 
-type PlainMessageResponse = {
-  msg: string,
-  to: Array<string>,
-  from: Array<string>
-};
-
-type Response = {
-  items: Array<ChatResponse>
-};
-
-const uuid = () => {
-  const s4 = () =>
-    Math.floor((1 + Math.random()) * 0x10000)
-      .toString(16)
-      .substring(1);
-
-  return `${s4()}${s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`;
+export type ChatMessageListResponse = {
+  filtered: number,
+  total: number,
+  items: Array<ChatMessageResponse>,
 };
 
 export default class ChatMessage {
-  id: string;
+  uuid: string;
+  content: string;
   date: Date;
-  message: string;
-  direction: string;
-  destination: {
-    serverId: string,
-    userId: string
-  };
+  alias: string;
+  userUuid: string;
 
-  source: {
-    serverId: string,
-    userId: string
-  };
-
-  read: boolean;
-
-  static parseMany(plain: Response): Array<ChatMessage> {
+  static parseMany(plain: ChatMessageListResponse): Array<ChatMessage> {
     return plain.items.map(item => ChatMessage.parse(item));
   }
 
-  static parse(plain: ChatResponse): ChatMessage {
+  static parse(plain: ChatMessageResponse): ChatMessage {
     return new ChatMessage({
-      id: uuid(),
-      date: moment(plain.date).toDate(),
-      message: plain.msg,
-      direction: plain.direction,
-      destination: {
-        serverId: plain.destination_server_uuid,
-        userId: plain.destination_user_uuid
-      },
-      source: {
-        serverId: plain.source_server_uuid,
-        userId: plain.source_user_uuid
-      },
-      read: true
+      uuid: plain.uuid,
+      date: moment(plain.created_at).toDate(),
+      content: plain.content,
+      alias: plain.alias,
+      userUuid: plain.user_uuid,
     });
   }
 
-  static parseMessageSent(plain: PlainMessageResponse): ChatMessage {
-    return new ChatMessage({
-      id: uuid(),
-      date: new Date(),
-      message: plain.msg,
-      direction: 'sent',
-      destination: {
-        serverId: plain.to[0],
-        userId: plain.to[1]
-      },
-      source: {
-        serverId: plain.from[0],
-        userId: plain.from[1]
-      },
-      read: true
-    });
+  // static parseMessageSent(plain: PlainMessageResponse): ChatMessage {
+  //   return new ChatMessage({
+  //     id: uuid(),
+  //     date: new Date(),
+  //     message: plain.msg,
+  //     direction: 'sent',
+  //     destination: {
+  //       serverId: plain.to[0],
+  //       userId: plain.to[1],
+  //     },
+  //     source: {
+  //       serverId: plain.from[0],
+  //       userId: plain.from[1],
+  //     },
+  //     read: true,
+  //   });
+  // }
+  //
+  // static parseMessageReceived(plain: PlainMessageResponse): ChatMessage {
+  //   return new ChatMessage({
+  //     id: uuid(),
+  //     date: new Date(),
+  //     message: plain.msg,
+  //     direction: 'received',
+  //     destination: {
+  //       serverId: plain.to[0],
+  //       userId: plain.to[1],
+  //     },
+  //     source: {
+  //       serverId: plain.from[0],
+  //       userId: plain.from[1],
+  //     },
+  //     read: false,
+  //   });
+  // }
+
+  static newFrom(message: ChatMessage) {
+    return newFrom(message, ChatMessage);
   }
 
-  static parseMessageReceived(plain: PlainMessageResponse): ChatMessage {
-    return new ChatMessage({
-      id: uuid(),
-      date: new Date(),
-      message: plain.msg,
-      direction: 'received',
-      destination: {
-        serverId: plain.to[0],
-        userId: plain.to[1]
-      },
-      source: {
-        serverId: plain.from[0],
-        userId: plain.from[1]
-      },
-      read: false
-    });
-  }
-
-  static newFrom(profile: ChatMessage) {
-    return newFrom(profile, ChatMessage);
-  }
-
-  constructor({ id, date, message, direction, destination, source, read = true }: ChatMessageArguments = {}) {
-    this.id = id;
+  constructor({ uuid, date, content, userUuid, alias }: Object = {}) {
+    this.uuid = uuid;
     this.date = date;
-    this.message = message;
-    this.direction = direction;
-    this.destination = destination;
-    this.source = source;
-    this.read = read;
+    this.content = content;
+    this.userUuid = userUuid;
+    this.alias = alias;
   }
 
   is(other: ChatMessage) {
-    return this.id === other.id;
+    return this.uuid === other.uuid;
   }
 
-  isIncoming() {
-    return this.direction === 'received';
-  }
-
-  acknowledge() {
-    this.read = true;
-
-    return this;
-  }
-
-  getTheOtherParty() {
-    if (this.direction === 'sent') {
-      return this.destination.userId;
-    }
-    return this.source.userId;
-  }
+  // isIncoming() {
+  //   return this.direction === 'received';
+  // }
+  //
+  // acknowledge() {
+  //   this.read = true;
+  //
+  //   return this;
+  // }
+  //
+  // getTheOtherParty() {
+  //   if (this.direction === 'sent') {
+  //     return this.destination.userId;
+  //   }
+  //   return this.source.userId;
+  // }
 }

@@ -7,13 +7,13 @@ import newFrom from '../utils/new-from';
 export const PRESENCE = {
   AVAILABLE: 'available',
   DO_NOT_DISTURB: 'donotdisturb',
-  DISCONNECTED: 'disconnected'
+  DISCONNECTED: 'disconnected',
 };
 
 export const STATE = {
   AVAILABLE: 'available',
   UNAVAILABLE: 'unavailable',
-  INVISIBLE: 'invisible'
+  INVISIBLE: 'invisible',
 };
 
 export const LINE_STATE = {
@@ -21,7 +21,7 @@ export const LINE_STATE = {
   HOLDING: 'holding',
   RINGING: 'ringing',
   TALKING: 'talking',
-  UNAVAILABLE: 'unavailable'
+  UNAVAILABLE: 'unavailable',
 };
 
 type ProfileResponse = {
@@ -35,7 +35,7 @@ type ProfileResponse = {
     id: number,
     extensions: Array<{ id: number, exten: string, context: string, links?: Array<{ href: string, rel: string }> }>,
     endpoint_custom?: ?string,
-    endpoint_sccp?: ?string
+    endpoint_sccp?: ?string,
   }>,
   id: number,
   username: string,
@@ -45,29 +45,29 @@ type ProfileResponse = {
   forwards: {
     busy: {
       destination: string,
-      enabled: boolean
+      enabled: boolean,
     },
     noanswer: {
       destination: string,
-      enabled: boolean
+      enabled: boolean,
     },
     unconditional: {
       destination: string,
-      enabled: boolean
-    }
+      enabled: boolean,
+    },
   },
   mobile_phone_number: ?string,
   subscription_type: ?number,
   services: {
     dnd: {
-      enabled: boolean
-    }
+      enabled: boolean,
+    },
   },
   switchboards: Array<any>,
   voicemail?: {
     id: number,
-    name: string
-  }
+    name: string,
+  },
 };
 
 type ProfileArguments = {
@@ -84,9 +84,9 @@ type ProfileArguments = {
   subscriptionType: ?number,
   voicemail?: {
     id: number,
-    name: string
+    name: string,
   },
-  switchboards: Array<any>
+  switchboards: Array<any>,
 };
 
 export default class Profile {
@@ -116,12 +116,12 @@ export default class Profile {
       forwards: [
         ForwardOption.parse(plain.forwards.unconditional, FORWARD_KEYS.UNCONDITIONAL),
         ForwardOption.parse(plain.forwards.noanswer, FORWARD_KEYS.NO_ANSWER),
-        ForwardOption.parse(plain.forwards.busy, FORWARD_KEYS.BUSY)
+        ForwardOption.parse(plain.forwards.busy, FORWARD_KEYS.BUSY),
       ],
       doNotDisturb: plain.services.dnd.enabled,
       subscriptionType: plain.subscription_type,
       voicemail: plain.voicemail,
-      switchboards: plain.switchboards || []
+      switchboards: plain.switchboards || [],
     });
   }
 
@@ -142,7 +142,7 @@ export default class Profile {
     presence,
     subscriptionType,
     voicemail,
-    switchboards
+    switchboards,
   }: $Shape<ProfileArguments> = {}) {
     this.id = id;
     this.firstName = firstName;

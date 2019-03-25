@@ -8,7 +8,7 @@ import Call from '../domain/Call';
 type CallQuery = {
   from_mobile: boolean,
   extension: string,
-  line_id?: number
+  line_id?: number,
 };
 
 export default (client: ApiRequester, baseUrl: string) => ({
@@ -39,7 +39,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   makeCall(token: Token, extension: string, fromMobile: boolean, lineId: ?number) {
     const query: CallQuery = {
       from_mobile: fromMobile,
-      extension
+      extension,
     };
 
     if (lineId) {
@@ -60,7 +60,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     const body: Object = {
       completions: ['answer'],
       destination,
-      initiator_call: callId
+      initiator_call: callId,
     };
 
     if (lineId) {

@@ -21,7 +21,7 @@ const events = [
   'transactionDestroyed',
   'notify',
   'outOfDialogReferRequested',
-  'message'
+  'message',
 ];
 const transportEvents = [
   'connected',
@@ -29,14 +29,14 @@ const transportEvents = [
   'transportError',
   'message',
   'closed',
-  'keepAliveDebounceTimeout'
+  'keepAliveDebounceTimeout',
 ];
 const MAX_MERGE_SESSIONS = 4;
 
 type MediaConfig = {
   audio: Object & boolean,
   video: Object & boolean,
-  localVideo?: Object & boolean
+  localVideo?: Object & boolean,
 };
 
 type WebRtcConfig = {
@@ -77,8 +77,8 @@ export default class WebRTCClient extends Emitter {
     if (WebRTCClient.isAPrivateIp(ip)) {
       return [
         {
-          urls: ['stun:stun.l.google.com:19302', 'stun:stun4.l.google.com:19302']
-        }
+          urls: ['stun:stun.l.google.com:19302', 'stun:stun4.l.google.com:19302'],
+        },
       ];
     }
     return [];
@@ -157,7 +157,7 @@ export default class WebRTCClient extends Emitter {
   // eslint-disable-next-line no-unused-vars
   sessionWantsToDoVideo(session: SIP.sessionDescriptionHandler) {
     const sdp = session.request.body;
-    const sessionHasVideo = (/\r\nm=video /).test(sdp);
+    const sessionHasVideo = /\r\nm=video /.test(sdp);
 
     return sessionHasVideo;
   }
@@ -277,7 +277,7 @@ export default class WebRTCClient extends Emitter {
       cancel: (newSession: SIP.sessionDescriptionHandler) => {
         this.hangup(newSession);
         this.unhold(session);
-      }
+      },
     };
   }
 
@@ -491,8 +491,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   sessionHasVideo(sessionId: string) {
-    return this.sessionHasLocalVideo(sessionId) ||
-      this.sessionHasRemoteVideo(sessionId);
+    return this.sessionHasLocalVideo(sessionId) || this.sessionHasRemoteVideo(sessionId);
   }
 
   sessionHasAudio(session: SIP.sessionDescriptionHandler) {
@@ -556,12 +555,12 @@ export default class WebRTCClient extends Emitter {
       uri: `${this.config.authorizationUser}@${this.config.host}`,
       transportOptions: {
         traceSip: false,
-        wsServers: `wss://${this.config.host}:${this.config.port || 443}/api/asterisk/ws`
+        wsServers: `wss://${this.config.host}:${this.config.port || 443}/api/asterisk/ws`,
       },
       sessionDescriptionHandlerFactoryOptions: {
         constraints: {
           audio: this._getAudioConstraints(),
-          video: this.video ? this.cameraDeviceId || true : false
+          video: this.video ? this.cameraDeviceId || true : false,
         },
         peerConnectionOptions: {
           iceCheckingTimeout: this.config.iceCheckingTimeout || 5000,
@@ -569,17 +568,17 @@ export default class WebRTCClient extends Emitter {
             rtcpMuxPolicy: 'require',
             bundlePolicy: 'max-compat',
             iceServers: WebRTCClient.getIceServers(this.config.host),
-            ...this._getRtcOptions(this.video)
-          }
-        }
-      }
+            ...this._getRtcOptions(this.video),
+          },
+        },
+      },
     };
 
     // Use custom SessionDescription handler for mobile
     if (!this._isWeb()) {
       config.sessionDescriptionHandlerFactory = MobileSessionDescriptionHandler(SIP).defaultFactory;
       config.registerOptions = {
-        extraContactHeaderParams: ['mobility=mobile']
+        extraContactHeaderParams: ['mobility=mobile'],
       };
     }
 
@@ -592,7 +591,7 @@ export default class WebRTCClient extends Emitter {
       mandatory: {
         OfferToReceiveAudio: this._hasAudio(),
         OfferToReceiveVideo: enableVideo,
-      }
+      },
     };
   }
 
@@ -601,15 +600,15 @@ export default class WebRTCClient extends Emitter {
       sessionDescriptionHandlerOptions: {
         constraints: {
           audio: this._getAudioConstraints(),
-          video: enableVideo
+          video: enableVideo,
         },
         RTCOfferOptions: {
           mandatory: {
             OfferToReceiveAudio: this._hasAudio(),
-            OfferToReceiveVideo: enableVideo
-          }
-        }
-      }
+            OfferToReceiveVideo: enableVideo,
+          },
+        },
+      },
     };
   }
 
@@ -731,7 +730,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   _cleanupMedia(session: ?SIP.sessionDescriptionHandler) {
-    if (session && session.id in this.videoSessions){
+    if (session && session.id in this.videoSessions) {
       delete this.videoSessions[session.id];
     }
 

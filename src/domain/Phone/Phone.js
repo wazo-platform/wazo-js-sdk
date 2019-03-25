@@ -10,7 +10,7 @@ export type PhoneEventCallbacks = {
   onCallMuted?: () => void,
   onCallUnmuted?: () => void,
   onCallEnded?: () => {},
-  onCallFailed?: (message: string) => {}
+  onCallFailed?: (message: string) => {},
 };
 
 export interface Phone {

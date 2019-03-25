@@ -2,19 +2,22 @@
 import ApiRequester from '../utils/api-requester';
 import type { UUID, Token } from '../domain/types';
 import Profile from '../domain/Profile';
+import ChatRoom from '../domain/ChatRoom';
+import type { ChatUser } from '../domain/ChatMessage';
+import ChatMessage from '../domain/ChatMessage';
 
-type PresenceResponse = {
+export type PresenceResponse = {
   lines: Array<{ id: number, state: string }>,
   sessions: Array<{ mobile: boolean, uuid: string }>,
   state: string,
   status: string,
-  user_uuid: string
+  user_uuid: string,
 };
 
 type PresenceListResponse = {
   filtered: number,
   total: number,
-  items: Array<PresenceResponse>
+  items: Array<PresenceResponse>,
 };
 
 export default (client: ApiRequester, baseUrl: string) => ({
@@ -37,5 +40,17 @@ export default (client: ApiRequester, baseUrl: string) => ({
   getMultipleLineState: async (token: Token, contactUuids: Array<UUID>): Promise<string> =>
     client
       .get(`${baseUrl}/users/presences`, { user_uuid: contactUuids.join(',') }, token)
-      .then((response: PresenceListResponse) => response.items)
+      .then((response: PresenceListResponse) => response.items),
+
+  getUserRooms: async (token: Token): Promise<Array<ChatRoom>> =>
+    client.get(`${baseUrl}/users/me/rooms`, null, token).then(ChatRoom.parseMany),
+
+  createRoom: async (token: Token, name: string, users: Array<ChatUser>): Promise<ChatRoom> =>
+    client.post(`${baseUrl}/users/me/rooms`, { name, users }, token).then(ChatRoom.parse),
+
+  getRoomMessages: async (token: Token, roomUuid: string): Promise<Array<ChatMessage>> =>
+    client.get(`${baseUrl}/users/me/rooms/${roomUuid}/messages`, null, token).then(ChatMessage.parseMany),
+
+  sendRoomMessage: async (token: Token, roomUuid: string, message: ChatMessage): Promise<ChatMessage> =>
+    client.post(`${baseUrl}/users/me/rooms/${roomUuid}/messages`, message, token).then(ChatMessage.parse),
 });

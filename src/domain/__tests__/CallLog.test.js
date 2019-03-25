@@ -19,10 +19,10 @@ describe('CallLog domain', () => {
           duration: 4,
           start: '2017-08-06T13:50:55.819057+00:00',
           end: '2017-08-08T13:51:23.822529+00:00',
-          id: 215
-        }
+          id: 215,
+        },
       ],
-      total: 233
+      total: 233,
     };
 
     const logs = CallLog.parseMany(response);
@@ -34,17 +34,17 @@ describe('CallLog domain', () => {
         callDirection: 'outbound',
         destination: {
           extension: '4182250459',
-          name: ''
+          name: '',
         },
         source: {
           extension: '8020',
-          name: 'Jonathan Lessard'
+          name: 'Jonathan Lessard',
         },
         id: 215,
         duration: 4000,
         start: moment('2017-08-06T13:50:55.819057+00:00').toDate(),
-        end: moment('2017-08-08T13:51:23.822529+00:00').toDate()
-      })
+        end: moment('2017-08-08T13:51:23.822529+00:00').toDate(),
+      }),
     ]);
   });
 });

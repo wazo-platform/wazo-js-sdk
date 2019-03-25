@@ -12,7 +12,7 @@ import type {
   ListGroupsResponse,
   ListPoliciesResponse,
   GetTenantResponse,
-  GetUserResponse
+  GetUserResponse,
 } from '../domain/types';
 import Session from '../domain/Session';
 
@@ -33,15 +33,15 @@ export default (client: ApiRequester, baseUrl: string) => ({
     password: string,
     backend: string,
     expiration: number,
-    mobile?: boolean
+    mobile?: boolean,
   }): Promise<?Session> {
     const body = {
       backend: params.backend || DEFAULT_BACKEND_USER,
-      expiration: params.expiration || DETAULT_EXPIRATION
+      expiration: params.expiration || DETAULT_EXPIRATION,
     };
     const headers: Object = {
       Authorization: `Basic ${ApiRequester.base64Encode(`${params.username}:${params.password}`)}`,
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     };
 
     if (params.mobile) {
@@ -58,7 +58,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   updatePassword(token: Token, userUuid: UUID, oldPassword: string, newPassword: string): Promise<Boolean> {
     const body = {
       new_password: newPassword,
-      old_password: oldPassword
+      old_password: oldPassword,
     };
 
     return client.put(`${baseUrl}/users/${userUuid}/password`, body, token, ApiRequester.successResponseParser);
@@ -66,7 +66,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   sendDeviceToken(token: Token, userUuid: UUID, deviceToken: string, apnsToken: ?string) {
     const body: Object = {
-      token: deviceToken
+      token: deviceToken,
     };
 
     if (apnsToken) {
@@ -93,7 +93,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   resetPassword(token: string, userUuid: string, password: string) {
     const body = {
-      password
+      password,
     };
 
     return client.post(
@@ -119,7 +119,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
       username,
       password,
       firstname,
-      lastname
+      lastname,
     };
 
     return client.post(`${baseUrl}/users`, body, token);
@@ -130,9 +130,9 @@ export default (client: ApiRequester, baseUrl: string) => ({
       emails: [
         {
           address: email,
-          main
-        }
-      ]
+          main,
+        },
+      ],
     };
 
     return client.put(`${baseUrl}/users/${userUuid}/emails`, body, token);
@@ -198,7 +198,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
       name,
       contact,
       phone,
-      address
+      address,
     };
 
     return client.put(`${baseUrl}/tenants/${uuid}`, body, token);
@@ -224,7 +224,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     const body = {
       name,
       description,
-      acl_templates: aclTemplates
+      acl_templates: aclTemplates,
     };
 
     return client.post(`${baseUrl}/policies`, body, token);
@@ -252,5 +252,5 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   deleteProviderToken(token: Token, userUuid: UUID, provider: string) {
     return client.delete(`${baseUrl}/users/${userUuid}/external/${provider}`, null, token);
-  }
+  },
 });
