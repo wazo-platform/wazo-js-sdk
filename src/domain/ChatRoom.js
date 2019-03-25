@@ -25,7 +25,7 @@ export default class ChatRoom {
 
   static parse(plain: RoomResponse): ChatRoom {
     return new ChatRoom({
-      uudid: plain.uuid,
+      uuid: plain.uuid,
       name: plain.name,
       users: plain.users,
     });

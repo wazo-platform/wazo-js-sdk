@@ -3,7 +3,7 @@ import ApiRequester from '../utils/api-requester';
 import type { UUID, Token } from '../domain/types';
 import Profile from '../domain/Profile';
 import ChatRoom from '../domain/ChatRoom';
-import type { ChatUser } from '../domain/ChatMessage';
+import type { ChatUser, ChatMessageListResponse } from '../domain/ChatMessage';
 import ChatMessage from '../domain/ChatMessage';
 
 export type PresenceResponse = {
@@ -49,7 +49,8 @@ export default (client: ApiRequester, baseUrl: string) => ({
     client.post(`${baseUrl}/users/me/rooms`, { name, users }, token).then(ChatRoom.parse),
 
   getRoomMessages: async (token: Token, roomUuid: string): Promise<Array<ChatMessage>> =>
-    client.get(`${baseUrl}/users/me/rooms/${roomUuid}/messages`, null, token).then(ChatMessage.parseMany),
+    client.get(`${baseUrl}/users/me/rooms/${roomUuid}/messages`, null, token)
+      .then((response: ChatMessageListResponse) =>ChatMessage.parseMany(response, roomUuid)),
 
   sendRoomMessage: async (token: Token, roomUuid: string, message: ChatMessage): Promise<ChatMessage> =>
     client.post(`${baseUrl}/users/me/rooms/${roomUuid}/messages`, message, token).then(ChatMessage.parse),

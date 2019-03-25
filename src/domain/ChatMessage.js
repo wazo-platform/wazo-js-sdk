@@ -31,87 +31,45 @@ export default class ChatMessage {
   date: Date;
   alias: string;
   userUuid: string;
+  roomUuid: ?string;
+  read: boolean;
 
-  static parseMany(plain: ChatMessageListResponse): Array<ChatMessage> {
-    return plain.items.map(item => ChatMessage.parse(item));
+  static parseMany(plain: ChatMessageListResponse, roomUuid: ?string = null): Array<ChatMessage> {
+    return plain.items.map(item => ChatMessage.parse(item, roomUuid));
   }
 
-  static parse(plain: ChatMessageResponse): ChatMessage {
+  static parse(plain: ChatMessageResponse, roomUuid: ?string = null): ChatMessage {
     return new ChatMessage({
       uuid: plain.uuid,
       date: moment(plain.created_at).toDate(),
       content: plain.content,
       alias: plain.alias,
       userUuid: plain.user_uuid,
+      roomUuid,
     });
   }
-
-  // static parseMessageSent(plain: PlainMessageResponse): ChatMessage {
-  //   return new ChatMessage({
-  //     id: uuid(),
-  //     date: new Date(),
-  //     message: plain.msg,
-  //     direction: 'sent',
-  //     destination: {
-  //       serverId: plain.to[0],
-  //       userId: plain.to[1],
-  //     },
-  //     source: {
-  //       serverId: plain.from[0],
-  //       userId: plain.from[1],
-  //     },
-  //     read: true,
-  //   });
-  // }
-  //
-  // static parseMessageReceived(plain: PlainMessageResponse): ChatMessage {
-  //   return new ChatMessage({
-  //     id: uuid(),
-  //     date: new Date(),
-  //     message: plain.msg,
-  //     direction: 'received',
-  //     destination: {
-  //       serverId: plain.to[0],
-  //       userId: plain.to[1],
-  //     },
-  //     source: {
-  //       serverId: plain.from[0],
-  //       userId: plain.from[1],
-  //     },
-  //     read: false,
-  //   });
-  // }
 
   static newFrom(message: ChatMessage) {
     return newFrom(message, ChatMessage);
   }
 
-  constructor({ uuid, date, content, userUuid, alias }: Object = {}) {
+  constructor({ uuid, date, content, userUuid, alias, roomUuid }: Object = {}) {
     this.uuid = uuid;
     this.date = date;
     this.content = content;
     this.userUuid = userUuid;
     this.alias = alias;
+    this.roomUuid = roomUuid;
+
+    // @TODO: change after message read status available
+    this.read = true;
   }
 
   is(other: ChatMessage) {
     return this.uuid === other.uuid;
   }
 
-  // isIncoming() {
-  //   return this.direction === 'received';
-  // }
-  //
-  // acknowledge() {
-  //   this.read = true;
-  //
-  //   return this;
-  // }
-  //
-  // getTheOtherParty() {
-  //   if (this.direction === 'sent') {
-  //     return this.destination.userId;
-  //   }
-  //   return this.source.userId;
-  // }
+  isIncoming(userUuid: string) {
+    return this.userUuid !== userUuid;
+  }
 }
