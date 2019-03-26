@@ -137,6 +137,7 @@ WebSocketClient.eventLists = [
   'auth_user_external_auth_deleted',
   'chatd_presence_updated',
   'chatd_user_room_message_created',
+  'chatd_user_room_created',
   'conference_user_participant_joined',
   'conference_user_participant_left',
   'switchboard_queued_calls_updated',
