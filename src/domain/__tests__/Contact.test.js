@@ -133,10 +133,10 @@ describe('Contact domain', () => {
             agent_id: null,
             endpoint_id: 8,
             user_uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54',
-            source_entry_id: '8'
-          }
-        }
-      ]
+            source_entry_id: '8',
+          },
+        },
+      ],
     };
 
     const contact = Contact.parse(response.results[0], response.column_types);
@@ -157,7 +157,7 @@ describe('Contact domain', () => {
         personal: false,
         source: 'internal',
         sourceId: '8',
-        uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54'
+        uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54',
       })
     );
   });

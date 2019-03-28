@@ -8,5 +8,5 @@ export default {
   SPAIN: 'ES',
   SWITZERLAND: 'CH',
   UNITED_KINGDOM: 'GB',
-  UNITED_STATES: 'US'
+  UNITED_STATES: 'US',
 };

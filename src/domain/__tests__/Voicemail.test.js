@@ -4,7 +4,7 @@ import Voicemail from '../Voicemail';
 
 const defaultCaller = {
   name: 'john doe',
-  number: '0101010101'
+  number: '0101010101',
 };
 
 describe('Voicemail', () => {
@@ -26,11 +26,11 @@ describe('Voicemail', () => {
     const voicemail = new Voicemail({
       caller: {
         name: 'john doe',
-        number: '0101010101'
+        number: '0101010101',
       },
       date: new Date(),
       duration: 0,
-      id: 'ref-1234'
+      id: 'ref-1234',
     });
     const query = 'john';
 
@@ -41,11 +41,11 @@ describe('Voicemail', () => {
     const voicemail = new Voicemail({
       caller: {
         name: 'John Doe',
-        number: '0101010101'
+        number: '0101010101',
       },
       date: new Date(),
       duration: 0,
-      id: 'ref-1234'
+      id: 'ref-1234',
     });
     const query = 'jOHn';
 
@@ -56,11 +56,11 @@ describe('Voicemail', () => {
     const voicemail = new Voicemail({
       caller: {
         name: 'john doe',
-        number: '0101010101'
+        number: '0101010101',
       },
       date: new Date(),
       duration: 0,
-      id: 'ref-1234'
+      id: 'ref-1234',
     });
     const query = '010101';
 
@@ -74,7 +74,7 @@ describe('Voicemail', () => {
         timestamp: 1530823017, // Thu Jul 05 2018 16:36:57 GMT-0400 (GMT-04:00)
         id: '1530823017-00000000',
         caller_id_name: 'Cl\u00e9ment Bourgeois',
-        caller_id_num: '8005'
+        caller_id_num: '8005',
       };
 
       const voicemail = Voicemail.parse(raw);

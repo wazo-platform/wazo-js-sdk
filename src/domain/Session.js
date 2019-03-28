@@ -29,15 +29,15 @@ type Response = {
       groups?: Array<string>,
       xivo_uuid?: UUID,
       tenants?: Array<{ uuid: UUID }>,
-      auth_id?: UUID
-    }
-  }
+      auth_id?: UUID,
+    },
+  },
 };
 
 type Authorization = {
   uuid: string,
   rules: Array<{ name: string, options: Object }>,
-  service: ?string
+  service: ?string,
 };
 
 type SessionArguments = {
@@ -46,7 +46,7 @@ type SessionArguments = {
   tenantUuid?: string,
   profile?: Profile,
   expiresAt: Date,
-  authorizations?: Array<Authorization>
+  authorizations?: Array<Authorization>,
 };
 
 export default class Session {
@@ -75,7 +75,7 @@ export default class Session {
       uuid: plain.data.metadata ? plain.data.metadata.uuid : null,
       authorizations,
       tenantUuid: plain.data.metadata ? plain.data.metadata.tenant_uuid : undefined,
-      expiresAt: new Date(`${plain.data.utc_expires_at}z`)
+      expiresAt: new Date(`${plain.data.utc_expires_at}z`),
     });
   }
 

@@ -10,14 +10,14 @@ export type RequestError = {
   resource: string,
   error_id: string,
   details: {
-    uuid: string
-  }
+    uuid: string,
+  },
 };
 
 export type LogoutResponse = {
   data: {
-    message: string
-  }
+    message: string,
+  },
 };
 
 export type User = {
@@ -27,7 +27,7 @@ export type User = {
   lastname: string,
   enabled: boolean,
   tenant_uuid: string,
-  emails: Array<string>
+  emails: Array<string>,
 };
 
 export type Tenant = {
@@ -41,9 +41,9 @@ export type Tenant = {
     state: ?string,
     line_1: ?string,
     line_2: ?string,
-    zip_code: ?string
+    zip_code: ?string,
   }>,
-  parent_uuid: UUID
+  parent_uuid: UUID,
 };
 
 export type Group = {
@@ -55,30 +55,30 @@ export type Policy = {
   description: ?string,
   tenant_uuid: UUID,
   uuid: UUID,
-  name: string
+  name: string,
 };
 
 export type ListTenantsResponse = {
   filtered: number,
   total: number,
-  items: Array<Tenant>
+  items: Array<Tenant>,
 };
 
 export type ListUsersResponse = {
   filtered: number,
   total: number,
-  items: Array<User>
+  items: Array<User>,
 };
 
 export type ListGroupsResponse = {
   filtered: number,
   total: number,
-  items: Array<Group>
+  items: Array<Group>,
 };
 
 export type ListPoliciesResponse = {
   total: number,
-  items: Array<Policy>
+  items: Array<Policy>,
 };
 
 export type AccessdGroup = {
@@ -87,7 +87,7 @@ export type AccessdGroup = {
 
 export type Link = {
   href: string,
-  rel: string
+  rel: string,
 };
 
 export type Line = {
@@ -95,7 +95,7 @@ export type Line = {
   endpoint_sip: {
     id: number,
     username: string,
-    links: Array<Link>
+    links: Array<Link>,
   },
   endpoint_sccp: ?string,
   endpoint_custom: ?string,
@@ -103,8 +103,8 @@ export type Line = {
     id: number,
     exten: string,
     context: string,
-    links: Array<Link>
-  }>
+    links: Array<Link>,
+  }>,
 };
 
 export type ConfdUser = {
@@ -143,7 +143,7 @@ export type ConfdUser = {
     noanswer_destination: ?string,
     busy_destination: ?string,
     congestion_destination: ?string,
-    fail_destination: ?string
+    fail_destination: ?string,
   },
   groups: Array<AccessdGroup>,
   incalls: Array<Object>, // @TODO
@@ -151,34 +151,34 @@ export type ConfdUser = {
   forwards: {
     busy: {
       enable: boolean,
-      destination: ?string
+      destination: ?string,
     },
     noanswer: {
       enable: boolean,
-      destination: ?string
+      destination: ?string,
     },
     unconditional: {
       enable: boolean,
-      destination: ?string
-    }
+      destination: ?string,
+    },
   },
   schedules: [], // @TODO
   services: {
     dnd: {
-      enabled: boolean
+      enabled: boolean,
     },
     incallfilter: {
-      enabled: boolean
-    }
+      enabled: boolean,
+    },
   },
   switchboards: Array<Object>, // @TODO
   voicemail: ?string,
-  queues: Array<Object> // @TODO
+  queues: Array<Object>, // @TODO
 };
 
 export type ListConfdUsersResponse = {
   total: number,
-  items: Array<ConfdUser>
+  items: Array<ConfdUser>,
 };
 
 export type Application = {
@@ -188,19 +188,19 @@ export type Application = {
   destination: string,
   destination_options: {
     music_on_hold: string,
-    type: string
+    type: string,
   },
-  links: Array<Link>
+  links: Array<Link>,
 };
 
 export type ListApplicationsResponse = {
   total: number,
-  items: Array<Application>
+  items: Array<Application>,
 };
 
 export type Node = {
   uuid: UUID,
-  calls: Array<Object> // @TODO
+  calls: Array<Object>, // @TODO
 };
 
 export type CallNode = {
@@ -208,12 +208,12 @@ export type CallNode = {
 };
 
 export type ListNodesResponse = {
-  items: Array<Node>
+  items: Array<Node>,
 };
 
 export type ListCallNodesResponse = {
   uuid: UUID,
-  items: Array<CallNode>
+  items: Array<CallNode>,
 };
 
 export type GetTenantResponse = {
@@ -233,5 +233,5 @@ export type WebRtcConfig = {
   secret: string,
   tenant_uuid: string,
   type: string,
-  username: string
+  username: string,
 };

@@ -12,9 +12,9 @@ describe('Line domain', () => {
         links: [
           {
             href: 'https://demo.wazo.community/api/confd/1.1/endpoints/sip/19',
-            rel: 'endpoint_sip'
-          }
-        ]
+            rel: 'endpoint_sip',
+          },
+        ],
       },
       endpoint_sccp: null,
       endpoint_custom: null,
@@ -26,17 +26,17 @@ describe('Line domain', () => {
           links: [
             {
               href: 'https://demo.wazo.community/api/confd/1.1/extensions/59',
-              rel: 'extensions'
-            }
-          ]
-        }
+              rel: 'extensions',
+            },
+          ],
+        },
       ],
       links: [
         {
           href: 'https://demo.wazo.community/api/confd/1.1/lines/8',
-          rel: 'lines'
-        }
-      ]
+          rel: 'lines',
+        },
+      ],
     };
 
     const line = Line.parse(response);
@@ -52,11 +52,11 @@ describe('Line domain', () => {
             links: [
               {
                 href: 'https://demo.wazo.community/api/confd/1.1/extensions/59',
-                rel: 'extensions'
-              }
-            ]
-          }
-        ]
+                rel: 'extensions',
+              },
+            ],
+          },
+        ],
       })
     );
   });

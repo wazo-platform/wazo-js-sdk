@@ -9,7 +9,7 @@ type MessageResponse = {
   duration: number,
   id: string,
   folder?: Object,
-  timestamp: number
+  timestamp: number,
 };
 
 type Response = {
@@ -20,8 +20,8 @@ type Response = {
     id: string,
     name: string,
     type: string,
-    messages: Array<MessageResponse>
-  }>
+    messages: Array<MessageResponse>,
+  }>,
 };
 
 type VoicemailArguments = {
@@ -30,9 +30,9 @@ type VoicemailArguments = {
   duration: number,
   caller: {
     name: string,
-    number: string
+    number: string,
   },
-  unread?: ?boolean
+  unread?: ?boolean,
 };
 
 export default class Voicemail {
@@ -42,7 +42,7 @@ export default class Voicemail {
   unread: ?boolean;
   caller: {
     name: string,
-    number: string
+    number: string,
   };
 
   static parse(plain: MessageResponse): Voicemail {
@@ -52,9 +52,9 @@ export default class Voicemail {
       duration: plain.duration * 1000,
       caller: {
         name: plain.caller_id_name,
-        number: plain.caller_id_num
+        number: plain.caller_id_num,
       },
-      unread: plain.folder ? plain.folder.type === 'new' : null
+      unread: plain.folder ? plain.folder.type === 'new' : null,
     });
   }
 

@@ -4,7 +4,7 @@ import SIP from 'sip.js';
 
 import ApiClient from './api-client';
 import WebRTCClient from './web-rtc-client';
-import WebSocketClient, {SOCKET_EVENTS} from './websocket-client';
+import WebSocketClient, { SOCKET_EVENTS } from './websocket-client';
 import Emitter from './utils/Emitter';
 
 // Domain
@@ -13,6 +13,7 @@ import ServerError from './domain/ServerError';
 import Call from './domain/Call';
 import CallLog from './domain/CallLog';
 import ChatMessage from './domain/ChatMessage';
+import ChatRoom from './domain/ChatRoom';
 import Contact from './domain/Contact';
 import COUNTRIES from './domain/Country';
 import ForwardOption, { FORWARD_KEYS } from './domain/ForwardOption';
@@ -26,9 +27,10 @@ import type {
   ContactResponse as ContactResponseType,
   ContactsResponse as ContactsResponseType,
   ContactPersonalResponse as ContactPersonalResponseType,
-  ContactMobileResponse as ContactMobileResponseType
+  ContactMobileResponse as ContactMobileResponseType,
 } from './domain/Contact';
 import type { Phone as PhoneType, PhoneEventCallbacks as PhoneEventCallbacksType } from './domain/Phone/Phone';
+import type { ChatUser as ChatUserType } from './domain/ChatMessage';
 import DebugPhone from './domain/Phone/DebugPhone';
 import type { Device as DeviceType } from './domain/Device/Device';
 import DebugDevice from './domain/Device/DebugDevice';
@@ -37,7 +39,7 @@ import {
   PhoneNumberFormat,
   AsYouTypeFormatter,
   getDisplayableNumber,
-  getCallableNumber
+  getCallableNumber,
 } from './utils/PhoneNumberUtil';
 
 export type NewContact = NewContactType;
@@ -48,6 +50,7 @@ export type ContactMobileResponse = ContactMobileResponseType;
 export type Phone = PhoneType;
 export type PhoneEventCallbacks = PhoneEventCallbacksType;
 export type Device = DeviceType;
+export type ChatUser = ChatUserType;
 
 export default {
   Emitter,
@@ -65,6 +68,7 @@ export default {
   Call,
   CallLog,
   ChatMessage,
+  ChatRoom,
   Contact,
   COUNTRIES,
   ForwardOption,
@@ -79,5 +83,5 @@ export default {
   PROFILE_STATE,
   FORWARD_KEYS,
   LINE_STATE,
-  SOCKET_EVENTS
+  SOCKET_EVENTS,
 };

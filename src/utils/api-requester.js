@@ -55,7 +55,7 @@ export default class ApiRequester {
     return {
       'X-Auth-Token': header,
       Accept: 'application/json',
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     };
   }
 
@@ -102,7 +102,7 @@ export default class ApiRequester {
       method,
       body: newBody,
       headers: headers ? ApiRequester.getHeaders(headers) : {},
-      agent: this.agent
+      agent: this.agent,
     };
 
     return realFetch()(url, options).then(response => {

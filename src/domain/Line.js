@@ -5,19 +5,19 @@ type Extension = {
   context: string,
   exten: string,
   id: number,
-  links?: Array<{ href: string, rel: string }>
+  links?: Array<{ href: string, rel: string }>,
 };
 
 type LineResponse = {
   endpoint_custom: ?string,
   endpoint_sccp: ?string,
   extensions: Array<Extension>,
-  id: number
+  id: number,
 };
 
 type LineArguments = {
   id: number,
-  extensions: Array<Extension>
+  extensions: Array<Extension>,
 };
 
 export default class Line {
@@ -27,7 +27,7 @@ export default class Line {
   static parse(plain: LineResponse): Line {
     return new Line({
       id: plain.id,
-      extensions: plain.extensions
+      extensions: plain.extensions,
     });
   }
 

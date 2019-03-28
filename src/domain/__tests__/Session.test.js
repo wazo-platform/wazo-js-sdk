@@ -40,7 +40,7 @@ describe('Session domain', () => {
           'events.users.me.#',
           'events.directory.me.#',
           'websocketd',
-          'call-logd.users.me.cdr.read'
+          'call-logd.users.me.cdr.read',
         ],
         utc_expires_at: '2017-07-19T21:27:53.086990',
         xivo_uuid: '6cd695d2-cdb9-4444-8b2d-27425ab85fa8',
@@ -48,11 +48,11 @@ describe('Session domain', () => {
         utc_issued_at: '2017-07-19T20:27:53.086990',
         auth_id: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54',
         metadata: {
-          uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54'
+          uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54',
         },
         expires_at: '2017-07-19T17:27:53.086990',
-        xivo_user_uuid: null
-      }
+        xivo_user_uuid: null,
+      },
     };
 
     const session = Session.parse(plain);
@@ -61,7 +61,7 @@ describe('Session domain', () => {
       new Session({
         token: 'b93ae6bd-08d7-4001-9e61-057e72bbc4b3',
         uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54',
-        expiresAt: new Date('2017-07-19T21:27:53.086990z')
+        expiresAt: new Date('2017-07-19T21:27:53.086990z'),
       })
     );
   });
@@ -75,10 +75,10 @@ describe('Session domain', () => {
         profile: new Profile({
           voicemail: {
             id: 1234,
-            name: 'inbox'
-          }
+            name: 'inbox',
+          },
         }),
-        expiresAt: A_DATE
+        expiresAt: A_DATE,
       });
 
       expect(session.hasAccessToVoicemail()).toBeTruthy();
@@ -93,10 +93,10 @@ describe('Session domain', () => {
             profile: new Profile({
               lines: [
                 new Line({ id: 9012, extensions: [{ id: 1, exten: '8000', context: 'default' }] }),
-                new Line({ id: 3421, extensions: [{ id: 2, exten: '9980', context: 'internal' }] })
-              ]
+                new Line({ id: 3421, extensions: [{ id: 2, exten: '9980', context: 'internal' }] }),
+              ],
             }),
-            expiresAt: A_DATE
+            expiresAt: A_DATE,
           });
 
           expect(session.allNumbers().length).toBeGreaterThan(1);
@@ -108,9 +108,9 @@ describe('Session domain', () => {
             token: 'ref-12345',
             uuid: '1234',
             profile: new Profile({
-              lines: [new Line({ id: 9012, extensions: [{ id: 1, exten: '8000', context: 'default' }] })]
+              lines: [new Line({ id: 9012, extensions: [{ id: 1, exten: '8000', context: 'default' }] })],
             }),
-            expiresAt: A_DATE
+            expiresAt: A_DATE,
           });
 
           expect(session.allNumbers().length).toEqual(1);
@@ -123,9 +123,9 @@ describe('Session domain', () => {
         token: 'ref-12345',
         uuid: '1234',
         profile: new Profile({
-          voicemail: undefined
+          voicemail: undefined,
         }),
-        expiresAt: A_DATE
+        expiresAt: A_DATE,
       });
 
       expect(session.hasAccessToVoicemail()).toBeFalsy();
@@ -135,7 +135,7 @@ describe('Session domain', () => {
       const session = new Session({
         token: 'ref-12345',
         uuid: '1234',
-        expiresAt: A_DATE
+        expiresAt: A_DATE,
       });
 
       expect(session.hasAccessToVoicemail()).toBeFalsy();
@@ -149,7 +149,7 @@ describe('Session domain', () => {
       const session = new Session({
         token: 'ref-12345',
         uuid: '1234',
-        expiresAt: EXPIRATION_DATE
+        expiresAt: EXPIRATION_DATE,
       });
       const currentDate = new Date(2006, 5, 6, 14, 30, 1);
 
@@ -160,7 +160,7 @@ describe('Session domain', () => {
       const session = new Session({
         token: 'ref-12345',
         uuid: '1234',
-        expiresAt: EXPIRATION_DATE
+        expiresAt: EXPIRATION_DATE,
       });
       const currentDate = new Date(2006, 5, 6, 14, 32, 0);
 
@@ -171,7 +171,7 @@ describe('Session domain', () => {
       const session = new Session({
         token: 'ref-12345',
         uuid: '1234',
-        expiresAt: EXPIRATION_DATE
+        expiresAt: EXPIRATION_DATE,
       });
       const currentDate = new Date(2006, 5, 6, 14, 29, 0);
 
@@ -186,10 +186,10 @@ describe('Session domain', () => {
       profile: new Profile({
         lines: [
           new Line({ id: 9012, extensions: [{ id: 1, exten: '8000', context: 'default' }] }),
-          new Line({ id: 3421, extensions: [{ id: 2, exten: '9980', context: 'internal' }] })
-        ]
+          new Line({ id: 3421, extensions: [{ id: 2, exten: '9980', context: 'internal' }] }),
+        ],
       }),
-      expiresAt: new Date(9999, 0, 1)
+      expiresAt: new Date(9999, 0, 1),
     });
 
     it('should return true given it owns the extension', () => {

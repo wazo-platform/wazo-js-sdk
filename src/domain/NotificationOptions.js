@@ -3,12 +3,12 @@ import newFrom from '../utils/new-from';
 
 type NotificationOptionResponse = {
   sound: boolean,
-  vibration: boolean
+  vibration: boolean,
 };
 
 type NotificationOptionsArguments = {
   sound: boolean,
-  vibration: boolean
+  vibration: boolean,
 };
 
 export default class NotificationOptions {
@@ -22,7 +22,7 @@ export default class NotificationOptions {
 
     return new NotificationOptions({
       sound: plain.sound,
-      vibration: plain.vibration
+      vibration: plain.vibration,
     });
   }
 

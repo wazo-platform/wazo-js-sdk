@@ -12,7 +12,7 @@ export type NewContact = {
   address: ?string,
   entreprise: ?string,
   birthday: ?string,
-  note: ?string
+  note: ?string,
 };
 
 export type ContactResponse = {
@@ -24,15 +24,15 @@ export type ContactResponse = {
     agent_id: ?number,
     endpoint_id: number,
     user_uuid: string,
-    source_entry_id: string
-  }
+    source_entry_id: string,
+  },
 };
 
 export type ContactsResponse = {
   column_types: Array<?string>,
   term: string,
   column_headers: Array<string>,
-  results: Array<ContactResponse>
+  results: Array<ContactResponse>,
 };
 
 export type ContactPersonalResponse = {
@@ -49,7 +49,7 @@ export type ContactPersonalResponse = {
   note: ?string,
   // @TODO: legacy ?
   firstname: ?string,
-  lastname: ?string
+  lastname: ?string,
 };
 
 // @see: https://github.com/rt2zz/react-native-contacts#example-contact-record
@@ -58,7 +58,7 @@ export type ContactMobileResponse = {
   company: string,
   emailAddresses: Array<{
     label: string,
-    email: string
+    email: string,
   }>,
   givenName: string,
   familyName: string,
@@ -67,11 +67,11 @@ export type ContactMobileResponse = {
   note: string,
   urlAddresses: Array<{
     label: string,
-    url: string
+    url: string,
   }>,
   phoneNumbers: Array<{
     label: string,
-    number: string
+    number: string,
   }>,
   hasThumbnail: boolean,
   thumbnailPath: string,
@@ -82,13 +82,13 @@ export type ContactMobileResponse = {
     region: string,
     postCode: string,
     country: string,
-    label: string
+    label: string,
   }>,
   birthday: {
     year: number,
     month: number,
-    day: number
-  }
+    day: number,
+  },
 };
 
 type ContactArguments = {
@@ -111,7 +111,7 @@ type ContactArguments = {
   sourceId?: string,
   status?: string,
   endpointId?: number,
-  uuid?: string
+  uuid?: string,
 };
 
 const SOURCE_MOBILE = 'mobile';
@@ -180,7 +180,7 @@ export default class Contact {
       personal: plain.column_values[columns.indexOf('personal')],
       source: plain.source,
       sourceId: plain.relations.source_entry_id,
-      uuid: plain.relations.user_uuid
+      uuid: plain.relations.user_uuid,
     });
   }
 
@@ -202,7 +202,7 @@ export default class Contact {
       address: plain.address || '',
       note: plain.note || '',
       favorited: false,
-      personal: true
+      personal: true,
     });
   }
 
@@ -226,7 +226,7 @@ export default class Contact {
       address,
       note: plain.note || '',
       favorited: false,
-      personal: true
+      personal: true,
     });
   }
 
@@ -252,7 +252,7 @@ export default class Contact {
     status,
     endpointId,
     personal,
-    favorited
+    favorited,
   }: ContactArguments = {}) {
     this.id = id;
     this.uuid = uuid;
@@ -347,7 +347,7 @@ export default class Contact {
     if (!this.name) {
       return {
         firstName: '',
-        lastName: ''
+        lastName: '',
       };
     }
     const names = this.name.split(/\s+/);
@@ -356,7 +356,7 @@ export default class Contact {
 
     return {
       firstName,
-      lastName
+      lastName,
     };
   }
 }

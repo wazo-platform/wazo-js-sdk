@@ -15,13 +15,13 @@ type CallLogResponse = {
   id: number,
   source_extension: string,
   source_name: string,
-  start: string
+  start: string,
 };
 
 type Response = {
   filtered: number,
   items: Array<CallLogResponse>,
-  total: number
+  total: number,
 };
 
 type CallLogArguments = {
@@ -31,16 +31,16 @@ type CallLogArguments = {
   callDirection: string,
   destination: {
     extension: string,
-    name: string
+    name: string,
   },
   source: {
     extension: string,
-    name: string
+    name: string,
   },
   id: number,
   duration: number,
   start: Date,
-  end: Date
+  end: Date,
 };
 
 export default class CallLog {
@@ -50,12 +50,12 @@ export default class CallLog {
   callDirection: string;
   destination: {
     extension: string,
-    name: string
+    name: string,
   };
 
   source: {
     extension: string,
-    name: string
+    name: string,
   };
 
   id: number;
@@ -83,16 +83,16 @@ export default class CallLog {
       callDirection: plain.call_direction,
       destination: {
         extension: plain.destination_extension,
-        name: plain.destination_name || ''
+        name: plain.destination_name || '',
       },
       source: {
         extension: plain.source_extension,
-        name: plain.source_name
+        name: plain.source_name,
       },
       id: plain.id,
       duration: (plain.duration || 0) * 1000, // duration is in seconds
       start: moment(plain.start).toDate(),
-      end: moment(plain.end).toDate()
+      end: moment(plain.end).toDate(),
     });
   }
 
@@ -103,18 +103,18 @@ export default class CallLog {
       callDirection: plain.call_direction,
       destination: {
         extension: plain.destination_extension,
-        name: plain.destination_name || ''
+        name: plain.destination_name || '',
       },
       source: {
         extension: plain.source_extension,
-        name: plain.source_name
+        name: plain.source_name,
       },
       id: plain.id,
       duration: (plain.duration || 0) * 1000, // duration is in seconds
       start: moment(plain.start).toDate(),
       end: moment(plain.end).toDate(),
       // @TODO: FIXME add verification declined vs missed call
-      newMissedCall: session.hasExtension(plain.destination_extension) && !plain.answered
+      newMissedCall: session.hasExtension(plain.destination_extension) && !plain.answered,
     });
   }
 
@@ -131,7 +131,7 @@ export default class CallLog {
     id,
     duration,
     start,
-    end
+    end,
   }: CallLogArguments = {}) {
     this.answer = answer;
     this.answered = answered;

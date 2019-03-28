@@ -33,7 +33,7 @@
     "lint": "./node_modules/.bin/eslint src/",
     "jest": "./node_modules/.bin/jest",
     "checkbuild": "npm run build && node dist/wazo-sdk.js",
-    "format": "./node_modules/.bin/prettier-eslint --write \"src/**/*.js\" \"__tests__/**/*.js\" --single-quote",
+    "format": "./node_modules/.bin/prettier-eslint --write \"src/**/*.js\" \"__tests__/**/*.js\" --single-quote --trailing-comma es5",
     "typecheck": "./node_modules/.bin/flow",
     "fetch-typedefs": "./node_modules/.bin/flow-typed install",
     "prepublishOnly": "npm run build"

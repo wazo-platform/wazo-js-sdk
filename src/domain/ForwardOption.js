@@ -4,19 +4,19 @@ import newFrom from '../utils/new-from';
 
 type Response = {
   destination: string,
-  enabled: boolean
+  enabled: boolean,
 };
 
 export const FORWARD_KEYS = {
   BUSY: 'busy',
   NO_ANSWER: 'noanswer',
-  UNCONDITIONAL: 'unconditional'
+  UNCONDITIONAL: 'unconditional',
 };
 
 type ForwardOptionArguments = {
   destination: string,
   enabled: boolean,
-  key: string
+  key: string,
 };
 
 export default class ForwardOption {
@@ -28,7 +28,7 @@ export default class ForwardOption {
     return new ForwardOption({
       destination: plain.destination || '',
       enabled: plain.enabled,
-      key
+      key,
     });
   }
 

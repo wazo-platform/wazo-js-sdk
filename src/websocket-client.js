@@ -5,13 +5,13 @@ import Emitter from './utils/Emitter';
 export const SOCKET_EVENTS = {
   ON_OPEN: 'onopen',
   ON_ERROR: 'onerror',
-  ON_CLOSE: 'onclose'
+  ON_CLOSE: 'onclose',
 };
 
 type WebSocketClientArguments = {
   host: string,
   token: string,
-  events: Array<string>
+  events: Array<string>,
 };
 
 class WebSocketClient extends Emitter {
@@ -94,7 +94,7 @@ class WebSocketClient extends Emitter {
         this.events.forEach(event => {
           const op = {
             op: 'subscribe',
-            data: { event_name: event }
+            data: { event_name: event },
           };
 
           sock.send(JSON.stringify(op));
@@ -136,6 +136,8 @@ WebSocketClient.eventLists = [
   'auth_user_external_auth_added',
   'auth_user_external_auth_deleted',
   'chatd_presence_updated',
+  'chatd_user_room_message_created',
+  'chatd_user_room_created',
   'conference_user_participant_joined',
   'conference_user_participant_left',
   'switchboard_queued_calls_updated',

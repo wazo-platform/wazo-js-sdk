@@ -20,5 +20,5 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client
       .get(`${baseUrl}/users/me/cdr`, { from: from.toISOString(), number }, token)
       .then(response => CallLog.parseMany(response));
-  }
+  },
 });

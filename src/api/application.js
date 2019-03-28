@@ -23,7 +23,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
           .post(`${url}/${nodeUuid}/calls`, { context, exten, autoanswer, displayed_caller_id_number }, token)
           .then(data => ({
             nodeUuid,
-            data
+            data,
           }))
       );
   },
@@ -73,5 +73,5 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   removeCallNodes(token: Token, applicationUuid: string, nodeUuid: string, callId: string) {
     return client.delete(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}/calls/${callId}`, null, token);
-  }
+  },
 });
