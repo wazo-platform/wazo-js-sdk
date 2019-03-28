@@ -113,6 +113,6 @@ export default (client: ApiRequester, baseUrl: string) => ({
     };
     const params = ApiRequester.getQueryString({ extension, caller_id: callerId });
 
-    return client.post(`${baseUrl}/users/me/faxes?${params}`, fax, token, headers);
+    return client.post(`${baseUrl}/users/me/faxes?${params}`, fax, headers);
   }
 });
