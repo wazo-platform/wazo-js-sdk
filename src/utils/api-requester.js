@@ -94,7 +94,9 @@ export default class ApiRequester {
     parse: Function = ApiRequester.defaultParser
   ): Promise<any> {
     const url = this.computeUrl(method, path, body);
-    const newBody = body && method !== 'get' ? JSON.stringify(body) : null;
+    const newHeaders = headers ? ApiRequester.getHeaders(headers) : {};
+    const newBody =
+      body && method !== 'get' && newHeaders['Content-Type'] === 'application/json' ? JSON.stringify(body) : null;
     const isHead = method === 'head';
     const hasEmptyResponse = method === 'delete' || isHead;
     const newParse = hasEmptyResponse ? ApiRequester.successResponseParser : parse;
