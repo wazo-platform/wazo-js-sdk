@@ -144,6 +144,9 @@ WebSocketClient.eventLists = [
   'switchboard_queued_call_answered',
   'switchboard_held_calls_updated',
   'switchboard_held_call_answered',
+  'fax_outbound_user_created',
+  'fax_outbound_user_succeeded',
+  'fax_outbound_user_failed',
 ];
 
 export default WebSocketClient;
