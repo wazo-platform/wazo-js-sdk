@@ -45,6 +45,7 @@ export default class ChatMessage {
       content: plain.content,
       alias: plain.alias,
       userUuid: plain.user_uuid,
+      read: true,
       roomUuid,
     });
   }
@@ -53,7 +54,7 @@ export default class ChatMessage {
     return newFrom(message, ChatMessage);
   }
 
-  constructor({ uuid, date, content, userUuid, alias, roomUuid }: Object = {}) {
+  constructor({ uuid, date, content, userUuid, alias, roomUuid, read }: Object = {}) {
     this.uuid = uuid;
     this.date = date;
     this.content = content;
@@ -62,7 +63,7 @@ export default class ChatMessage {
     this.roomUuid = roomUuid;
 
     // @TODO: change after message read status available
-    this.read = true;
+    this.read = read;
   }
 
   is(other: ChatMessage) {
@@ -71,5 +72,11 @@ export default class ChatMessage {
 
   isIncoming(userUuid: string) {
     return this.userUuid !== userUuid;
+  }
+
+  acknowledge() {
+    // @TODO: change after message read status available
+    this.read = true;
+    return this;
   }
 }
