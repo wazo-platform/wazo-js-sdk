@@ -110,19 +110,16 @@ export default class WebRTCClient extends Emitter {
     const userAgent = new SIP.UA(webRTCConfiguration);
 
     events
-      .filter(eventName => eventName !== 'invite')
-      .forEach(eventName => {
-        userAgent.on(eventName, event => {
-          this.eventEmitter.emit(eventName, event);
-        });
-      });
+      .filter(eventName => eventName !== 'invite' && eventName !== 'new')
+      .forEach(eventName => userAgent.on(eventName, event => this.eventEmitter.emit(eventName, event)));
 
     // Particular case for `invite` event
     userAgent.on('invite', (session: SIP.sessionDescriptionHandler) => {
       this._setupSession(session);
       this._fixLocalDescription(session, 'answer');
+      const shouldAutoAnswer = !!session.request.getHeader('alert-info');
 
-      this.eventEmitter.emit('invite', session, this.sessionWantsToDoVideo(session));
+      this.eventEmitter.emit('invite', session, this.sessionWantsToDoVideo(session), shouldAutoAnswer);
     });
 
     transportEvents.forEach(eventName => {
