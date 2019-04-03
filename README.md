@@ -181,7 +181,7 @@ const phone = new WazoWebRTCClient({
 // eventName can be on the of events : 
 // - transport: `connected`, `disconnected`, `transportError`, `message`, `closed`, `keepAliveDebounceTimeout`
 // - webrtc: `registered`, `unregistered`, `registrationFailed`, `invite`, `inviteSent`, `transportCreated`, `newTransaction`, `transactionDestroyed`, `notify`, `outOfDialogReferRequested`, `message`.
-phone.on('invite', (session: SIP.sessionDescriptionHandler) => {
+phone.on('invite', (session: SIP.sessionDescriptionHandler, hasVideo: boolean, shouldAutoAnswer: boolean) => {
   this.currentSession = session;
   // ...
 });
