@@ -127,6 +127,7 @@ describe('Contact domain', () => {
         {
           source: 'internal',
           column_values: ['Jonathan Lessard', '8020', null, null, false, 'contact@nexapp.ca', false],
+          backend: 'wazo',
           relations: {
             user_id: 8,
             xivo_id: '6cd695d2-cdb9-4444-8b2d-27425ab85fa8',
@@ -158,6 +159,7 @@ describe('Contact domain', () => {
         source: 'internal',
         sourceId: '8',
         uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54',
+        backend: 'wazo',
       })
     );
   });

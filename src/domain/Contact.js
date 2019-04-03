@@ -17,6 +17,7 @@ export type NewContact = {
 
 export type ContactResponse = {
   source: string,
+  backend: string,
   column_values: Array<any>,
   relations: {
     user_id: number,
@@ -50,6 +51,7 @@ export type ContactPersonalResponse = {
   // @TODO: legacy ?
   firstname: ?string,
   lastname: ?string,
+  backend: ?string,
 };
 
 // @see: https://github.com/rt2zz/react-native-contacts#example-contact-record
@@ -112,6 +114,7 @@ type ContactArguments = {
   status?: string,
   endpointId?: number,
   uuid?: string,
+  backend?: string,
 };
 
 const SOURCE_MOBILE = 'mobile';
@@ -135,6 +138,7 @@ export default class Contact {
   source: ?string;
   sourceId: string;
   status: ?string;
+  backend: ?string;
 
   static merge(oldContacts: Array<Contact>, newContacts: Array<Contact>): Array<Contact> {
     return newContacts.map(current => {
@@ -181,6 +185,7 @@ export default class Contact {
       source: plain.source,
       sourceId: plain.relations.source_entry_id,
       uuid: plain.relations.user_uuid,
+      backend: plain.backend || '',
     });
   }
 
@@ -203,6 +208,7 @@ export default class Contact {
       note: plain.note || '',
       favorited: false,
       personal: true,
+      backend: plain.backend || '',
     });
   }
 
@@ -253,6 +259,7 @@ export default class Contact {
     endpointId,
     personal,
     favorited,
+    backend,
   }: ContactArguments = {}) {
     this.id = id;
     this.uuid = uuid;
@@ -272,6 +279,7 @@ export default class Contact {
     this.endpointId = endpointId;
     this.personal = personal;
     this.favorited = favorited;
+    this.backend = backend;
   }
 
   setFavorite(value: boolean) {
