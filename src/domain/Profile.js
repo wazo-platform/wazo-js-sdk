@@ -3,6 +3,7 @@
 import Line from './Line';
 import ForwardOption, { FORWARD_KEYS } from './ForwardOption';
 import newFrom from '../utils/new-from';
+import type { Endpoint } from "./Line";
 
 export const PRESENCE = {
   AVAILABLE: 'available',
@@ -34,8 +35,9 @@ type ProfileResponse = {
   lines: Array<{
     id: number,
     extensions: Array<{ id: number, exten: string, context: string, links?: Array<{ href: string, rel: string }> }>,
-    endpoint_custom?: ?string,
-    endpoint_sccp?: ?string,
+    endpoint_custom?: Endpoint | null,
+    endpoint_sccp?: Endpoint | null,
+    endpoint_sip?: Endpoint | null,
   }>,
   id: number,
   username: string,
