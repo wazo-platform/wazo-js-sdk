@@ -57,6 +57,16 @@ describe('Line domain', () => {
             ],
           },
         ],
+        endpointSip: {
+          id: 19,
+          links: [
+            {
+              href: "https://demo.wazo.community/api/confd/1.1/endpoints/sip/19",
+              rel: 'endpoint_sip'
+            }
+          ],
+          username: "ipcor1pj"
+        }
       })
     );
   });

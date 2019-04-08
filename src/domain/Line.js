@@ -8,9 +8,10 @@ type Extension = {
   links?: Array<{ href: string, rel: string }>,
 };
 
-type Endpoint = {
+export type Endpoint = {
   id: number,
-  links: Array<{href: string, rel: string}>
+  links: Array<{href: string, rel: string}>,
+  username?: string
 }
 
 type LineResponse = {
@@ -24,9 +25,9 @@ type LineResponse = {
 type LineArguments = {
   id: number,
   extensions: Array<Extension>,
-  endpointCustom: ?Endpoint,
-  endpointSccp: ?Endpoint,
-  endpointSip: ?Endpoint,
+  endpointCustom?: Endpoint | null,
+  endpointSccp?: Endpoint | null,
+  endpointSip?: Endpoint | null,
 };
 
 export default class Line {
