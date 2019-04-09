@@ -37,9 +37,13 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
 
   makeCall(token: Token, extension: string, fromMobile: boolean, lineId: ?number) {
+    const matchAllButDigitsAndPlus = new RegExp('[\\D+]+', 'g');
+
+    const cleanedExtension = extension.replace(matchAllButDigitsAndPlus, '');
+
     const query: CallQuery = {
       from_mobile: fromMobile,
-      extension,
+      extension: cleanedExtension,
     };
 
     if (lineId) {
