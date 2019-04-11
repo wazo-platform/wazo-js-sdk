@@ -1,4 +1,5 @@
 /* @flow */
+import LibPhoneNumber from "google-libphonenumber";
 import ApiRequester from '../utils/api-requester';
 import type { UUID, Token, RequestError } from '../domain/types';
 import ChatMessage from '../domain/ChatMessage';
@@ -37,6 +38,13 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
 
   makeCall(token: Token, extension: string, fromMobile: boolean, lineId: ?number) {
+    const PhoneNumberUtil = LibPhoneNumber.PhoneNumberUtil.getInstance();
+    console.log('original extension', extension);
+    const parsed = PhoneNumberUtil.parse(extension, 'US');
+    console.log('parsed', JSON.stringify(parsed, null, 2));
+    const formatted = PhoneNumberUtil.format(parsed, LibPhoneNumber.PhoneNumberFormat.E164);
+    console.log('formatted', formatted, null, 2);
+
     const matchAllButDigitsAndPlus = new RegExp('[\\D+]+', 'g');
 
     const cleanedExtension = extension.replace(matchAllButDigitsAndPlus, '');
