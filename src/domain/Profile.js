@@ -83,6 +83,7 @@ type ProfileArguments = {
   forwards: Array<ForwardOption>,
   doNotDisturb?: boolean,
   presence?: string,
+  status: string,
   subscriptionType: ?number,
   voicemail?: {
     id: number,
@@ -103,6 +104,7 @@ export default class Profile {
   doNotDisturb: ?boolean;
   presence: ?string;
   voicemail: ?{ id: number, name: string };
+  status: string;
   subscriptionType: ?number;
   switchboards: Array<any>;
 
@@ -124,6 +126,7 @@ export default class Profile {
       subscriptionType: plain.subscription_type,
       voicemail: plain.voicemail,
       switchboards: plain.switchboards || [],
+      status: '',
     });
   }
 
@@ -145,6 +148,7 @@ export default class Profile {
     subscriptionType,
     voicemail,
     switchboards,
+    status,
   }: $Shape<ProfileArguments> = {}) {
     this.id = id;
     this.firstName = firstName;
@@ -159,6 +163,7 @@ export default class Profile {
     this.voicemail = voicemail;
     this.subscriptionType = subscriptionType;
     this.switchboards = switchboards;
+    this.status = status;
   }
 
   static getLinesState(lines: Array<Object>) {
