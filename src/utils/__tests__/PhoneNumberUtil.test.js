@@ -1,4 +1,4 @@
-import { getDisplayableNumber } from '../PhoneNumberUtil';
+import { getDisplayableNumber, getCallableNumber } from '../PhoneNumberUtil';
 
 describe('Formatting phone numbers', () => {
   it('should not format all phone numbers', () => {
@@ -19,5 +19,22 @@ describe('Formatting phone numbers', () => {
     expect(getDisplayableNumber('067545', 'FR', true)).toBe('06 75 45');
     expect(getDisplayableNumber('+3367545', 'US', true)).toBe('+33 6 75 45');
     expect(getDisplayableNumber('067545', 'US', true)).toBe('067-545');
+  });
+});
+
+describe('getCallableNumber', () => {
+  it('works with a country', () => {
+    expect(getCallableNumber('+33 6 75 45 12 34', 'FR')).toBe('0675451234');
+    expect(getCallableNumber('06 75 45 12 34', 'FR')).toBe('0675451234');
+    expect(getCallableNumber('+1-202-555-0147', 'US')).toBe('2025550147');
+    expect(getCallableNumber('202-555-0113', 'US')).toBe('2025550113');
+    expect(getCallableNumber('8008', 'US')).toBe('8008');
+    expect(getCallableNumber('80.08', 'US')).toBe('8008');
+  });
+  it('works without a country', () => {
+    expect(getCallableNumber('06 75 45')).toBe('067545');
+    expect(getCallableNumber('067-545')).toBe('067545');
+    expect(getCallableNumber('8008')).toBe('8008');
+    expect(getCallableNumber('80.08')).toBe('8008');
   });
 });
