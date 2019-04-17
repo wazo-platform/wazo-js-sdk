@@ -41,6 +41,7 @@ import {
   getDisplayableNumber,
   getCallableNumber,
 } from './utils/PhoneNumberUtil';
+import type { Source as SourceType, Sources as SourcesType } from "./domain/Source";
 
 export type NewContact = NewContactType;
 export type ContactResponse = ContactResponseType;
@@ -51,6 +52,8 @@ export type Phone = PhoneType;
 export type PhoneEventCallbacks = PhoneEventCallbacksType;
 export type Device = DeviceType;
 export type ChatUser = ChatUserType;
+export type Source = SourceType;
+export type Sources = SourcesType;
 
 export default {
   Emitter,
