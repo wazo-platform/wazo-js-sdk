@@ -5,7 +5,7 @@ const PhoneNumberUtil = LibPhoneNumber.PhoneNumberUtil.getInstance();
 const { PhoneNumberFormat, AsYouTypeFormatter } = LibPhoneNumber;
 
 // eslint-disable-next-line
-const EXTRA_CHAR_REGEXP = /\(|\)|\-|\s/g;
+const EXTRA_CHAR_REGEXP = /[^+\d]/g;
 
 const shouldBeFormatted = (number: ?string) => {
   if (!number || number.length <= 5) {
@@ -36,7 +36,7 @@ const getDisplayableNumber = (number: string, country: string, asYouType: boolea
   return displayValue;
 };
 
-const parsePhoneNumber = (phoneNumber: string): string => phoneNumber.replace(/[^+\d]/g, '');
+const parsePhoneNumber = (phoneNumber: string): string => phoneNumber.replace(EXTRA_CHAR_REGEXP, '');
 
 const getCallableNumber = (number: string, country: ?string): string => {
   if (country) {
