@@ -115,6 +115,7 @@ type ContactArguments = {
   endpointId?: number,
   uuid?: string,
   backend?: string,
+  personalStatus?: string,
 };
 
 const SOURCE_MOBILE = 'mobile';
@@ -139,6 +140,7 @@ export default class Contact {
   sourceId: string;
   status: ?string;
   backend: ?string;
+  personalStatus: string;
 
   static merge(oldContacts: Array<Contact>, newContacts: Array<Contact>): Array<Contact> {
     return newContacts.map(current => {
@@ -260,6 +262,7 @@ export default class Contact {
     personal,
     favorited,
     backend,
+    personalStatus,
   }: ContactArguments = {}) {
     this.id = id;
     this.uuid = uuid;
@@ -280,6 +283,7 @@ export default class Contact {
     this.personal = personal;
     this.favorited = favorited;
     this.backend = backend;
+    this.personalStatus = personalStatus || '';
   }
 
   setFavorite(value: boolean) {
