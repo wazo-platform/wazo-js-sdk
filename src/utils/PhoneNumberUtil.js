@@ -36,7 +36,20 @@ const getDisplayableNumber = (number: string, country: string, asYouType: boolea
   return displayValue;
 };
 
-const getCallableNumber = (number: string, country: string): string =>
-  getDisplayableNumber(number, country).replace(EXTRA_CHAR_REGEXP, '');
+const parsePhoneNumber = (phoneNumber: string): string => phoneNumber.replace(/[^+\d]/g, '');
 
-export { PhoneNumberUtil, PhoneNumberFormat, AsYouTypeFormatter, getDisplayableNumber, getCallableNumber };
+const getCallableNumber = (number: string, country: ?string): string => {
+  if (country) {
+    return getDisplayableNumber(number, country).replace(EXTRA_CHAR_REGEXP, '');
+  }
+  return parsePhoneNumber(number);
+};
+
+export {
+  PhoneNumberUtil,
+  PhoneNumberFormat,
+  parsePhoneNumber,
+  AsYouTypeFormatter,
+  getDisplayableNumber,
+  getCallableNumber
+};
