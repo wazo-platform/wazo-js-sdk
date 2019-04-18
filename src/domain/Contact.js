@@ -159,6 +159,16 @@ type Office365Response = {
   yomiSurname: any,
 }
 
+type WazoResponse = {
+  email: string,
+  exten: string,
+  firstname: string,
+  lastname: string,
+  mobile_phone_number: any,
+  uuid: string,
+  voicemail_number: any,
+}
+
 const SOURCE_MOBILE = 'mobile';
 
 export default class Contact {
@@ -308,6 +318,33 @@ export default class Contact {
         emails,
       source: 'office365',
       backend: 'office365',
+    });
+  }
+
+  static parseManyWazo(response: WazoResponse[]): Array<Contact> {
+    return response.map(r => Contact.parseWazo(r));
+  }
+
+  static parseWazo(single: WazoResponse): Contact {
+    const emails = [];
+    const numbers = [];
+
+    if (single.email) {
+      emails.push({label: 'email', email: single.email});
+    }
+
+    if (single.mobile_phone_number) {
+      numbers.push({label: 'mobile', email: single.mobile_phone_number});
+    }
+
+    return new Contact({
+      uuid: single.uuid,
+      sourceId: single.uuid,
+      name: `${single.firstname} ${single.lastname}`,
+      numbers,
+      emails,
+      source: 'wazo',
+      backend: 'wazo',
     });
   }
 

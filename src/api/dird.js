@@ -70,4 +70,16 @@ export default (client: ApiRequester, baseUrl: string) => ({
         .get(`${baseUrl}/backends/office365/sources/${sourceUUid}/contacts`, null, token)
         .then(response => Contact.parseManyOffice365(response.items));
   },
+
+  fetchWazoSource(token: Token, context: string): Promise<Sources> {
+    return client
+        .get(`${baseUrl}/directories/${context}/sources`, {backend: 'wazo'}, token)
+        .then(response => response);
+  },
+
+  fetchWazoContacts(token: Token, sourceUUid: UUID): Promise<Contact[]> {
+    return client
+        .get(`${baseUrl}/backends/wazo/sources/${sourceUUid}/contacts`, null, token)
+        .then(response => Contact.parseManyWazo(response.items));
+  },
 });
