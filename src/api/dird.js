@@ -3,7 +3,7 @@ import ApiRequester from '../utils/api-requester';
 import type { UUID, Token } from '../domain/types';
 import Contact from '../domain/Contact';
 import type { NewContact } from '../domain/Contact';
-import type { Sources } from "../domain/Source";
+import type { DirectorySources } from "../domain/DirectorySource";
 
 const getContactPayload = (contact: NewContact | Contact) => ({
   email: contact.email,
@@ -59,7 +59,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.delete(`${baseUrl}/directories/favorites/${source}/${sourceId}`, null, token);
   },
 
-  fetchOffice365Source(token: Token, context: string): Promise<Sources> {
+  fetchOffice365Source(token: Token, context: string): Promise<DirectorySources> {
     return client
         .get(`${baseUrl}/directories/${context}/sources`, {backend: 'office365'}, token)
         .then(response => response);
