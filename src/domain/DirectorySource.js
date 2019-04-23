@@ -2,15 +2,15 @@
 
 import type { UUID } from "./types";
 
-export type Source = {
+export type DirectorySource = {
   backend: string,
   name: string,
   tenant_uuid: UUID,
   uuid: UUID
 }
 
-export type Sources = {
+export type DirectorySources = {
   filtered: number,
   total: number,
-  items: Source[],
+  items: DirectorySource[],
 }
