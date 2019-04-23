@@ -334,7 +334,7 @@ export default class Contact {
     }
 
     if (single.mobile_phone_number) {
-      numbers.push({label: 'mobile', email: single.mobile_phone_number});
+      numbers.push({label: 'mobile', number: single.mobile_phone_number});
     }
 
     return new Contact({
