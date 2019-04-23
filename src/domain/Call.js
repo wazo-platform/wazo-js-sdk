@@ -39,6 +39,8 @@ export default class Call {
   static parse(plain: CallResponse): Call {
     return new Call({
       id: plain.call_id,
+      callerName: plain.caller_id_name,
+      callerNumber: plain.caller_id_number,
       calleeName: plain.peer_caller_id_name,
       calleeNumber: plain.peer_caller_id_number,
       isCaller: plain.is_caller,

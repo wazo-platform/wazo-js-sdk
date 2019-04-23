@@ -55,6 +55,10 @@ export default class Line {
     return this.id === line.id;
   }
 
+  hasExtension(extension: string) {
+    return this.extensions.some(ext => ext.exten === extension);
+  }
+
   constructor({ id, extensions, endpointCustom, endpointSccp, endpointSip }: LineArguments = {}) {
     this.id = id;
     this.extensions = extensions;
