@@ -5,6 +5,8 @@ import newFrom from '../utils/new-from';
 
 type CallResponse = {
   call_id: string,
+  caller_id_name: string,
+  caller_id_number: string,
   peer_caller_id_name: string,
   peer_caller_id_number: string,
   status: string,
@@ -39,6 +41,8 @@ export default class Call {
   static parse(plain: CallResponse): Call {
     return new Call({
       id: plain.call_id,
+      callerName: plain.caller_id_name,
+      callerNumber: plain.caller_id_number,
       calleeName: plain.peer_caller_id_name,
       calleeNumber: plain.peer_caller_id_number,
       isCaller: plain.is_caller,
