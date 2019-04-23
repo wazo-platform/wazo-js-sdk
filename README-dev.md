@@ -1,3 +1,9 @@
-To publish a new version read this documentation https://docs.npmjs.com/getting-started/publishing-npm-packages
+#### Publishing Package
 
-Build the dist version with `npm run build`
+See `NPM` documentation on [publishing packages](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry):
+
+    npm publish
+
+#### Building Package
+
+    npm run build
