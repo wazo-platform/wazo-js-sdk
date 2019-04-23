@@ -4,6 +4,7 @@ import type { UUID, Token } from '../domain/types';
 import Contact from '../domain/Contact';
 import type { NewContact } from '../domain/Contact';
 import type { DirectorySources } from "../domain/DirectorySource";
+import type { Sources } from "../index";
 
 const getContactPayload = (contact: NewContact | Contact) => ({
   email: contact.email,
@@ -69,5 +70,17 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client
         .get(`${baseUrl}/backends/office365/sources/${sourceUUid}/contacts`, null, token)
         .then(response => Contact.parseManyOffice365(response.items));
+  },
+
+  fetchWazoSource(token: Token, context: string): Promise<Sources> {
+    return client
+        .get(`${baseUrl}/directories/${context}/sources`, {backend: 'wazo'}, token)
+        .then(response => response);
+  },
+
+  fetchWazoContacts(token: Token, sourceUUid: UUID): Promise<Contact[]> {
+    return client
+        .get(`${baseUrl}/backends/wazo/sources/${sourceUUid}/contacts`, null, token)
+        .then(response => Contact.parseManyWazo(response.items));
   },
 });
