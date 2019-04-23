@@ -4,6 +4,7 @@ import type { UUID, Token } from '../domain/types';
 import Contact from '../domain/Contact';
 import type { NewContact } from '../domain/Contact';
 import type { DirectorySources } from "../domain/DirectorySource";
+import type { Sources } from "../index";
 
 const getContactPayload = (contact: NewContact | Contact) => ({
   email: contact.email,
