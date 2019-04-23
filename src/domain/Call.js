@@ -18,6 +18,8 @@ type CallResponse = {
 type CallArguments = {
   id: string,
   isCaller: boolean,
+  callerName: string,
+  callerNumber: string,
   calleeName: string,
   calleeNumber: string,
   onHold: boolean,
@@ -27,6 +29,8 @@ type CallArguments = {
 
 export default class Call {
   id: string;
+  callerName: string;
+  callerNumber: string;
   calleeName: string;
   calleeNumber: string;
   isCaller: boolean;
@@ -56,8 +60,10 @@ export default class Call {
     return newFrom(call, Call);
   }
 
-  constructor({ id, calleeName, calleeNumber, isCaller, onHold, status, startingTime }: CallArguments = {}) {
+  constructor({ id, callerName, callerNumber, calleeName, calleeNumber, isCaller, onHold, status, startingTime }: CallArguments = {}) {
     this.id = id;
+    this.callerName = callerName;
+    this.callerNumber = callerNumber;
     this.calleeName = calleeName;
     this.calleeNumber = calleeNumber;
     this.onHold = onHold;
