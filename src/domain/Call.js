@@ -60,7 +60,17 @@ export default class Call {
     return newFrom(call, Call);
   }
 
-  constructor({ id, callerName, callerNumber, calleeName, calleeNumber, isCaller, onHold, status, startingTime }: CallArguments = {}) {
+  constructor({
+    id,
+    callerName,
+    callerNumber,
+    calleeName,
+    calleeNumber,
+    isCaller,
+    onHold,
+    status,
+    startingTime
+  }: CallArguments = {}) {
     this.id = id;
     this.callerName = callerName;
     this.callerNumber = callerNumber;
