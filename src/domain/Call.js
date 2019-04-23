@@ -5,6 +5,8 @@ import newFrom from '../utils/new-from';
 
 type CallResponse = {
   call_id: string,
+  caller_id_name: string,
+  caller_id_number: string,
   peer_caller_id_name: string,
   peer_caller_id_number: string,
   status: string,
