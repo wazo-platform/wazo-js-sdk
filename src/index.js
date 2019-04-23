@@ -41,6 +41,8 @@ import {
   getDisplayableNumber,
   getCallableNumber,
 } from './utils/PhoneNumberUtil';
+import type { DirectorySource as DirectorySourceType,
+  DirectorySources as DirectorySourcesType } from "./domain/DirectorySource";
 
 export type NewContact = NewContactType;
 export type ContactResponse = ContactResponseType;
@@ -51,6 +53,8 @@ export type Phone = PhoneType;
 export type PhoneEventCallbacks = PhoneEventCallbacksType;
 export type Device = DeviceType;
 export type ChatUser = ChatUserType;
+export type Source = DirectorySourceType;
+export type Sources = DirectorySourcesType;
 
 export default {
   Emitter,

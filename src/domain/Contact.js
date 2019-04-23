@@ -118,6 +118,57 @@ type ContactArguments = {
   personalStatus?: string,
 };
 
+type Office365Response = {
+  assistantName: any,
+  birthday: any,
+  businessAddress: any,
+  businessHomePage: any,
+  businessPhones: Array<any>,
+  categories: Array<any>,
+  changeKey: string,
+  children: Array<any>,
+  companyName: any,
+  createdDateTime: string,
+  department: any,
+  displayName: string,
+  emailAddresses: Array<{name: string, address: string}>,
+  fileAs: string,
+  generation: any,
+  givenName: any,
+  homeAddress: any,
+  homePhones: string[],
+  id: string,
+  imAddresses: any,
+  initials: any,
+  jobTitle: any,
+  lastModifiedDateTime: string,
+  manager: any,
+  middleName: any,
+  mobilePhone: string,
+  nickName: any,
+  officeLocation: any,
+  otherAddress: any,
+  parentFolderId: string,
+  personalNotes: string,
+  profession: any,
+  spouseName: any,
+  surname: string,
+  title: any,
+  yomiCompanyName: any,
+  yomiGivenName: any,
+  yomiSurname: any,
+}
+
+type WazoResponse = {
+  email: string,
+  exten: string,
+  firstname: string,
+  lastname: string,
+  mobile_phone_number: any,
+  uuid: string,
+  voicemail_number: any,
+}
+
 const SOURCE_MOBILE = 'mobile';
 
 export default class Contact {
@@ -235,6 +286,65 @@ export default class Contact {
       note: plain.note || '',
       favorited: false,
       personal: true,
+    });
+  }
+
+  static parseManyOffice365(response: Office365Response[]): Array<Contact> {
+    return response.map(r => Contact.parseOffice365(r));
+  }
+
+  static parseOffice365(single: Office365Response): Contact {
+    const emails = [];
+    const numbers = [];
+
+    if (single.emailAddresses) {
+      const formattedEmails = single.emailAddresses.map(email => ({label: 'email', email: email.address}));
+      emails.push(...formattedEmails);
+    }
+
+    if (single.homePhones) {
+      const formattedPhones = single.homePhones.map(phone => ({label: 'home', number: phone}));
+      numbers.push(...formattedPhones);
+    }
+
+    if (single.mobilePhone) {
+      numbers.push({label: 'mobile', number: single.mobilePhone});
+    }
+
+    return new Contact({
+        sourceId: single.id,
+        name: single.displayName,
+        numbers,
+        emails,
+      source: 'office365',
+      backend: 'office365',
+    });
+  }
+
+  static parseManyWazo(response: WazoResponse[]): Array<Contact> {
+    return response.map(r => Contact.parseWazo(r));
+  }
+
+  static parseWazo(single: WazoResponse): Contact {
+    const emails = [];
+    const numbers = [];
+
+    if (single.email) {
+      emails.push({label: 'email', email: single.email});
+    }
+
+    if (single.mobile_phone_number) {
+      numbers.push({label: 'mobile', number: single.mobile_phone_number});
+    }
+
+    return new Contact({
+      uuid: single.uuid,
+      sourceId: single.uuid,
+      name: `${single.firstname} ${single.lastname}`,
+      numbers,
+      emails,
+      source: 'wazo',
+      backend: 'wazo',
     });
   }
 
