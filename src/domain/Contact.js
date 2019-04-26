@@ -3,6 +3,7 @@
 import Session from './Session';
 import { LINE_STATE } from './Profile';
 import newFrom from '../utils/new-from';
+import type { DirectorySource } from "./DirectorySource";
 
 export type NewContact = {
   firstName: string,
@@ -289,11 +290,11 @@ export default class Contact {
     });
   }
 
-  static parseManyOffice365(response: Office365Response[]): Array<Contact> {
-    return response.map(r => Contact.parseOffice365(r));
+  static parseManyOffice365(response: Office365Response[], source: DirectorySource): Array<Contact> {
+    return response.map(r => Contact.parseOffice365(r, source));
   }
 
-  static parseOffice365(single: Office365Response): Contact {
+  static parseOffice365(single: Office365Response, source: DirectorySource): Contact {
     const emails = [];
     const numbers = [];
 
@@ -316,16 +317,16 @@ export default class Contact {
         name: single.displayName,
         numbers,
         emails,
-      source: 'office365',
+      source: source.name,
       backend: 'office365',
     });
   }
 
-  static parseManyWazo(response: WazoResponse[]): Array<Contact> {
-    return response.map(r => Contact.parseWazo(r));
+  static parseManyWazo(response: WazoResponse[], source: DirectorySource): Array<Contact> {
+    return response.map(r => Contact.parseWazo(r, source));
   }
 
-  static parseWazo(single: WazoResponse): Contact {
+  static parseWazo(single: WazoResponse, source: DirectorySource): Contact {
     const emails = [];
     const numbers = [];
 
@@ -343,7 +344,7 @@ export default class Contact {
       name: `${single.firstname} ${single.lastname}`,
       numbers,
       emails,
-      source: 'wazo',
+      source: source.name,
       backend: 'wazo',
     });
   }

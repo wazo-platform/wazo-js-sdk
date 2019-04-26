@@ -3,7 +3,7 @@ import ApiRequester from '../utils/api-requester';
 import type { UUID, Token } from '../domain/types';
 import Contact from '../domain/Contact';
 import type { NewContact } from '../domain/Contact';
-import type { DirectorySources } from "../domain/DirectorySource";
+import type { DirectorySource, DirectorySources } from "../domain/DirectorySource";
 import type { Sources } from "../index";
 
 const getContactPayload = (contact: NewContact | Contact) => ({
@@ -66,10 +66,10 @@ export default (client: ApiRequester, baseUrl: string) => ({
         .then(response => response);
   },
 
-  fetchOffice365Contacts(token: Token, sourceUUid: UUID): Promise<Contact[]> {
+  fetchOffice365Contacts(token: Token, source: DirectorySource): Promise<Contact[]> {
     return client
-        .get(`${baseUrl}/backends/office365/sources/${sourceUUid}/contacts`, null, token)
-        .then(response => Contact.parseManyOffice365(response.items));
+        .get(`${baseUrl}/backends/office365/sources/${source.uuid}/contacts`, null, token)
+        .then(response => Contact.parseManyOffice365(response.items, source));
   },
 
   fetchWazoSource(token: Token, context: string): Promise<Sources> {
@@ -78,9 +78,9 @@ export default (client: ApiRequester, baseUrl: string) => ({
         .then(response => response);
   },
 
-  fetchWazoContacts(token: Token, sourceUUid: UUID): Promise<Contact[]> {
+  fetchWazoContacts(token: Token, source: DirectorySource): Promise<Contact[]> {
     return client
-        .get(`${baseUrl}/backends/wazo/sources/${sourceUUid}/contacts`, null, token)
-        .then(response => Contact.parseManyWazo(response.items));
+        .get(`${baseUrl}/backends/wazo/sources/${source.uuid}/contacts`, null, token)
+        .then(response => Contact.parseManyWazo(response.items, source));
   },
 });
