@@ -66,9 +66,9 @@ export default (client: ApiRequester, baseUrl: string) => ({
         .then(response => response);
   },
 
-  fetchOffice365Contacts(token: Token, sourceUUid: UUID, source: DirectorySource): Promise<Contact[]> {
+  fetchOffice365Contacts(token: Token, source: DirectorySource): Promise<Contact[]> {
     return client
-        .get(`${baseUrl}/backends/office365/sources/${sourceUUid}/contacts`, null, token)
+        .get(`${baseUrl}/backends/office365/sources/${source.uuid}/contacts`, null, token)
         .then(response => Contact.parseManyOffice365(response.items, source));
   },
 
@@ -78,9 +78,9 @@ export default (client: ApiRequester, baseUrl: string) => ({
         .then(response => response);
   },
 
-  fetchWazoContacts(token: Token, sourceUUid: UUID, source: DirectorySource): Promise<Contact[]> {
+  fetchWazoContacts(token: Token, source: DirectorySource): Promise<Contact[]> {
     return client
-        .get(`${baseUrl}/backends/wazo/sources/${sourceUUid}/contacts`, null, token)
+        .get(`${baseUrl}/backends/wazo/sources/${source.uuid}/contacts`, null, token)
         .then(response => Contact.parseManyWazo(response.items, source));
   },
 });
