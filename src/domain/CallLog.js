@@ -174,11 +174,27 @@ export default class CallLog {
   }
 
   isOutgoing(session: Session): boolean {
-    return session.hasExtension(this.source.extension);
+    if (this.callDirection === 'internal') {
+      return session.hasExtension(this.source.extension);
+    }
+
+    if (this.callDirection === 'outbound') {
+      return true;
+    }
+
+    return false;
   }
 
   isIncoming(session: Session): boolean {
-    return session.hasExtension(this.destination.extension);
+    if (this.callDirection === 'internal') {
+      return session.hasExtension(this.destination.extension);
+    }
+
+    if (this.callDirection === 'inbound') {
+      return true;
+    }
+
+    return false;
   }
 
   isAnOutgoingCall(session: Session): boolean {
