@@ -182,7 +182,10 @@ export default class CallLog {
   }
 
   isAnOutgoingCall(session: Session): boolean {
-    console.warn("@wazo/sdk: CallLog.isAnOutgoingcall(session) method is obsolete, please use CallLog.isOutgoing(session)");
+    console.warn(`@wazo/sdk 
+      CallLog.isAnOutgoingcall(session) method is obsolete.
+      Please use CallLog.isOutgoing(session).
+    `);
 
     return session.hasExtension(this.source.extension) && this.answered;
   }
@@ -192,7 +195,10 @@ export default class CallLog {
   }
 
   isAnIncomingCall(session: Session): boolean {
-    console.warn("@wazo/sdk: CallLog.isAnIncomingCall(session) method is obsolete, please use CallLog.isIncoming(session)");
+    console.warn(`@wazo/sdk
+      CallLog.isAnIncomingCall(session) method is obsolete.
+      Please use CallLog.isIncoming(session).
+    `);
 
     return session.hasExtension(this.destination.extension) && this.answered;
   }
