@@ -599,6 +599,7 @@ export default class WebRTCClient extends Emitter {
           audio: this._getAudioConstraints(),
           video: enableVideo,
         },
+        disableVideo: !enableVideo,
         RTCOfferOptions: {
           mandatory: {
             OfferToReceiveAudio: this._hasAudio(),
