@@ -169,6 +169,18 @@ export default class CallLog {
     return this.newMissedCall;
   }
 
+  isAnswered(): boolean {
+    return this.answered;
+  }
+
+  isOutgoing(session: Session): boolean {
+    return session.hasExtension(this.source.extension);
+  }
+
+  isIncoming(session: Session): boolean {
+    return session.hasExtension(this.destination.extension);
+  }
+
   isAnOutgoingCall(session: Session): boolean {
     return session.hasExtension(this.source.extension) && this.answered;
   }
