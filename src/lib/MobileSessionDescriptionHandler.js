@@ -228,6 +228,10 @@ export default SIP => {
           sdp: sessionDescription,
         };
 
+        if (options.disableVideo) {
+          modifiers = [SIP.Web.Modifiers.stripVideo].concat(modifiers);
+        }
+
         return SIP.Utils.Promise.resolve()
           .then(
             function() {
