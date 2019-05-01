@@ -30,11 +30,15 @@ describe('getCallableNumber', () => {
     expect(getCallableNumber('202-555-0113', 'US')).toBe('2025550113');
     expect(getCallableNumber('8008', 'US')).toBe('8008');
     expect(getCallableNumber('80.08', 'US')).toBe('8008');
+    expect(getCallableNumber('*10', 'US')).toBe('*10');
+    expect(getCallableNumber('9000', 'US')).toBe('9000');
   });
   it('works without a country', () => {
     expect(getCallableNumber('06 75 45')).toBe('067545');
     expect(getCallableNumber('067-545')).toBe('067545');
     expect(getCallableNumber('8008')).toBe('8008');
     expect(getCallableNumber('80.08')).toBe('8008');
+    expect(getCallableNumber('*10')).toBe('*10');
+    expect(getCallableNumber('9000')).toBe('9000');
   });
 });

@@ -5,7 +5,7 @@ const PhoneNumberUtil = LibPhoneNumber.PhoneNumberUtil.getInstance();
 const { PhoneNumberFormat, AsYouTypeFormatter } = LibPhoneNumber;
 
 // eslint-disable-next-line
-const EXTRA_CHAR_REGEXP = /[^+\d]/g;
+const EXTRA_CHAR_REGEXP = /[^+*\d]/g;
 
 const shouldBeFormatted = (number: ?string) => {
   if (!number || number.length <= 5) {
