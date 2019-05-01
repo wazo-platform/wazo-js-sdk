@@ -178,11 +178,7 @@ export default class CallLog {
       return session.hasExtension(this.source.extension);
     }
 
-    if (this.callDirection === 'outbound') {
-      return true;
-    }
-
-    return false;
+    return this.callDirection === 'outbound';
   }
 
   isIncoming(session: Session): boolean {
@@ -190,11 +186,7 @@ export default class CallLog {
       return session.hasExtension(this.destination.extension);
     }
 
-    if (this.callDirection === 'inbound') {
-      return true;
-    }
-
-    return false;
+    return this.callDirection === 'inbound'
   }
 
   isAnOutgoingCall(session: Session): boolean {
