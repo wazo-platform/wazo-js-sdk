@@ -338,7 +338,7 @@ export default class Contact {
     const numbers = [];
 
     if (single.emails) {
-      const formattedEmails = single.emails.map(email => ({ label: 'email', email: email.address }));
+      const formattedEmails = single.emails.map(email => ({ label: 'email', email }));
       emails.push(...formattedEmails);
     }
 

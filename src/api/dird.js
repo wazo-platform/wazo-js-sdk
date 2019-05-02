@@ -80,8 +80,9 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   fetchWazoContacts(token: Token, source: DirectorySource): Promise<Contact[]> {
     return client
-        .get(`${baseUrl}/backends/wazo/sources/${source.uuid}/contacts`, null, token)
-        .then(response => Contact.parseManyWazo(response.items, source));
+      .get(`${baseUrl}/backends/wazo/sources/${source.uuid}/contacts`, null, token)
+      .then(response => Contact.parseManyWazo(response.items, source));
+  },
 
   fetchGoogleSource(token: Token, context: string): Promise<Sources> {
     return client
