@@ -9,7 +9,7 @@ type CallResponse = {
   caller_id_number: string,
   peer_caller_id_name: string,
   peer_caller_id_number: string,
-  dialed_extension: String,
+  dialed_extension: string,
   status: string,
   is_caller: boolean,
   creation_time: string,
@@ -23,7 +23,7 @@ type CallArguments = {
   callerNumber: string,
   calleeName: string,
   calleeNumber: string,
-  dialedExtension: String,
+  dialedExtension: string,
   onHold: boolean,
   status: string,
   startingTime: Date,
@@ -35,7 +35,7 @@ export default class Call {
   callerNumber: string;
   calleeName: string;
   calleeNumber: string;
-  dialedExtension: String;
+  dialedExtension: string;
   isCaller: boolean;
   onHold: boolean;
   status: string;
