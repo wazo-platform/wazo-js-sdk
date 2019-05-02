@@ -169,6 +169,13 @@ type WazoResponse = {
   uuid: string,
   voicemail_number: any,
 }
+type GoogleResponse = {
+  emails: string[],
+  id: string,
+  name: string,
+  numbers: string[],
+  numbers_by_label: any,
+};
 
 const SOURCE_MOBILE = 'mobile';
 
@@ -319,6 +326,34 @@ export default class Contact {
         emails,
       source: source.name,
       backend: 'office365',
+    });
+  }
+
+  static parseManyGoogle(response: GoogleResponse[], source: DirectorySource): Array<Contact> {
+    return response.map(r => Contact.parseGoogle(r, source));
+  }
+
+  static parseGoogle(single: GoogleResponse, source: DirectorySource): Contact {
+    const emails = [];
+    const numbers = [];
+
+    if (single.emails) {
+      const formattedEmails = single.emails.map(email => ({ label: 'email', email: email.address }));
+      emails.push(...formattedEmails);
+    }
+
+    if (single.numbers) {
+      const formattedPhones = single.numbers.map(phone => ({ label: 'mobile', number: phone }));
+      numbers.push(...formattedPhones);
+    }
+
+    return new Contact({
+      sourceId: single.id,
+      name: single.name,
+      numbers,
+      emails,
+      source: source.name,
+      backend: 'google',
     });
   }
 
