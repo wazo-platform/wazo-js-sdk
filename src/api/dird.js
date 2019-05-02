@@ -80,7 +80,19 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   fetchWazoContacts(token: Token, source: DirectorySource): Promise<Contact[]> {
     return client
-        .get(`${baseUrl}/backends/wazo/sources/${source.uuid}/contacts`, null, token)
-        .then(response => Contact.parseManyWazo(response.items, source));
+      .get(`${baseUrl}/backends/wazo/sources/${source.uuid}/contacts`, null, token)
+      .then(response => Contact.parseManyWazo(response.items, source));
+  },
+
+  fetchGoogleSource(token: Token, context: string): Promise<Sources> {
+    return client
+      .get(`${baseUrl}/directories/${context}/sources`, { backend: 'google' }, token)
+      .then(response => response);
+  },
+
+  fetchGoogleContacts(token: Token, source: DirectorySource): Promise<Contact[]> {
+    return client
+      .get(`${baseUrl}/backends/google/sources/${source.uuid}/contacts`, null, token)
+      .then(response => Contact.parseManyGoogle(response.items, source));
   },
 });
