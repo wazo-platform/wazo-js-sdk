@@ -56,15 +56,23 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.get(`${baseUrl}/users/me/calls`, null, token).then(response => Call.parseMany(response.items));
   },
 
-  relocateCall(token: Token, callId: number, destination: string, lineId: ?number) {
+  relocateCall(token: Token, callId: number, destination: string, lineId: ?number, contact?: ?string) {
     const body: Object = {
       completions: ['answer'],
       destination,
       initiator_call: callId,
     };
 
+    if (lineId || contact) {
+      body.location = {};
+    }
+
     if (lineId) {
-      body.location = { line_id: lineId };
+      body.location.line_id = lineId;
+    }
+
+    if (contact) {
+      body.location.contact = contact;
     }
 
     return client.post(`${baseUrl}/users/me/relocates`, body, token);
