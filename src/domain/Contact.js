@@ -227,8 +227,19 @@ export default class Contact {
     return response.results.map(r => Contact.parse(r, response.column_types));
   }
 
+  static parseMultipleNumber(plain: ContactResponse, columns: Array<?string>) {
+    const numberColumns = columns
+      .map((e, index) => ({ index, columnName: e }))
+      .filter(e => e.columnName === 'number')
+      .map(e => e.index);
+    
+    const number = plain.column_values.find((e, index) => numberColumns.some(i => i === index) && e !== null);
+
+    return number || '';
+  }
+
   static parse(plain: ContactResponse, columns: Array<?string>): Contact {
-    const number = plain.column_values[columns.indexOf('number')];
+    const number = Contact.parseMultipleNumber(plain, columns);
     const email = plain.column_values[columns.indexOf('email')];
     return new Contact({
       name: plain.column_values[columns.indexOf('name')],
