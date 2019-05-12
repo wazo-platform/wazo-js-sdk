@@ -3,7 +3,7 @@
 import Line from './Line';
 import ForwardOption, { FORWARD_KEYS } from './ForwardOption';
 import newFrom from '../utils/new-from';
-import type { Endpoint } from "./Line";
+import type { Endpoint } from './Line';
 
 export const PRESENCE = {
   AVAILABLE: 'available',

@@ -3,7 +3,7 @@
 import Session from './Session';
 import { LINE_STATE } from './Profile';
 import newFrom from '../utils/new-from';
-import type { DirectorySource } from "./DirectorySource";
+import type { DirectorySource } from './DirectorySource';
 
 export type NewContact = {
   firstName: string,
@@ -132,7 +132,7 @@ type Office365Response = {
   createdDateTime: string,
   department: any,
   displayName: string,
-  emailAddresses: Array<{name: string, address: string}>,
+  emailAddresses: Array<{ name: string, address: string }>,
   fileAs: string,
   generation: any,
   givenName: any,
@@ -158,7 +158,7 @@ type Office365Response = {
   yomiCompanyName: any,
   yomiGivenName: any,
   yomiSurname: any,
-}
+};
 
 type WazoResponse = {
   email: string,
@@ -168,7 +168,7 @@ type WazoResponse = {
   mobile_phone_number: any,
   uuid: string,
   voicemail_number: any,
-}
+};
 type GoogleResponse = {
   emails: string[],
   id: string,
@@ -232,7 +232,7 @@ export default class Contact {
       .map((e, index) => ({ index, columnName: e }))
       .filter(e => e.columnName === 'number')
       .map(e => e.index);
-    
+
     const number = plain.column_values.find((e, index) => numberColumns.some(i => i === index) && e !== null);
 
     return number || '';
@@ -317,24 +317,24 @@ export default class Contact {
     const numbers = [];
 
     if (single.emailAddresses) {
-      const formattedEmails = single.emailAddresses.map(email => ({label: 'email', email: email.address}));
+      const formattedEmails = single.emailAddresses.map(email => ({ label: 'email', email: email.address }));
       emails.push(...formattedEmails);
     }
 
     if (single.homePhones) {
-      const formattedPhones = single.homePhones.map(phone => ({label: 'home', number: phone}));
+      const formattedPhones = single.homePhones.map(phone => ({ label: 'home', number: phone }));
       numbers.push(...formattedPhones);
     }
 
     if (single.mobilePhone) {
-      numbers.push({label: 'mobile', number: single.mobilePhone});
+      numbers.push({ label: 'mobile', number: single.mobilePhone });
     }
 
     return new Contact({
-        sourceId: single.id,
-        name: single.displayName,
-        numbers,
-        emails,
+      sourceId: single.id,
+      name: single.displayName,
+      numbers,
+      emails,
       source: source.name,
       backend: 'office365',
     });
@@ -377,11 +377,11 @@ export default class Contact {
     const numbers = [];
 
     if (single.email) {
-      emails.push({label: 'email', email: single.email});
+      emails.push({ label: 'email', email: single.email });
     }
 
     if (single.mobile_phone_number) {
-      numbers.push({label: 'mobile', number: single.mobile_phone_number});
+      numbers.push({ label: 'mobile', number: single.mobile_phone_number });
     }
 
     return new Contact({

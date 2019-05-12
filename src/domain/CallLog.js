@@ -186,7 +186,7 @@ export default class CallLog {
       return session.hasExtension(this.destination.extension);
     }
 
-    return this.callDirection === 'inbound'
+    return this.callDirection === 'inbound';
   }
 
   isAnOutgoingCall(session: Session): boolean {

@@ -51,5 +51,5 @@ export {
   parsePhoneNumber,
   AsYouTypeFormatter,
   getDisplayableNumber,
-  getCallableNumber
+  getCallableNumber,
 };

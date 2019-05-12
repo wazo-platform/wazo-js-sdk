@@ -1,16 +1,16 @@
 // @flow
 
-import type { UUID } from "./types";
+import type { UUID } from './types';
 
 export type DirectorySource = {
   backend: string,
   name: string,
   tenant_uuid: UUID,
-  uuid: UUID
-}
+  uuid: UUID,
+};
 
 export type DirectorySources = {
   filtered: number,
   total: number,
   items: DirectorySource[],
-}
+};

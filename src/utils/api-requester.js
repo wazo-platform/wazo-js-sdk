@@ -95,7 +95,7 @@ export default class ApiRequester {
   ): Promise<any> {
     const url = this.computeUrl(method, path, body);
     const newHeaders = headers ? ApiRequester.getHeaders(headers) : {};
-    let newBody = method === 'get' ? null: body;
+    let newBody = method === 'get' ? null : body;
     if (newBody && newHeaders['Content-Type'] === 'application/json') {
       newBody = JSON.stringify(newBody);
     }

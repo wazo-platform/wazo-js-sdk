@@ -27,7 +27,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   updateStatus: (token: Token, contactUuid: UUID, state: string, status: string): Promise<Boolean> => {
     const body = { state, status };
 
-    return client.put(`${baseUrl}/users/${contactUuid}/presences`, body, token, ApiRequester.successResponseParser)
+    return client.put(`${baseUrl}/users/${contactUuid}/presences`, body, token, ApiRequester.successResponseParser);
   },
 
   getPresence: async (token: Token, contactUuid: UUID): Promise<string> =>
@@ -55,8 +55,9 @@ export default (client: ApiRequester, baseUrl: string) => ({
     client.post(`${baseUrl}/users/me/rooms`, { name, users }, token).then(ChatRoom.parse),
 
   getRoomMessages: async (token: Token, roomUuid: string): Promise<Array<ChatMessage>> =>
-    client.get(`${baseUrl}/users/me/rooms/${roomUuid}/messages`, null, token)
-      .then((response: ChatMessageListResponse) =>ChatMessage.parseMany(response, roomUuid)),
+    client
+      .get(`${baseUrl}/users/me/rooms/${roomUuid}/messages`, null, token)
+      .then((response: ChatMessageListResponse) => ChatMessage.parseMany(response, roomUuid)),
 
   sendRoomMessage: async (token: Token, roomUuid: string, message: ChatMessage): Promise<ChatMessage> =>
     client.post(`${baseUrl}/users/me/rooms/${roomUuid}/messages`, message, token).then(ChatMessage.parse),
