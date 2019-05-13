@@ -74,7 +74,7 @@ export default class Call {
     isCaller,
     onHold,
     status,
-    startingTime
+    startingTime,
   }: CallArguments = {}) {
     this.id = id;
     this.callerName = callerName;

@@ -89,7 +89,7 @@ describe('Profile domain', () => {
         doNotDisturb: false,
         subscriptionType: 2,
         switchboards: [],
-        status: ''
+        status: '',
       })
     );
   });

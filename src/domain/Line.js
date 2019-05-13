@@ -10,9 +10,9 @@ type Extension = {
 
 export type Endpoint = {
   id: number,
-  links: Array<{href: string, rel: string}>,
-  username?: string
-}
+  links: Array<{ href: string, rel: string }>,
+  username?: string,
+};
 
 type LineResponse = {
   endpoint_custom: ?Endpoint,

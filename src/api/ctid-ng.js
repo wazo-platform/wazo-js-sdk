@@ -117,10 +117,10 @@ export default (client: ApiRequester, baseUrl: string) => ({
   sendFax(token: Token, extension: string, fax: string, callerId: ?string = null) {
     const headers = {
       'Content-type': 'application/pdf',
-      'X-Auth-Token': token
+      'X-Auth-Token': token,
     };
     const params = ApiRequester.getQueryString({ extension, caller_id: callerId });
 
     return client.post(`${baseUrl}/users/me/faxes?${params}`, fax, headers);
-  }
+  },
 });

@@ -41,8 +41,10 @@ import {
   getDisplayableNumber,
   getCallableNumber,
 } from './utils/PhoneNumberUtil';
-import type { DirectorySource as DirectorySourceType,
-  DirectorySources as DirectorySourcesType } from "./domain/DirectorySource";
+import type {
+  DirectorySource as DirectorySourceType,
+  DirectorySources as DirectorySourcesType,
+} from './domain/DirectorySource';
 
 export type NewContact = NewContactType;
 export type ContactResponse = ContactResponseType;
