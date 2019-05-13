@@ -1,6 +1,7 @@
 /* eslint-disable */
 // @see: https://github.com/onsip/SIP.js/blob/0.13.8/src/Web/SessionDescriptionHandler.ts
 import EventEmitter from 'events';
+import { SessionDescriptionHandlerObserver } from 'sip.js/lib/Web/SessionDescriptionHandlerObserver';
 
 /* SessionDescriptionHandler
  * @class PeerConnection helper Class.
