@@ -20,6 +20,14 @@ type PresenceListResponse = {
   items: Array<PresenceResponse>,
 };
 
+type GetMessagesOptions = {
+  direction: ?string,
+  limit: ?number,
+  order: ?string,
+  offset: ?string,
+  search: string
+};
+
 export default (client: ApiRequester, baseUrl: string) => ({
   updatePresence: (token: Token, contactUuid: UUID, state: string): Promise<Boolean> =>
     client.put(`${baseUrl}/users/${contactUuid}/presences`, { state }, token, ApiRequester.successResponseParser),
@@ -61,4 +69,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   sendRoomMessage: async (token: Token, roomUuid: string, message: ChatMessage): Promise<ChatMessage> =>
     client.post(`${baseUrl}/users/me/rooms/${roomUuid}/messages`, message, token).then(ChatMessage.parse),
+
+  getMessages: async (token: Token, options: GetMessagesOptions): Promise<ChatMessage> => 
+    client.get(`${baseUrl}/users/me/rooms/messages`, options, token),
 });
