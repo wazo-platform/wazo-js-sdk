@@ -22,18 +22,46 @@ describe('Contact domain', () => {
     expect(john.is(sam)).toBe(true);
   });
 
-  it('is not the same contact when it has different uuid', () => {
+  it ('is the same contact when it has the same uuid and no sourceId', () =>  {
+    const john = new Contact({ uuid: '12345', sourceId: undefined });
+    const sam = new Contact({ uuid: '12345', sourceId: undefined });
+
+    expect(john.is(sam)).toBe(true);
+  });
+
+  it ('is the same contact when it has the same uuid and no sourceId', () =>  {
+    const john = new Contact({ uuid: '12345', sourceId: undefined });
+    const sam = new Contact({ uuid: '12345', sourceId: undefined });
+
+    expect(john.is(sam)).toBe(true);
+  });
+
+  it ('is the same contact when one is missing a uuid but they have the same sourceId', () =>  {
+    const john = new Contact({ uuid: '12345', sourceId: '800' });
+    const sam = new Contact({ uuid: undefined, sourceId: '800' });
+
+    expect(john.is(sam)).toBe(true);
+  });
+
+  it ('is the same contact when one is missing a sourceId but they have the same sourceId', () =>  {
+    const john = new Contact({ uuid: '12345', sourceId: '800' });
+    const sam = new Contact({ uuid: '12345', sourceId: undefined });
+
+    expect(john.is(sam)).toBe(true);
+  });
+
+  it('is the same contact even when it has different uuid', () => {
     const john = new Contact({ uuid: 'abc', sourceId: '800' });
     const sam = new Contact({ uuid: '12345', sourceId: '800' });
 
-    expect(john.is(sam)).toBe(false);
+    expect(john.is(sam)).toBe(true);
   });
 
-  it('is not the same contact when it has different sourceId', () => {
+  it('is the same contact even when it has different sourceId', () => {
     const john = new Contact({ uuid: '12345', sourceId: '100' });
     const sam = new Contact({ uuid: '12345', sourceId: '800' });
 
-    expect(john.is(sam)).toBe(false);
+    expect(john.is(sam)).toBe(true);
   });
 
   it('has the id given the same uuid', () => {
