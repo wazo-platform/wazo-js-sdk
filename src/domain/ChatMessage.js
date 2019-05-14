@@ -9,6 +9,10 @@ export type ChatUser = {
   wazo_uuid: string,
 };
 
+export type ChatMessageResponseRoom = {
+  uuid: ?string,
+}
+
 export type ChatMessageResponse = {
   alias: string,
   content: string,
@@ -17,6 +21,7 @@ export type ChatMessageResponse = {
   user_uuid: string,
   uuid: string,
   wazo_uuid: string,
+  room: ?ChatMessageResponseRoom;
 };
 
 export type ChatMessageListResponse = {
@@ -34,11 +39,11 @@ export default class ChatMessage {
   roomUuid: ?string;
   read: boolean;
 
-  static parseMany(plain: ChatMessageListResponse, roomUuid: ?string = null): Array<ChatMessage> {
-    return plain.items.map(item => ChatMessage.parse(item, roomUuid));
+  static parseMany(plain: ChatMessageListResponse): Array<ChatMessage> {
+    return plain.items.map(item => ChatMessage.parse(item));
   }
 
-  static parse(plain: ChatMessageResponse, roomUuid: ?string = null): ChatMessage {
+  static parse(plain: ChatMessageResponse): ChatMessage {
     return new ChatMessage({
       uuid: plain.uuid,
       date: moment(plain.created_at).toDate(),
@@ -46,7 +51,7 @@ export default class ChatMessage {
       alias: plain.alias,
       userUuid: plain.user_uuid,
       read: true,
-      roomUuid,
+      roomUuid: plain.room ? plain.room.uuid : null,
     });
   }
 

@@ -65,7 +65,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   getRoomMessages: async (token: Token, roomUuid: string): Promise<Array<ChatMessage>> =>
     client
       .get(`${baseUrl}/users/me/rooms/${roomUuid}/messages`, null, token)
-      .then((response: ChatMessageListResponse) => ChatMessage.parseMany(response, roomUuid)),
+      .then((response: ChatMessageListResponse) => ChatMessage.parseMany(response)),
 
   sendRoomMessage: async (token: Token, roomUuid: string, message: ChatMessage): Promise<ChatMessage> =>
     client.post(`${baseUrl}/users/me/rooms/${roomUuid}/messages`, message, token).then(ChatMessage.parse),
