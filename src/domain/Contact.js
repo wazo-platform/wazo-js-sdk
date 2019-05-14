@@ -450,7 +450,10 @@ export default class Contact {
   }
 
   is(other: Contact): boolean {
-    return Boolean(other) && this.sourceId === other.sourceId && (this.uuid ? this.uuid === other.uuid : true);
+    return !!other && (
+      (!!this.sourceId && !!other.sourceId && this.sourceId === other.sourceId) || 
+      (!!this.uuid && !!other.uuid && this.uuid === other.uuid)
+    );
   }
 
   hasId(id: string): boolean {
