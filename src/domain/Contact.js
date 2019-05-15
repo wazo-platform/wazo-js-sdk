@@ -169,6 +169,7 @@ type WazoResponse = {
   uuid: string,
   voicemail_number: any,
 };
+
 type GoogleResponse = {
   emails: string[],
   id: string,
@@ -380,6 +381,10 @@ export default class Contact {
       emails.push({ label: 'email', email: single.email });
     }
 
+    if (single.exten) {
+      numbers.push({ label: 'exten', number: single.exten })
+    }
+
     if (single.mobile_phone_number) {
       numbers.push({ label: 'mobile', number: single.mobile_phone_number });
     }
@@ -451,7 +456,7 @@ export default class Contact {
 
   is(other: Contact): boolean {
     return !!other && (
-      (!!this.sourceId && !!other.sourceId && this.sourceId === other.sourceId) || 
+      (!!this.sourceId && !!other.sourceId && this.sourceId === other.sourceId) ||
       (!!this.uuid && !!other.uuid && this.uuid === other.uuid)
     );
   }
