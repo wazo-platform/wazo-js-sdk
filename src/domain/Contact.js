@@ -455,10 +455,13 @@ export default class Contact {
   }
 
   is(other: Contact): boolean {
-    return !!other && (
-      (!!this.sourceId && !!other.sourceId && this.sourceId === other.sourceId) ||
-      (!!this.uuid && !!other.uuid && this.uuid === other.uuid)
-    );
+    const sameSourceId = !!this.sourceId && !!other.sourceId && this.sourceId === other.sourceId;
+    const sameUuid = !!this.uuid && !!other.uuid && this.uuid === other.uuid;
+    const hasSameId = sameSourceId || sameUuid;
+
+    const hasSameBackend = !!this.backend && !!other.backend && this.backend === other.backend;
+
+    return !!other && hasSameId && hasSameBackend;
   }
 
   hasId(id: string): boolean {
