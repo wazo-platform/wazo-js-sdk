@@ -3,7 +3,7 @@ import authMethods from './api/auth';
 import applicationMethods from './api/application';
 import confdMethods from './api/confd';
 import accessdMethods from './api/accessd';
-import ctidNgMethods from './api/ctid-ng';
+import calldMethods from './api/calld';
 import dirdMethods from './api/dird';
 import callLogdMethods from './api/call-logd';
 import chatdMethods from './api/chatd';
@@ -25,7 +25,7 @@ export default class ApiClient {
   application: Object;
   confd: Object;
   accessd: Object;
-  ctidNg: Object;
+  calld: Object;
   dird: Object;
   callLogd: Object;
   chatd: Object;
@@ -37,10 +37,10 @@ export default class ApiClient {
 
   initializeEndpoints(): void {
     this.auth = authMethods(this.client, `auth/${AUTH_VERSION}`);
-    this.application = applicationMethods(this.client, `ctid-ng/${APPLICATION_VERSION}/applications`);
+    this.application = applicationMethods(this.client, `calld/${APPLICATION_VERSION}/applications`);
     this.confd = confdMethods(this.client, `confd/${CONFD_VERSION}`);
     this.accessd = accessdMethods(this.client, `accessd/${ACCESSD_VERSION}`);
-    this.ctidNg = ctidNgMethods(this.client, `ctid-ng/${CTIDNG_VERSION}`);
+    this.calld = calldMethods(this.client, `calld/${CTIDNG_VERSION}`);
     this.dird = dirdMethods(this.client, `dird/${DIRD_VERSION}`);
     this.callLogd = callLogdMethods(this.client, `call-logd/${CALL_LOGD_VERSION}`);
     this.chatd = chatdMethods(this.client, `chatd/${CHATD_VERSION}`);
