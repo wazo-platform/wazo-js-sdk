@@ -281,7 +281,7 @@ export default class Contact {
       note: plain.note || '',
       favorited: false,
       personal: true,
-      backend: plain.backend || '',
+      backend: plain.backend || 'personal',
     });
   }
 
