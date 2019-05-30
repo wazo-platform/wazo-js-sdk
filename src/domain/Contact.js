@@ -5,6 +5,13 @@ import { LINE_STATE } from './Profile';
 import newFrom from '../utils/new-from';
 import type { DirectorySource } from './DirectorySource';
 
+const BACKEND = {
+    OFFICE365: 'office365',
+    PERSONAL: 'personal',
+    GOOGLE: 'google',
+    WAZO: 'wazo',
+};
+
 export type NewContact = {
   firstName: string,
   lastName: string,
@@ -281,7 +288,7 @@ export default class Contact {
       note: plain.note || '',
       favorited: false,
       personal: true,
-      backend: plain.backend || '',
+      backend: plain.backend || BACKEND.PERSONAL,
     });
   }
 
@@ -337,7 +344,7 @@ export default class Contact {
       numbers,
       emails,
       source: source.name,
-      backend: 'office365',
+      backend: BACKEND.OFFICE365,
     });
   }
 
@@ -365,7 +372,7 @@ export default class Contact {
       numbers,
       emails,
       source: source.name,
-      backend: 'google',
+      backend: BACKEND.GOOGLE,
     });
   }
 
@@ -396,7 +403,7 @@ export default class Contact {
       numbers,
       emails,
       source: source.name,
-      backend: 'wazo',
+      backend: BACKEND.WAZO,
     });
   }
 
