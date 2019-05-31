@@ -40,6 +40,7 @@
   },
   "dependencies": {
     "events": "^3.0.0",
+    "fstream": "^1.0.12",
     "globby": "^9.1.0",
     "google-libphonenumber": "^3.1.15",
     "js-base64": "^2.4.9",
