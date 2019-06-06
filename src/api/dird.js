@@ -95,4 +95,16 @@ export default (client: ApiRequester, baseUrl: string) => ({
       .get(`${baseUrl}/backends/google/sources/${source.uuid}/contacts`, null, token)
       .then(response => Contact.parseManyGoogle(response.items, source));
   },
+
+  fetchConferenceSource(token: Token, context: string): Promise<Sources> {
+    return client
+      .get(`${baseUrl}/directories/${context}/sources`, { backend: 'conference' }, token)
+      .then(response => response);
+  },
+
+  fetchConferenceContacts(token: Token, source: DirectorySource): Promise<Contact[]> {
+    return client
+      .get(`${baseUrl}/backends/conference/sources/${source.uuid}/contacts`, null, token)
+      .then(response => Contact.parseManyConference(response.items, source));
+  },
 });
