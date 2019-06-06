@@ -176,6 +176,13 @@ type WazoResponse = {
   uuid: string,
   voicemail_number: any,
 };
+type ConferenceResponse = {
+  backend: string,
+  name: string,
+  id: string,
+  extensions: Array<{ context: string, exten: string }>,
+  incalls: Array<{ context: string, exten: string }>,
+};
 
 type GoogleResponse = {
   emails: string[],
@@ -404,6 +411,26 @@ export default class Contact {
       emails,
       source: source.name,
       backend: BACKEND.WAZO,
+    });
+  }
+
+  static parseManyConference(response: ConferenceResponse[], source: DirectorySource): Array<Contact> {
+    return response.map(r => Contact.parseConference(r, source));
+  }
+
+  static parseConference(single: ConferenceResponse, source: DirectorySource): Contact {
+    const numbers = [];
+
+    if (single.extensions[0].exten) {
+      numbers.push({ label: 'exten', number: single.extensions[0].exten })
+    }
+
+    return new Contact({
+      sourceId: single.id,
+      name: single.name,
+      numbers,
+      source: source.name,
+      backend: 'conference',
     });
   }
 
