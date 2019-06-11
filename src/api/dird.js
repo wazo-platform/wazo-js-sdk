@@ -17,6 +17,14 @@ const getContactPayload = (contact: NewContact | Contact) => ({
   note: contact.note ? contact.note : '',
 });
 
+type ContactSearchQueryParams = {
+  order?: string,
+  direction?: 'asc' | 'desc',
+  limit?: number,
+  offset?: number,
+  search?: string
+} | null
+
 export default (client: ApiRequester, baseUrl: string) => ({
   search(token: Token, context: string, term: string): Promise<Array<Contact>> {
     return client
@@ -24,8 +32,9 @@ export default (client: ApiRequester, baseUrl: string) => ({
       .then(response => Contact.parseMany(response));
   },
 
-  listPersonalContacts(token: Token): Promise<Array<Contact>> {
-    return client.get(`${baseUrl}/personal`, null, token).then(response => Contact.parseManyPersonal(response.items));
+  listPersonalContacts(token: Token, queryParams: ContactSearchQueryParams = null): Promise<Array<Contact>> {
+    return client.get(`${baseUrl}/personal`, queryParams, token)
+        .then(response => Contact.parseManyPersonal(response.items));
   },
 
   addContact(token: Token, contact: NewContact): Promise<Contact> {
@@ -66,9 +75,10 @@ export default (client: ApiRequester, baseUrl: string) => ({
       .then(response => response);
   },
 
-  fetchOffice365Contacts(token: Token, source: DirectorySource): Promise<Contact[]> {
+  fetchOffice365Contacts(token: Token, source: DirectorySource,
+                         queryParams: ContactSearchQueryParams = null): Promise<Contact[]> {
     return client
-      .get(`${baseUrl}/backends/office365/sources/${source.uuid}/contacts`, null, token)
+      .get(`${baseUrl}/backends/office365/sources/${source.uuid}/contacts`, queryParams, token)
       .then(response => Contact.parseManyOffice365(response.items, source));
   },
 
@@ -78,9 +88,12 @@ export default (client: ApiRequester, baseUrl: string) => ({
       .then(response => response);
   },
 
-  fetchWazoContacts(token: Token, source: DirectorySource): Promise<Contact[]> {
+  fetchWazoContacts(token: Token, source: DirectorySource,
+                    queryParams: ContactSearchQueryParams = null): Promise<Contact[]> {
+    console.warn('deprecation warning: consider using "dird.fetchWazoContactsWithParams" instead');
+
     return client
-      .get(`${baseUrl}/backends/wazo/sources/${source.uuid}/contacts`, null, token)
+      .get(`${baseUrl}/backends/wazo/sources/${source.uuid}/contacts`, queryParams, token)
       .then(response => Contact.parseManyWazo(response.items, source));
   },
 
@@ -90,9 +103,10 @@ export default (client: ApiRequester, baseUrl: string) => ({
       .then(response => response);
   },
 
-  fetchGoogleContacts(token: Token, source: DirectorySource): Promise<Contact[]> {
+  fetchGoogleContacts(token: Token, source: DirectorySource,
+                      queryParams: ContactSearchQueryParams = null): Promise<Contact[]> {
     return client
-      .get(`${baseUrl}/backends/google/sources/${source.uuid}/contacts`, null, token)
+      .get(`${baseUrl}/backends/google/sources/${source.uuid}/contacts`, queryParams, token)
       .then(response => Contact.parseManyGoogle(response.items, source));
   },
 
