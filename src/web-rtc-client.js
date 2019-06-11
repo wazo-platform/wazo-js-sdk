@@ -59,14 +59,14 @@ export default class WebRTCClient extends Emitter {
   hasAudio: boolean;
   audio: Object | boolean;
   audioElements: { [string]: HTMLAudioElement };
-  video: boolean;
+  video: Object | boolean;
+  videoEnabled: boolean;
   localVideo: ?Object & ?boolean;
   audioContext: ?AudioContext;
   audioStreams: Object;
   mergeDestination: ?MediaStreamAudioDestinationNode;
   audioOutputDeviceId: ?string;
   videoSessions: Object;
-  cameraDeviceId: string;
 
   static isAPrivateIp(ip: string): boolean {
     const regex = /^(?:10|127|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\..*/;
@@ -424,8 +424,17 @@ export default class WebRTCClient extends Emitter {
     this.userAgent = this.createUserAgent();
   }
 
+  changeVideoInputDevice(id: string) {
+    this.video = id ? { deviceId: { exact: id } } : true;
+    if (this.userAgent) {
+      this.userAgent.transport.disconnect();
+      this.userAgent.stop();
+    }
+    this.userAgent = this.createUserAgent();
+  }
+
   changeVideo(enabled: boolean) {
-    this.video = enabled;
+    this.videoEnabled = enabled;
   }
 
   _checkMaxMergeSessions(nbSessions: number) {
@@ -467,8 +476,12 @@ export default class WebRTCClient extends Emitter {
     return this.audio && this.audio.deviceId && this.audio.deviceId.exact ? this.audio : true;
   }
 
+  _getVideoConstraints() {
+    return this.video && this.video.deviceId && this.video.deviceId.exact ? this.video : true;
+  }
+
   _hasVideo() {
-    return this.video;
+    return this.videoEnabled;
   }
 
   sessionHasLocalVideo(sessionId: string): boolean {
@@ -557,7 +570,7 @@ export default class WebRTCClient extends Emitter {
       sessionDescriptionHandlerFactoryOptions: {
         constraints: {
           audio: this._getAudioConstraints(),
-          video: this.video ? this.cameraDeviceId || true : false,
+          video:  this._getVideoConstraints()
         },
         peerConnectionOptions: {
           iceCheckingTimeout: this.config.iceCheckingTimeout || 5000,
@@ -565,7 +578,7 @@ export default class WebRTCClient extends Emitter {
             rtcpMuxPolicy: 'require',
             bundlePolicy: 'max-compat',
             iceServers: WebRTCClient.getIceServers(this.config.host),
-            ...this._getRtcOptions(this.video),
+            ...this._getRtcOptions(this.videoEnabled),
           },
         },
       },
