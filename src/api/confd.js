@@ -28,7 +28,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     userUuid: string,
     key: string,
     destination: string,
-    enabled: Boolean
+    enabled: Boolean,
   ): Promise<Boolean> {
     const url = `${baseUrl}/users/${userUuid}/forwards/${key}`;
     return client.put(url, { destination, enabled }, token, ApiRequester.successResponseParser);

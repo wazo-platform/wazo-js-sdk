@@ -443,7 +443,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     console.warn(
-      `Merging more than ${MAX_MERGE_SESSIONS} session is not recommended, it will consume too many resources.`
+      `Merging more than ${MAX_MERGE_SESSIONS} session is not recommended, it will consume too many resources.`,
     );
   }
 
@@ -458,9 +458,9 @@ export default class WebRTCClient extends Emitter {
             const pc = sdh.peerConnection;
             const constraints = this._getRtcOptions(this._hasVideo());
             pc.createOffer(constraints).then(offer => pc.setLocalDescription(offer));
-          })
+          }),
         );
-      })
+      }),
     );
   }
 

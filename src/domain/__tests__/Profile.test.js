@@ -90,7 +90,7 @@ describe('Profile domain', () => {
         subscriptionType: 2,
         switchboards: [],
         status: '',
-      })
+      }),
     );
   });
 });

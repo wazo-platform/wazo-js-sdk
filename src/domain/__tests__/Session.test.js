@@ -62,7 +62,7 @@ describe('Session domain', () => {
         token: 'b93ae6bd-08d7-4001-9e61-057e72bbc4b3',
         uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54',
         expiresAt: new Date('2017-07-19T21:27:53.086990z'),
-      })
+      }),
     );
   });
 

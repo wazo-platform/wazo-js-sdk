@@ -91,7 +91,7 @@ export default class ApiRequester {
     method: string = 'get',
     body: ?Object = null,
     headers: ?string | ?Object = null,
-    parse: Function = ApiRequester.defaultParser
+    parse: Function = ApiRequester.defaultParser,
   ): Promise<any> {
     const url = this.computeUrl(method, path, body);
     const newHeaders = headers ? ApiRequester.getHeaders(headers) : {};
