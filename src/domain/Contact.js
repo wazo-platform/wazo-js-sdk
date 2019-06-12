@@ -6,10 +6,10 @@ import newFrom from '../utils/new-from';
 import type { DirectorySource } from './DirectorySource';
 
 const BACKEND = {
-    OFFICE365: 'office365',
-    PERSONAL: 'personal',
-    GOOGLE: 'google',
-    WAZO: 'wazo',
+  OFFICE365: 'office365',
+  PERSONAL: 'personal',
+  GOOGLE: 'google',
+  WAZO: 'wazo',
 };
 
 export type NewContact = {
@@ -396,7 +396,7 @@ export default class Contact {
     }
 
     if (single.exten) {
-      numbers.push({ label: 'exten', number: single.exten })
+      numbers.push({ label: 'exten', number: single.exten });
     }
 
     if (single.mobile_phone_number) {
@@ -422,7 +422,7 @@ export default class Contact {
     const numbers = [];
 
     if (single.extensions.length > 0 && single.extensions[0].exten) {
-      numbers.push({ label: 'exten', number: single.extensions[0].exten })
+      numbers.push({ label: 'exten', number: single.extensions[0].exten });
     }
 
     return new Contact({

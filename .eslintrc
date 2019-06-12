@@ -1,5 +1,5 @@
 {
-  "extends": ["airbnb-base", "prettier", "plugin:flowtype/recommended"],
+  "extends": ["airbnb-base", "plugin:flowtype/recommended"],
   "plugins": [
     "flowtype"
   ],
@@ -13,6 +13,9 @@
     "no-underscore-dangle": ["error", { "allowAfterThis": true }],
     "no-console": ["error", { "allow": ["info", "warn", "error"] }],
     "import/no-cycle": 0,
-    "no-plusplus": 0
+    "no-plusplus": 0,
+    "object-curly-newline": 0,
+    "implicit-arrow-linebreak": 0,
+    "arrow-parens": 0
   }
 }

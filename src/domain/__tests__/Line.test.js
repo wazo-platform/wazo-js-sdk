@@ -67,7 +67,7 @@ describe('Line domain', () => {
           ],
           username: 'ipcor1pj',
         },
-      })
+      }),
     );
   });
 });

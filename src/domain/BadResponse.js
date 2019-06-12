@@ -20,7 +20,7 @@ export default class BadResponse extends Error {
     status: number,
     timestamp: ?number = null,
     errorId: ?string = null,
-    details: ?Object = null
+    details: ?Object = null,
   ) {
     super(message);
 

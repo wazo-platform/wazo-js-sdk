@@ -11,7 +11,7 @@ export type ChatUser = {
 
 export type ChatMessageResponseRoom = {
   uuid: ?string,
-}
+};
 
 export type ChatMessageResponse = {
   alias: string,
@@ -21,7 +21,7 @@ export type ChatMessageResponse = {
   user_uuid: string,
   uuid: string,
   wazo_uuid: string,
-  room: ?ChatMessageResponseRoom;
+  room: ?ChatMessageResponseRoom,
 };
 
 export type ChatMessageListResponse = {

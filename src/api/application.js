@@ -11,7 +11,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     context: string,
     exten: string,
     autoanswer: string,
-    displayed_caller_id_number: ?string
+    displayed_caller_id_number: ?string,
   ) {
     const url = `${baseUrl}/${applicationUuid}/nodes`;
     const body = { calls: [{ id: callId }] };
@@ -24,8 +24,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
           .then(data => ({
             nodeUuid,
             data,
-          }))
-      );
+          })));
   },
 
   calls(token: Token, applicationUuid: string) {
@@ -52,7 +51,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     nodeUuid: string,
     context: string,
     exten: string,
-    autoanswer: string
+    autoanswer: string,
   ) {
     const data = { context, exten, autoanswer };
 

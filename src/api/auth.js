@@ -100,7 +100,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
       `${baseUrl}/users/password/reset?user_uuid=${userUuid}`,
       body,
       token,
-      ApiRequester.successResponseParser
+      ApiRequester.successResponseParser,
     );
   },
 
@@ -113,7 +113,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     username: string,
     password: string,
     firstname: string,
-    lastname: string
+    lastname: string,
   ): Promise<User | RequestError> {
     const body = {
       username,
@@ -192,7 +192,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     name: string,
     contact: string,
     phone: string,
-    address: Array<Object>
+    address: Array<Object>,
   ): Promise<Tenant | RequestError> {
     const body = {
       name,
