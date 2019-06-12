@@ -76,6 +76,11 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.post(`${baseUrl}/users/${userUuid}/external/mobile`, body, token);
   },
 
+  getPushNotificationSenderId(token: Token, userUuid: UUID) {
+    return client.get(`${baseUrl}/users/${userUuid}/external/mobile/sender_id`, null, token)
+      .then(response => response.sender_id);
+  },
+
   /**
    * `username` or `email` should be set.
    */
