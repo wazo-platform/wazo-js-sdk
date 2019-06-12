@@ -570,7 +570,7 @@ export default class WebRTCClient extends Emitter {
       sessionDescriptionHandlerFactoryOptions: {
         constraints: {
           audio: this._getAudioConstraints(),
-          video:  this._getVideoConstraints()
+          video: this._getVideoConstraints(),
         },
         peerConnectionOptions: {
           iceCheckingTimeout: this.config.iceCheckingTimeout || 5000,
