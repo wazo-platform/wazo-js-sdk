@@ -421,7 +421,7 @@ export default class Contact {
   static parseConference(single: ConferenceResponse, source: DirectorySource): Contact {
     const numbers = [];
 
-    if (single.extensions[0].exten) {
+    if (single.extensions.length > 0 && single.extensions[0].exten) {
       numbers.push({ label: 'exten', number: single.extensions[0].exten })
     }
 

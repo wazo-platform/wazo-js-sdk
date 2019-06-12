@@ -90,8 +90,6 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   fetchWazoContacts(token: Token, source: DirectorySource,
                     queryParams: ContactSearchQueryParams = null): Promise<Contact[]> {
-    console.warn('deprecation warning: consider using "dird.fetchWazoContactsWithParams" instead');
-
     return client
       .get(`${baseUrl}/backends/wazo/sources/${source.uuid}/contacts`, queryParams, token)
       .then(response => Contact.parseManyWazo(response.items, source));
