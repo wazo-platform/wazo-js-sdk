@@ -179,7 +179,7 @@ type WazoResponse = {
 type ConferenceResponse = {
   backend: string,
   name: string,
-  id: string,
+  id: number,
   extensions: Array<{ context: string, exten: string }>,
   incalls: Array<{ context: string, exten: string }>,
 };
@@ -426,7 +426,7 @@ export default class Contact {
     }
 
     return new Contact({
-      sourceId: single.id,
+      sourceId: String(single.id),
       name: single.name,
       numbers,
       source: source.name,
