@@ -2,12 +2,18 @@
 /* eslint-disable class-methods-use-this */
 /* global window, document, navigator */
 import 'webrtc-adapter';
+import { UA } from 'sip.js/lib/UA';
+import { Utils } from 'sip.js/lib/Utils';
+import { Exceptions } from 'sip.js/lib/Exceptions';
+import { Modifiers } from 'sip.js/lib/Web';
 import SIP from 'sip.js';
 import Emitter from './utils/Emitter';
 
 import once from './utils/once';
 
 import MobileSessionDescriptionHandler from './lib/MobileSessionDescriptionHandler';
+
+const SIPMethods = { Web: { Modifiers }, Utils, Exceptions };
 
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
 const events = [
@@ -55,7 +61,7 @@ type WebRtcConfig = {
 // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
 export default class WebRTCClient extends Emitter {
   config: WebRtcConfig;
-  userAgent: SIP.UA;
+  userAgent: UA;
   hasAudio: boolean;
   audio: Object | boolean;
   audioElements: { [string]: HTMLAudioElement };
@@ -105,9 +111,9 @@ export default class WebRTCClient extends Emitter {
     this.audioElements = {};
   }
 
-  createUserAgent(): SIP.UA {
+  createUserAgent(): UA {
     const webRTCConfiguration = this._createWebRTCConfiguration();
-    const userAgent = new SIP.UA(webRTCConfiguration);
+    const userAgent = new UA(webRTCConfiguration);
 
     events
       .filter(eventName => eventName !== 'invite' && eventName !== 'new')
@@ -586,7 +592,7 @@ export default class WebRTCClient extends Emitter {
 
     // Use custom SessionDescription handler for mobile
     if (!this._isWeb()) {
-      config.sessionDescriptionHandlerFactory = MobileSessionDescriptionHandler(SIP).defaultFactory;
+      config.sessionDescriptionHandlerFactory = MobileSessionDescriptionHandler(SIPMethods).defaultFactory;
       config.registerOptions = {
         extraContactHeaderParams: ['mobility=mobile'],
       };
