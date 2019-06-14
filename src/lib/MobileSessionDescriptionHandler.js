@@ -259,7 +259,11 @@ export default SIPMethods =>
             // Do not try to audio fallback again
             options.disableAudioFallback = true;
             // Remove video first, then do the other modifiers
-            return this.setDescription(sessionDescription, options, [SIPMethods.Web.Modifiers.stripVideo].concat(modifiers));
+            return this.setDescription(
+              sessionDescription,
+              options,
+              [SIPMethods.Web.Modifiers.stripVideo].concat(modifiers)
+            );
           }
           const error = new SIPMethods.Exceptions.SessionDescriptionHandlerError('setDescription', e);
           this.logger.error(error.error);
@@ -572,7 +576,11 @@ export default SIPMethods =>
           if (e instanceof SIPMethods.Exceptions.SessionDescriptionHandlerError) {
             throw e;
           }
-          const error = new SIPMethods.Exceptions.SessionDescriptionHandlerError('acquire', e, 'unable to acquire streams');
+          const error = new SIPMethods.Exceptions.SessionDescriptionHandlerError(
+            'acquire',
+            e,
+            'unable to acquire streams'
+          );
           this.logger.error(error.message);
           this.logger.error(error.error);
           throw error;
@@ -597,7 +605,11 @@ export default SIPMethods =>
           if (e instanceof SIPMethods.Exceptions.SessionDescriptionHandlerError) {
             throw e;
           }
-          const error = new SIPMethods.Exceptions.SessionDescriptionHandlerError('acquire', e, 'error removing streams');
+          const error = new SIPMethods.Exceptions.SessionDescriptionHandlerError(
+            'acquire',
+            e,
+            'error removing streams'
+          );
           this.logger.error(error.message);
           this.logger.error(error.error);
           throw error;
