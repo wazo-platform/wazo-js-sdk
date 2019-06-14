@@ -8,7 +8,7 @@ import { SessionDescriptionHandlerObserver } from 'sip.js/lib/Web/SessionDescrip
  * @param {SIP.Session} session
  * @param {Object} [options]
  */
-export default SIP =>
+export default SIPMethods =>
   class MobileSessionDescriptionHandler extends EventEmitter {
     /**
      * @param {SIP.Session} session
@@ -213,7 +213,7 @@ export default SIP =>
       };
 
       // if (options.disableVideo) {
-      //   modifiers = [SIP.Web.Modifiers.stripVideo].concat(modifiers);
+      //   modifiers = [SIPMethods.Web.Modifiers.stripVideo].concat(modifiers);
       // }
 
       return Promise.resolve()
@@ -230,13 +230,13 @@ export default SIP =>
           }.bind(this)
         )
         .then(function() {
-          return SIP.Utils.reducePromises(modifiers, description);
+          return SIPMethods.Utils.reducePromises(modifiers, description);
         })
         .catch(e => {
-          if (e instanceof SIP.Exceptions.SessionDescriptionHandlerError) {
+          if (e instanceof SIPMethods.Exceptions.SessionDescriptionHandlerError) {
             throw e;
           }
-          const error = new SIP.Exceptions.SessionDescriptionHandlerError(
+          const error = new SIPMethods.Exceptions.SessionDescriptionHandlerError(
             'setDescription',
             e,
             'The modifiers did not resolve successfully'
@@ -251,7 +251,7 @@ export default SIP =>
           return self.peerConnection.setRemoteDescription(new self.WebRTC.RTCSessionDescription(modifiedDescription));
         })
         .catch(e => {
-          if (e instanceof SIP.Exceptions.SessionDescriptionHandlerError) {
+          if (e instanceof SIPMethods.Exceptions.SessionDescriptionHandlerError) {
             throw e;
           }
           // Check the original SDP for video, and ensure that we have want to do audio fallback
@@ -259,9 +259,9 @@ export default SIP =>
             // Do not try to audio fallback again
             options.disableAudioFallback = true;
             // Remove video first, then do the other modifiers
-            return this.setDescription(sessionDescription, options, [SIP.Web.Modifiers.stripVideo].concat(modifiers));
+            return this.setDescription(sessionDescription, options, [SIPMethods.Web.Modifiers.stripVideo].concat(modifiers));
           }
-          const error = new SIP.Exceptions.SessionDescriptionHandlerError('setDescription', e);
+          const error = new SIPMethods.Exceptions.SessionDescriptionHandlerError('setDescription', e);
           this.logger.error(error.error);
           this.emit('peerConnection-setRemoteDescriptionFailed', error);
           throw error;
@@ -331,10 +331,10 @@ export default SIP =>
 
       return pc[methodName](RTCOfferOptions)
         .catch(e => {
-          if (e instanceof SIP.Exceptions.SessionDescriptionHandlerError) {
+          if (e instanceof SIPMethods.Exceptions.SessionDescriptionHandlerError) {
             throw e;
           }
-          const error = new SIP.Exceptions.SessionDescriptionHandlerError(
+          const error = new SIPMethods.Exceptions.SessionDescriptionHandlerError(
             'createOfferOrAnswer',
             e,
             'peerConnection-' + methodName + 'Failed'
@@ -343,17 +343,17 @@ export default SIP =>
           throw error;
         })
         .then(function(sdp) {
-          return SIP.Utils.reducePromises(modifiers, self.createRTCSessionDescriptionInit(sdp));
+          return SIPMethods.Utils.reducePromises(modifiers, self.createRTCSessionDescriptionInit(sdp));
         })
         .then(function(sdp) {
           self.resetIceGatheringComplete();
           return pc.setLocalDescription(new self.WebRTC.RTCSessionDescription(sdp));
         })
         .catch(e => {
-          if (e instanceof SIP.Exceptions.SessionDescriptionHandlerError) {
+          if (e instanceof SIPMethods.Exceptions.SessionDescriptionHandlerError) {
             throw e;
           }
-          const error = new SIP.Exceptions.SessionDescriptionHandlerError(
+          const error = new SIPMethods.Exceptions.SessionDescriptionHandlerError(
             'createOfferOrAnswer',
             e,
             'peerConnection-SetLocalDescriptionFailed'
@@ -366,7 +366,7 @@ export default SIP =>
         })
         .then(function readySuccess() {
           var localDescription = self.createRTCSessionDescriptionInit(self.peerConnection.localDescription);
-          return SIP.Utils.reducePromises(modifiers, localDescription);
+          return SIPMethods.Utils.reducePromises(modifiers, localDescription);
         })
         .then(function(localDescription) {
           self.setDirection(localDescription.sdp);
@@ -378,10 +378,10 @@ export default SIP =>
           methodName === 'createOffer' ? pc[methodName](RTCOfferOptions) : localDescription
         )
         .catch(e => {
-          if (e instanceof SIP.Exceptions.SessionDescriptionHandlerError) {
+          if (e instanceof SIPMethods.Exceptions.SessionDescriptionHandlerError) {
             throw e;
           }
-          const error = new SIP.Exceptions.SessionDescriptionHandlerError('createOfferOrAnswer', e);
+          const error = new SIPMethods.Exceptions.SessionDescriptionHandlerError('createOfferOrAnswer', e);
           this.logger.error(error);
           throw error;
         });
@@ -569,10 +569,10 @@ export default SIP =>
       )
         .catch(e => {
           // TODO: This propogates downwards
-          if (e instanceof SIP.Exceptions.SessionDescriptionHandlerError) {
+          if (e instanceof SIPMethods.Exceptions.SessionDescriptionHandlerError) {
             throw e;
           }
-          const error = new SIP.Exceptions.SessionDescriptionHandlerError('acquire', e, 'unable to acquire streams');
+          const error = new SIPMethods.Exceptions.SessionDescriptionHandlerError('acquire', e, 'unable to acquire streams');
           this.logger.error(error.message);
           this.logger.error(error.error);
           throw error;
@@ -594,10 +594,10 @@ export default SIP =>
           }.bind(this)
         )
         .catch(e => {
-          if (e instanceof SIP.Exceptions.SessionDescriptionHandlerError) {
+          if (e instanceof SIPMethods.Exceptions.SessionDescriptionHandlerError) {
             throw e;
           }
-          const error = new SIP.Exceptions.SessionDescriptionHandlerError('acquire', e, 'error removing streams');
+          const error = new SIPMethods.Exceptions.SessionDescriptionHandlerError('acquire', e, 'error removing streams');
           this.logger.error(error.message);
           this.logger.error(error.error);
           throw error;
@@ -623,10 +623,10 @@ export default SIP =>
           }.bind(this)
         )
         .catch(e => {
-          if (e instanceof SIP.Exceptions.SessionDescriptionHandlerError) {
+          if (e instanceof SIPMethods.Exceptions.SessionDescriptionHandlerError) {
             throw e;
           }
-          const error = new SIP.Exceptions.SessionDescriptionHandlerError('acquire', e, 'error adding stream');
+          const error = new SIPMethods.Exceptions.SessionDescriptionHandlerError('acquire', e, 'error adding stream');
           this.logger.error(error.message);
           this.logger.error(error.error);
           throw error;
@@ -700,7 +700,7 @@ export default SIP =>
       if (this.isIceGatheringComplete()) {
         return Promise.resolve();
       } else if (!this.isIceGatheringDeferred) {
-        this.iceGatheringDeferred = SIP.Utils.defer();
+        this.iceGatheringDeferred = SIPMethods.Utils.defer();
       }
       return this.iceGatheringDeferred.promise;
     }
