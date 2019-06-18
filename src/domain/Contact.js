@@ -174,6 +174,7 @@ type WazoResponse = {
   lastname: string,
   mobile_phone_number: any,
   uuid: string,
+  id: string,
   voicemail_number: any,
 };
 type ConferenceResponse = {
@@ -405,7 +406,7 @@ export default class Contact {
 
     return new Contact({
       uuid: single.uuid,
-      sourceId: single.uuid,
+      sourceId: String(single.id),
       name: `${single.firstname} ${single.lastname}`,
       numbers,
       emails,
