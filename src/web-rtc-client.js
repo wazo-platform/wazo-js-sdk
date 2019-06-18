@@ -594,7 +594,7 @@ export default class WebRTCClient extends Emitter {
     if (!this._isWeb()) {
       config.sessionDescriptionHandlerFactory = MobileSessionDescriptionHandler(SIPMethods).defaultFactory;
       config.registerOptions = {
-        extraContactHeaderParams: ['mobility=mobile'],
+        extraContactHeaderParams: ['mobility: mobile'],
       };
     }
 
