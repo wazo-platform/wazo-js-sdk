@@ -237,13 +237,13 @@ export default class WebRTCClient extends Emitter {
   hold(session: SIP.sessionDescriptionHandler) {
     this.mute(session);
 
-    return session.hold();
+    return session.hold(this._getMediaConfiguration(this.videoEnabled));
   }
 
   unhold(session: SIP.sessionDescriptionHandler) {
     this.unmute(session);
 
-    return session.unhold();
+    return session.unhold(this._getMediaConfiguration(this.videoEnabled));
   }
 
   sendDTMF(session: SIP.sessionDescriptionHandler, tone: string) {
@@ -483,6 +483,9 @@ export default class WebRTCClient extends Emitter {
   }
 
   _getVideoConstraints() {
+    if (!this.videoEnabled) {
+      return false;
+    }
     return this.video && this.video.deviceId && this.video.deviceId.exact ? this.video : true;
   }
 
@@ -620,6 +623,8 @@ export default class WebRTCClient extends Emitter {
         },
         disableVideo: !enableVideo,
         RTCOfferOptions: {
+          OfferToReceiveAudio: this._hasAudio(),
+          OfferToReceiveVideo: enableVideo,
           mandatory: {
             OfferToReceiveAudio: this._hasAudio(),
             OfferToReceiveVideo: enableVideo,
