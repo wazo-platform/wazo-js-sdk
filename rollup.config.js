@@ -6,18 +6,22 @@ import json from 'rollup-plugin-json';
 import flow from 'rollup-plugin-flow';
 
 const esmConfigs = globby.sync('src/**/*.js').map(inputFile => ({
-  entry: inputFile,
-  dest: inputFile.replace('src', 'esm'),
-  format: 'esm',
+  input: inputFile,
+  output: {
+    file: inputFile.replace('src', 'esm'),
+    format: 'esm',
+  },
   plugins: [
     flow(),
   ],
 }));
 
 const csjConfigs = globby.sync('src/**/*.js').map(inputFile => ({
-  entry: inputFile,
-  dest: inputFile.replace('src', 'lib'),
-  format: 'cjs',
+  input: inputFile,
+  output: {
+    file: inputFile.replace('src', 'lib'),
+    format: 'cjs',
+  },
   plugins: [
     flow(),
   ],

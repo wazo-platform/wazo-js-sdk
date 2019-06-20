@@ -15,6 +15,8 @@ import MobileSessionDescriptionHandler from './lib/MobileSessionDescriptionHandl
 
 const SIPMethods = { Web: { Modifiers }, Utils, Exceptions };
 
+const MAX_REGISTER_TRY = 10;
+
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
 const events = [
   'registered',
@@ -74,6 +76,9 @@ export default class WebRTCClient extends Emitter {
   mergeDestination: ?MediaStreamAudioDestinationNode;
   audioOutputDeviceId: ?string;
   videoSessions: Object;
+  registerTries: number;
+  registered: boolean;
+  registerTimeout: ?TimeoutID;
 
   static isAPrivateIp(ip: string): boolean {
     const regex = /^(?:10|127|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\..*/;
@@ -100,6 +105,9 @@ export default class WebRTCClient extends Emitter {
     this.userAgent = this.createUserAgent();
 
     this.videoSessions = {};
+    this.registerTries = 0;
+    this.registered = false;
+    this.registerTimeout = null;
   }
 
   configureMedia(media: MediaConfig) {
@@ -134,6 +142,8 @@ export default class WebRTCClient extends Emitter {
         this.eventEmitter.emit(eventName, event);
       });
     });
+
+    this._bindRegistrationEvents();
 
     return userAgent;
   }
@@ -816,5 +826,39 @@ export default class WebRTCClient extends Emitter {
         });
       });
     }
+  }
+
+  _bindRegistrationEvents(userAgent: UA) {
+    const onDisconnected = () => {
+      this.registered = false;
+      this.registerTries = 0;
+      this._tryToRegister();
+    };
+
+    userAgent.on('registered', () => {
+      if (this.registerTimeout) {
+        clearTimeout(this.registerTimeout);
+      }
+
+      this.registered = true;
+    });
+
+    userAgent.transport.on('disconnected', onDisconnected);
+    userAgent.on('unregistered', onDisconnected);
+  }
+
+  _tryToRegister() {
+    if (this.registered || this.registerTries >= MAX_REGISTER_TRY) {
+      if (this.registerTimeout) {
+        clearTimeout(this.registerTimeout);
+      }
+      return;
+    }
+
+    this.registerTimeout = setTimeout(() => {
+      this.register();
+      this.registerTries++;
+      this._tryToRegister();
+    }, 500 * this.registerTries);
   }
 }
