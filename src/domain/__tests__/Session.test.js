@@ -204,4 +204,141 @@ describe('Session domain', () => {
       expect(session.hasExtension('12')).toBeFalsy();
     });
   });
+
+  describe('when getting the primary context', () => {
+    const DEFAULT_CONTEXT = 'default';
+    const SOME_CONTEXT = 'some-context';
+
+    let A_SESSION;
+
+    beforeEach(() => {
+      A_SESSION = new Session({
+        token: 'ref-12345',
+        uuid: '1234',
+        expiresAt: new Date(9999, 0, 1),
+        engineVersion: null,
+      });
+    });
+
+    describe('given NO engine version', () => {
+      beforeEach(() => {
+        A_SESSION = new Session({ ...A_SESSION, engineVersion: null });
+      });
+
+      describe('and NO profile', () => {
+        beforeEach(() => {
+          A_SESSION = new Session({ ...A_SESSION, profile: null });
+        });
+
+        it('should return default context', async () => {
+          const context = A_SESSION.primaryContext();
+
+          expect(context).toEqual(DEFAULT_CONTEXT);
+        });
+      });
+
+      describe('and NO lines', () => {
+        beforeEach(() => {
+          A_SESSION = new Session({ ...A_SESSION, profile: new Profile({ lines: [] }) });
+        });
+
+        it('should return default context', async () => {
+          const context = A_SESSION.primaryContext();
+
+          expect(context).toEqual(DEFAULT_CONTEXT);
+        });
+      });
+
+      describe('and some lines', () => {
+        beforeEach(() => {
+          const line = new Line({ extensions: [{ context: SOME_CONTEXT, id: 1, exten: '1' }], id: 1, exten: 1 });
+          const profile = new Profile({ lines: [line] });
+          A_SESSION = new Session({ ...A_SESSION, profile });
+        });
+
+        it('should return line context', async () => {
+          const context = A_SESSION.primaryContext();
+
+          expect(context).toEqual(SOME_CONTEXT);
+        });
+      });
+    });
+
+    describe('given an engine version', () => {
+      describe('that is invalid', () => {
+        beforeEach(() => {
+          A_SESSION = new Session({ ...A_SESSION, engineVersion: '19.09-1' });
+        });
+
+        describe('and NO lines', () => {
+          beforeEach(() => {
+            const profile = new Profile({ lines: [] });
+            A_SESSION = new Session({ ...A_SESSION, profile });
+          });
+
+          it('should return default context', async () => {
+            const context = A_SESSION.primaryContext();
+
+            expect(context).toEqual(DEFAULT_CONTEXT);
+          });
+        });
+
+        describe('and some lines', () => {
+          beforeEach(() => {
+            const line = new Line({ extensions: [{ context: SOME_CONTEXT, id: 1, exten: '1' }], id: 1, exten: 1 });
+            const profile = new Profile({ lines: [line] });
+            A_SESSION = new Session({ ...A_SESSION, profile });
+          });
+
+          it('should return line context', async () => {
+            const context = A_SESSION.primaryContext();
+
+            expect(context).toEqual(SOME_CONTEXT);
+          });
+        });
+      });
+
+      describe('that is valid', () => {
+        describe('and under 19.08', () => {
+          describe('and NO lines', () => {
+            it('should return default context', async () => {
+              const context = A_SESSION.primaryContext();
+
+              expect(context).toEqual(DEFAULT_CONTEXT);
+            });
+          });
+
+          describe('and some lines', () => {
+            beforeEach(() => {
+              const line = new Line({ extensions: [{ context: SOME_CONTEXT, id: 1, exten: '1' }], id: 1, exten: 1 });
+              const profile = new Profile({ lines: [line] });
+              A_SESSION = new Session({ ...A_SESSION, profile });
+            });
+
+            it('should return line context', async () => {
+              const context = A_SESSION.primaryContext();
+
+              expect(context).toEqual(SOME_CONTEXT);
+            });
+          });
+        });
+
+        describe('and equal to 19.08', () => {
+          it('should return default context', async () => {
+            const context = A_SESSION.primaryContext();
+
+            expect(context).toEqual(DEFAULT_CONTEXT);
+          });
+        });
+
+        describe('and higher then 19.08', () => {
+          it('should return default context', async () => {
+            const context = A_SESSION.primaryContext();
+
+            expect(context).toEqual(DEFAULT_CONTEXT);
+          });
+        });
+      });
+    });
+  });
 });
