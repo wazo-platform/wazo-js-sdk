@@ -9,6 +9,7 @@ import type { UUID, Token } from './types';
 import newFrom from '../utils/new-from';
 
 const swarmKey = KEYUTIL.getKey(swarmPublicKey);
+const MINIMUM_WAZO_ENGINE_VERSION_FOR_DEFAULT_CONTEXT = 19.08;
 
 type Response = {
   data: {
@@ -42,12 +43,12 @@ type Authorization = {
 
 type SessionArguments = {
   token: string,
-  uuid: ?string,
-  tenantUuid?: string,
-  profile?: Profile,
+  uuid?: ?string,
+  tenantUuid?: ?string,
+  profile?: ?Profile,
   expiresAt: Date,
   authorizations?: Array<Authorization>,
-  engineVersion?: string,
+  engineVersion?: ?string,
 };
 
 export default class Session {
@@ -125,19 +126,15 @@ export default class Session {
   }
 
   primaryLine(): ?Line {
-    return this.profile ? this.profile.lines[0] : null;
+    return this.profile && this.profile.lines.length > 0 ? this.profile.lines[0] : null;
   }
 
-  primaryContext(): ?string {
+  primaryContext(): string {
     if (this.engineVersion) {
-      try {
-        const versionNumber = parseFloat(this.engineVersion);
+      const versionNumber = Number(this.engineVersion);
 
-        if (versionNumber >= 19.08) {
-          return 'default';
-        }
-      } catch (e) {
-        // do nothing
+      if (versionNumber && versionNumber >= MINIMUM_WAZO_ENGINE_VERSION_FOR_DEFAULT_CONTEXT) {
+        return 'default';
       }
     }
 
