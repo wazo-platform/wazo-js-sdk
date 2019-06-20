@@ -47,12 +47,14 @@ type SessionArguments = {
   profile?: Profile,
   expiresAt: Date,
   authorizations?: Array<Authorization>,
+  engineVersion?: string,
 };
 
 export default class Session {
   token: string;
   uuid: ?string;
   tenantUuid: ?string;
+  engineVersion: ?string;
   profile: ?Profile;
   expiresAt: Date;
   authorizations: Array<Authorization>;
@@ -83,13 +85,14 @@ export default class Session {
     return newFrom(profile, Session);
   }
 
-  constructor({ token, uuid, tenantUuid, profile, expiresAt, authorizations }: SessionArguments = {}) {
+  constructor({ token, uuid, tenantUuid, profile, expiresAt, authorizations, engineVersion }: SessionArguments = {}) {
     this.token = token;
     this.uuid = uuid;
     this.tenantUuid = tenantUuid || null;
     this.profile = profile;
     this.expiresAt = expiresAt;
     this.authorizations = authorizations || [];
+    this.engineVersion = engineVersion;
   }
 
   hasExpired(date: Date = new Date()): boolean {
@@ -126,9 +129,21 @@ export default class Session {
   }
 
   primaryContext(): ?string {
+    if (this.engineVersion) {
+      try {
+        const versionNumber = parseFloat(this.engineVersion);
+
+        if (versionNumber >= 19.08) {
+          return 'default';
+        }
+      } catch (e) {
+        // do nothing
+      }
+    }
+
     const line = this.primaryLine();
 
-    return line ? line.extensions[0].context : null;
+    return line && line.extensions.length > 0 ? line.extensions[0].context : 'default';
   }
 
   primaryNumber(): ?string {

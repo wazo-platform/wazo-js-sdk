@@ -55,7 +55,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.get(`${baseUrl}/users/${userUuid}/lines/${lineId}/associated/endpoints/sip`, null, token);
   },
 
-  getInfos(token: Token): Promise<any> {
+  getInfos(token: Token): Promise<{uuid: string, wazo_version: string}> {
     return client.get(`${baseUrl}/infos`, null, token);
   },
 });
