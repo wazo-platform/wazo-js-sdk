@@ -54,4 +54,8 @@ export default (client: ApiRequester, baseUrl: string) => ({
   getSIP(token: Token, userUuid: UUID, lineId: number): Promise<WebRtcConfig> {
     return client.get(`${baseUrl}/users/${userUuid}/lines/${lineId}/associated/endpoints/sip`, null, token);
   },
+
+  getInfos(token: Token): Promise<any> {
+    return client.get(`${baseUrl}/infos`, null, token);
+  },
 });
