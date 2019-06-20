@@ -143,7 +143,7 @@ export default class WebRTCClient extends Emitter {
       });
     });
 
-    this._bindRegistrationEvents();
+    this._bindRegistrationEvents(userAgent);
 
     return userAgent;
   }
