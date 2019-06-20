@@ -16,6 +16,7 @@
     "dist/*.js",
     "src/**/*.js",
     "esm/**/*.js",
+    "lib/**/*.js",
     "config.js"
   ],
   "repository": {

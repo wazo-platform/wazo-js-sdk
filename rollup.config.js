@@ -5,14 +5,25 @@ import commonjs from 'rollup-plugin-commonjs';
 import json from 'rollup-plugin-json';
 import flow from 'rollup-plugin-flow';
 
-const configs = globby.sync('src/**/*.js').map(inputFile => ({
+const esmConfigs = globby.sync('src/**/*.js').map(inputFile => ({
   entry: inputFile,
   dest: inputFile.replace('src', 'esm'),
   format: 'esm',
   plugins: [
     flow(),
-  ]
+  ],
 }));
+
+const csjConfigs = globby.sync('src/**/*.js').map(inputFile => ({
+  entry: inputFile,
+  dest: inputFile.replace('src', 'lib'),
+  format: 'cjs',
+  plugins: [
+    flow(),
+  ],
+}));
+
+const configs = esmConfigs.concat(csjConfigs);
 
 configs.push({
   input: 'src/index.js',
@@ -20,7 +31,7 @@ configs.push({
     file: 'dist/wazo-sdk.js',
     format: 'umd',
     name: '@wazo/sdk',
-    sourcemap: true
+    sourcemap: true,
   },
   plugins: [
     flow(),
@@ -31,7 +42,7 @@ configs.push({
       include: ['node_modules/**'],
       customResolveOptions: {
         moduleDirectory: 'node_modules',
-      }
+      },
     }),
     json(),
     commonjs(),
