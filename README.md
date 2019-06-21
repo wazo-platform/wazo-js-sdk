@@ -30,6 +30,10 @@ Depending on your preference, you may require or add the Wazo SDK to your own cl
 * `const { WazoApiClient } = require('@wazo/sdk');`
 * `import { WazoApiClient } from '@wazo/sdk';`
 
+Depending on your environment you can import:
+* `@wazo/sdk/esm`: compatible with (most) **browsers only**.
+* `@wazo/sdk/lib`: runnable on `node` env.
+
 ### Init
 ```js
 const client = new WazoApiClient({
