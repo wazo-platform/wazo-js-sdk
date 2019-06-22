@@ -549,6 +549,13 @@ export default class WebRTCClient extends Emitter {
     return streams.remotes;
   }
 
+  reinit(cb: Function = () => {}) {
+    this.userAgent = this.createUserAgent();
+    this.registered = false;
+
+    this._tryToRegister(cb);
+  }
+
   _initializeVideoSession(sessionId: string) {
     if (!this.videoSessions[sessionId]) {
       this.videoSessions[sessionId] = {
@@ -836,10 +843,6 @@ export default class WebRTCClient extends Emitter {
     };
 
     userAgent.on('registered', () => {
-      if (this.registerTimeout) {
-        clearTimeout(this.registerTimeout);
-      }
-
       this.registered = true;
     });
 
@@ -847,18 +850,19 @@ export default class WebRTCClient extends Emitter {
     userAgent.on('unregistered', onDisconnected);
   }
 
-  _tryToRegister() {
+  _tryToRegister(cb: Function = () => {}) {
     if (this.registered || this.registerTries >= MAX_REGISTER_TRY) {
       if (this.registerTimeout) {
         clearTimeout(this.registerTimeout);
       }
+      cb(this.registerTries >= MAX_REGISTER_TRY);
       return;
     }
 
     this.registerTimeout = setTimeout(() => {
       this.register();
       this.registerTries++;
-      this._tryToRegister();
+      this._tryToRegister(cb);
     }, 500 * this.registerTries);
   }
 }
