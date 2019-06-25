@@ -10,6 +10,8 @@ import SIP from 'sip.js';
 import Emitter from './utils/Emitter';
 
 import once from './utils/once';
+import Session from './domain/Session';
+import ApiClient from './api-client';
 
 import MobileSessionDescriptionHandler from './lib/MobileSessionDescriptionHandler';
 
@@ -52,8 +54,9 @@ type WebRtcConfig = {
   host: string,
   os: string,
   port?: number,
-  authorizationUser: string,
-  password: string,
+  authorizationUser: ?string,
+  password: ?string,
+  uri: string,
   media: MediaConfig,
   maxMergeSessions: number,
   iceCheckingTimeout: ?number,
@@ -96,13 +99,16 @@ export default class WebRTCClient extends Emitter {
     return [];
   }
 
-  constructor(config: WebRtcConfig) {
+  constructor(config: WebRtcConfig, session: ?Session) {
     super();
-    this.config = config;
+    this._buildConfig(config, session).then((newConfig: WebRtcConfig) => {
+      this.config = newConfig;
+      this.userAgent = this.createUserAgent();
+    });
+
     this.audioOutputDeviceId = config.audioOutputDeviceId;
 
     this.configureMedia(config.media);
-    this.userAgent = this.createUserAgent();
 
     this.videoSessions = {};
     this.registerTries = 0;
@@ -565,6 +571,22 @@ export default class WebRTCClient extends Emitter {
     }
   }
 
+  _buildConfig(config: WebRtcConfig, session: ?Session): Promise<WebRtcConfig> {
+    // If no session provided, return the configuration directly
+    if (!session) {
+      return new Promise(resolve => resolve(config));
+    }
+
+    const client = new ApiClient({ server: config.host });
+
+    return client.confd.getUserLineSipFromToken(session.token, session.uuid).then(sipLine => ({
+      authorizationUser: sipLine.username,
+      password: sipLine.secret,
+      uri: `${sipLine.username}@${config.host}`,
+      ...config,
+    }));
+  }
+
   _addLocalToVideoSession(sessionId: string, stream: any) {
     this._initializeVideoSession(sessionId);
 
@@ -589,7 +611,7 @@ export default class WebRTCClient extends Emitter {
       hackWssInTransport: true,
       log: this.config.log || { builtinEnabled: false },
       password: this.config.password,
-      uri: `${this.config.authorizationUser}@${this.config.host}`,
+      uri: `${this.config.authorizationUser || ''}@${this.config.host}`,
       transportOptions: {
         traceSip: false,
         wsServers: `wss://${this.config.host}:${this.config.port || 443}/api/asterisk/ws`,

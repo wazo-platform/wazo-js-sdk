@@ -171,17 +171,18 @@ client.accessd.getAuthorization(token, uuid);
 ```js
 import { WazoWebRTCClient } from '@wazo/sdk';
 
+const session = await client.auth.logIn({ ... });
+
 const phone = new WazoWebRTCClient({
   displayName: 'From WEB',
   host: 'demo.wazo.community',
-  authorizationUser: lineData.username,
-  password: lineData.secret,
   media: {
     audio: boolean,
     video: boolean | document.getElementById('video'), // pointing to a `<video id="video" />` element
     localVideo: boolean | document.getElementById('video'), // pointing to a `<video id="video" />` element
   }
-});
+}, session);
+
 // eventName can be on the of events : 
 // - transport: `connected`, `disconnected`, `transportError`, `message`, `closed`, `keepAliveDebounceTimeout`
 // - webrtc: `registered`, `unregistered`, `registrationFailed`, `invite`, `inviteSent`, `transportCreated`, `newTransaction`, `transactionDestroyed`, `notify`, `outOfDialogReferRequested`, `message`.
