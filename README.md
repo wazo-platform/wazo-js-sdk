@@ -171,22 +171,23 @@ client.accessd.getAuthorization(token, uuid);
 ```js
 import { WazoWebRTCClient } from '@wazo/sdk';
 
+const session = await client.auth.logIn({ ... });
+
 const phone = new WazoWebRTCClient({
   displayName: 'From WEB',
   host: 'demo.wazo.community',
-  authorizationUser: lineData.username,
-  password: lineData.secret,
   media: {
     audio: boolean,
     video: boolean | document.getElementById('video'), // pointing to a `<video id="video" />` element
     localVideo: boolean | document.getElementById('video'), // pointing to a `<video id="video" />` element
   }
-});
+}, session);
+
 // eventName can be on the of events : 
 // - transport: `connected`, `disconnected`, `transportError`, `message`, `closed`, `keepAliveDebounceTimeout`
 // - webrtc: `registered`, `unregistered`, `registrationFailed`, `invite`, `inviteSent`, `transportCreated`, `newTransaction`, `transactionDestroyed`, `notify`, `outOfDialogReferRequested`, `message`.
-phone.on('invite', (session: SIP.sessionDescriptionHandler, hasVideo: boolean, shouldAutoAnswer: boolean) => {
-  this.currentSession = session;
+phone.on('invite', (sipSession: SIP.sessionDescriptionHandler, hasVideo: boolean, shouldAutoAnswer: boolean) => {
+  this.currentSipSession = sipSession;
   // ...
 });
 
@@ -200,54 +201,54 @@ phone.call(number: string);
 
 ### Be notified to a phone call
 ```js
-phone.on('invite', (session: SIP.sessionDescriptionHandler) => {
-  this.currentSession = session;
+phone.on('invite', (sipSession: SIP.sessionDescriptionHandler) => {
+  this.currentSipSession = sipSession;
 });
 ```
 
 ### Answering a call
 ```js
-phone.answer(session: SIP.sessionDescriptionHandler);
+phone.answer(sipSession: SIP.sessionDescriptionHandler);
 ```
 
 ## Hangup a call
 ```js
-phone.hangup(session: SIP.sessionDescriptionHandler);
+phone.hangup(sipSession: SIP.sessionDescriptionHandler);
 ```
 
 ## Rejecting a call
 ```js
-phone.reject(session: SIP.sessionDescriptionHandler);
+phone.reject(sipSession: SIP.sessionDescriptionHandler);
 ```
 
 ## Muting a call
 ```js
-phone.mute(session: SIP.sessionDescriptionHandler);
+phone.mute(sipSession: SIP.sessionDescriptionHandler);
 ```
 
 ## Umuting a call
 ```js
-phone.unmute(session: SIP.sessionDescriptionHandler);
+phone.unmute(sipSession: SIP.sessionDescriptionHandler);
 ```
 
 ## Holding a call
 ```js
-phone.hold(session: SIP.sessionDescriptionHandler);
+phone.hold(sipSession: SIP.sessionDescriptionHandler);
 ```
 
 ## Unholding a call
 ```js
-phone.unhold(session: SIP.sessionDescriptionHandler);
+phone.unhold(sipSession: SIP.sessionDescriptionHandler);
 ```
 
 ## Transferring a call
 ```js
-phone.transfert(session: SIP.sessionDescriptionHandler, target: string);
+phone.transfert(sipSession: SIP.sessionDescriptionHandler, target: string);
 ```
 
 ## Sending a DTMF tone
 ```js
-phone.sendDTMF(session: SIP.sessionDescriptionHandler, tone: string);
+phone.sendDTMF(sipSession: SIP.sessionDescriptionHandler, tone: string);
 ```
 
 ## Sending a message
@@ -267,18 +268,18 @@ phone.merge(sessions: Array<SIP.InviteClientContext>);
 
 ## Add a session to a conference
 ```js
-phone.addToMerge(session: SIP.InviteClientContext);
+phone.addToMerge(sipSession: SIP.InviteClientContext);
 ```
 
 ## Remove a session from a conference
 ```js
-phone.removeFromMerge(session: SIP.InviteClientContext, shouldHold: boolean);
+phone.removeFromMerge(sipSession: SIP.InviteClientContext, shouldHold: boolean);
 // shouldHold indicate if the session should be held after removed from session
 ```
 
 ## Unmerge a sessions from a conference
 ```js
-phone.unmerge(sessions: Array<SIP.InviteClientContext>)
+phone.unmerge(sipSessions: Array<SIP.InviteClientContext>)
 ```
 
 ### Wazo Websocket

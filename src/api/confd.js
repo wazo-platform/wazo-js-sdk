@@ -45,6 +45,18 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.get(`${baseUrl}/users/${userUuid}/lines/${lineId}/associated/endpoints/sip`, null, token);
   },
 
+  getUserLineSipFromToken(token: Token, userUuid: string) {
+    return this.getUser(token, userUuid).then(user => {
+      if (!user.lines.length) {
+        console.warn(`No sip line for user: ${userUuid}`);
+        return null;
+      }
+      const line = user.lines[0];
+
+      return this.getUserLineSip(token, userUuid, line.id);
+    });
+  },
+
   listApplications(token: Token): Promise<ListApplicationsResponse> {
     const url = `${baseUrl}/applications?recurse=true`;
 
