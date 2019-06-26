@@ -45,6 +45,7 @@ import type {
   DirectorySource as DirectorySourceType,
   DirectorySources as DirectorySourcesType,
 } from './domain/DirectorySource';
+import type { ConferenceParticipant as ConferenceParticipantType } from './api/calld';
 
 export type NewContact = NewContactType;
 export type ContactResponse = ContactResponseType;
@@ -57,6 +58,7 @@ export type Device = DeviceType;
 export type ChatUser = ChatUserType;
 export type Source = DirectorySourceType;
 export type Sources = DirectorySourcesType;
+export type ConferenceParticipant = ConferenceParticipantType;
 
 export default {
   Emitter,
