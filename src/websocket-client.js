@@ -6,6 +6,7 @@ export const SOCKET_EVENTS = {
   ON_OPEN: 'onopen',
   ON_ERROR: 'onerror',
   ON_CLOSE: 'onclose',
+  INITIALIZED: 'initialized',
 };
 
 type WebSocketClientArguments = {
@@ -106,6 +107,7 @@ class WebSocketClient extends Emitter {
         break;
       case 'start':
         this.initialized = true;
+        this.eventEmitter.emit(SOCKET_EVENTS.INITIALIZED);
         break;
       default:
         this.eventEmitter.emit('message', message);
