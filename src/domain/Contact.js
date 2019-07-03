@@ -1,7 +1,7 @@
 // @flow
 
 import Session from './Session';
-import { LINE_STATE, PRESENCE } from './Profile';
+import { LINE_STATE, PRESENCE, STATE } from './Profile';
 import newFrom from '../utils/new-from';
 import type { DirectorySource } from './DirectorySource';
 
@@ -512,10 +512,19 @@ export default class Contact {
   }
 
   isAvailable(): boolean {
-    return this.presence === PRESENCE.AVAILABLE;
+    return this.presence === STATE.AVAILABLE;
   }
-  isNotAvailable(): boolean {
-    return this.presence === PRESENCE.NOT_AVAILABLE;
+
+  isAway(): boolean {
+    return this.presence === STATE.AWAY;
+  }
+
+  isUnavailable(): boolean {
+    return this.presence === STATE.UNAVAILABLE;
+  }
+
+  isInvisible(): boolean {
+    return this.presence === STATE.INVISIBLE;
   }
 
   isDoNotDisturb(): boolean {

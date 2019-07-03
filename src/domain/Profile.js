@@ -7,7 +7,6 @@ import type { Endpoint } from './Line';
 
 export const PRESENCE = {
   AVAILABLE: 'available',
-  NOT_AVAILABLE: 'notAvailable',
   DO_NOT_DISTURB: 'donotdisturb',
   DISCONNECTED: 'disconnected',
 };
@@ -16,6 +15,7 @@ export const STATE = {
   AVAILABLE: 'available',
   UNAVAILABLE: 'unavailable',
   INVISIBLE: 'invisible',
+  AWAY: 'away',
 };
 
 export const LINE_STATE = {
