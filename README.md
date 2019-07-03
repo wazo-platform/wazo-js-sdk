@@ -116,6 +116,11 @@ client.application.addCallNodes(token, applicationUuid, nodeUuid, callId); // ad
 client.application.playCall(token, applicationUuid, callId, language, uri); // play a sound into a call
 ```
 
+### Calld
+```js
+client.calld.getConferenceParticipantsAsUser(token, conferenceId); // List participants of a conference the user is part of
+```
+
 ### Confd
 ```js
 client.confd.listUsers(token);
