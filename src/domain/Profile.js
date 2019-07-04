@@ -15,6 +15,7 @@ export const STATE = {
   AVAILABLE: 'available',
   UNAVAILABLE: 'unavailable',
   INVISIBLE: 'invisible',
+  AWAY: 'away',
 };
 
 export const LINE_STATE = {
