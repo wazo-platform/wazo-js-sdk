@@ -5,6 +5,7 @@ import newFrom from '../utils/new-from';
 
 type CallResponse = {
   call_id: string,
+  sip_call_id: string,
   caller_id_name: string,
   caller_id_number: string,
   peer_caller_id_name: string,
@@ -18,6 +19,7 @@ type CallResponse = {
 
 type CallArguments = {
   id: string,
+  sipCallId: string,
   isCaller: boolean,
   callerName: string,
   callerNumber: string,
@@ -31,6 +33,7 @@ type CallArguments = {
 
 export default class Call {
   id: string;
+  sipCallId: string;
   callerName: string;
   callerNumber: string;
   calleeName: string;
@@ -48,6 +51,7 @@ export default class Call {
   static parse(plain: CallResponse): Call {
     return new Call({
       id: plain.call_id,
+      sipCallId: plain.sip_call_id,
       callerName: plain.caller_id_name,
       callerNumber: plain.caller_id_number,
       calleeName: plain.peer_caller_id_name,
@@ -66,6 +70,7 @@ export default class Call {
 
   constructor({
     id,
+    sipCallId,
     callerName,
     callerNumber,
     calleeName,
@@ -77,6 +82,7 @@ export default class Call {
     startingTime,
   }: CallArguments = {}) {
     this.id = id;
+    this.sipCallId = sipCallId;
     this.callerName = callerName;
     this.callerNumber = callerNumber;
     this.calleeName = calleeName;
