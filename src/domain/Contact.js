@@ -492,11 +492,12 @@ export default class Contact {
   is(other: Contact): boolean {
     const sameSourceId = !!this.sourceId && !!other.sourceId && this.sourceId === other.sourceId;
     const sameUuid = !!this.uuid && !!other.uuid && this.uuid === other.uuid;
+
     const hasSameId = sameSourceId || sameUuid;
-
     const hasSameBackend = !!this.backend && !!other.backend && this.backend === other.backend;
+    const hasSameSource = !!this.source && !!other.source && this.source === other.source;
 
-    return !!other && hasSameId && hasSameBackend;
+    return !!other && hasSameId && hasSameBackend && hasSameSource;
   }
 
   hasId(id: string): boolean {
