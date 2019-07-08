@@ -12,12 +12,12 @@ export type ConferenceParticipant = {
   language: string,
   muted: boolean,
   user_uuid: string,
-}
+};
 
 type ConferenceParticipants = {
   items: Array<ConferenceParticipant>,
-  total: number
-}
+  total: number,
+};
 export default (client: ApiRequester, baseUrl: string) => ({
   getConferenceParticipantsAsUser: async (token: Token, conferenceId: string): Promise<ConferenceParticipants> =>
     client.get(`${baseUrl}/users/me/conferences/${conferenceId}/participants`, null, token),

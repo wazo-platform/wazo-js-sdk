@@ -29,15 +29,15 @@
   "scripts": {
     "build": "./node_modules/.bin/rollup --config --extend",
     "docs:build": "./node_modules/.bin/documentation build src/index.js -f html -o docs",
-    "test": "npm run jest && npm run lint && npm run typecheck && npm run checkbuild",
+    "test": "yarn jest && yarn lint && yarn typecheck && yarn checkbuild",
     "watch": "./node_modules/.bin/webpack --mode=development --watch",
     "lint": "./node_modules/.bin/eslint src/",
-    "jest": "./node_modules/.bin/jest",
-    "checkbuild": "npm run build && node dist/wazo-sdk.js",
+    "jest": "./node_modules/.bin/jest src/",
+    "checkbuild": "yarn build && node dist/wazo-sdk.js",
     "format": "./node_modules/.bin/prettier-eslint --write \"src/**/*.js\" \"__tests__/**/*.js\" --single-quote --trailing-comma es5",
     "typecheck": "./node_modules/.bin/flow",
     "fetch-typedefs": "./node_modules/.bin/flow-typed install",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "yarn build"
   },
   "dependencies": {
     "events": "^3.0.0",
