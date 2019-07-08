@@ -7,9 +7,12 @@
 
 [libs]
 
+[lints]
+deprecated-utility=off
+
 [options]
 emoji=true
 suppress_comment= \\(.\\|\n\\)*\\$FlowFixMe
 
 [version]
-0.81.0
+0.102.0

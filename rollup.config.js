@@ -36,13 +36,17 @@ configs.push({
     format: 'umd',
     name: '@wazo/sdk',
     sourcemap: true,
+    intro: `
+if (typeof(window) === 'undefined') {
+  global.window = {
+    navigator: {},
+  };
+}
+    `,
   },
   plugins: [
     flow(),
     resolve({
-      jsnext: true,
-      main: false,
-      browser: true,
       include: ['node_modules/**'],
       customResolveOptions: {
         moduleDirectory: 'node_modules',

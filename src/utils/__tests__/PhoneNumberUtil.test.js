@@ -11,14 +11,16 @@ describe('Formatting phone numbers', () => {
     expect(getDisplayableNumber('+33675456545', 'FR')).toBe('06 75 45 65 45');
     expect(getDisplayableNumber('0675456545', 'FR')).toBe('06 75 45 65 45');
     expect(getDisplayableNumber('+33675456545', 'US')).toBe('06 75 45 65 45');
-    expect(getDisplayableNumber('0675456545', 'US')).toBe('(067) 545-6545');
+    expect(getDisplayableNumber('0675456545', 'US')).toBe('0675456545');
+    expect(getDisplayableNumber('4188884356', 'US')).toBe('(418) 888-4356');
   });
 
   it('should format real phone numbers when typing', () => {
     expect(getDisplayableNumber('+3367545', 'FR', true)).toBe('+33 6 75 45');
     expect(getDisplayableNumber('067545', 'FR', true)).toBe('06 75 45');
     expect(getDisplayableNumber('+3367545', 'US', true)).toBe('+33 6 75 45');
-    expect(getDisplayableNumber('067545', 'US', true)).toBe('067-545');
+    expect(getDisplayableNumber('067545', 'US', true)).toBe('067545');
+    expect(getDisplayableNumber('418808', 'US', true)).toBe('418-808');
   });
 });
 
