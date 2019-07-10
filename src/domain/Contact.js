@@ -257,6 +257,7 @@ export default class Contact {
   static parse(plain: ContactResponse, columns: Array<?string>): Contact {
     const number = Contact.parseMultipleNumber(plain, columns);
     const email = plain.column_values[columns.indexOf('email')];
+
     return new Contact({
       name: plain.column_values[columns.indexOf('name')],
       number: number || '',
