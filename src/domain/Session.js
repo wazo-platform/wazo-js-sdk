@@ -143,7 +143,7 @@ export default class Session {
   }
 
   hasEngineVersionGte(version: string) {
-    return this.engineVersion && compareVersions(this.engineVersion, version) >= 0;
+    return this.engineVersion && compareVersions(String(this.engineVersion), String(version)) >= 0;
   }
 
   primaryNumber(): ?string {
