@@ -7,9 +7,10 @@ import Contact from './Contact';
 import Line from './Line';
 import type { UUID, Token } from './types';
 import newFrom from '../utils/new-from';
+import compareVersions from '../utils/compare-version';
 
 const swarmKey = KEYUTIL.getKey(swarmPublicKey);
-const MINIMUM_WAZO_ENGINE_VERSION_FOR_DEFAULT_CONTEXT = 19.08;
+const MINIMUM_WAZO_ENGINE_VERSION_FOR_DEFAULT_CONTEXT = '19.08';
 
 type Response = {
   data: {
@@ -131,9 +132,7 @@ export default class Session {
 
   primaryContext(): string {
     if (this.engineVersion) {
-      const versionNumber = Number(this.engineVersion);
-
-      if (versionNumber && versionNumber >= MINIMUM_WAZO_ENGINE_VERSION_FOR_DEFAULT_CONTEXT) {
+      if (this.hasEngineVersionGte(MINIMUM_WAZO_ENGINE_VERSION_FOR_DEFAULT_CONTEXT)) {
         return 'default';
       }
     }
@@ -141,6 +140,10 @@ export default class Session {
     const line = this.primaryLine();
 
     return line && line.extensions.length > 0 ? line.extensions[0].context : 'default';
+  }
+
+  hasEngineVersionGte(version: string) {
+    return this.engineVersion && compareVersions(this.engineVersion, version) >= 0;
   }
 
   primaryNumber(): ?string {

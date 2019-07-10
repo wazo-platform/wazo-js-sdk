@@ -267,7 +267,7 @@ describe('Session domain', () => {
     describe('given an engine version', () => {
       describe('that is invalid', () => {
         beforeEach(() => {
-          A_SESSION = new Session({ ...A_SESSION, engineVersion: '19.09-1' });
+          A_SESSION = new Session({ ...A_SESSION, engineVersion: '19.09' });
         });
 
         describe('and NO lines', () => {
@@ -287,7 +287,7 @@ describe('Session domain', () => {
           beforeEach(() => {
             const line = new Line({ extensions: [{ context: SOME_CONTEXT, id: 1, exten: '1' }], id: 1, exten: 1 });
             const profile = new Profile({ lines: [line] });
-            A_SESSION = new Session({ ...A_SESSION, profile });
+            A_SESSION = new Session({ ...A_SESSION, profile, engineVersion: '18.08' });
           });
 
           it('should return line context', async () => {
@@ -337,6 +337,17 @@ describe('Session domain', () => {
 
             expect(context).toEqual(DEFAULT_CONTEXT);
           });
+        });
+      });
+
+      describe('when version is 19.10', () => {
+        it('should not consider that version is 19.1', () => {
+          A_SESSION = new Session({ ...A_SESSION, engineVersion: '19.10' });
+          expect(A_SESSION.hasEngineVersionGte('19.10')).toBeTruthy();
+          expect(A_SESSION.hasEngineVersionGte('19.11')).toBeFalsy();
+          expect(A_SESSION.hasEngineVersionGte('19.09')).toBeTruthy();
+          expect(A_SESSION.hasEngineVersionGte('19.1')).toBeTruthy();
+          expect(A_SESSION.hasEngineVersionGte('19.2')).toBeTruthy();
         });
       });
     });
