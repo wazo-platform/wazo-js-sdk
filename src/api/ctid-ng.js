@@ -1,6 +1,7 @@
 /* @flow */
 import ApiRequester from '../utils/api-requester';
 import type { UUID, Token, RequestError } from '../domain/types';
+import Relocation from '../domain/Relocation';
 import ChatMessage from '../domain/ChatMessage';
 import Voicemail from '../domain/Voicemail';
 import Call from '../domain/Call';
@@ -56,7 +57,13 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.get(`${baseUrl}/users/me/calls`, null, token).then(response => Call.parseMany(response.items));
   },
 
-  relocateCall(token: Token, callId: number, destination: string, lineId: ?number, contact?: ?string) {
+  relocateCall(
+    token: Token,
+    callId: number,
+    destination: string,
+    lineId: ?number,
+    contact?: ?string,
+  ): Promise<Relocation> {
     const body: Object = {
       completions: ['answer'],
       destination,
@@ -75,7 +82,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
       body.location.contact = contact;
     }
 
-    return client.post(`${baseUrl}/users/me/relocates`, body, token);
+    return client.post(`${baseUrl}/users/me/relocates`, body, token).then(response => Relocation.parse(response));
   },
 
   listVoicemails(token: Token): Promise<RequestError | Array<Voicemail>> {
