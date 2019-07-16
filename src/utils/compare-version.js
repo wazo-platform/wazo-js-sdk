@@ -1,8 +1,8 @@
 // Can't use `semver` package as Wazo version aren't in semver format
 
 const compareVersions = (a, b) => {
-  let i; let
-    diff;
+  let i;
+  let diff;
   const regExStrip0 = /(\.0+)+$/;
   const segmentsA = a.replace(regExStrip0, '').split('.');
   const segmentsB = b.replace(regExStrip0, '').split('.');

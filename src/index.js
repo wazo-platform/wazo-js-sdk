@@ -22,6 +22,7 @@ import NotificationOptions from './domain/NotificationOptions';
 import Profile, { PRESENCE, STATE as PROFILE_STATE, LINE_STATE } from './domain/Profile';
 import Session from './domain/Session';
 import Voicemail from './domain/Voicemail';
+import Relocation from './domain/Relocation';
 import type {
   NewContact as NewContactType,
   ContactResponse as ContactResponseType,
@@ -85,6 +86,7 @@ export default {
   Profile,
   Session,
   Voicemail,
+  Relocation,
   DebugPhone,
   DebugDevice,
   PRESENCE,
