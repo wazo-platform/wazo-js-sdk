@@ -322,12 +322,15 @@ export default class WebRTCClient extends Emitter {
     const pc = sdh.peerConnection;
 
     const bindStreams = remoteStream => {
-      const localStream = pc.getLocalStreams()[0];
+      const localStream = this._getLocalStream(pc);
       const localAudioSource = this._addAudioStream(localStream);
       const remoteAudioSource = this._addAudioStream(remoteStream);
 
-      pc.removeStream(remoteStream);
+      if (remoteStream) {
+        pc.removeStream(remoteStream);
+      }
       pc.removeStream(localStream);
+
       if (this.mergeDestination) {
         pc.addStream(this.mergeDestination.stream);
       }
@@ -339,14 +342,14 @@ export default class WebRTCClient extends Emitter {
       });
     };
 
-    if (session.local_hold && !isFirefox) {
+    if (session.localHold && !isFirefox) {
       this.unhold(session);
 
       // When call is hold we lost the current track. Wait for another one.
       return sdh.once('addTrack', e => bindStreams(e.streams[0]));
     }
 
-    return bindStreams(pc.getRemoteStreams()[0]);
+    return bindStreams(this._getRemoteStream(pc));
   }
 
   removeFromMerge(session: SIP.InviteClientContext, shouldHold: boolean = true) {
@@ -354,19 +357,23 @@ export default class WebRTCClient extends Emitter {
     const pc = sdh.peerConnection;
     const { localAudioSource, remoteAudioSource } = this.audioStreams[session.id];
 
-    remoteAudioSource.disconnect(this.mergeDestination);
+    if (remoteAudioSource) {
+      remoteAudioSource.disconnect(this.mergeDestination);
+    }
     localAudioSource.disconnect(this.mergeDestination);
 
     if (this.audioContext) {
       const newDestination = this.audioContext.createMediaStreamDestination();
       localAudioSource.connect(newDestination);
-      remoteAudioSource.connect(newDestination);
+      if (remoteAudioSource) {
+        remoteAudioSource.connect(newDestination);
+      }
 
       if (pc.signalingState === 'closed' || pc.iceConnectionState === 'closed') {
         return null;
       }
 
-      if (this.mergeDestination) {
+      if (this.mergeDestination && this.mergeDestination.stream) {
         pc.removeStream(this.mergeDestination.stream);
       }
       pc.addStream(newDestination.stream);
@@ -539,7 +546,7 @@ export default class WebRTCClient extends Emitter {
       return senders.some(sender => sender.track && sender.track.kind === 'audio' && sender.track.enabled);
     }
 
-    const localStreams = pc.getLocalStreams();
+    const localStreams = this._getLocalStream(pc);
 
     return localStreams.some(stream => {
       const audioTracks = stream.getAudioTracks();
@@ -717,19 +724,7 @@ export default class WebRTCClient extends Emitter {
   _setupRemoteMedia(session: SIP.sessionDescriptionHandler) {
     // If there is a video track, it will attach the video and audio to the same element
     const pc = session.sessionDescriptionHandler.peerConnection;
-    let remoteStream;
-
-    if (pc.getReceivers) {
-      remoteStream = typeof global !== 'undefined' ? new global.window.MediaStream() : new window.MediaStream();
-      pc.getReceivers().forEach(receiver => {
-        const { track } = receiver;
-        if (track) {
-          remoteStream.addTrack(track);
-        }
-      });
-    } else {
-      [remoteStream] = pc.getRemoteStreams();
-    }
+    const remoteStream = this._getRemoteStream(pc);
 
     if (this._hasVideo() && this._isWeb()) {
       this._addRemoteToVideoSession(session.id, remoteStream);
@@ -741,7 +736,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   _addAudioStream(mediaStream: MediaStream) {
-    if (!this.audioContext) {
+    if (!this.audioContext || !mediaStream) {
       return null;
     }
     const audioSource = this.audioContext.createMediaStreamSource(mediaStream);
@@ -772,19 +767,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     const pc = session.sessionDescriptionHandler.peerConnection;
-    let localStream;
-
-    if (pc.getSenders) {
-      localStream = typeof global !== 'undefined' ? new global.window.MediaStream() : new window.MediaStream();
-      pc.getSenders().forEach(sender => {
-        const { track } = sender;
-        if (track && track.kind === 'video') {
-          localStream.addTrack(track);
-        }
-      });
-    } else {
-      [localStream] = pc.getLocalStreams();
-    }
+    const localStream = this._getLocalStream(pc);
 
     if (this._isWeb() && this._hasVideo()) {
       this._addLocalToVideoSession(session.id, localStream);
@@ -886,5 +869,47 @@ export default class WebRTCClient extends Emitter {
       this.registerTries++;
       this._tryToRegister(cb);
     }, 500 * this.registerTries);
+  }
+
+  /**
+   * @param pc RTCPeerConnection
+   */
+  _getRemoteStream(pc: any) {
+    let remoteStream;
+
+    if (pc.getReceivers) {
+      remoteStream = typeof global !== 'undefined' ? new global.window.MediaStream() : new window.MediaStream();
+      pc.getReceivers().forEach(receiver => {
+        const { track } = receiver;
+        if (track) {
+          remoteStream.addTrack(track);
+        }
+      });
+    } else {
+      [remoteStream] = pc.getRemoteStreams();
+    }
+
+    return remoteStream;
+  }
+
+  /**
+   * @param pc RTCPeerConnection
+   */
+  _getLocalStream(pc: any) {
+    let localStream;
+
+    if (pc.getSenders) {
+      localStream = typeof global !== 'undefined' ? new global.window.MediaStream() : new window.MediaStream();
+      pc.getSenders().forEach(sender => {
+        const { track } = sender;
+        if (track) {
+          localStream.addTrack(track);
+        }
+      });
+    } else {
+      [localStream] = pc.getLocalStreams();
+    }
+
+    return localStream;
   }
 }

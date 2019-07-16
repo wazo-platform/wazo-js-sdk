@@ -46,13 +46,10 @@ if (typeof(window) === 'undefined') {
   },
   plugins: [
     flow(),
-    resolve({
-      include: ['node_modules/**'],
-      customResolveOptions: {
-        moduleDirectory: 'node_modules',
-      },
-    }),
     json(),
+    resolve({
+      preferBuiltins: false,
+    }),
     commonjs(),
     terser(),
   ],
