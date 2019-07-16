@@ -326,8 +326,11 @@ export default class WebRTCClient extends Emitter {
       const localAudioSource = this._addAudioStream(localStream);
       const remoteAudioSource = this._addAudioStream(remoteStream);
 
-      pc.removeStream(remoteStream);
+      if (remoteStream) {
+        pc.removeStream(remoteStream);
+      }
       pc.removeStream(localStream);
+
       if (this.mergeDestination) {
         pc.addStream(this.mergeDestination.stream);
       }
@@ -354,19 +357,23 @@ export default class WebRTCClient extends Emitter {
     const pc = sdh.peerConnection;
     const { localAudioSource, remoteAudioSource } = this.audioStreams[session.id];
 
-    remoteAudioSource.disconnect(this.mergeDestination);
+    if (remoteAudioSource) {
+      remoteAudioSource.disconnect(this.mergeDestination);
+    }
     localAudioSource.disconnect(this.mergeDestination);
 
     if (this.audioContext) {
       const newDestination = this.audioContext.createMediaStreamDestination();
       localAudioSource.connect(newDestination);
-      remoteAudioSource.connect(newDestination);
+      if (remoteAudioSource) {
+        remoteAudioSource.connect(newDestination);
+      }
 
       if (pc.signalingState === 'closed' || pc.iceConnectionState === 'closed') {
         return null;
       }
 
-      if (this.mergeDestination) {
+      if (this.mergeDestination && this.mergeDestination.stream) {
         pc.removeStream(this.mergeDestination.stream);
       }
       pc.addStream(newDestination.stream);
@@ -741,7 +748,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   _addAudioStream(mediaStream: MediaStream) {
-    if (!this.audioContext) {
+    if (!this.audioContext || !mediaStream) {
       return null;
     }
     const audioSource = this.audioContext.createMediaStreamSource(mediaStream);
