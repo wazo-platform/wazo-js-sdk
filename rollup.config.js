@@ -51,7 +51,7 @@ if (typeof(window) === 'undefined') {
       preferBuiltins: false,
     }),
     commonjs(),
-    // terser(),
+    terser(),
   ],
   moduleContext: { 'node_modules/node-fetch/lib/index': 'window' },
 });
