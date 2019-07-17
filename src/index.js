@@ -23,6 +23,10 @@ import Profile, { PRESENCE, STATE as PROFILE_STATE, LINE_STATE } from './domain/
 import Session from './domain/Session';
 import Voicemail from './domain/Voicemail';
 import Relocation from './domain/Relocation';
+import Conference from './domain/Conference';
+import CallSession from './domain/CallSession';
+import IndirectTransfer from './domain/IndirectTransfer';
+import SwitchboardCall from './domain/SwitchboardCall';
 import type {
   NewContact as NewContactType,
   ContactResponse as ContactResponseType,
@@ -46,7 +50,13 @@ import type {
   DirectorySource as DirectorySourceType,
   DirectorySources as DirectorySourcesType,
 } from './domain/DirectorySource';
-import type { ConferenceParticipant as ConferenceParticipantType } from './api/calld';
+import type {
+  SwitchboardAnwseredQueuedCall as SwitchboardAnwseredQueuedCallType,
+  SwitchboardAnwseredHeldCall as SwitchboardAnwseredHeldCallType,
+  SwitchboardCallItem as SwitchboardCallItemType,
+  SwitchboardCallItems as SwitchboardCallItemsType,
+} from './domain/SwitchboardCall';
+import type { ConferenceParticipant as ConferenceParticipantType } from './domain/Conference';
 
 export type NewContact = NewContactType;
 export type ContactResponse = ContactResponseType;
@@ -60,6 +70,10 @@ export type ChatUser = ChatUserType;
 export type Source = DirectorySourceType;
 export type Sources = DirectorySourcesType;
 export type ConferenceParticipant = ConferenceParticipantType;
+export type SwitchboardAnwseredQueuedCall = SwitchboardAnwseredQueuedCallType;
+export type SwitchboardAnwseredHeldCall = SwitchboardAnwseredHeldCallType;
+export type SwitchboardCallItem = SwitchboardCallItemType;
+export type SwitchboardCallItems = SwitchboardCallItemsType;
 
 export default {
   Emitter,
@@ -75,6 +89,10 @@ export default {
   BadResponse,
   ServerError,
   Call,
+  Conference,
+  CallSession,
+  IndirectTransfer,
+  SwitchboardCall,
   CallLog,
   ChatMessage,
   ChatRoom,

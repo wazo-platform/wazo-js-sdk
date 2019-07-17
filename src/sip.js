@@ -1,4 +1,7 @@
+import SIP from 'sip.js';
+
 export default {
+  sessionDescriptionHandler: SIP.sessionDescriptionHandler,
   C: {
     REASON_PHRASE: {
       100: 'Trying',
