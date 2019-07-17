@@ -14,7 +14,9 @@ export type RootListResponse = {
   items: Array<RoomResponse>,
 };
 
-export default class ChatRoom {
+class ChatRoom {
+  static type: string;
+
   uuid: string;
   name: string;
   users: Array<ChatUser>;
@@ -41,3 +43,6 @@ export default class ChatRoom {
     this.users = users;
   }
 }
+ChatRoom.type = 'ChatRoom';
+
+export default ChatRoom;

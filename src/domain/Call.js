@@ -31,7 +31,9 @@ type CallArguments = {
   startingTime: Date,
 };
 
-export default class Call {
+class Call {
+  static type: string;
+
   id: string;
   sipCallId: string;
   callerName: string;
@@ -155,3 +157,7 @@ export default class Call {
     this.onHold = false;
   }
 }
+
+Call.type = 'Call';
+
+export default Call;

@@ -43,7 +43,9 @@ type CallLogArguments = {
   end: Date,
 };
 
-export default class CallLog {
+class CallLog {
+  static type: string;
+
   answer: Date;
   answered: boolean;
   newMissedCall: boolean;
@@ -215,3 +217,8 @@ export default class CallLog {
     return !this.answered && session.hasExtension(this.destination.extension);
   }
 }
+
+// Useful to compare instead of instanceof with minified code
+CallLog.type = 'CallLog';
+
+export default CallLog;

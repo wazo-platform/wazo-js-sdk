@@ -195,7 +195,9 @@ type GoogleResponse = {
 
 const SOURCE_MOBILE = 'mobile';
 
-export default class Contact {
+class Contact {
+  static type: string;
+
   id: ?string;
   uuid: ?string;
   name: ?string;
@@ -589,3 +591,6 @@ export default class Contact {
     };
   }
 }
+Contact.type = 'Contact';
+
+export default Contact;

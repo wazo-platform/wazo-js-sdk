@@ -30,7 +30,9 @@ export type ChatMessageListResponse = {
   items: Array<ChatMessageResponse>,
 };
 
-export default class ChatMessage {
+class ChatMessage {
+  static type: string;
+
   uuid: string;
   content: string;
   date: Date;
@@ -85,3 +87,8 @@ export default class ChatMessage {
     return this;
   }
 }
+
+// Useful to compare instead of instanceof with minified code
+ChatMessage.type = 'ChatMessage';
+
+export default ChatMessage;

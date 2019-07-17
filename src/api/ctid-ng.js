@@ -106,7 +106,12 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
 
   holdSwitchboardCall(token: Token, switchboardUuid: UUID, callId: string) {
-    return client.put(`${baseUrl}/switchboards/${switchboardUuid}/calls/held/${callId}`, null, token);
+    return client.put(
+      `${baseUrl}/switchboards/${switchboardUuid}/calls/held/${callId}`,
+      null,
+      token,
+      ApiRequester.successResponseParser,
+    );
   },
 
   answerSwitchboardHeldCall(token: Token, switchboardUuid: UUID, callId: string) {

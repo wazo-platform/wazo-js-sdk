@@ -30,7 +30,9 @@ type LineArguments = {
   endpointSip?: Endpoint | null,
 };
 
-export default class Line {
+class Line {
+  static type: string;
+
   id: number;
   extensions: Array<Extension>;
   endpointCustom: Endpoint | null;
@@ -67,3 +69,7 @@ export default class Line {
     this.endpointSip = endpointSip || null;
   }
 }
+
+Line.type = 'Line';
+
+export default Line;
