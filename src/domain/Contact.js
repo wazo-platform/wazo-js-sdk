@@ -195,8 +195,8 @@ type GoogleResponse = {
 
 const SOURCE_MOBILE = 'mobile';
 
-class Contact {
-  static type: string;
+export default class Contact {
+  type: string;
 
   id: ?string;
   uuid: ?string;
@@ -484,6 +484,9 @@ class Contact {
     this.favorited = favorited;
     this.backend = backend;
     this.personalStatus = personalStatus || '';
+
+    // Useful to compare instead of instanceof with minified code
+    this.type = 'Contact';
   }
 
   setFavorite(value: boolean) {
@@ -591,6 +594,3 @@ class Contact {
     };
   }
 }
-Contact.type = 'Contact';
-
-export default Contact;

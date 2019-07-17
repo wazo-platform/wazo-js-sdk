@@ -35,8 +35,8 @@ type VoicemailArguments = {
   unread?: ?boolean,
 };
 
-class Voicemail {
-  static type: string;
+export default class Voicemail {
+  type: string;
 
   id: string;
   date: Date;
@@ -80,6 +80,9 @@ class Voicemail {
     this.duration = duration;
     this.caller = caller;
     this.unread = unread;
+
+    // Useful to compare instead of instanceof with minified code
+    this.type = 'Voicemail';
   }
 
   is(other: Voicemail): boolean {
@@ -106,8 +109,3 @@ class Voicemail {
     return this.caller.name.toUpperCase().includes(query.toUpperCase()) || this.caller.number.includes(query);
   }
 }
-
-// Useful to compare instead of instanceof with minified code
-Voicemail.type = 'Voicemail';
-
-export default Voicemail;

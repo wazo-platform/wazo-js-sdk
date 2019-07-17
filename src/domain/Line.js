@@ -30,8 +30,8 @@ type LineArguments = {
   endpointSip?: Endpoint | null,
 };
 
-class Line {
-  static type: string;
+export default class Line {
+  type: string;
 
   id: number;
   extensions: Array<Extension>;
@@ -67,9 +67,8 @@ class Line {
     this.endpointCustom = endpointCustom || null;
     this.endpointSccp = endpointSccp || null;
     this.endpointSip = endpointSip || null;
+
+    // Useful to compare instead of instanceof with minified code
+    this.type = 'Line';
   }
 }
-
-Line.type = 'Line';
-
-export default Line;

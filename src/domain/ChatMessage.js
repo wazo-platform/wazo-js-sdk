@@ -30,8 +30,8 @@ export type ChatMessageListResponse = {
   items: Array<ChatMessageResponse>,
 };
 
-class ChatMessage {
-  static type: string;
+export default class ChatMessage {
+  type: string;
 
   uuid: string;
   content: string;
@@ -71,6 +71,9 @@ class ChatMessage {
 
     // @TODO: change after message read status available
     this.read = read;
+
+    // Useful to compare instead of instanceof with minified code
+    this.type = 'ChatMessage';
   }
 
   is(other: ChatMessage) {
@@ -87,8 +90,3 @@ class ChatMessage {
     return this;
   }
 }
-
-// Useful to compare instead of instanceof with minified code
-ChatMessage.type = 'ChatMessage';
-
-export default ChatMessage;

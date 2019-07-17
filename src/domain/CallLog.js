@@ -43,8 +43,8 @@ type CallLogArguments = {
   end: Date,
 };
 
-class CallLog {
-  static type: string;
+export default class CallLog {
+  type: string;
 
   answer: Date;
   answered: boolean;
@@ -144,6 +144,9 @@ class CallLog {
     this.duration = duration;
     this.start = start;
     this.end = end;
+
+    // Useful to compare instead of instanceof with minified code
+    this.type = 'CallLog';
   }
 
   isFromSameParty(other: CallLog, session: Session): boolean {
@@ -217,8 +220,3 @@ class CallLog {
     return !this.answered && session.hasExtension(this.destination.extension);
   }
 }
-
-// Useful to compare instead of instanceof with minified code
-CallLog.type = 'CallLog';
-
-export default CallLog;

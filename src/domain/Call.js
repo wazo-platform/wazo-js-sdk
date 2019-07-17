@@ -31,8 +31,8 @@ type CallArguments = {
   startingTime: Date,
 };
 
-class Call {
-  static type: string;
+export default class Call {
+  type: string;
 
   id: string;
   sipCallId: string;
@@ -94,6 +94,9 @@ class Call {
     this.isCaller = isCaller;
     this.status = status;
     this.startingTime = startingTime;
+
+    // Useful to compare instead of instanceof with minified code
+    this.type = 'Call';
   }
 
   getElapsedTimeInSeconds(): number {
@@ -157,7 +160,3 @@ class Call {
     this.onHold = false;
   }
 }
-
-Call.type = 'Call';
-
-export default Call;

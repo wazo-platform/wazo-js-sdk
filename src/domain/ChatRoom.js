@@ -14,8 +14,8 @@ export type RootListResponse = {
   items: Array<RoomResponse>,
 };
 
-class ChatRoom {
-  static type: string;
+export default class ChatRoom {
+  type: string;
 
   uuid: string;
   name: string;
@@ -41,8 +41,8 @@ class ChatRoom {
     this.uuid = uuid;
     this.name = name;
     this.users = users;
+
+    // Useful to compare instead of instanceof with minified code
+    this.type = 'ChatRoom';
   }
 }
-ChatRoom.type = 'ChatRoom';
-
-export default ChatRoom;
