@@ -424,14 +424,17 @@ export default class Contact {
 
   static parseConference(single: ConferenceResponse, source: DirectorySource): Contact {
     const numbers = [];
+    let firstNumber = '';
 
     if (single.extensions.length > 0 && single.extensions[0].exten) {
-      numbers.push({ label: 'exten', number: single.extensions[0].exten });
+      firstNumber = single.extensions[0].exten;
+      numbers.push({ label: 'exten', number: firstNumber });
     }
 
     return new Contact({
       sourceId: String(single.id),
       name: single.name,
+      number: firstNumber,
       numbers,
       source: source.name,
       backend: 'conference',
