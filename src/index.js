@@ -39,6 +39,7 @@ import type { Phone as PhoneType, PhoneEventCallbacks as PhoneEventCallbacksType
 import type { ChatUser as ChatUserType } from './domain/ChatMessage';
 import DebugPhone from './domain/Phone/DebugPhone';
 import type { Device as DeviceType } from './domain/Device/Device';
+import type { WebSocketMessage as WebSocketMessageType } from './types/WebSocketMessage';
 import DebugDevice from './domain/Device/DebugDevice';
 import {
   PhoneNumberUtil,
@@ -75,6 +76,7 @@ export type SwitchboardAnwseredQueuedCall = SwitchboardAnwseredQueuedCallType;
 export type SwitchboardAnwseredHeldCall = SwitchboardAnwseredHeldCallType;
 export type SwitchboardCallItem = SwitchboardCallItemType;
 export type SwitchboardCallItems = SwitchboardCallItemsType;
+export type WebSocketMessage = WebSocketMessageType;
 
 export default {
   Emitter,

@@ -1,6 +1,7 @@
 // @flow
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import Emitter from './utils/Emitter';
+import type { WebSocketMessage } from './types/WebSocketMessage';
 
 export const SOCKET_EVENTS = {
   ON_OPEN: 'onopen',
@@ -89,7 +90,7 @@ class WebSocketClient extends Emitter {
     this.socket.close();
   }
 
-  handleMessage(message: Object, sock: ReconnectingWebSocket) {
+  handleMessage(message: WebSocketMessage, sock: ReconnectingWebSocket) {
     switch (message.op) {
       case 'init':
         this.events.forEach(event => {
