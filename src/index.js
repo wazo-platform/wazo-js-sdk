@@ -24,6 +24,7 @@ import Session from './domain/Session';
 import Voicemail from './domain/Voicemail';
 import Relocation from './domain/Relocation';
 import Conference from './domain/Conference';
+import Room from './domain/Room';
 import CallSession from './domain/CallSession';
 import IndirectTransfer from './domain/IndirectTransfer';
 import SwitchboardCall from './domain/SwitchboardCall';
@@ -105,6 +106,7 @@ export default {
   Session,
   Voicemail,
   Relocation,
+  Room,
   DebugPhone,
   DebugDevice,
   PRESENCE,
