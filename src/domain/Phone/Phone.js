@@ -1,5 +1,5 @@
 // @flow
-
+import Line from '../Line';
 import CallSession from '../CallSession';
 
 export type PhoneEventCallbacks = {
@@ -15,82 +15,92 @@ export type PhoneEventCallbacks = {
   onCallFailed?: (message: string) => {},
 };
 
+type PhoneVoid = Promise<void> | void;
+
+export type AvailablePhoneOptions = {
+  accept: boolean,
+  addParticipant: boolean,
+  decline: boolean,
+  hold: boolean,
+  merge: boolean,
+  mute: boolean,
+  record: boolean,
+  sendKey: boolean,
+  transfer: boolean,
+};
+
 export interface Phone {
-  makeCall(number: string): void;
+  accept(callSession: CallSession, enableVideo: boolean): string | null;
 
-  acceptCall(): void;
+  addToConference(participants: CallSession[]): PhoneVoid;
 
-  mute(): void;
+  changeAudioDevice(id: string): PhoneVoid;
 
-  unmute(): void;
+  changeAudioInputDevice(id: string): PhoneVoid;
 
-  hold(): void;
+  changeVideoInputDevice(id: string): PhoneVoid;
 
-  unhold(): void;
+  close(): PhoneVoid;
 
-  isCallUsingVideo(callSession: CallSession): boolean;
+  disableRinging(): PhoneVoid;
 
-  isOnline(): boolean;
+  enableRinging(): PhoneVoid;
 
-  isWebRTC(): boolean;
-
-  removeListener(listener: $Shape<PhoneEventCallbacks>): void;
-
-  endCurrentCall(CallSession: CallSession): void;
+  endCurrentCall(CallSession: CallSession): PhoneVoid;
 
   getLocalStreamForCall(callSession: CallSession): boolean;
 
+  getOptions(): AvailablePhoneOptions;
+
   getRemoteStreamForCall(callSession: CallSession): boolean;
 
-  disableRinging(): void;
+  hangup(callSession: CallSession): PhoneVoid;
 
-  enableRinging(): void;
+  hangupConference(participants: CallSession[]): PhoneVoid;
 
   hasAnActiveCall(): boolean;
 
-  sendKey(key: string): void;
+  hold(callSession: CallSession): PhoneVoid;
+
+  holdConference(participants: CallSession[]): PhoneVoid;
+
+  indirectTransfer(source: CallSession, destination: CallSession): PhoneVoid;
+
+  isCallUsingVideo(callSession: CallSession): boolean;
+
+  isWebRTC(): boolean;
+
+  makeCall(number: string, line: Line, enableVideo?: boolean): ?CallSession | Promise<?CallSession>;
+
+  mute(callSession: CallSession): PhoneVoid;
+
+  muteConference(participants: CallSession[]): PhoneVoid;
+
+  reject(callSession: CallSession): PhoneVoid;
+
+  removeFromConference(participants: CallSession[]): PhoneVoid;
+
+  resume(callSession: CallSession): PhoneVoid;
+
+  resumeConference(participants: CallSession[]): PhoneVoid;
+
+  sendKey(callSession: CallSession, tone: string): PhoneVoid;
+
+  startConference(participants: CallSession[]): PhoneVoid;
+
+  transfer(callSession: CallSession, target: string): PhoneVoid;
+
+  turnCameraOff(callSession: CallSession): PhoneVoid;
+
+  turnCameraOn(callSession: CallSession): PhoneVoid;
+
+  unmute(callSession: CallSession): PhoneVoid;
+
+  unmuteConference(participants: CallSession[]): PhoneVoid;
+
+  isRegistered(): boolean;
 
   putOnSpeaker(): void;
 
   putOffSpeaker(): void;
-
-  endCall(): void;
-
-  isInCall(): boolean;
-
-  onConnectionMade(): void;
-
-  reject(callSession: CallSession): void;
-
-  close(): void;
-
-  changeAudioDevice(id: string): void;
-
-  changeAudioInputDevice(id: string): void;
-
-  changeVideoInputDevice(id: string): void;
-
-  addToConference(participants: CallSession[]): void;
-
-  startConference(participants: CallSession[]): void;
-
-  resumeConference(participants: CallSession[]): void;
-
-  holdConference(participants: CallSession[]): void;
-
-  unmuteConference(participants: CallSession[]): void;
-
-  muteConference(participants: CallSession[]): void;
-
-  hangupConference(participants: CallSession[]): void;
-
-  removeFromConference(participants: CallSession[]): void;
-
-  transfer(callSession: CallSession, target: string): void;
-
-  indirectTransfer(source: CallSession, destination: CallSession): void;
-
-  turnCameraOff(callSession: CallSession): void;
-
-  turnCameraOn(callSession: CallSession): void;
 }

@@ -5,6 +5,7 @@ import Session from './Session';
 
 type CallSessionArguments = {
   answered: boolean,
+  call: ?Call,
   callId: string,
   callerNumber: string,
   cameraEnabled: boolean,
@@ -21,6 +22,8 @@ type CallSessionArguments = {
 };
 
 export default class CallSession {
+  call: ?Call;
+
   callId: string;
 
   displayName: string;
@@ -62,6 +65,7 @@ export default class CallSession {
     dialedExtension,
     sipCallId,
     callerNumber,
+    call,
   }: CallSessionArguments) {
     this.callId = callId;
     this.sipCallId = sipCallId;
@@ -76,6 +80,7 @@ export default class CallSession {
     this.callerNumber = callerNumber;
     this.cameraEnabled = cameraEnabled;
     this.dialedExtension = dialedExtension || '';
+    this.call = call;
   }
 
   resume() {
@@ -178,6 +183,7 @@ export default class CallSession {
       answered: call.isUp(),
       cameraEnabled: false,
       dialedExtension: call.dialedExtension,
+      call,
     });
   }
 }
