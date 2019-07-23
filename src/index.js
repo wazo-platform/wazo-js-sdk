@@ -37,7 +37,6 @@ import type {
 } from './domain/Contact';
 import type { Phone as PhoneType, PhoneEventCallbacks as PhoneEventCallbacksType } from './domain/Phone/Phone';
 import type { ChatUser as ChatUserType } from './domain/ChatMessage';
-import DebugPhone from './domain/Phone/DebugPhone';
 import type { Device as DeviceType } from './domain/Device/Device';
 import type { WebSocketMessage as WebSocketMessageType } from './types/WebSocketMessage';
 import DebugDevice from './domain/Device/DebugDevice';
@@ -109,7 +108,6 @@ export default {
   Voicemail,
   Relocation,
   Room,
-  DebugPhone,
   DebugDevice,
   PRESENCE,
   PROFILE_STATE,
