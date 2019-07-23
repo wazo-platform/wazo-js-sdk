@@ -154,7 +154,7 @@ export default class WebRTCClient extends Emitter {
     return userAgent;
   }
 
-  isRegistered(): Boolean {
+  isRegistered(): boolean {
     return this.userAgent && this.userAgent.isRegistered();
   }
 

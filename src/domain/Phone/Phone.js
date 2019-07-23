@@ -99,8 +99,4 @@ export interface Phone {
   unmuteConference(participants: CallSession[]): PhoneVoid;
 
   isRegistered(): boolean;
-
-  putOnSpeaker(): void;
-
-  putOffSpeaker(): void;
 }

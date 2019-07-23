@@ -10,7 +10,6 @@ import CallSession from '../domain/CallSession';
 import getApiClient from './getApiClient';
 
 export default class CallApi {
-
   static async fetchCallLogs(server: string, session: Session, offset: number, limit: number): Promise<Call[]> {
     return getApiClient(server).callLogd.listCallLogs(session.token, offset, limit);
   }
@@ -53,5 +52,4 @@ export default class CallApi {
   ): Promise<Relocation> {
     return getApiClient(server).ctidNg.relocateCall(session.token, callId, 'line', line, contactIdentifier);
   }
-
 }

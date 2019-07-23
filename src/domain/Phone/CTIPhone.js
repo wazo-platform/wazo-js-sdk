@@ -7,10 +7,9 @@ import CallSession from '../CallSession';
 import type { Phone, AvailablePhoneOptions } from './Phone';
 import Emitter from '../../utils/Emitter';
 
-import CallApi from '../../services/CallApi';
+import CallApi from '../../service/CallApi';
 
 export default class CTIPhone extends Emitter implements Phone {
-
   session: Session;
 
   server: string;
@@ -154,5 +153,4 @@ export default class CTIPhone extends Emitter implements Phone {
   enableRinging() {}
 
   disableRinging() {}
-
 }

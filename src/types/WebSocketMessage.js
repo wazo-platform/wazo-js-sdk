@@ -167,7 +167,7 @@ export type WebSocketMessage =
   | CallResumed
   | NewCallLog
   | ChatMessageSent
-  | WebSocketBaseMessage & ChatMessageResponse
+  | (WebSocketBaseMessage & ChatMessageResponse)
   | ChatRoomCreate
   | VoicemailCreated
   | UpdateDoNotDisturb
