@@ -3,6 +3,13 @@
 import EventEmitter from 'events';
 import { SessionDescriptionHandlerObserver } from 'sip.js/lib/Web/SessionDescriptionHandlerObserver';
 
+// Avoid issue with sip.js :
+// `window.addEventListener` is not a function. (In 'window.addEventListener("unload",this.unloadListener)')`
+if (!window.addEventListener) {
+  window.addEventListener = () => {};
+  window.removeEventListener = () => {};
+}
+
 /* SessionDescriptionHandler
  * @class PeerConnection helper Class.
  * @param {SIP.Session} session

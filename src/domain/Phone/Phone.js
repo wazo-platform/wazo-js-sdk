@@ -40,6 +40,8 @@ export interface Phone {
 
   changeVideoInputDevice(id: string): PhoneVoid;
 
+  onConnectionMade(): PhoneVoid;
+
   close(): PhoneVoid;
 
   disableRinging(): PhoneVoid;
@@ -95,6 +97,8 @@ export interface Phone {
   turnCameraOn(callSession: CallSession): PhoneVoid;
 
   unmute(callSession: CallSession): PhoneVoid;
+
+  setActiveSipSession(callSession: CallSession): PhoneVoid;
 
   unmuteConference(participants: CallSession[]): PhoneVoid;
 

@@ -168,6 +168,14 @@ export default class CallSession {
     );
   }
 
+  separateDisplayName(): { firstName: string, lastName: string } {
+    const names = this.displayName.split(' ');
+    const firstName = names[0];
+    const lastName = names.slice(1).join(' ');
+
+    return { firstName, lastName };
+  }
+
   static parseCall(session: Session, call: Call): CallSession {
     return new CallSession({
       callId: call.id,

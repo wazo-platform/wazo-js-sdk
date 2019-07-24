@@ -223,7 +223,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   reject(session: SIP.sessionDescriptionHandler) {
-    return session.reject();
+    return session.reject ? session.reject() : session.cancel();
   }
 
   getNumber(session: SIP.sessionDescriptionHandler): ?String {
@@ -425,8 +425,13 @@ export default class WebRTCClient extends Emitter {
     });
 
     this.audioElements = {};
+    if (!this.userAgent) {
+      return null;
+    }
 
-    this.userAgent.transport.disconnect();
+    if (this.userAgent.transport) {
+      this.userAgent.transport.disconnect();
+    }
 
     return this.userAgent.stop();
   }
@@ -801,7 +806,10 @@ export default class WebRTCClient extends Emitter {
   }
 
   _toggleAudio(session: SIP.sessionDescriptionHandler, muteAudio: boolean) {
-    const pc = session.sessionDescriptionHandler.peerConnection;
+    const pc = session.sessionDescriptionHandler ? session.sessionDescriptionHandler.peerConnection : null;
+    if (!pc) {
+      return;
+    }
 
     if (pc.getSenders) {
       pc.getSenders().forEach(sender => {

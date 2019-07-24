@@ -92,7 +92,9 @@ export default class CTIPhone extends Emitter implements Phone {
 
   sendKey() {}
 
-  onConnectionMade() {}
+  onConnectionMade() {
+    this.eventEmitter.emit('onCallAccepted');
+  }
 
   close() {}
 
@@ -145,6 +147,8 @@ export default class CTIPhone extends Emitter implements Phone {
   getRemoteStreamForCall(): boolean {
     return false;
   }
+
+  setActiveSipSession() {}
 
   isRegistered(): boolean {
     return true;

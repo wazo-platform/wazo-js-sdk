@@ -40,6 +40,8 @@ configs.push({
 if (typeof(window) === 'undefined') {
   global.window = {
     navigator: {},
+    removeEventListener: {},
+    addEventListener: {},
   };
 }
     `,
