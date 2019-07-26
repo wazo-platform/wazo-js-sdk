@@ -103,4 +103,6 @@ export interface Phone {
   unmuteConference(participants: CallSession[]): PhoneVoid;
 
   isRegistered(): boolean;
+
+  hasIncomingCallSession(): boolean;
 }

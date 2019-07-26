@@ -548,6 +548,20 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return this._createCallSession(this.currentSipSession);
   }
 
+  hasIncomingCallSession(): boolean {
+    return this.incomingSessions.length > 0;
+  }
+
+  getIncomingCallSession(): ?CallSession {
+    if (!this.hasIncomingCallSession()) {
+      return null;
+    }
+
+    const sessionId = this.incomingSessions[0];
+
+    return this._createCallSession(this.sipSessions[sessionId]);
+  }
+
   _createIncomingCallSession(
     sipSession: SIP.sessionDescriptionHandler,
     cameraEnabled: boolean,
@@ -626,7 +640,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const keys = Object.keys(this.sipSessions);
     const keyIndex = keys.findIndex(sessionId => callSession && callSession.isId(sessionId));
     if (keyIndex === -1) {
-      const currentSipSessionId = this._getSipSessionId(this.currentSipSession);
+      const currentSipSessionId = this.currentSipSession
+        ? this._getSipSessionId(this.currentSipSession) : Object.keys(this.sipSessions)[0];
       return currentSipSessionId ? this.sipSessions[currentSipSessionId] : null;
     }
 

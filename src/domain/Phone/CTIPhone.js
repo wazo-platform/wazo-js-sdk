@@ -154,6 +154,10 @@ export default class CTIPhone extends Emitter implements Phone {
     return true;
   }
 
+  hasIncomingCallSession(): boolean {
+    return true;
+  }
+
   enableRinging() {}
 
   disableRinging() {}
