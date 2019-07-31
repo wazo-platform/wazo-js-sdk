@@ -1,6 +1,8 @@
 // @flow
 
 import CallSession from './CallSession';
+import newFrom from '../utils/new-from';
+import updateFrom from '../utils/update-from';
 
 export type IndirectTransferArguments = {
   destinationId: string,
@@ -30,5 +32,13 @@ export default class IndirectTransfer {
 
   sourceIs(callSession: CallSession): boolean {
     return callSession.isId(this.sourceId);
+  }
+
+  updateFrom(indirectTransfer: IndirectTransfer) {
+    updateFrom(this, indirectTransfer);
+  }
+
+  static newFrom(indirectTransfer: IndirectTransfer) {
+    return newFrom(indirectTransfer, IndirectTransfer);
   }
 }

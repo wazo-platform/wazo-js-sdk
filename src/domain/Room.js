@@ -1,6 +1,8 @@
 // @flow
 
 import CallSession from './CallSession';
+import newFrom from '../utils/new-from';
+import updateFrom from '../utils/update-from';
 
 export type RoomArguments = {
   connectedCallSession: CallSession | null,
@@ -66,5 +68,13 @@ export default class Room {
       ...this,
       participants: this.participants.filter(participant => participant.extension !== extension),
     });
+  }
+
+  updateFrom(room: Room) {
+    updateFrom(this, room);
+  }
+
+  static newFrom(room: Room) {
+    return newFrom(room, Room);
   }
 }

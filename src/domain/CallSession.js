@@ -2,6 +2,8 @@
 
 import Call from './Call';
 import Session from './Session';
+import newFrom from '../utils/new-from';
+import updateFrom from '../utils/update-from';
 
 type CallSessionArguments = {
   answered: boolean,
@@ -168,12 +170,20 @@ export default class CallSession {
     );
   }
 
+  updateFrom(session: CallSession) {
+    updateFrom(this, session);
+  }
+
   separateDisplayName(): { firstName: string, lastName: string } {
     const names = this.displayName.split(' ');
     const firstName = names[0];
     const lastName = names.slice(1).join(' ');
 
     return { firstName, lastName };
+  }
+
+  static newFrom(callSession: CallSession) {
+    return newFrom(callSession, CallSession);
   }
 
   static parseCall(session: Session, call: Call): CallSession {

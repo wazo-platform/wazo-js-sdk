@@ -1,6 +1,8 @@
 // @flow
 
 import CallSession from './CallSession';
+import newFrom from '../utils/new-from';
+import updateFrom from '../utils/update-from';
 
 export type SwitchboardCallItem = { caller_id_name: string, caller_id_number: string, id: string };
 
@@ -92,6 +94,14 @@ class SwitchboardCall {
     this.state = state;
     this.switchboardName = switchboardName;
     this.switchboardUuid = switchboardUuid;
+  }
+
+  updateFrom(switchboardCall: SwitchboardCall) {
+    updateFrom(this, switchboardCall);
+  }
+
+  static newFrom(switchboardCall: SwitchboardCall) {
+    return newFrom(switchboardCall, SwitchboardCall);
   }
 }
 
