@@ -641,7 +641,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const keyIndex = keys.findIndex(sessionId => callSession && callSession.isId(sessionId));
     if (keyIndex === -1) {
       const currentSipSessionId = this.currentSipSession
-        ? this._getSipSessionId(this.currentSipSession) : Object.keys(this.sipSessions)[0];
+        ? this._getSipSessionId(this.currentSipSession)
+        : Object.keys(this.sipSessions)[0];
       return currentSipSessionId ? this.sipSessions[currentSipSessionId] : null;
     }
 
