@@ -433,6 +433,7 @@ export default class WebRTCClient extends Emitter {
       this.userAgent.transport.disconnect();
     }
 
+    this.userAgent.removeAllListeners();
     return this.userAgent.stop();
   }
 
@@ -455,6 +456,7 @@ export default class WebRTCClient extends Emitter {
     if (this.userAgent) {
       this.userAgent.transport.disconnect();
       this.userAgent.stop();
+      this.userAgent.removeAllListeners();
     }
     this.userAgent = this.createUserAgent();
   }
@@ -463,6 +465,7 @@ export default class WebRTCClient extends Emitter {
     this.video = id ? { deviceId: { exact: id } } : true;
     if (this.userAgent) {
       this.userAgent.transport.disconnect();
+      this.userAgent.removeAllListeners();
       this.userAgent.stop();
     }
     this.userAgent = this.createUserAgent();
