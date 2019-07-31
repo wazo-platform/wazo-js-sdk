@@ -219,10 +219,6 @@ export default SIPMethods =>
         sdp: sessionDescription,
       };
 
-      if (options.disableVideo) {
-        modifiers = [SIPMethods.Web.Modifiers.stripVideo].concat(modifiers);
-      }
-
       return Promise.resolve()
         .then(
           function() {
