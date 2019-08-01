@@ -15,6 +15,7 @@ type CallLogResponse = {
   id: number,
   source_extension: string,
   source_name: string,
+  requested_extension: string,
   start: string,
 };
 
@@ -84,7 +85,7 @@ export default class CallLog {
       answered: plain.answered,
       callDirection: plain.call_direction,
       destination: {
-        extension: plain.destination_extension,
+        extension: plain.destination_extension || plain.requested_extension,
         name: plain.destination_name || '',
       },
       source: {
@@ -104,7 +105,7 @@ export default class CallLog {
       answered: plain.answered,
       callDirection: plain.call_direction,
       destination: {
-        extension: plain.destination_extension,
+        extension: plain.destination_extension || plain.requested_extension,
         name: plain.destination_name || '',
       },
       source: {
