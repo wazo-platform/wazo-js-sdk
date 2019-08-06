@@ -201,7 +201,7 @@ export default class WebRTCClient extends Emitter {
       session.stop();
     }
 
-    if (session.id in this.audioStreams) {
+    if (this._getSipSessionId(session) in this.audioStreams) {
       this.removeFromMerge(session);
     }
 
@@ -336,7 +336,7 @@ export default class WebRTCClient extends Emitter {
       }
 
       return pc.createOffer(this._getRtcOptions(false)).then(offer => {
-        this.audioStreams[session.id] = { localAudioSource, remoteAudioSource };
+        this.audioStreams[this._getSipSessionId(session)] = { localAudioSource, remoteAudioSource };
 
         pc.setLocalDescription(offer);
       });
@@ -355,7 +355,7 @@ export default class WebRTCClient extends Emitter {
   removeFromMerge(session: SIP.InviteClientContext, shouldHold: boolean = true) {
     const sdh = session.sessionDescriptionHandler;
     const pc = sdh.peerConnection;
-    const { localAudioSource, remoteAudioSource } = this.audioStreams[session.id];
+    const { localAudioSource, remoteAudioSource } = this.audioStreams[this._getSipSessionId(session)];
 
     if (remoteAudioSource) {
       remoteAudioSource.disconnect(this.mergeDestination);
@@ -379,7 +379,7 @@ export default class WebRTCClient extends Emitter {
       pc.addStream(newDestination.stream);
     }
 
-    delete this.audioStreams[session.id];
+    delete this.audioStreams[this._getSipSessionId(session)];
 
     return pc.createOffer(this._getRtcOptions(false)).then(offer => {
       const result = pc.setLocalDescription(offer);
@@ -697,7 +697,7 @@ export default class WebRTCClient extends Emitter {
         session.stop();
       }
 
-      if (session.id in this.audioStreams) {
+      if (this._getSipSessionId(session) in this.audioStreams) {
         this.removeFromMerge(session);
       }
     });
@@ -735,9 +735,9 @@ export default class WebRTCClient extends Emitter {
     const remoteStream = this._getRemoteStream(pc);
 
     if (this._hasVideo() && this._isWeb()) {
-      this._addRemoteToVideoSession(session.id, remoteStream);
+      this._addRemoteToVideoSession(this._getSipSessionId(session), remoteStream);
     } else if (this._hasAudio() && this._isWeb()) {
-      const audio = this.audioElements[session.id];
+      const audio = this.audioElements[this._getSipSessionId(session)];
       audio.srcObject = remoteStream;
       audio.play();
     }
@@ -767,7 +767,7 @@ export default class WebRTCClient extends Emitter {
       if (document.body) {
         document.body.appendChild(audio);
       }
-      this.audioElements[session.id] = audio;
+      this.audioElements[this._getSipSessionId(session)] = audio;
     }
 
     if (!this._hasVideo()) {
@@ -778,13 +778,14 @@ export default class WebRTCClient extends Emitter {
     const localStream = this._getLocalStream(pc);
 
     if (this._isWeb() && this._hasVideo()) {
-      this._addLocalToVideoSession(session.id, localStream);
+      this._addLocalToVideoSession(this._getSipSessionId(session), localStream);
     }
   }
 
   _cleanupMedia(session: ?SIP.sessionDescriptionHandler) {
-    if (session && session.id in this.videoSessions) {
-      delete this.videoSessions[session.id];
+    const sessionId = this._getSipSessionId(session);
+    if (session && sessionId in this.videoSessions) {
+      delete this.videoSessions[this._getSipSessionId(session)];
     }
 
     const cleanAudio = id => {
@@ -801,9 +802,9 @@ export default class WebRTCClient extends Emitter {
 
     if (this._hasAudio() && this._isWeb()) {
       if (session) {
-        cleanAudio(session.id);
+        cleanAudio(this._getSipSessionId(session));
       } else {
-        Object.keys(this.audioElements).forEach(sessionId => cleanAudio(sessionId));
+        Object.keys(this.audioElements).forEach(id => cleanAudio(id));
       }
     }
   }
@@ -922,5 +923,9 @@ export default class WebRTCClient extends Emitter {
     }
 
     return localStream;
+  }
+
+  _getSipSessionId(sipSession: ?SIP.sessionDescriptionHandler): string {
+    return (sipSession && sipSession.request && sipSession.request.callId) || (sipSession && sipSession.id) || '';
   }
 }
