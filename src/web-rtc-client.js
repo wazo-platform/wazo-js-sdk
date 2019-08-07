@@ -201,7 +201,7 @@ export default class WebRTCClient extends Emitter {
       session.stop();
     }
 
-    if (this._getSipSessionId(session) in this.audioStreams) {
+    if (this.getSipSessionId(session) in this.audioStreams) {
       this.removeFromMerge(session);
     }
 
@@ -336,7 +336,7 @@ export default class WebRTCClient extends Emitter {
       }
 
       return pc.createOffer(this._getRtcOptions(false)).then(offer => {
-        this.audioStreams[this._getSipSessionId(session)] = { localAudioSource, remoteAudioSource };
+        this.audioStreams[this.getSipSessionId(session)] = { localAudioSource, remoteAudioSource };
 
         pc.setLocalDescription(offer);
       });
@@ -355,7 +355,7 @@ export default class WebRTCClient extends Emitter {
   removeFromMerge(session: SIP.InviteClientContext, shouldHold: boolean = true) {
     const sdh = session.sessionDescriptionHandler;
     const pc = sdh.peerConnection;
-    const { localAudioSource, remoteAudioSource } = this.audioStreams[this._getSipSessionId(session)];
+    const { localAudioSource, remoteAudioSource } = this.audioStreams[this.getSipSessionId(session)];
 
     if (remoteAudioSource) {
       remoteAudioSource.disconnect(this.mergeDestination);
@@ -379,7 +379,7 @@ export default class WebRTCClient extends Emitter {
       pc.addStream(newDestination.stream);
     }
 
-    delete this.audioStreams[this._getSipSessionId(session)];
+    delete this.audioStreams[this.getSipSessionId(session)];
 
     return pc.createOffer(this._getRtcOptions(false)).then(offer => {
       const result = pc.setLocalDescription(offer);
@@ -577,6 +577,10 @@ export default class WebRTCClient extends Emitter {
     this._tryToRegister(cb);
   }
 
+  getSipSessionId(sipSession: ?SIP.sessionDescriptionHandler): string {
+    return (sipSession && sipSession.request && sipSession.request.callId) || (sipSession && sipSession.id) || '';
+  }
+
   _initializeVideoSession(sessionId: string) {
     if (!this.videoSessions[sessionId]) {
       this.videoSessions[sessionId] = {
@@ -697,7 +701,7 @@ export default class WebRTCClient extends Emitter {
         session.stop();
       }
 
-      if (this._getSipSessionId(session) in this.audioStreams) {
+      if (this.getSipSessionId(session) in this.audioStreams) {
         this.removeFromMerge(session);
       }
     });
@@ -735,9 +739,9 @@ export default class WebRTCClient extends Emitter {
     const remoteStream = this._getRemoteStream(pc);
 
     if (this._hasVideo() && this._isWeb()) {
-      this._addRemoteToVideoSession(this._getSipSessionId(session), remoteStream);
+      this._addRemoteToVideoSession(this.getSipSessionId(session), remoteStream);
     } else if (this._hasAudio() && this._isWeb()) {
-      const audio = this.audioElements[this._getSipSessionId(session)];
+      const audio = this.audioElements[this.getSipSessionId(session)];
       audio.srcObject = remoteStream;
       audio.play();
     }
@@ -767,7 +771,7 @@ export default class WebRTCClient extends Emitter {
       if (document.body) {
         document.body.appendChild(audio);
       }
-      this.audioElements[this._getSipSessionId(session)] = audio;
+      this.audioElements[this.getSipSessionId(session)] = audio;
     }
 
     if (!this._hasVideo()) {
@@ -778,14 +782,14 @@ export default class WebRTCClient extends Emitter {
     const localStream = this._getLocalStream(pc);
 
     if (this._isWeb() && this._hasVideo()) {
-      this._addLocalToVideoSession(this._getSipSessionId(session), localStream);
+      this._addLocalToVideoSession(this.getSipSessionId(session), localStream);
     }
   }
 
   _cleanupMedia(session: ?SIP.sessionDescriptionHandler) {
-    const sessionId = this._getSipSessionId(session);
+    const sessionId = this.getSipSessionId(session);
     if (session && sessionId in this.videoSessions) {
-      delete this.videoSessions[this._getSipSessionId(session)];
+      delete this.videoSessions[this.getSipSessionId(session)];
     }
 
     const cleanAudio = id => {
@@ -802,7 +806,7 @@ export default class WebRTCClient extends Emitter {
 
     if (this._hasAudio() && this._isWeb()) {
       if (session) {
-        cleanAudio(this._getSipSessionId(session));
+        cleanAudio(this.getSipSessionId(session));
       } else {
         Object.keys(this.audioElements).forEach(id => cleanAudio(id));
       }
@@ -923,9 +927,5 @@ export default class WebRTCClient extends Emitter {
     }
 
     return localStream;
-  }
-
-  _getSipSessionId(sipSession: ?SIP.sessionDescriptionHandler): string {
-    return (sipSession && sipSession.request && sipSession.request.callId) || (sipSession && sipSession.id) || '';
   }
 }
