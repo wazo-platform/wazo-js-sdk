@@ -1,7 +1,7 @@
 // @flow
 
 import Session from './Session';
-import { LINE_STATE, PRESENCE, STATE } from './Profile';
+import { LINE_STATE, STATE } from './Profile';
 import newFrom from '../utils/new-from';
 import type { DirectorySource } from './DirectorySource';
 
@@ -116,7 +116,7 @@ type ContactArguments = {
   note?: string,
   endpointId?: number,
   personal?: boolean,
-  presence?: string,
+  state?: string,
   source?: string,
   sourceId?: string,
   status?: string,
@@ -212,7 +212,7 @@ export default class Contact {
   note: ?string;
   endpointId: ?number;
   personal: ?boolean;
-  presence: ?string;
+  state: ?string;
   source: ?string;
   sourceId: string;
   status: ?string;
@@ -459,7 +459,7 @@ export default class Contact {
     birthday,
     address,
     note,
-    presence,
+    state,
     status,
     endpointId,
     personal,
@@ -480,7 +480,7 @@ export default class Contact {
     this.birthday = birthday;
     this.address = address;
     this.note = note;
-    this.presence = presence;
+    this.state = state;
     this.status = status;
     this.endpointId = endpointId;
     this.personal = personal;
@@ -522,27 +522,19 @@ export default class Contact {
   }
 
   isAvailable(): boolean {
-    return this.presence === STATE.AVAILABLE;
+    return this.state === STATE.AVAILABLE;
   }
 
   isAway(): boolean {
-    return this.presence === STATE.AWAY;
+    return this.state === STATE.AWAY;
   }
 
   isUnavailable(): boolean {
-    return this.presence === STATE.UNAVAILABLE;
+    return this.state === STATE.UNAVAILABLE;
   }
 
   isInvisible(): boolean {
-    return this.presence === STATE.INVISIBLE;
-  }
-
-  isDoNotDisturb(): boolean {
-    return this.presence === PRESENCE.DO_NOT_DISTURB;
-  }
-
-  isDisconnected(): boolean {
-    return this.presence === PRESENCE.DISCONNECTED;
+    return this.state === STATE.INVISIBLE;
   }
 
   isInCall(): boolean {
@@ -558,7 +550,7 @@ export default class Contact {
   }
 
   merge(old: Contact): Contact {
-    this.presence = old.presence;
+    this.state = old.state;
     this.status = old.status;
 
     return this;
