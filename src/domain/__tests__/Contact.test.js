@@ -92,58 +92,22 @@ describe('Contact domain', () => {
     expect(lastName).toBe('Smith');
   });
 
-  it('is available given an available presence', () => {
-    const contact = new Contact({ uuid: 'uuid-12345', presence: 'available' });
+  it('is available given an available state', () => {
+    const contact = new Contact({ uuid: 'uuid-12345', state: 'available' });
 
     expect(contact.isAvailable()).toBeTruthy();
   });
 
-  it('is not available given a non available presence', () => {
-    const contact = new Contact({ uuid: 'uuid-12345', presence: 'donotdisturb' });
+  it('is not available given a non available state', () => {
+    const contact = new Contact({ uuid: 'uuid-12345', state: 'donotdisturb' });
 
     expect(contact.isAvailable()).toBeFalsy();
   });
 
-  it('is not available given no presence', () => {
+  it('is not available given no state', () => {
     const contact = new Contact({ uuid: 'uuid-12345' });
 
     expect(contact.isAvailable()).toBeFalsy();
-  });
-
-  it('is do-not-disturb given a do-not-disturb presence', () => {
-    const contact = new Contact({ uuid: 'uuid-12345', presence: 'donotdisturb' });
-
-    expect(contact.isDoNotDisturb()).toBeTruthy();
-  });
-
-  it('is not do-not-disturb given a non do-not-disturb presence', () => {
-    const contact = new Contact({ uuid: 'uuid-12345', presence: 'available' });
-
-    expect(contact.isDoNotDisturb()).toBeFalsy();
-  });
-
-  it('is not do-not-disturb given no presence', () => {
-    const contact = new Contact({ uuid: 'uuid-12345' });
-
-    expect(contact.isDoNotDisturb()).toBeFalsy();
-  });
-
-  it('is disconnected given a disconnected presence', () => {
-    const contact = new Contact({ uuid: 'uuid-12345', presence: 'disconnected' });
-
-    expect(contact.isDisconnected()).toBeTruthy();
-  });
-
-  it('is not disconnected given a non disconnected presence', () => {
-    const contact = new Contact({ uuid: 'uuid-12345', presence: 'available' });
-
-    expect(contact.isDisconnected()).toBeFalsy();
-  });
-
-  it('is not disconnected given no presence', () => {
-    const contact = new Contact({ uuid: 'uuid-12345' });
-
-    expect(contact.isDisconnected()).toBeFalsy();
   });
 
   it('can parse a plain contact to domain', () => {

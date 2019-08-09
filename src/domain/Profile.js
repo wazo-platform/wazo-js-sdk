@@ -5,12 +5,6 @@ import ForwardOption, { FORWARD_KEYS } from './ForwardOption';
 import newFrom from '../utils/new-from';
 import type { Endpoint } from './Line';
 
-export const PRESENCE = {
-  AVAILABLE: 'available',
-  DO_NOT_DISTURB: 'donotdisturb',
-  DISCONNECTED: 'disconnected',
-};
-
 export const STATE = {
   AVAILABLE: 'available',
   UNAVAILABLE: 'unavailable',
@@ -83,7 +77,7 @@ type ProfileArguments = {
   mobileNumber: string,
   forwards: Array<ForwardOption>,
   doNotDisturb?: boolean,
-  presence?: string,
+  state?: string,
   status: string,
   subscriptionType: ?number,
   voicemail?: {
@@ -103,7 +97,7 @@ export default class Profile {
   mobileNumber: string;
   forwards: Array<ForwardOption>;
   doNotDisturb: ?boolean;
-  presence: ?string;
+  state: ?string;
   voicemail: ?{ id: number, name: string };
   status: string;
   subscriptionType: ?number;
@@ -145,7 +139,7 @@ export default class Profile {
     mobileNumber,
     forwards,
     doNotDisturb,
-    presence,
+    state,
     subscriptionType,
     voicemail,
     switchboards,
@@ -160,7 +154,7 @@ export default class Profile {
     this.mobileNumber = mobileNumber;
     this.forwards = forwards;
     this.doNotDisturb = doNotDisturb;
-    this.presence = presence;
+    this.state = state;
     this.voicemail = voicemail;
     this.subscriptionType = subscriptionType;
     this.switchboards = switchboards;
@@ -216,8 +210,8 @@ export default class Profile {
     return this;
   }
 
-  setPresence(presence: string) {
-    this.presence = presence;
+  setState(state: string) {
+    this.state = state;
 
     return this;
   }

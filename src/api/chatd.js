@@ -29,7 +29,7 @@ type GetMessagesOptions = {
 };
 
 export default (client: ApiRequester, baseUrl: string) => ({
-  updatePresence: (token: Token, contactUuid: UUID, state: string): Promise<Boolean> =>
+  updateState: (token: Token, contactUuid: UUID, state: string): Promise<Boolean> =>
     client.put(`${baseUrl}/users/${contactUuid}/presences`, { state }, token, ApiRequester.successResponseParser),
 
   updateStatus: (token: Token, contactUuid: UUID, state: string, status: string): Promise<Boolean> => {
@@ -38,7 +38,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.put(`${baseUrl}/users/${contactUuid}/presences`, body, token, ApiRequester.successResponseParser);
   },
 
-  getPresence: async (token: Token, contactUuid: UUID): Promise<string> =>
+  getState: async (token: Token, contactUuid: UUID): Promise<string> =>
     client
       .get(`${baseUrl}/users/${contactUuid}/presences`, null, token)
       .then((response: PresenceResponse) => response.state),
