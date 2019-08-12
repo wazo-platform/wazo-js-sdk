@@ -9,6 +9,7 @@ export const STATE = {
   AVAILABLE: 'available',
   UNAVAILABLE: 'unavailable',
   INVISIBLE: 'invisible',
+  DISCONNECTED: 'disconnected',
   AWAY: 'away',
 };
 
