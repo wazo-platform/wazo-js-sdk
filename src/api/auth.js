@@ -172,6 +172,10 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.get(`${baseUrl}/users/${userUuid}/sessions`, null, token);
   },
 
+  deleteUserSession(token: Token, userUuid: UUID, sessionUuis: UUID) {
+    return client.delete(`${baseUrl}/users/${userUuid}/sessions/${sessionUuis}`, null, token);
+  },
+
   listUsers(token: Token): Promise<ListUsersResponse> {
     return client.get(`${baseUrl}/users`, null, token);
   },
