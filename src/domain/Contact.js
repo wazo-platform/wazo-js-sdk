@@ -5,7 +5,7 @@ import { LINE_STATE, STATE } from './Profile';
 import newFrom from '../utils/new-from';
 import type { DirectorySource } from './DirectorySource';
 
-const BACKEND = {
+export const BACKEND = {
   OFFICE365: 'office365',
   PERSONAL: 'personal',
   GOOGLE: 'google',
