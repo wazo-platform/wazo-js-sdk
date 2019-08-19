@@ -148,19 +148,29 @@ client.callLogd.listCallLogs(token, offset, limit);
 client.callLogd.listCallLogsFromDate(token, from, number);
 ```
 
-### Ctid Ng
+### Calld
+
+Please note, ctidNg endpoint is obsolete but continue to work with old version. Please update your code.
+
 ```js
-client.ctidNg.updatePresence(token, presence);
-client.ctidNg.listMessages(token, participantUuid, limit);
-client.ctidNg.sendMessage(token, alias, msg, toUserId);
-client.ctidNg.makeCall(token, extension, fromMobile, lineId);
-client.ctidNg.cancelCall(token, callId);
-client.ctidNg.listCalls(token);
-client.ctidNg.relocateCall(token, callId, destination, lineId);
-client.ctidNg.listVoicemails(token);
-client.ctidNg.deleteVoicemail(token, voicemailId);
-client.ctidNg.getPresence(token, contactUuid};
-client.ctidNg.getStatus(token, lineUuid);
+client.calld.answerSwitchboardQueuedCall(token, switchboardUuid, callId);
+client.calld.answerSwitchboardHeldCall(token switchboardUuid, callId);
+client.calld.cancelCall(token, callId);
+client.calld.deleteVoicemail(token, voicemailId);
+client.calld.fetchSwitchboardHeldCalls(token, switchboardUuid);
+client.calld.fetchSwitchboardQueuedCalls(token, switchboardUuid);
+client.calld.getConferenceParticipantsAsUser(token, conferenceId);
+client.calld.getPresence(token, contactUuid}; //deprecated use chatd in ctidNg, don't work with calld
+client.calld.getStatus(token, lineUuid); //deprecated use chatd in ctidNg, don't work with calld
+client.calld.holdSwitchboardCall(token, switchboardUuid, callId);
+client.calld.listCalls(token);
+client.calld.listMessages(token, participantUuid, limit);
+client.calld.listVoicemails(token);
+client.calld.makeCall(token, extension, fromMobile, lineId);
+client.calld.sendFax(token, extension, fax, callerId);
+client.calld.sendMessage(token, alias, msg, toUserId);
+client.calld.relocateCall(token, callId, destination, lineId);
+client.calld.updatePresence(token, presence);
 ```
 
 ### Accessd
