@@ -1,6 +1,7 @@
 /* @flow */
 import ApiRequester from '../utils/api-requester';
-import type { UUID, Token, RequestError, ConferenceParticipants } from '../domain/types';
+import type { UUID, Token, RequestError } from '../domain/types';
+import type { ConferenceParticipants } from '../domain/Conference';
 import Relocation from '../domain/Relocation';
 import ChatMessage from '../domain/ChatMessage';
 import Voicemail from '../domain/Voicemail';
