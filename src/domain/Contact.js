@@ -119,6 +119,7 @@ type ContactArguments = {
   state?: string,
   source?: string,
   sourceId?: string,
+  lineState?: string,
   status?: string,
   endpointId?: number,
   uuid?: string,
@@ -213,6 +214,7 @@ export default class Contact {
   endpointId: ?number;
   personal: ?boolean;
   state: ?string;
+  lineState: ?string;
   source: ?string;
   sourceId: string;
   status: ?string;
@@ -460,6 +462,7 @@ export default class Contact {
     address,
     note,
     state,
+    lineState,
     status,
     endpointId,
     personal,
@@ -481,6 +484,7 @@ export default class Contact {
     this.address = address;
     this.note = note;
     this.state = state;
+    this.lineState = lineState;
     this.status = status;
     this.endpointId = endpointId;
     this.personal = personal;
@@ -538,20 +542,23 @@ export default class Contact {
   }
 
   isInCall(): boolean {
-    return this.status === LINE_STATE.TALKING || this.status === LINE_STATE.HOLDING;
+    return this.lineState === LINE_STATE.TALKING || this.lineState === LINE_STATE.HOLDING;
   }
 
   isRinging(): boolean {
-    return this.status === LINE_STATE.RINGING;
+    return this.lineState === LINE_STATE.RINGING;
   }
 
   isInUseOrRinging(): boolean {
-    return this.status === LINE_STATE.TALKING || this.status === LINE_STATE.RINGING;
+    return this.lineState === LINE_STATE.TALKING || this.lineState === LINE_STATE.RINGING;
   }
 
   merge(old: Contact): Contact {
     this.state = old.state;
     this.status = old.status;
+    if (old.lineState && !this.lineState) {
+      this.lineState = old.lineState;
+    }
 
     return this;
   }
