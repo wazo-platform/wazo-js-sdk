@@ -167,7 +167,7 @@ client.calld.listCalls(token);
 client.calld.listMessages(token, participantUuid, limit);
 client.calld.listVoicemails(token);
 client.calld.makeCall(token, extension, fromMobile, lineId);
-client.cqlld.sendFax(token, extension, fax, callerId);
+client.calld.sendFax(token, extension, fax, callerId);
 client.calld.sendMessage(token, alias, msg, toUserId);
 client.calld.relocateCall(token, callId, destination, lineId);
 client.calld.updatePresence(token, presence);
