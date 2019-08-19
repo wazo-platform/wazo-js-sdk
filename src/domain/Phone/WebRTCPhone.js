@@ -21,6 +21,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   ringingEnabled: boolean;
 
+  acceptedSessions: Object;
+
+  rejectedSessions: Object;
+
   constructor(client: WazoWebRTCClient, audioOutputDeviceId?: string, allowVideo: boolean = false) {
     super();
 
@@ -64,6 +68,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.on('disconnected', () => {
       this.eventEmitter.emit('onUnRegistered');
     });
+
+    this.acceptedSessions = {};
+    this.rejectedSessions = {};
   }
 
   register() {
@@ -251,9 +258,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.holdSipSession(this.currentSipSession);
     }
 
-    if (!callSession) {
+    if (!callSession || callSession.getId() in this.acceptedSessions) {
       return null;
     }
+
+    this.acceptedSessions[callSession.getId()] = true;
 
     this.eventEmitter.emit('onCallAnswered', callSession);
 
@@ -269,9 +278,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   async reject(callSession: CallSession): Promise<void> {
     this.eventEmitter.emit('terminateSound');
-    if (!callSession) {
+    if (!callSession || callSession.getId() in this.rejectedSessions) {
       return;
     }
+
+    this.rejectedSessions[callSession.getId()] = true;
 
     const sipSession = this._findSipSession(callSession);
     if (sipSession) {
