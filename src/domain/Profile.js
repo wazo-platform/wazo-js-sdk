@@ -4,6 +4,7 @@ import Line from './Line';
 import ForwardOption, { FORWARD_KEYS } from './ForwardOption';
 import newFrom from '../utils/new-from';
 import type { Endpoint } from './Line';
+import SipLine from './SipLine';
 
 export const STATE = {
   AVAILABLE: 'available',
@@ -74,6 +75,7 @@ type ProfileArguments = {
   lastName: string,
   email: string,
   lines: Array<Line>,
+  sipLines?: Array<SipLine>,
   username: string,
   mobileNumber: string,
   forwards: Array<ForwardOption>,
@@ -94,6 +96,7 @@ export default class Profile {
   lastName: string;
   email: string;
   lines: Array<Line>;
+  sipLines: Array<SipLine>;
   username: string;
   mobileNumber: string;
   forwards: Array<ForwardOption>;
@@ -145,6 +148,7 @@ export default class Profile {
     voicemail,
     switchboards,
     status,
+    sipLines,
   }: $Shape<ProfileArguments> = {}) {
     this.id = id;
     this.firstName = firstName;
@@ -160,6 +164,8 @@ export default class Profile {
     this.subscriptionType = subscriptionType;
     this.switchboards = switchboards;
     this.status = status;
+
+    this.sipLines = sipLines || [];
   }
 
   static getLinesState(lines: Array<Object>) {

@@ -2,6 +2,7 @@
 import ApiRequester from '../utils/api-requester';
 import type { UUID, Token, ListConfdUsersResponse, ListApplicationsResponse, WebRtcConfig } from '../domain/types';
 import Profile from '../domain/Profile';
+import SipLine from '../domain/SipLine';
 
 export default (client: ApiRequester, baseUrl: string) => ({
   listUsers(token: Token): Promise<ListConfdUsersResponse> {
@@ -41,8 +42,15 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
 
   // @TODO: type response
-  getUserLineSip(token: Token, userUuid: string, lineId: string) {
-    return client.get(`${baseUrl}/users/${userUuid}/lines/${lineId}/associated/endpoints/sip`, null, token);
+  getUserLineSip(token: Token, userUuid: string, lineId: string): Promise<SipLine> {
+    return client
+      .get(`${baseUrl}/users/${userUuid}/lines/${lineId}/associated/endpoints/sip`, null, token)
+      .then(response => SipLine.parse(response));
+  },
+
+  getUserLinesSip(token: Token, userUuid: string, lineIds: string[]): Promise<SipLine>[] {
+    // $FlowFixMe
+    return Promise.all(lineIds.map(lineId => this.getUserLineSip(token, userUuid, lineId)));
   },
 
   getUserLineSipFromToken(token: Token, userUuid: string) {
@@ -64,6 +72,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
 
   getSIP(token: Token, userUuid: UUID, lineId: number): Promise<WebRtcConfig> {
+    console.warn('`confd.getSIP` is deprecated, use getUserLineSip instead');
     return client.get(`${baseUrl}/users/${userUuid}/lines/${lineId}/associated/endpoints/sip`, null, token);
   },
 

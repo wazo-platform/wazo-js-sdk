@@ -172,6 +172,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     this.userAgent.unregister();
+    this.registered = false;
   }
 
   // eslint-disable-next-line no-unused-vars
@@ -571,9 +572,13 @@ export default class WebRTCClient extends Emitter {
   }
 
   reinit(cb: Function = () => {}) {
+    if (this.userAgent) {
+      this.userAgent.removeAllListeners();
+    }
     this.userAgent = this.createUserAgent();
     this.registered = false;
 
+    this.registerTries = 0;
     this._tryToRegister(cb);
   }
 
@@ -884,7 +889,7 @@ export default class WebRTCClient extends Emitter {
       this.register();
       this.registerTries++;
       this._tryToRegister(cb);
-    }, 500 * this.registerTries);
+    }, 1500 * this.registerTries);
   }
 
   /**
