@@ -1,6 +1,6 @@
 // @flow
 import newFrom from '../utils/new-from';
-import type Endpoint from './Line';
+import type { Endpoint } from './Line';
 
 type SipLineResponse = {
   id: number,

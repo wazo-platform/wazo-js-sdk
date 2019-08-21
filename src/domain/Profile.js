@@ -36,7 +36,6 @@ type ProfileResponse = {
     endpoint_sccp?: Endpoint | null,
     endpoint_sip?: Endpoint | null,
   }>,
-  sipLines: Array<SipLine>,
   id: number,
   username: string,
   timezone: ?string,
@@ -76,7 +75,7 @@ type ProfileArguments = {
   lastName: string,
   email: string,
   lines: Array<Line>,
-  sipLines: Array<SipLine>,
+  sipLines?: Array<SipLine>,
   username: string,
   mobileNumber: string,
   forwards: Array<ForwardOption>,
@@ -149,6 +148,7 @@ export default class Profile {
     voicemail,
     switchboards,
     status,
+    sipLines,
   }: $Shape<ProfileArguments> = {}) {
     this.id = id;
     this.firstName = firstName;
@@ -165,7 +165,7 @@ export default class Profile {
     this.switchboards = switchboards;
     this.status = status;
 
-    this.sipLines = [];
+    this.sipLines = sipLines || [];
   }
 
   static getLinesState(lines: Array<Object>) {
