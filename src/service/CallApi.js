@@ -28,7 +28,7 @@ export default class CallApi {
 
   static async fetchSIP(server: string, session: Session, line: ?Line): Promise<any> {
     const lineToUse = line || session.primaryLine();
-    return getApiClient(server).confd.getSIP(session.token, session.uuid, lineToUse ? lineToUse.id : null);
+    return getApiClient(server).confd.getUserLineSip(session.token, session.uuid, lineToUse ? lineToUse.id : null);
   }
 
   static async cancelCall(server: string, session: Session, callSession: CallSession): Promise<void> {

@@ -5,6 +5,7 @@ import { swarmPublicKey } from '../../config';
 import Profile from './Profile';
 import Contact from './Contact';
 import Line from './Line';
+import SipLine from './SipLine';
 import type { UUID, Token } from './types';
 import newFrom from '../utils/new-from';
 import compareVersions from '../utils/compare-version';
@@ -128,6 +129,14 @@ export default class Session {
 
   primaryLine(): ?Line {
     return this.profile && this.profile.lines.length > 0 ? this.profile.lines[0] : null;
+  }
+
+  primarySipLine(): ?SipLine {
+    return this.profile && this.profile.sipLines.length > 0 ? this.profile.sipLines[0] : null;
+  }
+
+  primaryWebRtcLine(): ?SipLine {
+    return this.profile && this.profile.sipLines.find(sipLine => sipLine.isWebRtc());
   }
 
   primaryContext(): string {
