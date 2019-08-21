@@ -545,6 +545,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   onConnectionMade(): void {}
 
   close(): void {
+    this.unregister();
     this.client.close();
     this.unbind();
   }
