@@ -416,7 +416,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   // Should be async to match CTIPhone definition
-  async makeCall(number: string, line: any, enableVideo?: boolean): Promise<CallSession> {
+  async makeCall(number: string, line: any, enableVideo?: boolean): Promise<?CallSession> {
+    if (!number) {
+      return new Promise(resolve => resolve(null));
+    }
     if (!this.client.isRegistered()) {
       this.client.register();
     }

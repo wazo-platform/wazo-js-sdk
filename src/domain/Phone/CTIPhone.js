@@ -48,6 +48,9 @@ export default class CTIPhone extends Emitter implements Phone {
   }
 
   async makeCall(number: string, line: Line): Promise<?CallSession> {
+    if (!number) {
+      return null;
+    }
     this.currentCall = await CallApi.makeCall(this.server, this.session, line, number, this.isMobile);
     if (!this.currentCall) {
       return null;
