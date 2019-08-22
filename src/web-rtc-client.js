@@ -159,7 +159,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   register() {
-    if (!this.userAgent) {
+    if (!this.userAgent || this.isRegistered()) {
       return;
     }
 

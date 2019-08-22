@@ -139,6 +139,10 @@ export default class Session {
     return this.profile && this.profile.sipLines.find(sipLine => sipLine.isWebRtc());
   }
 
+  primaryCtiLine(): ?SipLine {
+    return this.profile && this.profile.sipLines.find(sipLine => !sipLine.isWebRtc());
+  }
+
   primaryContext(): string {
     if (this.engineVersion) {
       if (this.hasEngineVersionGte(MINIMUM_WAZO_ENGINE_VERSION_FOR_DEFAULT_CONTEXT)) {

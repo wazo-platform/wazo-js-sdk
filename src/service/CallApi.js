@@ -35,11 +35,16 @@ export default class CallApi {
     return getApiClient(server).ctidNg.cancelCall(session.token, callSession.callId);
   }
 
-  static async makeCall(server: string, session: Session, callFromLine: Line, extension: string): Promise<?Call> {
-    if (!callFromLine) {
-      return null;
-    }
-    const response = await getApiClient(server).ctidNg.makeCall(session.token, extension, false, callFromLine.id);
+  static async makeCall(
+    server: string,
+    session: Session,
+    callFromLine: Line,
+    extension: string,
+    isMobile: boolean = false,
+  ): Promise<?Call> {
+    const lineId = callFromLine ? callFromLine.id : null;
+
+    const response = await getApiClient(server).ctidNg.makeCall(session.token, extension, isMobile, lineId);
     return Call.parse(response);
   }
 

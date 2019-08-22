@@ -14,12 +14,15 @@ export default class CTIPhone extends Emitter implements Phone {
 
   server: string;
 
+  isMobile: boolean;
+
   currentCall: ?Call;
 
-  constructor(server: string, session: Session) {
+  constructor(server: string, session: Session, isMobile: boolean = false) {
     super();
     this.session = session;
     this.server = server;
+    this.isMobile = isMobile;
   }
 
   getOptions(): AvailablePhoneOptions {
@@ -45,7 +48,7 @@ export default class CTIPhone extends Emitter implements Phone {
   }
 
   async makeCall(number: string, line: Line): Promise<?CallSession> {
-    this.currentCall = await CallApi.makeCall(this.server, this.session, line, number);
+    this.currentCall = await CallApi.makeCall(this.server, this.session, line, number, this.isMobile);
     if (!this.currentCall) {
       return null;
     }
