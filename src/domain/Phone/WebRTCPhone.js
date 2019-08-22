@@ -427,7 +427,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.holdSipSession(this.currentSipSession);
     }
 
-    const sipSession = this.client.call(number, this.allowVideo ? enableVideo : false);
+    let sipSession;
+    try {
+      sipSession = this.client.call(number, this.allowVideo ? enableVideo : false);
+    } catch (error) {
+      console.warn(error);
+      return new Promise(resolve => resolve(null));
+    }
     const callSession = this._createOutgoingCallSession(sipSession, enableVideo || false);
 
     this.sipSessions[callSession.getId()] = sipSession;

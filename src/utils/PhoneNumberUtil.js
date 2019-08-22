@@ -38,11 +38,15 @@ const getDisplayableNumber = (number: string, country: string, asYouType: boolea
 
 const parsePhoneNumber = (phoneNumber: string): string => phoneNumber.replace(EXTRA_CHAR_REGEXP, '');
 
-const getCallableNumber = (number: string, country: ?string): string => {
-  if (country) {
-    return getDisplayableNumber(number, country).replace(EXTRA_CHAR_REGEXP, '');
+const getCallableNumber = (number: string, country: ?string): ?string => {
+  try {
+    if (country) {
+      return getDisplayableNumber(number, country).replace(EXTRA_CHAR_REGEXP, '');
+    }
+    return parsePhoneNumber(number);
+  } catch (_) {
+    return null;
   }
-  return parsePhoneNumber(number);
 };
 
 export {
