@@ -138,8 +138,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.eventEmitter.emit('onCameraDisabled', this._createCameraDisabledCallSession(sipSession, callSession));
     });
 
-    sipSession.on('failed', () => {
-      this.eventEmitter.emit('onCallFailed', this._createCallSession(sipSession));
+    sipSession.on('failed', reason => {
+      this.eventEmitter.emit('onCallFailed', this._createCallSession(sipSession), reason);
 
       this._onCallTerminated(sipSession);
     });
