@@ -81,6 +81,7 @@ export default class WebRTCClient extends Emitter {
   videoSessions: Object;
   registerTries: number;
   registered: boolean;
+  registering: boolean;
   registerTimeout: ?TimeoutID;
 
   static isAPrivateIp(ip: string): boolean {
@@ -114,6 +115,7 @@ export default class WebRTCClient extends Emitter {
     this.registerTries = 0;
     this.registered = false;
     this.registerTimeout = null;
+    this.registering = false;
   }
 
   configureMedia(media: MediaConfig) {
@@ -572,13 +574,13 @@ export default class WebRTCClient extends Emitter {
   }
 
   reinit(cb: Function = () => {}) {
-    if (this.userAgent) {
-      this.userAgent.removeAllListeners();
+    if (this.registering) {
+      return;
     }
-    this.userAgent = this.createUserAgent();
-    this.registered = false;
 
+    this.registering = true;
     this.registerTries = 0;
+    this.registered = false;
     this._tryToRegister(cb);
   }
 
@@ -864,8 +866,7 @@ export default class WebRTCClient extends Emitter {
   _bindRegistrationEvents(userAgent: UA) {
     const onDisconnected = () => {
       this.registered = false;
-      this.registerTries = 0;
-      this._tryToRegister();
+      this.reinit();
     };
 
     userAgent.on('registered', () => {
@@ -882,10 +883,16 @@ export default class WebRTCClient extends Emitter {
         clearTimeout(this.registerTimeout);
       }
       cb(this.registerTries >= MAX_REGISTER_TRY);
+      this.registering = false;
       return;
     }
 
     this.registerTimeout = setTimeout(() => {
+      if (this.userAgent) {
+        this.userAgent.removeAllListeners();
+      }
+      this.userAgent = this.createUserAgent();
+
       this.register();
       this.registerTries++;
       this._tryToRegister(cb);
