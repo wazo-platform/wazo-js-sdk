@@ -17,7 +17,7 @@ import MobileSessionDescriptionHandler from './lib/MobileSessionDescriptionHandl
 
 const SIPMethods = { Web: { Modifiers }, Utils, Exceptions };
 
-const MAX_REGISTER_TRY = 10;
+const MAX_REGISTER_TRY = 200;
 
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
 const events = [
