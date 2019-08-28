@@ -51,7 +51,11 @@ export default class CTIPhone extends Emitter implements Phone {
     if (!number) {
       return null;
     }
-    this.currentCall = await CallApi.makeCall(this.server, this.session, line, number, this.isMobile);
+    try {
+      this.currentCall = await CallApi.makeCall(this.server, this.session, line, number, this.isMobile);
+    } catch (_) {
+      // We have to deal with error like `User has no mobile phone number` error in the UI.
+    }
     if (!this.currentCall) {
       return null;
     }
