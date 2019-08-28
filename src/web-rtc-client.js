@@ -2,6 +2,7 @@
 /* eslint-disable class-methods-use-this */
 /* global window, document, navigator */
 import 'webrtc-adapter';
+import { SessionStatus } from 'sip.js/lib/Enums';
 import { UA } from 'sip.js/lib/UA';
 import { Utils } from 'sip.js/lib/Utils';
 import { Exceptions } from 'sip.js/lib/Exceptions';
@@ -200,27 +201,51 @@ export default class WebRTCClient extends Emitter {
   }
 
   hangup(session: SIP.sessionDescriptionHandler) {
-    if ('stop' in session) {
-      session.stop();
-    }
+    try {
+      this._cleanupMedia(session);
 
-    if (this.getSipSessionId(session) in this.audioStreams) {
-      this.removeFromMerge(session);
-    }
+      if (this.getSipSessionId(session) in this.audioStreams) {
+        this.removeFromMerge(session);
+      }
 
-    if (session.hasAnswer && session.bye) {
-      return session.bye();
-    }
+      this._cleanupMedia(session);
 
-    if (!session.hasAnswer && session.cancel) {
-      return session.cancel();
-    }
+      const cancel = () => session.cancel && !session.isCanceled && session.cancel();
 
-    if (session.reject) {
-      return session.reject();
-    }
+      const reject = () => session.reject && session.reject();
 
-    this._cleanupMedia(session);
+      const actions = {
+        // Status 2: cancel
+        [SessionStatus.STATUS_1XX_RECEIVED]: cancel,
+        // Status 4: cancel
+        [SessionStatus.STATUS_WAITING_FOR_ANSWER]: cancel,
+        // Status 8: nothing to do
+        [SessionStatus.STATUS_CANCELED]: null,
+        // Status 9: nothing to do
+        [SessionStatus.STATUS_TERMINATED]: null,
+      };
+
+      // Handle different session status
+      if (actions[session.status]) {
+        return actions[session.status]();
+      }
+
+      if (session.hasAnswer && session.bye) {
+        return session.bye();
+      }
+
+      if (!session.hasAnswer) {
+        return cancel();
+      }
+
+      if ('stop' in session) {
+        session.stop();
+      }
+
+      return reject();
+    } catch (error) {
+      console.warn('WebRtcClient.hangup error', error);
+    }
 
     return null;
   }
@@ -437,6 +462,13 @@ export default class WebRTCClient extends Emitter {
     }
 
     this.userAgent.removeAllListeners();
+
+    // Clear sessions correctly, avoid to call `terminate` on them in `userAgent.stop` later
+    Object.keys(this.userAgent.sessions).forEach(sessionId => {
+      this.hangup(this.userAgent.sessions[sessionId]);
+      delete this.userAgent.sessions[sessionId];
+    });
+
     return this.userAgent.stop();
   }
 

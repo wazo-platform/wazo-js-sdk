@@ -86,7 +86,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   unregister() {
-    if (!this.client) {
+    if (!this.client || !this.client.isRegistered()) {
       return;
     }
     this.client.unregister();
