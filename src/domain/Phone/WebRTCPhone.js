@@ -79,7 +79,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     try {
-      this.client.reinit();
+      this.client.register();
     } catch (e) {
       // Avoid exception on `t.server.scheme` in sip transport when losing the webrtc socket connection
     }
