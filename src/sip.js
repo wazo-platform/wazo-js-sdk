@@ -2,6 +2,7 @@ import SIP from 'sip.js';
 
 export default {
   sessionDescriptionHandler: SIP.sessionDescriptionHandler,
+  InviteServerContext: SIP.InviteServerContext,
   C: {
     REASON_PHRASE: {
       100: 'Trying',

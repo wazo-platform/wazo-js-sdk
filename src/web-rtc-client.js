@@ -200,7 +200,7 @@ export default class WebRTCClient extends Emitter {
     return session.accept(this._getMediaConfiguration(enableVideo || false));
   }
 
-  hangup(session: SIP.sessionDescriptionHandler) {
+  hangup(session: SIP.sessionDescriptionHandler | SIP.InviteServerContext) {
     try {
       this._cleanupMedia(session);
 
@@ -210,7 +210,17 @@ export default class WebRTCClient extends Emitter {
 
       this._cleanupMedia(session);
 
-      const cancel = () => session.cancel && !session.isCanceled && session.cancel();
+      // Check if sessionDescriptionHandler or InviteServerContext
+      const isISC = typeof session.cancel !== 'undefined';
+
+      const cancel = () => {
+        if (isISC && !session.isCanceled) {
+          session.cancel();
+          // eslint-disable-next-line
+        } else if(!session._canceled) {
+          session.reject();
+        }
+      };
 
       const reject = () => session.reject && session.reject();
 
@@ -230,12 +240,16 @@ export default class WebRTCClient extends Emitter {
         return actions[session.status]();
       }
 
-      if (session.hasAnswer && session.bye) {
-        return session.bye();
-      }
+      // For InviteServerContext
+      if (isISC) {
+        if (session.hasAnswer && session.bye) {
+          return session.bye();
+        }
 
-      if (!session.hasAnswer) {
-        return cancel();
+        // For InviteServerContext
+        if (!session.hasAnswer) {
+          return cancel();
+        }
       }
 
       if ('stop' in session) {
