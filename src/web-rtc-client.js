@@ -191,6 +191,7 @@ export default class WebRTCClient extends Emitter {
   hangup(session: SIP.sessionDescriptionHandler | SIP.InviteServerContext) {
     try {
       this._cleanupMedia(session);
+      const { status } = session;
 
       if (this.getSipSessionId(session) in this.audioStreams) {
         this.removeFromMerge(session);
@@ -198,34 +199,42 @@ export default class WebRTCClient extends Emitter {
 
       this._cleanupMedia(session);
 
-      // Check if sessionDescriptionHandler or InviteServerContext
+      // Check if sessionDescriptionHandler or InviteServerContext (ISC = outgoing call)
       const isISC = typeof session.cancel !== 'undefined';
 
       const cancel = () => {
-        if (isISC && !session.isCanceled) {
+        if (!session.isCanceled) {
           session.cancel();
-          // eslint-disable-next-line
-        } else if (!session._canceled) {
+        }
+      };
+
+      const reject = () => {
+        // eslint-disable-next-line
+        if (!session._canceled) {
           session.reject();
         }
       };
 
-      const reject = () => session.reject && session.reject();
+      const bye = () => session.bye && session.bye();
 
       const actions = {
-        // Status 2: cancel
-        [SessionStatus.STATUS_1XX_RECEIVED]: cancel,
-        // Status 4: cancel
-        [SessionStatus.STATUS_WAITING_FOR_ANSWER]: cancel,
-        // Status 8: nothing to do
+        // Status 2 (STATUS_1XX_RECEIVED) : cancel
+        [SessionStatus.STATUS_1XX_RECEIVED]: isISC ? cancel : reject,
+        // Status 4 (STATUS_WAITING_FOR_ANSWER) : cancel
+        [SessionStatus.STATUS_WAITING_FOR_ANSWER]: isISC ? cancel : reject,
+        // Status 8 (STATUS_CANCELED) : nothing to do
         [SessionStatus.STATUS_CANCELED]: null,
-        // Status 9: nothing to do
+        // Status 9 (STATUS_TERMINATED): nothing to do
         [SessionStatus.STATUS_TERMINATED]: null,
+        // Status 10 (STATUS_ANSWERED_WAITING_FOR_PRACK): bye
+        [SessionStatus.STATUS_ANSWERED_WAITING_FOR_PRACK]: bye, // bye is the same for sdh ou isc
+        // Status 12 (STATUS_CONFIRMED): bye
+        [SessionStatus.STATUS_CONFIRMED]: bye, // bye is the same for sdh ou isc
       };
 
       // Handle different session status
-      if (actions[session.status]) {
-        return actions[session.status]();
+      if (actions[status]) {
+        return actions[status]();
       }
 
       // For InviteServerContext
@@ -244,7 +253,7 @@ export default class WebRTCClient extends Emitter {
         session.stop();
       }
 
-      return reject();
+      return bye();
     } catch (error) {
       console.warn('WebRtcClient.hangup error', error);
     }
@@ -467,12 +476,6 @@ export default class WebRTCClient extends Emitter {
     }
 
     this.userAgent.removeAllListeners();
-
-    // Clear sessions correctly, avoid to call `terminate` on them in `userAgent.stop` later
-    Object.keys(this.userAgent.sessions).forEach(sessionId => {
-      this.hangup(this.userAgent.sessions[sessionId]);
-      delete this.userAgent.sessions[sessionId];
-    });
 
     return this.userAgent.stop();
   }
