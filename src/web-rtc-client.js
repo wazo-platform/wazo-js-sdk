@@ -831,6 +831,9 @@ export default class WebRTCClient extends Emitter {
 
     const cleanAudio = id => {
       const element = this.audioElements[id];
+      if (!element) {
+        return;
+      }
 
       element.pause();
       if (element.parentNode) {
