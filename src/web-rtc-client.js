@@ -18,8 +18,6 @@ import MobileSessionDescriptionHandler from './lib/MobileSessionDescriptionHandl
 
 const SIPMethods = { Web: { Modifiers }, Utils, Exceptions };
 
-const MAX_REGISTER_TRY = 200;
-
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
 const events = [
   'registered',
@@ -63,6 +61,7 @@ type WebRtcConfig = {
   iceCheckingTimeout: ?number,
   log?: Object,
   audioOutputDeviceId?: string,
+  userAgentString?: string,
 };
 
 // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
@@ -80,10 +79,6 @@ export default class WebRTCClient extends Emitter {
   mergeDestination: ?MediaStreamAudioDestinationNode;
   audioOutputDeviceId: ?string;
   videoSessions: Object;
-  registerTries: number;
-  registered: boolean;
-  registering: boolean;
-  registerTimeout: ?TimeoutID;
 
   static isAPrivateIp(ip: string): boolean {
     const regex = /^(?:10|127|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\..*/;
@@ -113,10 +108,6 @@ export default class WebRTCClient extends Emitter {
     this.configureMedia(config.media);
 
     this.videoSessions = {};
-    this.registerTries = 0;
-    this.registered = false;
-    this.registerTimeout = null;
-    this.registering = false;
   }
 
   configureMedia(media: MediaConfig) {
@@ -152,8 +143,6 @@ export default class WebRTCClient extends Emitter {
       });
     });
 
-    this._bindRegistrationEvents(userAgent);
-
     return userAgent;
   }
 
@@ -175,7 +164,6 @@ export default class WebRTCClient extends Emitter {
     }
 
     this.userAgent.unregister();
-    this.registered = false;
   }
 
   // eslint-disable-next-line no-unused-vars
@@ -217,7 +205,7 @@ export default class WebRTCClient extends Emitter {
         if (isISC && !session.isCanceled) {
           session.cancel();
           // eslint-disable-next-line
-        } else if(!session._canceled) {
+        } else if (!session._canceled) {
           session.reject();
         }
       };
@@ -619,17 +607,6 @@ export default class WebRTCClient extends Emitter {
     return streams.remotes;
   }
 
-  reinit(cb: Function = () => {}) {
-    if (this.registering) {
-      return;
-    }
-
-    this.registering = true;
-    this.registerTries = 0;
-    this.registered = false;
-    this._tryToRegister(cb);
-  }
-
   getSipSessionId(sipSession: ?SIP.sessionDescriptionHandler): string {
     return (sipSession && sipSession.request && sipSession.request.callId) || (sipSession && sipSession.id) || '';
   }
@@ -684,17 +661,21 @@ export default class WebRTCClient extends Emitter {
       log: this.config.log || { builtinEnabled: false },
       password: this.config.password,
       uri: `${this.config.authorizationUser || ''}@${this.config.host}`,
+      userAgentString: this.config.userAgentString || 'wazo-sdk',
       transportOptions: {
+        maxReconnectionAttempts: 30,
+        reconnectionTimeout: 2,
         traceSip: false,
         wsServers: `wss://${this.config.host}:${this.config.port || 443}/api/asterisk/ws`,
       },
       sessionDescriptionHandlerFactoryOptions: {
+        alwaysAcquireMediaFirst: true,
         constraints: {
           audio: this._getAudioConstraints(),
           video: this._getVideoConstraints(),
         },
+        iceCheckingTimeout: this.config.iceCheckingTimeout || 1000,
         peerConnectionOptions: {
-          iceCheckingTimeout: this.config.iceCheckingTimeout || 5000,
           rtcConfiguration: {
             rtcpMuxPolicy: 'require',
             bundlePolicy: 'max-compat',
@@ -907,42 +888,6 @@ export default class WebRTCClient extends Emitter {
         });
       });
     }
-  }
-
-  _bindRegistrationEvents(userAgent: UA) {
-    const onDisconnected = () => {
-      this.registered = false;
-      this.reinit();
-    };
-
-    userAgent.on('registered', () => {
-      this.registered = true;
-    });
-
-    userAgent.transport.on('disconnected', onDisconnected);
-    userAgent.on('unregistered', onDisconnected);
-  }
-
-  _tryToRegister(cb: Function = () => {}) {
-    if (this.registered || this.registerTries >= MAX_REGISTER_TRY) {
-      if (this.registerTimeout) {
-        clearTimeout(this.registerTimeout);
-      }
-      cb(this.registerTries >= MAX_REGISTER_TRY);
-      this.registering = false;
-      return;
-    }
-
-    this.registerTimeout = setTimeout(() => {
-      if (this.userAgent) {
-        this.userAgent.removeAllListeners();
-      }
-      this.userAgent = this.createUserAgent();
-
-      this.register();
-      this.registerTries++;
-      this._tryToRegister(cb);
-    }, 1500 * this.registerTries);
   }
 
   /**
