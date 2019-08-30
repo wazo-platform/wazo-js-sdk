@@ -344,10 +344,13 @@ export default class WebRTCClient extends Emitter {
     return sessions.map(this.addToMerge.bind(this));
   }
 
+  isFirefox(): boolean {
+    return this._isWeb() && navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+  }
+
   addToMerge(session: SIP.InviteClientContext): Promise<boolean> {
     this._checkMaxMergeSessions(Object.keys(this.audioStreams).length + 1);
 
-    const isFirefox = this._isWeb() && navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
     const sdh = session.sessionDescriptionHandler;
     const pc = sdh.peerConnection;
 
@@ -372,7 +375,7 @@ export default class WebRTCClient extends Emitter {
       });
     };
 
-    if (session.localHold && !isFirefox) {
+    if (session.localHold && !this.isFirefox()) {
       this.unhold(session);
 
       // When call is hold we lost the current track. Wait for another one.
@@ -669,7 +672,7 @@ export default class WebRTCClient extends Emitter {
         wsServers: `wss://${this.config.host}:${this.config.port || 443}/api/asterisk/ws`,
       },
       sessionDescriptionHandlerFactoryOptions: {
-        alwaysAcquireMediaFirst: true,
+        alwaysAcquireMediaFirst: this.isFirefox(),
         constraints: {
           audio: this._getAudioConstraints(),
           video: this._getVideoConstraints(),
