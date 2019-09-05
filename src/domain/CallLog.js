@@ -155,10 +155,15 @@ export default class CallLog {
   }
 
   theOtherParty(session: Session): { extension: string, name: string } {
-    if (session.hasExtension(this.source.extension)) {
+    if (this.callDirection === 'inbound') {
+      return this.source;
+    }
+
+    if (this.callDirection === 'outbound') {
       return this.destination;
     }
-    return this.source;
+
+    return session.hasExtension(this.source.extension) ? this.destination : this.source;
   }
 
   isNewMissedCall(): boolean {
