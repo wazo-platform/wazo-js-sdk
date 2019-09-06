@@ -669,7 +669,7 @@ export default class WebRTCClient extends Emitter {
       uri: `${this.config.authorizationUser || ''}@${this.config.host}`,
       userAgentString: this.config.userAgentString || 'wazo-sdk',
       transportOptions: {
-        maxReconnectionAttempts: 30,
+        maxReconnectionAttempts: 100000,
         reconnectionTimeout: 2,
         traceSip: false,
         wsServers: `wss://${this.config.host}:${this.config.port || 443}/api/asterisk/ws`,
