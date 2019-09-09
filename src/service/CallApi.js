@@ -18,7 +18,7 @@ export default class CallApi {
     return getApiClient(server).ctidNg.listCalls(session.token);
   }
 
-  async fetchCallLogsFromDate(server: string, token: string, from: Date, number: string): Promise<CallLog[]> {
+  static async fetchCallLogsFromDate(server: string, token: string, from: Date, number: string): Promise<CallLog[]> {
     return getApiClient(server).callLogd.listCallLogsFromDate(token, from, number);
   }
 
