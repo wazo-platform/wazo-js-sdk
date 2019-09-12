@@ -495,6 +495,11 @@ export default class WebRTCClient extends Emitter {
   }
 
   changeAudioInputDevice(id: string) {
+    const currentId = this.getAudioDeviceId();
+    if (id === currentId) {
+      return;
+    }
+
     this.audio = id ? { deviceId: { exact: id } } : true;
     if (this.userAgent) {
       this.userAgent.transport.disconnect();
@@ -505,6 +510,11 @@ export default class WebRTCClient extends Emitter {
   }
 
   changeVideoInputDevice(id: string) {
+    const currentId = this.getVideoDeviceId();
+    if (id === currentId) {
+      return;
+    }
+
     this.video = id ? { deviceId: { exact: id } } : true;
     if (this.userAgent) {
       this.userAgent.transport.disconnect();
@@ -512,6 +522,16 @@ export default class WebRTCClient extends Emitter {
       this.userAgent.stop();
     }
     this.userAgent = this.createUserAgent();
+  }
+
+  getAudioDeviceId(): ?string {
+    // $FlowFixMe
+    return this.audio && 'deviceId' in this.audio ? this.audio.deviceId.exact : null;
+  }
+
+  getVideoDeviceId(): ?string {
+    // $FlowFixMe
+    return this.video && 'deviceId' in this.video ? this.video.deviceId.exact : null;
   }
 
   changeVideo(enabled: boolean) {
