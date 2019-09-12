@@ -117,7 +117,7 @@ export default class CallLog {
       start: moment(plain.start).toDate(),
       end: moment(plain.end).toDate(),
       // @TODO: FIXME add verification declined vs missed call
-      newMissedCall: session.hasExtension(plain.destination_extension) && !plain.answered,
+      newMissedCall: session && session.hasExtension(plain.destination_extension) && !plain.answered,
     });
   }
 
