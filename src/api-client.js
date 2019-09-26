@@ -41,6 +41,9 @@ export default class ApiClient {
   calld: Object;
 
   refreshToken: ?string;
+  onRefreshToken: ?Function;
+  refreshExpiration: ?number;
+  refreshBackend: ?string;
 
   // @see https://github.com/facebook/flow/issues/183#issuecomment-358607052
   constructor({ server, agent = null, refreshToken, clientId }: ConstructorParams) {
@@ -72,7 +75,13 @@ export default class ApiClient {
       return null;
     }
 
-    const { token } = await this.auth.refreshToken(this.refreshToken);
+    const { token } = await this.auth.refreshToken(this.refreshToken, this.refreshBackend, this.refreshExpiration);
+
+    if (this.onRefreshToken) {
+      this.onRefreshToken(token);
+    }
+
+    this.setToken(token);
 
     return token;
   }
@@ -81,7 +90,23 @@ export default class ApiClient {
     this.client.token = token;
   }
 
-  setRefreshToken(refreshToken: string) {
+  setRefreshToken(refreshToken: ?string) {
     this.refreshToken = refreshToken;
+  }
+
+  setClientId(clientId: ?string) {
+    this.client.clientId = clientId;
+  }
+
+  setOnRefreshToken(onRefreshToken: Function) {
+    this.onRefreshToken = onRefreshToken;
+  }
+
+  setRefreshExpiration(refreshExpiration: number) {
+    this.refreshExpiration = refreshExpiration;
+  }
+
+  setRefreshBackend(refreshBackend: string) {
+    this.refreshBackend = refreshBackend;
   }
 }

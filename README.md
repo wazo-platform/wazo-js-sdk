@@ -76,9 +76,17 @@ const { refreshToken, ...result } = await client.auth.login(/* ... */);
 ```
 
 ### Set token (and refresh token)
-```
+```js
 client.setToken(token);
 client.setRefreshToken(refreshToken);
+```
+
+### Add an event when the token is refreshed
+
+```js
+client.setOnRefreshToken((newToken) => {
+  // Do something with the new token (like storing it in the localstorage...).
+});
 ```
 
 ### Log Out

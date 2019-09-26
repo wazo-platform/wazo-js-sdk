@@ -123,9 +123,9 @@ export default class ApiRequester {
 
         return promise.then(async err => {
           // Check if the token is incorrect
-          if (firstCall && response.status === 401 && err.details && err.details.invalid_token) {
-            this.token = await this.refreshTokenCallback();
-            return this.call(path, method, body, headers, parse, false);
+          if (firstCall && response.status === 401) {
+            // Replay the call after refreshing the token
+            return this.refreshTokenCallback().then(() => this.call(path, method, body, headers, parse, false));
           }
 
           throw typeof err === 'string'

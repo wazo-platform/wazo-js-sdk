@@ -3,31 +3,56 @@
 import WazoApiClient from '../api-client';
 
 const clients = {};
-let token = null;
-let refreshToken = null;
+// Can't use node cache mechanism here because when requiring lib/CallApi.js
+// this file will be merge with CallApi.js and the cache will be lost.
+// So we have to tore values in global scope.
 
-export const setToken = (newToken: string) => {
-  token = newToken;
+export const setApiClientId = (clientId: string) => {
+  global.clientId = clientId;
+};
 
-  Object.keys(clients).forEach(server => {
-    clients[server].setToken(token);
-  });
+export const setCurrentServer = (newServer: string) => {
+  global.currentServer = newServer;
+};
+
+export const setApiToken = (newToken: string) => {
+  global.token = newToken;
 };
 
 export const setRefreshToken = (newRefreshToken: string) => {
-  refreshToken = newRefreshToken;
-
-  Object.keys(clients).forEach(server => {
-    clients[server].setRefreshToken(refreshToken);
-  });
+  global.refreshToken = newRefreshToken;
 };
 
-export default (server: string): WazoApiClient => {
+export const setOnRefreshToken = (onRefreshToken: Function) => {
+  global.onRefreshToken = onRefreshToken;
+};
+
+export const setRefreshExpiration = (refreshExpiration: number) => {
+  global.refreshExpiration = refreshExpiration;
+};
+
+export const setRefreshBackend = (refreshBackend: number) => {
+  global.refreshBackend = refreshBackend;
+};
+
+const fillClient = client => {
+  client.setToken(global.token);
+  client.setRefreshToken(global.refreshToken);
+  client.setClientId(global.clientId);
+  client.onRefreshToken = global.onRefreshToken;
+  client.setRefreshExpiration(global.refreshExpiration);
+  client.setRefreshBackend(global.refreshBackend);
+
+  return client;
+};
+
+export default (forServer: ?string): WazoApiClient => {
+  const server: string = forServer || global.currentServer || '';
   if (server in clients) {
-    return clients[server];
+    return fillClient(clients[server]);
   }
 
-  clients[server] = new WazoApiClient({ server, refreshToken });
+  clients[server] = new WazoApiClient({ server });
 
-  return clients[server];
+  return fillClient(clients[server]);
 };

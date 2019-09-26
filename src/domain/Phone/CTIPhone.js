@@ -12,16 +12,13 @@ import CallApi from '../../service/CallApi';
 export default class CTIPhone extends Emitter implements Phone {
   session: Session;
 
-  server: string;
-
   isMobile: boolean;
 
   currentCall: ?Call;
 
-  constructor(server: string, session: Session, isMobile: boolean = false) {
+  constructor(session: Session, isMobile: boolean = false) {
     super();
     this.session = session;
-    this.server = server;
     this.isMobile = isMobile;
   }
 
@@ -52,7 +49,7 @@ export default class CTIPhone extends Emitter implements Phone {
       return null;
     }
     try {
-      this.currentCall = await CallApi.makeCall(this.server, line, number, this.isMobile);
+      this.currentCall = await CallApi.makeCall(line, number, this.isMobile);
     } catch (_) {
       // We have to deal with error like `User has no mobile phone number` error in the UI.
     }
@@ -80,7 +77,7 @@ export default class CTIPhone extends Emitter implements Phone {
 
   async hangup(callSession: CallSession): Promise<void> {
     try {
-      await CallApi.cancelCall(this.server, this.session, callSession);
+      await CallApi.cancelCall(callSession);
       if (this.currentCall && callSession.callId === this.currentCall.id) {
         this.endCurrentCall(callSession);
       }
@@ -92,7 +89,7 @@ export default class CTIPhone extends Emitter implements Phone {
   }
 
   async reject(callSession: CallSession): Promise<void> {
-    await CallApi.cancelCall(this.server, this.session, callSession);
+    await CallApi.cancelCall(callSession);
     this.eventEmitter.emit('onCallEnded', callSession);
   }
 
