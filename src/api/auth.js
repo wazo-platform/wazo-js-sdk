@@ -20,13 +20,10 @@ const DEFAULT_BACKEND_USER = 'wazo_user';
 const DETAULT_EXPIRATION = 3600;
 
 export default (client: ApiRequester, baseUrl: string) => ({
-  checkToken(token: Token): Promise<Boolean> {
-    return client.head(`${baseUrl}/token/${token}`, null, {});
-  },
+  checkToken: (token: Token): Promise<Boolean> => client.head(`${baseUrl}/token/${token}`, null, {}),
 
-  authenticate(token: Token): Promise<?Session> {
-    return client.get(`${baseUrl}/token/${token}`, null, {}).then(response => Session.parse(response));
-  },
+  authenticate: (token: Token): Promise<?Session> =>
+    client.get(`${baseUrl}/token/${token}`, null, {}).then(response => Session.parse(response)),
 
   logIn(params: {
     username: string,
@@ -35,7 +32,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     expiration: number,
     mobile?: boolean,
   }): Promise<?Session> {
-    const body = {
+    const body: Object = {
       backend: params.backend || DEFAULT_BACKEND_USER,
       expiration: params.expiration || DETAULT_EXPIRATION,
     };
@@ -44,6 +41,11 @@ export default (client: ApiRequester, baseUrl: string) => ({
       'Content-Type': 'application/json',
     };
 
+    if (client.clientId) {
+      body.access_type = 'offline';
+      body.client_id = client.clientId;
+    }
+
     if (params.mobile) {
       headers['Wazo-Session-Type'] = 'mobile';
     }
@@ -51,20 +53,34 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.post(`${baseUrl}/token`, body, headers).then(response => Session.parse(response));
   },
 
-  logOut(token: Token): Promise<LogoutResponse> {
-    return client.delete(`${baseUrl}/token/${token}`, null, {}, ApiRequester.successResponseParser);
+  logOut: (token: Token): Promise<LogoutResponse> =>
+    client.delete(`${baseUrl}/token/${token}`, null, {}, ApiRequester.successResponseParser),
+
+  refreshToken: (refreshToken: string, backend: string, expiration: number): Promise<?Session> => {
+    const body: Object = {
+      backend: backend || DEFAULT_BACKEND_USER,
+      expiration: expiration || DETAULT_EXPIRATION,
+      refresh_token: refreshToken,
+      client_id: client.clientId,
+    };
+
+    const headers: Object = {
+      'Content-Type': 'application/json',
+    };
+
+    return client.post(`${baseUrl}/token`, body, headers).then(response => Session.parse(response));
   },
 
-  updatePassword(token: Token, userUuid: UUID, oldPassword: string, newPassword: string): Promise<Boolean> {
+  updatePassword: (userUuid: UUID, oldPassword: string, newPassword: string): Promise<Boolean> => {
     const body = {
       new_password: newPassword,
       old_password: oldPassword,
     };
 
-    return client.put(`${baseUrl}/users/${userUuid}/password`, body, token, ApiRequester.successResponseParser);
+    return client.put(`${baseUrl}/users/${userUuid}/password`, body, null, ApiRequester.successResponseParser);
   },
 
-  sendDeviceToken(token: Token, userUuid: UUID, deviceToken: string, apnsToken: ?string) {
+  sendDeviceToken: (userUuid: UUID, deviceToken: string, apnsToken: ?string) => {
     const body: Object = {
       token: deviceToken,
     };
@@ -73,19 +89,16 @@ export default (client: ApiRequester, baseUrl: string) => ({
       body.apns_token = apnsToken;
     }
 
-    return client.post(`${baseUrl}/users/${userUuid}/external/mobile`, body, token);
+    return client.post(`${baseUrl}/users/${userUuid}/external/mobile`, body);
   },
 
-  getPushNotificationSenderId(token: Token, userUuid: UUID) {
-    return client
-      .get(`${baseUrl}/users/${userUuid}/external/mobile/sender_id`, null, token)
-      .then(response => response.sender_id);
-  },
+  getPushNotificationSenderId: (userUuid: UUID) =>
+    client.get(`${baseUrl}/users/${userUuid}/external/mobile/sender_id`, null).then(response => response.sender_id),
 
   /**
    * `username` or `email` should be set.
    */
-  sendResetPasswordEmail({ username, email }: { username: ?string, email: ?string }) {
+  sendResetPasswordEmail: ({ username, email }: { username: ?string, email: ?string }) => {
     const body = {};
     if (username) {
       body.username = username;
@@ -97,7 +110,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.get(`${baseUrl}/users/password/reset`, body, {}, ApiRequester.successResponseParser);
   },
 
-  resetPassword(token: string, userUuid: string, password: string) {
+  resetPassword: (userUuid: string, password: string) => {
     const body = {
       password,
     };
@@ -105,22 +118,19 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.post(
       `${baseUrl}/users/password/reset?user_uuid=${userUuid}`,
       body,
-      token,
+      null,
       ApiRequester.successResponseParser,
     );
   },
 
-  removeDeviceToken(token: Token, userUuid: UUID) {
-    return client.delete(`${baseUrl}/users/${userUuid}/external/mobile`, null, token);
-  },
+  removeDeviceToken: (userUuid: UUID) => client.delete(`${baseUrl}/users/${userUuid}/external/mobile`),
 
-  createUser(
-    token: Token,
+  createUser: (
     username: string,
     password: string,
     firstname: string,
     lastname: string,
-  ): Promise<User | RequestError> {
+  ): Promise<User | RequestError> => {
     const body = {
       username,
       password,
@@ -128,10 +138,10 @@ export default (client: ApiRequester, baseUrl: string) => ({
       lastname,
     };
 
-    return client.post(`${baseUrl}/users`, body, token);
+    return client.post(`${baseUrl}/users`, body);
   },
 
-  addUserEmail(token: Token, userUuid: UUID, email: string, main?: boolean) {
+  addUserEmail: (userUuid: UUID, email: string, main?: boolean) => {
     const body = {
       emails: [
         {
@@ -141,69 +151,46 @@ export default (client: ApiRequester, baseUrl: string) => ({
       ],
     };
 
-    return client.put(`${baseUrl}/users/${userUuid}/emails`, body, token);
+    return client.put(`${baseUrl}/users/${userUuid}/emails`, body);
   },
 
-  addUserPolicy(token: Token, userUuid: UUID, policyUuid: UUID) {
-    return client.put(`${baseUrl}/users/${userUuid}/policies/${policyUuid}`, null, token);
-  },
+  addUserPolicy: (userUuid: UUID, policyUuid: UUID) =>
+    client.put(`${baseUrl}/users/${userUuid}/policies/${policyUuid}`),
 
-  deleteUserPolicy(token: Token, userUuid: UUID, policyUuid: UUID) {
-    return client.delete(`${baseUrl}/users/${userUuid}/policies/${policyUuid}`, null, token);
-  },
+  deleteUserPolicy: (userUuid: UUID, policyUuid: UUID) =>
+    client.delete(`${baseUrl}/users/${userUuid}/policies/${policyUuid}`),
 
-  addUserGroup(token: Token, userUuid: UUID, groupUuid: UUID) {
-    return client.put(`${baseUrl}/groups/${groupUuid}/users/${userUuid}`, null, token);
-  },
+  addUserGroup: (userUuid: UUID, groupUuid: UUID) => client.put(`${baseUrl}/groups/${groupUuid}/users/${userUuid}`),
 
-  listUsersGroup(token: Token, groupUuid: UUID) {
-    return client.get(`${baseUrl}/groups/${groupUuid}/users`, null, token);
-  },
+  listUsersGroup: (groupUuid: UUID) => client.get(`${baseUrl}/groups/${groupUuid}/users`),
 
-  deleteUserGroup(token: Token, userUuid: UUID, groupUuid: UUID) {
-    return client.delete(`${baseUrl}/groups/${groupUuid}/users/${userUuid}`, null, token);
-  },
+  deleteUserGroup: (userUuid: UUID, groupUuid: UUID) =>
+    client.delete(`${baseUrl}/groups/${groupUuid}/users/${userUuid}`),
 
-  getUser(token: Token, userUuid: UUID): Promise<GetUserResponse> {
-    return client.get(`${baseUrl}/users/${userUuid}`, null, token);
-  },
+  getUser: (userUuid: UUID): Promise<GetUserResponse> => client.get(`${baseUrl}/users/${userUuid}`),
 
-  getUserSession(token: Token, userUuid: UUID) {
-    return client.get(`${baseUrl}/users/${userUuid}/sessions`, null, token);
-  },
+  getUserSession: (userUuid: UUID) => client.get(`${baseUrl}/users/${userUuid}/sessions`),
 
-  deleteUserSession(token: Token, userUuid: UUID, sessionUuis: UUID) {
-    return client.delete(`${baseUrl}/users/${userUuid}/sessions/${sessionUuis}`, null, token);
-  },
+  deleteUserSession: (userUuid: UUID, sessionUuids: UUID) =>
+    client.delete(`${baseUrl}/users/${userUuid}/sessions/${sessionUuids}`),
 
-  listUsers(token: Token): Promise<ListUsersResponse> {
-    return client.get(`${baseUrl}/users`, null, token);
-  },
+  listUsers: (): Promise<ListUsersResponse> => client.get(`${baseUrl}/users`),
 
-  deleteUser(token: Token, userUuid: UUID): Promise<Boolean | RequestError> {
-    return client.delete(`${baseUrl}/users/${userUuid}`, null, token);
-  },
+  deleteUser: (userUuid: UUID): Promise<Boolean | RequestError> => client.delete(`${baseUrl}/users/${userUuid}`),
 
-  listTenants(token: Token): Promise<ListTenantsResponse> {
-    return client.get(`${baseUrl}/tenants`, null, token);
-  },
+  listTenants: (): Promise<ListTenantsResponse> => client.get(`${baseUrl}/tenants`),
 
-  getTenant(token: Token, tenantUuid: UUID): Promise<GetTenantResponse> {
-    return client.get(`${baseUrl}/tenants/${tenantUuid}`, null, token);
-  },
+  getTenant: (tenantUuid: UUID): Promise<GetTenantResponse> => client.get(`${baseUrl}/tenants/${tenantUuid}`),
 
-  createTenant(token: Token, name: string): Promise<Tenant | RequestError> {
-    return client.post(`${baseUrl}/tenants`, { name }, token);
-  },
+  createTenant: (name: string): Promise<Tenant | RequestError> => client.post(`${baseUrl}/tenants`, { name }),
 
-  updateTenant(
-    token: Token,
+  updateTenant: (
     uuid: UUID,
     name: string,
     contact: string,
     phone: string,
     address: Array<Object>,
-  ): Promise<Tenant | RequestError> {
+  ): Promise<Tenant | RequestError> => {
     const body = {
       name,
       contact,
@@ -211,56 +198,40 @@ export default (client: ApiRequester, baseUrl: string) => ({
       address,
     };
 
-    return client.put(`${baseUrl}/tenants/${uuid}`, body, token);
+    return client.put(`${baseUrl}/tenants/${uuid}`, body);
   },
 
-  deleteTenant(token: Token, uuid: UUID): Promise<Boolean | RequestError> {
-    return client.delete(`${baseUrl}/tenants/${uuid}`, null, token);
-  },
+  deleteTenant: (uuid: UUID): Promise<Boolean | RequestError> => client.delete(`${baseUrl}/tenants/${uuid}`),
 
-  createGroup(token: Token, name: string) {
-    return client.post(`${baseUrl}/groups`, { name }, token);
-  },
+  createGroup: (name: string) => client.post(`${baseUrl}/groups`, { name }),
 
-  listGroups(token: Token): Promise<ListGroupsResponse> {
-    return client.get(`${baseUrl}/groups`, null, token);
-  },
+  listGroups: (): Promise<ListGroupsResponse> => client.get(`${baseUrl}/groups`),
 
-  deleteGroup(token: Token, uuid: UUID): Promise<Boolean | RequestError> {
-    return client.delete(`${baseUrl}/groups/${uuid}`, null, token);
-  },
+  deleteGroup: (uuid: UUID): Promise<Boolean | RequestError> => client.delete(`${baseUrl}/groups/${uuid}`),
 
-  createPolicy(token: Token, name: string, description: string, aclTemplates: Array<Object>) {
+  createPolicy: (name: string, description: string, aclTemplates: Array<Object>) => {
     const body = {
       name,
       description,
       acl_templates: aclTemplates,
     };
 
-    return client.post(`${baseUrl}/policies`, body, token);
+    client.post(`${baseUrl}/policies`, body);
   },
 
-  listPolicies(token: Token): Promise<ListPoliciesResponse> {
-    return client.get(`${baseUrl}/policies`, null, token);
-  },
+  listPolicies: (): Promise<ListPoliciesResponse> => client.get(`${baseUrl}/policies`),
 
-  deletePolicy(token: Token, policyUuid: UUID): Promise<Boolean | RequestError> {
-    return client.delete(`${baseUrl}/policies/${policyUuid}`, null, token);
-  },
+  deletePolicy: (policyUuid: UUID): Promise<Boolean | RequestError> =>
+    client.delete(`${baseUrl}/policies/${policyUuid}`),
 
-  getProviders(token: Token, userUuid: UUID) {
-    return client.get(`${baseUrl}/users/${userUuid}/external`, null, token);
-  },
+  getProviders: (userUuid: UUID) => client.get(`${baseUrl}/users/${userUuid}/external`),
 
-  getProviderToken(token: Token, userUuid: UUID, provider: string) {
-    return client.get(`${baseUrl}/users/${userUuid}/external/${provider}`, null, token);
-  },
+  getProviderToken: (userUuid: UUID, provider: string) =>
+    client.get(`${baseUrl}/users/${userUuid}/external/${provider}`),
 
-  getProviderAuthUrl(token: Token, userUuid: UUID, provider: string) {
-    return client.post(`${baseUrl}/users/${userUuid}/external/${provider}`, {}, token);
-  },
+  getProviderAuthUrl: (userUuid: UUID, provider: string) =>
+    client.post(`${baseUrl}/users/${userUuid}/external/${provider}`, {}),
 
-  deleteProviderToken(token: Token, userUuid: UUID, provider: string) {
-    return client.delete(`${baseUrl}/users/${userUuid}/external/${provider}`, null, token);
-  },
+  deleteProviderToken: (userUuid: UUID, provider: string) =>
+    client.delete(`${baseUrl}/users/${userUuid}/external/${provider}`),
 });

@@ -56,7 +56,9 @@ const password = 'zowa';
 
 jest.mock('node-fetch/lib/index', () => {});
 
+const token = 1234;
 const client = new WazoApiClient({ server });
+client.setToken(token);
 
 describe('With correct API results', () => {
   beforeEach(() => {
@@ -88,10 +90,10 @@ describe('With correct API results', () => {
 
   describe('logOut test', () => {
     it('should delete the specified token', async () => {
-      const token = 123;
-      await client.auth.logOut(token);
+      const oldToken = 123;
+      await client.auth.logOut(oldToken);
 
-      expect(global.fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token/${token}`, {
+      expect(global.fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token/${oldToken}`, {
         method: 'delete',
         body: null,
         headers: {},
@@ -110,12 +112,12 @@ describe('With unAuthorized API results', () => {
 
   describe('checkLogin test', () => {
     it('should return false on 401 status', async () => {
-      const token = 123;
-      const result = await client.auth.checkToken(token);
+      const tokenToCheck = 123;
+      const result = await client.auth.checkToken(tokenToCheck);
 
       expect(result).toBeFalsy();
 
-      expect(global.fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token/${token}`, {
+      expect(global.fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token/${tokenToCheck}`, {
         method: 'head',
         body: null,
         headers: {},
@@ -134,11 +136,9 @@ describe('With not found API results', () => {
 
   describe('fetchVoicemail test', () => {
     it('should throw a BadResponse instance on 404 status', async () => {
-      const token = 123;
-
       let error = null;
       try {
-        await client.ctidNg.listVoicemails(token);
+        await client.ctidNg.listVoicemails();
       } catch (e) {
         error = e;
       }

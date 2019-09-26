@@ -2,10 +2,9 @@
 import ApiRequester from '../utils/api-requester';
 
 export default (client: ApiRequester, baseUrl: string) => ({
-  listSubscriptions(token: string) {
-    return client.get(`${baseUrl}/subscriptions?recurse=true`, null, token);
-  },
-  createSubscription(token: string, { productSku, name, startDate, contractDate, autoRenew, term }: Object) {
+  listSubscriptions: () => client.get(`${baseUrl}/subscriptions?recurse=true`),
+
+  createSubscription: ({ productSku, name, startDate, contractDate, autoRenew, term }: Object) => {
     const body = {
       product_sku: productSku,
       name,
@@ -15,27 +14,25 @@ export default (client: ApiRequester, baseUrl: string) => ({
       term,
     };
 
-    return client.post(`${baseUrl}/subscriptions`, body, token);
+    return client.post(`${baseUrl}/subscriptions`, body);
   },
-  getSubscription(token: string, uuid: string) {
-    return client.get(`${baseUrl}/subscriptions/${uuid}`, null, token);
-  },
-  deleteSubscription(token: string, uuid: string) {
-    return client.delete(`${baseUrl}/subscriptions/${uuid}`, null, token);
-  },
-  createSubscriptionToken(token: string) {
-    return client.post(`${baseUrl}/subscriptions/token`, null, token);
-  },
-  listAuthorizations(token: string, subscriptionUuid: string) {
-    return client.get(`${baseUrl}/subscriptions/${subscriptionUuid}/authorizations`, null, token);
-  },
-  getAuthorization(token: string, subscriptionUuid: string, uuid: string) {
-    return client.get(`${baseUrl}/subscriptions/${subscriptionUuid}/authorizations/${uuid}`, null, token);
-  },
-  deleteAuthorization(token: string, subscriptionUuid: string, uuid: string) {
-    return client.delete(`${baseUrl}/subscriptions/${subscriptionUuid}/authorizations/${uuid}`, null, token);
-  },
-  createAuthorization(token: string, subscriptionUuid: string, { startDate, term, service, rules, autoRenew }: Object) {
+
+  getSubscription: (uuid: string) => client.get(`${baseUrl}/subscriptions/${uuid}`),
+
+  deleteSubscription: (uuid: string) => client.delete(`${baseUrl}/subscriptions/${uuid}`),
+
+  createSubscriptionToken: () => client.post(`${baseUrl}/subscriptions/token`),
+
+  listAuthorizations: (subscriptionUuid: string) =>
+    client.get(`${baseUrl}/subscriptions/${subscriptionUuid}/authorizations`),
+
+  getAuthorization: (subscriptionUuid: string, uuid: string) =>
+    client.get(`${baseUrl}/subscriptions/${subscriptionUuid}/authorizations/${uuid}`),
+
+  deleteAuthorization: (subscriptionUuid: string, uuid: string) =>
+    client.delete(`${baseUrl}/subscriptions/${subscriptionUuid}/authorizations/${uuid}`),
+
+  createAuthorization: (subscriptionUuid: string, { startDate, term, service, rules, autoRenew }: Object) => {
     const url = `${baseUrl}/subscriptions/${subscriptionUuid}/authorizations`;
     const body = {
       start_date: startDate,
@@ -45,6 +42,6 @@ export default (client: ApiRequester, baseUrl: string) => ({
       auto_renew: autoRenew,
     };
 
-    return client.post(url, body, token);
+    return client.post(url, body);
   },
 });

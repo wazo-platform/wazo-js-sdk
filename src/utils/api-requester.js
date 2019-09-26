@@ -9,6 +9,13 @@ import ServerError from '../domain/ServerError';
 import Logger from './logger';
 import type { Token } from '../domain/types';
 
+type ConstructorParams = {
+  server: string,
+  agent: ?Object,
+  clientId: ?string,
+  refreshTokenCallback: Function,
+};
+
 const methods = ['head', 'get', 'post', 'put', 'delete'];
 
 // Use a function here to be able to mock it in tests
@@ -31,6 +38,9 @@ const realFetch = () => {
 export default class ApiRequester {
   server: string;
   agent: ?Object;
+  clientId: ?string;
+  token: string;
+  refreshTokenCallback: Function;
 
   head: Function;
   get: Function;
@@ -47,18 +57,6 @@ export default class ApiRequester {
     return response.json().then((data: Object) => data);
   }
 
-  static getHeaders(header: ?Token | ?Object): Object {
-    if (header instanceof Object) {
-      return header;
-    }
-
-    return {
-      'X-Auth-Token': header,
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    };
-  }
-
   static getQueryString(obj: Object): string {
     return Object.keys(obj)
       .filter(key => obj[key])
@@ -71,9 +69,11 @@ export default class ApiRequester {
   }
 
   // @see https://github.com/facebook/flow/issues/183#issuecomment-358607052
-  constructor({ server, agent = null }: $Subtype<{ server: string, agent: ?Object }>) {
+  constructor({ server, refreshTokenCallback, clientId, agent = null }: ConstructorParams) {
     this.server = server;
     this.agent = agent;
+    this.clientId = clientId;
+    this.refreshTokenCallback = refreshTokenCallback;
 
     methods.forEach(method => {
       // $FlowFixMe
@@ -92,9 +92,10 @@ export default class ApiRequester {
     body: ?Object = null,
     headers: ?string | ?Object = null,
     parse: Function = ApiRequester.defaultParser,
+    firstCall: boolean = true,
   ): Promise<any> {
     const url = this.computeUrl(method, path, body);
-    const newHeaders = headers ? ApiRequester.getHeaders(headers) : {};
+    const newHeaders = this.getHeaders(headers);
     let newBody = method === 'get' ? null : body;
     if (newBody && newHeaders['Content-Type'] === 'application/json') {
       newBody = JSON.stringify(newBody);
@@ -105,7 +106,7 @@ export default class ApiRequester {
     const options = {
       method,
       body: newBody,
-      headers: headers ? ApiRequester.getHeaders(headers) : {},
+      headers: this.getHeaders(headers),
       agent: this.agent,
     };
 
@@ -115,12 +116,18 @@ export default class ApiRequester {
 
       Logger.logRequest(url, options, response);
 
-      // Throw an error only if status >= 500
+      // Throw an error only if status >= 400
       if ((isHead && response.status >= 500) || (!isHead && response.status >= 400)) {
         const promise = isJson ? response.json() : response.text();
         const exceptionClass = response.status >= 500 ? ServerError : BadResponse;
 
-        return promise.then(err => {
+        return promise.then(async err => {
+          // Check if the token is incorrect
+          if (firstCall && response.status === 401 && err.details && err.details.invalid_token) {
+            this.token = await this.refreshTokenCallback();
+            return this.call(path, method, body, headers, parse, false);
+          }
+
           throw typeof err === 'string'
             ? exceptionClass.fromText(err, response.status)
             : exceptionClass.fromResponse(err, response.status);
@@ -129,6 +136,18 @@ export default class ApiRequester {
 
       return newParse(response, isJson);
     });
+  }
+
+  getHeaders(header: ?Token | ?Object): Object {
+    if (header instanceof Object) {
+      return header;
+    }
+
+    return {
+      'X-Auth-Token': this.token,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    };
   }
 
   computeUrl(method: string, path: string, body: ?Object): string {

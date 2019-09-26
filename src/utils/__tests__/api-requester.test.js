@@ -30,7 +30,7 @@ describe('Calling fetch', () => {
     const body = { a: 1 };
     const url = `https://${server}/api/${path}?a=1`;
 
-    new ApiRequester({ server }).call(path, method, body);
+    new ApiRequester({ server }).call(path, method, body, {});
     expect(global.fetch).toBeCalledWith(url, { method: 'get', body: null, headers: {}, agent: null });
   });
 });

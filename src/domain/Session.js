@@ -16,6 +16,7 @@ const MINIMUM_WAZO_ENGINE_VERSION_FOR_DEFAULT_CONTEXT = '19.08';
 type Response = {
   data: {
     token: Token,
+    refresh_token?: Token,
     acls: Array<string>,
     utc_expires_at: string,
     xivo_uuid: string,
@@ -45,6 +46,7 @@ type Authorization = {
 
 type SessionArguments = {
   token: string,
+  refreshToken?: ?string,
   uuid?: ?string,
   tenantUuid?: ?string,
   profile?: ?Profile,
@@ -55,6 +57,7 @@ type SessionArguments = {
 
 export default class Session {
   token: string;
+  refreshToken: ?string;
   uuid: ?string;
   tenantUuid: ?string;
   engineVersion: ?string;
@@ -77,6 +80,7 @@ export default class Session {
 
     return new Session({
       token: plain.data.token,
+      refreshToken: plain.data.refresh_token || null,
       uuid: plain.data.metadata ? plain.data.metadata.uuid : null,
       authorizations,
       tenantUuid: plain.data.metadata ? plain.data.metadata.tenant_uuid : undefined,
@@ -88,7 +92,16 @@ export default class Session {
     return newFrom(profile, Session);
   }
 
-  constructor({ token, uuid, tenantUuid, profile, expiresAt, authorizations, engineVersion }: SessionArguments = {}) {
+  constructor({
+    token,
+    uuid,
+    tenantUuid,
+    profile,
+    expiresAt,
+    authorizations,
+    engineVersion,
+    refreshToken,
+  }: SessionArguments = {}) {
     this.token = token;
     this.uuid = uuid;
     this.tenantUuid = tenantUuid || null;
@@ -96,6 +109,7 @@ export default class Session {
     this.expiresAt = expiresAt;
     this.authorizations = authorizations || [];
     this.engineVersion = engineVersion;
+    this.refreshToken = refreshToken;
   }
 
   hasExpired(date: Date = new Date()): boolean {
