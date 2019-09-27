@@ -70,12 +70,21 @@ export default class ApiClient {
     this.initializeEndpoints();
   }
 
+  async forceRefreshToken() {
+    return this.refreshTokenCallback();
+  }
+
   async refreshTokenCallback() {
     if (!this.refreshToken) {
       return null;
     }
 
-    const { token } = await this.auth.refreshToken(this.refreshToken, this.refreshBackend, this.refreshExpiration);
+    const { token } = await this.auth.refreshToken(
+      this.refreshToken,
+      this.refreshBackend,
+      this.refreshExpiration,
+      true,
+    );
 
     if (this.onRefreshToken) {
       this.onRefreshToken(token);

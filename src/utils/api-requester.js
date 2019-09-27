@@ -122,10 +122,10 @@ export default class ApiRequester {
         const exceptionClass = response.status >= 500 ? ServerError : BadResponse;
 
         return promise.then(async err => {
-          // Check if the token is incorrect
-          if (firstCall && response.status === 401) {
+          // Check if the token is still valid
+          if (firstCall && this._checkTokenExpired(response, err)) {
             // Replay the call after refreshing the token
-            return this.refreshTokenCallback().then(() => this.call(path, method, body, headers, parse, false));
+            return this._replayWithNewToken(err, path, method, body, headers, parse);
           }
 
           throw typeof err === 'string'
@@ -135,6 +135,40 @@ export default class ApiRequester {
       }
 
       return newParse(response, isJson);
+    });
+  }
+
+  _checkTokenExpired(response: Object, err: Object) {
+    // Special case when authenticating form a token: we got a 404
+    const isTokenNotFound = response.status === 404 && this._isTokenNotFound(err);
+
+    return response.status === 401 || isTokenNotFound;
+  }
+
+  _isTokenNotFound(err: Object) {
+    return err.reason && err.reason[0] === 'No such token';
+  }
+
+  _replayWithNewToken(
+    err: Object,
+    path: string,
+    method: string,
+    body: ?Object = null,
+    headers: ?string | ?Object = null,
+    parse: Function,
+  ) {
+    const isTokenNotFound = this._isTokenNotFound(err);
+    let newPath = path;
+
+    return this.refreshTokenCallback().then(() => {
+      if (isTokenNotFound) {
+        const pathParts = path.split('/');
+        pathParts.pop();
+        pathParts.push(this.token);
+        newPath = pathParts.join('/');
+      }
+
+      return this.call(newPath, method, body, headers, parse, false);
     });
   }
 

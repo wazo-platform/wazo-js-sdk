@@ -39,7 +39,7 @@ const fillClient = client => {
   client.setToken(global.token);
   client.setRefreshToken(global.refreshToken);
   client.setClientId(global.clientId);
-  client.onRefreshToken = global.onRefreshToken;
+  client.setOnRefreshToken(global.onRefreshToken);
   client.setRefreshExpiration(global.refreshExpiration);
   client.setRefreshBackend(global.refreshBackend);
 

@@ -68,7 +68,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
       'Content-Type': 'application/json',
     };
 
-    return client.post(`${baseUrl}/token`, body, headers).then(response => Session.parse(response));
+    return client.post(`${baseUrl}/token`, body, headers, ApiRequester.defaultParser, false).then(Session.parse);
   },
 
   updatePassword: (userUuid: UUID, oldPassword: string, newPassword: string): Promise<Boolean> => {
