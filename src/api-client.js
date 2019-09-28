@@ -11,6 +11,13 @@ import calldMethods from './api/calld';
 
 import ApiRequester from './utils/api-requester';
 
+type ConstructorParams = {
+  server: string,
+  agent?: ?Object,
+  clientId?: string,
+  refreshToken?: ?string,
+};
+
 const AUTH_VERSION = '0.1';
 const APPLICATION_VERSION = '1.0';
 const CONFD_VERSION = '1.1';
@@ -33,9 +40,15 @@ export default class ApiClient {
   chatd: Object;
   calld: Object;
 
+  refreshToken: ?string;
+  onRefreshToken: ?Function;
+  refreshExpiration: ?number;
+  refreshBackend: ?string;
+
   // @see https://github.com/facebook/flow/issues/183#issuecomment-358607052
-  constructor({ server, agent = null }: $Subtype<{ server: string, agent?: ?Object }>) {
-    this.updatePatemers({ server, agent });
+  constructor({ server, agent = null, refreshToken, clientId }: ConstructorParams) {
+    this.updateParameters({ server, agent, clientId });
+    this.refreshToken = refreshToken;
   }
 
   initializeEndpoints(): void {
@@ -50,9 +63,59 @@ export default class ApiClient {
     this.calld = calldMethods(this.client, `calld/${CALLD_VERSION}`);
   }
 
-  updatePatemers({ server, agent }: { server: string, agent: ?Object }) {
-    this.client = new ApiRequester({ server, agent });
+  updateParameters({ server, agent, clientId }: { server: string, agent: ?Object, clientId: ?string }) {
+    const refreshTokenCallback = this.refreshTokenCallback.bind(this);
+    this.client = new ApiRequester({ server, agent, refreshTokenCallback, clientId });
 
     this.initializeEndpoints();
+  }
+
+  async forceRefreshToken() {
+    return this.refreshTokenCallback();
+  }
+
+  async refreshTokenCallback() {
+    if (!this.refreshToken) {
+      return null;
+    }
+
+    const { token } = await this.auth.refreshToken(
+      this.refreshToken,
+      this.refreshBackend,
+      this.refreshExpiration,
+      true,
+    );
+
+    if (this.onRefreshToken) {
+      this.onRefreshToken(token);
+    }
+
+    this.setToken(token);
+
+    return token;
+  }
+
+  setToken(token: string) {
+    this.client.token = token;
+  }
+
+  setRefreshToken(refreshToken: ?string) {
+    this.refreshToken = refreshToken;
+  }
+
+  setClientId(clientId: ?string) {
+    this.client.clientId = clientId;
+  }
+
+  setOnRefreshToken(onRefreshToken: Function) {
+    this.onRefreshToken = onRefreshToken;
+  }
+
+  setRefreshExpiration(refreshExpiration: number) {
+    this.refreshExpiration = refreshExpiration;
+  }
+
+  setRefreshBackend(refreshBackend: string) {
+    this.refreshBackend = refreshBackend;
   }
 }

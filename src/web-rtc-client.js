@@ -653,8 +653,10 @@ export default class WebRTCClient extends Emitter {
     }
 
     const client = new ApiClient({ server: config.host });
+    client.setToken(session.token);
+    client.setRefreshToken(session.refreshToken);
 
-    return client.confd.getUserLineSipFromToken(session.token, session.uuid).then(sipLine => ({
+    return client.confd.getUserLineSipFromToken(session.uuid).then(sipLine => ({
       authorizationUser: sipLine.username,
       password: sipLine.secret,
       uri: `${sipLine.username}@${config.host}`,

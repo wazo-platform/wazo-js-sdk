@@ -1,6 +1,6 @@
 /* @flow */
 import ApiRequester from '../utils/api-requester';
-import type { UUID, Token } from '../domain/types';
+import type { UUID } from '../domain/types';
 import Profile from '../domain/Profile';
 import ChatRoom from '../domain/ChatRoom';
 import type { ChatUser, ChatMessageListResponse } from '../domain/ChatMessage';
@@ -29,47 +29,44 @@ type GetMessagesOptions = {
 };
 
 export default (client: ApiRequester, baseUrl: string) => ({
-  updateState: (token: Token, contactUuid: UUID, state: string): Promise<Boolean> =>
-    client.put(`${baseUrl}/users/${contactUuid}/presences`, { state }, token, ApiRequester.successResponseParser),
+  updateState: (contactUuid: UUID, state: string): Promise<Boolean> =>
+    client.put(`${baseUrl}/users/${contactUuid}/presences`, { state }, null, ApiRequester.successResponseParser),
 
-  updateStatus: (token: Token, contactUuid: UUID, state: string, status: string): Promise<Boolean> => {
+  updateStatus: (contactUuid: UUID, state: string, status: string): Promise<Boolean> => {
     const body = { state, status };
 
-    return client.put(`${baseUrl}/users/${contactUuid}/presences`, body, token, ApiRequester.successResponseParser);
+    return client.put(`${baseUrl}/users/${contactUuid}/presences`, body, null, ApiRequester.successResponseParser);
   },
 
-  getState: async (token: Token, contactUuid: UUID): Promise<string> =>
-    client
-      .get(`${baseUrl}/users/${contactUuid}/presences`, null, token)
-      .then((response: PresenceResponse) => response.state),
+  getState: async (contactUuid: UUID): Promise<string> =>
+    client.get(`${baseUrl}/users/${contactUuid}/presences`).then((response: PresenceResponse) => response.state),
 
-  getContactStatusInfo: async (token: Token, contactUuid: UUID): Promise<PresenceResponse> =>
-    client.get(`${baseUrl}/users/${contactUuid}/presences`, null, token).then((response: PresenceResponse) => response),
+  getContactStatusInfo: async (contactUuid: UUID): Promise<PresenceResponse> =>
+    client.get(`${baseUrl}/users/${contactUuid}/presences`).then((response: PresenceResponse) => response),
 
-  getLineState: async (token: Token, contactUuid: UUID): Promise<string> =>
+  getLineState: async (contactUuid: UUID): Promise<string> =>
     client
-      .get(`${baseUrl}/users/${contactUuid}/presences`, null, token)
+      .get(`${baseUrl}/users/${contactUuid}/presences`)
       .then((response: PresenceResponse) => Profile.getLinesState(response.lines)),
 
-  getMultipleLineState: async (token: Token, contactUuids: Array<UUID>): Promise<string> =>
+  getMultipleLineState: async (contactUuids: Array<UUID>): Promise<string> =>
     client
-      .get(`${baseUrl}/users/presences`, { user_uuid: contactUuids.join(',') }, token)
+      .get(`${baseUrl}/users/presences`, { user_uuid: contactUuids.join(',') })
       .then((response: PresenceListResponse) => response.items),
 
-  getUserRooms: async (token: Token): Promise<Array<ChatRoom>> =>
-    client.get(`${baseUrl}/users/me/rooms`, null, token).then(ChatRoom.parseMany),
+  getUserRooms: async (): Promise<Array<ChatRoom>> => client.get(`${baseUrl}/users/me/rooms`).then(ChatRoom.parseMany),
 
-  createRoom: async (token: Token, name: string, users: Array<ChatUser>): Promise<ChatRoom> =>
-    client.post(`${baseUrl}/users/me/rooms`, { name, users }, token).then(ChatRoom.parse),
+  createRoom: async (name: string, users: Array<ChatUser>): Promise<ChatRoom> =>
+    client.post(`${baseUrl}/users/me/rooms`, { name, users }).then(ChatRoom.parse),
 
-  getRoomMessages: async (token: Token, roomUuid: string): Promise<Array<ChatMessage>> =>
+  getRoomMessages: async (roomUuid: string): Promise<Array<ChatMessage>> =>
     client
-      .get(`${baseUrl}/users/me/rooms/${roomUuid}/messages`, null, token)
+      .get(`${baseUrl}/users/me/rooms/${roomUuid}/messages`)
       .then((response: ChatMessageListResponse) => ChatMessage.parseMany(response)),
 
-  sendRoomMessage: async (token: Token, roomUuid: string, message: ChatMessage): Promise<ChatMessage> =>
-    client.post(`${baseUrl}/users/me/rooms/${roomUuid}/messages`, message, token).then(ChatMessage.parse),
+  sendRoomMessage: async (roomUuid: string, message: ChatMessage): Promise<ChatMessage> =>
+    client.post(`${baseUrl}/users/me/rooms/${roomUuid}/messages`, message).then(ChatMessage.parse),
 
-  getMessages: async (token: Token, options: GetMessagesOptions): Promise<ChatMessage> =>
-    client.get(`${baseUrl}/users/me/rooms/messages`, options, token),
+  getMessages: async (options: GetMessagesOptions): Promise<ChatMessage> =>
+    client.get(`${baseUrl}/users/me/rooms/messages`, options),
 });

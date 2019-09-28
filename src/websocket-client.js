@@ -1,4 +1,5 @@
 // @flow
+/* eslint-disable no-underscore-dangle */
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import Emitter from './utils/Emitter';
 import type { WebSocketMessage } from './types/WebSocketMessage';
@@ -45,7 +46,7 @@ class WebSocketClient extends Emitter {
   }
 
   connect() {
-    this.socket = new ReconnectingWebSocket(`wss://${this.host}/api/websocketd/?token=${this.token}`, [], this.options);
+    this.socket = new ReconnectingWebSocket(this._getUrl(), [], this.options);
     if (this.options.binaryType) {
       this.socket.binaryType = this.options.binaryType;
     }
@@ -113,6 +114,19 @@ class WebSocketClient extends Emitter {
       default:
         this.eventEmitter.emit('message', message);
     }
+  }
+
+  updateToken(token: string) {
+    this.token = token;
+
+    if (this.socket) {
+      // $FlowFixMe
+      this.socket._url = this._getUrl();
+    }
+  }
+
+  _getUrl() {
+    return `wss://${this.host}/api/websocketd/?token=${this.token}`;
   }
 }
 

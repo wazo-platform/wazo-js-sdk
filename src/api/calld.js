@@ -1,6 +1,6 @@
 /* @flow */
 import ApiRequester from '../utils/api-requester';
-import type { UUID, Token, RequestError } from '../domain/types';
+import type { UUID, RequestError } from '../domain/types';
 import type { ConferenceParticipants } from '../domain/Conference';
 import Relocation from '../domain/Relocation';
 import ChatMessage from '../domain/ChatMessage';
@@ -14,11 +14,10 @@ type CallQuery = {
 };
 
 export default (client: ApiRequester, baseUrl: string) => ({
-  updatePresence(token: Token, presence: string): Promise<Boolean> {
-    return client.put(`${baseUrl}/users/me/presences`, { presence }, token, ApiRequester.successResponseParser);
-  },
+  updatePresence: (presence: string): Promise<Boolean> =>
+    client.put(`${baseUrl}/users/me/presences`, { presence }, null, ApiRequester.successResponseParser),
 
-  listMessages(token: Token, participantUuid: ?UUID, limit?: number): Promise<Array<ChatMessage>> {
+  listMessages: (participantUuid: ?UUID, limit?: number): Promise<Array<ChatMessage>> => {
     const query: Object = {};
 
     if (participantUuid) {
@@ -29,16 +28,16 @@ export default (client: ApiRequester, baseUrl: string) => ({
       query.limit = limit;
     }
 
-    return client.get(`${baseUrl}/users/me/chats`, query, token).then(response => ChatMessage.parseMany(response));
+    return client.get(`${baseUrl}/users/me/chats`, query).then(response => ChatMessage.parseMany(response));
   },
 
-  sendMessage(token: Token, alias: string, msg: string, toUserId: string) {
+  sendMessage: (alias: string, msg: string, toUserId: string) => {
     const body = { alias, msg, to: toUserId };
 
-    return client.post(`${baseUrl}/users/me/chats`, body, token, ApiRequester.successResponseParser);
+    return client.post(`${baseUrl}/users/me/chats`, body, null, ApiRequester.successResponseParser);
   },
 
-  makeCall(token: Token, extension: string, fromMobile: boolean, lineId: ?number) {
+  makeCall: (extension: string, fromMobile: boolean, lineId: ?number) => {
     const query: CallQuery = {
       from_mobile: fromMobile,
       extension,
@@ -47,24 +46,16 @@ export default (client: ApiRequester, baseUrl: string) => ({
     if (lineId) {
       query.line_id = lineId;
     }
-    return client.post(`${baseUrl}/users/me/calls`, query, token);
+
+    return client.post(`${baseUrl}/users/me/calls`, query);
   },
 
-  cancelCall(token: Token, callId: number): Promise<Boolean> {
-    return client.delete(`${baseUrl}/users/me/calls/${callId}`, null, token);
-  },
+  cancelCall: (callId: number): Promise<Boolean> => client.delete(`${baseUrl}/users/me/calls/${callId}`, null),
 
-  listCalls(token: Token): Promise<Array<Call>> {
-    return client.get(`${baseUrl}/users/me/calls`, null, token).then(response => Call.parseMany(response.items));
-  },
+  listCalls: (): Promise<Array<Call>> =>
+    client.get(`${baseUrl}/users/me/calls`, null).then(response => Call.parseMany(response.items)),
 
-  relocateCall(
-    token: Token,
-    callId: number,
-    destination: string,
-    lineId: ?number,
-    contact?: ?string,
-  ): Promise<Relocation> {
+  relocateCall(callId: number, destination: string, lineId: ?number, contact?: ?string): Promise<Relocation> {
     const body: Object = {
       completions: ['answer'],
       destination,
@@ -83,52 +74,45 @@ export default (client: ApiRequester, baseUrl: string) => ({
       body.location.contact = contact;
     }
 
-    return client.post(`${baseUrl}/users/me/relocates`, body, token).then(response => Relocation.parse(response));
+    return client.post(`${baseUrl}/users/me/relocates`, body).then(response => Relocation.parse(response));
   },
 
-  listVoicemails(token: Token): Promise<RequestError | Array<Voicemail>> {
-    return client.get(`${baseUrl}/users/me/voicemails`, null, token).then(response => Voicemail.parseMany(response));
-  },
+  listVoicemails: (): Promise<RequestError | Array<Voicemail>> =>
+    client.get(`${baseUrl}/users/me/voicemails`).then(response => Voicemail.parseMany(response)),
 
-  deleteVoicemail(token: Token, voicemailId: number): Promise<Boolean> {
-    return client.delete(`${baseUrl}/users/me/voicemails/messages/${voicemailId}`, null, token);
-  },
+  deleteVoicemail: (voicemailId: number): Promise<Boolean> =>
+    client.delete(`${baseUrl}/users/me/voicemails/messages/${voicemailId}`),
 
-  fetchSwitchboardHeldCalls(token: Token, switchboardUuid: UUID) {
-    return client.get(`${baseUrl}/switchboards/${switchboardUuid}/calls/held`, null, token);
-  },
+  fetchSwitchboardHeldCalls: (switchboardUuid: UUID) =>
+    client.get(`${baseUrl}/switchboards/${switchboardUuid}/calls/held`),
 
-  holdSwitchboardCall(token: Token, switchboardUuid: UUID, callId: string) {
-    return client.put(
+  holdSwitchboardCall: (switchboardUuid: UUID, callId: string) =>
+    client.put(
       `${baseUrl}/switchboards/${switchboardUuid}/calls/held/${callId}`,
       null,
-      token,
+      null,
       ApiRequester.successResponseParser,
-    );
-  },
+    ),
 
-  answerSwitchboardHeldCall(token: Token, switchboardUuid: UUID, callId: string) {
-    return client.put(`${baseUrl}/switchboards/${switchboardUuid}/calls/held/${callId}/answer`, null, token);
-  },
+  answerSwitchboardHeldCall: (switchboardUuid: UUID, callId: string) =>
+    client.put(`${baseUrl}/switchboards/${switchboardUuid}/calls/held/${callId}/answer`),
 
-  fetchSwitchboardQueuedCalls(token: Token, switchboardUuid: UUID) {
-    return client.get(`${baseUrl}/switchboards/${switchboardUuid}/calls/queued`, null, token);
-  },
+  fetchSwitchboardQueuedCalls: (switchboardUuid: UUID) =>
+    client.get(`${baseUrl}/switchboards/${switchboardUuid}/calls/queued`),
 
-  answerSwitchboardQueuedCall(token: Token, switchboardUuid: UUID, callId: string) {
-    return client.put(`${baseUrl}/switchboards/${switchboardUuid}/calls/queued/${callId}/answer`, null, token);
-  },
+  answerSwitchboardQueuedCall: (switchboardUuid: UUID, callId: string) =>
+    client.put(`${baseUrl}/switchboards/${switchboardUuid}/calls/queued/${callId}/answer`),
 
-  sendFax(token: Token, extension: string, fax: string, callerId: ?string = null) {
+  sendFax: (extension: string, fax: string, callerId: ?string = null) => {
     const headers = {
       'Content-type': 'application/pdf',
-      'X-Auth-Token': token,
+      'X-Auth-Token': client.token,
     };
     const params = ApiRequester.getQueryString({ extension, caller_id: callerId });
 
     return client.post(`${baseUrl}/users/me/faxes?${params}`, fax, headers);
   },
 
-  getConferenceParticipantsAsUser: async (token: Token, conferenceId: string): Promise<ConferenceParticipants> =>
-    client.get(`${baseUrl}/users/me/conferences/${conferenceId}/participants`, null, token),
+  getConferenceParticipantsAsUser: async (conferenceId: string): Promise<ConferenceParticipants> =>
+    client.get(`${baseUrl}/users/me/conferences/${conferenceId}/participants`),
 });

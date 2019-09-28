@@ -1,11 +1,10 @@
 /* @flow */
 /* eslint-disable camelcase */
 import ApiRequester from '../utils/api-requester';
-import type { Token, ListNodesResponse, ListCallNodesResponse } from '../domain/types';
+import type { ListNodesResponse, ListCallNodesResponse } from '../domain/types';
 
 export default (client: ApiRequester, baseUrl: string) => ({
   answerCall(
-    token: string,
     applicationUuid: string,
     callId: number,
     context: string,
@@ -17,60 +16,38 @@ export default (client: ApiRequester, baseUrl: string) => ({
     const body = { calls: [{ id: callId }] };
 
     return client
-      .post(url, body, token, res => res.json().then(response => response.uuid))
+      .post(url, body, null, res => res.json().then(response => response.uuid))
       .then(nodeUuid =>
         client
-          .post(`${url}/${nodeUuid}/calls`, { context, exten, autoanswer, displayed_caller_id_number }, token)
+          .post(`${url}/${nodeUuid}/calls`, { context, exten, autoanswer, displayed_caller_id_number })
           .then(data => ({
             nodeUuid,
             data,
           })));
   },
 
-  calls(token: Token, applicationUuid: string) {
-    return client.get(`${baseUrl}/${applicationUuid}/calls`, null, token);
-  },
+  calls: (applicationUuid: string) => client.get(`${baseUrl}/${applicationUuid}/calls`),
 
-  hangupCall(token: Token, applicationUuid: string, callId: number) {
-    const url = `${baseUrl}/${applicationUuid}/calls/${callId}`;
+  hangupCall: (applicationUuid: string, callId: number) =>
+    client.delete(`${baseUrl}/${applicationUuid}/calls/${callId}`),
 
-    return client.delete(url, null, token);
-  },
+  playCall: (applicationUuid: string, callId: number, language: string, uri: string) =>
+    client.post(`${baseUrl}/${applicationUuid}/calls/${callId}/playbacks`, { language, uri }),
 
-  playCall(token: Token, applicationUuid: string, callId: number, language: string, uri: string) {
-    return client.post(`${baseUrl}/${applicationUuid}/calls/${callId}/playbacks`, { language, uri }, token);
-  },
+  addCallNodes: (applicationUuid: string, nodeUuid: string, callId: string): Promise<Boolean> =>
+    client.put(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}/calls/${callId}`),
 
-  addCallNodes(token: Token, applicationUuid: string, nodeUuid: string, callId: string): Promise<Boolean> {
-    return client.put(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}/calls/${callId}`, null, token);
-  },
+  addNewCallNodes: (applicationUuid: string, nodeUuid: string, context: string, exten: string, autoanswer: string) =>
+    client.post(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}/calls`, { context, exten, autoanswer }),
 
-  addNewCallNodes(
-    token: Token,
-    applicationUuid: string,
-    nodeUuid: string,
-    context: string,
-    exten: string,
-    autoanswer: string,
-  ) {
-    const data = { context, exten, autoanswer };
+  listCallsNodes: (applicationUuid: string, nodeUuid: string): Promise<ListCallNodesResponse> =>
+    client.get(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}`),
 
-    return client.post(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}/calls`, data, token);
-  },
+  listNodes: (applicationUuid: string): Promise<ListNodesResponse> => client.get(`${baseUrl}/${applicationUuid}/nodes`),
 
-  listCallsNodes(token: Token, applicationUuid: string, nodeUuid: string): Promise<ListCallNodesResponse> {
-    return client.get(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}`, null, token);
-  },
+  removeNode: (applicationUuid: string, nodeUuid: string) =>
+    client.delete(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}`),
 
-  listNodes(token: Token, applicationUuid: string): Promise<ListNodesResponse> {
-    return client.get(`${baseUrl}/${applicationUuid}/nodes`, null, token);
-  },
-
-  removeNode(token: Token, applicationUuid: string, nodeUuid: string) {
-    return client.delete(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}`, null, token);
-  },
-
-  removeCallNodes(token: Token, applicationUuid: string, nodeUuid: string, callId: string) {
-    return client.delete(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}/calls/${callId}`, null, token);
-  },
+  removeCallNodes: (applicationUuid: string, nodeUuid: string, callId: string) =>
+    client.delete(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}/calls/${callId}`),
 });

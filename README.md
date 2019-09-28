@@ -39,6 +39,7 @@ Depending on your environment you can import:
 const client = new WazoApiClient({
   server: 'demo.wazo.community', // required string
   agent: null // http(s).Agent instance, allows custom proxy, unsecured https, certificate etc.
+  clientId: null, // Set an identifier for your app when using refreshToken
 });
 ```
 
@@ -60,7 +61,7 @@ client.auth.logIn({
     tenants: [{ uuid }],
     auth_id
   },
-  token, // should be used for other request
+  // should be used for other request
   acls,
   utc_expires_at,
   xivo_uuid,
@@ -71,7 +72,21 @@ client.auth.logIn({
   xivo_user_uuid
 });
 // or
-const result = await client.auth.login(/* ... */);
+const { refreshToken, ...result } = await client.auth.login(/* ... */);
+```
+
+### Set token (and refresh token)
+```js
+client.setToken(token);
+client.setRefreshToken(refreshToken);
+```
+
+### Add an event when the token is refreshed
+
+```js
+client.setOnRefreshToken((newToken) => {
+  // Do something with the new token (like storing it in the localstorage...).
+});
 ```
 
 ### Log Out
@@ -91,61 +106,61 @@ const valid = await client.auth.checkToken(token);
 ### Other auth methods
 
 ```js
-client.auth.listTenants(token);
-client.auth.createTenant(token, name);
-client.auth.deleteTenant(token, uuid);
-client.auth.createUser(token, username, password, firstname, lastname);
-client.auth.addUserEmail(token, userUuid, email, main);
-client.auth.addUserPolicy(token, userUuid, policyUuid);
-client.auth.deleteUser(token);
-client.auth.listUsers(token);
-client.auth.listGroups(token);
-client.auth.createPolicy(token, name);
-client.auth.listPolicies(token);
+client.auth.listTenants();
+client.auth.createTenant(name);
+client.auth.deleteTenant(uuid);
+client.auth.createUser(username, password, firstname, lastname);
+client.auth.addUserEmail(userUuid, email, main);
+client.auth.addUserPolicy(userUuid, policyUuid);
+client.auth.deleteUser();
+client.auth.listUsers();
+client.auth.listGroups();
+client.auth.createPolicy(name);
+client.auth.listPolicies();
 ```
 
 ### Application
 ```js
-client.application.calls(token, applicationUuid); // list calls
-client.application.hangupCall(token, applicationUuid, callId); // hangup a call
-client.application.answerCall(token, applicationUuid, callId, context, exten, autoanswer);  // answer a call
-client.application.listNodes(token, applicationUuid); // list nodes
-client.application.listCallsNodes(token, applicationUuid, nodeUuid); // list calls in a node
-client.application.removeCallNodes(token, applicationUuid, nodeUuid, callId); // remove call from node (no hangup)
-client.application.addCallNodes(token, applicationUuid, nodeUuid, callId); // add call in a node
-client.application.playCall(token, applicationUuid, callId, language, uri); // play a sound into a call
+client.application.calls(applicationUuid); // list calls
+client.application.hangupCall(applicationUuid, callId); // hangup a call
+client.application.answerCall(applicationUuid, callId, context, exten, autoanswer);  // answer a call
+client.application.listNodes(applicationUuid); // list nodes
+client.application.listCallsNodes(applicationUuid, nodeUuid); // list calls in a node
+client.application.removeCallNodes(applicationUuid, nodeUuid, callId); // remove call from node (no hangup)
+client.application.addCallNodes(applicationUuid, nodeUuid, callId); // add call in a node
+client.application.playCall(applicationUuid, callId, language, uri); // play a sound into a call
 ```
 
 ### Calld
 ```js
-client.calld.getConferenceParticipantsAsUser(token, conferenceId); // List participants of a conference the user is part of
+client.calld.getConferenceParticipantsAsUser(conferenceId); // List participants of a conference the user is part of
 ```
 
 ### Confd
 ```js
-client.confd.listUsers(token);
-client.confd.getUser(token, userUuid);
-client.confd.getUserLineSip(token, userUuid, lineId);
-client.confd.listApplications(token);
+client.confd.listUsers();
+client.confd.getUser(userUuid);
+client.confd.getUserLineSip(userUuid, lineId);
+client.confd.listApplications();
 ```
 
 ### Dird
 ```js
-client.dird.search(token, context, term);
-client.dird.listPersonalContacts(token);
-client.dird.addContact(token, newContact);
-client.dird.editContact(token, contact);
-client.dird.deleteContact(token, contactUuid);
-client.dird.listFavorites(token, context);
-client.dird.markAsFavorite(token, source, sourceId);
-client.dird.removeFavorite(token, source, sourceId);
+client.dird.search(context, term);
+client.dird.listPersonalContacts();
+client.dird.addContact(newContact);
+client.dird.editContact(contact);
+client.dird.deleteContact(contactUuid);
+client.dird.listFavorites(context);
+client.dird.markAsFavorite(source, sourceId);
+client.dird.removeFavorite(source, sourceId);
 ```
 
 ### Call Logd
 ```js
-client.callLogd.search(token, search, limit);
-client.callLogd.listCallLogs(token, offset, limit);
-client.callLogd.listCallLogsFromDate(token, from, number);
+client.callLogd.search(search, limit);
+client.callLogd.listCallLogs(offset, limit);
+client.callLogd.listCallLogsFromDate(from, number);
 ```
 
 ### Calld
@@ -153,33 +168,33 @@ client.callLogd.listCallLogsFromDate(token, from, number);
 Please note, ctidNg endpoint is obsolete but continue to work with old version. Please update your code.
 
 ```js
-client.calld.answerSwitchboardQueuedCall(token, switchboardUuid, callId);
-client.calld.answerSwitchboardHeldCall(token switchboardUuid, callId);
-client.calld.cancelCall(token, callId);
-client.calld.deleteVoicemail(token, voicemailId);
-client.calld.fetchSwitchboardHeldCalls(token, switchboardUuid);
-client.calld.fetchSwitchboardQueuedCalls(token, switchboardUuid);
-client.calld.getConferenceParticipantsAsUser(token, conferenceId);
-client.calld.getPresence(token, contactUuid}; //deprecated use chatd in ctidNg, don't work with calld
-client.calld.getStatus(token, lineUuid); //deprecated use chatd in ctidNg, don't work with calld
-client.calld.holdSwitchboardCall(token, switchboardUuid, callId);
-client.calld.listCalls(token);
-client.calld.listMessages(token, participantUuid, limit);
-client.calld.listVoicemails(token);
-client.calld.makeCall(token, extension, fromMobile, lineId);
-client.calld.sendFax(token, extension, fax, callerId);
-client.calld.sendMessage(token, alias, msg, toUserId);
-client.calld.relocateCall(token, callId, destination, lineId);
-client.calld.updatePresence(token, presence);
+client.calld.answerSwitchboardQueuedCall(switchboardUuid, callId);
+client.calld.answerSwitchboardHeldCall(switchboardUuid, callId);
+client.calld.cancelCall(callId);
+client.calld.deleteVoicemail(voicemailId);
+client.calld.fetchSwitchboardHeldCalls(switchboardUuid);
+client.calld.fetchSwitchboardQueuedCalls(switchboardUuid);
+client.calld.getConferenceParticipantsAsUser(conferenceId);
+client.calld.getPresence(contactUuid); //deprecated use chatd in ctidNg, don't work with calld
+client.calld.getStatus(lineUuid); //deprecated use chatd in ctidNg, don't work with calld
+client.calld.holdSwitchboardCall(switchboardUuid, callId);
+client.calld.listCalls();
+client.calld.listMessages(participantUuid, limit);
+client.calld.listVoicemails();
+client.calld.makeCall(extension, fromMobile, lineId);
+client.calld.sendFax(extension, fax, callerId);
+client.calld.sendMessage(alias, msg, toUserId);
+client.calld.relocateCall(callId, destination, lineId);
+client.calld.updatePresence(presence);
 ```
 
 ### Accessd
 ```js
-client.accessd.listSubscriptions(token);
-client.accessd.createSubscription(token, { productSku, name, startDate, contractDate, autoRenew, term });
-client.accessd.getSubscription(token, uuid);
-client.accessd.listAuthorizations(token);
-client.accessd.getAuthorization(token, uuid);
+client.accessd.listSubscriptions();
+client.accessd.createSubscription({ productSku, name, startDate, contractDate, autoRenew, term });
+client.accessd.getSubscription(uuid);
+client.accessd.listAuthorizations();
+client.accessd.getAuthorization(uuid);
 ```
 
 ### WebRTCPhone
@@ -303,7 +318,7 @@ import { WazoWebSocketClient } from '@wazo/sdk';
 
 const ws = new WazoWebSocket({
   host, // wazo websocket host
-  token, // valid Wazo token
+  // valid Wazo token
 });
 
 // eventName can be on the of events here: http://documentation.wazo.community/en/stable/api_sdk/websocket.html
