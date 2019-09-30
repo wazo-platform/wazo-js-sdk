@@ -5,13 +5,13 @@
   "main": "dist/wazo-sdk.js",
   "author": "Wazo (http://wazo.io)",
   "maintainers": [
-    "Wazo Team <dev@wazo.io> (https://github.com/wazo-pbx)"
+    "Wazo Team <dev@wazo.io> (https://github.com/wazo-platform)"
   ],
   "contributors": [
-    "Wazo Team <dev@wazo.io> (https://github.com/wazo-pbx)"
+    "Wazo Team <dev@wazo.io> (https://github.com/wazo-platform)"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/wazo-pbx/wazo-js-sdk",
+  "homepage": "https://github.com/wazo-platform/wazo-js-sdk",
   "files": [
     "dist/*.js",
     "src/**/*.js",
@@ -21,10 +21,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/wazo-pbx/wazo-js-sdk"
+    "url": "https://github.com/wazo-platform/wazo-js-sdk"
   },
   "bugs": {
-    "url": "https://github.com/wazo-pbx/wazo-js-sdk/issues"
+    "url": "https://github.com/wazo-platform/wazo-js-sdk/issues"
   },
   "scripts": {
     "build": "./node_modules/.bin/rollup --config --extend",
