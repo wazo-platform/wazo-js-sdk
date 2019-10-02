@@ -58,7 +58,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     this.client.on('unregistered', () => {
       this.eventEmitter.emit('onUnRegistered');
-      this.register();
     });
 
     this.client.on('registered', () => {
