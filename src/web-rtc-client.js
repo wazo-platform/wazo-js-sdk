@@ -149,7 +149,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   isRegistered(): boolean {
-    return this.userAgent && this.userAgent.isRegistered();
+    return this.userAgent && this.userAgent.transport.isConnected() && this.userAgent.isRegistered();
   }
 
   register() {
@@ -639,27 +639,26 @@ export default class WebRTCClient extends Emitter {
     return (sipSession && sipSession.request && sipSession.request.callId) || (sipSession && sipSession.id) || '';
   }
 
-  _connectIfNeeded = (): Promise<void> => new Promise(resolve => {
-    if (!this.userAgent.transport.isConnected()) {
-      if (this.connectionPromise) {
+  _connectIfNeeded(): Promise<void> {
+    return new Promise(resolve => {
+      if (!this.userAgent.transport.isConnected()) {
+        if (this.connectionPromise) {
+          return this.connectionPromise;
+        }
+
+        this.connectionPromise = this.userAgent.transport.connectPromise().then(() => {
+          resolve();
+        }).catch(error => {
+          this.connectionPromise = null;
+          console.warn('[WebRtcClient][_connectIfNeeded] error', error.message);
+        });
+
         return this.connectionPromise;
       }
 
-      this.connectionPromise = this.userAgent.transport.connectPromise().then(() => {
-        console.log('[Songbird][WebRtcClient][_connectIfNeeded] connected');
-        resolve();
-      }).catch(error => {
-        this.connectionPromise = null;
-        console.log('[Songbird][WebRtcClient][_connectIfNeeded] error', error.message);
-      });
-
-      console.log('[Songbird][WebRtcClient][_connectIfNeeded] WS not opened, connecting ...');
-
-      return this.connectionPromise;
-    }
-
-    return resolve();
-  });
+      return resolve();
+    });
+  }
 
   _initializeVideoSession(sessionId: string) {
     if (!this.videoSessions[sessionId]) {
