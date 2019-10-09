@@ -157,7 +157,7 @@ export default class WebRTCClient extends Emitter {
       return;
     }
 
-    this._connectIfNeeded().then(this.userAgent.register);
+    this._connectIfNeeded().then(this.userAgent.register.bind(this.userAgent));
   }
 
   unregister() {
@@ -646,9 +646,7 @@ export default class WebRTCClient extends Emitter {
           return this.connectionPromise;
         }
 
-        this.connectionPromise = this.userAgent.transport.connectPromise().then(() => {
-          resolve();
-        }).catch(error => {
+        this.connectionPromise = this.userAgent.transport.connectPromise().then(resolve).catch(error => {
           this.connectionPromise = null;
           console.warn('[WebRtcClient][_connectIfNeeded] error', error.message);
         });
