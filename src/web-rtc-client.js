@@ -79,6 +79,7 @@ export default class WebRTCClient extends Emitter {
   mergeDestination: ?MediaStreamAudioDestinationNode;
   audioOutputDeviceId: ?string;
   videoSessions: Object;
+  connectionPromise: ?Promise<void>;
 
   static isAPrivateIp(ip: string): boolean {
     const regex = /^(?:10|127|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\..*/;
@@ -108,6 +109,7 @@ export default class WebRTCClient extends Emitter {
     this.configureMedia(config.media);
 
     this.videoSessions = {};
+    this.connectionPromise = null;
   }
 
   configureMedia(media: MediaConfig) {
@@ -147,7 +149,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   isRegistered(): boolean {
-    return this.userAgent && this.userAgent.isRegistered();
+    return this.userAgent && this.userAgent.transport.isConnected() && this.userAgent.isRegistered();
   }
 
   register() {
@@ -155,7 +157,7 @@ export default class WebRTCClient extends Emitter {
       return;
     }
 
-    this.userAgent.register();
+    this._connectIfNeeded().then(this.userAgent.register.bind(this.userAgent));
   }
 
   unregister() {
@@ -635,6 +637,25 @@ export default class WebRTCClient extends Emitter {
 
   getSipSessionId(sipSession: ?SIP.sessionDescriptionHandler): string {
     return (sipSession && sipSession.request && sipSession.request.callId) || (sipSession && sipSession.id) || '';
+  }
+
+  _connectIfNeeded(): Promise<void> {
+    return new Promise(resolve => {
+      if (!this.userAgent.transport.isConnected()) {
+        if (this.connectionPromise) {
+          return this.connectionPromise;
+        }
+
+        this.connectionPromise = this.userAgent.transport.connectPromise().then(resolve).catch(error => {
+          this.connectionPromise = null;
+          console.warn('[WebRtcClient][_connectIfNeeded] error', error.message);
+        });
+
+        return this.connectionPromise;
+      }
+
+      return resolve();
+    });
   }
 
   _initializeVideoSession(sessionId: string) {
