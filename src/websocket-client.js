@@ -15,6 +15,7 @@ type WebSocketClientArguments = {
   host: string,
   token: string,
   events: Array<string>,
+  version?: number,
 };
 
 class WebSocketClient extends Emitter {
@@ -34,7 +35,7 @@ class WebSocketClient extends Emitter {
    * @param events
    * @param options @see https://github.com/pladaria/reconnecting-websocket#available-options
    */
-  constructor({ host, token, events = [] }: WebSocketClientArguments, options: Object = {}) {
+  constructor({ host, token, version = 1, events = [] }: WebSocketClientArguments, options: Object = {}) {
     super();
     this.initialized = false;
 
@@ -43,6 +44,7 @@ class WebSocketClient extends Emitter {
     this.token = token;
     this.events = events;
     this.options = options;
+    this.version = version;
   }
 
   connect() {
@@ -131,7 +133,7 @@ class WebSocketClient extends Emitter {
   }
 
   _getUrl() {
-    return `wss://${this.host}/api/websocketd/?token=${this.token}&version=2`;
+    return `wss://${this.host}/api/websocketd/?token=${this.token}&version=${this.version}`;
   }
 }
 
