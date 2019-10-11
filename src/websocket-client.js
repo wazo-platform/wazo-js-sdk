@@ -68,8 +68,8 @@ class WebSocketClient extends Emitter {
 
       if (!this.initialized) {
         this.handleMessage(message, this.socket);
-      } else if (message.op === 'event') {
-        this.eventEmitter.emit(message.name || message.data.name, message.data || message);
+      } else {
+        this._handleMessage(message);
       }
     };
 
@@ -125,12 +125,23 @@ class WebSocketClient extends Emitter {
 
     if (this.socket) {
       // If still connected, send the token to the WS
-      if (this.socket.readyState === this.socket.OPEN) {
+      if (this.socket.readyState === this.socket.OPEN && this.version >= 2) {
         this.socket.send(JSON.stringify({ op: 'token', data: { token } }));
         return;
       }
       // $FlowFixMe
       this.socket._url = this._getUrl();
+    }
+  }
+
+  _handleMessage(message: Object) {
+    if (this.version === 1) {
+      this.eventEmitter.emit(message.name, message);
+      return;
+    }
+
+    if (this.version >= 2 && message.op === 'event') {
+      this.eventEmitter.emit(message.data.name, message.data);
     }
   }
 
