@@ -15,11 +15,13 @@ type WebSocketClientArguments = {
   host: string,
   token: string,
   events: Array<string>,
+  version?: number,
 };
 
 class WebSocketClient extends Emitter {
   initialized: boolean;
   host: string;
+  version: number;
   token: string;
   events: Array<string>;
   options: Object;
@@ -32,9 +34,10 @@ class WebSocketClient extends Emitter {
    * @param host
    * @param token
    * @param events
+   * @param version
    * @param options @see https://github.com/pladaria/reconnecting-websocket#available-options
    */
-  constructor({ host, token, events = [] }: WebSocketClientArguments, options: Object = {}) {
+  constructor({ host, token, version = 1, events = [] }: WebSocketClientArguments, options: Object = {}) {
     super();
     this.initialized = false;
 
@@ -43,6 +46,7 @@ class WebSocketClient extends Emitter {
     this.token = token;
     this.events = events;
     this.options = options;
+    this.version = version;
   }
 
   connect() {
@@ -65,7 +69,7 @@ class WebSocketClient extends Emitter {
       if (!this.initialized) {
         this.handleMessage(message, this.socket);
       } else {
-        this.eventEmitter.emit(message.name, message);
+        this._handleMessage(message);
       }
     };
 
@@ -120,13 +124,29 @@ class WebSocketClient extends Emitter {
     this.token = token;
 
     if (this.socket) {
+      // If still connected, send the token to the WS
+      if (this.socket.readyState === this.socket.OPEN && this.version >= 2) {
+        this.socket.send(JSON.stringify({ op: 'token', data: { token } }));
+        return;
+      }
       // $FlowFixMe
       this.socket._url = this._getUrl();
     }
   }
 
+  _handleMessage(message: Object) {
+    if (this.version === 1) {
+      this.eventEmitter.emit(message.name, message);
+      return;
+    }
+
+    if (this.version >= 2 && message.op === 'event') {
+      this.eventEmitter.emit(message.data.name, message.data);
+    }
+  }
+
   _getUrl() {
-    return `wss://${this.host}/api/websocketd/?token=${this.token}`;
+    return `wss://${this.host}/api/websocketd/?token=${this.token}&version=${this.version}`;
   }
 }
 
