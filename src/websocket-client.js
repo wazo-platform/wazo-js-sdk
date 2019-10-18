@@ -18,6 +18,40 @@ type WebSocketClientArguments = {
   version?: number,
 };
 
+export const AUTH_SESSION_EXPIRE_SOON = 'auth_session_expire_soon';
+export const FAVORITE_ADDED = 'favorite_added';
+export const FAVORITE_DELETED = 'favorite_deleted';
+export const USER_STATUS_UPDATE = 'user_status_update';
+export const CHAT_MESSAGE_SENT = 'chat_message_sent';
+export const CHAT_MESSAGE_RECEIVED = 'chat_message_received';
+export const ENDPOINT_STATUS_UPDATE = 'endpoint_status_update';
+export const USERS_FORWARDS_BUSY_UPDATED = 'users_forwards_busy_updated';
+export const USERS_FORWARDS_NOANSWER_UPDATED = 'users_forwards_noanswer_updated';
+export const USERS_FORWARDS_UNCONDITIONAL_UPDATED = 'users_forwards_unconditional_updated';
+export const USERS_SERVICES_DND_UPDATED = 'users_services_dnd_updated';
+export const USER_VOICEMAIL_MESSAGE_CREATED = 'user_voicemail_message_created';
+export const USER_VOICEMAIL_MESSAGE_DELETED = 'user_voicemail_message_deleted';
+export const CALL_LOG_USER_CREATED = 'call_log_user_created';
+export const CALL_CREATED = 'call_created';
+export const CALL_ENDED = 'call_ended';
+export const CALL_UPDATED = 'call_updated';
+export const CALL_HELD = 'call_held';
+export const CALL_RESUMED = 'call_resumed';
+export const AUTH_USER_EXTERNAL_AUTH_ADDED = 'auth_user_external_auth_added';
+export const AUTH_USER_EXTERNAL_AUTH_DELETED = 'auth_user_external_auth_deleted';
+export const CHATD_PRESENCE_UPDATED = 'chatd_presence_updated';
+export const CHATD_USER_ROOM_MESSAGE_CREATED = 'chatd_user_room_message_created';
+export const CHATD_USER_ROOM_CREATED = 'chatd_user_room_created';
+export const CONFERENCE_USER_PARTICIPANT_JOINED = 'conference_user_participant_joined';
+export const CONFERENCE_USER_PARTICIPANT_LEFT = 'conference_user_participant_left';
+export const SWITCHBOARD_QUEUED_CALLS_UPDATED = 'switchboard_queued_calls_updated';
+export const SWITCHBOARD_QUEUED_CALL_ANSWERED = 'switchboard_queued_call_answered';
+export const SWITCHBOARD_HELD_CALLS_UPDATED = 'switchboard_held_calls_updated';
+export const SWITCHBOARD_HELD_CALL_ANSWERED = 'switchboard_held_call_answered';
+export const FAX_OUTBOUND_USER_CREATED = 'fax_outbound_user_created';
+export const FAX_OUTBOUND_USER_SUCCEEDED = 'fax_outbound_user_succeeded';
+export const FAX_OUTBOUND_USER_FAILED = 'fax_outbound_user_failed';
+
 class WebSocketClient extends Emitter {
   initialized: boolean;
   host: string;
@@ -152,38 +186,39 @@ class WebSocketClient extends Emitter {
 
 // Can't use static
 WebSocketClient.eventLists = [
-  'favorite_added',
-  'favorite_deleted',
-  'user_status_update',
-  'chat_message_sent',
-  'chat_message_received',
-  'endpoint_status_update',
-  'users_forwards_busy_updated',
-  'users_forwards_noanswer_updated',
-  'users_forwards_unconditional_updated',
-  'users_services_dnd_updated',
-  'user_voicemail_message_created',
-  'user_voicemail_message_deleted',
-  'call_log_user_created',
-  'call_created',
-  'call_ended',
-  'call_updated',
-  'call_held',
-  'call_resumed',
-  'auth_user_external_auth_added',
-  'auth_user_external_auth_deleted',
-  'chatd_presence_updated',
-  'chatd_user_room_message_created',
-  'chatd_user_room_created',
-  'conference_user_participant_joined',
-  'conference_user_participant_left',
-  'switchboard_queued_calls_updated',
-  'switchboard_queued_call_answered',
-  'switchboard_held_calls_updated',
-  'switchboard_held_call_answered',
-  'fax_outbound_user_created',
-  'fax_outbound_user_succeeded',
-  'fax_outbound_user_failed',
+  AUTH_SESSION_EXPIRE_SOON,
+  FAVORITE_ADDED,
+  FAVORITE_DELETED,
+  USER_STATUS_UPDATE,
+  CHAT_MESSAGE_SENT,
+  CHAT_MESSAGE_RECEIVED,
+  ENDPOINT_STATUS_UPDATE,
+  USERS_FORWARDS_BUSY_UPDATED,
+  USERS_FORWARDS_NOANSWER_UPDATED,
+  USERS_FORWARDS_UNCONDITIONAL_UPDATED,
+  USERS_SERVICES_DND_UPDATED,
+  USER_VOICEMAIL_MESSAGE_CREATED,
+  USER_VOICEMAIL_MESSAGE_DELETED,
+  CALL_LOG_USER_CREATED,
+  CALL_CREATED,
+  CALL_ENDED,
+  CALL_UPDATED,
+  CALL_HELD,
+  CALL_RESUMED,
+  AUTH_USER_EXTERNAL_AUTH_ADDED,
+  AUTH_USER_EXTERNAL_AUTH_DELETED,
+  CHATD_PRESENCE_UPDATED,
+  CHATD_USER_ROOM_MESSAGE_CREATED,
+  CHATD_USER_ROOM_CREATED,
+  CONFERENCE_USER_PARTICIPANT_JOINED,
+  CONFERENCE_USER_PARTICIPANT_LEFT,
+  SWITCHBOARD_QUEUED_CALLS_UPDATED,
+  SWITCHBOARD_QUEUED_CALL_ANSWERED,
+  SWITCHBOARD_HELD_CALLS_UPDATED,
+  SWITCHBOARD_HELD_CALL_ANSWERED,
+  FAX_OUTBOUND_USER_CREATED,
+  FAX_OUTBOUND_USER_SUCCEEDED,
+  FAX_OUTBOUND_USER_FAILED,
 ];
 
 export default WebSocketClient;
