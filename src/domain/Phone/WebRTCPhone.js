@@ -133,7 +133,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       }
     });
     sipSession.on('progress', () => {
-      this.eventEmitter.emit('onProgress', this.audioOutputDeviceId);
+      this.eventEmitter.emit('onProgress', this._createCallSession(sipSession), this.audioOutputDeviceId);
     });
     sipSession.on('muted', callSession => {
       this.eventEmitter.emit('onCallMuted', this._createMutedCallSession(sipSession, callSession));
@@ -667,6 +667,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return new CallSession({
       callId: fromSession && fromSession.callId,
       sipCallId: this.client.getSipSessionId(sipSession),
+      sipStatus: sipSession.status,
       displayName: sipSession.remoteIdentity.displayName || number,
       startTime: sipSession.startTime,
       answered: sipSession.hasAnswer,

@@ -20,6 +20,7 @@ type CallSessionArguments = {
   ringing: boolean,
   sipCallId: string,
   sipId?: string,
+  sipStatus?: number,
   startTime: number,
 };
 
@@ -49,6 +50,8 @@ export default class CallSession {
 
   sipCallId: string;
 
+  sipStatus: ?number;
+
   muted: boolean;
 
   cameraEnabled: boolean;
@@ -66,6 +69,7 @@ export default class CallSession {
     cameraEnabled,
     dialedExtension,
     sipCallId,
+    sipStatus,
     callerNumber,
     call,
   }: CallSessionArguments) {
@@ -83,6 +87,7 @@ export default class CallSession {
     this.cameraEnabled = cameraEnabled;
     this.dialedExtension = dialedExtension || '';
     this.call = call;
+    this.sipStatus = sipStatus;
   }
 
   resume() {

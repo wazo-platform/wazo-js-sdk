@@ -1,6 +1,6 @@
 /* @flow */
 import ApiRequester from '../utils/api-requester';
-import type { UUID, Token } from '../domain/types';
+import type { UUID } from '../domain/types';
 import Contact from '../domain/Contact';
 import type { NewContact } from '../domain/Contact';
 import type { DirectorySource, DirectorySources } from '../domain/DirectorySource';
@@ -65,11 +65,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   fetchWazoSource: (context: string): Promise<Sources> =>
     client.get(`${baseUrl}/directories/${context}/sources`, { backend: 'wazo' }),
 
-  fetchWazoContacts: (
-    token: Token,
-    source: DirectorySource,
-    queryParams: ContactSearchQueryParams = null,
-  ): Promise<Contact[]> =>
+  fetchWazoContacts: (source: DirectorySource, queryParams: ContactSearchQueryParams = null): Promise<Contact[]> =>
     client
       .get(`${baseUrl}/backends/wazo/sources/${source.uuid}/contacts`, queryParams)
       .then(response => Contact.parseManyWazo(response.items, source)),
@@ -77,11 +73,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   fetchGoogleSource: (context: string): Promise<Sources> =>
     client.get(`${baseUrl}/directories/${context}/sources`, { backend: 'google' }),
 
-  fetchGoogleContacts: (
-    token: Token,
-    source: DirectorySource,
-    queryParams: ContactSearchQueryParams = null,
-  ): Promise<Contact[]> =>
+  fetchGoogleContacts: (source: DirectorySource, queryParams: ContactSearchQueryParams = null): Promise<Contact[]> =>
     client
       .get(`${baseUrl}/backends/google/sources/${source.uuid}/contacts`, queryParams)
       .then(response => Contact.parseManyGoogle(response.items, source)),
