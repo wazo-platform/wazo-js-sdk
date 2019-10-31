@@ -136,7 +136,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       // When receiving a progress event, we know we are the caller so we have to force incoming to false
       this.eventEmitter.emit(
         'onProgress',
-        this._createCallSession(sipSession, null, { incoming: false }),
+        this._createCallSession(sipSession, null, { incoming: false, ringing: true }),
         this.audioOutputDeviceId,
       );
     });
