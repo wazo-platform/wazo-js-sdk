@@ -247,25 +247,23 @@ export default class Contact {
     return response.results.map(r => Contact.parse(r, response.column_types));
   }
 
-  static parseMultipleNumber(plain: ContactResponse, columns: Array<?string>) {
+  static fetchNumbers(plain: ContactResponse, columns: Array<?string>): Array<string> {
     const numberColumns = columns
       .map((e, index) => ({ index, columnName: e }))
-      .filter(e => e.columnName === 'number')
+      .filter(e => e.columnName === 'number' || e.columnName === 'callable')
       .map(e => e.index);
 
-    const number = plain.column_values.find((e, index) => numberColumns.some(i => i === index) && e !== null);
-
-    return number || '';
+    return plain.column_values.filter((e, index) => numberColumns.some(i => i === index) && e !== null);
   }
 
   static parse(plain: ContactResponse, columns: Array<?string>): Contact {
-    const number = Contact.parseMultipleNumber(plain, columns);
+    const numbers = Contact.fetchNumbers(plain, columns);
     const email = plain.column_values[columns.indexOf('email')];
 
     return new Contact({
       name: plain.column_values[columns.indexOf('name')],
-      number: number || '',
-      numbers: number ? [{ label: 'primary', number }] : [],
+      number: numbers.length ? numbers[0] : '',
+      numbers: numbers.map((number, i) => ({ label: i === 0 ? 'primary' : 'secondary', number })),
       favorited: plain.column_values[columns.indexOf('favorite')],
       email: email || '',
       emails: email ? [{ label: 'primary', email }] : [],

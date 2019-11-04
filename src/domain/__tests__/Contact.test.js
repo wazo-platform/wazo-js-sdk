@@ -118,7 +118,7 @@ describe('Contact domain', () => {
       results: [
         {
           source: 'internal',
-          column_values: ['Jonathan Lessard', '8020', null, null, false, 'contact@nexapp.ca', false],
+          column_values: ['Jonathan Lessard', '8020', '06800880', null, false, 'contact@nexapp.ca', false],
           backend: 'wazo',
           relations: {
             user_id: 8,
@@ -138,7 +138,7 @@ describe('Contact domain', () => {
       new Contact({
         name: 'Jonathan Lessard',
         number: '8020',
-        numbers: [{ label: 'primary', number: '8020' }],
+        numbers: [{ label: 'primary', number: '8020' }, { label: 'secondary', number: '06800880' }],
         favorited: false,
         email: 'contact@nexapp.ca',
         emails: [{ label: 'primary', email: 'contact@nexapp.ca' }],
