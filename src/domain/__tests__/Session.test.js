@@ -43,6 +43,7 @@ describe('Session domain', () => {
           'call-logd.users.me.cdr.read',
         ],
         utc_expires_at: '2017-07-19T21:27:53.086990',
+        session_uuid: 'f14dd6d6-547c-434d-bd5c-e882b5b83b32',
         xivo_uuid: '6cd695d2-cdb9-4444-8b2d-27425ab85fa8',
         issued_at: '2017-07-19T16:27:53.086990',
         utc_issued_at: '2017-07-19T20:27:53.086990',
@@ -63,6 +64,7 @@ describe('Session domain', () => {
         refreshToken: null,
         uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54',
         expiresAt: new Date('2017-07-19T21:27:53.086990z'),
+        sessionUuid: 'f14dd6d6-547c-434d-bd5c-e882b5b83b32',
       }),
     );
   });
