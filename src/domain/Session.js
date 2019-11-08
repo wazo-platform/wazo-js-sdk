@@ -17,6 +17,7 @@ type Response = {
   data: {
     token: Token,
     refresh_token?: Token,
+    session_uuid: UUID,
     acls: Array<string>,
     utc_expires_at: string,
     xivo_uuid: string,
@@ -47,6 +48,7 @@ type Authorization = {
 type SessionArguments = {
   token: string,
   refreshToken?: ?string,
+  sessionUuid?: ?string,
   uuid?: ?string,
   tenantUuid?: ?string,
   profile?: ?Profile,
@@ -60,6 +62,7 @@ export default class Session {
   refreshToken: ?string;
   uuid: ?string;
   tenantUuid: ?string;
+  sessionUuid: ?string;
   engineVersion: ?string;
   profile: ?Profile;
   expiresAt: Date;
@@ -82,6 +85,7 @@ export default class Session {
       token: plain.data.token,
       refreshToken: plain.data.refresh_token || null,
       uuid: plain.data.metadata ? plain.data.metadata.uuid : null,
+      sessionUuid: plain.data.session_uuid,
       authorizations,
       tenantUuid: plain.data.metadata ? plain.data.metadata.tenant_uuid : undefined,
       expiresAt: new Date(`${plain.data.utc_expires_at}z`),
@@ -101,6 +105,7 @@ export default class Session {
     authorizations,
     engineVersion,
     refreshToken,
+    sessionUuid,
   }: SessionArguments = {}) {
     this.token = token;
     this.uuid = uuid;
@@ -110,6 +115,7 @@ export default class Session {
     this.authorizations = authorizations || [];
     this.engineVersion = engineVersion;
     this.refreshToken = refreshToken;
+    this.sessionUuid = sessionUuid;
   }
 
   hasExpired(date: Date = new Date()): boolean {

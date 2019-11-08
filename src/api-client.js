@@ -79,7 +79,7 @@ export default class ApiClient {
       return null;
     }
 
-    const { token } = await this.auth.refreshToken(
+    const session = await this.auth.refreshToken(
       this.refreshToken,
       this.refreshBackend,
       this.refreshExpiration,
@@ -87,12 +87,12 @@ export default class ApiClient {
     );
 
     if (this.onRefreshToken) {
-      this.onRefreshToken(token);
+      this.onRefreshToken(session.token, session);
     }
 
-    this.setToken(token);
+    this.setToken(session.token);
 
-    return token;
+    return session.token;
   }
 
   setToken(token: string) {
