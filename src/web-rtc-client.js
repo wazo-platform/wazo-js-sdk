@@ -726,8 +726,8 @@ export default class WebRTCClient extends Emitter {
           audio: this._getAudioConstraints(),
           video: this._getVideoConstraints(),
         },
-        iceCheckingTimeout: this.config.iceCheckingTimeout || 1000,
         peerConnectionOptions: {
+          iceCheckingTimeout: this.config.iceCheckingTimeout || 1000,
           rtcConfiguration: {
             rtcpMuxPolicy: 'require',
             bundlePolicy: 'max-compat',
