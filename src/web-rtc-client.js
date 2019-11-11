@@ -506,6 +506,7 @@ export default class WebRTCClient extends Emitter {
       const sdh = session.sessionDescriptionHandler;
       const pc = sdh.peerConnection;
 
+      // $FlowFixMe
       navigator.mediaDevices.getUserMedia({ audio: { deviceId: { exact: id } } }).then(async stream => {
         const audioTrack = stream.getAudioTracks()[0];
         const sender = pc.getSenders().find((s) => s.track.kind === audioTrack.kind);
@@ -525,6 +526,7 @@ export default class WebRTCClient extends Emitter {
       const sdh = session.sessionDescriptionHandler;
       const pc = sdh.peerConnection;
 
+      // $FlowFixMe
       navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: id } } }).then(async stream => {
         const videoTrack = stream.getVideoTracks()[0];
         const sender = pc.getSenders().find((s) => s.track.kind === videoTrack.kind);
