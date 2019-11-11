@@ -496,34 +496,44 @@ export default class WebRTCClient extends Emitter {
     });
   }
 
-  changeAudioInputDevice(id: string) {
+  changeAudioInputDevice(id: string, session: ?SIP.InviteClientContext) {
     const currentId = this.getAudioDeviceId();
     if (id === currentId) {
       return;
     }
 
-    this.audio = id ? { deviceId: { exact: id } } : true;
-    if (this.userAgent) {
-      this.userAgent.transport.disconnect();
-      this.userAgent.stop();
-      this.userAgent.removeAllListeners();
+    if (session) {
+      const sdh = session.sessionDescriptionHandler;
+      const pc = sdh.peerConnection;
+
+      // $FlowFixMe
+      navigator.mediaDevices.getUserMedia({ audio: { deviceId: { exact: id } } }).then(async stream => {
+        const audioTrack = stream.getAudioTracks()[0];
+        const sender = pc.getSenders().find((s) => s.track.kind === audioTrack.kind);
+
+        sender.replaceTrack(audioTrack);
+      });
     }
-    this.userAgent = this.createUserAgent();
   }
 
-  changeVideoInputDevice(id: string) {
+  changeVideoInputDevice(id: string, session: ?SIP.InviteClientContext) {
     const currentId = this.getVideoDeviceId();
     if (id === currentId) {
       return;
     }
 
-    this.video = id ? { deviceId: { exact: id } } : true;
-    if (this.userAgent) {
-      this.userAgent.transport.disconnect();
-      this.userAgent.removeAllListeners();
-      this.userAgent.stop();
+    if (session) {
+      const sdh = session.sessionDescriptionHandler;
+      const pc = sdh.peerConnection;
+
+      // $FlowFixMe
+      navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: id } } }).then(async stream => {
+        const videoTrack = stream.getVideoTracks()[0];
+        const sender = pc.getSenders().find((s) => s.track.kind === videoTrack.kind);
+
+        sender.replaceTrack(videoTrack);
+      });
     }
-    this.userAgent = this.createUserAgent();
   }
 
   getAudioDeviceId(): ?string {
