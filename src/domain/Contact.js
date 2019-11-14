@@ -51,7 +51,6 @@ export type ContactPersonalResponse = {
   number: ?string,
   numbers: ?Array<{ label: string, number: string }>,
   email: ?string,
-  numbers: ?Array<{ label: string, email: string }>,
   entreprise: ?string,
   birthday: ?string,
   address: ?string,
@@ -122,8 +121,6 @@ type ContactArguments = {
   lineState?: string,
   mobile?: boolean,
   status?: string,
-  endpointId?: number,
-  uuid?: string,
   backend?: string,
   personalStatus?: string,
 };
