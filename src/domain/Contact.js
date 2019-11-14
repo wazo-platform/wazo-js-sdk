@@ -216,7 +216,7 @@ export default class Contact {
   personal: ?boolean;
   state: ?string;
   lineState: ?string;
-  mobile: ?boolean,
+  mobile: ?boolean;
   source: ?string;
   sourceId: string;
   status: ?string;
