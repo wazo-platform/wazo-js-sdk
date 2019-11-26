@@ -103,7 +103,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   stop() {
-    this.client && this.client.stop();
+    if (!this.client) {
+      return;
+    }
+    this.client.stop();
   }
 
   removeIncomingSessions(id: string) {

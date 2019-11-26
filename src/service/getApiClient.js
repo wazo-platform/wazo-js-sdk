@@ -77,5 +77,3 @@ export default (forServer: ?string): WazoApiClient => {
 
   return fillClient(global.wazoClients[server]);
 };
-
-
