@@ -26,6 +26,7 @@ type GetMessagesOptions = {
   order: ?string,
   offset: ?string,
   search: string,
+  distinct: string,
 };
 
 export default (client: ApiRequester, baseUrl: string) => ({

@@ -14,6 +14,10 @@ export default class CallApi {
     return getApiClient().callLogd.listCallLogs(offset, limit);
   }
 
+  static async fetchDistinctCallLogs(offset: number, limit: number, distinct: string = 'peer_exten'): Promise<Call[]> {
+    return getApiClient().callLogd.listDistinctCallLogs(offset, limit, distinct);
+  }
+
   static async fetchActiveCalls(): Promise<Call[]> {
     return getApiClient().ctidNg.listCalls();
   }
