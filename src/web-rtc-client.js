@@ -168,6 +168,14 @@ export default class WebRTCClient extends Emitter {
     this.userAgent.unregister();
   }
 
+  stop() {
+    if (!this.userAgent) {
+      return;
+    }
+
+    this.userAgent.stop();
+  }
+
   // eslint-disable-next-line no-unused-vars
   sessionWantsToDoVideo(session: SIP.sessionDescriptionHandler) {
     const sdp = session.request.body;
