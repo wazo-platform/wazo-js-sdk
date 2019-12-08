@@ -2,7 +2,7 @@
 import ApiRequester from '../utils/api-requester';
 
 export default (client: ApiRequester, baseUrl: string) => ({
-  listSubscriptions: () => client.get(`${baseUrl}/subscriptions?recurse=true`),
+  listSubscriptions: () => client.get(`${baseUrl}/subscriptions`),
 
   createSubscription: ({ productSku, name, startDate, contractDate, autoRenew, term }: Object) => {
     const body = {
