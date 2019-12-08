@@ -87,7 +87,7 @@ export default class ApiRequester {
     });
   }
 
-  setTenant (tenant: ?string) {
+  setTenant(tenant: ?string) {
     this.tenant = tenant;
   }
 
@@ -184,7 +184,7 @@ export default class ApiRequester {
 
     return {
       'X-Auth-Token': this.token,
-      ...this.tenant ? { 'Wazo-Tenant': this.tenant } : null,
+      ...(this.tenant ? { 'Wazo-Tenant': this.tenant } : null),
       Accept: 'application/json',
       'Content-Type': 'application/json',
     };

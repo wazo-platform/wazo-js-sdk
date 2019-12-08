@@ -79,12 +79,7 @@ export default class ApiClient {
       return null;
     }
 
-    const session = await this.auth.refreshToken(
-      this.refreshToken,
-      this.refreshBackend,
-      this.refreshExpiration,
-      true,
-    );
+    const session = await this.auth.refreshToken(this.refreshToken, this.refreshBackend, this.refreshExpiration, true);
 
     if (this.onRefreshToken) {
       this.onRefreshToken(session.token, session);
