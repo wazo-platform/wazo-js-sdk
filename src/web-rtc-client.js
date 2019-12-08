@@ -517,7 +517,7 @@ export default class WebRTCClient extends Emitter {
       // $FlowFixMe
       navigator.mediaDevices.getUserMedia({ audio: { deviceId: { exact: id } } }).then(async stream => {
         const audioTrack = stream.getAudioTracks()[0];
-        const sender = pc.getSenders().find((s) => s.track.kind === audioTrack.kind);
+        const sender = pc.getSenders().find(s => s.track.kind === audioTrack.kind);
 
         sender.replaceTrack(audioTrack);
       });
@@ -537,7 +537,7 @@ export default class WebRTCClient extends Emitter {
       // $FlowFixMe
       navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: id } } }).then(async stream => {
         const videoTrack = stream.getVideoTracks()[0];
-        const sender = pc.getSenders().find((s) => s.track.kind === videoTrack.kind);
+        const sender = pc.getSenders().find(s => s.track.kind === videoTrack.kind);
 
         sender.replaceTrack(videoTrack);
       });

@@ -40,6 +40,7 @@ export default class ApiRequester {
   agent: ?Object;
   clientId: ?string;
   token: string;
+  tenant: ?string;
   refreshTokenCallback: Function;
 
   head: Function;
@@ -84,6 +85,10 @@ export default class ApiRequester {
         return this.call.call(this, ...args);
       };
     });
+  }
+
+  setTenant(tenant: ?string) {
+    this.tenant = tenant;
   }
 
   call(
@@ -179,6 +184,7 @@ export default class ApiRequester {
 
     return {
       'X-Auth-Token': this.token,
+      ...(this.tenant ? { 'Wazo-Tenant': this.tenant } : null),
       Accept: 'application/json',
       'Content-Type': 'application/json',
     };
