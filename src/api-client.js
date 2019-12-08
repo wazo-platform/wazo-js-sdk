@@ -99,6 +99,10 @@ export default class ApiClient {
     this.client.token = token;
   }
 
+  setTenant(tenant: string) {
+    this.client.setTenant(tenant);
+  }
+
   setRefreshToken(refreshToken: ?string) {
     this.refreshToken = refreshToken;
   }

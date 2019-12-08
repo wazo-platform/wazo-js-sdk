@@ -32,6 +32,23 @@ describe('Computing fetch URL', () => {
   });
 });
 
+describe('Retrieving headers', () => {
+  it('should send a tenant if exists', () => {
+    const tenant = 'abc234';
+
+    const requester = new ApiRequester({ server });
+    requester.setTenant(tenant);
+
+    expect(requester.getHeaders()['Wazo-Tenant']).toBe(tenant);
+  });
+
+  it('should not send a tenant if not present', () => {
+    const requester = new ApiRequester({ server });
+
+    expect(requester.getHeaders()).not.toHaveProperty('Wazo-Tenant');
+  });
+});
+
 describe('Calling fetch', () => {
   it('should call fetch without body but query string in get method', () => {
     jest.mock('node-fetch/lib/index', () => {});
