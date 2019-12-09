@@ -45,23 +45,24 @@ export const setRefreshBackend = (refreshBackend: number, forServer: ?string = n
 const fillClient = (apiClient: WazoApiClient) => {
   const { server, token, clientId } = apiClient.client;
 
+  // Always try with null server when dealing with non-related server info
   if (!token) {
-    apiClient.setToken(global.wazoClientToken[server]);
+    apiClient.setToken(global.wazoClientToken[server] || global.wazoClientToken[null]);
   }
   if (!clientId) {
-    apiClient.setClientId(global.wazoClientId[server]);
+    apiClient.setClientId(global.wazoClientId[server] || global.wazoClientId[null]);
   }
   if (!apiClient.refreshToken) {
-    apiClient.setRefreshToken(global.wazoRefreshToken[server]);
+    apiClient.setRefreshToken(global.wazoRefreshToken[server] || global.wazoRefreshToken[null]);
   }
   if (!apiClient.onRefreshToken) {
-    apiClient.setOnRefreshToken(global.wazoOnRefreshToken[server]);
+    apiClient.setOnRefreshToken(global.wazoOnRefreshToken[server] || global.wazoOnRefreshToken[null]);
   }
   if (!apiClient.refreshExpiration) {
-    apiClient.setRefreshExpiration(global.wazoRefreshExpiration[server]);
+    apiClient.setRefreshExpiration(global.wazoRefreshExpiration[server] || global.wazoRefreshExpiration[null]);
   }
   if (!apiClient.refreshBackend) {
-    apiClient.setRefreshBackend(global.wazoRefreshBackend[server]);
+    apiClient.setRefreshBackend(global.wazoRefreshBackend[server] || global.wazoRefreshBackend[null]);
   }
 
   return apiClient;
