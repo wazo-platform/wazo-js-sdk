@@ -1,3 +1,4 @@
+/* eslint-disable dot-notation */
 /* @flow */
 
 import WazoApiClient from '../api-client';
