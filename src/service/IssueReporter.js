@@ -1,6 +1,8 @@
 /* global window */
 // @flow
 
+global.wazoIssueReporterLogs = [];
+
 class IssueReporter {
   INFO: string;
   LOG: string;
@@ -9,7 +11,6 @@ class IssueReporter {
 
   consoleMethods: string[];
   oldConsoleMethods: Object;
-  logs: Object[];
 
   constructor() {
     this.INFO = 'info';
@@ -19,7 +20,6 @@ class IssueReporter {
 
     this.consoleMethods = [this.INFO, this.LOG, this.WARN, this.ERROR];
     this.oldConsoleMethods = {};
-    this.logs = [];
   }
 
   init() {
@@ -27,7 +27,7 @@ class IssueReporter {
   }
 
   log(level: string, ...args: any) {
-    this.logs.push({
+    global.wazoIssueReporterLogs.push({
       level,
       date: new Date(),
       message: args.join(', '),
@@ -35,7 +35,12 @@ class IssueReporter {
   }
 
   getReport() {
-    return this.logs.map(log => `${log.date.toString().substr(0, 24)} - ${log.level} - ${log.message}`).join('\r\n');
+    return global.wazoIssueReporterLogs
+      .map(log => `${log.date.toString().substr(0, 24)} - ${log.level} - ${log.message}`).join('\r\n');
+  }
+
+  getLogs() {
+    return global.wazoIssueReporterLogs;
   }
 
   _catchConsole() {

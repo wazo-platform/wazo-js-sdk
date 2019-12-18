@@ -8,11 +8,12 @@ import { Utils } from 'sip.js/lib/Utils';
 import { Exceptions } from 'sip.js/lib/Exceptions';
 import { Modifiers } from 'sip.js/lib/Web';
 import SIP from 'sip.js';
-import Emitter from './utils/Emitter';
 
+import Emitter from './utils/Emitter';
 import once from './utils/once';
 import Session from './domain/Session';
 import ApiClient from './api-client';
+import IssueReporter from './service/IssueReporter';
 
 import MobileSessionDescriptionHandler from './lib/MobileSessionDescriptionHandler';
 
@@ -153,6 +154,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   register() {
+    IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] register', !!this.userAgent, this.isRegistered());
     if (!this.userAgent || this.isRegistered()) {
       return;
     }
@@ -161,6 +163,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   unregister() {
+    IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] unregister', !!this.userAgent);
     if (!this.userAgent) {
       return;
     }
@@ -169,6 +172,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   stop() {
+    IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] stop', !!this.userAgent);
     if (!this.userAgent) {
       return;
     }
@@ -468,6 +472,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   close() {
+    IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] close', !!this.userAgent);
     this._cleanupMedia();
 
     (Object.values(this.audioElements): any).forEach((audioElement: HTMLAudioElement) => {
@@ -659,11 +664,13 @@ export default class WebRTCClient extends Emitter {
 
   _connectIfNeeded(): Promise<void> {
     return new Promise(resolve => {
+      IssueReporter.log(IssueReporter.INFO, '[WebRtcClient][_connectIfNeeded]', this.userAgent.transport.isConnected());
       if (!this.userAgent.transport.isConnected()) {
         if (this.connectionPromise) {
           return this.connectionPromise;
         }
 
+        IssueReporter.log(IssueReporter.INFO, '[WebRtcClient][_connectIfNeeded] connecting');
         this.connectionPromise = this.userAgent.transport
           .connectPromise()
           .then(resolve)
