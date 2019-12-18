@@ -2,17 +2,22 @@
 // @flow
 
 class IssueReporter {
-  static INFO: string;
-  static LOG: string;
-  static WARN: string;
-  static ERROR: string;
+  INFO: string;
+  LOG: string;
+  WARN: string;
+  ERROR: string;
 
   consoleMethods: string[];
   oldConsoleMethods: Object;
   logs: Object[];
 
   constructor() {
-    this.consoleMethods = [IssueReporter.INFO, IssueReporter.LOG, IssueReporter.WARN, IssueReporter.ERROR];
+    this.INFO = 'info';
+    this.LOG = 'log';
+    this.WARN = 'warn';
+    this.ERROR = 'error';
+
+    this.consoleMethods = [this.INFO, this.LOG, this.WARN, this.ERROR];
     this.oldConsoleMethods = {};
     this.logs = [];
   }
@@ -21,16 +26,16 @@ class IssueReporter {
     this._catchConsole();
   }
 
-  log(level: string, message: string) {
+  log(level: string, ...args: any) {
     this.logs.push({
       level,
-      date: Date.now(),
-      message,
+      date: new Date(),
+      message: args.join(', '),
     });
   }
 
   getReport() {
-    return this.logs.map(log => `${log.date.toString()} - ${log.level} - ${log.message}`).join('\r\n');
+    return this.logs.map(log => `${log.date.toString().substr(0, 24)} - ${log.level} - ${log.message}`).join('\r\n');
   }
 
   _catchConsole() {
@@ -46,11 +51,5 @@ class IssueReporter {
     });
   }
 }
-
-// Can't use static
-IssueReporter.INFO = 'info';
-IssueReporter.LOG = 'log';
-IssueReporter.WARN = 'warn';
-IssueReporter.ERROR = 'error';
 
 export default new IssueReporter();
