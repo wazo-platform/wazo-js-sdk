@@ -3,6 +3,7 @@
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import Emitter from './utils/Emitter';
 import type { WebSocketMessage } from './types/WebSocketMessage';
+import IssueReporter from './service/IssueReporter';
 
 export const SOCKET_EVENTS = {
   ON_OPEN: 'onopen',
@@ -52,6 +53,13 @@ export const FAX_OUTBOUND_USER_CREATED = 'fax_outbound_user_created';
 export const FAX_OUTBOUND_USER_SUCCEEDED = 'fax_outbound_user_succeeded';
 export const FAX_OUTBOUND_USER_FAILED = 'fax_outbound_user_failed';
 
+const BLACKLIST_EVENTS = [
+  CHAT_MESSAGE_SENT,
+  CHAT_MESSAGE_RECEIVED,
+  CHATD_USER_ROOM_MESSAGE_CREATED,
+  CHATD_USER_ROOM_CREATED,
+];
+
 class WebSocketClient extends Emitter {
   initialized: boolean;
   host: string;
@@ -84,30 +92,43 @@ class WebSocketClient extends Emitter {
   }
 
   connect() {
+    IssueReporter.log(IssueReporter.INFO, '[WebSocketClient][connect]');
     this.socket = new ReconnectingWebSocket(this._getUrl(), [], this.options);
     if (this.options.binaryType) {
       this.socket.binaryType = this.options.binaryType;
     }
 
     this.socket.onopen = () => {
+      IssueReporter.log(IssueReporter.INFO, '[WebSocketClient][connect] onopen');
       this.eventEmitter.emit(SOCKET_EVENTS.ON_OPEN);
     };
 
-    this.socket.onerror = () => {
+    this.socket.onerror = (error) => {
+      IssueReporter.log(IssueReporter.ERROR, '[WebSocketClient] onerror', JSON.stringify(error));
       this.eventEmitter.emit(SOCKET_EVENTS.ON_ERROR);
     };
 
     this.socket.onmessage = (event: MessageEvent) => {
       const message = JSON.parse(typeof event.data === 'string' ? event.data : '{}');
+      let { name } = message;
+      if (message.data && message.data.name) {
+        // eslint-disable-next-line
+        name = message.data.name;
+      }
+
+      if (BLACKLIST_EVENTS.indexOf(name) === -1) {
+        IssueReporter.log(IssueReporter.INFO, '[WebSocketClient] onmessage', event.data);
+      }
 
       if (!this.initialized) {
-        this.handleMessage(message, this.socket);
+        this._handleInitMessage(message, this.socket);
       } else {
         this._handleMessage(message);
       }
     };
 
     this.socket.onclose = e => {
+      IssueReporter.log(IssueReporter.INFO, '[WebSocketClient] onclose', JSON.stringify(e));
       this.initialized = false;
       this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE);
 
@@ -129,7 +150,22 @@ class WebSocketClient extends Emitter {
     this.socket.close();
   }
 
-  handleMessage(message: WebSocketMessage, sock: ReconnectingWebSocket) {
+  updateToken(token: string) {
+    this.token = token;
+    IssueReporter.log(IssueReporter.INFO, '[WebSocketClient] updateToken', !!this.socket);
+
+    if (this.socket) {
+      // If still connected, send the token to the WS
+      if (this.socket.readyState === this.socket.OPEN && this.version >= 2) {
+        this.socket.send(JSON.stringify({ op: 'token', data: { token } }));
+        return;
+      }
+      // $FlowFixMe
+      this.socket._url = this._getUrl();
+    }
+  }
+
+  _handleInitMessage(message: WebSocketMessage, sock: ReconnectingWebSocket) {
     switch (message.op) {
       case 'init':
         this.events.forEach(event => {
@@ -151,20 +187,6 @@ class WebSocketClient extends Emitter {
         break;
       default:
         this.eventEmitter.emit('message', message);
-    }
-  }
-
-  updateToken(token: string) {
-    this.token = token;
-
-    if (this.socket) {
-      // If still connected, send the token to the WS
-      if (this.socket.readyState === this.socket.OPEN && this.version >= 2) {
-        this.socket.send(JSON.stringify({ op: 'token', data: { token } }));
-        return;
-      }
-      // $FlowFixMe
-      this.socket._url = this._getUrl();
     }
   }
 

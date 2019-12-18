@@ -5,6 +5,7 @@ import type { Phone, AvailablePhoneOptions } from './Phone';
 import WazoWebRTCClient from '../../web-rtc-client';
 import SIP from '../../sip';
 import Emitter from '../../utils/Emitter';
+import IssueReporter from '../../service/IssueReporter';
 
 export default class WebRTCPhone extends Emitter implements Phone {
   client: WazoWebRTCClient;
@@ -106,6 +107,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     if (!this.client) {
       return;
     }
+    IssueReporter.log(IssueReporter.INFO, '[WebRtcPhone] stop');
     this.client.stop();
   }
 
@@ -576,6 +578,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   onConnectionMade(): void {}
 
   close(): void {
+    IssueReporter.log(IssueReporter.INFO, '[WebRtcPhone] close');
     this.unregister();
     this.client.close();
     this.unbind();
