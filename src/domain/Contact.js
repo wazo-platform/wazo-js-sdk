@@ -59,6 +59,7 @@ export type ContactPersonalResponse = {
   firstname: ?string,
   lastname: ?string,
   backend: ?string,
+  favorited: boolean,
 };
 
 // @see: https://github.com/rt2zz/react-native-contacts#example-contact-record
@@ -296,7 +297,7 @@ export default class Contact {
       birthday: plain.birthday || '',
       address: plain.address || '',
       note: plain.note || '',
-      favorited: false,
+      favorited: plain.favorited,
       personal: true,
       backend: plain.backend || BACKEND.PERSONAL,
     });
