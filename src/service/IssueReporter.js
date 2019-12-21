@@ -11,6 +11,7 @@ class IssueReporter {
 
   consoleMethods: string[];
   oldConsoleMethods: Object;
+  enabled: boolean;
 
   constructor() {
     this.INFO = 'info';
@@ -20,13 +21,25 @@ class IssueReporter {
 
     this.consoleMethods = [this.INFO, this.LOG, this.WARN, this.ERROR];
     this.oldConsoleMethods = {};
+    this.enabled = false;
   }
 
   init() {
     this._catchConsole();
   }
 
+  enable() {
+    this.enabled = true;
+  }
+
+  disable() {
+    this.enabled = false;
+  }
+
   log(level: string, ...args: any) {
+    if (!this.enabled) {
+      return;
+    }
     global.wazoIssueReporterLogs.push({
       level,
       date: new Date(),
