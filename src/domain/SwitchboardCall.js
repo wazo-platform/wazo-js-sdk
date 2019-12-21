@@ -59,6 +59,7 @@ class SwitchboardCall {
   state: string;
   switchboardName: string;
   switchboardUuid: string;
+  type: string;
 
   static parse(plain: SwitchboardCallResponse): SwitchboardCall {
     return new SwitchboardCall({
@@ -94,6 +95,9 @@ class SwitchboardCall {
     this.state = state;
     this.switchboardName = switchboardName;
     this.switchboardUuid = switchboardUuid;
+
+    // Useful to compare instead of instanceof with minified code
+    this.type = 'SwitchboardCall';
   }
 
   updateFrom(switchboardCall: SwitchboardCall) {
