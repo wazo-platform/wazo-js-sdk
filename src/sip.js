@@ -1,4 +1,5 @@
 import SIP from 'sip.js';
+import { SessionStatus } from 'sip.js/lib/Enums';
 
 export default {
   sessionDescriptionHandler: SIP.sessionDescriptionHandler,
@@ -108,4 +109,5 @@ export default {
       WEBRTC_NOT_SUPPORTED: 'WebRTC Not Supported',
     },
   },
+  SessionStatus,
 };

@@ -56,6 +56,8 @@ export default class CallSession {
 
   cameraEnabled: boolean;
 
+  type: string;
+
   constructor({
     answered,
     isCaller,
@@ -88,6 +90,9 @@ export default class CallSession {
     this.dialedExtension = dialedExtension || '';
     this.call = call;
     this.sipStatus = sipStatus;
+
+    // Useful to compare instead of instanceof with minified code
+    this.type = 'CallSession';
   }
 
   resume() {
