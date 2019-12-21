@@ -23,6 +23,7 @@ type ContactSearchQueryParams = {
   limit?: number,
   offset?: number,
   search?: string,
+  uuid?: string,
 } | null;
 
 export default (client: ApiRequester, baseUrl: string) => ({
@@ -65,6 +66,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   fetchWazoSource: (context: string): Promise<Sources> =>
     client.get(`${baseUrl}/directories/${context}/sources`, { backend: 'wazo' }),
 
+  // Can be used with `queryParams = { uuid: uuid1, uuid2 }` to fetch multiple contacts
   fetchWazoContacts: (source: DirectorySource, queryParams: ContactSearchQueryParams = null): Promise<Contact[]> =>
     client
       .get(`${baseUrl}/backends/wazo/sources/${source.uuid}/contacts`, queryParams)
