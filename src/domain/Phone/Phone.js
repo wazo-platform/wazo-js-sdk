@@ -36,6 +36,8 @@ export interface Phone {
 
   changeAudioDevice(id: string): PhoneVoid;
 
+  changeRingDevice(id: string): PhoneVoid;
+
   changeAudioInputDevice(id: string): PhoneVoid;
 
   changeVideoInputDevice(id: string): PhoneVoid;
