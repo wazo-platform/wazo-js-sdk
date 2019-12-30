@@ -33,8 +33,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
   constructor(
     client: WazoWebRTCClient,
     audioOutputDeviceId?: string,
-    audioRingDeviceId?: string,
     allowVideo: boolean = false,
+    audioRingDeviceId?: string,
   ) {
     super();
 
