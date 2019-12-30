@@ -42,7 +42,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.allowVideo = allowVideo;
     this.sipSessions = {};
     this.audioOutputDeviceId = audioOutputDeviceId;
-    this.audioRingDeviceId = audioRingDeviceId;
+    this.audioRingDeviceId = audioRingDeviceId || audioOutputDeviceId;
     this.incomingSessions = [];
     this.ringingEnabled = true;
     this.shouldRegisterAgain = true;
@@ -217,8 +217,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   changeRingDevice(id: string) {
     this.audioRingDeviceId = id;
-    // @TODO: make sure this is ok
-    // this.client.changeAudioOutputDevice(id);
   }
 
   changeAudioInputDevice(id: string) {
