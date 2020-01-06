@@ -1,0 +1,12 @@
+---
+- hosts: all
+  tasks:
+    - name: yarn
+      command: "yarnpkg"
+      args:
+        chdir: "{{ zuul.project.src_dir }}"
+
+    - name: yarn test
+      command: "yarnpkg test"
+      args:
+        chdir: "{{ zuul.project.src_dir }}"

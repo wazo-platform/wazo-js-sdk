@@ -1,0 +1,15 @@
+- job:
+    name: wazo-js-sdk-yarn-test
+    description: Build and test
+    pre-run: zuul.d/pre.yaml
+    run: zuul.d/run.yaml
+
+- project:
+    check:
+      jobs:
+        - wazo-js-sdk-yarn-test:
+            nodeset: debian10-vm
+    gate:
+      jobs:
+        - wazo-js-sdk-yarn-test:
+            nodeset: debian10-vm
