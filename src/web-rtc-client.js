@@ -9,6 +9,7 @@ import { Exceptions } from 'sip.js/lib/Exceptions';
 import { Modifiers } from 'sip.js/lib/Web';
 import SIP from 'sip.js';
 
+import isMobile from './utils/isMobile';
 import Emitter from './utils/Emitter';
 import once from './utils/once';
 import Session from './domain/Session';
@@ -134,7 +135,10 @@ export default class WebRTCClient extends Emitter {
     // Particular case for `invite` event
     userAgent.on('invite', (session: SIP.sessionDescriptionHandler) => {
       this._setupSession(session);
-      this._fixLocalDescription(session, 'answer');
+      // This causes trouble with the desktop version on some engines, restrict its use to mobile
+      if (isMobile()) {
+        this._fixLocalDescription(session, 'answer');
+      }
       const shouldAutoAnswer = !!session.request.getHeader('alert-info');
 
       this.eventEmitter.emit('invite', session, this.sessionWantsToDoVideo(session), shouldAutoAnswer);

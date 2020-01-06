@@ -7,6 +7,7 @@ import { Base64 } from 'js-base64';
 import BadResponse from '../domain/BadResponse';
 import ServerError from '../domain/ServerError';
 import Logger from './logger';
+import isMobile from './isMobile';
 import type { Token } from '../domain/types';
 
 type ConstructorParams = {
@@ -25,7 +26,7 @@ const realFetch = () => {
     return window.fetch;
   }
 
-  if (typeof navigator !== 'undefined' && navigator.product === 'ReactNative') {
+  if (isMobile()) {
     // React native
     return fetch;
   }
