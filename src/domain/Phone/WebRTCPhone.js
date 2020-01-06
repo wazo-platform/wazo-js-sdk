@@ -22,19 +22,27 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   audioOutputDeviceId: string | typeof undefined;
 
+  audioRingDeviceId: string | typeof undefined;
+
   ringingEnabled: boolean;
 
   acceptedSessions: Object;
 
   rejectedSessions: Object;
 
-  constructor(client: WazoWebRTCClient, audioOutputDeviceId?: string, allowVideo: boolean = false) {
+  constructor(
+    client: WazoWebRTCClient,
+    audioOutputDeviceId?: string,
+    allowVideo: boolean = false,
+    audioRingDeviceId?: string,
+  ) {
     super();
 
     this.client = client;
     this.allowVideo = allowVideo;
     this.sipSessions = {};
     this.audioOutputDeviceId = audioOutputDeviceId;
+    this.audioRingDeviceId = audioRingDeviceId || audioOutputDeviceId;
     this.incomingSessions = [];
     this.ringingEnabled = true;
     this.shouldRegisterAgain = true;
@@ -50,7 +58,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         this.eventEmitter.emit('terminateSound');
 
         if (this.ringingEnabled) {
-          this.eventEmitter.emit('playRingingSound', this.audioOutputDeviceId);
+          this.eventEmitter.emit('playRingingSound', this.audioRingDeviceId);
         }
       }
 
@@ -205,6 +213,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
   changeAudioDevice(id: string) {
     this.audioOutputDeviceId = id;
     this.client.changeAudioOutputDevice(id);
+  }
+
+  changeRingDevice(id: string) {
+    this.audioRingDeviceId = id;
   }
 
   changeAudioInputDevice(id: string) {
