@@ -27,7 +27,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   },
 
   answerCall: (applicationUuid: string, callId: number) =>
-    client.put(`${baseUrl}/${applicationUuid}/calls/${callId}/answer`, { }, null, ApiRequester.successResponseParser),
+    client.put(`${baseUrl}/${applicationUuid}/calls/${callId}/answer`),
 
   calls: (applicationUuid: string) => client.get(`${baseUrl}/${applicationUuid}/calls`),
 
@@ -41,25 +41,25 @@ export default (client: ApiRequester, baseUrl: string) => ({
     client.delete(`${baseUrl}/${applicationUuid}/playbacks/${playbackUuid}`),
 
   startProgressCall: (applicationUuid: string, callId: number) =>
-    client.put(`${baseUrl}/${applicationUuid}/calls/${callId}/progress/start`, { }, null, ApiRequester.successResponseParser),
+    client.put(`${baseUrl}/${applicationUuid}/calls/${callId}/progress/start`),
 
   stopProgressCall: (applicationUuid: string, callId: number) =>
-    client.put(`${baseUrl}/${applicationUuid}/calls/${callId}/progress/stop`, { }, null, ApiRequester.successResponseParser),
+    client.put(`${baseUrl}/${applicationUuid}/calls/${callId}/progress/stop`),
 
   startMohCall: (applicationUuid: string, callId: number) =>
-    client.put(`${baseUrl}/${applicationUuid}/calls/${callId}/moh/start`, { }, null, ApiRequester.successResponseParser),
+    client.put(`${baseUrl}/${applicationUuid}/calls/${callId}/moh/start`),
 
   stopMohCall: (applicationUuid: string, callId: number) =>
-    client.put(`${baseUrl}/${applicationUuid}/calls/${callId}/moh/stop`, { }, null, ApiRequester.successResponseParser),
+    client.put(`${baseUrl}/${applicationUuid}/calls/${callId}/moh/stop`),
 
   startMuteCall: (applicationUuid: string, callId: number) =>
-    client.put(`${baseUrl}/${applicationUuid}/calls/${callId}/mute/start`, { }, null, ApiRequester.successResponseParser),
+    client.put(`${baseUrl}/${applicationUuid}/calls/${callId}/mute/start`),
 
   stopMuteCall: (applicationUuid: string, callId: number) =>
-    client.put(`${baseUrl}/${applicationUuid}/calls/${callId}/mute/stop`, { }, null, ApiRequester.successResponseParser),
+    client.put(`${baseUrl}/${applicationUuid}/calls/${callId}/mute/stop`),
 
   addCallNodes: (applicationUuid: string, nodeUuid: string, callId: string): Promise<Boolean> =>
-    client.put(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}/calls/${callId}`, { }, null, ApiRequester.successResponseParser),
+    client.put(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}/calls/${callId}`),
 
   addNewCallNodes: (applicationUuid: string, nodeUuid: string, context: string, exten: string, autoanswer: string) =>
     client.post(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}/calls`, { context, exten, autoanswer }),
