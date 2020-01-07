@@ -49,7 +49,8 @@ class IssueReporter {
 
   getReport() {
     return global.wazoIssueReporterLogs
-      .map(log => `${log.date.toString().substr(0, 24)} - ${log.level} - ${log.message}`).join('\r\n');
+      .map(log => `${log.date.toString().substr(0, 24)} - ${log.level} - ${log.message}`)
+      .join('\r\n');
   }
 
   getLogs() {
