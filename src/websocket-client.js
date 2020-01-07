@@ -121,7 +121,7 @@ class WebSocketClient extends Emitter {
       this.eventEmitter.emit(SOCKET_EVENTS.ON_OPEN);
     };
 
-    this.socket.onerror = (error) => {
+    this.socket.onerror = error => {
       IssueReporter.log(IssueReporter.ERROR, '[WebSocketClient] onerror', JSON.stringify(error));
       this.eventEmitter.emit(SOCKET_EVENTS.ON_ERROR);
     };
