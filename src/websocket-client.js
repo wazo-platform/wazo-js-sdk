@@ -52,6 +52,24 @@ export const SWITCHBOARD_HELD_CALL_ANSWERED = 'switchboard_held_call_answered';
 export const FAX_OUTBOUND_USER_CREATED = 'fax_outbound_user_created';
 export const FAX_OUTBOUND_USER_SUCCEEDED = 'fax_outbound_user_succeeded';
 export const FAX_OUTBOUND_USER_FAILED = 'fax_outbound_user_failed';
+export const APPLICATION_CALL_DTMF_RECEIVED = 'application_call_dtmf_received';
+export const APPLICATION_CALL_ENTERED = 'application_call_entered';
+export const APPLICATION_CALL_INITIATED = 'application_call_initiated';
+export const APPLICATION_CALL_DELETED = 'application_call_deleted';
+export const APPLICATION_CALL_UPDATED = 'application_call_updated';
+export const APPLICATION_CALL_ANSWERED = 'application_call_answered';
+export const APPLICATION_PROGRESS_STARTED = 'application_progress_started';
+export const APPLICATION_PROGRESS_STOPPED = 'application_progress_stopped';
+export const APPLICATION_DESTINATION_NODE_CREATED = 'application_destination_node_created';
+export const APPLICATION_NODE_CREATED = 'application_node_created';
+export const APPLICATION_NODE_DELETED = 'application_node_deleted';
+export const APPLICATION_NODE_UPDATED = 'application_node_updated';
+export const APPLICATION_PLAYBACK_CREATED = 'application_playback_created';
+export const APPLICATION_PLAYBACK_DELETED = 'application_playback_deleted';
+export const APPLICATION_SNOOP_CREATED = 'application_snoop_created';
+export const APPLICATION_SNOOP_DELETED = 'application_snoop_deleted';
+export const APPLICATION_SNOOP_UPDATED = 'application_snoop_updated';
+export const APPLICATION_USER_OUTGOING_CALL_CREATED = 'application_user_outgoing_call_created';
 
 const BLACKLIST_EVENTS = [
   CHAT_MESSAGE_SENT,
@@ -241,6 +259,24 @@ WebSocketClient.eventLists = [
   FAX_OUTBOUND_USER_CREATED,
   FAX_OUTBOUND_USER_SUCCEEDED,
   FAX_OUTBOUND_USER_FAILED,
+  APPLICATION_CALL_DTMF_RECEIVED,
+  APPLICATION_CALL_ENTERED,
+  APPLICATION_CALL_INITIATED,
+  APPLICATION_CALL_DELETED,
+  APPLICATION_CALL_UPDATED,
+  APPLICATION_CALL_ANSWERED,
+  APPLICATION_PROGRESS_STARTED,
+  APPLICATION_PROGRESS_STOPPED,
+  APPLICATION_DESTINATION_NODE_CREATED,
+  APPLICATION_NODE_CREATED,
+  APPLICATION_NODE_DELETED,
+  APPLICATION_NODE_UPDATED,
+  APPLICATION_PLAYBACK_CREATED,
+  APPLICATION_PLAYBACK_DELETED,
+  APPLICATION_SNOOP_CREATED,
+  APPLICATION_SNOOP_DELETED,
+  APPLICATION_SNOOP_UPDATED,
+  APPLICATION_USER_OUTGOING_CALL_CREATED,
 ];
 
 export default WebSocketClient;
