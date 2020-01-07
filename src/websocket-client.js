@@ -211,11 +211,13 @@ class WebSocketClient extends Emitter {
   _handleMessage(message: Object) {
     if (this.version === 1) {
       this.eventEmitter.emit(message.name, message);
+      this.eventEmitter.emit('*', message, message.name);
       return;
     }
 
     if (this.version >= 2 && message.op === 'event') {
       this.eventEmitter.emit(message.data.name, message.data);
+      this.eventEmitter.emit('*', message.data, message.data.name);
     }
   }
 

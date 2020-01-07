@@ -35,10 +35,14 @@ Depending on your environment you can import:
 * `@wazo/sdk/lib`: runnable on `node` env.
 
 ### Init
+
+You should set a `clientId` (some string representing the name of your application) if you want to use the refresh token
+mechanism.
+
 ```js
 const client = new WazoApiClient({
   server: 'demo.wazo.community', // required string
-  agent: null // http(s).Agent instance, allows custom proxy, unsecured https, certificate etc.
+  agent: null, // http(s).Agent instance, allows custom proxy, unsecured https, certificate etc.
   clientId: null, // Set an identifier for your app when using refreshToken
 });
 ```
@@ -317,15 +321,46 @@ phone.unmerge(sipSessions: Array<SIP.InviteClientContext>)
 import { WazoWebSocketClient } from '@wazo/sdk';
 
 const ws = new WazoWebSocket({
-  host, // wazo websocket host
-  // valid Wazo token
+  host: 'host.com', // wazo websocket host
+  token: 'abc', // valid Wazo token
+  version: 2, // Use version 2 to ba informed when your token expires with a `AUTH_SESSION_EXPIRE_SOON` event 
+  events: ['*'], // The wazo event you want to reveice (cf: http://documentation.wazo.community/en/stable/api_sdk/websocket.html)
+}, {
+  // reconnecting-websocket options, like `WebSocket` on node env. 
+  // See: https://github.com/pladaria/reconnecting-websocket#available-options
 });
 
 // eventName can be on the of events here: http://documentation.wazo.community/en/stable/api_sdk/websocket.html
 ws.on('eventName', (data: mixed) => {
 });
 
+// Catch all events
+ws.on('*', (data: mixed, eventName: string) => {
+});
+
 ws.connect();
+```
+
+#### Handling token refreshing through WebSocket
+
+To be able to receive `AUTH_SESSION_EXPIRE_SOON`, you need to use the version 2 of the WebSocket client.
+
+```js
+import { AUTH_SESSION_EXPIRE_SOON } from '@wazo/sdk/lib/websocket-client';
+
+// Retrieve a token and a refreshToken from 
+const { refreshToken, ...result } = await apiClient.auth.login(/* ... */);
+apiClient.setRefreshToken(refreshToken);
+
+// Set 
+apiClient.setOnRefreshToken(token => {
+  // Send new token via WebSocket
+  ws.updateToken(token);
+});
+
+ws.on(AUTH_SESSION_EXPIRE_SOON, () => {
+  apiClient.forceRefreshToken();
+});
 ```
 
 ## Closing the socket
