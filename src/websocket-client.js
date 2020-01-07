@@ -52,6 +52,7 @@ export const SWITCHBOARD_HELD_CALL_ANSWERED = 'switchboard_held_call_answered';
 export const FAX_OUTBOUND_USER_CREATED = 'fax_outbound_user_created';
 export const FAX_OUTBOUND_USER_SUCCEEDED = 'fax_outbound_user_succeeded';
 export const FAX_OUTBOUND_USER_FAILED = 'fax_outbound_user_failed';
+export const APPLICATION_CALL_DTMF_RECEIVED = 'application_call_dtmf_received';
 export const APPLICATION_CALL_ENTERED = 'application_call_entered';
 export const APPLICATION_CALL_INITIATED = 'application_call_initiated';
 export const APPLICATION_CALL_DELETED = 'application_call_deleted';
