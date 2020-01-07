@@ -38,7 +38,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     client.post(`${baseUrl}/${applicationUuid}/calls/${callId}/playbacks`, { language, uri }),
 
   stopPlaybackCall: (applicationUuid: string, playbackUuid: string) =>
-    client.delete(`${baseUrl}/${applicationUuid}/playbacks/${playbackUuId}`),
+    client.delete(`${baseUrl}/${applicationUuid}/playbacks/${playbackUuid}`),
 
   startProgressCall: (applicationUuid: string, callId: number) =>
     client.put(`${baseUrl}/${applicationUuid}/calls/${callId}/progress/start`),
