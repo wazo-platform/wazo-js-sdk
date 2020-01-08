@@ -81,6 +81,9 @@ export default (client: ApiRequester, baseUrl: string) => ({
       ApiRequester.successResponseParser,
     ),
 
+  createNewNodeWithCall: (applicationUuid: string, callId: number) =>
+    client.post(`${baseUrl}/${applicationUuid}/nodes`, { callId }),
+
   addNewCallNodes: (applicationUuid: string, nodeUuid: string, context: string, exten: string, autoanswer: string) =>
     client.post(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}/calls`, { context, exten, autoanswer }),
 
