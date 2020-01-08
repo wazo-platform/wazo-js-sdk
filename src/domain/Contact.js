@@ -411,6 +411,7 @@ export default class Contact {
       uuid: single.uuid,
       sourceId: String(single.id),
       name: `${single.firstname} ${single.lastname}`,
+      number: numbers.length ? numbers[0].number : '',
       numbers,
       emails,
       source: source.name,
