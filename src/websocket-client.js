@@ -70,6 +70,7 @@ export const APPLICATION_SNOOP_CREATED = 'application_snoop_created';
 export const APPLICATION_SNOOP_DELETED = 'application_snoop_deleted';
 export const APPLICATION_SNOOP_UPDATED = 'application_snoop_updated';
 export const APPLICATION_USER_OUTGOING_CALL_CREATED = 'application_user_outgoing_call_created';
+export const TRUNK_STATUS_UPDATED = 'trunk_status_updated';
 
 const BLACKLIST_EVENTS = [
   CHAT_MESSAGE_SENT,
@@ -277,6 +278,7 @@ WebSocketClient.eventLists = [
   APPLICATION_SNOOP_DELETED,
   APPLICATION_SNOOP_UPDATED,
   APPLICATION_USER_OUTGOING_CALL_CREATED,
+  TRUNK_STATUS_UPDATED,
 ];
 
 export default WebSocketClient;
