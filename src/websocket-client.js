@@ -123,8 +123,8 @@ class WebSocketClient extends Emitter {
     };
 
     this.socket.onerror = error => {
-      IssueReporter.log(IssueReporter.ERROR, '[WebSocketClient] onerror', JSON.stringify(error));
-      this.eventEmitter.emit(SOCKET_EVENTS.ON_ERROR);
+      IssueReporter.log(IssueReporter.ERROR, '[WebSocketClient] onerror', error.message, error.stack);
+      this.eventEmitter.emit(SOCKET_EVENTS.ON_ERROR, error);
     };
 
     this.socket.onmessage = (event: MessageEvent) => {
@@ -146,12 +146,12 @@ class WebSocketClient extends Emitter {
       }
     };
 
-    this.socket.onclose = e => {
-      IssueReporter.log(IssueReporter.INFO, '[WebSocketClient] onclose', JSON.stringify(e));
+    this.socket.onclose = error => {
+      IssueReporter.log(IssueReporter.INFO, '[WebSocketClient] onclose', error.message, error.stack);
       this.initialized = false;
-      this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE);
+      this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE, error);
 
-      switch (e.code) {
+      switch (error.code) {
         case 4002:
           break;
         case 4003:
