@@ -48,7 +48,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     });
   },
 
-  listApplications: (): Promise<ListApplicationsResponse> => client.get(`${baseUrl}/applications?recurse=true`, null),
+  listApplications: (): Promise<ListApplicationsResponse> => client.get(`${baseUrl}/applications`, null),
 
   getInfos: (): Promise<{ uuid: string, wazo_version: string }> => client.get(`${baseUrl}/infos`, null),
 });
