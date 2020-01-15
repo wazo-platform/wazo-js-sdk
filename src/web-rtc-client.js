@@ -139,6 +139,7 @@ export default class WebRTCClient extends Emitter {
       if (isMobile()) {
         this._fixLocalDescription(session, 'answer');
       }
+      // @TODO: useful ? replaced by the Answer-Mode header. Should be deprecated
       const shouldAutoAnswer = !!session.request.getHeader('alert-info');
 
       this.eventEmitter.emit('invite', session, this.sessionWantsToDoVideo(session), shouldAutoAnswer);
