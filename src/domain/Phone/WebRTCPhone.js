@@ -48,7 +48,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.shouldRegisterAgain = true;
 
     this.client.on('invite', (sipSession: SIP.sessionDescriptionHandler, wantsToDoVideo: boolean) => {
-      const callSession = this._createIncomingCallSession(sipSession, this.allowVideo ? wantsToDoVideo : false);
+      const autoAnswer = sipSession.request.getHeader('Answer-Mode') === 'Auto';
+      const withVideo = this.allowVideo ? wantsToDoVideo : false;
+      const callSession = this._createIncomingCallSession(sipSession, withVideo, null, autoAnswer);
       this.incomingSessions.push(callSession.getId());
       this._bindEvents(sipSession);
 
@@ -633,9 +635,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
   _createIncomingCallSession(
     sipSession: SIP.sessionDescriptionHandler,
     cameraEnabled: boolean,
-    fromSession?: CallSession,
+    fromSession?: ?CallSession,
+    autoAnswer: boolean = false,
   ): CallSession {
-    return this._createCallSession(sipSession, fromSession, { incoming: true, ringing: true, cameraEnabled });
+    return this._createCallSession(sipSession, fromSession,
+      { incoming: true, ringing: true, cameraEnabled, autoAnswer });
   }
 
   _createOutgoingCallSession(

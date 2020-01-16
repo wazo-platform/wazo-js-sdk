@@ -22,6 +22,7 @@ type CallSessionArguments = {
   sipId?: string,
   sipStatus?: number,
   startTime: number,
+  autoAnswer?: boolean,
 };
 
 export default class CallSession {
@@ -56,6 +57,8 @@ export default class CallSession {
 
   cameraEnabled: boolean;
 
+  autoAnswer: boolean;
+
   type: string;
 
   constructor({
@@ -74,6 +77,7 @@ export default class CallSession {
     sipStatus,
     callerNumber,
     call,
+    autoAnswer,
   }: CallSessionArguments) {
     this.callId = callId;
     this.sipCallId = sipCallId;
@@ -90,6 +94,7 @@ export default class CallSession {
     this.dialedExtension = dialedExtension || '';
     this.call = call;
     this.sipStatus = sipStatus;
+    this.autoAnswer = autoAnswer || false;
 
     // Useful to compare instead of instanceof with minified code
     this.type = 'CallSession';
