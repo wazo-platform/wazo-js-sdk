@@ -31,6 +31,7 @@ export const USERS_FORWARDS_NOANSWER_UPDATED = 'users_forwards_noanswer_updated'
 export const USERS_FORWARDS_UNCONDITIONAL_UPDATED = 'users_forwards_unconditional_updated';
 export const USERS_SERVICES_DND_UPDATED = 'users_services_dnd_updated';
 export const USER_VOICEMAIL_MESSAGE_CREATED = 'user_voicemail_message_created';
+export const USER_VOICEMAIL_MESSAGE_UPDATED = 'user_voicemail_message_updated';
 export const USER_VOICEMAIL_MESSAGE_DELETED = 'user_voicemail_message_deleted';
 export const CALL_LOG_USER_CREATED = 'call_log_user_created';
 export const CALL_CREATED = 'call_created';
@@ -239,6 +240,7 @@ WebSocketClient.eventLists = [
   USERS_FORWARDS_UNCONDITIONAL_UPDATED,
   USERS_SERVICES_DND_UPDATED,
   USER_VOICEMAIL_MESSAGE_CREATED,
+  USER_VOICEMAIL_MESSAGE_UPDATED,
   USER_VOICEMAIL_MESSAGE_DELETED,
   CALL_LOG_USER_CREATED,
   CALL_CREATED,
