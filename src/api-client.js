@@ -16,7 +16,7 @@ type ConstructorParams = {
   agent?: ?Object,
   clientId?: string,
   refreshToken?: ?string,
-  isMobile: boolean,
+  isMobile?: ?boolean,
 };
 
 const AUTH_VERSION = '0.1';
@@ -51,7 +51,7 @@ export default class ApiClient {
   constructor({ server, agent = null, refreshToken, clientId, isMobile = false }: ConstructorParams) {
     this.updateParameters({ server, agent, clientId });
     this.refreshToken = refreshToken;
-    this.isMobile = isMobile;
+    this.isMobile = isMobile || false;
   }
 
   initializeEndpoints(): void {
@@ -82,7 +82,12 @@ export default class ApiClient {
       return null;
     }
 
-    const session = await this.auth.refreshToken(this.refreshToken, this.refreshBackend, this.refreshExpiration, this.isMobile);
+    const session = await this.auth.refreshToken(
+      this.refreshToken,
+      this.refreshBackend,
+      this.refreshExpiration,
+      this.isMobile,
+    );
 
     if (this.onRefreshToken) {
       this.onRefreshToken(session.token, session);

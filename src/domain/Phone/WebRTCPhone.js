@@ -638,8 +638,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
     fromSession?: ?CallSession,
     autoAnswer: boolean = false,
   ): CallSession {
-    return this._createCallSession(sipSession, fromSession,
-      { incoming: true, ringing: true, cameraEnabled, autoAnswer });
+    return this._createCallSession(sipSession, fromSession, {
+      incoming: true,
+      ringing: true,
+      cameraEnabled,
+      autoAnswer,
+    });
   }
 
   _createOutgoingCallSession(

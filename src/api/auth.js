@@ -56,7 +56,12 @@ export default (client: ApiRequester, baseUrl: string) => ({
   logOut: (token: Token): Promise<LogoutResponse> =>
     client.delete(`${baseUrl}/token/${token}`, null, {}, ApiRequester.successResponseParser),
 
-  refreshToken: (refreshToken: string, backend: string, expiration: number, isMobile: boolean = false): Promise<?Session> => {
+  refreshToken: (
+    refreshToken: string,
+    backend: string,
+    expiration: number,
+    isMobile: boolean = false,
+  ): Promise<?Session> => {
     const body: Object = {
       backend: backend || DEFAULT_BACKEND_USER,
       expiration: expiration || DETAULT_EXPIRATION,

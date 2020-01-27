@@ -116,6 +116,5 @@ export default (client: ApiRequester, baseUrl: string) => ({
   getConferenceParticipantsAsUser: async (conferenceId: string): Promise<ConferenceParticipants> =>
     client.get(`${baseUrl}/users/me/conferences/${conferenceId}/participants`),
 
-  listTrunks: () =>
-    client.get(`${baseUrl}/trunks`),
+  listTrunks: () => client.get(`${baseUrl}/trunks`),
 });
