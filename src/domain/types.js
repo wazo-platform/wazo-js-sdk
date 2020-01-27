@@ -235,3 +235,13 @@ export type WebRtcConfig = {
   type: string,
   username: string,
 };
+
+export type CTITransfer = {
+  "flow": string,
+  "id": string,
+  "initiator_call": string,
+  "initiator_uuid": string,
+  "recipient_call": string,
+  "status": string,
+  "transferred_call": string,
+};

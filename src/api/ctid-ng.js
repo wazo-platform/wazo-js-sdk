@@ -3,11 +3,12 @@
 /* DEPRECATED: USE CALLD INSTEAD CTID-NG */
 
 import ApiRequester from '../utils/api-requester';
-import type { UUID, RequestError } from '../domain/types';
+import type { UUID, RequestError, CTITransfer } from '../domain/types';
 import Relocation from '../domain/Relocation';
 import ChatMessage from '../domain/ChatMessage';
 import Voicemail from '../domain/Voicemail';
 import Call from '../domain/Call';
+import { TRANSFER_FLOW_BLIND } from '../domain/Phone/CTIPhone';
 
 type CallQuery = {
   from_mobile: boolean,
@@ -77,6 +78,24 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
     return client.post(`${baseUrl}/users/me/relocates`, body).then(response => Relocation.parse(response));
   },
+
+  transferCall(callId: number, number: string, flow: string = TRANSFER_FLOW_BLIND): Promise<RequestError | CTITransfer> {
+    const body: Object = {
+      exten: number,
+      flow,
+      initiator_call: callId,
+    };
+
+    return client.post(`${baseUrl}/users/me/transfers`, body).then(response => response);
+  },
+
+  // @TODO: fix response type
+  cancelCallTransfer: (transferId: string): Promise<RequestError | void> =>
+    client.delete(`${baseUrl}/users/me/transfers/${transferId}`),
+
+  // @TODO: fix response type
+  confirmCallTransfer: (transferId: string): Promise<RequestError | void> =>
+    client.put(`${baseUrl}/users/me/transfers/${transferId}/complete`),
 
   listVoicemails: (): Promise<RequestError | Array<Voicemail>> =>
     client.get(`${baseUrl}/users/me/voicemails`, null).then(response => Voicemail.parseMany(response)),

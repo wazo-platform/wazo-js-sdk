@@ -502,6 +502,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
     await sipSessionTarget.refer(sipSession);
   }
 
+  initiateCTIIndirectTransfer() {}
+
+  cancelCTIIndirectTransfer() {}
+
+  confirmCTIIndirectTransfer() {}
+
   async hangup(callSession: ?CallSession): Promise<void> {
     const sipSession = this._findSipSession(callSession);
     if (!sipSession) {

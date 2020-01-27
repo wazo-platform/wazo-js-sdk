@@ -68,7 +68,13 @@ export interface Phone {
 
   holdConference(participants: CallSession[]): PhoneVoid;
 
-  indirectTransfer(source: CallSession, destination: CallSession): PhoneVoid;
+  initiateIndirectTransfer(source: CallSession, destination: CallSession): PhoneVoid;
+
+  initiateCTIIndirectTransfer(source: CallSession, destination: CallSession): PhoneVoid;
+
+  cancelCTIIndirectTransfer(source: CallSession, destination: CallSession): PhoneVoid;
+
+  confirmCTIIndirectTransfer(source: CallSession, destination: CallSession): PhoneVoid;
 
   isCallUsingVideo(callSession: CallSession): boolean;
 

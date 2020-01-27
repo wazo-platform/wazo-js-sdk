@@ -9,6 +9,9 @@ import Emitter from '../../utils/Emitter';
 
 import CallApi from '../../service/CallApi';
 
+export const TRANSFER_FLOW_ATTENDED = 'attended';
+export const TRANSFER_FLOW_BLIND = 'blind';
+
 export default class CTIPhone extends Emitter implements Phone {
   session: Session;
 
@@ -28,7 +31,7 @@ export default class CTIPhone extends Emitter implements Phone {
       decline: true,
       mute: true,
       hold: false,
-      transfer: false,
+      transfer: true,
       sendKey: false,
       addParticipant: false,
       record: false,
@@ -93,10 +96,24 @@ export default class CTIPhone extends Emitter implements Phone {
     this.eventEmitter.emit('onCallEnded', callSession);
   }
 
-  transfer() {}
+  async transfer(callSession: CallSession, number: string): Promise<void> {
+    await CallApi.transferCall(callSession.callId, number, TRANSFER_FLOW_BLIND);
+  }
 
   indirectTransfer() {}
+  
+  async initiateCTIIndirectTransfer(callSession: CallSession, number: string) {
+    return await CallApi.transferCall(callSession.callId, number, TRANSFER_FLOW_ATTENDED);
+  }
 
+  async cancelCTIIndirectTransfer(transferId: string) {
+    return await CallApi.cancelCallTransfer(transferId);
+  }
+
+  async confirmCTIIndirectTransfer(transferId: string) {
+    return await CallApi.confirmCallTransfer(transferId);
+  }
+  
   sendKey() {}
 
   onConnectionMade() {
