@@ -16,6 +16,7 @@ type ConstructorParams = {
   agent?: ?Object,
   clientId?: string,
   refreshToken?: ?string,
+  isMobile: boolean,
 };
 
 const AUTH_VERSION = '0.1';
@@ -44,11 +45,13 @@ export default class ApiClient {
   onRefreshToken: ?Function;
   refreshExpiration: ?number;
   refreshBackend: ?string;
+  isMobile: boolean;
 
   // @see https://github.com/facebook/flow/issues/183#issuecomment-358607052
-  constructor({ server, agent = null, refreshToken, clientId }: ConstructorParams) {
+  constructor({ server, agent = null, refreshToken, clientId, isMobile = false }: ConstructorParams) {
     this.updateParameters({ server, agent, clientId });
     this.refreshToken = refreshToken;
+    this.isMobile = isMobile;
   }
 
   initializeEndpoints(): void {
@@ -79,7 +82,7 @@ export default class ApiClient {
       return null;
     }
 
-    const session = await this.auth.refreshToken(this.refreshToken, this.refreshBackend, this.refreshExpiration, true);
+    const session = await this.auth.refreshToken(this.refreshToken, this.refreshBackend, this.refreshExpiration, this.isMobile);
 
     if (this.onRefreshToken) {
       this.onRefreshToken(session.token, session);
@@ -116,5 +119,9 @@ export default class ApiClient {
 
   setRefreshBackend(refreshBackend: string) {
     this.refreshBackend = refreshBackend;
+  }
+
+  setIsMobile(isMobile: boolean) {
+    this.isMobile = isMobile;
   }
 }

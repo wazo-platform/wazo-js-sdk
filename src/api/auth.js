@@ -56,7 +56,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   logOut: (token: Token): Promise<LogoutResponse> =>
     client.delete(`${baseUrl}/token/${token}`, null, {}, ApiRequester.successResponseParser),
 
-  refreshToken: (refreshToken: string, backend: string, expiration: number): Promise<?Session> => {
+  refreshToken: (refreshToken: string, backend: string, expiration: number, isMobile: boolean = false): Promise<?Session> => {
     const body: Object = {
       backend: backend || DEFAULT_BACKEND_USER,
       expiration: expiration || DETAULT_EXPIRATION,
@@ -66,6 +66,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
     const headers: Object = {
       'Content-Type': 'application/json',
+      ...(isMobile ? { 'Wazo-Session-Type': 'mobile' } : {}),
     };
 
     return client.post(`${baseUrl}/token`, body, headers, ApiRequester.defaultParser, false).then(Session.parse);
