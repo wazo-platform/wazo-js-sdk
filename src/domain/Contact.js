@@ -345,6 +345,11 @@ export default class Contact {
       numbers.push(...formattedPhones);
     }
 
+    if (single.businessPhones) {
+      const formattedPhones = single.businessPhones.map(phone => ({ label: 'business', number: phone }));
+      numbers.push(...formattedPhones);
+    }
+
     if (single.mobilePhone) {
       numbers.push({ label: 'mobile', number: single.mobilePhone });
     }
