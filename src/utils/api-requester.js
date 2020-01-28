@@ -56,7 +56,12 @@ export default class ApiRequester {
   }
 
   static defaultParser(response: Object) {
-    return response.json().then((data: Object) => data);
+    try {
+      return response.json().then((data: Object) => data);
+    } catch (e) {
+      console.warn(e, response);
+      return null;
+    }
   }
 
   static getQueryString(obj: Object): string {
