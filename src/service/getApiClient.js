@@ -14,6 +14,7 @@ global.wazoRefreshToken = {};
 global.wazoOnRefreshToken = {};
 global.wazoRefreshExpiration = {};
 global.wazoRefreshBackend = {};
+global.wazoIsMobile = {};
 
 export const setApiClientId = (clientId: string, forServer: ?string = null) => {
   global.wazoClientId[forServer] = clientId;
@@ -43,6 +44,10 @@ export const setRefreshBackend = (refreshBackend: number, forServer: ?string = n
   global.wazoRefreshBackend[forServer] = refreshBackend;
 };
 
+export const setIsMobile = (isMobile: boolean, forServer: ?string = null) => {
+  global.wazoIsMobile[forServer] = isMobile;
+};
+
 const fillClient = (apiClient: WazoApiClient) => {
   const { server, token, clientId } = apiClient.client;
 
@@ -53,14 +58,19 @@ const fillClient = (apiClient: WazoApiClient) => {
 
   apiClient.setRefreshToken(global.wazoRefreshToken[server] || global.wazoRefreshToken[null] || apiClient.refreshToken);
 
-  apiClient.setOnRefreshToken(global.wazoOnRefreshToken[server] || global.wazoOnRefreshToken[null]
-    || apiClient.onRefreshToken);
+  apiClient.setOnRefreshToken(
+    global.wazoOnRefreshToken[server] || global.wazoOnRefreshToken[null] || apiClient.onRefreshToken,
+  );
 
-  apiClient.setRefreshExpiration(global.wazoRefreshExpiration[server] || global.wazoRefreshExpiration[null]
-    || apiClient.refreshExpiration);
+  apiClient.setRefreshExpiration(
+    global.wazoRefreshExpiration[server] || global.wazoRefreshExpiration[null] || apiClient.refreshExpiration,
+  );
 
-  apiClient.setRefreshBackend(global.wazoRefreshBackend[server] || global.wazoRefreshBackend[null]
-    || apiClient.refreshBackend);
+  apiClient.setRefreshBackend(
+    global.wazoRefreshBackend[server] || global.wazoRefreshBackend[null] || apiClient.refreshBackend,
+  );
+
+  apiClient.setIsMobile(global.wazoIsMobile[server] || global.wazoIsMobile[null] || apiClient.isMobile);
 
   return apiClient;
 };

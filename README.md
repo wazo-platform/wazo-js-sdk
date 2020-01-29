@@ -40,6 +40,7 @@ const client = new WazoApiClient({
   server: 'demo.wazo.community', // required string
   agent: null, // http(s).Agent instance, allows custom proxy, unsecured https, certificate etc.
   clientId: null, // Set an identifier for your app when using refreshToken
+  isMobile: false,
 });
 ```
 
