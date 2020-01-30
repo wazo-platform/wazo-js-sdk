@@ -49,4 +49,12 @@ export default class CallApi {
   static async relocateCall(callId: string, line: number, contactIdentifier?: string): Promise<Relocation> {
     return getApiClient().ctidNg.relocateCall(callId, 'line', line, contactIdentifier);
   }
+
+  static async mute(callId: string): Promise<void> {
+    return getApiClient().ctidNg.mute(callId);
+  }
+
+  static async unmute(callId: string): Promise<void> {
+    return getApiClient().ctidNg.unmute(callId);
+  }
 }

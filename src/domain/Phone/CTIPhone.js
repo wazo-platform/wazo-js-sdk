@@ -26,7 +26,7 @@ export default class CTIPhone extends Emitter implements Phone {
     return {
       accept: false,
       decline: true,
-      mute: false,
+      mute: true,
       hold: false,
       transfer: false,
       sendKey: false,
@@ -107,11 +107,15 @@ export default class CTIPhone extends Emitter implements Phone {
 
   hold() {}
 
-  mute() {}
-
   resume() {}
 
-  unmute() {}
+  async mute(callSession: CallSession): Promise<void> {
+    await CallApi.mute(callSession.callId);
+  }
+
+  async unmute(callSession: CallSession): Promise<void> {
+    await CallApi.unmute(callSession.callId);
+  }
 
   putOnSpeaker() {}
 

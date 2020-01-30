@@ -15,6 +15,7 @@ type CallResponse = {
   is_caller: boolean,
   creation_time: string,
   on_hold: boolean,
+  muted: boolean,
 };
 
 type CallArguments = {
@@ -27,6 +28,7 @@ type CallArguments = {
   calleeNumber: string,
   dialedExtension: string,
   onHold: boolean,
+  muted: boolean,
   status: string,
   startingTime: Date,
 };
@@ -43,6 +45,7 @@ export default class Call {
   dialedExtension: string;
   isCaller: boolean;
   onHold: boolean;
+  muted: boolean;
   status: string;
   startingTime: Date;
 
@@ -60,6 +63,7 @@ export default class Call {
       calleeNumber: plain.peer_caller_id_number,
       dialedExtension: plain.dialed_extension,
       isCaller: plain.is_caller,
+      muted: plain.muted,
       onHold: plain.on_hold,
       status: plain.status,
       startingTime: moment(plain.creation_time).toDate(),
@@ -79,6 +83,7 @@ export default class Call {
     calleeNumber,
     dialedExtension,
     isCaller,
+    muted,
     onHold,
     status,
     startingTime,
@@ -90,6 +95,7 @@ export default class Call {
     this.calleeName = calleeName;
     this.calleeNumber = calleeNumber;
     this.dialedExtension = dialedExtension;
+    this.muted = muted;
     this.onHold = onHold;
     this.isCaller = isCaller;
     this.status = status;
