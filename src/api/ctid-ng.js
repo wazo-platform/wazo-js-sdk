@@ -116,11 +116,9 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.post(`${baseUrl}/users/me/faxes?${params}`, fax, headers);
   },
 
-  mute: (callId: string) => client.put(`${baseUrl}/users/me/calls/${callId}/mute/start`, null)
-    .then(() => true)
-    .catch(() => false),
+  mute: (callId: string) =>
+    client.put(`${baseUrl}/users/me/calls/${callId}/mute/start`, null, null, ApiRequester.successResponseParser),
 
-  unmute: (callId: string) => client.put(`${baseUrl}/users/me/calls/${callId}/mute/stop`, null)
-    .then(() => true)
-    .catch(() => false),
+  unmute: (callId: string) =>
+    client.put(`${baseUrl}/users/me/calls/${callId}/mute/stop`, null, null, ApiRequester.successResponseParser),
 });
