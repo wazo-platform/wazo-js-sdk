@@ -117,4 +117,10 @@ export default (client: ApiRequester, baseUrl: string) => ({
     client.get(`${baseUrl}/users/me/conferences/${conferenceId}/participants`),
 
   listTrunks: () => client.get(`${baseUrl}/trunks`),
+
+  mute: (callId: string) =>
+    client.put(`${baseUrl}/users/me/calls/${callId}/mute/start`, null, null, ApiRequester.successResponseParser),
+
+  unmute: (callId: string) =>
+    client.put(`${baseUrl}/users/me/calls/${callId}/mute/stop`, null, null, ApiRequester.successResponseParser),
 });
