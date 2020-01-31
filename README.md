@@ -166,7 +166,7 @@ client.callLogd.listCallLogsFromDate(from, number);
 
 ### Calld
 
-Please note, ctidNg endpoint is obsolete but continue to work with old version. Please update your code.
+Please note, ctidNg endpoint is deprecated but continue to work with old version. Please update your code.
 
 ```js
 client.calld.answerSwitchboardQueuedCall(switchboardUuid, callId);

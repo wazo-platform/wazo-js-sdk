@@ -1,4 +1,7 @@
 /* @flow */
+
+/* DEPRECATED: USE CALLD INSTEAD CTID-NG */
+
 import ApiRequester from '../utils/api-requester';
 import type { UUID, RequestError } from '../domain/types';
 import Relocation from '../domain/Relocation';
