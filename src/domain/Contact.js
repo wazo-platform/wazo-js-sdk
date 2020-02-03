@@ -343,11 +343,6 @@ export default class Contact {
       emails.push(...formattedEmails);
     }
 
-    if (single.homePhones) {
-      const formattedPhones = single.homePhones.map(phone => ({ label: 'home', number: phone }));
-      numbers.push(...formattedPhones);
-    }
-
     if (single.businessPhones) {
       const formattedPhones = single.businessPhones.map(phone => ({ label: 'business', number: phone }));
       numbers.push(...formattedPhones);
@@ -357,9 +352,15 @@ export default class Contact {
       numbers.push({ label: 'mobile', number: single.mobilePhone });
     }
 
+    if (single.homePhones) {
+      const formattedPhones = single.homePhones.map(phone => ({ label: 'home', number: phone }));
+      numbers.push(...formattedPhones);
+    }
+
     return new Contact({
       sourceId: single.id,
       name: single.displayName,
+      number: numbers.length ? numbers[0].number : '',
       numbers,
       emails,
       source: source.name,
@@ -388,6 +389,7 @@ export default class Contact {
     return new Contact({
       sourceId: single.id,
       name: single.name,
+      number: numbers.length ? numbers[0].number : '',
       numbers,
       emails,
       source: source.name,
