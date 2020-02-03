@@ -79,7 +79,11 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.post(`${baseUrl}/users/me/relocates`, body).then(response => Relocation.parse(response));
   },
 
-  transferCall(callId: number, number: string, flow: string = TRANSFER_FLOW_BLIND): Promise<RequestError | CTITransfer> {
+  transferCall(
+    callId: number,
+    number: string,
+    flow: string = TRANSFER_FLOW_BLIND,
+  ): Promise<RequestError | CTITransfer> {
     const body: Object = {
       exten: number,
       flow,

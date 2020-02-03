@@ -101,19 +101,19 @@ export default class CTIPhone extends Emitter implements Phone {
   }
 
   indirectTransfer() {}
-  
-  async initiateCTIIndirectTransfer(callSession: CallSession, number: string) {
-    return await CallApi.transferCall(callSession.callId, number, TRANSFER_FLOW_ATTENDED);
+
+  async initiateCTIIndirectTransfer(callSession: CallSession, number: string): Promise<any> {
+    return CallApi.transferCall(callSession.callId, number, TRANSFER_FLOW_ATTENDED);
   }
 
-  async cancelCTIIndirectTransfer(transferId: string) {
-    return await CallApi.cancelCallTransfer(transferId);
+  async cancelCTIIndirectTransfer(transferId: string): Promise<any> {
+    return CallApi.cancelCallTransfer(transferId);
   }
 
-  async confirmCTIIndirectTransfer(transferId: string) {
-    return await CallApi.confirmCallTransfer(transferId);
+  async confirmCTIIndirectTransfer(transferId: string): Promise<any> {
+    return CallApi.confirmCallTransfer(transferId);
   }
-  
+
   sendKey() {}
 
   onConnectionMade() {
