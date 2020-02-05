@@ -420,7 +420,7 @@ export default class Contact {
     return new Contact({
       uuid: single.uuid,
       sourceId: String(single.id),
-      name: `${single.firstname} ${single.lastname}`,
+      name: `${single.firstname}${single.lastname ? ` ${single.lastname}` : ''}`,
       number: numbers.length ? numbers[0].number : '',
       numbers,
       emails,
