@@ -70,6 +70,12 @@ export interface Phone {
 
   indirectTransfer(source: CallSession, destination: CallSession): PhoneVoid;
 
+  initiateCTIIndirectTransfer(callSession: CallSession, number: string): PhoneVoid;
+
+  cancelCTIIndirectTransfer(transferId: string): PhoneVoid;
+
+  confirmCTIIndirectTransfer(transferId: string): PhoneVoid;
+
   isCallUsingVideo(callSession: CallSession): boolean;
 
   isWebRTC(): boolean;

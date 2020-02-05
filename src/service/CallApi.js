@@ -8,6 +8,7 @@ import Relocation from '../domain/Relocation';
 import CallSession from '../domain/CallSession';
 
 import getApiClient from './getApiClient';
+import Transfer from '../domain/IndirectTransfer';
 
 export default class CallApi {
   static async fetchCallLogs(offset: number, limit: number): Promise<Call[]> {
@@ -56,5 +57,17 @@ export default class CallApi {
 
   static async unmute(callId: string): Promise<void> {
     return getApiClient().calld.unmute(callId);
+  }
+
+  static async transferCall(callId: string, number: string, flow: string): Promise<Transfer> {
+    return getApiClient().calld.transferCall(callId, number, flow);
+  }
+
+  static async cancelCallTransfer(transferId: string): Promise<Transfer> {
+    return getApiClient().calld.cancelCallTransfer(transferId);
+  }
+
+  static async confirmCallTransfer(transferId: string): Promise<Transfer> {
+    return getApiClient().calld.confirmCallTransfer(transferId);
   }
 }
