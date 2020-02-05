@@ -19,7 +19,7 @@ export default class CallApi {
   }
 
   static async fetchActiveCalls(): Promise<Call[]> {
-    return getApiClient().ctidNg.listCalls();
+    return getApiClient().calld.listCalls();
   }
 
   static async fetchCallLogsFromDate(from: Date, number: string): Promise<CallLog[]> {
@@ -36,25 +36,25 @@ export default class CallApi {
   }
 
   static async cancelCall(callSession: CallSession): Promise<void> {
-    return getApiClient().ctidNg.cancelCall(callSession.callId);
+    return getApiClient().calld.cancelCall(callSession.callId);
   }
 
   static async makeCall(callFromLine: Line, extension: string, isMobile: boolean = false): Promise<?Call> {
     const lineId = callFromLine ? callFromLine.id : null;
 
-    const response = await getApiClient().ctidNg.makeCall(extension, isMobile, lineId);
+    const response = await getApiClient().calld.makeCall(extension, isMobile, lineId);
     return Call.parse(response);
   }
 
   static async relocateCall(callId: string, line: number, contactIdentifier?: string): Promise<Relocation> {
-    return getApiClient().ctidNg.relocateCall(callId, 'line', line, contactIdentifier);
+    return getApiClient().calld.relocateCall(callId, 'line', line, contactIdentifier);
   }
 
   static async mute(callId: string): Promise<void> {
-    return getApiClient().ctidNg.mute(callId);
+    return getApiClient().calld.mute(callId);
   }
 
   static async unmute(callId: string): Promise<void> {
-    return getApiClient().ctidNg.unmute(callId);
+    return getApiClient().calld.unmute(callId);
   }
 }

@@ -1,4 +1,7 @@
 /* @flow */
+
+/* DEPRECATED: USE CALLD INSTEAD CTID-NG */
+
 import ApiRequester from '../utils/api-requester';
 import type { UUID, RequestError } from '../domain/types';
 import Relocation from '../domain/Relocation';
@@ -116,9 +119,4 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.post(`${baseUrl}/users/me/faxes?${params}`, fax, headers);
   },
 
-  mute: (callId: string) =>
-    client.put(`${baseUrl}/users/me/calls/${callId}/mute/start`, null, null, ApiRequester.successResponseParser),
-
-  unmute: (callId: string) =>
-    client.put(`${baseUrl}/users/me/calls/${callId}/mute/stop`, null, null, ApiRequester.successResponseParser),
 });
