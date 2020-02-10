@@ -381,8 +381,12 @@ export default class Contact {
       emails.push(...formattedEmails);
     }
 
-    if (single.numbers) {
-      const formattedPhones = single.numbers.map(phone => ({ label: 'mobile', number: phone }));
+    if (single.numbers_by_label) {
+      const formattedPhones = Object.keys(single.numbers_by_label).map(label =>
+        ({ label, number: single.numbers_by_label[label] }));
+      numbers.push(...formattedPhones);
+    } else if (single.numbers) {
+      const formattedPhones = single.numbers.map(phone => ({ number: phone }));
       numbers.push(...formattedPhones);
     }
 
