@@ -77,6 +77,9 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.post(`${baseUrl}/token`, body, headers, ApiRequester.defaultParser, false).then(Session.parse);
   },
 
+  deleteRefreshToken: (clientId: string): Promise<boolean> =>
+    client.delete(`${baseUrl}/users/me/tokens/${clientId}`, null, null, ApiRequester.successResponseParser),
+
   updatePassword: (userUuid: UUID, oldPassword: string, newPassword: string): Promise<Boolean> => {
     const body = {
       new_password: newPassword,
