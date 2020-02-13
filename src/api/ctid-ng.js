@@ -1,4 +1,5 @@
 /* @flow */
+/* eslint-disable camelcase */
 
 /* DEPRECATED: USE CALLD INSTEAD CTID-NG */
 
@@ -14,6 +15,7 @@ type CallQuery = {
   from_mobile: boolean,
   extension: string,
   line_id?: number,
+  all_lines?: boolean,
 };
 
 export default (client: ApiRequester, baseUrl: string) => ({
@@ -40,7 +42,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.post(`${baseUrl}/users/me/chats`, body, null, ApiRequester.successResponseParser);
   },
 
-  makeCall: (extension: string, fromMobile: boolean, lineId: ?number, allLines: ?boolean) => {
+  makeCall: (extension: string, fromMobile: boolean, lineId: ?number, allLines: ?boolean = false) => {
     const query: CallQuery = {
       from_mobile: fromMobile,
       extension,

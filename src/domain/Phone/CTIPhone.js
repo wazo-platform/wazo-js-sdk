@@ -17,11 +17,11 @@ export default class CTIPhone extends Emitter implements Phone {
 
   isMobile: boolean;
 
-  callbackAllLines: Boolean;
+  callbackAllLines: boolean;
 
   currentCall: ?Call;
 
-  constructor(session: Session, isMobile: boolean = false, callbackAllLines = false) {
+  constructor(session: Session, isMobile: boolean = false, callbackAllLines: boolean = false) {
     super();
     this.session = session;
     this.isMobile = isMobile;
