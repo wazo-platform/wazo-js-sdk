@@ -40,7 +40,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.post(`${baseUrl}/users/me/chats`, body, null, ApiRequester.successResponseParser);
   },
 
-  makeCall: (extension: string, fromMobile: boolean, lineId: ?number) => {
+  makeCall: (extension: string, fromMobile: boolean, lineId: ?number, allLines: ?boolean) => {
     const query: CallQuery = {
       from_mobile: fromMobile,
       extension,
@@ -49,6 +49,11 @@ export default (client: ApiRequester, baseUrl: string) => ({
     if (lineId) {
       query.line_id = lineId;
     }
+
+    if (allLines) {
+      query.all_lines = true;
+    }
+
     return client.post(`${baseUrl}/users/me/calls`, query);
   },
 
