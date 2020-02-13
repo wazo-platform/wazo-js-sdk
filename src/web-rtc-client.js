@@ -20,6 +20,12 @@ import MobileSessionDescriptionHandler from './lib/MobileSessionDescriptionHandl
 
 const SIPMethods = { Web: { Modifiers }, Utils, Exceptions };
 
+// We need to replace 0.0.0.0 to 127.0.0.1 in the sdp to avoid MOH during a createOffer.
+const replaceLocalIpModifier = (description: Object) => Promise.resolve({
+  ...description,
+  sdp: description.sdp.replace('c=IN IP4 0.0.0.0', 'c=IN IP4 127.0.0.1'),
+});
+
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
 const events = [
   'registered',
@@ -750,6 +756,7 @@ export default class WebRTCClient extends Emitter {
         wsServers: `wss://${this.config.host}:${this.config.port || 443}/api/asterisk/ws`,
       },
       sessionDescriptionHandlerFactoryOptions: {
+        modifiers: [replaceLocalIpModifier],
         alwaysAcquireMediaFirst: this.isFirefox(),
         constraints: {
           audio: this._getAudioConstraints(),
