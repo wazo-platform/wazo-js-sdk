@@ -17,12 +17,15 @@ export default class CTIPhone extends Emitter implements Phone {
 
   isMobile: boolean;
 
+  callbackAllLines: boolean;
+
   currentCall: ?Call;
 
-  constructor(session: Session, isMobile: boolean = false) {
+  constructor(session: Session, isMobile: boolean = false, callbackAllLines: boolean = false) {
     super();
     this.session = session;
     this.isMobile = isMobile;
+    this.callbackAllLines = callbackAllLines;
   }
 
   getOptions(): AvailablePhoneOptions {
@@ -52,7 +55,7 @@ export default class CTIPhone extends Emitter implements Phone {
       return null;
     }
     try {
-      this.currentCall = await CallApi.makeCall(line, number, this.isMobile);
+      this.currentCall = await CallApi.makeCall(line, number, this.isMobile, this.callbackAllLines);
     } catch (_) {
       // We have to deal with error like `User has no mobile phone number` error in the UI.
     }

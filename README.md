@@ -182,7 +182,7 @@ client.calld.holdSwitchboardCall(switchboardUuid, callId);
 client.calld.listCalls();
 client.calld.listMessages(participantUuid, limit);
 client.calld.listVoicemails();
-client.calld.makeCall(extension, fromMobile, lineId);
+client.calld.makeCall(extension, fromMobile, lineId, allLines);
 client.calld.sendFax(extension, fax, callerId);
 client.calld.sendMessage(alias, msg, toUserId);
 client.calld.relocateCall(callId, destination, lineId);

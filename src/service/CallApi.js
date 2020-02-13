@@ -40,10 +40,11 @@ export default class CallApi {
     return getApiClient().calld.cancelCall(callSession.callId);
   }
 
-  static async makeCall(callFromLine: Line, extension: string, isMobile: boolean = false): Promise<?Call> {
+  static async makeCall(callFromLine: Line, extension: string, isMobile: boolean = false,
+    callbackAllLines: boolean = false): Promise<?Call> {
     const lineId = callFromLine ? callFromLine.id : null;
 
-    const response = await getApiClient().calld.makeCall(extension, isMobile, lineId);
+    const response = await getApiClient().calld.makeCall(extension, isMobile, lineId, callbackAllLines);
     return Call.parse(response);
   }
 
