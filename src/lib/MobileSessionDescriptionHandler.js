@@ -382,8 +382,17 @@ export default SIPMethods =>
         .then(localDescription =>
           // @see https://github.com/oney/react-native-webrtc/issues/242#issuecomment-290452014
           // @see https://github.com/oney/RCTWebRTCDemo/blob/master/main.js#L103
-          methodName === 'createOffer' && !modifiers.length ? pc[methodName](RTCOfferOptions) : localDescription
+          methodName === 'createOffer' ? pc[methodName](RTCOfferOptions) : localDescription
         )
+        .then((localDescription) => {
+          // Add ice candidates if not present
+          if (localDescription.sdp.indexOf('a=candidate') === -1) {
+            self.peerConnection.gatheredIces.forEach(ice => {
+              localDescription.sdp += "a=" + ice + "\n";
+            });
+          }
+          return localDescription;
+        })
         .catch(e => {
           if (e instanceof SIPMethods.Exceptions.SessionDescriptionHandlerError) {
             throw e;
@@ -473,6 +482,8 @@ export default SIPMethods =>
       this.peerConnection.onicecandidate = function(e) {
         self.emit('iceCandidate', e);
         if (e.candidate) {
+          self.peerConnection.gatheredIces = self.peerConnection.gatheredIces || [];
+          self.peerConnection.gatheredIces.push(e.candidate.candidate);
           self.logger.log(
             'ICE candidate received: ' + (e.candidate.candidate === null ? null : e.candidate.candidate.trim())
           );
@@ -661,6 +672,7 @@ export default SIPMethods =>
 
     resetIceGatheringComplete() {
       this.iceGatheringTimeout = false;
+      this.peerConnection.gatheredIces = [];
 
       if (this.iceGatheringTimer) {
         clearTimeout(this.iceGatheringTimer);
