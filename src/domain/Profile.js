@@ -67,6 +67,11 @@ type ProfileResponse = {
     id: number,
     name: string,
   },
+  call_pickup_target_users?: Array<{
+    firstname: string,
+    lastname: string,
+    uuid: string,
+  }>,
 };
 
 type ProfileArguments = {
@@ -88,6 +93,7 @@ type ProfileArguments = {
     name: string,
   },
   switchboards: Array<any>,
+  callPickupTargetUsers?: Array<{ firstname: string, lastname: string, uuid: string }>,
 };
 
 export default class Profile {
@@ -106,6 +112,7 @@ export default class Profile {
   status: string;
   subscriptionType: ?number;
   switchboards: Array<any>;
+  callPickupTargetUsers: ?Array<{ firstname: string, lastname: string, uuid: string }>
 
   static parse(plain: ProfileResponse): Profile {
     return new Profile({
@@ -126,6 +133,7 @@ export default class Profile {
       voicemail: plain.voicemail,
       switchboards: plain.switchboards || [],
       status: '',
+      callPickupTargetUsers: plain.call_pickup_target_users || [],
     });
   }
 
@@ -149,6 +157,7 @@ export default class Profile {
     switchboards,
     status,
     sipLines,
+    callPickupTargetUsers,
   }: $Shape<ProfileArguments> = {}) {
     this.id = id;
     this.firstName = firstName;
@@ -164,6 +173,7 @@ export default class Profile {
     this.subscriptionType = subscriptionType;
     this.switchboards = switchboards;
     this.status = status;
+    this.callPickupTargetUsers = callPickupTargetUsers;
 
     this.sipLines = sipLines || [];
   }
