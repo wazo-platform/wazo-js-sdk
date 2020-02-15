@@ -65,6 +65,9 @@ describe('Profile domain', () => {
       timezone: null,
       mobileNumber: '1234',
       switchboards: [],
+      call_pickup_target_users: [
+        { uuid: 'uuid-0', firstname: 'FirstName-0', lastname: 'LastName-0' },
+      ],
     };
 
     const profile = Profile.parse(plain);
@@ -90,6 +93,9 @@ describe('Profile domain', () => {
         subscriptionType: 2,
         switchboards: [],
         status: '',
+        callPickupTargetUsers: [
+          { uuid: 'uuid-0', firstname: 'FirstName-0', lastname: 'LastName-0' },
+        ],
       }),
     );
   });
