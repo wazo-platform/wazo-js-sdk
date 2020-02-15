@@ -9,9 +9,7 @@ import { Exceptions } from 'sip.js/lib/Exceptions';
 import { Modifiers } from 'sip.js/lib/Web';
 import SIP from 'sip.js';
 
-import isMobile from './utils/isMobile';
 import Emitter from './utils/Emitter';
-import once from './utils/once';
 import Session from './domain/Session';
 import ApiClient from './api-client';
 import IssueReporter from './service/IssueReporter';
@@ -141,10 +139,6 @@ export default class WebRTCClient extends Emitter {
     // Particular case for `invite` event
     userAgent.on('invite', (session: SIP.sessionDescriptionHandler) => {
       this._setupSession(session);
-      // This causes trouble with the desktop version on some engines, restrict its use to mobile
-      if (isMobile()) {
-        this._fixLocalDescription(session, 'answer');
-      }
       const shouldAutoAnswer = !!session.request.getHeader('alert-info');
 
       this.eventEmitter.emit('invite', session, this.sessionWantsToDoVideo(session), shouldAutoAnswer);
@@ -580,23 +574,6 @@ export default class WebRTCClient extends Emitter {
 
     console.warn(
       `Merging more than ${MAX_MERGE_SESSIONS} session is not recommended, it will consume too many resources.`,
-    );
-  }
-
-  _fixLocalDescription(context: SIP.InviteClientContext, direction: string) {
-    const eventName = direction === 'answer' ? 'iceGatheringComplete' : 'iceCandidate';
-    context.on(
-      'SessionDescriptionHandler-created',
-      once(sdh => {
-        sdh.on(
-          eventName,
-          once(() => {
-            const pc = sdh.peerConnection;
-            const constraints = this._getRtcOptions(this._hasVideo());
-            pc.createOffer(constraints).then(offer => pc.setLocalDescription(offer));
-          }),
-        );
-      }),
     );
   }
 
