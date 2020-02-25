@@ -50,7 +50,7 @@ export type ContactPersonalResponse = {
   firstName: ?string,
   lastName: ?string,
   number: ?string,
-  numbers: ?Array<{ label: string, number: string }>,
+  numbers: ?Array<{ label?: string, number: string }>,
   email: ?string,
   entreprise: ?string,
   birthday: ?string,
@@ -107,10 +107,10 @@ type ContactArguments = {
   uuid?: string,
   name?: string,
   number?: string,
-  numbers?: Array<{ label: string, number: string }>,
+  numbers?: Array<{ label?: string, number: string }>,
   favorited?: boolean,
   email?: string,
-  emails?: Array<{ label: string, email: string }>,
+  emails?: Array<{ label?: string, email: string }>,
   entreprise?: string,
   birthday?: string,
   address?: string,
@@ -204,10 +204,10 @@ export default class Contact {
   uuid: ?string;
   name: ?string;
   number: ?string;
-  numbers: ?Array<{ label: string, number: string }>;
+  numbers: ?Array<{ label?: string, number: string }>;
   favorited: ?boolean;
   email: ?string;
-  emails: ?Array<{ label: string, email: string }>;
+  emails: ?Array<{ label?: string, email: string }>;
   entreprise: ?string;
   birthday: ?string;
   address: ?string;
@@ -335,17 +335,15 @@ export default class Contact {
   }
 
   static parseOffice365(single: Office365Response, source: DirectorySource): Contact {
-    const emails = [];
-    const numbers = [];
+    const emails: Array<{ label?: string, email: string }> = [];
+    const numbers: Array<{ label?: string, number: string }> = [];
 
     if (single.emailAddresses) {
-      const formattedEmails = single.emailAddresses.map(email => ({ label: 'email', email: email.address }));
-      emails.push(...formattedEmails);
+      single.emailAddresses.map(email => emails.push({ email: email.address }));
     }
 
     if (single.businessPhones) {
-      const formattedPhones = single.businessPhones.map(phone => ({ label: 'business', number: phone }));
-      numbers.push(...formattedPhones);
+      single.businessPhones.map(phone => numbers.push({ label: 'business', number: phone }));
     }
 
     if (single.mobilePhone) {
@@ -353,8 +351,7 @@ export default class Contact {
     }
 
     if (single.homePhones) {
-      const formattedPhones = single.homePhones.map(phone => ({ label: 'home', number: phone }));
-      numbers.push(...formattedPhones);
+      single.homePhones.map(phone => numbers.push({ label: 'home', number: phone }));
     }
 
     return new Contact({
@@ -373,17 +370,18 @@ export default class Contact {
   }
 
   static parseGoogle(single: GoogleResponse, source: DirectorySource): Contact {
-    const emails = [];
-    const numbers = [];
+    const emails: Array<{ label?: string, email: string }> = [];
+    const numbers: Array<{ label?: string, number: string }> = [];
 
     if (single.emails) {
-      const formattedEmails = single.emails.map(email => ({ label: 'email', email }));
-      emails.push(...formattedEmails);
+      single.emails.map(email => emails.push({ email }));
     }
 
-    if (single.numbers) {
-      const formattedPhones = single.numbers.map(phone => ({ label: 'mobile', number: phone }));
-      numbers.push(...formattedPhones);
+    if (single.numbers_by_label) {
+      Object.keys(single.numbers_by_label).map(label =>
+        numbers.push({ label, number: single.numbers_by_label[label] }));
+    } else if (single.numbers) {
+      single.numbers.map(phone => numbers.push({ number: phone }));
     }
 
     return new Contact({
