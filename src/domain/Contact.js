@@ -374,14 +374,15 @@ export default class Contact {
     const numbers: Array<{ label?: string, number: string }> = [];
 
     if (single.emails) {
-      single.emails.map(email => emails.push({ email }));
+      single.emails.forEach(email =>
+        (typeof email === 'object' ? { email: email.address, label: email.label } : { email }));
     }
 
     if (single.numbers_by_label) {
-      Object.keys(single.numbers_by_label).map(label =>
+      Object.keys(single.numbers_by_label).forEach(label =>
         numbers.push({ label, number: single.numbers_by_label[label] }));
     } else if (single.numbers) {
-      single.numbers.map(phone => numbers.push({ number: phone }));
+      single.numbers.forEach(phone => numbers.push({ number: phone }));
     }
 
     return new Contact({
