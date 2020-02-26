@@ -66,6 +66,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
       completions: ['answer'],
       destination,
       initiator_call: callId,
+      auto_answer: true,
     };
 
     if (lineId || contact) {
