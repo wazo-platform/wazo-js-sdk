@@ -182,7 +182,7 @@ export default class Session {
   primaryNumber(): ?string {
     const line = this.primaryLine();
 
-    return line ? line.extensions[0].exten : null;
+    return line && line.extensions.length ? line.extensions[0].exten : null;
   }
 
   allLines(): Line[] {

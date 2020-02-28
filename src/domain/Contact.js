@@ -436,7 +436,7 @@ export default class Contact {
     const numbers = [];
     let firstNumber = '';
 
-    if (single.extensions.length > 0 && single.extensions[0].exten) {
+    if (single && single.extensions && single.extensions.length > 0 && single.extensions[0].exten) {
       firstNumber = single.extensions[0].exten;
       numbers.push({ label: 'exten', number: firstNumber });
     }
