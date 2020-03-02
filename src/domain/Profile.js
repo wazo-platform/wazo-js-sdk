@@ -63,6 +63,12 @@ type ProfileResponse = {
     },
   },
   switchboards: Array<any>,
+  agent?: {
+    firstname: string,
+    id: number,
+    lastname: string,
+    number: string,
+  },
   voicemail?: {
     id: number,
     name: string,
@@ -92,6 +98,12 @@ type ProfileArguments = {
     id: number,
     name: string,
   },
+  agent?: {
+    firstname: string,
+    id: number,
+    lastname: string,
+    number: string,
+  },
   switchboards: Array<any>,
   callPickupTargetUsers?: Array<{ firstname: string, lastname: string, uuid: string }>,
 };
@@ -111,6 +123,7 @@ export default class Profile {
   voicemail: ?{ id: number, name: string };
   status: string;
   subscriptionType: ?number;
+  agent: ?{ firstname: string, id: number, lastname: string, number: string };
   switchboards: Array<any>;
   callPickupTargetUsers: ?Array<{ firstname: string, lastname: string, uuid: string }>
 
@@ -132,6 +145,7 @@ export default class Profile {
       subscriptionType: plain.subscription_type,
       voicemail: plain.voicemail,
       switchboards: plain.switchboards || [],
+      agent: plain.agent,
       status: '',
       callPickupTargetUsers: plain.call_pickup_target_users || [],
     });
@@ -155,6 +169,7 @@ export default class Profile {
     subscriptionType,
     voicemail,
     switchboards,
+    agent,
     status,
     sipLines,
     callPickupTargetUsers,
@@ -172,6 +187,7 @@ export default class Profile {
     this.voicemail = voicemail;
     this.subscriptionType = subscriptionType;
     this.switchboards = switchboards;
+    this.agent = agent;
     this.status = status;
     this.callPickupTargetUsers = callPickupTargetUsers;
 
