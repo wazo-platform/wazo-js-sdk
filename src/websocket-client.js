@@ -74,6 +74,8 @@ export const APPLICATION_SNOOP_UPDATED = 'application_snoop_updated';
 export const APPLICATION_USER_OUTGOING_CALL_CREATED = 'application_user_outgoing_call_created';
 export const TRUNK_STATUS_UPDATED = 'trunk_status_updated';
 export const AGENT_STATUS_UPDATE = 'agent_status_update';
+export const AGENT_PAUSED = 'agent_paused';
+export const AGENT_UNPAUSED = 'agent_unpaused';
 
 const BLACKLIST_EVENTS = [
   CHAT_MESSAGE_SENT,
@@ -285,6 +287,8 @@ WebSocketClient.eventLists = [
   APPLICATION_USER_OUTGOING_CALL_CREATED,
   TRUNK_STATUS_UPDATED,
   AGENT_STATUS_UPDATE,
+  AGENT_PAUSED,
+  AGENT_UNPAUSED,
 ];
 
 export default WebSocketClient;

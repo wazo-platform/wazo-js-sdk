@@ -165,6 +165,8 @@ type FaxOutboundSucceeded = WebSocketBaseMessage & {
 };
 
 type AgentStatusUpdate = WebSocketBaseMessage & { data: AgentStatusUpdateEvent, name: 'agent_status_update' };
+type AgentPaused = WebSocketBaseMessage & { data: any, name: 'agent_paused' };
+type AgentUnpaused = WebSocketBaseMessage & { data: any, name: 'agent_unpaused' };
 
 export type WebSocketMessage =
   | CallCreated
@@ -194,4 +196,6 @@ export type WebSocketMessage =
   | ParticipantLeftRoom
   | FaxOutboundFailed
   | FaxOutboundSucceeded
-  | AgentStatusUpdate;
+  | AgentStatusUpdate
+  | AgentPaused
+  | AgentUnpaused;
