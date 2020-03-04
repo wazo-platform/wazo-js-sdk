@@ -114,6 +114,11 @@ export type FaxOutboundSucceededEvent = {
   user_uuid: string,
 };
 
+export type AgentStatusUpdateEvent = {
+  agent_id: string,
+  status: string,
+};
+
 type CallCreated = WebSocketBaseMessage & { data: CallMessage, name: 'call_created' };
 type CallUpdated = WebSocketBaseMessage & { data: CallMessage, name: 'call_updated' };
 type CallEnded = WebSocketBaseMessage & { data: CallMessage, name: 'call_ended' };
@@ -159,6 +164,10 @@ type FaxOutboundSucceeded = WebSocketBaseMessage & {
   name: 'fax_outbound_user_succeeded',
 };
 
+type AgentStatusUpdate = WebSocketBaseMessage & { data: AgentStatusUpdateEvent, name: 'agent_status_update' };
+type AgentPaused = WebSocketBaseMessage & { data: any, name: 'agent_paused' };
+type AgentUnpaused = WebSocketBaseMessage & { data: any, name: 'agent_unpaused' };
+
 export type WebSocketMessage =
   | CallCreated
   | CallUpdated
@@ -186,4 +195,7 @@ export type WebSocketMessage =
   | ParticipantJoinedRoom
   | ParticipantLeftRoom
   | FaxOutboundFailed
-  | FaxOutboundSucceeded;
+  | FaxOutboundSucceeded
+  | AgentStatusUpdate
+  | AgentPaused
+  | AgentUnpaused;
