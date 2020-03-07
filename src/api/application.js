@@ -67,6 +67,17 @@ export default (client: ApiRequester, baseUrl: string) => ({
   stopMohCall: (applicationUuid: string, callId: number) =>
     client.put(`${baseUrl}/${applicationUuid}/calls/${callId}/moh/stop`, {}, null, ApiRequester.successResponseParser),
 
+  startHoldCall: (applicationUuid: string, callId: number) =>
+    client.put(
+      `${baseUrl}/${applicationUuid}/calls/${callId}/hold/start`,
+      {},
+      null,
+      ApiRequester.successResponseParser,
+    ),
+
+  stopHoldCall: (applicationUuid: string, callId: number) =>
+    client.put(`${baseUrl}/${applicationUuid}/calls/${callId}/hold/stop`, {}, null, ApiRequester.successResponseParser),
+
   startMuteCall: (applicationUuid: string, callId: number) =>
     client.put(
       `${baseUrl}/${applicationUuid}/calls/${callId}/mute/start`,
