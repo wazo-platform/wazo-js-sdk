@@ -6,6 +6,7 @@ import ApiClient from './api-client';
 import WebRTCClient from './web-rtc-client';
 import WebSocketClient, { SOCKET_EVENTS } from './websocket-client';
 import Emitter from './utils/Emitter';
+import IssueReporter from './service/IssueReporter';
 
 // Domain
 import BadResponse from './domain/BadResponse';
@@ -108,6 +109,7 @@ export default {
   Voicemail,
   Relocation,
   Room,
+  IssueReporter,
   DebugDevice,
   PROFILE_STATE,
   FORWARD_KEYS,
