@@ -9,6 +9,7 @@ import ServerError from '../domain/ServerError';
 import Logger from './logger';
 import isMobile from './isMobile';
 import type { Token } from '../domain/types';
+import IssueReporter from '../service/IssueReporter';
 
 type ConstructorParams = {
   server: string,
@@ -120,7 +121,9 @@ export default class ApiRequester {
       const contentType = response.headers.get('content-type') || '';
       const isJson = contentType.indexOf('application/json') !== -1;
 
-      Logger.logRequest(url, options, response);
+      const curl = this._getCurlCommand(url, options, response);
+      Logger.logRequest(curl);
+      IssueReporter.logRequest(curl, response);
 
       // Throw an error only if status >= 400
       if ((isHead && response.status >= 500) || (!isHead && response.status >= 400)) {
@@ -195,6 +198,23 @@ export default class ApiRequester {
     const url = `${this.baseUrl}/${path}`;
 
     return method === 'get' && body && Object.keys(body).length ? `${url}?${ApiRequester.getQueryString(body)}` : url;
+  }
+
+  _getCurlCommand(url: string, { method, body, headers }: Object, response: Object) {
+    const { status } = response;
+
+    let curl = `${status} - curl ${method !== 'get' ? `-X ${method.toUpperCase()}` : ''}`;
+    Object.keys(headers).forEach(headerName => {
+      curl += ` -H '${headerName}: ${headers[headerName]}'`;
+    });
+
+    curl += ` ${url}`;
+
+    if (body) {
+      curl += ` -d '${body}'`;
+    }
+
+    return curl;
   }
 
   get baseUrl(): string {
