@@ -89,13 +89,19 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.put(`${baseUrl}/users/${userUuid}/password`, body, null, ApiRequester.successResponseParser);
   },
 
-  sendDeviceToken: (userUuid: UUID, deviceToken: string, apnsToken: ?string) => {
+  sendDeviceToken: (userUuid: UUID, deviceToken: string, apnsVoipToken: ?string, apnsNotificationToken: ?string) => {
     const body: Object = {
       token: deviceToken,
     };
 
-    if (apnsToken) {
-      body.apns_token = apnsToken;
+    if (apnsVoipToken) {
+      // Should be called `voip_token`, but we can't changed it to be retro-compatible
+      body.apns_token = apnsVoipToken;
+      body.apns_voip_token = apnsVoipToken;
+    }
+
+    if (apnsNotificationToken) {
+      body.apns_notification_token = apnsNotificationToken;
     }
 
     return client.post(`${baseUrl}/users/${userUuid}/external/mobile`, body);
