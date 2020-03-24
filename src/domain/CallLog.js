@@ -16,6 +16,8 @@ type CallLogResponse = {
   source_extension: string,
   source_name: string,
   requested_extension: string,
+  source_user_uuid: string,
+  destination_user_uuid: string,
   start: string,
 };
 
@@ -33,10 +35,12 @@ type CallLogArguments = {
   destination: {
     extension: string,
     name: string,
+    uuid: string,
   },
   source: {
     extension: string,
     name: string,
+    uuid: string,
   },
   id: number,
   duration: number,
@@ -54,11 +58,13 @@ export default class CallLog {
   destination: {
     extension: string,
     name: string,
+    uuid: string,
   };
 
   source: {
     extension: string,
     name: string,
+    uuid: string,
   };
 
   id: number;
@@ -87,10 +93,12 @@ export default class CallLog {
       destination: {
         extension: plain.destination_extension || plain.requested_extension,
         name: plain.destination_name || '',
+        uuid: plain.destination_user_uuid,
       },
       source: {
         extension: plain.source_extension,
         name: plain.source_name,
+        uuid: plain.source_user_uuid,
       },
       id: plain.id,
       duration: (plain.duration || 0) * 1000, // duration is in seconds
@@ -107,10 +115,12 @@ export default class CallLog {
       destination: {
         extension: plain.destination_extension || plain.requested_extension,
         name: plain.destination_name || '',
+        uuid: plain.destination_user_uuid,
       },
       source: {
         extension: plain.source_extension,
         name: plain.source_name,
+        uuid: plain.source_user_uuid,
       },
       id: plain.id,
       duration: (plain.duration || 0) * 1000, // duration is in seconds
@@ -118,6 +128,8 @@ export default class CallLog {
       end: moment(plain.end).toDate(),
       // @TODO: FIXME add verification declined vs missed call
       newMissedCall: session && session.hasExtension(plain.destination_extension) && !plain.answered,
+      sourceUserUuid: plain.source_user_uuid,
+      destinationUserUuid: plain.destination_user_uuid,
     });
   }
 

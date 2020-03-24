@@ -90,6 +90,11 @@ export default (client: ApiRequester, baseUrl: string) => ({
   deleteVoicemail: (voicemailId: number): Promise<Boolean> =>
     client.delete(`${baseUrl}/users/me/voicemails/messages/${voicemailId}`),
 
+  getPresence: (contactUuid: UUID): Promise<{ presence: string, user_uuid: string, xivo_uuid: string }> =>
+    client.get(`${baseUrl}/users/${contactUuid}/presences`, null),
+
+  getStatus: (lineUuid: UUID) => client.get(`${baseUrl}/lines/${lineUuid}/presences`, null),
+
   fetchSwitchboardHeldCalls: (switchboardUuid: UUID) =>
     client.get(`${baseUrl}/switchboards/${switchboardUuid}/calls/held`),
 
