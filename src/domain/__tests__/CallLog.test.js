@@ -14,8 +14,10 @@ describe('CallLog domain', () => {
           call_direction: 'outbound',
           source_extension: '8020',
           source_name: 'Jonathan Lessard',
+          source_user_uuid: '',
           destination_extension: '4182250459',
           destination_name: null,
+          destination_user_uuid: '',
           duration: 4,
           start: '2017-08-06T13:50:55.819057+00:00',
           end: '2017-08-08T13:51:23.822529+00:00',
@@ -36,10 +38,12 @@ describe('CallLog domain', () => {
         destination: {
           extension: '4182250459',
           name: '',
+          uuid: '',
         },
         source: {
           extension: '8020',
           name: 'Jonathan Lessard',
+          uuid: '',
         },
         id: 215,
         duration: 4000,
