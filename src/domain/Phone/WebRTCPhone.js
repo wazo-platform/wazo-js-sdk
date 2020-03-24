@@ -594,10 +594,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     if (!this.currentSipSession && this.incomingSessions.length > 0) {
       this.eventEmitter.emit('playRingingSound', this.audioOutputDeviceId);
-      return;
     }
-
-    this.eventEmitter.emit('playHangupSound', this.audioOutputDeviceId);
   }
 
   onConnectionMade(): void {}
