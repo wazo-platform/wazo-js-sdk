@@ -196,6 +196,10 @@ export default class WebRTCClient extends Emitter {
     this.changeVideo(enableVideo || false);
     const context = this.userAgent.invite(number, this._getMediaConfiguration(enableVideo || false));
 
+    if (!enableVideo) {
+      context.modifiers.push(SIPMethods.Web.Modifiers.stripVideo);
+    }
+
     this._setupSession(context);
 
     return context;
