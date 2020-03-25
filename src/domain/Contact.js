@@ -121,6 +121,7 @@ type ContactArguments = {
   source?: string,
   sourceId?: string,
   lineState?: string,
+  lastActivity?: string;
   mobile?: boolean,
   status?: string,
   backend?: string,
@@ -216,6 +217,7 @@ export default class Contact {
   personal: ?boolean;
   state: ?string;
   lineState: ?string;
+  lastActivity: ?string;
   mobile: ?boolean;
   source: ?string;
   sourceId: string;
@@ -471,6 +473,7 @@ export default class Contact {
     note,
     state,
     lineState,
+    lastActivity,
     mobile,
     status,
     endpointId,
@@ -495,6 +498,7 @@ export default class Contact {
     this.note = note;
     this.state = state;
     this.lineState = lineState;
+    this.lastActivity = lastActivity;
     this.mobile = mobile;
     this.status = status;
     this.endpointId = endpointId;
