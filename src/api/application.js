@@ -113,4 +113,17 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   removeCallNodes: (applicationUuid: string, nodeUuid: string, callId: string) =>
     client.delete(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}/calls/${callId}`),
+
+  listSnoop: (applicationUuid: string): Promise<ListNodesResponse> => client.get(`${baseUrl}/${applicationUuid}/snoops`),
+
+  removeSnoop: (applicationUuid: string, snoopUuid: string) =>
+    client.delete(`${baseUrl}/${applicationUuid}/snoops/${snoopUuid}`),
+
+  viewSnoop: (applicationUuid: string, snoopUuid: string): Promise<ListNodesResponse> => client.get(`${baseUrl}/${applicationUuid}/snoops/${snoopUuid}`),
+
+  createSnoop: (applicationUuid: string, callId: number, snoopingCallId: number, whisperMode: string) =>
+    client.post(`${baseUrl}/${applicationUuid}/calls/${callId}/snoops`, { snoopingCallId, whisperMode }),
+
+  updateSnoop: (applicationUuid: string, snoopUuid: string, whisperMode: string) =>
+    client.put(`${baseUrl}/${applicationUuid}/snoops/${snoopUuid}`, { whisperMode }, null, ApiRequester.successResponseParser),
 });
