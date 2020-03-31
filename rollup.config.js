@@ -43,6 +43,8 @@ if (typeof(window) === 'undefined') {
     removeEventListener: {},
     addEventListener: {},
   };
+} else {
+  window.global = window.global || {};
 }
     `,
   },
