@@ -101,14 +101,18 @@ export default (client: ApiRequester, baseUrl: string) => ({
       ApiRequester.successResponseParser,
     ),
 
-  answerSwitchboardHeldCall: (switchboardUuid: UUID, callId: string, lineId: string) =>
-    client.put(`${baseUrl}/switchboards/${switchboardUuid}/calls/held/${callId}/answer?line_id=${lineId}`),
+  answerSwitchboardHeldCall: (switchboardUuid: UUID, callId: string, lineId: string = null) =>
+    client.put(
+      `${baseUrl}/switchboards/${switchboardUuid}/calls/held/${callId}/answer${lineId ? `?line_id=${lineId}` : ''}`,
+    ),
 
   fetchSwitchboardQueuedCalls: (switchboardUuid: UUID) =>
     client.get(`${baseUrl}/switchboards/${switchboardUuid}/calls/queued`),
 
-  answerSwitchboardQueuedCall: (switchboardUuid: UUID, callId: string, lineId: string) =>
-    client.put(`${baseUrl}/switchboards/${switchboardUuid}/calls/queued/${callId}/answer?line_id=${lineId}`),
+  answerSwitchboardQueuedCall: (switchboardUuid: UUID, callId: string, lineId: string = null) =>
+    client.put(
+      `${baseUrl}/switchboards/${switchboardUuid}/calls/queued/${callId}/answer${lineId ? `?line_id=${lineId}` : ''}`,
+    ),
 
   sendFax: (extension: string, fax: string, callerId: ?string = null) => {
     const headers = {
