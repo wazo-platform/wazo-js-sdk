@@ -124,7 +124,8 @@ export default (client: ApiRequester, baseUrl: string) => ({
     client.get(`${baseUrl}/${applicationUuid}/snoops/${snoopUuid}`),
 
   createSnoop: (applicationUuid: string, callId: number, snoopingCallId: number, whisperMode: string) =>
-    client.post(`${baseUrl}/${applicationUuid}/calls/${callId}/snoops`, { snooping_call_id: snoopingCallId, whisper_mode: whisperMode }),
+    client.post(`${baseUrl}/${applicationUuid}/calls/${callId}/snoops`,
+      { snooping_call_id: snoopingCallId, whisper_mode: whisperMode }),
 
   updateSnoop: (applicationUuid: string, snoopUuid: string, whisperMode: string) =>
     client.put(`${baseUrl}/${applicationUuid}/snoops/${snoopUuid}`, { whisper_mode: whisperMode }, null,
