@@ -8,7 +8,7 @@ export type RoomArguments = {
   connectedCallSession: CallSession | null,
   id: string,
   name?: string,
-  participants: Array<{ extension: string, uuid: string }>,
+  participants: Array<{ extension: string, uuid: string, talking: ?boolean }>,
 };
 
 // Represents a conference room, like `9000`.
@@ -19,7 +19,7 @@ export default class Room {
 
   connectedCallSession: CallSession | null;
 
-  participants: Array<{ extension: string, uuid: string }>;
+  participants: Array<{ extension: string, uuid: string, talking: ?boolean }>;
 
   constructor({ id, connectedCallSession, participants, name }: RoomArguments) {
     this.id = id;
@@ -40,12 +40,44 @@ export default class Room {
     return !!this.connectedCallSession && this.connectedCallSession.is(callSession);
   }
 
-  addParticipant(uuid: string, extension: string) {
+  addParticipant(uuid: string, extension: string, talking: ?boolean = null) {
     if (!this.participants.some(participant => participant.uuid === uuid || participant.extension === extension)) {
-      return new Room({ ...this, participants: [...this.participants, { uuid, extension }] });
+      return new Room({ ...this, participants: [...this.participants, { uuid, extension, talking }] });
     }
 
     return this;
+  }
+
+  updateParticipant(uuid: string, participant: Object, shouldAdd: boolean = false) {
+    const idx = this.participants.findIndex(someParticipant => someParticipant.uuid === uuid);
+    if (idx === -1 && !shouldAdd) {
+      return this;
+    }
+
+    const updatedParticipants = [...this.participants];
+    if (idx !== -1) {
+      updatedParticipants[idx] = { ...updatedParticipants[idx], ...participant };
+    } else {
+      updatedParticipants.push(participant);
+    }
+
+    return new Room({ ...this, participants: updatedParticipants });
+  }
+
+  updateParticipantByExtension(extension: string, participant: Object, shouldAdd: boolean = false) {
+    const idx = this.participants.findIndex(someParticipant => someParticipant.extension === extension);
+    if (idx === -1 && !shouldAdd) {
+      return this;
+    }
+
+    const updatedParticipants = [...this.participants];
+    if (idx !== -1) {
+      updatedParticipants[idx] = { ...updatedParticipants[idx], ...participant };
+    } else {
+      updatedParticipants.push(participant);
+    }
+
+    return new Room({ ...this, participants: updatedParticipants });
   }
 
   hasCallWithId(id: string): boolean {

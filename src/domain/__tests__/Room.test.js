@@ -118,6 +118,41 @@ describe('Room', () => {
     });
   });
 
+  describe('on updated participant with UUID', () => {
+    it('should updated participant with corresponding UUID', async () => {
+      const uuid = 'some-uuid';
+      const room = new Room({ participants: [{ uuid, talking: true }] });
+
+      expect(room.participants[0].talking).toBeTruthy();
+
+      const updatedRoom = room.updateParticipant(uuid, { talking: false });
+
+      expect(updatedRoom.participants[0].talking).toBeFalsy();
+    });
+
+    it('should add participant when not found', async () => {
+      const uuid = 'some-uuid';
+      const room = new Room({ participants: [] });
+
+      const updatedRoom = room.updateParticipant(uuid, { talking: false }, true);
+
+      expect(updatedRoom.participants[0].talking).toBeFalsy();
+    });
+  });
+
+  describe('on updated participant by extension', () => {
+    it('should updated participant with corresponding extension', async () => {
+      const extension = 1234;
+      const room = new Room({ participants: [{ extension, talking: false }] });
+
+      expect(room.participants[0].talking).toBeFalsy();
+
+      const updatedRoom = room.updateParticipantByExtension(extension, { talking: true });
+
+      expect(updatedRoom.participants[0].talking).toBeTruthy();
+    });
+  });
+
   describe('on disconnect', () => {
     it('should destroy connected call', async () => {
       const room = new Room({ connectedCallSession: new CallSession({}) });
