@@ -32,8 +32,10 @@ export default (client: ApiRequester, baseUrl: string) => ({
     client.get(`${baseUrl}/users/${userUuid}/lines/${lineId}/associated/endpoints/sip`).then(SipLine.parse),
 
   getUserLinesSip(userUuid: string, lineIds: string[]): Promise<SipLine>[] {
+    // We have to catch all exception, unless Promise.all will returns an empty array for 2 lines with a custom one:
+    // The custom line will throw a 404 and break the Promise.all.
     // $FlowFixMe
-    return Promise.all(lineIds.map(lineId => this.getUserLineSip(userUuid, lineId)));
+    return Promise.all(lineIds.map(lineId => this.getUserLineSip(userUuid, lineId).catch(() => null)));
   },
 
   getUserLineSipFromToken(userUuid: string) {
