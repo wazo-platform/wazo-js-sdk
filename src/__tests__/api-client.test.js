@@ -148,7 +148,7 @@ describe('With not found API results', () => {
       expect(error.message).toBe(mockedNotFoundResponse.message);
       expect(error.status).toBe(404);
 
-      expect(global.fetch).toBeCalledWith(`https://${server}/api/ctid-ng/1.0/users/me/voicemails`, {
+      expect(global.fetch).toBeCalledWith(`https://${server}/api/calld/1.0/users/me/voicemails`, {
         method: 'get',
         body: null,
         headers: { 'X-Auth-Token': token, 'Content-Type': 'application/json', Accept: 'application/json' },
