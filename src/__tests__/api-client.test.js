@@ -138,7 +138,7 @@ describe('With not found API results', () => {
     it('should throw a BadResponse instance on 404 status', async () => {
       let error = null;
       try {
-        await client.ctidNg.listVoicemails();
+        await client.calld.listVoicemails();
       } catch (e) {
         error = e;
       }
