@@ -31,6 +31,10 @@ export default class CallApi {
     return getApiClient().callLogd.search(query, limit);
   }
 
+  static async searchBy(field: string, value: string, limit: number): Promise<CallLog[]> {
+    return getApiClient().callLogd.searchBy(field, value, limit);
+  }
+
   static async fetchSIP(session: Session, line: ?Line): Promise<any> {
     const lineToUse = line || session.primaryLine();
     return getApiClient().confd.getUserLineSip(session.uuid, lineToUse ? lineToUse.id : null);
