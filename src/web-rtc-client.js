@@ -2,12 +2,12 @@
 /* eslint-disable class-methods-use-this */
 /* global window, document, navigator */
 import 'webrtc-adapter';
-import { SessionStatus } from 'sip.js/lib/Enums';
-import { UA } from 'sip.js/lib/UA';
-import { Utils } from 'sip.js/lib/Utils';
-import { Exceptions } from 'sip.js/lib/Exceptions';
-import { Modifiers } from 'sip.js/lib/Web';
-import SIP from 'sip.js';
+import { SessionStatus } from '@wazo/sip.js/lib/Enums';
+import { UA } from '@wazo/sip.js/lib/UA';
+import { Utils } from '@wazo/sip.js/lib/Utils';
+import { Exceptions } from '@wazo/sip.js/lib/Exceptions';
+import { Modifiers } from '@wazo/sip.js/lib/Web';
+import SIP from '@wazo/sip.js';
 
 import Emitter from './utils/Emitter';
 import Session from './domain/Session';
@@ -36,7 +36,7 @@ const events = [
   'transactionDestroyed',
   'notify',
   'outOfDialogReferRequested',
-  'message',
+  'message', // i believe this is overwritten by its namesake in transportEvents
 ];
 const transportEvents = [
   'connected',
@@ -726,6 +726,10 @@ export default class WebRTCClient extends Emitter {
 
   _createWebRTCConfiguration() {
     const config: Object = {
+      // @TEMP + is overwritten in mobile.
+      registerOptions: {
+        expires: 6000, // default 600
+      },
       authorizationUser: this.config.authorizationUser,
       displayName: this.config.displayName,
       hackIpInContact: true,

@@ -39,6 +39,7 @@
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
+    "@wazo/sip.js": "^0.15.10",
     "events": "^3.1.0",
     "fstream": "^1.0.12",
     "globby": "^11.0.0",
@@ -48,7 +49,6 @@
     "moment": "^2.24.0",
     "node-fetch": "^2.6.0",
     "reconnecting-websocket": "^4.4.0",
-    "sip.js": "0.15.10",
     "webrtc-adapter": "^7.5.0"
   },
   "devDependencies": {
