@@ -1,5 +1,5 @@
-import SIP from 'sip.js';
-import { SessionStatus } from 'sip.js/lib/Enums';
+import SIP from '@wazo/sip.js';
+import { SessionStatus } from '@wazo/sip.js/lib/Enums';
 
 export default {
   sessionDescriptionHandler: SIP.sessionDescriptionHandler,
