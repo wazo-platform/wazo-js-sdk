@@ -1359,10 +1359,10 @@
     lodash.unescape "4.0.1"
     semver "5.5.0"
 
-"@wazo/sip.js@^0.15.10":
-  version "0.15.10"
-  resolved "https://registry.yarnpkg.com/@wazo/sip.js/-/sip.js-0.15.10.tgz#44048a4552f6fcb485145266c9c5d9235decb52b"
-  integrity sha512-FzfJdZHKOhjFw923+9ait5ojkB+OrR91gjetEK0KrbFUT1opxEzRasQ2T4BYNBiLjBsl/mDoePvBuLcFh40LYg==
+"@wazo/sip.js@^0.15.12":
+  version "0.15.12"
+  resolved "https://registry.yarnpkg.com/@wazo/sip.js/-/sip.js-0.15.12.tgz#1476c65657a3246f066b5bf81bd7416a90999b35"
+  integrity sha512-EXJvICTDp4YiBkbRKv7UpZaHP0849FIJnNs1SexHDBeTuvZbAz3UUO+ShpBYLAcoQh4FqvCj3DQyyPXLzaB7EQ==
   dependencies:
     crypto-js "^3.3.0"
     events "^3.1.0"

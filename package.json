@@ -1,6 +1,6 @@
 {
   "name": "@wazo/sdk",
-  "version": "0.30.0-rc1",
+  "version": "0.30.0-rc2",
   "description": "Wazo's JavaScript Software Development Kit.",
   "main": "dist/wazo-sdk.js",
   "author": "Wazo (http://wazo.io)",
@@ -39,7 +39,7 @@
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
-    "@wazo/sip.js": "^0.15.10",
+    "@wazo/sip.js": "^0.15.12",
     "events": "^3.1.0",
     "fstream": "^1.0.12",
     "globby": "^11.0.0",
