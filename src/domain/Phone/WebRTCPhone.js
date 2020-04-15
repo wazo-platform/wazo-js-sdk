@@ -211,6 +211,32 @@ export default class WebRTCPhone extends Emitter implements Phone {
       const { label, msid } = this._parseSDP(message.data);
       return this.eventEmitter.emit('reinvite', session, message, label, msid);
     });
+
+    if (!sipSession.sessionDescriptionHandler) {
+      return;
+    }
+
+    // Video events
+    const { peerConnection } = sipSession.sessionDescriptionHandler;
+    peerConnection.ontrack = rawEvent => {
+      const event = rawEvent;
+      const [stream] = event.streams;
+
+      if (event.track.kind === 'audio') {
+        return this.eventEmitter.emit('onAudioStream', stream);
+      }
+
+      // not sure this does anything
+      if (event.track.kind === 'video') {
+        event.track.enabled = false;
+      }
+
+      return this.eventEmitter.emit('onVideoStream', stream, event.track.id);
+    };
+
+    peerConnection.onremovestream = event => {
+      this.eventEmitter.emit('onRemoveStream', event.stream);
+    };
   }
 
   async startScreenSharing(constraints: Object) {
@@ -268,28 +294,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     this.eventEmitter.emit('onCallAccepted', callSession);
-
-    // Video events
-    const { peerConnection } = sipSession.sessionDescriptionHandler;
-    peerConnection.ontrack = rawEvent => {
-      const event = rawEvent;
-      const [stream] = event.streams;
-
-      if (event.track.kind === 'audio') {
-        return this.eventEmitter.emit('onAudioStream', stream);
-      }
-
-      // not sure this does anything
-      if (event.track.kind === 'video') {
-        event.track.enabled = false;
-      }
-
-      return this.eventEmitter.emit('onVideoStream', stream, event.track.id);
-    };
-
-    peerConnection.onremovestream = event => {
-      this.eventEmitter.emit('onRemoveStream', event.stream);
-    };
 
     return callSession;
   }
@@ -563,7 +567,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.eventEmitter.emit('playProgressSound', this.audioOutputDeviceId);
 
     this.currentSipSession = sipSession;
-    this._bindEvents(sipSession);
+
+    // We use a setImmediate because the sipSession becomes as InviteClientContext right after
+    // But I don't know when
+    setImmediate(() => this._bindEvents(sipSession));
 
     this.eventEmitter.emit('onCallOutgoing', callSession);
 
