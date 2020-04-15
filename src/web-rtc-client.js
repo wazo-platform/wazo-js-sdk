@@ -386,7 +386,7 @@ export default class WebRTCClient extends Emitter {
     const pc = sdh.peerConnection;
 
     const bindStreams = remoteStream => {
-      const localStream = this._getLocalStream(pc);
+      const localStream = this.getLocalStream(pc);
       const localAudioSource = this._addAudioStream(localStream);
       const remoteAudioSource = this._addAudioStream(remoteStream);
 
@@ -600,7 +600,7 @@ export default class WebRTCClient extends Emitter {
       return senders.some(sender => sender.track && sender.track.kind === 'audio' && sender.track.enabled);
     }
 
-    const localStreams = this._getLocalStream(pc);
+    const localStreams = this.getLocalStream(pc);
 
     return localStreams.some(stream => {
       const audioTracks = stream.getAudioTracks();
@@ -655,6 +655,27 @@ export default class WebRTCClient extends Emitter {
 
   _hasVideo() {
     return this.videoEnabled;
+  }
+
+  /**
+   * @param pc RTCPeerConnection
+   */
+  getLocalStream(pc: any) {
+    let localStream;
+
+    if (pc.getSenders) {
+      localStream = typeof global !== 'undefined' ? new global.window.MediaStream() : new window.MediaStream();
+      pc.getSenders().forEach(sender => {
+        const { track } = sender;
+        if (track) {
+          localStream.addTrack(track);
+        }
+      });
+    } else {
+      [localStream] = pc.getLocalStreams();
+    }
+
+    return localStream;
   }
 
   _connectIfNeeded(): Promise<void> {
@@ -890,7 +911,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     const pc = session.sessionDescriptionHandler.peerConnection;
-    const localStream = this._getLocalStream(pc);
+    const localStream = this.getLocalStream(pc);
 
     if (this._isWeb() && this._hasVideo()) {
       this._addLocalToVideoSession(this.getSipSessionId(session), localStream);
@@ -990,27 +1011,5 @@ export default class WebRTCClient extends Emitter {
     }
 
     return remoteStream;
-  }
-
-  /**
-   * @param pc RTCPeerConnection
-   */
-  _getLocalStream(pc: any) {
-    let localStream;
-
-    if (pc.getSenders) {
-      localStream = typeof global !== 'undefined' && global.window && global.window.MediaStream
-        ? new global.window.MediaStream() : new window.MediaStream();
-      pc.getSenders().forEach(sender => {
-        const { track } = sender;
-        if (track) {
-          localStream.addTrack(track);
-        }
-      });
-    } else {
-      [localStream] = pc.getLocalStreams();
-    }
-
-    return localStream;
   }
 }

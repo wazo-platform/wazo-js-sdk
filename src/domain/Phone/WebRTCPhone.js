@@ -1,3 +1,4 @@
+/* global navigator */
 // @flow
 
 import CallSession from '../CallSession';
@@ -29,6 +30,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
   acceptedSessions: Object;
 
   rejectedSessions: Object;
+
+  currentScreenShare: Object;
 
   constructor(
     client: WazoWebRTCClient,
@@ -197,6 +200,60 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
       this.eventEmitter.emit('onCallEnded', this._createCallSession(sipSession));
     });
+
+    sipSession.on('onMessage', (muas: SIP.MessageUserAgentServer) => {
+      if (muas.message.method === 'MESSAGE') {
+        this.eventEmitter.emit('onMessage', muas.message.body, muas);
+      }
+    });
+
+    sipSession.on('reinvite', (session: SIP.InviteClientContext, message: SIP.IncomingRequestMessage) => {
+      const { label, msid } = this._parseSDP(message.data);
+      return this.eventEmitter.emit('reinvite', session, message, label, msid);
+    });
+  }
+
+  async startScreenSharing(constraints: Object) {
+    if (!navigator.mediaDevices) {
+      return null;
+    }
+    const screenShareStream = await navigator.mediaDevices.getDisplayMedia({
+      video: {
+        cursor: 'always',
+      },
+      audio: false,
+    });
+
+    if (!screenShareStream) {
+      throw new Error(`Can't create medie stream for screensharing with contraints ${JSON.stringify(constraints)}`);
+    }
+
+    // $FlowFixMe
+    screenShareStream.local = true;
+
+    const screenTrack = screenShareStream.getVideoTracks()[0];
+    const sipSession = this.currentSipSession;
+    const pc = sipSession.sessionDescriptionHandler.peerConnection;
+    const sender = pc.getSenders().find(s => s.track.kind === 'video');
+    const localStream = this.client.getLocalStream(pc);
+
+    sender.replaceTrack(screenTrack);
+
+    screenTrack.onended = async () => this.eventEmitter.emit('onScreenShareEnded');
+
+    this.currentScreenShare = { stream: screenShareStream, sender, localStream };
+
+    return screenShareStream;
+  }
+
+  async stopScreenSharing() {
+    if (!this.currentScreenShare) {
+      return;
+    }
+
+    await this.currentScreenShare.stream.getVideoTracks().forEach(track => track.stop());
+
+    this.currentScreenShare.sender.replaceTrack(this.currentScreenShare.localStream.getVideoTracks()[0]);
   }
 
   _onCallAccepted(sipSession: SIP.sessionDescriptionHandler, videoEnabled: boolean): CallSession {
@@ -211,6 +268,29 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     this.eventEmitter.emit('onCallAccepted', callSession);
+
+    // Video events
+    const { peerConnection } = sipSession.sessionDescriptionHandler;
+    peerConnection.ontrack = rawEvent => {
+      const event = rawEvent;
+      const [stream] = event.streams;
+
+      if (event.track.kind === 'audio') {
+        return this.eventEmitter.emit('onAudioStream', stream);
+      }
+
+      // not sure this does anything
+      if (event.track.kind === 'video') {
+        event.track.enabled = false;
+      }
+
+      return this.eventEmitter.emit('onVideoStream', stream, event.track.id);
+    };
+
+    peerConnection.onremovestream = event => {
+      this.eventEmitter.emit('onRemoveStream', event.stream);
+    };
+
     return callSession;
   }
 
@@ -642,6 +722,19 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return this._createCallSession(this.sipSessions[sessionId]);
   }
 
+  sendMessage(sipSession: SIP.sessionDescriptionHandler = null, body: string) {
+    if (!sipSession) {
+      return;
+    }
+
+    sipSession.sendRequest('MESSAGE', {
+      body: {
+        body,
+        contentType: 'text/plain',
+      },
+    });
+  }
+
   _createIncomingCallSession(
     sipSession: SIP.sessionDescriptionHandler,
     cameraEnabled: boolean,
@@ -737,5 +830,15 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     return this.sipSessions[keys[keyIndex]];
+  }
+
+  _parseSDP(sdp: string) {
+    const labelMatches = sdp.match(/a=label:(.*)/m);
+    const msidMatches = sdp.match(/a=msid:(.*)/gm);
+
+    const label = labelMatches && labelMatches.length && labelMatches[1];
+    const msid = msidMatches && msidMatches.length && msidMatches[msidMatches.length - 1].split(' ')[1];
+
+    return { label, msid };
   }
 }
