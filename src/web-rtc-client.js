@@ -664,7 +664,9 @@ export default class WebRTCClient extends Emitter {
     let localStream;
 
     if (pc.getSenders) {
-      localStream = typeof global !== 'undefined' ? new global.window.MediaStream() : new window.MediaStream();
+      localStream = typeof global !== 'undefined' && global.window && global.window.MediaStream
+        ? new global.window.MediaStream() : new window.MediaStream();
+
       pc.getSenders().forEach(sender => {
         const { track } = sender;
         if (track) {
