@@ -103,11 +103,11 @@ export default class WebRTCClient extends Emitter {
     return [];
   }
 
-  constructor(config: WebRtcConfig, session: ?Session) {
+  constructor(config: WebRtcConfig, session: ?Session, uaConfigOverrides: ?Object) {
     super();
     this._buildConfig(config, session).then((newConfig: WebRtcConfig) => {
       this.config = newConfig;
-      this.userAgent = this.createUserAgent();
+      this.userAgent = this.createUserAgent(uaConfigOverrides);
     });
 
     this.audioOutputDeviceId = config.audioOutputDeviceId;
@@ -128,8 +128,8 @@ export default class WebRTCClient extends Emitter {
     this.audioElements = {};
   }
 
-  createUserAgent(): UA {
-    const webRTCConfiguration = this._createWebRTCConfiguration();
+  createUserAgent(configOverrides: ?Object): UA {
+    const webRTCConfiguration = this._createWebRTCConfiguration(configOverrides);
     const userAgent = new UA(webRTCConfiguration);
 
     events
@@ -745,12 +745,8 @@ export default class WebRTCClient extends Emitter {
     return !!this.localVideo;
   }
 
-  _createWebRTCConfiguration() {
+  _createWebRTCConfiguration(configOverrides: Object = {}) {
     const config: Object = {
-      // @TEMP + is overwritten in mobile.
-      registerOptions: {
-        expires: 6000, // default 600
-      },
       authorizationUser: this.config.authorizationUser,
       displayName: this.config.displayName,
       hackIpInContact: true,
@@ -792,7 +788,7 @@ export default class WebRTCClient extends Emitter {
       };
     }
 
-    return config;
+    return { ...config, ...configOverrides };
   }
 
   // eslint-disable-next-line no-unused-vars
