@@ -571,39 +571,6 @@ export default class WebRTCClient extends Emitter {
     this.videoEnabled = enabled;
   }
 
-  _checkMaxMergeSessions(nbSessions: number) {
-    if (nbSessions < MAX_MERGE_SESSIONS) {
-      return;
-    }
-
-    console.warn(
-      `Merging more than ${MAX_MERGE_SESSIONS} session is not recommended, it will consume too many resources.`,
-    );
-  }
-
-  _isWeb() {
-    return typeof window === 'object' && typeof document === 'object';
-  }
-
-  _hasAudio() {
-    return this.hasAudio;
-  }
-
-  _getAudioConstraints() {
-    return this.audio && this.audio.deviceId && this.audio.deviceId.exact ? this.audio : true;
-  }
-
-  _getVideoConstraints() {
-    if (!this.videoEnabled) {
-      return false;
-    }
-    return this.video && this.video.deviceId && this.video.deviceId.exact ? this.video : true;
-  }
-
-  _hasVideo() {
-    return this.videoEnabled;
-  }
-
   sessionHasLocalVideo(sessionId: string): boolean {
     const streams = this.videoSessions[sessionId];
     if (!streams || !streams.local) {
@@ -651,6 +618,43 @@ export default class WebRTCClient extends Emitter {
 
   getSipSessionId(sipSession: ?SIP.sessionDescriptionHandler): string {
     return (sipSession && sipSession.request && sipSession.request.callId) || (sipSession && sipSession.id) || '';
+  }
+
+  async waitForRegister() {
+    return new Promise(resolve => this.on('registered', resolve));
+  }
+
+  _checkMaxMergeSessions(nbSessions: number) {
+    if (nbSessions < MAX_MERGE_SESSIONS) {
+      return;
+    }
+
+    console.warn(
+      `Merging more than ${MAX_MERGE_SESSIONS} session is not recommended, it will consume too many resources.`,
+    );
+  }
+
+  _isWeb() {
+    return typeof window === 'object' && typeof document === 'object';
+  }
+
+  _hasAudio() {
+    return this.hasAudio;
+  }
+
+  _getAudioConstraints() {
+    return this.audio && this.audio.deviceId && this.audio.deviceId.exact ? this.audio : true;
+  }
+
+  _getVideoConstraints() {
+    if (!this.videoEnabled) {
+      return false;
+    }
+    return this.video && this.video.deviceId && this.video.deviceId.exact ? this.video : true;
+  }
+
+  _hasVideo() {
+    return this.videoEnabled;
   }
 
   _connectIfNeeded(): Promise<void> {
@@ -969,7 +973,8 @@ export default class WebRTCClient extends Emitter {
     let remoteStream;
 
     if (pc.getReceivers) {
-      remoteStream = typeof global !== 'undefined' ? new global.window.MediaStream() : new window.MediaStream();
+      remoteStream = typeof global !== 'undefined' && global.window && global.window.MediaStream
+        ? new global.window.MediaStream() : new window.MediaStream();
       pc.getReceivers().forEach(receiver => {
         const { track } = receiver;
         if (track) {
@@ -990,7 +995,8 @@ export default class WebRTCClient extends Emitter {
     let localStream;
 
     if (pc.getSenders) {
-      localStream = typeof global !== 'undefined' ? new global.window.MediaStream() : new window.MediaStream();
+      localStream = typeof global !== 'undefined' && global.window && global.window.MediaStream
+        ? new global.window.MediaStream() : new window.MediaStream();
       pc.getSenders().forEach(sender => {
         const { track } = sender;
         if (track) {

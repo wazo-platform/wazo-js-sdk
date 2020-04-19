@@ -16,6 +16,7 @@ type ConstructorParams = {
   agent: ?Object,
   clientId: ?string,
   refreshTokenCallback: Function,
+  token?: string,
 };
 
 const methods = ['head', 'get', 'post', 'put', 'delete'];
@@ -72,11 +73,14 @@ export default class ApiRequester {
   }
 
   // @see https://github.com/facebook/flow/issues/183#issuecomment-358607052
-  constructor({ server, refreshTokenCallback, clientId, agent = null }: ConstructorParams) {
+  constructor({ server, refreshTokenCallback, clientId, agent = null, token = null }: ConstructorParams) {
     this.server = server;
     this.agent = agent;
     this.clientId = clientId;
     this.refreshTokenCallback = refreshTokenCallback;
+    if (token) {
+      this.token = token;
+    }
 
     methods.forEach(method => {
       // $FlowFixMe
@@ -91,6 +95,10 @@ export default class ApiRequester {
 
   setTenant(tenant: ?string) {
     this.tenant = tenant;
+  }
+
+  setToken(token: string) {
+    this.token = token;
   }
 
   call(
