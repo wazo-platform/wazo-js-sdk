@@ -59,7 +59,7 @@ export default class ApiClient {
 
   initializeEndpoints(): void {
     this.auth = authMethods(this.client, `auth/${AUTH_VERSION}`);
-    this.application = applicationMethods(this.client, `ctid-ng/${APPLICATION_VERSION}/applications`);
+    this.application = applicationMethods(this.client, `calld/${APPLICATION_VERSION}/applications`);
     this.confd = confdMethods(this.client, `confd/${CONFD_VERSION}`);
     this.accessd = accessdMethods(this.client, `accessd/${ACCESSD_VERSION}`);
     this.ctidNg = ctidNgMethods(this.client, `ctid-ng/${CTIDNG_VERSION}`);
