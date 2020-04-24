@@ -48,6 +48,7 @@ import {
   getDisplayableNumber,
   getCallableNumber,
 } from './utils/PhoneNumberUtil';
+import ApiRequester from './utils/api-requester';
 import type {
   DirectorySource as DirectorySourceType,
   DirectorySources as DirectorySourcesType,
@@ -79,6 +80,7 @@ export type SwitchboardCallItems = SwitchboardCallItemsType;
 export type WebSocketMessage = WebSocketMessageType;
 
 export default {
+  ApiRequester,
   Emitter,
   PhoneNumberUtil,
   PhoneNumberFormat,

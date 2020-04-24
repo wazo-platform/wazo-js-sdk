@@ -103,7 +103,7 @@ export default class ApiClient {
   }
 
   setToken(token: string) {
-    this.client.token = token;
+    this.client.setToken(token);
   }
 
   setTenant(tenant: string) {

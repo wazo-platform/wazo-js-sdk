@@ -198,6 +198,22 @@ client.accessd.listAuthorizations();
 client.accessd.getAuthorization(uuid);
 ```
 
+### Calling an API endpoint without WazoApiClient
+
+```js
+const requester = new ApiRequester({ 
+  server: 'demo.wazo.community', // Engine server
+  refreshTokenCallback: () => {}, // Called when the token is refreshed
+  clientId: 'my-id', // ClientId used for refreshToken
+  agent: null, // http(s).Agent instance, allows custom proxy, unsecured https, certificate etc.
+  token: null, // User token (can be defined later with requester.setToken()
+});
+
+// Retrieve personal contacts
+const results = await requester.call('dird/0.1/personal');
+
+```
+
 ### WebRTCPhone
 ```js
 import { WazoWebRTCClient } from '@wazo/sdk';
@@ -221,6 +237,9 @@ phone.on('invite', (sipSession: SIP.sessionDescriptionHandler, hasVideo: boolean
   this.currentSipSession = sipSession;
   // ...
 });
+
+// We have to wait to be registered to be able to make a call
+await phone.waitForRegister();
 
 phone.call('1234');
 ```
