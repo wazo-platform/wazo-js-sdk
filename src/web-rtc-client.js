@@ -25,7 +25,7 @@ const replaceLocalIpModifier = (description: Object) => Promise.resolve({
 });
 
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
-const events = [
+export const events = [
   'registered',
   'unregistered',
   'registrationFailed',
@@ -38,7 +38,7 @@ const events = [
   'outOfDialogReferRequested',
   'message', // i believe this is overwritten by its namesake in transportEvents
 ];
-const transportEvents = [
+export const transportEvents = [
   'connected',
   'disconnected',
   'transportError',
