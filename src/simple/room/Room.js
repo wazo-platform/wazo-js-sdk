@@ -366,7 +366,7 @@ class Room extends Emitter {
     }
 
     this.participants = this.participants.filter(participant => participant.callId !== payload.data.call_id);
-    this.eventEmitter.emit(this.CONFERENCE_USER_PARTICIPANT_LEFT, payload.data);
+    this.eventEmitter.emit(this.CONFERENCE_USER_PARTICIPANT_LEFT, leftParticipant);
   };
 
   _onScreenshareEnded() {

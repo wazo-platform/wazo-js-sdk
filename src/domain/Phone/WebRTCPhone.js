@@ -624,9 +624,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     this.currentSipSession = sipSession;
 
-    // We use a setImmediate because the sipSession becomes as InviteClientContext right after
+    // We use a setTimeout because the sipSession becomes as InviteClientContext right after
     // But I don't know when
-    setImmediate(() => this._bindEvents(sipSession));
+    setTimeout(() => this._bindEvents(sipSession), 0);
 
     this.eventEmitter.emit(ON_CALL_OUTGOING, callSession);
 
