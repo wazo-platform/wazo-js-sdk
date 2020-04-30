@@ -206,7 +206,12 @@ class Room extends Emitter {
   }
 
   unmute() {
-    return Wazo.Phone.unmute(this.callSession);
+    Wazo.Phone.unmute(this.callSession);
+
+    if (this.localParticipant) {
+      this.localParticipant.onAudioUnMuted();
+      this._sendParticipantStatus(this.localParticipant);
+    }
   }
 
   _bindEvents() {
