@@ -77,9 +77,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   currentSipSession: SIP.sessionDescriptionHandler;
 
-  audioOutputDeviceId: string | typeof undefined;
+  audioOutputDeviceId: ?string;
 
-  audioRingDeviceId: string | typeof undefined;
+  audioRingDeviceId: ?string;
 
   ringingEnabled: boolean;
 
@@ -91,7 +91,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   constructor(
     client: WazoWebRTCClient,
-    audioOutputDeviceId?: string,
+    audioOutputDeviceId: ?string,
     allowVideo: boolean = false,
     audioRingDeviceId?: string,
   ) {

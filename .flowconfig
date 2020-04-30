@@ -13,6 +13,7 @@ deprecated-utility=off
 [options]
 emoji=true
 suppress_comment= \\(.\\|\n\\)*\\$FlowFixMe
+esproposal.optional_chaining=enable
 
 [version]
 0.119.1

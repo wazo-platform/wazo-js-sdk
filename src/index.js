@@ -60,6 +60,7 @@ import type {
   SwitchboardCallItems as SwitchboardCallItemsType,
 } from './domain/SwitchboardCall';
 import type { ConferenceParticipant as ConferenceParticipantType } from './domain/Conference';
+import Wazo from './simple/index';
 
 export type NewContact = NewContactType;
 export type ContactResponse = ContactResponseType;
@@ -117,4 +118,5 @@ export default {
   FORWARD_KEYS,
   LINE_STATE,
   SOCKET_EVENTS,
+  Wazo,
 };

@@ -1,0 +1,178 @@
+// @flow
+import Emitter from '../../utils/Emitter';
+
+class Participant extends Emitter {
+  uuid: string;
+  name: string;
+  number: string;
+  callId: string;
+  isTalking: boolean;
+  tracks: any[];
+  videoTracks: any[];
+  audioMuted: boolean;
+  videoMuted: boolean;
+  screensharing: boolean;
+  extra: Object;
+
+  ON_UPDATED: string;
+  ON_START_TALKING: string;
+  ON_STOP_TALKING: string;
+  ON_DISCONNECT: string;
+  ON_TRACK_SUBSCRIBED: string;
+  ON_TRACK_UNSUBSCRIBED: string;
+  ON_AUDIO_MUTED: string;
+  ON_AUDIO_UNMUTED: string;
+  ON_VIDEO_MUTED: string;
+  ON_VIDEO_UNMUTED: string;
+  ON_SCREENSHARING: string;
+  ON_STOP_SCREENSHARING: string;
+
+  /**
+   * @param rawParticipant string Participant sent via the Wazo WS
+   * @param extra Object extra status of the participant
+   */
+  constructor(rawParticipant: Object, extra: Object = {}) {
+    super();
+
+    this.uuid = rawParticipant.user_uuid;
+    this.name = rawParticipant.caller_id_name.replace("\\'", "'");
+    this.number = rawParticipant.caller_id_number;
+    this.callId = rawParticipant.call_id;
+    this.isTalking = false;
+    this.tracks = [];
+    this.videoTracks = [];
+    this.audioMuted = false;
+    this.videoMuted = false;
+    this.screensharing = false;
+    this.extra = extra;
+
+    this.ON_UPDATED = 'ON_UPDATED';
+    this.ON_START_TALKING = 'ON_PARTICIPANT_START_TALKING';
+    this.ON_STOP_TALKING = 'ON_PARTICIPANT_STOP_TALKING';
+    this.ON_DISCONNECT = 'ON_PARTICIPANT_DISCONNECT';
+    this.ON_TRACK_SUBSCRIBED = 'ON_TRACK_SUBSCRIBED';
+    this.ON_TRACK_UNSUBSCRIBED = 'ON_TRACK_UNSUBSCRIBED';
+    this.ON_AUDIO_MUTED = 'ON_AUDIO_MUTED';
+    this.ON_AUDIO_UNMUTED = 'ON_AUDIO_UNMUTED';
+    this.ON_VIDEO_MUTED = 'ON_VIDEO_MUTED';
+    this.ON_VIDEO_UNMUTED = 'ON_VIDEO_UNMUTED';
+    this.ON_SCREENSHARING = 'ON_SCREENSHARING';
+    this.ON_STOP_SCREENSHARING = 'ON_STOP_SCREENSHARING';
+  }
+
+  triggerEvent(name: string, ...args: any[]) {
+    this.eventEmitter.emit.apply(this.eventEmitter, [name, ...args]);
+    this.eventEmitter.emit(this.ON_UPDATED);
+  }
+
+  onTalking(isTalking: boolean) {
+    this.isTalking = isTalking;
+    this.triggerEvent(this.isTalking ? this.ON_START_TALKING : this.ON_STOP_TALKING);
+  }
+
+  onDisconnect() {
+    return this.triggerEvent(this.ON_DISCONNECT);
+  }
+
+  onTrackSubscribed(track: any) {
+    return this.triggerEvent(this.ON_TRACK_SUBSCRIBED, track);
+  }
+
+  onTrackUnSubscribed(track: any) {
+    return this.triggerEvent(this.ON_TRACK_UNSUBSCRIBED, track);
+  }
+
+  onAudioMuted() {
+    if (this.audioMuted) {
+      return;
+    }
+    this.audioMuted = true;
+
+    this.triggerEvent(this.ON_AUDIO_MUTED);
+  }
+
+  onAudioUnMuted() {
+    if (!this.audioMuted) {
+      return;
+    }
+    this.audioMuted = false;
+
+    this.triggerEvent(this.ON_AUDIO_UNMUTED);
+  }
+
+  onVideoMuted() {
+    if (this.videoMuted) {
+      return;
+    }
+    this.videoMuted = true;
+
+    this.triggerEvent(this.ON_VIDEO_MUTED);
+  }
+
+  onVideoUnMuted() {
+    if (!this.videoMuted) {
+      return;
+    }
+    this.videoMuted = false;
+
+    this.triggerEvent(this.ON_VIDEO_UNMUTED);
+  }
+
+  onScreensharing() {
+    if (this.screensharing) {
+      return;
+    }
+    this.screensharing = true;
+
+    this.triggerEvent(this.ON_SCREENSHARING);
+  }
+
+  onStopScreensharing() {
+    if (!this.screensharing) {
+      return;
+    }
+    this.screensharing = false;
+
+    this.triggerEvent(this.ON_STOP_TALKING);
+  }
+
+  getStatus() {
+    return {
+      callId: this.callId,
+      audioMuted: this.audioMuted,
+      videoMuted: this.videoMuted,
+      screensharing: this.screensharing,
+      extra: this.extra,
+    };
+  }
+
+  updateStatus(status: Object) {
+    if (status.audioMuted !== this.audioMuted) {
+      if (status.audioMuted) {
+        this.onAudioMuted();
+      } else {
+        this.onAudioUnMuted();
+      }
+    }
+
+    if (status.videoMuted !== this.videoMuted) {
+      if (status.videoMuted) {
+        this.onVideoMuted();
+      } else {
+        this.onVideoUnMuted();
+      }
+    }
+
+    if (status.screensharing !== this.screensharing) {
+      if (status.screensharing) {
+        this.onScreensharing();
+      } else {
+        this.onStopScreensharing();
+      }
+    }
+
+    this.extra = status.extra;
+  }
+}
+
+export default Participant;
