@@ -1,3 +1,4 @@
+/* global document */
 // @flow
 import sdpParser from 'sdp-transform';
 
@@ -15,19 +16,22 @@ const TYPE_REQUEST_PARTICIPANT_STATUS = 'participant_request_status';
 class Room extends Emitter {
   callSession: ?CallSession;
   extension: string;
-  sourceId: number;
+  sourceId: ?number;
   participants: Participant[];
-  callId: string;
+  callId: ?string;
   connected: boolean;
   localParticipant: ?Participant;
-  _callIdTrackIdMap: Object;
-  _unassociatedVideoTracks: Object;
+  _callIdStreamIdMap: Object;
+  _unassociatedVideoStreams: Object;
   _boundOnParticipantJoined: Function;
   _boundOnParticipantLeft: Function;
   _boundOnScreenshareEnded: Function;
   _boundOnMessage: Function;
   audioStream: ?any;
+  audioElement: ?any;
   extra: Object;
+  // video tag representing the room audio stream
+  roomAudioElement: any;
 
   CONFERENCE_USER_PARTICIPANT_JOINED: string;
   CONFERENCE_USER_PARTICIPANT_LEFT: string;
@@ -50,7 +54,7 @@ class Room extends Emitter {
    * @param callId string
    * @param extra Object
    */
-  constructor(callSession: CallSession, extension: string, sourceId: number, callId: string, extra: Object = {}) {
+  constructor(callSession: CallSession, extension: string, sourceId: ?number, callId: ?string, extra: Object = {}) {
     super();
     // Represents the room callSession
     this.callSession = callSession;
@@ -60,10 +64,10 @@ class Room extends Emitter {
     this.participants = [];
     this.connected = false;
     this.localParticipant = null;
-    // [callId]: trackId
-    this._callIdTrackIdMap = {};
-    // Track not yet associated to a participant, [trackId]: stream
-    this._unassociatedVideoTracks = {};
+    // [callId]: streamId
+    this._callIdStreamIdMap = {};
+    // Stream not yet associated to a participant, [streamId]: stream
+    this._unassociatedVideoStreams = {};
 
     // The shared audio stream of the room
     this.audioStream = null;
@@ -108,6 +112,7 @@ class Room extends Emitter {
     Wazo.Phone.checkSfu();
 
     const callSession = await Wazo.Phone.call(extension, constraints && !!constraints.video);
+    const room = new Room(callSession, extension, null, null, constraints.extra);
 
     // Call_created is triggered before call_accepted, so we have to listen for it here.
     let callId = '';
@@ -128,7 +133,10 @@ class Room extends Emitter {
     // Retrieve conference
     const conference = contacts.find(contact => contact.numbers.find(number => number.number === extension));
 
-    return new Room(callSession, extension, conference.sourceId, callId, constraints.extra);
+    room.setSourceId(conference.sourceId);
+    room.setCallId(callId);
+
+    return room;
   }
 
   static disconnect() {
@@ -146,6 +154,18 @@ class Room extends Emitter {
     Wazo.Phone.off(this.ON_SCREEN_SHARE_ENDED, this._boundOnScreenshareEnded);
     Wazo.Websocket.off(this.CONFERENCE_USER_PARTICIPANT_JOINED, this._boundOnParticipantJoined);
     Wazo.Websocket.off(this.CONFERENCE_USER_PARTICIPANT_LEFT, this._boundOnParticipantLeft);
+
+    if (this.roomAudioElement && document.body) {
+      document.body.removeChild(this.roomAudioElement);
+    }
+  }
+
+  setSourceId(sourceId: number) {
+    this.sourceId = sourceId;
+  }
+
+  setCallId(callId: string) {
+    this.callId = callId;
   }
 
   sendMessage(body: string, sipSession: any = null) {
@@ -227,29 +247,37 @@ class Room extends Emitter {
       }));
 
       labelMsidArray.forEach(({ label, msid }) => {
-        this._callIdTrackIdMap[String(label)] = msid;
+        this._callIdStreamIdMap[String(label)] = msid;
       });
     });
 
     this.on(this.ON_AUDIO_STREAM, stream => {
       this.audioStream = stream;
+      if (document.createElement) {
+        this.roomAudioElement = document.createElement('audio');
+        this.roomAudioElement.srcObject = stream;
+        this.roomAudioElement.autoplay = true;
+        if (document.body) {
+          document.body.appendChild(this.roomAudioElement);
+        }
+      }
     });
 
-    this.on(this.ON_VIDEO_STREAM, (stream, trackId) => {
-      // ON_VIDEO_STREAM is called before PARTICIPANT_JOINED, so we have to keep stream in `_unassociatedVideoTracks`.
-      this._unassociatedVideoTracks[trackId] = stream;
+    this.on(this.ON_VIDEO_STREAM, (stream, streamId) => {
+      // ON_VIDEO_STREAM is called before PARTICIPANT_JOINED, so we have to keep stream in `_unassociatedVideoStreams`.
+      this._unassociatedVideoStreams[streamId] = stream;
     });
 
     this.on(this.ON_REMOVE_STREAM, stream => {
       const participant = this.participants.find(someParticipant =>
-        someParticipant.tracks.find(track => track.id === stream.id));
+        someParticipant.streams.find(someStream => someStream.id === stream.id));
       if (!participant) {
         return;
       }
 
-      participant.videoTracks = participant.videoTracks.filter(track => track.id !== stream.id);
-      participant.tracks = participant.tracks.filter(track => track.id !== stream.id);
-      participant.onTrackUnSubscribed(stream);
+      participant.videoStreams = participant.videoStreams.filter(someStream => someStream.id !== stream.id);
+      participant.streams = participant.streams.filter(someStream => someStream.id !== stream.id);
+      participant.onStreamUnSubscribed(stream);
     });
   }
 
@@ -333,11 +361,11 @@ class Room extends Emitter {
 
     const localParticipant = participants.find(someParticipant => someParticipant instanceof Wazo.LocalParticipant);
     if (!this.localParticipant && localParticipant) {
-      const videoStream = this._getLocalVideoStream();
+      const videoStream = new Wazo.Stream(this._getLocalVideoStream(), localParticipant);
       if (videoStream) {
-        localParticipant.tracks.push(videoStream);
-        localParticipant.videoTracks.push(videoStream);
-        localParticipant.onTrackSubscribed(videoStream);
+        localParticipant.streams.push(videoStream);
+        localParticipant.videoStreams.push(videoStream);
+        localParticipant.onStreamSubscribed(videoStream);
       }
       this.localParticipant = localParticipant;
 
@@ -352,7 +380,7 @@ class Room extends Emitter {
 
     participants.forEach(someParticipant => {
       this.eventEmitter.emit(this.CONFERENCE_USER_PARTICIPANT_JOINED, someParticipant);
-      this._associateTracks(someParticipant);
+      this.__associateStreams(someParticipant);
     });
 
     return participants;
@@ -367,7 +395,7 @@ class Room extends Emitter {
 
     this.participants = this.participants.filter(participant => participant.callId !== payload.data.call_id);
     this.eventEmitter.emit(this.CONFERENCE_USER_PARTICIPANT_LEFT, leftParticipant);
-  };
+  }
 
   _onScreenshareEnded() {
     this.eventEmitter.emit(this.ON_SCREEN_SHARE_ENDED);
@@ -408,27 +436,27 @@ class Room extends Emitter {
     }));
   }
 
-  // Associate audio/video tracks to the participant and triggers events on it
-  _associateTracks(participant: Participant) {
-    const trackId = this._callIdTrackIdMap[participant.callId];
-    if (!trackId || !participant || !this.localParticipant || participant.callId === this.localParticipant.callId) {
+  // Associate audio/video streams to the participant and triggers events on it
+  __associateStreams(participant: Participant) {
+    const streamId = this._callIdStreamIdMap[participant.callId];
+    if (!streamId || !participant || !this.localParticipant || participant.callId === this.localParticipant.callId) {
       return;
     }
 
-    if (this._unassociatedVideoTracks[trackId]) {
+    if (this._unassociatedVideoStreams[streamId]) {
       // Try to associate stream
-      const track = this._unassociatedVideoTracks[trackId];
-      participant.tracks.push(track);
-      participant.videoTracks.push(track);
+      const stream = new Wazo.Stream(this._unassociatedVideoStreams[streamId], participant);
+      participant.streams.push(stream);
+      participant.videoStreams.push(stream);
 
-      participant.onTrackSubscribed(track);
+      participant.onStreamSubscribed(stream);
 
-      delete this._unassociatedVideoTracks[trackId];
+      delete this._unassociatedVideoStreams[streamId];
     }
   }
 
-  _getCallIdFromTrackId(trackId: string) {
-    return Object.keys(this._callIdTrackIdMap).find(key => this._callIdTrackIdMap[key] === trackId);
+  _getCallIdFromStreamId(streamId: string) {
+    return Object.keys(this._callIdStreamIdMap).find(key => this._callIdStreamIdMap[key] === streamId);
   }
 
   _getParticipantFromCallId(callId: string) {

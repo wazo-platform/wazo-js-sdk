@@ -7,8 +7,8 @@ class Participant extends Emitter {
   number: string;
   callId: string;
   isTalking: boolean;
-  tracks: any[];
-  videoTracks: any[];
+  streams: any[];
+  videoStreams: any[];
   audioMuted: boolean;
   videoMuted: boolean;
   screensharing: boolean;
@@ -18,8 +18,8 @@ class Participant extends Emitter {
   ON_START_TALKING: string;
   ON_STOP_TALKING: string;
   ON_DISCONNECT: string;
-  ON_TRACK_SUBSCRIBED: string;
-  ON_TRACK_UNSUBSCRIBED: string;
+  ON_STREAM_SUBSCRIBED: string;
+  ON_STREAM_UNSUBSCRIBED: string;
   ON_AUDIO_MUTED: string;
   ON_AUDIO_UNMUTED: string;
   ON_VIDEO_MUTED: string;
@@ -39,8 +39,8 @@ class Participant extends Emitter {
     this.number = rawParticipant.caller_id_number;
     this.callId = rawParticipant.call_id;
     this.isTalking = false;
-    this.tracks = [];
-    this.videoTracks = [];
+    this.streams = [];
+    this.videoStreams = [];
     this.audioMuted = false;
     this.videoMuted = false;
     this.screensharing = false;
@@ -50,8 +50,8 @@ class Participant extends Emitter {
     this.ON_START_TALKING = 'ON_PARTICIPANT_START_TALKING';
     this.ON_STOP_TALKING = 'ON_PARTICIPANT_STOP_TALKING';
     this.ON_DISCONNECT = 'ON_PARTICIPANT_DISCONNECT';
-    this.ON_TRACK_SUBSCRIBED = 'ON_TRACK_SUBSCRIBED';
-    this.ON_TRACK_UNSUBSCRIBED = 'ON_TRACK_UNSUBSCRIBED';
+    this.ON_STREAM_SUBSCRIBED = 'ON_STREAM_SUBSCRIBED';
+    this.ON_STREAM_UNSUBSCRIBED = 'ON_STREAM_UNSUBSCRIBED';
     this.ON_AUDIO_MUTED = 'ON_AUDIO_MUTED';
     this.ON_AUDIO_UNMUTED = 'ON_AUDIO_UNMUTED';
     this.ON_VIDEO_MUTED = 'ON_VIDEO_MUTED';
@@ -74,12 +74,12 @@ class Participant extends Emitter {
     return this.triggerEvent(this.ON_DISCONNECT);
   }
 
-  onTrackSubscribed(track: any) {
-    return this.triggerEvent(this.ON_TRACK_SUBSCRIBED, track);
+  onStreamSubscribed(stream: any) {
+    return this.triggerEvent(this.ON_STREAM_SUBSCRIBED, stream);
   }
 
-  onTrackUnSubscribed(track: any) {
-    return this.triggerEvent(this.ON_TRACK_UNSUBSCRIBED, track);
+  onStreamUnSubscribed(stream: any) {
+    return this.triggerEvent(this.ON_STREAM_UNSUBSCRIBED, stream);
   }
 
   onAudioMuted() {
