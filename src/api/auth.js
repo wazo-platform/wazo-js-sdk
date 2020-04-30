@@ -17,7 +17,7 @@ import type {
 import Session from '../domain/Session';
 
 const DEFAULT_BACKEND_USER = 'wazo_user';
-const DETAULT_EXPIRATION = 3600;
+export const DETAULT_EXPIRATION = 3600;
 
 export default (client: ApiRequester, baseUrl: string) => ({
   checkToken: (token: Token): Promise<Boolean> => client.head(`${baseUrl}/token/${token}`, null, {}),

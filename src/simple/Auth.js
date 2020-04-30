@@ -1,5 +1,6 @@
 // @flow
 import type Session from '../domain/Session';
+import { DETAULT_EXPIRATION } from '../api/auth';
 import getApiClient, {
   setCurrentServer,
   setApiToken,
@@ -8,6 +9,7 @@ import getApiClient, {
   setRefreshExpiration,
   setOnRefreshToken,
 } from '../service/getApiClient';
+
 import Wazo from './index';
 
 class Auth {
@@ -17,6 +19,10 @@ class Auth {
   host: ?string;
   session: ?Session;
   onRefreshTokenCallback: ?Function;
+
+  constructor() {
+    this.expiration = DETAULT_EXPIRATION;
+  }
 
   init(clientId: string, expiration: number, minSubscriptionType: number) {
     this.clientId = clientId;

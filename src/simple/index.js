@@ -5,7 +5,7 @@ import Room from './room/Room';
 import RemoteParticipant from './room/RemoteParticipant';
 import LocalParticipant from './room/LocalParticipant';
 
-export default {
+const Wazo = {
   Auth,
   Phone,
   Websocket,
@@ -13,3 +13,12 @@ export default {
   RemoteParticipant,
   LocalParticipant,
 };
+
+if (window) {
+  window.Wazo = Wazo;
+}
+if (global) {
+  global.Wazo = Wazo;
+}
+
+export default Wazo;
