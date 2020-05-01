@@ -56,6 +56,7 @@ class Websocket extends Emitter {
     if (this.ws) {
       this.ws.close();
     }
+    this.unbind();
   }
 }
 

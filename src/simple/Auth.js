@@ -19,9 +19,11 @@ class Auth {
   host: ?string;
   session: ?Session;
   onRefreshTokenCallback: ?Function;
+  authenticated: boolean;
 
   constructor() {
     this.expiration = DETAULT_EXPIRATION;
+    this.authenticated = false;
   }
 
   init(clientId: string, expiration: number, minSubscriptionType: number) {
@@ -90,6 +92,7 @@ class Auth {
     }
 
     this.session = null;
+    this.authenticated = false;
   }
 
   setOnRefreshToken(callback: Function) {
@@ -118,6 +121,9 @@ class Auth {
   }
 
   async _onAuthenticated(rawSession: Session) {
+    if (this.authenticated) {
+      return this.session;
+    }
     const session = rawSession;
     if (!session) {
       return null;
@@ -130,6 +136,8 @@ class Auth {
     this.session = session;
 
     this.checkSubscription(session, this.minSubscriptionType);
+
+    this.authenticated = true;
 
     return Wazo.Websocket.open(this.host, session);
   }
