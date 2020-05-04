@@ -31,11 +31,11 @@ class Participant extends Emitter {
    * @param rawParticipant string Participant sent via the Wazo WS
    * @param extra Object extra status of the participant
    */
-  constructor(rawParticipant: Object, extra: Object = {}) {
+  constructor(rawParticipant: Object = {}, extra: Object = {}) {
     super();
 
     this.uuid = rawParticipant.user_uuid;
-    this.name = rawParticipant.caller_id_name.replace("\\'", "'");
+    this.name = (rawParticipant.caller_id_name || '').replace("\\'", "'");
     this.number = rawParticipant.caller_id_number;
     this.callId = rawParticipant.call_id;
     this.isTalking = false;

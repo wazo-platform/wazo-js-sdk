@@ -24,6 +24,14 @@ class Stream {
         track.enabled = true;
       });
     };
+
+    return element;
+  }
+
+  detach() {
+    this.htmlStream.getTracks().forEach(track => {
+      track.stop();
+    });
   }
 
   get id() {
