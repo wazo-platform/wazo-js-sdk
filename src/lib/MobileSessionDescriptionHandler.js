@@ -131,7 +131,13 @@ export default SIPMethods =>
         this.initPeerConnection(options.peerConnectionOptions);
       }
 
-      this.shouldAcquireMedia = true;
+      // Merge passed constraints with saved constraints and save
+      let newConstraints = Object.assign({}, this.constraints, options.constraints);
+      newConstraints = this.checkAndDefaultConstraints(newConstraints);
+      if (JSON.stringify(newConstraints) !== JSON.stringify(this.constraints)) {
+        this.constraints = newConstraints;
+        this.shouldAcquireMedia = true;
+      }
 
       modifiers = modifiers || [];
       if (!Array.isArray(modifiers)) {
