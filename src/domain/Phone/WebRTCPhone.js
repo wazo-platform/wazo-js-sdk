@@ -257,10 +257,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.eventEmitter.emit(ON_CALL_ENDED, this._createCallSession(sipSession));
     });
 
-    sipSession.on('onMessage', (muas: SIP.MessageUserAgentServer) => {
-      if (muas.message.method === 'MESSAGE') {
-        this.eventEmitter.emit(ON_MESSAGE, muas.message.body, muas);
-      }
+    sipSession.on('message', (message) => {
+      this.eventEmitter.emit(ON_MESSAGE, message);
     });
 
     sipSession.on('reinvite', (session: SIP.InviteClientContext, message: SIP.IncomingRequestMessage) => {

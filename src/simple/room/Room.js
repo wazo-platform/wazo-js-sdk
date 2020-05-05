@@ -2,6 +2,7 @@
 // @flow
 import sdpParser from 'sdp-transform';
 
+import SIP from '../../sip';
 import type CallSession from '../../domain/CallSession';
 import getApiClient from '../../service/getApiClient';
 import Emitter from '../../utils/Emitter';
@@ -293,10 +294,13 @@ class Room extends Emitter {
       Wazo.Phone.on(event, (...args) => this.eventEmitter.emit.apply(this.eventEmitter, [event, ...args])));
   }
 
-  _onMessage(payload: Object) {
+  _onMessage(message: SIP.IncomingRequestMessage) {
+    if (message.method !== 'MESSAGE') {
+      return;
+    }
     let body;
     try {
-      body = JSON.parse(payload);
+      body = JSON.parse(message.body);
     } catch (e) {
       return;
     }
@@ -332,7 +336,7 @@ class Room extends Emitter {
         break;
     }
 
-    this.eventEmitter.emit(this.ON_MESSAGE, payload);
+    this.eventEmitter.emit(this.ON_MESSAGE, body);
   }
 
   async _onParticipantJoined(payload: Object) {
