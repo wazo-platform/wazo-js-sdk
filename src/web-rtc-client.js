@@ -73,6 +73,7 @@ type WebRtcConfig = {
 // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
 export default class WebRTCClient extends Emitter {
   config: WebRtcConfig;
+  uaConfigOverrides: ?Object;
   userAgent: UA;
   hasAudio: boolean;
   audio: Object | boolean;
@@ -111,6 +112,7 @@ export default class WebRTCClient extends Emitter {
     });
 
     this.audioOutputDeviceId = config.audioOutputDeviceId;
+    this.uaConfigOverrides = uaConfigOverrides;
 
     this.configureMedia(config.media);
 
@@ -159,6 +161,10 @@ export default class WebRTCClient extends Emitter {
 
   register() {
     IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] register', !!this.userAgent, this.isRegistered());
+    if (!this.userAgent) {
+      IssueReporter.log(IssueReporter.INFO, '[WebRtcClient][register] recreating UA');
+      this.userAgent = this.createUserAgent(this.uaConfigOverrides);
+    }
     if (!this.userAgent || this.isRegistered()) {
       return;
     }
@@ -182,6 +188,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     this.userAgent.stop();
+    this.userAgent = null;
   }
 
   // eslint-disable-next-line no-unused-vars
@@ -482,6 +489,7 @@ export default class WebRTCClient extends Emitter {
   close() {
     IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] close', !!this.userAgent);
     this._cleanupMedia();
+    this.connectionPromise = null;
 
     (Object.values(this.audioElements): any).forEach((audioElement: HTMLAudioElement) => {
       // eslint-disable-next-line
@@ -683,14 +691,19 @@ export default class WebRTCClient extends Emitter {
   _connectIfNeeded(): Promise<void> {
     return new Promise(resolve => {
       IssueReporter.log(IssueReporter.INFO, '[WebRtcClient][_connectIfNeeded]', this.userAgent.transport.isConnected());
+      if (!this.userAgent) {
+        IssueReporter.log(IssueReporter.INFO, '[WebRtcClient][_connectIfNeeded] recreating UA');
+        this.userAgent = this.createUserAgent(this.uaConfigOverrides);
+      }
+
       if (!this.userAgent.transport.isConnected()) {
         if (this.connectionPromise) {
           return this.connectionPromise;
         }
 
         IssueReporter.log(IssueReporter.INFO, '[WebRtcClient][_connectIfNeeded] connecting');
-        this.connectionPromise = this.userAgent.transport
-          .connectPromise()
+        this.connectionPromise = this.userAgent
+          .start()
           .then(resolve)
           .catch(error => {
             this.connectionPromise = null;
@@ -760,7 +773,7 @@ export default class WebRTCClient extends Emitter {
       transportOptions: {
         maxReconnectionAttempts: 100000,
         reconnectionTimeout: 2,
-        traceSip: false,
+        traceSip: configOverrides.traceSip || false,
         wsServers: `wss://${this.config.host}:${this.config.port || 443}/api/asterisk/ws`,
       },
       sessionDescriptionHandlerFactoryOptions: {

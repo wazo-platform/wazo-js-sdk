@@ -160,7 +160,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     try {
       this.client.register();
-    } catch (e) {
+    } catch (error) {
+      console.error('[WebRtcPhone] register error', error, error.message, error.stack);
       // Avoid exception on `t.server.scheme` in sip transport when losing the webrtc socket connection
     }
   }
@@ -656,7 +657,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   async hangup(callSession: ?CallSession): Promise<void> {
     const sipSession = this._findSipSession(callSession);
     if (!sipSession) {
-      throw new Error('Call is unknown to the WebRTC phone');
+      return console.error('Call is unknown to the WebRTC phone');
     }
 
     const sipSessionId = this.client.getSipSessionId(sipSession);
