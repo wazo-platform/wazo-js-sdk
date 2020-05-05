@@ -1,7 +1,7 @@
 /* eslint-disable */
 // @see: https://github.com/onsip/SIP.js/blob/0.13.8/src/Web/SessionDescriptionHandler.ts
 import EventEmitter from 'events';
-import { SessionDescriptionHandlerObserver } from '@wazo/sip.js/lib/Web/SessionDescriptionHandlerObserver';
+import { SessionDescriptionHandlerObserver } from 'sip.js/lib/Web/SessionDescriptionHandlerObserver';
 
 // Avoid issue with sip.js :
 // `window.addEventListener` is not a function. (In 'window.addEventListener("unload",this.unloadListener)')`

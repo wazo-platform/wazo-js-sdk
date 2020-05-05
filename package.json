@@ -39,7 +39,7 @@
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
-    "@wazo/sip.js": "^0.15.12",
+    "sip.js": "^0.15.11",
     "events": "^3.1.0",
     "fstream": "^1.0.12",
     "globby": "^11.0.0",

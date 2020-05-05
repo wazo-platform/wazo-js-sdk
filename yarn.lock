@@ -1487,15 +1487,6 @@
     lodash.unescape "4.0.1"
     semver "5.5.0"
 
-"@wazo/sip.js@^0.15.12":
-  version "0.15.12"
-  resolved "https://registry.yarnpkg.com/@wazo/sip.js/-/sip.js-0.15.12.tgz#1476c65657a3246f066b5bf81bd7416a90999b35"
-  integrity sha512-EXJvICTDp4YiBkbRKv7UpZaHP0849FIJnNs1SexHDBeTuvZbAz3UUO+ShpBYLAcoQh4FqvCj3DQyyPXLzaB7EQ==
-  dependencies:
-    crypto-js "^3.3.0"
-    events "^3.1.0"
-    tslib "^1.10.0"
-
 "@webassemblyjs/ast@1.9.0":
   version "1.9.0"
   resolved "https://registry.yarnpkg.com/@webassemblyjs/ast/-/ast-1.9.0.tgz#bd850604b4042459a5a41cd7d338cbed695ed964"
@@ -7717,6 +7708,15 @@ signal-exit@^3.0.0, signal-exit@^3.0.2:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/signal-exit/-/signal-exit-3.0.2.tgz#b5fdc08f1287ea1178628e415e25132b73646c6d"
   integrity sha1-tf3AjxKH6hF4Yo5BXiUTK3NkbG0=
+
+sip.js@^0.15.11:
+  version "0.15.11"
+  resolved "https://registry.yarnpkg.com/sip.js/-/sip.js-0.15.11.tgz#553151adc1cfd8e0985bed771a4534b7d263ed44"
+  integrity sha512-8sVNvQMVWRqSDGVy5Kmt6LAOrDcTYo8539e0h7xp9EtoGbRkntDuVPr9dFL/lqRK2Z6xB2xsfZe5jT2L1OcjgA==
+  dependencies:
+    crypto-js "^3.3.0"
+    events "^3.1.0"
+    tslib "^1.10.0"
 
 sisteransi@^1.0.0:
   version "1.0.2"

@@ -1,6 +1,6 @@
 // @flow
 
-import SIP from '@wazo/sip.js';
+import SIP from 'sip.js';
 
 import ApiClient from './api-client';
 import WebRTCClient from './web-rtc-client';

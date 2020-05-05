@@ -2,12 +2,12 @@
 /* eslint-disable class-methods-use-this */
 /* global window, document, navigator */
 import 'webrtc-adapter';
-import { SessionStatus } from '@wazo/sip.js/lib/Enums';
-import { UA } from '@wazo/sip.js/lib/UA';
-import { Utils } from '@wazo/sip.js/lib/Utils';
-import { Exceptions } from '@wazo/sip.js/lib/Exceptions';
-import { Modifiers } from '@wazo/sip.js/lib/Web';
-import SIP from '@wazo/sip.js';
+import { SessionStatus } from 'sip.js/lib/Enums';
+import { UA } from 'sip.js/lib/UA';
+import { Utils } from 'sip.js/lib/Utils';
+import { Exceptions } from 'sip.js/lib/Exceptions';
+import { Modifiers } from 'sip.js/lib/Web';
+import SIP from 'sip.js';
 
 import Emitter from './utils/Emitter';
 import Session from './domain/Session';
