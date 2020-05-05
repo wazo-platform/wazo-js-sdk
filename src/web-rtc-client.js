@@ -106,13 +106,13 @@ export default class WebRTCClient extends Emitter {
 
   constructor(config: WebRtcConfig, session: ?Session, uaConfigOverrides: ?Object) {
     super();
+    this.uaConfigOverrides = uaConfigOverrides;
     this._buildConfig(config, session).then((newConfig: WebRtcConfig) => {
       this.config = newConfig;
       this.userAgent = this.createUserAgent(uaConfigOverrides);
     });
 
     this.audioOutputDeviceId = config.audioOutputDeviceId;
-    this.uaConfigOverrides = uaConfigOverrides;
 
     this.configureMedia(config.media);
 
@@ -188,7 +188,6 @@ export default class WebRTCClient extends Emitter {
     }
 
     this.userAgent.stop();
-    this.userAgent = null;
   }
 
   // eslint-disable-next-line no-unused-vars
@@ -508,7 +507,8 @@ export default class WebRTCClient extends Emitter {
 
     this.userAgent.removeAllListeners();
 
-    return this.userAgent.stop();
+    this.userAgent.stop();
+    this.userAgent = null;
   }
 
   changeAudioOutputDevice(id: string) {
