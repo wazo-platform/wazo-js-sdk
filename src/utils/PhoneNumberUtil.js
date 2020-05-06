@@ -29,8 +29,10 @@ const getDisplayableNumber = (number: string, country: string, asYouType: boolea
     });
   } else {
     const parsedNumber = PhoneNumberUtil.parseAndKeepRawInput(number, country);
+    const numberCountry = PhoneNumberUtil.getRegionCodeForNumber(parsedNumber);
+    const format = numberCountry === country ? PhoneNumberFormat.NATIONAL : PhoneNumberFormat.INTERNATIONAL;
 
-    displayValue = PhoneNumberUtil.format(parsedNumber, PhoneNumberFormat.NATIONAL);
+    displayValue = PhoneNumberUtil.format(parsedNumber, format);
   }
 
   return displayValue;
