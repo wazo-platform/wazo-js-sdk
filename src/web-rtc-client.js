@@ -702,7 +702,7 @@ export default class WebRTCClient extends Emitter {
         }
 
         IssueReporter.log(IssueReporter.INFO, '[WebRtcClient][_connectIfNeeded] connecting');
-        this.connectionPromise = this.userAgent
+        this.connectionPromise = this.userAgent.start && this.userAgent
           .start()
           .then(resolve)
           .catch(error => {
