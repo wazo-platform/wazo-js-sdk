@@ -14,9 +14,16 @@ class Stream {
 
   attach(rawElement: ?HTMLVideoElement) {
     const element = rawElement || document.createElement('video');
+    const isLocal = this.participant instanceof Wazo.LocalParticipant;
     element.autoplay = true;
     element.srcObject = this.htmlStream;
-    element.muted = this.participant instanceof Wazo.LocalParticipant;
+    element.muted = isLocal;
+
+    if (isLocal) {
+      // Reverse local video
+      element.style.transform = 'scale(-1, 1)';
+    }
+
     element.onloadedmetadata = () => {
       const tracks = this.htmlStream ? this.htmlStream.getVideoTracks() : [];
       tracks.forEach(track => {
