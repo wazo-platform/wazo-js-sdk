@@ -120,6 +120,25 @@ class Auth {
     return this.session;
   }
 
+  getFirstName(): string {
+    if (!this.session || !this.session.profile) {
+      return '';
+    }
+    return this.session.profile.firstName;
+  }
+
+  getLastName(): string {
+    if (!this.session || !this.session.profile) {
+      return '';
+    }
+
+    return this.session.profile.lastName;
+  }
+
+  getName() {
+    return `${this.getFirstName()} ${this.getLastName()}`;
+  }
+
   async _onAuthenticated(rawSession: Session) {
     if (this.authenticated) {
       return this.session;
