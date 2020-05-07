@@ -90,6 +90,12 @@ export default (client: ApiRequester, baseUrl: string) => ({
   deleteVoicemail: (voicemailId: number): Promise<Boolean> =>
     client.delete(`${baseUrl}/users/me/voicemails/messages/${voicemailId}`),
 
+  getVoicemailUrl: (voicemail: Voicemail) => {
+    const body = { token: client.token };
+
+    return client.computeUrl('get', `${baseUrl}/users/me/voicemails/messages/${voicemail.id}/recording`, body);
+  },
+
   fetchSwitchboardHeldCalls: (switchboardUuid: UUID) =>
     client.get(`${baseUrl}/switchboards/${switchboardUuid}/calls/held`),
 
