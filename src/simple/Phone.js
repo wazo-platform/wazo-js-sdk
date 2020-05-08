@@ -113,7 +113,7 @@ class Phone extends Emitter {
     return this.phone && this.phone.turnCameraOn(callSession);
   }
 
-  startScreenSharing(constraints: Object) {
+  async startScreenSharing(constraints: Object) {
     return this.phone && this.phone.startScreenSharing(constraints);
   }
 

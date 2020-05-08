@@ -181,13 +181,19 @@ class Room extends Emitter {
     return this.sendMessage(JSON.stringify({ type: TYPE_SIGNAL, content }));
   }
 
-  startScreenSharing(constraints: Object) {
-    Wazo.Phone.startScreenSharing(constraints);
+  async startScreenSharing(constraints: Object) {
+    const screensharingStream = await Wazo.Phone.startScreenSharing(constraints);
+    if (!screensharingStream) {
+      console.warn('screensharing stream is null (likely due to user cancellation)');
+      return null;
+    }
 
     if (this.localParticipant) {
       this.localParticipant.onScreensharing();
       this._sendParticipantStatus(this.localParticipant);
     }
+
+    return screensharingStream;
   }
 
   stopScreenSharing() {
