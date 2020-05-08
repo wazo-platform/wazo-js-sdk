@@ -173,7 +173,7 @@ class Participant extends Emitter {
 
     // Poor man's object comparision
     if (JSON.stringify(this.extra) !== JSON.stringify(status.extra)) {
-      this.extra = status.extra;
+      this.extra = { ...this.extra, ...status.extra };
       this.eventEmitter.emit(this.ON_UPDATED);
     }
   }
