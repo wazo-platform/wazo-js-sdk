@@ -83,6 +83,7 @@ export default class WebRTCClient extends Emitter {
   localVideo: ?Object & ?boolean;
   audioContext: ?AudioContext;
   audioStreams: Object;
+  audioMixer: ?ChannelMerger;
   mergeDestination: ?MediaStreamAudioDestinationNode;
   audioOutputDeviceId: ?string;
   videoSessions: Object;
@@ -371,7 +372,7 @@ export default class WebRTCClient extends Emitter {
   merge(sessions: Array<SIP.InviteClientContext>): Array<Promise<boolean>> {
     this._checkMaxMergeSessions(sessions.length);
     if (this.audioContext) {
-      this.mergeDestination = this.audioContext.createMediaStreamDestination();
+      this.audioMixer= this.audioContext.createChannelMerger(10);
     }
 
     if (this.audioContext && this.audioContext.state === 'suspended') {
@@ -381,10 +382,6 @@ export default class WebRTCClient extends Emitter {
     return sessions.map(this.addToMerge.bind(this));
   }
 
-  isFirefox(): boolean {
-    return this._isWeb() && navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
-  }
-
   addToMerge(session: SIP.InviteClientContext): Promise<boolean> {
     this._checkMaxMergeSessions(Object.keys(this.audioStreams).length + 1);
 
@@ -392,24 +389,12 @@ export default class WebRTCClient extends Emitter {
     const pc = sdh.peerConnection;
 
     const bindStreams = remoteStream => {
-      const localStream = this.getLocalStream(pc);
-      const localAudioSource = this._addAudioStream(localStream);
+      const audioPeerDestination = this.audioContext.createMediaStreamDestination();
+      this.audioMixer.connect(audioPeerDestination);
       const remoteAudioSource = this._addAudioStream(remoteStream);
 
-      if (remoteStream) {
-        pc.removeStream(remoteStream);
-      }
-      pc.removeStream(localStream);
-
-      if (this.mergeDestination) {
-        pc.addStream(this.mergeDestination.stream);
-      }
-
-      return pc.createOffer(this._getRtcOptions(false)).then(offer => {
-        this.audioStreams[this.getSipSessionId(session)] = { localAudioSource, remoteAudioSource };
-
-        pc.setLocalDescription(offer);
-      });
+      const sender = pc.getSenders().filter(s => s.track.kind == 'audio')[0];
+      sender.replaceTrack(audioPeerDestination.stream.getAudioTracks()[0]);
     };
 
     if (session.localHold && !this.isFirefox()) {
@@ -483,6 +468,10 @@ export default class WebRTCClient extends Emitter {
 
   getContactIdentifier() {
     return this.userAgent ? `${this.userAgent.configuration.contactName}/${this.userAgent.contact.uri}` : null;
+  }
+
+  isFirefox(): boolean {
+    return this._isWeb() && navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
   }
 
   close() {
@@ -895,8 +884,8 @@ export default class WebRTCClient extends Emitter {
       return null;
     }
     const audioSource = this.audioContext.createMediaStreamSource(mediaStream);
-    if (this.mergeDestination) {
-      audioSource.connect(this.mergeDestination);
+    if (this.audioMixer) {
+      audioSource.connect(this.audioMixer);
     }
 
     return audioSource;
