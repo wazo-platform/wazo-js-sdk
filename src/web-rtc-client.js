@@ -84,7 +84,6 @@ export default class WebRTCClient extends Emitter {
   audioContext: ?AudioContext;
   audioStreams: Object;
   audioMixer: ?ChannelMerger;
-  mergeDestination: ?MediaStreamAudioDestinationNode;
   audioOutputDeviceId: ?string;
   videoSessions: Object;
   connectionPromise: ?Promise<void>;
@@ -413,9 +412,9 @@ export default class WebRTCClient extends Emitter {
     const { localAudioSource, remoteAudioSource } = this.audioStreams[this.getSipSessionId(session)];
 
     if (remoteAudioSource) {
-      remoteAudioSource.disconnect(this.mergeDestination);
+      remoteAudioSource.disconnect(this.audioMixer);
     }
-    localAudioSource.disconnect(this.mergeDestination);
+    localAudioSource.disconnect(this.audioMixer);
 
     if (this.audioContext) {
       const newDestination = this.audioContext.createMediaStreamDestination();
@@ -428,8 +427,8 @@ export default class WebRTCClient extends Emitter {
         return null;
       }
 
-      if (this.mergeDestination && this.mergeDestination.stream) {
-        pc.removeStream(this.mergeDestination.stream);
+      if (this.audioMixer && this.audioMixer.stream) {
+        pc.removeStream(this.audioMixer.stream);
       }
       pc.addStream(newDestination.stream);
     }
@@ -455,7 +454,7 @@ export default class WebRTCClient extends Emitter {
     return new Promise((resolve, reject) => {
       Promise.all(promises)
         .then(() => {
-          this.mergeDestination = null;
+          this.audioMixer = null;
           resolve(true);
         })
         .catch(reject);
