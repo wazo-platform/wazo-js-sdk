@@ -388,6 +388,10 @@ export default class WebRTCClient extends Emitter {
     const pc = sdh.peerConnection;
 
     const bindStreams = remoteStream => {
+      const localStream = this.getLocalStream(pc);
+      const micro = this.audioContext.createMediaStreamSource(localStream);
+      micro.connect(this.audioMixer);
+
       const audioPeerDestination = this.audioContext.createMediaStreamDestination();
       this.audioMixer.connect(audioPeerDestination);
       const remoteAudioSource = this._addAudioStream(remoteStream);
