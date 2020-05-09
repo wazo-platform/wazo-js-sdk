@@ -427,23 +427,16 @@ export default class WebRTCClient extends Emitter {
         return null;
       }
 
-      if (this.audioMixer && this.audioMixer.stream) {
-        pc.removeStream(this.audioMixer.stream);
-      }
-      pc.addStream(newDestination.stream);
     }
 
     delete this.audioStreams[this.getSipSessionId(session)];
 
-    return pc.createOffer(this._getRtcOptions(false)).then(offer => {
-      const result = pc.setLocalDescription(offer);
+    if (shouldHold) {
+      this.hold(session);
+    }
 
-      if (shouldHold) {
-        this.hold(session);
-      }
+    return;
 
-      return result;
-    });
   }
 
   unmerge(sessions: Array<SIP.InviteClientContext>): Promise<boolean> {
