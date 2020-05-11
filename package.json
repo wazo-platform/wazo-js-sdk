@@ -1,6 +1,6 @@
 {
   "name": "@wazo/sdk",
-  "version": "0.29.0",
+  "version": "0.30.0-rc7",
   "description": "Wazo's JavaScript Software Development Kit.",
   "main": "dist/wazo-sdk.js",
   "author": "Wazo (http://wazo.io)",
@@ -39,6 +39,7 @@
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
+    "@wazo/sip.js": "^0.15.12",
     "events": "^3.1.0",
     "fstream": "^1.0.12",
     "globby": "^11.0.0",
@@ -48,7 +49,6 @@
     "moment": "^2.24.0",
     "node-fetch": "^2.6.0",
     "reconnecting-websocket": "^4.4.0",
-    "sip.js": "0.15.10",
     "webrtc-adapter": "^7.5.0"
   },
   "devDependencies": {

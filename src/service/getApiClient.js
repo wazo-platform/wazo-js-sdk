@@ -3,18 +3,17 @@
 
 import WazoApiClient from '../api-client';
 
-global.wazoClients = {};
-
 // Can't use node cache mechanism here because when requiring lib/CallApi.js
 // this file will be merge with CallApi.js and the cache will be lost.
-// So we have to tore values in global scope.
-global.wazoClientId = {};
-global.wazoClientToken = {};
-global.wazoRefreshToken = {};
-global.wazoOnRefreshToken = {};
-global.wazoRefreshExpiration = {};
-global.wazoRefreshBackend = {};
-global.wazoIsMobile = {};
+// So we have to store values in global scope.
+global.wazoClients = global.wazoClients || {};
+global.wazoClientId = global.wazoClientId || {};
+global.wazoClientToken = global.wazoClientToken || {};
+global.wazoRefreshToken = global.wazoRefreshToken || {};
+global.wazoOnRefreshToken = global.wazoOnRefreshToken || {};
+global.wazoRefreshExpiration = global.wazoRefreshExpiration || {};
+global.wazoRefreshBackend = global.wazoRefreshBackend || {};
+global.wazoIsMobile = global.wazoIsMobile || {};
 
 export const setApiClientId = (clientId: string, forServer: ?string = null) => {
   global.wazoClientId[forServer] = clientId;

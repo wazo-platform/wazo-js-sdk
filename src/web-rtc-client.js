@@ -2,12 +2,12 @@
 /* eslint-disable class-methods-use-this */
 /* global window, document, navigator */
 import 'webrtc-adapter';
-import { SessionStatus } from 'sip.js/lib/Enums';
-import { UA } from 'sip.js/lib/UA';
-import { Utils } from 'sip.js/lib/Utils';
-import { Exceptions } from 'sip.js/lib/Exceptions';
-import { Modifiers } from 'sip.js/lib/Web';
-import SIP from 'sip.js';
+import { SessionStatus } from '@wazo/sip.js/lib/Enums';
+import { UA } from '@wazo/sip.js/lib/UA';
+import { Utils } from '@wazo/sip.js/lib/Utils';
+import { Exceptions } from '@wazo/sip.js/lib/Exceptions';
+import { Modifiers } from '@wazo/sip.js/lib/Web';
+import SIP from '@wazo/sip.js';
 
 import Emitter from './utils/Emitter';
 import Session from './domain/Session';
@@ -25,7 +25,7 @@ const replaceLocalIpModifier = (description: Object) => Promise.resolve({
 });
 
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
-const events = [
+export const events = [
   'registered',
   'unregistered',
   'registrationFailed',
@@ -36,9 +36,9 @@ const events = [
   'transactionDestroyed',
   'notify',
   'outOfDialogReferRequested',
-  'message',
+  'message', // i believe this is overwritten by its namesake in transportEvents
 ];
-const transportEvents = [
+export const transportEvents = [
   'connected',
   'disconnected',
   'transportError',
@@ -103,11 +103,11 @@ export default class WebRTCClient extends Emitter {
     return [];
   }
 
-  constructor(config: WebRtcConfig, session: ?Session) {
+  constructor(config: WebRtcConfig, session: ?Session, uaConfigOverrides: ?Object) {
     super();
     this._buildConfig(config, session).then((newConfig: WebRtcConfig) => {
       this.config = newConfig;
-      this.userAgent = this.createUserAgent();
+      this.userAgent = this.createUserAgent(uaConfigOverrides);
     });
 
     this.audioOutputDeviceId = config.audioOutputDeviceId;
@@ -128,8 +128,8 @@ export default class WebRTCClient extends Emitter {
     this.audioElements = {};
   }
 
-  createUserAgent(): UA {
-    const webRTCConfiguration = this._createWebRTCConfiguration();
+  createUserAgent(configOverrides: ?Object): UA {
+    const webRTCConfiguration = this._createWebRTCConfiguration(configOverrides);
     const userAgent = new UA(webRTCConfiguration);
 
     events
@@ -386,7 +386,7 @@ export default class WebRTCClient extends Emitter {
     const pc = sdh.peerConnection;
 
     const bindStreams = remoteStream => {
-      const localStream = this._getLocalStream(pc);
+      const localStream = this.getLocalStream(pc);
       const localAudioSource = this._addAudioStream(localStream);
       const remoteAudioSource = this._addAudioStream(remoteStream);
 
@@ -600,7 +600,7 @@ export default class WebRTCClient extends Emitter {
       return senders.some(sender => sender.track && sender.track.kind === 'audio' && sender.track.enabled);
     }
 
-    const localStreams = this._getLocalStream(pc);
+    const localStreams = this.getLocalStream(pc);
 
     return localStreams.some(stream => {
       const audioTracks = stream.getAudioTracks();
@@ -655,6 +655,29 @@ export default class WebRTCClient extends Emitter {
 
   _hasVideo() {
     return this.videoEnabled;
+  }
+
+  /**
+   * @param pc RTCPeerConnection
+   */
+  getLocalStream(pc: any) {
+    let localStream;
+
+    if (pc.getSenders) {
+      localStream = typeof global !== 'undefined' && global.window && global.window.MediaStream
+        ? new global.window.MediaStream() : new window.MediaStream();
+
+      pc.getSenders().forEach(sender => {
+        const { track } = sender;
+        if (track) {
+          localStream.addTrack(track);
+        }
+      });
+    } else {
+      [localStream] = pc.getLocalStreams();
+    }
+
+    return localStream;
   }
 
   _connectIfNeeded(): Promise<void> {
@@ -724,7 +747,7 @@ export default class WebRTCClient extends Emitter {
     return !!this.localVideo;
   }
 
-  _createWebRTCConfiguration() {
+  _createWebRTCConfiguration(configOverrides: Object = {}) {
     const config: Object = {
       authorizationUser: this.config.authorizationUser,
       displayName: this.config.displayName,
@@ -767,7 +790,7 @@ export default class WebRTCClient extends Emitter {
       };
     }
 
-    return config;
+    return { ...config, ...configOverrides };
   }
 
   // eslint-disable-next-line no-unused-vars
@@ -886,7 +909,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     const pc = session.sessionDescriptionHandler.peerConnection;
-    const localStream = this._getLocalStream(pc);
+    const localStream = this.getLocalStream(pc);
 
     if (this._isWeb() && this._hasVideo()) {
       this._addLocalToVideoSession(this.getSipSessionId(session), localStream);
@@ -986,27 +1009,5 @@ export default class WebRTCClient extends Emitter {
     }
 
     return remoteStream;
-  }
-
-  /**
-   * @param pc RTCPeerConnection
-   */
-  _getLocalStream(pc: any) {
-    let localStream;
-
-    if (pc.getSenders) {
-      localStream = typeof global !== 'undefined' && global.window && global.window.MediaStream
-        ? new global.window.MediaStream() : new window.MediaStream();
-      pc.getSenders().forEach(sender => {
-        const { track } = sender;
-        if (track) {
-          localStream.addTrack(track);
-        }
-      });
-    } else {
-      [localStream] = pc.getLocalStreams();
-    }
-
-    return localStream;
   }
 }
