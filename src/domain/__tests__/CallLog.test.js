@@ -20,6 +20,7 @@ describe('CallLog domain', () => {
           start: '2017-08-06T13:50:55.819057+00:00',
           end: '2017-08-08T13:51:23.822529+00:00',
           requested_extension: '',
+          requested_name: '',
           id: 215,
         },
       ],
