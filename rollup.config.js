@@ -29,6 +29,19 @@ const csjConfigs = globby.sync('src/**/*.js').map(inputFile => ({
 
 const configs = esmConfigs.concat(csjConfigs);
 
+const plugins = [
+  flow(),
+  json(),
+  resolve({
+    preferBuiltins: false,
+  }),
+  commonjs(),
+];
+
+if (!process.env.DEV) {
+  plugins.push(terser());
+}
+
 configs.push({
   input: 'src/index.js',
   output: {
@@ -48,15 +61,7 @@ if (typeof(window) === 'undefined') {
 }
     `,
   },
-  plugins: [
-    flow(),
-    json(),
-    resolve({
-      preferBuiltins: false,
-    }),
-    commonjs(),
-    terser(),
-  ],
+  plugins,
   moduleContext: { 'node_modules/node-fetch/lib/index': 'window' },
 });
 
