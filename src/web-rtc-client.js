@@ -2,12 +2,12 @@
 /* eslint-disable class-methods-use-this */
 /* global window, document, navigator */
 import 'webrtc-adapter';
-import { SessionStatus } from '@wazo/sip.js/lib/Enums';
-import { UA } from '@wazo/sip.js/lib/UA';
-import { Utils } from '@wazo/sip.js/lib/Utils';
-import { Exceptions } from '@wazo/sip.js/lib/Exceptions';
-import { Modifiers } from '@wazo/sip.js/lib/Web';
-import SIP from '@wazo/sip.js';
+import { SessionStatus } from 'sip.js/lib/Enums';
+import { UA } from 'sip.js/lib/UA';
+import { Utils } from 'sip.js/lib/Utils';
+import { Exceptions } from 'sip.js/lib/Exceptions';
+import { Modifiers } from 'sip.js/lib/Web';
+import SIP from 'sip.js';
 
 import Emitter from './utils/Emitter';
 import Session from './domain/Session';
@@ -73,6 +73,7 @@ type WebRtcConfig = {
 // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
 export default class WebRTCClient extends Emitter {
   config: WebRtcConfig;
+  uaConfigOverrides: ?Object;
   userAgent: UA;
   hasAudio: boolean;
   audio: Object | boolean;
@@ -105,6 +106,7 @@ export default class WebRTCClient extends Emitter {
 
   constructor(config: WebRtcConfig, session: ?Session, uaConfigOverrides: ?Object) {
     super();
+    this.uaConfigOverrides = uaConfigOverrides;
     this._buildConfig(config, session).then((newConfig: WebRtcConfig) => {
       this.config = newConfig;
       this.userAgent = this.createUserAgent(uaConfigOverrides);
@@ -159,6 +161,10 @@ export default class WebRTCClient extends Emitter {
 
   register() {
     IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] register', !!this.userAgent, this.isRegistered());
+    if (!this.userAgent) {
+      IssueReporter.log(IssueReporter.INFO, '[WebRtcClient][register] recreating UA');
+      this.userAgent = this.createUserAgent(this.uaConfigOverrides);
+    }
     if (!this.userAgent || this.isRegistered()) {
       return;
     }
@@ -482,6 +488,7 @@ export default class WebRTCClient extends Emitter {
   close() {
     IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] close', !!this.userAgent);
     this._cleanupMedia();
+    this.connectionPromise = null;
 
     (Object.values(this.audioElements): any).forEach((audioElement: HTMLAudioElement) => {
       // eslint-disable-next-line
@@ -500,7 +507,8 @@ export default class WebRTCClient extends Emitter {
 
     this.userAgent.removeAllListeners();
 
-    return this.userAgent.stop();
+    this.userAgent.stop();
+    this.userAgent = null;
   }
 
   changeAudioOutputDevice(id: string) {
@@ -683,14 +691,19 @@ export default class WebRTCClient extends Emitter {
   _connectIfNeeded(): Promise<void> {
     return new Promise(resolve => {
       IssueReporter.log(IssueReporter.INFO, '[WebRtcClient][_connectIfNeeded]', this.userAgent.transport.isConnected());
+      if (!this.userAgent) {
+        IssueReporter.log(IssueReporter.INFO, '[WebRtcClient][_connectIfNeeded] recreating UA');
+        this.userAgent = this.createUserAgent(this.uaConfigOverrides);
+      }
+
       if (!this.userAgent.transport.isConnected()) {
         if (this.connectionPromise) {
           return this.connectionPromise;
         }
 
         IssueReporter.log(IssueReporter.INFO, '[WebRtcClient][_connectIfNeeded] connecting');
-        this.connectionPromise = this.userAgent.transport
-          .connectPromise()
+        this.connectionPromise = this.userAgent.start && this.userAgent
+          .start()
           .then(resolve)
           .catch(error => {
             this.connectionPromise = null;
@@ -760,7 +773,7 @@ export default class WebRTCClient extends Emitter {
       transportOptions: {
         maxReconnectionAttempts: 100000,
         reconnectionTimeout: 2,
-        traceSip: false,
+        traceSip: configOverrides.traceSip || false,
         wsServers: `wss://${this.config.host}:${this.config.port || 443}/api/asterisk/ws`,
       },
       sessionDescriptionHandlerFactoryOptions: {

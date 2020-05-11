@@ -77,9 +77,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   currentSipSession: SIP.sessionDescriptionHandler;
 
-  audioOutputDeviceId: string | typeof undefined;
+  audioOutputDeviceId: ?string;
 
-  audioRingDeviceId: string | typeof undefined;
+  audioRingDeviceId: ?string;
 
   ringingEnabled: boolean;
 
@@ -91,7 +91,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   constructor(
     client: WazoWebRTCClient,
-    audioOutputDeviceId?: string,
+    audioOutputDeviceId: ?string,
     allowVideo: boolean = false,
     audioRingDeviceId?: string,
   ) {
@@ -160,7 +160,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     try {
       this.client.register();
-    } catch (e) {
+    } catch (error) {
+      console.error('[WebRtcPhone] register error', error, error.message, error.stack);
       // Avoid exception on `t.server.scheme` in sip transport when losing the webrtc socket connection
     }
   }
@@ -257,10 +258,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.eventEmitter.emit(ON_CALL_ENDED, this._createCallSession(sipSession));
     });
 
-    sipSession.on('onMessage', (muas: SIP.MessageUserAgentServer) => {
-      if (muas.message.method === 'MESSAGE') {
-        this.eventEmitter.emit(ON_MESSAGE, muas.message.body, muas);
-      }
+    sipSession.on('message', (message) => {
+      this.eventEmitter.emit(ON_MESSAGE, message);
     });
 
     sipSession.on('reinvite', (session: SIP.InviteClientContext, message: SIP.IncomingRequestMessage) => {
@@ -624,9 +623,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     this.currentSipSession = sipSession;
 
-    // We use a setImmediate because the sipSession becomes as InviteClientContext right after
+    // We use a setTimeout because the sipSession becomes as InviteClientContext right after
     // But I don't know when
-    setImmediate(() => this._bindEvents(sipSession));
+    setTimeout(() => this._bindEvents(sipSession), 0);
 
     this.eventEmitter.emit(ON_CALL_OUTGOING, callSession);
 
@@ -658,7 +657,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   async hangup(callSession: ?CallSession): Promise<void> {
     const sipSession = this._findSipSession(callSession);
     if (!sipSession) {
-      throw new Error('Call is unknown to the WebRTC phone');
+      return console.error('Call is unknown to the WebRTC phone');
     }
 
     const sipSessionId = this.client.getSipSessionId(sipSession);

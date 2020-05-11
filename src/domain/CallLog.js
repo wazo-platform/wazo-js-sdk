@@ -16,6 +16,7 @@ type CallLogResponse = {
   source_extension: string,
   source_name: string,
   requested_extension: string,
+  requested_name: string,
   start: string,
 };
 
@@ -85,8 +86,8 @@ export default class CallLog {
       answered: plain.answered,
       callDirection: plain.call_direction,
       destination: {
-        extension: plain.destination_extension || plain.requested_extension,
-        name: plain.destination_name || '',
+        extension: plain.requested_extension || plain.destination_extension,
+        name: plain.requested_name || plain.destination_name || '',
       },
       source: {
         extension: plain.source_extension,
@@ -105,8 +106,8 @@ export default class CallLog {
       answered: plain.answered,
       callDirection: plain.call_direction,
       destination: {
-        extension: plain.destination_extension || plain.requested_extension,
-        name: plain.destination_name || '',
+        extension: plain.requested_extension || plain.destination_extension,
+        name: plain.requested_name || plain.destination_name || '',
       },
       source: {
         extension: plain.source_extension,
@@ -117,7 +118,8 @@ export default class CallLog {
       start: moment(plain.start).toDate(),
       end: moment(plain.end).toDate(),
       // @TODO: FIXME add verification declined vs missed call
-      newMissedCall: session && session.hasExtension(plain.destination_extension) && !plain.answered,
+      newMissedCall: session
+        && session.hasExtension(plain.requested_extension || plain.destination_extension) && !plain.answered,
     });
   }
 
