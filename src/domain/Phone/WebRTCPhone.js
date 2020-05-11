@@ -1,5 +1,6 @@
 /* global navigator */
 // @flow
+import { Modifiers } from 'sip.js/lib/Web';
 
 import CallSession from '../CallSession';
 import type { Phone, AvailablePhoneOptions } from './Phone';
@@ -7,6 +8,7 @@ import WazoWebRTCClient from '../../web-rtc-client';
 import SIP from '../../sip';
 import Emitter from '../../utils/Emitter';
 import IssueReporter from '../../service/IssueReporter';
+import { fixVideoBundle, replaceVideoPort } from '../../utils/modifiers';
 
 export const ON_REGISTERED = 'onRegistered';
 export const ON_UNREGISTERED = 'onUnRegistered';
@@ -34,6 +36,8 @@ export const ON_PLAY_RING_SOUND = 'playRingingSound';
 export const ON_PLAY_INBOUND_CALL_SIGNAL_SOUND = 'playInboundCallSignalSound';
 export const ON_PLAY_HANGUP_SOUND = 'playHangupSound';
 export const ON_PLAY_PROGRESS_SOUND = 'playProgressSound';
+
+const SIPMethods = { Web: { Modifiers } };
 
 export const events = [
   ON_REGISTERED,
@@ -294,6 +298,33 @@ export default class WebRTCPhone extends Emitter implements Phone {
     };
   }
 
+  async updateConstraints(callSession: CallSession, options: Object, withCamera: boolean = true, audioOnly: boolean = false) {
+    const sipSession = this.sipSessions[callSession.getId()];
+    if (!sipSession) {
+      console.warn('No sip session to reinvite');
+      return;
+    }
+
+    // Remove stripVideo
+    sipSession.modifiers = sipSession.modifiers.filter(modifier => modifier.toString().indexOf('stripVideo') === -1);
+    const modifiers = [];
+
+    if (options.RTCOfferOptions && options.RTCOfferOptions.mandatory && !options.RTCOfferOptions.OfferToReceiveVideo) {
+      modifiers.push(SIPMethods.Web.Modifiers.stripVideo);
+    }
+
+    if (audioOnly) {
+      modifiers.push(fixVideoBundle);
+    }
+
+    if (!withCamera) {
+      modifiers.push(replaceVideoPort);
+    }
+
+    console.log('reinvite', modifiers);
+    sipSession.reinvite({ sessionDescriptionHandlerOptions: options }, modifiers);
+  }
+
   async startScreenSharing(constraints: Object) {
     if (!navigator.mediaDevices) {
       return null;
@@ -306,7 +337,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     });
 
     if (!screenShareStream) {
-      throw new Error(`Can't create medie stream for screensharing with contraints ${JSON.stringify(constraints)}`);
+      throw new Error(`Can't create media stream for screensharing with contraints ${JSON.stringify(constraints)}`);
     }
 
     // $FlowFixMe
@@ -597,7 +628,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   // Should be async to match CTIPhone definition
-  async makeCall(number: string, line: any, enableVideo?: boolean): Promise<?CallSession> {
+  async makeCall(number: string, line: any, enableVideo?: boolean, audioOnly?: boolean): Promise<?CallSession> {
     if (!number) {
       return new Promise(resolve => resolve(null));
     }
@@ -610,7 +641,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     let sipSession;
     try {
-      sipSession = this.client.call(number, this.allowVideo ? enableVideo : false);
+      sipSession = this.client.call(number, this.allowVideo ? enableVideo : false, audioOnly);
     } catch (error) {
       console.warn(error);
       return new Promise(resolve => resolve(null));

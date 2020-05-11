@@ -13,6 +13,7 @@ import Emitter from './utils/Emitter';
 import Session from './domain/Session';
 import ApiClient from './api-client';
 import IssueReporter from './service/IssueReporter';
+import { fixVideoBundle } from './utils/modifiers';
 
 import MobileSessionDescriptionHandler from './lib/MobileSessionDescriptionHandler';
 
@@ -66,6 +67,8 @@ type WebRtcConfig = {
   maxMergeSessions: number,
   iceCheckingTimeout: ?number,
   log?: Object,
+  audioOnly?: boolean,
+  receiveVideo?: boolean,
   audioOutputDeviceId?: string,
   userAgentString?: string,
 };
@@ -132,6 +135,7 @@ export default class WebRTCClient extends Emitter {
 
   createUserAgent(configOverrides: ?Object): UA {
     const webRTCConfiguration = this._createWebRTCConfiguration(configOverrides);
+    console.log('webRTCConfiguration', webRTCConfiguration);
     const userAgent = new UA(webRTCConfiguration);
 
     events
@@ -198,12 +202,13 @@ export default class WebRTCClient extends Emitter {
     return sessionHasVideo;
   }
 
-  call(number: string, enableVideo?: boolean): SIP.InviteClientContext {
+  call(number: string, enableVideo?: boolean, audioOnly?: boolean, receiveVideo?: boolean = true): SIP.InviteClientContext {
     this.changeVideo(enableVideo || false);
-    const context = this.userAgent.invite(number, this._getMediaConfiguration(enableVideo || false));
+    const context = this.userAgent.invite(number, this._getMediaConfiguration(receiveVideo));
 
-    if (!enableVideo) {
+    if (audioOnly) {
       context.modifiers.push(SIPMethods.Web.Modifiers.stripVideo);
+      // context.modifiers.push(fixVideoBundle);
     }
 
     this._setupSession(context);
@@ -211,9 +216,9 @@ export default class WebRTCClient extends Emitter {
     return context;
   }
 
-  answer(session: SIP.sessionDescriptionHandler, enableVideo?: boolean) {
+  answer(session: SIP.sessionDescriptionHandler, enableVideo?: boolean, audioOnly?: boolean, receiveVideo?: boolean = true) {
     this.changeVideo(enableVideo || false);
-    return session.accept(this._getMediaConfiguration(enableVideo || false));
+    return session.accept(this._getMediaConfiguration(receiveVideo));
   }
 
   hangup(session: SIP.sessionDescriptionHandler | SIP.InviteServerContext) {
@@ -789,7 +794,7 @@ export default class WebRTCClient extends Emitter {
             rtcpMuxPolicy: 'require',
             bundlePolicy: 'max-compat',
             iceServers: WebRTCClient.getIceServers(this.config.host),
-            ...this._getRtcOptions(this.videoEnabled),
+            ...this._getRtcOptions(this.config.receiveVideo || false),
           },
         },
       },
@@ -807,29 +812,34 @@ export default class WebRTCClient extends Emitter {
   }
 
   // eslint-disable-next-line no-unused-vars
-  _getRtcOptions(enableVideo: boolean) {
+  _getRtcOptions(receiveVideo: boolean) {
     return {
+      OfferToReceiveAudio: this._hasAudio(),
+      OfferToReceiveVideo: receiveVideo,
+      offerToReceiveVideo: receiveVideo,
       mandatory: {
         OfferToReceiveAudio: this._hasAudio(),
-        OfferToReceiveVideo: enableVideo,
+        OfferToReceiveVideo: receiveVideo,
       },
     };
   }
 
-  _getMediaConfiguration(enableVideo: boolean) {
+  _getMediaConfiguration(receiveVideo: boolean) {
     return {
       sessionDescriptionHandlerOptions: {
         constraints: {
           audio: this._getAudioConstraints(),
           video: this._getVideoConstraints(),
         },
-        disableVideo: !enableVideo,
+        disableVideo: !receiveVideo,
         RTCOfferOptions: {
           OfferToReceiveAudio: this._hasAudio(),
-          OfferToReceiveVideo: enableVideo,
+          OfferToReceiveVideo: receiveVideo,
+          offerToReceiveVideo: receiveVideo,
           mandatory: {
             OfferToReceiveAudio: this._hasAudio(),
-            OfferToReceiveVideo: enableVideo,
+            OfferToReceiveVideo: receiveVideo,
+            offerToReceiveVideo: receiveVideo,
           },
         },
       },

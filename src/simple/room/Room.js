@@ -29,7 +29,6 @@ class Room extends Emitter {
   _boundOnScreenshareEnded: Function;
   _boundOnMessage: Function;
   audioStream: ?any;
-  audioElement: ?any;
   extra: Object;
   // video tag representing the room audio stream
   roomAudioElement: any;
@@ -104,15 +103,17 @@ class Room extends Emitter {
   /**
    *
    * @param extension string
+   * @param audioOnly ?boolean
+   * @param receiveVideo ?boolean
    * @param constraints string
    * @returns {Promise<Room>}
    */
-  static async connect({ extension, ...constraints }: Object) {
+  static async connect({ extension, audioOnly, receiveVideo, ...constraints }: Object) {
     // @TODO: retrieve only constraints here (eg: avoid extra)
-    await Wazo.Phone.connect({ media: constraints });
+    await Wazo.Phone.connect({ audioOnly, receiveVideo, media: constraints });
     Wazo.Phone.checkSfu();
 
-    const callSession = await Wazo.Phone.call(extension, constraints && !!constraints.video);
+    const callSession = await Wazo.Phone.call(extension, constraints && !!constraints.video, audioOnly);
     const room = new Room(callSession, extension, null, null, constraints.extra);
 
     // Call_created is triggered before call_accepted, so we have to listen for it here.
@@ -124,7 +125,10 @@ class Room extends Emitter {
     // Wait for the call to be accepted
     await new Promise((resolve, reject) => {
       Wazo.Phone.once(Wazo.Phone.ON_CALL_ACCEPTED, resolve);
-      Wazo.Phone.once(Wazo.Phone.ON_CALL_FAILED, reject);
+      Wazo.Phone.once(Wazo.Phone.ON_CALL_FAILED, (...args) => {
+        console.log('call failed', args);
+        return reject();
+      });
     });
 
     // Fetch conference source
@@ -159,6 +163,10 @@ class Room extends Emitter {
     if (this.roomAudioElement && document.body) {
       document.body.removeChild(this.roomAudioElement);
     }
+  }
+
+  async updateConstraints(constraints: Object, withCamera: boolean = true, audioOnly: boolean = false) {
+    return Wazo.Phone.updateConstraints(this.callSession, constraints, withCamera, audioOnly);
   }
 
   setSourceId(sourceId: number) {
@@ -256,8 +264,7 @@ class Room extends Emitter {
       this.audioStream = stream;
       if (document.createElement) {
         this.roomAudioElement = document.createElement('audio');
-        this.roomAudioElement.srcObject = stream;
-        this.roomAudioElement.autoplay = true;
+
         if (document.body) {
           document.body.appendChild(this.roomAudioElement);
         }
@@ -267,6 +274,15 @@ class Room extends Emitter {
     this.on(this.ON_VIDEO_STREAM, (stream, streamId) => {
       // ON_VIDEO_STREAM is called before PARTICIPANT_JOINED, so we have to keep stream in `_unassociatedVideoStreams`.
       this._unassociatedVideoStreams[streamId] = stream;
+
+      // When the participant renegociate it constraints during the call, we also have to trigger events.
+      const callId = this._getCallIdFromStreamId(streamId);
+      if (callId) {
+        const participant = this._getParticipantFromCallId(callId);
+        if (participant) {
+          this._onParticipantVideoStream(participant, streamId);
+        }
+      }
     });
 
     this.on(this.ON_REMOVE_STREAM, stream => {
@@ -384,7 +400,7 @@ class Room extends Emitter {
 
     participants.forEach(someParticipant => {
       this.eventEmitter.emit(this.CONFERENCE_USER_PARTICIPANT_JOINED, someParticipant);
-      this.__associateStreams(someParticipant);
+      this._associateStreams(someParticipant);
     });
 
     return participants;
@@ -441,22 +457,28 @@ class Room extends Emitter {
   }
 
   // Associate audio/video streams to the participant and triggers events on it
-  __associateStreams(participant: Participant) {
+  _associateStreams(participant: Participant) {
     const streamId = this._callIdStreamIdMap[participant.callId];
     if (!streamId || !participant || !this.localParticipant || participant.callId === this.localParticipant.callId) {
       return;
     }
 
-    if (this._unassociatedVideoStreams[streamId]) {
-      // Try to associate stream
-      const stream = new Wazo.Stream(this._unassociatedVideoStreams[streamId], participant);
-      participant.streams.push(stream);
-      participant.videoStreams.push(stream);
+    this._onParticipantVideoStream(participant, streamId)
+  }
 
-      participant.onStreamSubscribed(stream);
-
-      delete this._unassociatedVideoStreams[streamId];
+  _onParticipantVideoStream(participant: Participant, streamId: string) {
+    if (!this._unassociatedVideoStreams[streamId]) {
+      return;
     }
+
+    // Try to associate stream
+    const stream = new Wazo.Stream(this._unassociatedVideoStreams[streamId], participant);
+    participant.streams.push(stream);
+    participant.videoStreams.push(stream);
+
+    participant.onStreamSubscribed(stream);
+
+    delete this._unassociatedVideoStreams[streamId];
   }
 
   _getCallIdFromStreamId(streamId: string) {

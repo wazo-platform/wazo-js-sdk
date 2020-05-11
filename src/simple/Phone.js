@@ -75,13 +75,17 @@ class Phone extends Emitter {
     this.phone = null;
   }
 
-  async call(extension: string, withCamera: boolean = false, rawSipLine: ?SipLine = null) {
+  async call(extension: string, withCamera: boolean = false, audioOnly: boolean = false, rawSipLine: ?SipLine = null) {
     if (!this.phone) {
       return;
     }
     const sipLine = rawSipLine || await this._getWebRtcLine();
 
-    return this.phone.makeCall(extension, sipLine, withCamera);
+    return this.phone.makeCall(extension, sipLine, withCamera, audioOnly);
+  }
+
+  async updateConstraints(callSession: CallSession, constraints: Object, withCamera: boolean = true, audioOnly: boolean = false) {
+    return this.phone && this.phone.updateConstraints(callSession, constraints, withCamera, audioOnly);
   }
 
   async hangup(callSession: CallSession) {
