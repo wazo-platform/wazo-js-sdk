@@ -28,6 +28,7 @@
   },
   "scripts": {
     "build": "./node_modules/.bin/rollup --config --extend",
+    "build:dev": "DEV=1 ./node_modules/.bin/rollup --config --extend",
     "test": "yarn jest && yarn lint && yarn typecheck && yarn checkbuild",
     "watch": "./node_modules/.bin/webpack --mode=development --watch",
     "lint": "./node_modules/.bin/eslint src/",
