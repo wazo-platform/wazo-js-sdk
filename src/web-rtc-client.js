@@ -83,7 +83,7 @@ export default class WebRTCClient extends Emitter {
   localVideo: ?Object & ?boolean;
   audioContext: ?AudioContext;
   audioStreams: Object;
-  audioMixer: ?ChannelMerger;
+  audioMixer: ?any; /* ChannelMerger */
   audioOutputDeviceId: ?string;
   videoSessions: Object;
   connectionPromise: ?Promise<void>;
@@ -371,7 +371,7 @@ export default class WebRTCClient extends Emitter {
   merge(sessions: Array<SIP.InviteClientContext>): Array<Promise<boolean>> {
     this._checkMaxMergeSessions(sessions.length);
     if (this.audioContext) {
-      this.audioMixer= this.audioContext.createChannelMerger(10);
+      this.audioMixer = this.audioContext.createChannelMerger(10);
     }
 
     if (this.audioContext && this.audioContext.state === 'suspended') {
@@ -381,7 +381,7 @@ export default class WebRTCClient extends Emitter {
     return sessions.map(this.addToMerge.bind(this));
   }
 
-  addToMerge(session: SIP.InviteClientContext): Promise<boolean> {
+  addToMerge(session: SIP.InviteClientContext) {
     this._checkMaxMergeSessions(Object.keys(this.audioStreams).length + 1);
 
     const sdh = session.sessionDescriptionHandler;
@@ -389,15 +389,22 @@ export default class WebRTCClient extends Emitter {
 
     const bindStreams = remoteStream => {
       const localStream = this.getLocalStream(pc);
-      const micro = this.audioContext.createMediaStreamSource(localStream);
-      micro.connect(this.audioMixer);
 
-      const audioPeerDestination = this.audioContext.createMediaStreamDestination();
-      this.audioMixer.connect(audioPeerDestination);
-      const remoteAudioSource = this._addAudioStream(remoteStream);
+      if (this.audioContext && this.audioMixer) {
+        const micro = this.audioContext.createMediaStreamSource(localStream);
+        if (micro && this.audioMixer) {
+          micro.connect(this.audioMixer);
+        }
 
-      const sender = pc.getSenders().filter(s => s.track.kind == 'audio')[0];
-      sender.replaceTrack(audioPeerDestination.stream.getAudioTracks()[0]);
+        // $FlowFixMe
+        const audioPeerDestination = this.audioContext.createMediaStreamDestination();
+        // $FlowFixMe
+        this.audioMixer.connect(audioPeerDestination);
+        this._addAudioStream(remoteStream);
+
+        const sender = pc.getSenders().filter(s => s.track.kind === 'audio')[0];
+        sender.replaceTrack(audioPeerDestination.stream.getAudioTracks()[0]);
+      }
     };
 
     if (session.localHold && !this.isFirefox()) {
@@ -438,9 +445,6 @@ export default class WebRTCClient extends Emitter {
     if (shouldHold) {
       this.hold(session);
     }
-
-    return;
-
   }
 
   unmerge(sessions: Array<SIP.InviteClientContext>): Promise<boolean> {
