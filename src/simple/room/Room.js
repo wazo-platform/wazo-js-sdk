@@ -80,14 +80,14 @@ class Room extends Emitter {
     this.CONFERENCE_USER_PARTICIPANT_LEFT = Wazo.Websocket.CONFERENCE_USER_PARTICIPANT_LEFT;
     this.ON_SCREEN_SHARE_ENDED = Wazo.Phone.ON_SCREEN_SHARE_ENDED;
     this.ON_MESSAGE = Wazo.Phone.ON_MESSAGE;
-    this.ON_CHAT = 'room_on_chat';
-    this.ON_SIGNAL = 'room_on_signal';
+    this.ON_CHAT = 'room/ON_CHAT';
+    this.ON_SIGNAL = 'room/ON_SIGNAL';
     this.ON_AUDIO_STREAM = Wazo.Phone.ON_AUDIO_STREAM;
     this.ON_VIDEO_STREAM = Wazo.Phone.ON_VIDEO_STREAM;
     this.ON_REMOVE_STREAM = Wazo.Phone.ON_REMOVE_STREAM;
-    this.ON_DISCONNECTED = 'room_disconnected';
-    this.ON_JOINED = 'room_joined';
-    this.ON_TALKING = 'room_talking';
+    this.ON_DISCONNECTED = 'room/ON_DISCONNECTED';
+    this.ON_JOINED = 'room/ON_JOINED';
+    this.ON_TALKING = 'room/ON_TALKING';
 
     this._boundOnParticipantJoined = this._onParticipantJoined.bind(this);
     this._boundOnParticipantLeft = this._onParticipantLeft.bind(this);

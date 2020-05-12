@@ -46,18 +46,18 @@ class Participant extends Emitter {
     this.screensharing = false;
     this.extra = extra;
 
-    this.ON_UPDATED = 'ON_UPDATED';
-    this.ON_START_TALKING = 'ON_PARTICIPANT_START_TALKING';
-    this.ON_STOP_TALKING = 'ON_PARTICIPANT_STOP_TALKING';
-    this.ON_DISCONNECT = 'ON_PARTICIPANT_DISCONNECT';
-    this.ON_STREAM_SUBSCRIBED = 'ON_STREAM_SUBSCRIBED';
-    this.ON_STREAM_UNSUBSCRIBED = 'ON_STREAM_UNSUBSCRIBED';
-    this.ON_AUDIO_MUTED = 'ON_AUDIO_MUTED';
-    this.ON_AUDIO_UNMUTED = 'ON_AUDIO_UNMUTED';
-    this.ON_VIDEO_MUTED = 'ON_VIDEO_MUTED';
-    this.ON_VIDEO_UNMUTED = 'ON_VIDEO_UNMUTED';
-    this.ON_SCREENSHARING = 'ON_SCREENSHARING';
-    this.ON_STOP_SCREENSHARING = 'ON_STOP_SCREENSHARING';
+    this.ON_UPDATED = 'participant/ON_UPDATED';
+    this.ON_START_TALKING = 'participant/ON_START_TALKING';
+    this.ON_STOP_TALKING = 'participant/ON_STOP_TALKING';
+    this.ON_DISCONNECT = 'participant/ON_DISCONNECT';
+    this.ON_STREAM_SUBSCRIBED = 'participant/ON_STREAM_SUBSCRIBED';
+    this.ON_STREAM_UNSUBSCRIBED = 'participant/ON_STREAM_UNSUBSCRIBED';
+    this.ON_AUDIO_MUTED = 'participant/ON_AUDIO_MUTED';
+    this.ON_AUDIO_UNMUTED = 'participant/ON_AUDIO_UNMUTED';
+    this.ON_VIDEO_MUTED = 'participant/ON_VIDEO_MUTED';
+    this.ON_VIDEO_UNMUTED = 'participant/ON_VIDEO_UNMUTED';
+    this.ON_SCREENSHARING = 'participant/ON_SCREENSHARING';
+    this.ON_STOP_SCREENSHARING = 'participant/ON_STOP_SCREENSHARING';
   }
 
   triggerEvent(name: string, ...args: any[]) {
