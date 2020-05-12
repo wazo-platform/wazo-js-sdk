@@ -1,7 +1,9 @@
 // @flow
 import Emitter from '../../utils/Emitter';
+import Room from './Room';
 
 class Participant extends Emitter {
+  room: Room;
   uuid: string;
   name: string;
   number: string;
@@ -26,13 +28,16 @@ class Participant extends Emitter {
   ON_VIDEO_UNMUTED: string;
   ON_SCREENSHARING: string;
   ON_STOP_SCREENSHARING: string;
+  ON_EXTRA_CHANGE: string;
 
   /**
    * @param rawParticipant string Participant sent via the Wazo WS
    * @param extra Object extra status of the participant
    */
-  constructor(rawParticipant: Object = {}, extra: Object = {}) {
+  constructor(room: Room, rawParticipant: Object = {}, extra: Object = {}) {
     super();
+
+    this.room = room;
 
     this.uuid = rawParticipant.user_uuid;
     this.name = (rawParticipant.caller_id_name || '').replace("\\'", "'");
@@ -58,16 +63,56 @@ class Participant extends Emitter {
     this.ON_VIDEO_UNMUTED = 'participant/ON_VIDEO_UNMUTED';
     this.ON_SCREENSHARING = 'participant/ON_SCREENSHARING';
     this.ON_STOP_SCREENSHARING = 'participant/ON_STOP_SCREENSHARING';
+    this.ON_EXTRA_CHANGE = 'participant/ON_EXTRA_CHANGE';
   }
 
   triggerEvent(name: string, ...args: any[]) {
     this.eventEmitter.emit.apply(this.eventEmitter, [name, ...args]);
-    this.eventEmitter.emit(this.ON_UPDATED);
+  }
+
+  triggerUpdate(type: string) {
+    const status: Object = { callId: this.callId };
+
+    switch (type) {
+      case this.ON_START_TALKING:
+      case this.ON_STOP_TALKING: {
+        status.isTalking = this.isTalking;
+        break;
+      }
+      case this.ON_AUDIO_MUTED:
+      case this.ON_AUDIO_UNMUTED: {
+        status.audioMuted = this.audioMuted;
+        break;
+      }
+      case this.ON_VIDEO_MUTED:
+      case this.ON_VIDEO_UNMUTED: {
+        status.videoMuted = this.videoMuted;
+        break;
+      }
+      case this.ON_SCREENSHARING:
+      case this.ON_STOP_SCREENSHARING: {
+        status.screensharing = this.screensharing;
+        break;
+      }
+      case this.ON_EXTRA_CHANGE: {
+        status.extra = this.extra;
+        break;
+      }
+      default:
+    }
+
+    const data: Object = {
+      type,
+      origin: this.callId,
+      status,
+    };
+
+    this.room.sendSignal(data);
   }
 
   onTalking(isTalking: boolean) {
     this.isTalking = isTalking;
-    this.triggerEvent(this.isTalking ? this.ON_START_TALKING : this.ON_STOP_TALKING);
+    this.triggerUpdate(this.isTalking ? this.ON_START_TALKING : this.ON_STOP_TALKING);
   }
 
   onDisconnect() {
@@ -88,7 +133,7 @@ class Participant extends Emitter {
     }
     this.audioMuted = true;
 
-    this.triggerEvent(this.ON_AUDIO_MUTED);
+    this.triggerUpdate(this.ON_AUDIO_MUTED);
   }
 
   onAudioUnMuted() {
@@ -97,7 +142,7 @@ class Participant extends Emitter {
     }
     this.audioMuted = false;
 
-    this.triggerEvent(this.ON_AUDIO_UNMUTED);
+    this.triggerUpdate(this.ON_AUDIO_UNMUTED);
   }
 
   onVideoMuted() {
@@ -106,7 +151,7 @@ class Participant extends Emitter {
     }
     this.videoMuted = true;
 
-    this.triggerEvent(this.ON_VIDEO_MUTED);
+    this.triggerUpdate(this.ON_VIDEO_MUTED);
   }
 
   onVideoUnMuted() {
@@ -115,7 +160,7 @@ class Participant extends Emitter {
     }
     this.videoMuted = false;
 
-    this.triggerEvent(this.ON_VIDEO_UNMUTED);
+    this.triggerUpdate(this.ON_VIDEO_UNMUTED);
   }
 
   onScreensharing() {
@@ -124,7 +169,7 @@ class Participant extends Emitter {
     }
     this.screensharing = true;
 
-    this.triggerEvent(this.ON_SCREENSHARING);
+    this.triggerUpdate(this.ON_SCREENSHARING);
   }
 
   onStopScreensharing() {
@@ -133,7 +178,7 @@ class Participant extends Emitter {
     }
     this.screensharing = false;
 
-    this.triggerEvent(this.ON_STOP_TALKING);
+    this.triggerUpdate(this.ON_STOP_TALKING);
   }
 
   getStatus() {
@@ -142,8 +187,14 @@ class Participant extends Emitter {
       audioMuted: this.audioMuted,
       videoMuted: this.videoMuted,
       screensharing: this.screensharing,
+      isTalking: this.isTalking,
       extra: this.extra,
     };
+  }
+
+  setStatus(status: Object) {
+    // eslint-disable-next-line no-return-assign
+    Object.keys(status).forEach((field: string) => this[field] = status[field]);
   }
 
   updateStatus(status: Object) {
@@ -174,7 +225,7 @@ class Participant extends Emitter {
     // Poor man's object comparision
     if (JSON.stringify(this.extra) !== JSON.stringify(status.extra)) {
       this.extra = { ...this.extra, ...status.extra };
-      this.eventEmitter.emit(this.ON_UPDATED);
+      this.triggerUpdate(this.ON_EXTRA_CHANGE);
     }
   }
 }

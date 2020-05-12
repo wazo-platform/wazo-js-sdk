@@ -9,10 +9,8 @@ import Emitter from '../../utils/Emitter';
 import Wazo from '../index';
 import Participant from './Participant';
 
-const TYPE_CHAT = 'chat';
-const TYPE_SIGNAL = 'signal';
-const TYPE_UPDATE_PARTICIPANT_STATUS = 'participant_update_status';
-const TYPE_REQUEST_PARTICIPANT_STATUS = 'participant_request_status';
+const TYPE_CHAT = 'message/TYPE_CHAT';
+const TYPE_SIGNAL = 'message/TYPE_SIGNAL';
 
 class Room extends Emitter {
   callSession: ?CallSession;
@@ -45,7 +43,6 @@ class Room extends Emitter {
   ON_REMOVE_STREAM: string;
   ON_DISCONNECTED: string;
   ON_JOINED: string;
-  ON_TALKING: string;
 
   /**
    *
@@ -87,7 +84,6 @@ class Room extends Emitter {
     this.ON_REMOVE_STREAM = Wazo.Phone.ON_REMOVE_STREAM;
     this.ON_DISCONNECTED = 'room/ON_DISCONNECTED';
     this.ON_JOINED = 'room/ON_JOINED';
-    this.ON_TALKING = 'room/ON_TALKING';
 
     this._boundOnParticipantJoined = this._onParticipantJoined.bind(this);
     this._boundOnParticipantLeft = this._onParticipantLeft.bind(this);
@@ -190,7 +186,6 @@ class Room extends Emitter {
 
     if (this.localParticipant) {
       this.localParticipant.onScreensharing();
-      this._sendParticipantStatus(this.localParticipant);
     }
 
     return screensharingStream;
@@ -201,7 +196,6 @@ class Room extends Emitter {
 
     if (this.localParticipant) {
       this.localParticipant.onStopScreensharing();
-      this._sendParticipantStatus(this.localParticipant);
     }
   }
 
@@ -210,7 +204,6 @@ class Room extends Emitter {
 
     if (this.localParticipant) {
       this.localParticipant.onVideoMuted();
-      this._sendParticipantStatus(this.localParticipant);
     }
   }
 
@@ -219,7 +212,6 @@ class Room extends Emitter {
 
     if (this.localParticipant) {
       this.localParticipant.onVideoUnMuted();
-      this._sendParticipantStatus(this.localParticipant);
     }
   }
 
@@ -228,7 +220,6 @@ class Room extends Emitter {
 
     if (this.localParticipant) {
       this.localParticipant.onAudioMuted();
-      this._sendParticipantStatus(this.localParticipant);
     }
   }
 
@@ -237,7 +228,6 @@ class Room extends Emitter {
 
     if (this.localParticipant) {
       this.localParticipant.onAudioUnMuted();
-      this._sendParticipantStatus(this.localParticipant);
     }
   }
 
@@ -322,21 +312,24 @@ class Room extends Emitter {
           return;
         }
         this.participants[participantIdx].onTalking(isTalking);
-
-        return this.eventEmitter.emit(this.ON_TALKING, channel, this.participants[participantIdx]);
+        break;
       }
 
       case TYPE_CHAT:
         return this.eventEmitter.emit(this.ON_CHAT, body.content);
 
-      case TYPE_SIGNAL:
+      case TYPE_SIGNAL: {
+        const { origin, status } = body.content;
+
+        if (this.localParticipant && origin !== this.localParticipant.callId) {
+          const participant = this._getParticipantFromCallId(status.callId);
+          if (participant) {
+            participant.setStatus(status);
+            participant.eventEmitter.emit(participant.ON_UPDATED);
+          }
+        }
         return this.eventEmitter.emit(this.ON_SIGNAL, body.content);
-
-      case TYPE_UPDATE_PARTICIPANT_STATUS:
-        return this._updateParticipantStatus(body.status);
-
-      case TYPE_REQUEST_PARTICIPANT_STATUS:
-        return this._sendParticipantStatus(this.localParticipant);
+      }
 
       default:
         break;
@@ -358,11 +351,11 @@ class Room extends Emitter {
         participants = response.items.map(item => {
           const isMe = item.call_id === this.callId;
 
-          return isMe ? new Wazo.LocalParticipant(item, this.extra) : new Wazo.RemoteParticipant(item);
+          return isMe ? new Wazo.LocalParticipant(this, item, this.extra) : new Wazo.RemoteParticipant(this, item);
         });
       }
     } else {
-      participants = [new Wazo.RemoteParticipant(participant)];
+      participants = [new Wazo.RemoteParticipant(this, participant)];
       // We can't send our status here, because for other participants the api request that retrieve all participants
       // can be slow and we may not be in the list of participants for now.
     }
@@ -378,10 +371,6 @@ class Room extends Emitter {
         localParticipant.onStreamSubscribed(videoStream);
       }
       this.localParticipant = localParticipant;
-
-      // Send our status to all participants when we enter the room
-      this._sendParticipantStatus(localParticipant);
-      this._requestParticipantsStatus();
 
       this.connected = true;
 
@@ -412,38 +401,6 @@ class Room extends Emitter {
     if (this.localParticipant) {
       this.localParticipant.onStopScreensharing();
     }
-    this._sendParticipantStatus(this.localParticipant);
-  }
-
-  // Sends a `TYPE_UPDATE_PARTICIPANT_STATUS` to all participants of the room
-  _sendParticipantStatus(participant: ?Participant) {
-    if (!participant) {
-      return;
-    }
-
-    this.sendMessage(JSON.stringify({
-      type: TYPE_UPDATE_PARTICIPANT_STATUS,
-      status: participant.getStatus(),
-    }));
-  }
-
-  // Called when we receive a `TYPE_PARTICIPANT_STATUS` for a participant
-  _updateParticipantStatus(rawStatus: Object) {
-    const status = rawStatus;
-    const { callId } = status;
-    delete status.callId;
-    const participant = this._getParticipantFromCallId(callId);
-    if (!participant) {
-      return;
-    }
-
-    participant.updateStatus(status);
-  }
-
-  _requestParticipantsStatus() {
-    this.sendMessage(JSON.stringify({
-      type: TYPE_REQUEST_PARTICIPANT_STATUS,
-    }));
   }
 
   // Associate audio/video streams to the participant and triggers events on it
