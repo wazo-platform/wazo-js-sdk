@@ -83,7 +83,7 @@ export default class WebRTCClient extends Emitter {
   localVideo: ?Object & ?boolean;
   audioContext: ?AudioContext;
   audioStreams: Object;
-  mergeDestination: ?MediaStreamAudioDestinationNode;
+  audioMixer: ?any /* ChannelMerger */;
   audioOutputDeviceId: ?string;
   videoSessions: Object;
   connectionPromise: ?Promise<void>;
@@ -371,7 +371,7 @@ export default class WebRTCClient extends Emitter {
   merge(sessions: Array<SIP.InviteClientContext>): Array<Promise<boolean>> {
     this._checkMaxMergeSessions(sessions.length);
     if (this.audioContext) {
-      this.mergeDestination = this.audioContext.createMediaStreamDestination();
+      this.audioMixer = this.audioContext.createChannelMerger(10);
     }
 
     if (this.audioContext && this.audioContext.state === 'suspended') {
@@ -381,11 +381,7 @@ export default class WebRTCClient extends Emitter {
     return sessions.map(this.addToMerge.bind(this));
   }
 
-  isFirefox(): boolean {
-    return this._isWeb() && navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
-  }
-
-  addToMerge(session: SIP.InviteClientContext): Promise<boolean> {
+  addToMerge(session: SIP.InviteClientContext) {
     this._checkMaxMergeSessions(Object.keys(this.audioStreams).length + 1);
 
     const sdh = session.sessionDescriptionHandler;
@@ -393,23 +389,25 @@ export default class WebRTCClient extends Emitter {
 
     const bindStreams = remoteStream => {
       const localStream = this.getLocalStream(pc);
-      const localAudioSource = this._addAudioStream(localStream);
+      if (!this.audioContext || !this.audioMixer) {
+        return;
+      }
+
+      const localAudioSource = this.audioContext.createMediaStreamSource(localStream);
+      // $FlowFixMe
+      localAudioSource.connect(this.audioMixer);
+
       const remoteAudioSource = this._addAudioStream(remoteStream);
 
-      if (remoteStream) {
-        pc.removeStream(remoteStream);
-      }
-      pc.removeStream(localStream);
+      // $FlowFixMe
+      const audioPeerDestination = this.audioContext.createMediaStreamDestination();
+      // $FlowFixMe
+      this.audioMixer.connect(audioPeerDestination);
 
-      if (this.mergeDestination) {
-        pc.addStream(this.mergeDestination.stream);
-      }
+      this.audioStreams[this.getSipSessionId(session)] = { localAudioSource, remoteAudioSource };
 
-      return pc.createOffer(this._getRtcOptions(false)).then(offer => {
-        this.audioStreams[this.getSipSessionId(session)] = { localAudioSource, remoteAudioSource };
-
-        pc.setLocalDescription(offer);
-      });
+      const sender = pc.getSenders().filter(s => s.track.kind === 'audio')[0];
+      sender.replaceTrack(audioPeerDestination.stream.getAudioTracks()[0]);
     };
 
     if (session.localHold && !this.isFirefox()) {
@@ -428,9 +426,9 @@ export default class WebRTCClient extends Emitter {
     const { localAudioSource, remoteAudioSource } = this.audioStreams[this.getSipSessionId(session)];
 
     if (remoteAudioSource) {
-      remoteAudioSource.disconnect(this.mergeDestination);
+      remoteAudioSource.disconnect(this.audioMixer);
     }
-    localAudioSource.disconnect(this.mergeDestination);
+    localAudioSource.disconnect(this.audioMixer);
 
     if (this.audioContext) {
       const newDestination = this.audioContext.createMediaStreamDestination();
@@ -443,23 +441,13 @@ export default class WebRTCClient extends Emitter {
         return null;
       }
 
-      if (this.mergeDestination && this.mergeDestination.stream) {
-        pc.removeStream(this.mergeDestination.stream);
-      }
-      pc.addStream(newDestination.stream);
     }
 
     delete this.audioStreams[this.getSipSessionId(session)];
 
-    return pc.createOffer(this._getRtcOptions(false)).then(offer => {
-      const result = pc.setLocalDescription(offer);
-
-      if (shouldHold) {
-        this.hold(session);
-      }
-
-      return result;
-    });
+    if (shouldHold) {
+      this.hold(session);
+    }
   }
 
   unmerge(sessions: Array<SIP.InviteClientContext>): Promise<boolean> {
@@ -470,7 +458,7 @@ export default class WebRTCClient extends Emitter {
     return new Promise((resolve, reject) => {
       Promise.all(promises)
         .then(() => {
-          this.mergeDestination = null;
+          this.audioMixer = null;
           resolve(true);
         })
         .catch(reject);
@@ -483,6 +471,10 @@ export default class WebRTCClient extends Emitter {
 
   getContactIdentifier() {
     return this.userAgent ? `${this.userAgent.configuration.contactName}/${this.userAgent.contact.uri}` : null;
+  }
+
+  isFirefox(): boolean {
+    return this._isWeb() && navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
   }
 
   close() {
@@ -895,8 +887,8 @@ export default class WebRTCClient extends Emitter {
       return null;
     }
     const audioSource = this.audioContext.createMediaStreamSource(mediaStream);
-    if (this.mergeDestination) {
-      audioSource.connect(this.mergeDestination);
+    if (this.audioMixer) {
+      audioSource.connect(this.audioMixer);
     }
 
     return audioSource;
