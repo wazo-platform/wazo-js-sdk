@@ -83,7 +83,7 @@ export default class WebRTCClient extends Emitter {
   localVideo: ?Object & ?boolean;
   audioContext: ?AudioContext;
   audioStreams: Object;
-  audioMixer: ?any; /* ChannelMerger */
+  audioMixer: ?any /* ChannelMerger */;
   audioOutputDeviceId: ?string;
   videoSessions: Object;
   connectionPromise: ?Promise<void>;
@@ -389,22 +389,25 @@ export default class WebRTCClient extends Emitter {
 
     const bindStreams = remoteStream => {
       const localStream = this.getLocalStream(pc);
-
-      if (this.audioContext && this.audioMixer) {
-        const micro = this.audioContext.createMediaStreamSource(localStream);
-        if (micro && this.audioMixer) {
-          micro.connect(this.audioMixer);
-        }
-
-        // $FlowFixMe
-        const audioPeerDestination = this.audioContext.createMediaStreamDestination();
-        // $FlowFixMe
-        this.audioMixer.connect(audioPeerDestination);
-        this._addAudioStream(remoteStream);
-
-        const sender = pc.getSenders().filter(s => s.track.kind === 'audio')[0];
-        sender.replaceTrack(audioPeerDestination.stream.getAudioTracks()[0]);
+      if (!this.audioContext || !this.audioMixer) {
+        return;
       }
+
+      const localAudioSource = this.audioContext.createMediaStreamSource(localStream);
+      // $FlowFixMe
+      localAudioSource.connect(this.audioMixer);
+
+      const remoteAudioSource = this._addAudioStream(remoteStream);
+
+      // $FlowFixMe
+      const audioPeerDestination = this.audioContext.createMediaStreamDestination();
+      // $FlowFixMe
+      this.audioMixer.connect(audioPeerDestination);
+
+      this.audioStreams[this.getSipSessionId(session)] = { localAudioSource, remoteAudioSource };
+
+      const sender = pc.getSenders().filter(s => s.track.kind === 'audio')[0];
+      sender.replaceTrack(audioPeerDestination.stream.getAudioTracks()[0]);
     };
 
     if (session.localHold && !this.isFirefox()) {
