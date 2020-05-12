@@ -389,12 +389,15 @@ export default class WebRTCClient extends Emitter {
 
     const bindStreams = remoteStream => {
       const localStream = this.getLocalStream(pc);
-      const micro = this.audioContext.createMediaStreamSource(localStream);
-      micro.connect(this.audioMixer);
+      const localAudioSource = this.audioContext.createMediaStreamSource(localStream);
+      localAudioSource.connect(this.audioMixer);
+
+      const remoteAudioSource = this._addAudioStream(remoteStream);
 
       const audioPeerDestination = this.audioContext.createMediaStreamDestination();
       this.audioMixer.connect(audioPeerDestination);
-      const remoteAudioSource = this._addAudioStream(remoteStream);
+
+      this.audioStreams[this.getSipSessionId(session)] = { localAudioSource, remoteAudioSource };
 
       const sender = pc.getSenders().filter(s => s.track.kind == 'audio')[0];
       sender.replaceTrack(audioPeerDestination.stream.getAudioTracks()[0]);
