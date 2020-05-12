@@ -15,6 +15,14 @@ const shouldBeFormatted = (number: ?string) => {
   return !number.includes('#') && !number.includes('*');
 };
 
+const isSameCountry = (country1, country2) => {
+  if ((country1 === 'US' && country2 === 'CA') || (country2 === 'US' && country1 === 'CA')) {
+    return true;
+  }
+
+  return country1 === country2;
+};
+
 const getDisplayableNumber = (number: string, country: string, asYouType: boolean = false): string => {
   if (!shouldBeFormatted(number)) {
     return number;
@@ -29,8 +37,10 @@ const getDisplayableNumber = (number: string, country: string, asYouType: boolea
     });
   } else {
     const parsedNumber = PhoneNumberUtil.parseAndKeepRawInput(number, country);
+    const numberCountry = PhoneNumberUtil.getRegionCodeForNumber(parsedNumber);
+    const format = isSameCountry(numberCountry, country) ? PhoneNumberFormat.NATIONAL : PhoneNumberFormat.INTERNATIONAL;
 
-    displayValue = PhoneNumberUtil.format(parsedNumber, PhoneNumberFormat.NATIONAL);
+    displayValue = PhoneNumberUtil.format(parsedNumber, format);
   }
 
   return displayValue;
