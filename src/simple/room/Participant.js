@@ -68,6 +68,7 @@ class Participant extends Emitter {
 
   triggerEvent(name: string, ...args: any[]) {
     this.eventEmitter.emit.apply(this.eventEmitter, [name, ...args]);
+    this.room.onParticipantUpdate(this);
   }
 
   triggerUpdate(type: string) {
@@ -108,11 +109,14 @@ class Participant extends Emitter {
     };
 
     this.room.sendSignal(data);
+    this.room.onParticipantUpdate(this);
   }
 
-  onTalking(isTalking: boolean) {
+  onTalking(isTalking: boolean, broadcast: boolean = true) {
     this.isTalking = isTalking;
-    this.triggerUpdate(this.isTalking ? this.ON_START_TALKING : this.ON_STOP_TALKING);
+    if (broadcast) {
+      this.triggerUpdate(this.isTalking ? this.ON_START_TALKING : this.ON_STOP_TALKING);
+    }
   }
 
   onDisconnect() {
@@ -127,58 +131,70 @@ class Participant extends Emitter {
     return this.triggerEvent(this.ON_STREAM_UNSUBSCRIBED, stream);
   }
 
-  onAudioMuted() {
+  onAudioMuted(broadcast: boolean = true) {
     if (this.audioMuted) {
       return;
     }
     this.audioMuted = true;
 
-    this.triggerUpdate(this.ON_AUDIO_MUTED);
+    if (broadcast) {
+      this.triggerUpdate(this.ON_AUDIO_MUTED);
+    }
   }
 
-  onAudioUnMuted() {
+  onAudioUnMuted(broadcast: boolean = true) {
     if (!this.audioMuted) {
       return;
     }
     this.audioMuted = false;
 
-    this.triggerUpdate(this.ON_AUDIO_UNMUTED);
+    if (broadcast) {
+      this.triggerUpdate(this.ON_AUDIO_UNMUTED);
+    }
   }
 
-  onVideoMuted() {
+  onVideoMuted(broadcast: boolean = true) {
     if (this.videoMuted) {
       return;
     }
     this.videoMuted = true;
 
-    this.triggerUpdate(this.ON_VIDEO_MUTED);
+    if (broadcast) {
+      this.triggerUpdate(this.ON_VIDEO_MUTED);
+    }
   }
 
-  onVideoUnMuted() {
+  onVideoUnMuted(broadcast: boolean = true) {
     if (!this.videoMuted) {
       return;
     }
     this.videoMuted = false;
 
-    this.triggerUpdate(this.ON_VIDEO_UNMUTED);
+    if (broadcast) {
+      this.triggerUpdate(this.ON_VIDEO_UNMUTED);
+    }
   }
 
-  onScreensharing() {
+  onScreensharing(broadcast: boolean = true) {
     if (this.screensharing) {
       return;
     }
     this.screensharing = true;
 
-    this.triggerUpdate(this.ON_SCREENSHARING);
+    if (broadcast) {
+      this.triggerUpdate(this.ON_SCREENSHARING);
+    }
   }
 
-  onStopScreensharing() {
+  onStopScreensharing(broadcast: boolean = true) {
     if (!this.screensharing) {
       return;
     }
     this.screensharing = false;
 
-    this.triggerUpdate(this.ON_STOP_TALKING);
+    if (broadcast) {
+      this.triggerUpdate(this.ON_STOP_TALKING);
+    }
   }
 
   getStatus() {
@@ -192,40 +208,37 @@ class Participant extends Emitter {
     };
   }
 
-  setStatus(status: Object) {
-    // eslint-disable-next-line no-return-assign
-    Object.keys(status).forEach((field: string) => this[field] = status[field]);
-  }
-
-  updateStatus(status: Object) {
+  updateStatus(status: Object, broadcast: boolean = true) {
     if (status.audioMuted !== this.audioMuted) {
       if (status.audioMuted) {
-        this.onAudioMuted();
+        this.onAudioMuted(broadcast);
       } else {
-        this.onAudioUnMuted();
+        this.onAudioUnMuted(broadcast);
       }
     }
 
     if (status.videoMuted !== this.videoMuted) {
       if (status.videoMuted) {
-        this.onVideoMuted();
+        this.onVideoMuted(broadcast);
       } else {
-        this.onVideoUnMuted();
+        this.onVideoUnMuted(broadcast);
       }
     }
 
     if (status.screensharing !== this.screensharing) {
       if (status.screensharing) {
-        this.onScreensharing();
+        this.onScreensharing(broadcast);
       } else {
-        this.onStopScreensharing();
+        this.onStopScreensharing(broadcast);
       }
     }
 
     // Poor man's object comparision
     if (JSON.stringify(this.extra) !== JSON.stringify(status.extra)) {
       this.extra = { ...this.extra, ...status.extra };
-      this.triggerUpdate(this.ON_EXTRA_CHANGE);
+      if (broadcast) {
+        this.triggerUpdate(this.ON_EXTRA_CHANGE);
+      }
     }
   }
 }

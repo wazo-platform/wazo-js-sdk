@@ -8,6 +8,9 @@ import getApiClient from '../../service/getApiClient';
 import Emitter from '../../utils/Emitter';
 import Wazo from '../index';
 import Participant from './Participant';
+import LocalParticipant from './LocalParticipant';
+import RemoteParticipant from './RemoteParticipant';
+import newFrom from '../../utils/new-from';
 
 const TYPE_CHAT = 'message/TYPE_CHAT';
 const TYPE_SIGNAL = 'message/TYPE_SIGNAL';
@@ -319,14 +322,15 @@ class Room extends Emitter {
         return this.eventEmitter.emit(this.ON_CHAT, body.content);
 
       case TYPE_SIGNAL: {
-        const { origin, status } = body.content;
+        const { status } = body.content;
 
-        if (this.localParticipant && origin !== this.localParticipant.callId) {
-          const participant = this._getParticipantFromCallId(status.callId);
-          if (participant) {
-            participant.setStatus(status);
-            participant.eventEmitter.emit(participant.ON_UPDATED);
-          }
+        // @NOTE: in its current state, TYPE_SIGNAL is only used to update participants
+        // we may need to figure out a way to contain this if we're to use signaling for other purposes
+        const participant = this._getParticipantFromCallId(status.callId);
+        if (participant) {
+          participant.updateStatus(status, false);
+          participant.eventEmitter.emit(participant.ON_UPDATED);
+          this.onParticipantUpdate(participant);
         }
         return this.eventEmitter.emit(this.ON_SIGNAL, body.content);
       }
@@ -394,6 +398,16 @@ class Room extends Emitter {
 
     this.participants = this.participants.filter(participant => participant.callId !== payload.data.call_id);
     this.eventEmitter.emit(this.CONFERENCE_USER_PARTICIPANT_LEFT, leftParticipant);
+  }
+
+  onParticipantUpdate(origParticipant: Participant) {
+    const participant: LocalParticipant | RemoteParticipant = newFrom(
+      origParticipant,
+      Object.getPrototypeOf(origParticipant.constructor),
+    );
+    const participants = this.participants.filter(p => p.callId !== participant.callId);
+    participants.push(participant);
+    this.participants = [...participants];
   }
 
   _onScreenshareEnded() {
