@@ -328,6 +328,7 @@ class Room extends Emitter {
         // we may need to figure out a way to contain this if we're to use signaling for other purposes
         const participant = this._getParticipantFromCallId(status.callId);
         if (participant) {
+          // we're received, so no need to broadcast (false)
           participant.updateStatus(status, false);
           participant.eventEmitter.emit(participant.ON_UPDATED);
           this.onParticipantUpdate(participant);
