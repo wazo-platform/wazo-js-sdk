@@ -68,6 +68,7 @@ class Participant extends Emitter {
 
   triggerEvent(name: string, ...args: any[]) {
     this.eventEmitter.emit.apply(this.eventEmitter, [name, ...args]);
+    this.eventEmitter.emit.apply(this.eventEmitter, [this.ON_UPDATED, ...args]);
   }
 
   triggerUpdate(eventType: string, broadcast: boolean = true) {
@@ -106,7 +107,7 @@ class Participant extends Emitter {
     }
 
     this.eventEmitter.emit.apply(this.eventEmitter, [eventType, status]);
-    this.eventEmitter.emit(this.ON_UPDATED, status);
+    this.eventEmitter.emit.apply(this.eventEmitter, [this.ON_UPDATED, eventType, status]);
   }
 
   onTalking(isTalking: boolean, broadcast: boolean = true) {
@@ -192,12 +193,14 @@ class Participant extends Emitter {
   }
 
   updateStatus(status: Object, broadcast: boolean = true) {
+    let updated: boolean = false;
     if (status.audioMuted !== undefined && status.audioMuted !== this.audioMuted) {
       if (status.audioMuted) {
         this.onAudioMuted(broadcast);
       } else {
         this.onAudioUnMuted(broadcast);
       }
+      updated = true;
     }
 
     if (status.videoMuted !== undefined && status.videoMuted !== this.videoMuted) {
@@ -206,6 +209,7 @@ class Participant extends Emitter {
       } else {
         this.onVideoUnMuted(broadcast);
       }
+      updated = true;
     }
 
     if (status.screensharing !== undefined && status.screensharing !== this.screensharing) {
@@ -214,12 +218,18 @@ class Participant extends Emitter {
       } else {
         this.onStopScreensharing(broadcast);
       }
+      updated = true;
     }
 
     // Poor man's object comparison
     if (status.extra !== undefined && JSON.stringify(this.extra) !== JSON.stringify(status.extra)) {
       this.extra = { ...this.extra, ...status.extra };
       this.triggerUpdate(this.ON_EXTRA_CHANGE, broadcast);
+      updated = true;
+    }
+
+    if (!updated) {
+      this.eventEmitter.emit.apply(this.eventEmitter, [this.ON_UPDATED, status, 'silent']);
     }
   }
 

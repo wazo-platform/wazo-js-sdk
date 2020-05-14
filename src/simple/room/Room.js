@@ -391,8 +391,11 @@ class Room extends Emitter {
 
     // @TODO: we could use a better function name here
     const isJoining = part => {
-      this.eventEmitter.emit(this.CONFERENCE_USER_PARTICIPANT_JOINED, part);
       this.__associateStreams(part);
+      // @VALIDATE: no need to publicize ourselves, no?
+      if (part instanceof RemoteParticipant) {
+        this.eventEmitter.emit(this.CONFERENCE_USER_PARTICIPANT_JOINED, part);
+      }
     };
 
     // When we join the room, we can call `getConferenceParticipantsAsUser`, not before.
@@ -407,6 +410,8 @@ class Room extends Emitter {
             ? new Wazo.LocalParticipant(this, item, this.extra)
             : new Wazo.RemoteParticipant(this, item);
         });
+
+        this.participants = participants;
 
         const localParticipant = participants.find(someParticipant => someParticipant instanceof Wazo.LocalParticipant);
         if (!this.localParticipant && localParticipant) {
@@ -425,13 +430,10 @@ class Room extends Emitter {
             type: SIGNAL_TYPE_PARTICIPANT_REQUEST,
             origin: this.localParticipant.getStatus(),
           });
-
-          this.eventEmitter.emit(this.ON_JOINED, localParticipant);
         }
 
         participants.forEach(someParticipant => isJoining(someParticipant));
-
-        this.participants = participants;
+        this.eventEmitter.emit(this.ON_JOINED, localParticipant, participants);
       }
 
       return this.participants;
@@ -442,8 +444,8 @@ class Room extends Emitter {
       : null;
 
     if (remoteParticipant) {
-      isJoining(remoteParticipant);
       this.participants.push(remoteParticipant);
+      isJoining(remoteParticipant);
     }
 
     return remoteParticipant;
