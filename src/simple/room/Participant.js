@@ -1,6 +1,6 @@
 // @flow
 import Emitter from '../../utils/Emitter';
-import Room from './Room';
+import Room, { SIGNAL_TYPE_PARTICIPANT_UPDATE } from './Room';
 
 class Participant extends Emitter {
   room: Room;
@@ -68,13 +68,12 @@ class Participant extends Emitter {
 
   triggerEvent(name: string, ...args: any[]) {
     this.eventEmitter.emit.apply(this.eventEmitter, [name, ...args]);
-    this.room.onParticipantUpdate();
   }
 
-  triggerUpdate(type: string) {
+  triggerUpdate(eventType: string, broadcast: boolean = true) {
     const status: Object = { callId: this.callId };
 
-    switch (type) {
+    switch (eventType) {
       case this.ON_START_TALKING:
       case this.ON_STOP_TALKING: {
         status.isTalking = this.isTalking;
@@ -102,22 +101,17 @@ class Participant extends Emitter {
       default:
     }
 
-    const data: Object = {
-      type,
-      origin: this.callId,
-      status,
-    };
+    if (broadcast) {
+      this.broadcastStatus(status);
+    }
 
-    this.room.onParticipantUpdate();
-    this.eventEmitter.emit.apply(this.eventEmitter, [type, status]);
-    this.room.sendSignal(data);
+    this.eventEmitter.emit.apply(this.eventEmitter, [eventType, status]);
+    this.eventEmitter.emit(this.ON_UPDATED, status);
   }
 
   onTalking(isTalking: boolean, broadcast: boolean = true) {
     this.isTalking = isTalking;
-    if (broadcast) {
-      this.triggerUpdate(this.isTalking ? this.ON_START_TALKING : this.ON_STOP_TALKING);
-    }
+    this.triggerUpdate(this.isTalking ? this.ON_START_TALKING : this.ON_STOP_TALKING, broadcast);
   }
 
   onDisconnect() {
@@ -138,9 +132,7 @@ class Participant extends Emitter {
     }
     this.audioMuted = true;
 
-    if (broadcast) {
-      this.triggerUpdate(this.ON_AUDIO_MUTED);
-    }
+    this.triggerUpdate(this.ON_AUDIO_MUTED, broadcast);
   }
 
   onAudioUnMuted(broadcast: boolean = true) {
@@ -149,9 +141,7 @@ class Participant extends Emitter {
     }
     this.audioMuted = false;
 
-    if (broadcast) {
-      this.triggerUpdate(this.ON_AUDIO_UNMUTED);
-    }
+    this.triggerUpdate(this.ON_AUDIO_UNMUTED, broadcast);
   }
 
   onVideoMuted(broadcast: boolean = true) {
@@ -160,9 +150,7 @@ class Participant extends Emitter {
     }
     this.videoMuted = true;
 
-    if (broadcast) {
-      this.triggerUpdate(this.ON_VIDEO_MUTED);
-    }
+    this.triggerUpdate(this.ON_VIDEO_MUTED, broadcast);
   }
 
   onVideoUnMuted(broadcast: boolean = true) {
@@ -171,9 +159,7 @@ class Participant extends Emitter {
     }
     this.videoMuted = false;
 
-    if (broadcast) {
-      this.triggerUpdate(this.ON_VIDEO_UNMUTED);
-    }
+    this.triggerUpdate(this.ON_VIDEO_UNMUTED, broadcast);
   }
 
   onScreensharing(broadcast: boolean = true) {
@@ -182,9 +168,7 @@ class Participant extends Emitter {
     }
     this.screensharing = true;
 
-    if (broadcast) {
-      this.triggerUpdate(this.ON_SCREENSHARING);
-    }
+    this.triggerUpdate(this.ON_SCREENSHARING, broadcast);
   }
 
   onStopScreensharing(broadcast: boolean = true) {
@@ -193,9 +177,7 @@ class Participant extends Emitter {
     }
     this.screensharing = false;
 
-    if (broadcast) {
-      this.triggerUpdate(this.ON_STOP_TALKING);
-    }
+    this.triggerUpdate(this.ON_STOP_TALKING, broadcast);
   }
 
   getStatus() {
@@ -234,13 +216,20 @@ class Participant extends Emitter {
       }
     }
 
-    // Poor man's object comparision
+    // Poor man's object comparison
     if (status.extra !== undefined && JSON.stringify(this.extra) !== JSON.stringify(status.extra)) {
       this.extra = { ...this.extra, ...status.extra };
-      if (broadcast) {
-        this.triggerUpdate(this.ON_EXTRA_CHANGE);
-      }
+      this.triggerUpdate(this.ON_EXTRA_CHANGE, broadcast);
     }
+  }
+
+  broadcastStatus(status: Object = null) {
+    this.room.debug('broadcastingStatus', status || this.getStatus());
+    this.room.sendSignal({
+      type: SIGNAL_TYPE_PARTICIPANT_UPDATE,
+      origin: this.callId,
+      status: status || this.getStatus(),
+    });
   }
 }
 
