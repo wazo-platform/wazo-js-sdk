@@ -244,6 +244,10 @@ class Room extends Emitter {
     }
   }
 
+  sendDTMF(tone: string) {
+    Wazo.Phone.sendDTMF(this.callSession, tone);
+  }
+
   _bindEvents() {
     // Retrieve mapping
     Wazo.Phone.phone.currentSipSession.sessionDescriptionHandler.on('setDescription', ({ type, sdp: rawSdp }) => {

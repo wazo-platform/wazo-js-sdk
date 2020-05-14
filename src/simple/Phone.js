@@ -121,6 +121,10 @@ class Phone extends Emitter {
     return this.phone && this.phone.stopScreenSharing();
   }
 
+  sendDTMF(callSession: CallSession, tone: string) {
+    return this.phone && this.phone.sendKey(callSession, tone);
+  }
+
   getLocalVideoStream(callSession: CallSession) {
     if (!this.phone || !this.phone.client) {
       return;
