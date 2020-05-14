@@ -210,7 +210,7 @@ class Participant extends Emitter {
   }
 
   updateStatus(status: Object, broadcast: boolean = true) {
-    if (status.audioMuted !== this.audioMuted) {
+    if (status.audioMuted !== undefined && status.audioMuted !== this.audioMuted) {
       if (status.audioMuted) {
         this.onAudioMuted(broadcast);
       } else {
@@ -218,7 +218,7 @@ class Participant extends Emitter {
       }
     }
 
-    if (status.videoMuted !== this.videoMuted) {
+    if (status.videoMuted !== undefined && status.videoMuted !== this.videoMuted) {
       if (status.videoMuted) {
         this.onVideoMuted(broadcast);
       } else {
@@ -226,7 +226,7 @@ class Participant extends Emitter {
       }
     }
 
-    if (status.screensharing !== this.screensharing) {
+    if (status.screensharing !== undefined && status.screensharing !== this.screensharing) {
       if (status.screensharing) {
         this.onScreensharing(broadcast);
       } else {
@@ -235,7 +235,7 @@ class Participant extends Emitter {
     }
 
     // Poor man's object comparision
-    if (JSON.stringify(this.extra) !== JSON.stringify(status.extra)) {
+    if (status.extra !== undefined && JSON.stringify(this.extra) !== JSON.stringify(status.extra)) {
       this.extra = { ...this.extra, ...status.extra };
       if (broadcast) {
         this.triggerUpdate(this.ON_EXTRA_CHANGE);
