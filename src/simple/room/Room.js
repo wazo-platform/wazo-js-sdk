@@ -277,8 +277,11 @@ class Room extends Emitter {
 
       // When the participant renegociate it constraints during the call, we also have to trigger events.
       const callId = this._getCallIdFromStreamId(streamId);
+      console.log('ON_VIDEO_STREAM', callId, streamId, this._callIdStreamIdMap);
       if (callId) {
         const participant = this._getParticipantFromCallId(callId);
+        console.log('ON_VIDEO_STREAM parti', participant, callId, this.participants);
+
         if (participant) {
           this._onParticipantVideoStream(participant, streamId);
         }

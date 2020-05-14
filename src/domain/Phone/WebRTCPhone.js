@@ -280,6 +280,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     peerConnection.ontrack = rawEvent => {
       const event = rawEvent;
       const [stream] = event.streams;
+      console.log('ontrack', event.track.kind);
 
       if (event.track.kind === 'audio') {
         return this.eventEmitter.emit(ON_AUDIO_STREAM, stream);
@@ -306,20 +307,20 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     // Remove stripVideo
-    sipSession.modifiers = sipSession.modifiers.filter(modifier => modifier.toString().indexOf('stripVideo') === -1);
+    // sipSession.modifiers = sipSession.modifiers.filter(modifier => modifier.toString().indexOf('stripVideo') === -1);
     const modifiers = [];
 
-    if (options.RTCOfferOptions && options.RTCOfferOptions.mandatory && !options.RTCOfferOptions.OfferToReceiveVideo) {
-      modifiers.push(SIPMethods.Web.Modifiers.stripVideo);
-    }
-
-    if (audioOnly) {
-      modifiers.push(fixVideoBundle);
-    }
-
-    if (!withCamera) {
-      modifiers.push(replaceVideoPort);
-    }
+    // if (options.RTCOfferOptions && options.RTCOfferOptions.mandatory && !options.RTCOfferOptions.OfferToReceiveVideo) {
+    //   modifiers.push(SIPMethods.Web.Modifiers.stripVideo);
+    // }
+    //
+    // if (audioOnly) {
+    //   modifiers.push(fixVideoBundle);
+    // }
+    //
+    // if (!withCamera) {
+    //   modifiers.push(replaceVideoPort);
+    // }
 
     console.log('reinvite', modifiers);
     sipSession.reinvite({ sessionDescriptionHandlerOptions: options }, modifiers);

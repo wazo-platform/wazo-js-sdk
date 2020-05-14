@@ -57,6 +57,9 @@ class Phone extends Emitter {
       authorizationUser: this.sipLine.username,
       password: this.sipLine.secret,
       uri: `${this.sipLine.username}@${server}`,
+      log: {
+        builtinEnabled: true,
+      },
       ...options,
     });
 

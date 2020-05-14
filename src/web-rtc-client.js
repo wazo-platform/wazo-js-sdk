@@ -135,7 +135,6 @@ export default class WebRTCClient extends Emitter {
 
   createUserAgent(configOverrides: ?Object): UA {
     const webRTCConfiguration = this._createWebRTCConfiguration(configOverrides);
-    console.log('webRTCConfiguration', webRTCConfiguration);
     const userAgent = new UA(webRTCConfiguration);
 
     events
@@ -207,7 +206,7 @@ export default class WebRTCClient extends Emitter {
     const context = this.userAgent.invite(number, this._getMediaConfiguration(receiveVideo));
 
     if (audioOnly) {
-      context.modifiers.push(SIPMethods.Web.Modifiers.stripVideo);
+      // context.modifiers.push(SIPMethods.Web.Modifiers.stripVideo);
       // context.modifiers.push(fixVideoBundle);
     }
 
@@ -791,9 +790,8 @@ export default class WebRTCClient extends Emitter {
         peerConnectionOptions: {
           iceCheckingTimeout: this.config.iceCheckingTimeout || 1000,
           rtcConfiguration: {
-            rtcpMuxPolicy: 'require',
             bundlePolicy: 'max-compat',
-            iceServers: WebRTCClient.getIceServers(this.config.host),
+            iceServers: [],
             ...this._getRtcOptions(this.config.receiveVideo || false),
           },
         },
