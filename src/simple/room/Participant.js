@@ -68,7 +68,7 @@ class Participant extends Emitter {
 
   triggerEvent(name: string, ...args: any[]) {
     this.eventEmitter.emit.apply(this.eventEmitter, [name, ...args]);
-    this.room.onParticipantUpdate(this);
+    this.room.onParticipantUpdate();
   }
 
   triggerUpdate(type: string) {
@@ -108,8 +108,9 @@ class Participant extends Emitter {
       status,
     };
 
+    this.room.onParticipantUpdate();
+    this.eventEmitter.emit.apply(this.eventEmitter, [type, status]);
     this.room.sendSignal(data);
-    this.room.onParticipantUpdate(this);
   }
 
   onTalking(isTalking: boolean, broadcast: boolean = true) {

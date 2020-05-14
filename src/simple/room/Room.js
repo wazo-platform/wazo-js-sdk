@@ -8,9 +8,7 @@ import getApiClient from '../../service/getApiClient';
 import Emitter from '../../utils/Emitter';
 import Wazo from '../index';
 import Participant from './Participant';
-import LocalParticipant from './LocalParticipant';
 import RemoteParticipant from './RemoteParticipant';
-import newFrom from '../../utils/new-from';
 
 const TYPE_CHAT = 'message/TYPE_CHAT';
 const TYPE_SIGNAL = 'message/TYPE_SIGNAL';
@@ -331,7 +329,7 @@ class Room extends Emitter {
           // we're received, so no need to broadcast (false)
           participant.updateStatus(status, false);
           participant.eventEmitter.emit(participant.ON_UPDATED);
-          this.onParticipantUpdate(participant);
+          this.onParticipantUpdate();
         }
         return this.eventEmitter.emit(this.ON_SIGNAL, body.content);
       }
@@ -348,6 +346,12 @@ class Room extends Emitter {
     const session = Wazo.Auth.getSession();
     let participants = [];
 
+    // @TODO: we could use a better function name here
+    const isJoining = part => {
+      this.eventEmitter.emit(this.CONFERENCE_USER_PARTICIPANT_JOINED, part);
+      this.__associateStreams(part);
+    };
+
     // When we join the room, we can call `getConferenceParticipantsAsUser`, not before.
     if (participant.user_uuid === session.uuid) {
       // Retrieve participants via an API calls
@@ -356,38 +360,44 @@ class Room extends Emitter {
         participants = response.items.map(item => {
           const isMe = item.call_id === this.callId;
 
-          return isMe ? new Wazo.LocalParticipant(this, item, this.extra) : new Wazo.RemoteParticipant(this, item);
+          return isMe && item.call_id
+            ? new Wazo.LocalParticipant(this, item, this.extra)
+            : new Wazo.RemoteParticipant(this, item);
         });
+
+        const localParticipant = participants.find(someParticipant => someParticipant instanceof Wazo.LocalParticipant);
+        if (!this.localParticipant && localParticipant) {
+          const videoStream = new Wazo.Stream(this._getLocalVideoStream(), localParticipant);
+          if (videoStream) {
+            localParticipant.streams.push(videoStream);
+            localParticipant.videoStreams.push(videoStream);
+            localParticipant.onStreamSubscribed(videoStream);
+          }
+          this.localParticipant = localParticipant;
+
+          this.connected = true;
+
+          this.eventEmitter.emit(this.ON_JOINED, localParticipant);
+        }
+
+        participants.forEach(someParticipant => isJoining(someParticipant));
+
+        this.participants = participants;
       }
-    } else {
-      participants = [new Wazo.RemoteParticipant(this, participant)];
-      // We can't send our status here, because for other participants the api request that retrieve all participants
-      // can be slow and we may not be in the list of participants for now.
+
+      return this.participants;
     }
 
-    this.participants = [...this.participants, ...participants];
+    const remoteParticipant: ?RemoteParticipant = !this.participants.some(p => p.callId === participant.call_id)
+      ? new Wazo.RemoteParticipant(this, participant)
+      : null;
 
-    const localParticipant = participants.find(someParticipant => someParticipant instanceof Wazo.LocalParticipant);
-    if (!this.localParticipant && localParticipant) {
-      const videoStream = new Wazo.Stream(this._getLocalVideoStream(), localParticipant);
-      if (videoStream) {
-        localParticipant.streams.push(videoStream);
-        localParticipant.videoStreams.push(videoStream);
-        localParticipant.onStreamSubscribed(videoStream);
-      }
-      this.localParticipant = localParticipant;
-
-      this.connected = true;
-
-      this.eventEmitter.emit(this.ON_JOINED, localParticipant);
+    if (remoteParticipant) {
+      isJoining(remoteParticipant);
+      this.participants.push(remoteParticipant);
     }
 
-    participants.forEach(someParticipant => {
-      this.eventEmitter.emit(this.CONFERENCE_USER_PARTICIPANT_JOINED, someParticipant);
-      this.__associateStreams(someParticipant);
-    });
-
-    return participants;
+    return remoteParticipant;
   }
 
   _onParticipantLeft(payload: Object) {
@@ -401,14 +411,8 @@ class Room extends Emitter {
     this.eventEmitter.emit(this.CONFERENCE_USER_PARTICIPANT_LEFT, leftParticipant);
   }
 
-  onParticipantUpdate(origParticipant: Participant) {
-    const participant: LocalParticipant | RemoteParticipant = newFrom(
-      origParticipant,
-      Object.getPrototypeOf(origParticipant.constructor),
-    );
-    const participants = this.participants.filter(p => p.callId !== participant.callId);
-    participants.push(participant);
-    this.participants = [...participants];
+  onParticipantUpdate() {
+    this.participants = [...this.participants];
   }
 
   _onScreenshareEnded() {
