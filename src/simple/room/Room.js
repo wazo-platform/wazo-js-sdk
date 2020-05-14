@@ -328,7 +328,7 @@ class Room extends Emitter {
         if (participant) {
           // we're received, so no need to broadcast (false)
           participant.updateStatus(status, false);
-          participant.eventEmitter.emit(participant.ON_UPDATED);
+          participant.eventEmitter.emit(participant.ON_UPDATED, status);
           this.onParticipantUpdate();
         }
         return this.eventEmitter.emit(this.ON_SIGNAL, body.content);
