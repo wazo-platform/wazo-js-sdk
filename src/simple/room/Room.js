@@ -117,13 +117,12 @@ class Room extends Emitter {
    * @param constraints string
    * @returns {Promise<Room>}
    */
-  static async connect({ extension, ...constraints }: Object) {
-    // @TODO: retrieve only constraints here (eg: avoid extra)
+  static async connect({ extension, constraints, extra, verbosity }: Object) {
     await Wazo.Phone.connect({ media: constraints });
     Wazo.Phone.checkSfu();
 
     const callSession = await Wazo.Phone.call(extension, constraints && !!constraints.video);
-    const room = new Room(callSession, extension, null, null, constraints.extra);
+    const room = new Room(callSession, extension, null, null, extra, verbosity);
 
     // Call_created is triggered before call_accepted, so we have to listen for it here.
     let callId = '';
