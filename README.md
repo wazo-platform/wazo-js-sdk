@@ -3,7 +3,7 @@
 [![npm version](https://badge.fury.io/js/%40wazo%2Fsdk.svg)](https://badge.fury.io/js/%40wazo%2Fsdk)
 [![Greenkeeper badge](https://badges.greenkeeper.io/wazo-platform/wazo-js-sdk.svg)](https://greenkeeper.io/)
 
-The Wazo JavaScript Software Development Kit is an API wrapper making it easy for you to communicate with your Wazo server. It allows you to add Wazo functionalities to any JavaScript application you are developing.
+The Wazo JavaScript Software Development Kit is an API wrapper that makes it easy to communicate with your Wazo server. It allows you to add Wazo functionalities to any JavaScript application you are developing.
 
 ## Usage
 
@@ -44,13 +44,13 @@ Wazo.Auth.init(clientId, tokenExpiration, minSubscriptionType);
 ```
 
 - `clientId`: string (optional)
-  - An identifier of your application that will be used for refreshing users token 
+  - An identifier of your application that will be used to refresh users token 
   
 - `tokenExpiration`: number (optional, default 3600 seconds)
   - Duration before token expiration (in seconds) 
   
 - `minSubscriptionType`: number (optional)
-  - Defines the minimal subscription type for an user to have access at your application.
+  - Defines the minimum user subscription type that allows access to your application.
   
 #### Setting the engine host
 
@@ -59,7 +59,7 @@ Wazo.Auth.setHost(host);
 ```
 
 - `host`: string
-  - Host where your engine is installed (including port if needed).
+  - URL to your host (include port if needed).
 
 ### Authenticating an user
 ```
@@ -72,7 +72,7 @@ const session = await Wazo.Auth.logIn(username, password);
 - `password`: string
   - User's password
  
-Returns as `Wazo.domain.Session`. This object contains, among others information, the user token.
+Returns as `Wazo.domain.Session`. This object contains, among other information, the user's token.
 
 #### Validating a token
 
@@ -81,7 +81,7 @@ const session = await Wazo.Auth.validateToken(token, refreshToken);
 ```
 
 - `token`: string
-  - User's token to validate (eg: check if correct and not expired).
+  - User's token to validate (eg: makes sure the token is valid and not expired).
   
 - `refreshToken`: string (optional)
   - User's refresh token, used to generate a new token if expired.
@@ -90,7 +90,7 @@ Returns as `Wazo.domain.Session`.
 
 #### Setting a callback when a new token is refreshed
 
-When the user's token will soon be expired, Wazo's SDK triggers a callback so you can update it in your application.
+When the user's token is about to expire, Wazo's SDK triggers a callback so you can update it in your application.
 Like updating the new token in your localstorage / cookies.
 
 ```js
@@ -98,11 +98,11 @@ Wazo.Auth.setOnRefreshToken(token => { /* Do something with the new token */ });
 ```
 
 - `callback`: Function(token: string)
-  - A function that will be triggered when the user's token will soon expire.
+  - A function that is triggered when the user's token will soon expire.
 
 #### Loggin out
 
-Destroys user'' ' token and refreshToken.
+Destroys user's token and refreshToken.
 
 ```js
 await Wazo.Auth.logout();
@@ -120,10 +120,10 @@ Wazo.Room.connect(options);
  - `extension`: string
    The room extension (number) you want to join
  - `audio`: boolean|Object 
-   A boolean if you want to send the user audio or not. Or an Object if you want to specify the audio input, etc...
+   A boolean, if you want to send the user audio or not; or an Object, if you want to specify the audio input, etc...
    See [getUserMedia arguments](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia) for more information. 
  - `video`: boolean|Object 
-   A boolean if you want to send the user video or not. Or an Object if you want to specify the audio input, etc...
+   A boolean, if you want to send the user video or not; or an Object, if you want to specify the audio input, etc...
    See [getUserMedia arguments](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia) for more information.
  - `extra`: Object
    A map of values that will be added to the information of the current participant.
@@ -137,7 +137,7 @@ room.sendChat(content);
 ```
 
 - `content`: string
-  The chat message content you want to send to all participants of the room.
+  The chat message content you want to send to all participants in the room.
   
 #### Sending a custom message to all participants
 
@@ -146,7 +146,7 @@ room.sendSignal(content);
 ```
 
 - `content`: string
-  The message content you want to send to all participants of the room.
+  The message content you want to send to all participants in the room.
   
 #### Sharing the user screen
 
@@ -207,7 +207,7 @@ Wazo.room.disconnect();
 room.on(room.ON_CHAT, (message) => {});
 ```
 
-Triggered when we receive a chat message.
+Triggered when receiving a chat message.
 
 - `message`: string
 
@@ -215,7 +215,7 @@ Triggered when we receive a chat message.
 room.on(room.ON_MESSAGE, (message) => {});
 ```
 
-Triggered when received a custom message.
+Triggered when receiving a custom message.
 
 - `message`: string
 
@@ -223,7 +223,7 @@ Triggered when received a custom message.
 room.on(room.ON_JOINED, (participant) => {});
 ```
 
-Triggered when we join the room.
+Triggered when joining the room.
 
 - `participant`: `Wazo.LocalParticipant`.
 
@@ -231,7 +231,7 @@ Triggered when we join the room.
 room.on(room.CONFERENCE_USER_PARTICIPANT_JOINED, (participant) => {});
 ```
 
-Triggered when a participant joined the room.
+Triggered when a participant joins the room.
 
 - `participant`: `Wazo.RemoteParticipant`.
 
@@ -239,7 +239,7 @@ Triggered when a participant joined the room.
 room.on(room.CONFERENCE_USER_PARTICIPANT_LEFT, (participant) => {});
 ```
 
-Triggered when a participant left the room.
+Triggered when a participant leaves the room.
 
 - `participant`: `Wazo.RemoteParticipant`.
 
@@ -247,7 +247,7 @@ Triggered when a participant left the room.
 room.on(room.ON_SCREEN_SHARE_ENDED, () => {});
 ```
 
-Triggered when we stop the screensharing.
+Triggered when screensharing is stopped.
 
 - `participant`: `Wazo.RemoteParticipant`.
 
@@ -255,7 +255,7 @@ Triggered when we stop the screensharing.
 room.on(room.ON_TALKING, (channel, participant) => {});
 ```
 
-Triggered when a participant is talking or stop talking.
+Triggered when a participant is talking, or stops talking.
 
 - `channel`: Object containing information about the event.
 - `participant`: `Wazo.RemoteParticipant` or `Wazo.LocalParticipant`.
@@ -289,16 +289,16 @@ You can access all Wazo's domain objects in `Wazo.domain.*`, like `Wazo.domain.S
   List all video streams that the participant is sending.
   
 - `audioMuted`: boolean
-  Indicates if the participant has muted its microphone.
+  Indicates if the participant has muted his microphone.
   
 - `videoMuted`: boolean
-  Indicates if the participant has muted its camera.
+  Indicates if the participant has muted his camera.
   
 - `screensharing`: boolean
-  Indicates if the participant is currently sharing its screen.
+  Indicates if the participant is currently sharing his screen.
   
 - `extra`: Object
-  extra information of a participant.
+  extra information related to a participant.
   
   
 #### Participant events
@@ -319,7 +319,7 @@ Triggered when the participant is talking.
 participant.on(participant.ON_STOP_TALKING, () => {});
 ```
 
-Triggered when the participant stop talking.
+Triggered when the participant stops talking.
 
 ```js
 participant.on(participant.ON_DISCONNECT, () => {});
@@ -340,46 +340,46 @@ Triggered when the participant sends a stream.
 participant.on(participant.ON_STREAM_UNSUBSCRIBED, (stream) => {});
 ```
 
-Triggered when the participant stop sending a stream.
+Triggered when the participant stops sending a stream.
 
 - `stream`: `Wazo.Stream`
-  A Wazo stream that is no more sent by the participant.
+  A Wazo stream that is no longer sent by the participant.
   
 ```js
 participant.on(participant.ON_AUDIO_MUTED, () => {});
 ```
 
-Triggered when the participant has disabled its microphone.
+Triggered when the participant has disabled his microphone.
   
 ```js
 participant.on(participant.ON_AUDIO_UNMUTED, () => {});
 ```
 
-Triggered when the participant has enabled its microphone. 
+Triggered when the participant has enabled his microphone. 
   
 ```js
 participant.on(participant.ON_VIDEO_MUTED, () => {});
 ```
 
-Triggered when the participant has disabled its camera. 
+Triggered when the participant has disabled his camera. 
   
 ```js
 participant.on(participant.ON_VIDEO_UNMUTED, () => {});
 ```
 
-Triggered when the participant has enabled its camera. 
+Triggered when the participant has enabled his camera. 
   
 ```js
 participant.on(participant.ON_SCREENSHARING, () => {});
 ```
 
-Triggered when the participant is sharing its screen. 
+Triggered when the participant is sharing his screen. 
   
 ```js
 participant.on(participant.ON_STOP_SCREENSHARING, () => {});
 ```
 
-Triggered when the participant stop sharing its screen. 
+Triggered when the participant stop sharing his screen. 
 
 #### Stream
 
@@ -395,7 +395,7 @@ Returns a `htmlElement` (audio or video) attached to the stream.
 
 `stream.detach(htmlEmelent)`
 
-Detach a stream from an existing htmlElement.
+Detaches a stream from an existing htmlElement.
 
 - `htmlElement`: htmlElement.
 
@@ -406,7 +406,7 @@ Depending on your preference, you may require or add the Wazo SDK to your own cl
 * `const { WazoApiClient } = require('@wazo/sdk');`
 * `import { WazoApiClient } from '@wazo/sdk';`
 
-Depending on your environment you can import:
+Depending on your environment, you can import:
 * `@wazo/sdk/esm`: compatible with (most) **browsers only**.
 * `@wazo/sdk/lib`: runnable on `node` env.
 
@@ -717,7 +717,7 @@ const ws = new WazoWebSocket({
   // valid Wazo token
 });
 
-// eventName can be on the of events here: http://documentation.wazo.community/en/stable/api_sdk/websocket.html
+// 'eventName' can be one the of events listed here: http://documentation.wazo.community/en/stable/api_sdk/websocket.html
 ws.on('eventName', (data: mixed) => {
 });
 
