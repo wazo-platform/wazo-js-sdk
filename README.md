@@ -33,7 +33,10 @@ Alternatively, you may load the Wazo SDK from a CDN. Use one of the following Co
 import Wazo from '@wazo/sdk/lib/simple';
 
 // Browser
-// You can access the `Wazo` object directly on the browser
+// You can access the `Wazo` object directly on the browser, simply include it in the html :
+<script src="https://unpkg.com/@wazo/sdk/dist/wazo-sdk.js"></script>
+or 
+<script src="https://cdn.jsdelivr.net/npm/@wazo/sdk"></script>
 ```
 
 ### Authentication
