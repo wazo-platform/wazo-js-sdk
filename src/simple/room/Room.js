@@ -5,6 +5,7 @@ import sdpParser from 'sdp-transform';
 import SIP from '../../sip';
 import type CallSession from '../../domain/CallSession';
 import getApiClient from '../../service/getApiClient';
+import Logger from '../../utils/logger';
 import Emitter from '../../utils/Emitter';
 import Wazo from '../index';
 import Participant from './Participant';
@@ -35,7 +36,6 @@ class Room extends Emitter {
   extra: Object;
   // video tag representing the room audio stream
   roomAudioElement: any;
-  verbosity: number;
 
   CONFERENCE_USER_PARTICIPANT_JOINED: string;
   CONFERENCE_USER_PARTICIPANT_LEFT: string;
@@ -62,7 +62,6 @@ class Room extends Emitter {
     extension: string, sourceId: ?number,
     callId: ?string,
     extra: Object = {},
-    verbosity: number = 0,
   ) {
     super();
     // Represents the room callSession
@@ -82,9 +81,6 @@ class Room extends Emitter {
     this.audioStream = null;
     // Extra values passed to local participant
     this.extra = extra;
-
-    // set debug verbosity
-    this.verbosity = verbosity;
 
     // Sugar syntax for `room.EVENT_NAME`
     this.CONFERENCE_USER_PARTICIPANT_JOINED = Wazo.Websocket.CONFERENCE_USER_PARTICIPANT_JOINED;
@@ -117,12 +113,12 @@ class Room extends Emitter {
    * @param constraints string
    * @returns {Promise<Room>}
    */
-  static async connect({ extension, constraints, extra, verbosity }: Object) {
+  static async connect({ extension, constraints, extra }: Object) {
     await Wazo.Phone.connect({ media: constraints });
     Wazo.Phone.checkSfu();
 
     const callSession = await Wazo.Phone.call(extension, constraints && !!constraints.video);
-    const room = new Room(callSession, extension, null, null, extra, verbosity);
+    const room = new Room(callSession, extension, null, null, extra);
 
     // Call_created is triggered before call_accepted, so we have to listen for it here.
     let callId = '';
@@ -357,7 +353,6 @@ class Room extends Emitter {
 
         if (participant) {
           // we're received, so no need to broadcast, hence the input false arg
-          this.debug('updatingStatus', status);
           participant.updateStatus(status, false);
         }
         break;
@@ -375,8 +370,9 @@ class Room extends Emitter {
         // might as well update the requester's status
         const requester: ?Participant = this._getParticipantFromCallId(origin.callId);
         if (requester) {
-          this.debug('updatingRequesterStatus', origin);
-          requester.updateStatus(origin, false);
+          // @FIXME?: when need to trigger an update on join-in; this is a bit of a hack
+          Logger.log('Trigger requester status', origin);
+          requester.triggerUpdate('REQUESTER_UPDATE');
         }
         break;
       }
@@ -502,12 +498,6 @@ class Room extends Emitter {
 
   _getLocalVideoStream() {
     return Wazo.Phone.getLocalVideoStream(this.callSession);
-  }
-
-  debug(...rest: any) {
-    if (this.verbosity) {
-      console.info(...rest);
-    }
   }
 }
 

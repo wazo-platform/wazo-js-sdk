@@ -1,5 +1,6 @@
 // @flow
 import Emitter from '../../utils/Emitter';
+import Logger from '../../utils/logger';
 import Room, { SIGNAL_TYPE_PARTICIPANT_UPDATE } from './Room';
 
 class Participant extends Emitter {
@@ -106,13 +107,16 @@ class Participant extends Emitter {
       this.broadcastStatus(status);
     }
 
-    this.eventEmitter.emit.apply(this.eventEmitter, [eventType, status]);
-    this.eventEmitter.emit.apply(this.eventEmitter, [this.ON_UPDATED, eventType, status]);
+    this.eventEmitter.emit(eventType, status);
+    this.eventEmitter.emit(this.ON_UPDATED, eventType, status);
   }
 
-  onTalking(isTalking: boolean, broadcast: boolean = true) {
+  onTalking(isTalking: boolean) {
+    Logger.log(`${this.name} ${isTalking ? 'is talking' : 'stopped talking'}`);
     this.isTalking = isTalking;
-    this.triggerUpdate(this.isTalking ? this.ON_START_TALKING : this.ON_STOP_TALKING, broadcast);
+    // you may notice we're not broadcasting: since all participants are getting this info
+    // directly from asterisk, there's no need to do so
+    this.triggerUpdate(this.isTalking ? this.ON_START_TALKING : this.ON_STOP_TALKING, false);
   }
 
   onDisconnect() {
@@ -193,52 +197,46 @@ class Participant extends Emitter {
   }
 
   updateStatus(status: Object, broadcast: boolean = true) {
-    let updated: boolean = false;
-    if (status.audioMuted !== undefined && status.audioMuted !== this.audioMuted) {
+    Logger.log(`Updating ${this.name}'s status`, status);
+
+    if (typeof status.audioMuted !== 'undefined' && status.audioMuted !== this.audioMuted) {
       if (status.audioMuted) {
         this.onAudioMuted(broadcast);
       } else {
         this.onAudioUnMuted(broadcast);
       }
-      updated = true;
     }
 
-    if (status.videoMuted !== undefined && status.videoMuted !== this.videoMuted) {
+    if (typeof status.videoMuted !== 'undefined' && status.videoMuted !== this.videoMuted) {
       if (status.videoMuted) {
         this.onVideoMuted(broadcast);
       } else {
         this.onVideoUnMuted(broadcast);
       }
-      updated = true;
     }
 
-    if (status.screensharing !== undefined && status.screensharing !== this.screensharing) {
+    if (typeof status.screensharing !== 'undefined' && status.screensharing !== this.screensharing) {
       if (status.screensharing) {
         this.onScreensharing(broadcast);
       } else {
         this.onStopScreensharing(broadcast);
       }
-      updated = true;
     }
 
     // Poor man's object comparison
-    if (status.extra !== undefined && JSON.stringify(this.extra) !== JSON.stringify(status.extra)) {
+    if (typeof status.extra !== 'undefined' && JSON.stringify(this.extra) !== JSON.stringify(status.extra)) {
       this.extra = { ...this.extra, ...status.extra };
       this.triggerUpdate(this.ON_EXTRA_CHANGE, broadcast);
-      updated = true;
-    }
-
-    if (!updated) {
-      this.eventEmitter.emit.apply(this.eventEmitter, [this.ON_UPDATED, status, 'silent']);
     }
   }
 
-  broadcastStatus(status: Object = null) {
-    this.room.debug('broadcastingStatus', status || this.getStatus());
+  broadcastStatus(inboundStatus: Object = null) {
+    const status = inboundStatus || this.getStatus();
+    Logger.log(`Broadcasting ${this.name}'s status`, status);
     this.room.sendSignal({
       type: SIGNAL_TYPE_PARTICIPANT_UPDATE,
       origin: this.callId,
-      status: status || this.getStatus(),
+      status,
     });
   }
 }
