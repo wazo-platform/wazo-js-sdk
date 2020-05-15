@@ -25,6 +25,382 @@ Alternatively, you may load the Wazo SDK from a CDN. Use one of the following Co
 <script src="https://cdn.jsdelivr.net/npm/@wazo/sdk"></script>
 ```
 
+## Simple API
+
+### Require / Import
+```js
+// For Node / packaged app
+import Wazo from '@wazo/sdk/lib/simple';
+
+// Browser
+// You can access the `Wazo` object directly on the browser
+```
+
+### Authentication
+
+#### Initializing
+```js
+Wazo.Auth.init(clientId, tokenExpiration, minSubscriptionType);
+```
+
+- `clientId`: string (optional)
+  - An identifier of your application that will be used for refreshing users token 
+  
+- `tokenExpiration`: number (optional, default 3600 seconds)
+  - Duration before token expiration (in seconds) 
+  
+- `minSubscriptionType`: number (optional)
+  - Defines the minimal subscription type for an user to have access at your application.
+  
+#### Setting the engine host
+
+```js
+Wazo.Auth.setHost(host);
+```
+
+- `host`: string
+  - Host where your engine is installed (including port if needed).
+
+### Authenticating an user
+```
+const session = await Wazo.Auth.logIn(username, password);
+```
+
+- `username`: string
+  - User's username
+
+- `password`: string
+  - User's password
+ 
+Returns as `Wazo.domain.Session`. This object contains, among others information, the user token.
+
+#### Validating a token
+
+```js
+const session = await Wazo.Auth.validateToken(token, refreshToken);
+```
+
+- `token`: string
+  - User's token to validate (eg: check if correct and not expired).
+  
+- `refreshToken`: string (optional)
+  - User's refresh token, used to generate a new token if expired.
+
+Returns as `Wazo.domain.Session`.
+
+#### Setting a callback when a new token is refreshed
+
+When the user's token will soon be expired, Wazo's SDK triggers a callback so you can update it in your application.
+Like updating the new token in your localstorage / cookies.
+
+```js
+Wazo.Auth.setOnRefreshToken(token => { /* Do something with the new token */ });
+```
+
+- `callback`: Function(token: string)
+  - A function that will be triggered when the user's token will soon expire.
+
+#### Loggin out
+
+Destroys user'' ' token and refreshToken.
+
+```js
+await Wazo.Auth.logout();
+```
+
+### Conference
+
+#### Joining a room
+
+```js
+Wazo.Room.connect(options);
+```
+
+- `options`: Object
+ - `extension`: string
+   The room extension (number) you want to join
+ - `audio`: boolean|Object 
+   A boolean if you want to send the user audio or not. Or an Object if you want to specify the audio input, etc...
+   See [getUserMedia arguments](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia) for more information. 
+ - `video`: boolean|Object 
+   A boolean if you want to send the user video or not. Or an Object if you want to specify the audio input, etc...
+   See [getUserMedia arguments](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia) for more information.
+ - `extra`: Object
+   A map of values that will be added to the information of the current participant.
+
+Returns a `Wazo.Room` instance.
+
+#### Sending a chat message in the room
+
+```js
+room.sendChat(content);
+```
+
+- `content`: string
+  The chat message content you want to send to all participants of the room.
+  
+#### Sending a custom message to all participants
+
+```js
+room.sendSignal(content);
+```
+
+- `content`: string
+  The message content you want to send to all participants of the room.
+  
+#### Sharing the user screen
+
+```js
+room.startScreenSharing(constraints);
+```
+
+- `constraints`: Object 
+  See [getUserMedia arguments](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia) for more information. 
+
+#### Stopping the screen share
+
+```js
+room.stopScreenSharing();
+```
+
+#### Disabling the camera
+
+```js
+room.turnCameraOff();
+```
+
+#### Enabling the camera
+
+```js
+room.turnCameraOn();
+```
+
+#### Disabling the microphone
+
+```js
+room.mute();
+```
+
+#### Enabling the microphone
+
+```js
+room.unmute();
+```
+
+#### Accessing room participants
+
+```js
+room.participants;
+```
+
+`participants`: An array of `Wazo.LocalParticipant` and `Wazo.RemoteParticipant`.
+
+#### Disconnect from the room
+
+```js
+Wazo.room.disconnect();
+```
+
+### Conference events
+
+```js
+room.on(room.ON_CHAT, (message) => {});
+```
+
+Triggered when we receive a chat message.
+
+- `message`: string
+
+```js
+room.on(room.ON_MESSAGE, (message) => {});
+```
+
+Triggered when received a custom message.
+
+- `message`: string
+
+```js
+room.on(room.ON_JOINED, (participant) => {});
+```
+
+Triggered when we join the room.
+
+- `participant`: `Wazo.LocalParticipant`.
+
+```js
+room.on(room.CONFERENCE_USER_PARTICIPANT_JOINED, (participant) => {});
+```
+
+Triggered when a participant joined the room.
+
+- `participant`: `Wazo.RemoteParticipant`.
+
+```js
+room.on(room.CONFERENCE_USER_PARTICIPANT_LEFT, (participant) => {});
+```
+
+Triggered when a participant left the room.
+
+- `participant`: `Wazo.RemoteParticipant`.
+
+```js
+room.on(room.ON_SCREEN_SHARE_ENDED, () => {});
+```
+
+Triggered when we stop the screensharing.
+
+- `participant`: `Wazo.RemoteParticipant`.
+
+```js
+room.on(room.ON_TALKING, (channel, participant) => {});
+```
+
+Triggered when a participant is talking or stop talking.
+
+- `channel`: Object containing information about the event.
+- `participant`: `Wazo.RemoteParticipant` or `Wazo.LocalParticipant`.
+  The participant instance, your can access the `participant.isTalking` attribute to know the status.
+  
+#### Accessing the current WebRtc phone
+
+You can access the current [webRtcPhone instance](#WebRTCPhone) via `Wazo.Phone.phone`.
+
+### Domain
+
+You can access all Wazo's domain objects in `Wazo.domain.*`, like `Wazo.domain.Session`;
+
+#### Participant
+
+`Wazo.LocalParticipant` and `Wazo.RemoteParticipant` shares the same properties :
+
+- `uuid`: string
+  The participant uuid.
+  
+- `name`: string
+  The participant name, retrieved from the sip configuration.
+  
+- `isTalking`: boolean
+  Indicates if the participant is currently talking.
+  
+- `streams`: Array of `Wazo.Stream`
+  List all streams that the participant is sending.
+  
+- `videoStreams`: Array of `Wazo.Stream`
+  List all video streams that the participant is sending.
+  
+- `audioMuted`: boolean
+  Indicates if the participant has muted its microphone.
+  
+- `videoMuted`: boolean
+  Indicates if the participant has muted its camera.
+  
+- `screensharing`: boolean
+  Indicates if the participant is currently sharing its screen.
+  
+- `extra`: Object
+  extra information of a participant.
+  
+  
+#### Participant events
+
+```js
+participant.on(participant.ON_UPDATED, () => {});
+```
+
+Triggered when the participant is updated.
+
+```js
+participant.on(participant.ON_START_TALKING, () => {});
+```
+
+Triggered when the participant is talking.
+
+```js
+participant.on(participant.ON_STOP_TALKING, () => {});
+```
+
+Triggered when the participant stop talking.
+
+```js
+participant.on(participant.ON_DISCONNECT, () => {});
+```
+
+Triggered when the participant leaves the room.
+
+```js
+participant.on(participant.ON_STREAM_SUBSCRIBED, (stream) => {});
+```
+
+Triggered when the participant sends a stream.
+
+- `stream`: `Wazo.Stream`
+  A Wazo stream that is sent by the participant.
+  
+```js
+participant.on(participant.ON_STREAM_UNSUBSCRIBED, (stream) => {});
+```
+
+Triggered when the participant stop sending a stream.
+
+- `stream`: `Wazo.Stream`
+  A Wazo stream that is no more sent by the participant.
+  
+```js
+participant.on(participant.ON_AUDIO_MUTED, () => {});
+```
+
+Triggered when the participant has disabled its microphone.
+  
+```js
+participant.on(participant.ON_AUDIO_UNMUTED, () => {});
+```
+
+Triggered when the participant has enabled its microphone. 
+  
+```js
+participant.on(participant.ON_VIDEO_MUTED, () => {});
+```
+
+Triggered when the participant has disabled its camera. 
+  
+```js
+participant.on(participant.ON_VIDEO_UNMUTED, () => {});
+```
+
+Triggered when the participant has enabled its camera. 
+  
+```js
+participant.on(participant.ON_SCREENSHARING, () => {});
+```
+
+Triggered when the participant is sharing its screen. 
+  
+```js
+participant.on(participant.ON_STOP_SCREENSHARING, () => {});
+```
+
+Triggered when the participant stop sharing its screen. 
+
+#### Stream
+
+`Wazo.Stream` helps attaching or detaching streams to html elements:
+
+`stream.attach(htmlEmelent)`
+
+Attaches a stream to an existing htmlElement or creates and returns a new one.
+
+- `htmlElement`: htmlElement (optional).
+
+Returns a `htmlElement` (audio or video) attached to the stream.
+
+`stream.detach(htmlEmelent)`
+
+Detach a stream from an existing htmlElement.
+
+- `htmlElement`: htmlElement.
+
+## Advanced API
+
 ### Require / Import
 Depending on your preference, you may require or add the Wazo SDK to your own client application one of the following ways:
 * `const { WazoApiClient } = require('@wazo/sdk');`
