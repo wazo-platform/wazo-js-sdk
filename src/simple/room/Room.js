@@ -11,9 +11,6 @@ import Wazo from '../index';
 import Participant from './Participant';
 import RemoteParticipant from './RemoteParticipant';
 
-const MESSAGE_TYPE_CHAT = 'message/TYPE_CHAT';
-const MESSAGE_TYPE_SIGNAL = 'message/TYPE_SIGNAL';
-
 export const SIGNAL_TYPE_PARTICIPANT_UPDATE = 'signal/PARTICIPANT_UPDATE';
 export const SIGNAL_TYPE_PARTICIPANT_REQUEST = 'signal/PARTICIPANT_REQUEST';
 
@@ -31,6 +28,8 @@ class Room extends Emitter {
   _boundOnParticipantLeft: Function;
   _boundOnScreenshareEnded: Function;
   _boundOnMessage: Function;
+  _boundOnChat: Function;
+  _boundOnSignal: Function;
   audioStream: ?any;
   audioElement: ?any;
   extra: Object;
@@ -87,8 +86,9 @@ class Room extends Emitter {
     this.CONFERENCE_USER_PARTICIPANT_LEFT = Wazo.Websocket.CONFERENCE_USER_PARTICIPANT_LEFT;
     this.ON_SCREEN_SHARE_ENDED = Wazo.Phone.ON_SCREEN_SHARE_ENDED;
     this.ON_MESSAGE = Wazo.Phone.ON_MESSAGE;
-    this.ON_CHAT = 'room/ON_CHAT';
-    this.ON_SIGNAL = 'room/ON_SIGNAL';
+    this.ON_CHAT = Wazo.Phone.ON_CHAT;
+    this.ON_SIGNAL = Wazo.Phone.ON_SIGNAL;
+
     this.ON_AUDIO_STREAM = Wazo.Phone.ON_AUDIO_STREAM;
     this.ON_VIDEO_STREAM = Wazo.Phone.ON_VIDEO_STREAM;
     this.ON_REMOVE_STREAM = Wazo.Phone.ON_REMOVE_STREAM;
@@ -98,6 +98,8 @@ class Room extends Emitter {
     this._boundOnParticipantJoined = this._onParticipantJoined.bind(this);
     this._boundOnParticipantLeft = this._onParticipantLeft.bind(this);
     this._boundOnMessage = this._onMessage.bind(this);
+    this._boundOnChat = this._onChat.bind(this);
+    this._boundOnSignal = this._onSignal.bind(this);
     this._boundOnScreenshareEnded = this._onScreenshareEnded.bind(this);
 
     this.unbind();
@@ -157,6 +159,8 @@ class Room extends Emitter {
     this.unbind();
 
     Wazo.Phone.off(this.ON_MESSAGE, this._boundOnMessage);
+    Wazo.Phone.off(this.ON_CHAT, this._boundOnChat);
+    Wazo.Phone.off(this.ON_SIGNAL, this._boundOnSignal);
     Wazo.Phone.off(this.ON_SCREEN_SHARE_ENDED, this._boundOnScreenshareEnded);
     Wazo.Websocket.off(this.CONFERENCE_USER_PARTICIPANT_JOINED, this._boundOnParticipantJoined);
     Wazo.Websocket.off(this.CONFERENCE_USER_PARTICIPANT_LEFT, this._boundOnParticipantLeft);
@@ -179,11 +183,11 @@ class Room extends Emitter {
   }
 
   sendChat(content: string) {
-    return this.sendMessage(JSON.stringify({ type: MESSAGE_TYPE_CHAT, content }));
+    return Wazo.Phone.sendChat(content);
   }
 
   sendSignal(content: any) {
-    return this.sendMessage(JSON.stringify({ type: MESSAGE_TYPE_SIGNAL, content }));
+    return Wazo.Phone.sendSignal(content);
   }
 
   async startScreenSharing(constraints: Object) {
@@ -297,6 +301,8 @@ class Room extends Emitter {
 
     // Phone events
     Wazo.Phone.on(this.ON_MESSAGE, this._boundOnMessage);
+    Wazo.Phone.on(this.ON_CHAT, this._boundOnChat);
+    Wazo.Phone.on(this.ON_SIGNAL, this._boundOnSignal);
     Wazo.Phone.on(this.ON_SCREEN_SHARE_ENDED, this._boundOnScreenshareEnded);
 
     [this.ON_AUDIO_STREAM, this.ON_VIDEO_STREAM, this.ON_REMOVE_STREAM].forEach(event =>
@@ -328,24 +334,20 @@ class Room extends Emitter {
         break;
       }
 
-      case MESSAGE_TYPE_CHAT:
-        return this.eventEmitter.emit(this.ON_CHAT, body.content);
-
-      case MESSAGE_TYPE_SIGNAL: {
-        this._onSignal(body.content);
-        break;
-      }
-
       default:
     }
 
-    this.eventEmitter.emit(this.ON_MESSAGE, body);
+    this.eventEmitter.emit(Wazo.Phone.ON_MESSAGE, body);
+  }
+
+  _onChat(content: Object) {
+    this.eventEmitter.emit(Wazo.Phone.ON_CHAT, content);
   }
 
   _onSignal(content: Object) {
-    const { type: signalType } = content;
+    const { type } = content;
 
-    switch (signalType) {
+    switch (type) {
       // we're receiving a external update
       case SIGNAL_TYPE_PARTICIPANT_UPDATE: {
         const { status } = content;
@@ -381,7 +383,8 @@ class Room extends Emitter {
         console.warn('uncaught signal', content);
       }
     }
-    this.eventEmitter.emit(this.ON_SIGNAL, content);
+
+    this.eventEmitter.emit(Wazo.Phone.ON_SIGNAL, content);
   }
 
   async _onParticipantJoined(payload: Object) {
