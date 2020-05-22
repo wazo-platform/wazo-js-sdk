@@ -106,46 +106,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.ringingEnabled = true;
     this.shouldRegisterAgain = true;
 
-    this.client.on('invite', (sipSession: SIP.sessionDescriptionHandler, wantsToDoVideo: boolean) => {
-      const autoAnswer = sipSession.request.getHeader('Answer-Mode') === 'Auto';
-      const withVideo = this.allowVideo ? wantsToDoVideo : false;
-      const callSession = this._createIncomingCallSession(sipSession, withVideo, null, autoAnswer);
-      this.incomingSessions.push(callSession.getId());
-      this._bindEvents(sipSession);
-
-      this.sipSessions[callSession.getId()] = sipSession;
-
-      if (!this.currentSipSession) {
-        if (this.ringingEnabled) {
-          this.eventEmitter.emit(ON_TERMINATE_SOUND);
-          this.eventEmitter.emit(ON_PLAY_RING_SOUND, this.audioRingDeviceId);
-        }
-      } else {
-        this.eventEmitter.emit(ON_TERMINATE_SOUND);
-        this.eventEmitter.emit(ON_PLAY_INBOUND_CALL_SIGNAL_SOUND, this.audioOutputDeviceId);
-      }
-
-      this.eventEmitter.emit(ON_CALL_INCOMING, callSession);
-    });
-
-    this.client.on('accepted', () => {});
-    this.client.on('ended', () => {});
-
-    this.client.on('unregistered', () => {
-      this.eventEmitter.emit(ON_UNREGISTERED);
-
-      if (this.shouldRegisterAgain) {
-        this.register();
-      }
-    });
-
-    this.client.on('registered', () => {
-      this.eventEmitter.emit(ON_REGISTERED);
-    });
-
-    this.client.on('disconnected', () => {
-      this.eventEmitter.emit(ON_UNREGISTERED);
-    });
+    this._bindClientEvents();
 
     this.acceptedSessions = {};
     this.rejectedSessions = {};
@@ -160,6 +121,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     try {
       this.client.register();
+      this._bindClientEvents();
     } catch (error) {
       console.error('[WebRtcPhone] register error', error, error.message, error.stack);
       // Avoid exception on `t.server.scheme` in sip transport when losing the webrtc socket connection
@@ -189,6 +151,22 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   isWebRTC() {
     return true;
+  }
+
+  startHeartbeat() {
+    if (!this.client) {
+      return;
+    }
+
+    this.client.startHeartbeat();
+  }
+
+  stopHeartbeat() {
+    if (!this.client) {
+      return;
+    }
+
+    this.client.stopHeartbeat();
   }
 
   getOptions(): AvailablePhoneOptions {
@@ -794,6 +772,57 @@ export default class WebRTCPhone extends Emitter implements Phone {
         body,
         contentType: 'text/plain',
       },
+    });
+  }
+
+  _bindClientEvents() {
+    this.client.unbind();
+
+    this.client.on('invite', (sipSession: SIP.sessionDescriptionHandler, wantsToDoVideo: boolean) => {
+      const autoAnswer = sipSession.request.getHeader('Answer-Mode') === 'Auto';
+      const withVideo = this.allowVideo ? wantsToDoVideo : false;
+      const callSession = this._createIncomingCallSession(sipSession, withVideo, null, autoAnswer);
+      this.incomingSessions.push(callSession.getId());
+      this._bindEvents(sipSession);
+
+      this.sipSessions[callSession.getId()] = sipSession;
+
+      if (!this.currentSipSession) {
+        if (this.ringingEnabled) {
+          this.eventEmitter.emit(ON_TERMINATE_SOUND);
+          this.eventEmitter.emit(ON_PLAY_RING_SOUND, this.audioRingDeviceId);
+        }
+      } else {
+        this.eventEmitter.emit(ON_TERMINATE_SOUND);
+        this.eventEmitter.emit(ON_PLAY_INBOUND_CALL_SIGNAL_SOUND, this.audioOutputDeviceId);
+      }
+
+      this.eventEmitter.emit(ON_CALL_INCOMING, callSession);
+    });
+
+    this.client.on('accepted', () => {});
+    this.client.on('ended', () => {});
+
+    this.client.on('unregistered', () => {
+      this.eventEmitter.emit(ON_UNREGISTERED);
+
+      if (this.shouldRegisterAgain) {
+        this.register();
+      }
+    });
+
+    this.client.on('registered', () => {
+      this.stopHeartbeat();
+      this.eventEmitter.emit(ON_REGISTERED);
+    });
+
+    this.client.on('connected', () => {
+      this.stopHeartbeat();
+    });
+
+    this.client.on('disconnected', () => {
+      this.eventEmitter.emit(ON_UNREGISTERED);
+      this.startHeartbeat();
     });
   }
 
