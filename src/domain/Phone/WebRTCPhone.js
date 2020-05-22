@@ -106,7 +106,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.ringingEnabled = true;
     this.shouldRegisterAgain = true;
 
-    this._bindClientEvents();
+    this.bindClientEvents();
 
     this.acceptedSessions = {};
     this.rejectedSessions = {};
@@ -121,7 +121,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     try {
       this.client.register();
-      this._bindClientEvents();
+      this.bindClientEvents();
     } catch (error) {
       console.error('[WebRtcPhone] register error', error, error.message, error.stack);
       // Avoid exception on `t.server.scheme` in sip transport when losing the webrtc socket connection
@@ -377,6 +377,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   hasAnActiveCall() {
     return !!this.currentSipSession;
+  }
+
+  callCount() {
+    return Object.keys(this.sipSessions).length;
   }
 
   isCurrentCallSipSession(callSession: CallSession): boolean {
@@ -775,7 +779,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     });
   }
 
-  _bindClientEvents() {
+  bindClientEvents() {
     this.client.unbind();
 
     this.client.on('invite', (sipSession: SIP.sessionDescriptionHandler, wantsToDoVideo: boolean) => {
