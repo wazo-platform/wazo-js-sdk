@@ -114,12 +114,12 @@ class Phone extends Emitter {
     return this.phone.sendMessage(toSipSession, body);
   }
 
-  sendChat(content: string) {
-    return this.sendMessage(JSON.stringify({ type: MESSAGE_TYPE_CHAT, content }));
+  sendChat(content: string, sipSession: SIP.sessionDescriptionHandler = null) {
+    return this.sendMessage(JSON.stringify({ type: MESSAGE_TYPE_CHAT, content }), sipSession);
   }
 
-  sendSignal(content: any) {
-    return this.sendMessage(JSON.stringify({ type: MESSAGE_TYPE_SIGNAL, content }));
+  sendSignal(content: any, sipSession: SIP.sessionDescriptionHandler = null) {
+    return this.sendMessage(JSON.stringify({ type: MESSAGE_TYPE_SIGNAL, content }), sipSession);
   }
 
   turnCameraOff(callSession: CallSession) {
@@ -211,10 +211,12 @@ class Phone extends Emitter {
 
     switch (body.type) {
       case MESSAGE_TYPE_CHAT:
-        return this.eventEmitter.emit(this.ON_CHAT, body.content);
+        this.eventEmitter.emit(this.ON_CHAT, body.content);
+        break;
 
       case MESSAGE_TYPE_SIGNAL: {
-        return this.eventEmitter.emit(this.ON_SIGNAL, body.content);
+        this.eventEmitter.emit(this.ON_SIGNAL, body.content);
+        break;
       }
 
       default:

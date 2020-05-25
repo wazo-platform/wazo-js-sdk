@@ -337,11 +337,11 @@ class Room extends Emitter {
       default:
     }
 
-    this.eventEmitter.emit(Wazo.Phone.ON_MESSAGE, body);
+    this.eventEmitter.emit(this.ON_MESSAGE, body);
   }
 
   _onChat(content: Object) {
-    this.eventEmitter.emit(Wazo.Phone.ON_CHAT, content);
+    this.eventEmitter.emit(this.ON_CHAT, content);
   }
 
   _onSignal(content: Object) {
