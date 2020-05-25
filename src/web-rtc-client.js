@@ -14,6 +14,7 @@ import Emitter from './utils/Emitter';
 import Session from './domain/Session';
 import ApiClient from './api-client';
 import IssueReporter from './service/IssueReporter';
+import Heartbeat from './utils/heartbeat';
 
 import MobileSessionDescriptionHandler from './lib/MobileSessionDescriptionHandler';
 
@@ -48,9 +49,6 @@ export const transportEvents = [
   'keepAliveDebounceTimeout',
 ];
 const MAX_MERGE_SESSIONS = 4;
-const DEFAULT_HEARTBEAT_DELAY = 5000;
-const DEFAULT_HEARTBEAT_TIMEOUT = 11000;
-const DEFAULT_MAX_HEARTBEATS = 3;
 
 type MediaConfig = {
   audio: Object & boolean,
@@ -77,7 +75,6 @@ type WebRtcConfig = {
   maxHeartbeats: number,
 };
 
-
 // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
 export default class WebRTCClient extends Emitter {
   config: WebRtcConfig;
@@ -95,11 +92,8 @@ export default class WebRTCClient extends Emitter {
   audioOutputDeviceId: ?string;
   videoSessions: Object;
   connectionPromise: ?Promise<void>;
-  heartbeatNumber: number;
-  hasHeartbeat: boolean;
-  heartbeatDelayTimeout: ?TimeoutID;
-  heartbeatTimeout: ?TimeoutID;
   _boundOnHeartbeat: Function;
+  heartbeat: Heartbeat;
 
   static isAPrivateIp(ip: string): boolean {
     const regex = /^(?:10|127|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\..*/;
@@ -132,9 +126,11 @@ export default class WebRTCClient extends Emitter {
 
     this.videoSessions = {};
     this.connectionPromise = null;
+
     this._boundOnHeartbeat = this._onHeartbeat.bind(this);
-    this.hasHeartbeat = false;
-    this.heartbeatNumber = 0;
+    this.heartbeat = new Heartbeat(config.heartbeatDelay, config.heartbeatTimeout, config.maxHeartbeats);
+    this.heartbeat.setSendHeartbeat(this.pingServer.bind(this));
+    this.heartbeat.setOnHeartbeatTimeout(this._onHeartbeatTimeout.bind(this));
   }
 
   configureMedia(media: MediaConfig) {
@@ -707,56 +703,24 @@ export default class WebRTCClient extends Emitter {
   }
 
   startHeartbeat() {
-    if (!this.userAgent || this.heartbeatNumber > (this.config.maxHeartbeats || DEFAULT_MAX_HEARTBEATS)) {
-      this.hasHeartbeat = false;
+    if (!this.userAgent) {
+      this.heartbeat.stop();
       return;
-    }
-
-    this.heartbeatNumber = 0;
-    this.hasHeartbeat = true;
-
-    this._sendHeartbeat();
-  }
-
-  _sendHeartbeat() {
-    if (this.heartbeatTimeout) {
-      clearTimeout(this.heartbeatTimeout);
-    }
-
-    if (this.heartbeatDelayTimeout) {
-      clearTimeout(this.heartbeatDelayTimeout);
     }
 
     this.userAgent.transport.off('message', this._boundOnHeartbeat);
     this.userAgent.transport.on('message', this._boundOnHeartbeat);
 
-    this.heartbeatDelayTimeout = setTimeout(() => {
-      this.heartbeatNumber++;
-      this.pingServer();
-    }, this.config.heartbeatDelay || DEFAULT_HEARTBEAT_DELAY);
-
-    this.heartbeatTimeout = setTimeout(this._onHeartbeatTimeout.bind(this),
-      this.config.heartbeatTimeout || DEFAULT_HEARTBEAT_TIMEOUT);
+    this.heartbeat.start();
   }
 
   stopHeartbeat() {
-    this.hasHeartbeat = false;
-
-    if (this.heartbeatDelayTimeout) {
-      clearTimeout(this.heartbeatDelayTimeout);
-    }
-    if (this.heartbeatTimeout) {
-      clearTimeout(this.heartbeatTimeout);
-    }
+    this.heartbeat.stop();
   }
 
   _onHeartbeat(message: string) {
-    if (!this.hasHeartbeat) {
-      return;
-    }
-
     if (message.indexOf('200 OK') !== -1) {
-      this._sendHeartbeat();
+      this.heartbeat.onHeartbeat();
     }
   }
 
