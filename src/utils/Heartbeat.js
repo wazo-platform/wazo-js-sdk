@@ -17,7 +17,7 @@ class Heartbeat {
   _onTimeoutCallback: ?Function;
 
   constructor(heartbeatDelay: number = DEFAULT_HEARTBEAT_DELAY, heartbeatTimeout: number = DEFAULT_HEARTBEAT_TIMEOUT,
-              maxHeartbeats: number = DEFAULT_MAX_HEARTBEATS) {
+    maxHeartbeats: number = DEFAULT_MAX_HEARTBEATS) {
     this.heartbeatDelay = heartbeatDelay;
     this.heartbeatTimeout = heartbeatTimeout;
     this.maxHeartbeats = maxHeartbeats;

@@ -14,7 +14,7 @@ import Emitter from './utils/Emitter';
 import Session from './domain/Session';
 import ApiClient from './api-client';
 import IssueReporter from './service/IssueReporter';
-import Heartbeat from './utils/heartbeat';
+import Heartbeat from './utils/Heartbeat';
 
 import MobileSessionDescriptionHandler from './lib/MobileSessionDescriptionHandler';
 
