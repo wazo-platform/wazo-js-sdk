@@ -46,6 +46,7 @@ class Heartbeat {
   }
 
   start() {
+    this.stop();
     this.hasHeartbeat = true;
     this._heartbeatTries = 0;
     this._sendHeartbeat();
