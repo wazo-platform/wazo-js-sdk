@@ -727,7 +727,9 @@ export default class WebRTCClient extends Emitter {
   async _onHeartbeatTimeout() {
     if (this.userAgent.transport) {
       // Disconnect from WS and triggers events
-      await this.userAgent.transport.disconnect();
+      this.userAgent.transport.disconnect({ force: true });
+      // Force `disconnected` to be called quickly when calling `onClose`
+      this.userAgent.transport.disconnectDeferredResolve = null;
       // We have to trigger onClose manually or it can take too much time to be triggered by the transport.
       this.userAgent.transport.onClose({});
     }

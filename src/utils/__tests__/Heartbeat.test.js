@@ -35,7 +35,7 @@ describe('Heartbeat', () => {
   });
 
   describe('When onHearbeat is called every times', () => {
-    it('should call send', async () => {
+    it('should not timeout', async () => {
       const timeout = jest.fn();
       const heartbeat = new Heartbeat(5, 50, 8);
       const sendHeartbeat = jest.fn(() => {
@@ -49,6 +49,33 @@ describe('Heartbeat', () => {
 
       expect(sendHeartbeat).toHaveBeenNthCalledWith(8);
       expect(timeout).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('When calling it twice', () => {
+    it('should work like the first time', async () => {
+      const timeout = jest.fn();
+      const heartbeat = new Heartbeat(5, 50, 8);
+      const sendHeartbeat = jest.fn(() => {
+        heartbeat.onHeartbeat();
+      });
+      heartbeat.setSendHeartbeat(sendHeartbeat);
+      heartbeat.setOnHeartbeatTimeout(timeout);
+
+      // First call
+      heartbeat.start();
+
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      expect(sendHeartbeat).toHaveBeenNthCalledWith(8);
+      expect(timeout).not.toHaveBeenCalled();
+
+      // Second call
+      heartbeat.setSendHeartbeat(() => {});
+      heartbeat.start();
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      expect(timeout).toHaveBeenCalled();
     });
   });
 });
