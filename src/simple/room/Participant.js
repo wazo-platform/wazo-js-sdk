@@ -101,6 +101,7 @@ class Participant extends Emitter {
         break;
       }
       default:
+        break;
     }
 
     if (broadcast) {
