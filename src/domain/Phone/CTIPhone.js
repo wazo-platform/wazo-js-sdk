@@ -46,8 +46,21 @@ export default class CTIPhone extends Emitter implements Phone {
     return !!this.currentCall;
   }
 
+  callCount() {
+    return this.currentCall ? 1 : 0;
+  }
+
   isWebRTC() {
     return false;
+  }
+
+  startHeartbeat() {
+  }
+
+  stopHeartbeat() {
+  }
+
+  bindClientEvents() {
   }
 
   async makeCall(number: string, line: Line): Promise<?CallSession> {

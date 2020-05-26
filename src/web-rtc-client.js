@@ -7,12 +7,15 @@ import { UA } from 'sip.js/lib/UA';
 import { Utils } from 'sip.js/lib/Utils';
 import { Exceptions } from 'sip.js/lib/Exceptions';
 import { Modifiers } from 'sip.js/lib/Web';
+import { URI } from 'sip.js/lib/core/messages/uri';
+import { TransportStatus } from 'sip.js/lib/Web/Transport';
 import SIP from 'sip.js';
 
 import Emitter from './utils/Emitter';
 import Session from './domain/Session';
 import ApiClient from './api-client';
 import IssueReporter from './service/IssueReporter';
+import Heartbeat from './utils/Heartbeat';
 
 import MobileSessionDescriptionHandler from './lib/MobileSessionDescriptionHandler';
 
@@ -68,6 +71,9 @@ type WebRtcConfig = {
   log?: Object,
   audioOutputDeviceId?: string,
   userAgentString?: string,
+  heartbeatDelay: number,
+  heartbeatTimeout: number,
+  maxHeartbeats: number,
 };
 
 // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
@@ -87,6 +93,8 @@ export default class WebRTCClient extends Emitter {
   audioOutputDeviceId: ?string;
   videoSessions: Object;
   connectionPromise: ?Promise<void>;
+  _boundOnHeartbeat: Function;
+  heartbeat: Heartbeat;
 
   static isAPrivateIp(ip: string): boolean {
     const regex = /^(?:10|127|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\..*/;
@@ -110,6 +118,7 @@ export default class WebRTCClient extends Emitter {
     this._buildConfig(config, session).then((newConfig: WebRtcConfig) => {
       this.config = newConfig;
       this.userAgent = this.createUserAgent(uaConfigOverrides);
+      this._bindUserAgentEvents();
     });
 
     this.audioOutputDeviceId = config.audioOutputDeviceId;
@@ -118,6 +127,11 @@ export default class WebRTCClient extends Emitter {
 
     this.videoSessions = {};
     this.connectionPromise = null;
+
+    this._boundOnHeartbeat = this._onHeartbeat.bind(this);
+    this.heartbeat = new Heartbeat(config.heartbeatDelay, config.heartbeatTimeout, config.maxHeartbeats);
+    this.heartbeat.setSendHeartbeat(this.pingServer.bind(this));
+    this.heartbeat.setOnHeartbeatTimeout(this._onHeartbeatTimeout.bind(this));
   }
 
   configureMedia(media: MediaConfig) {
@@ -132,27 +146,24 @@ export default class WebRTCClient extends Emitter {
 
   createUserAgent(configOverrides: ?Object): UA {
     const webRTCConfiguration = this._createWebRTCConfiguration(configOverrides);
-    const userAgent = new UA(webRTCConfiguration);
 
-    events
-      .filter(eventName => eventName !== 'invite' && eventName !== 'new')
-      .forEach(eventName => userAgent.on(eventName, event => this.eventEmitter.emit(eventName, event)));
+    return new UA(webRTCConfiguration);
+  }
 
-    // Particular case for `invite` event
-    userAgent.on('invite', (session: SIP.sessionDescriptionHandler) => {
-      this._setupSession(session);
-      const shouldAutoAnswer = !!session.request.getHeader('alert-info');
+  pingServer() {
+    if (!this.isConnected()) {
+      return;
+    }
 
-      this.eventEmitter.emit('invite', session, this.sessionWantsToDoVideo(session), shouldAutoAnswer);
-    });
+    try {
+      this.userAgent.request('OPTIONS', new URI('', '', this.config.host));
+    } catch (_) {
+      // Nothing to do
+    }
+  }
 
-    transportEvents.forEach(eventName => {
-      userAgent.transport.on(eventName, event => {
-        this.eventEmitter.emit(eventName, event);
-      });
-    });
-
-    return userAgent;
+  isConnected() {
+    return this.userAgent && this.userAgent.transport.isConnected();
   }
 
   isRegistered(): boolean {
@@ -168,6 +179,7 @@ export default class WebRTCClient extends Emitter {
     if (!this.userAgent || this.isRegistered()) {
       return;
     }
+    this._bindUserAgentEvents();
 
     this._connectIfNeeded().then(this.userAgent.register.bind(this.userAgent));
   }
@@ -187,7 +199,11 @@ export default class WebRTCClient extends Emitter {
       return;
     }
 
-    this.userAgent.stop();
+    try {
+      this.userAgent.stop();
+    } catch (e) {
+      IssueReporter.log(IssueReporter.WARN, '[WebRtcClient] close error', e.message, e.stack);
+    }
   }
 
   // eslint-disable-next-line no-unused-vars
@@ -493,13 +509,20 @@ export default class WebRTCClient extends Emitter {
       return null;
     }
 
+    this.stopHeartbeat();
+
     if (this.userAgent.transport) {
       this.userAgent.transport.disconnect();
     }
 
     this.userAgent.removeAllListeners();
 
-    this.userAgent.stop();
+    try {
+      this.userAgent.stop();
+    } catch (_) {
+      // Avoid to raise exception when trying to close with hanged-up sessions remaining
+      // eg: "INVITE not rejectable in state Completed"
+    }
     this.userAgent = null;
   }
 
@@ -680,12 +703,73 @@ export default class WebRTCClient extends Emitter {
     return localStream;
   }
 
+  hasHeartbeat() {
+    return this.heartbeat.hasHeartbeat;
+  }
+
+  startHeartbeat() {
+    if (!this.userAgent) {
+      this.heartbeat.stop();
+      return;
+    }
+
+    this.userAgent.transport.off('message', this._boundOnHeartbeat);
+    this.userAgent.transport.on('message', this._boundOnHeartbeat);
+
+    this.heartbeat.start();
+  }
+
+  stopHeartbeat() {
+    this.heartbeat.stop();
+  }
+
+  _onHeartbeat(message: string) {
+    if (message.indexOf('200 OK') !== -1) {
+      this.heartbeat.onHeartbeat();
+    }
+  }
+
+  async _onHeartbeatTimeout() {
+    if (this.userAgent.transport) {
+      // Disconnect from WS and triggers events
+      this.userAgent.transport.disconnect({ force: true });
+      // Force `disconnected` to be called quickly when calling `onClose`
+      this.userAgent.transport.disconnectDeferredResolve = null;
+      // We have to trigger onClose manually or it can take too much time to be triggered by the transport.
+      this.userAgent.transport.status = TransportStatus.STATUS_CLOSING;
+      this.userAgent.transport.onClose({ code: 1000, reason: 'heartbeat failed' });
+    }
+  }
+
+  _bindUserAgentEvents() {
+    this.userAgent.removeAllListeners();
+
+    events
+      .filter(eventName => eventName !== 'invite' && eventName !== 'new')
+      .forEach(eventName => this.userAgent.on(eventName, event => this.eventEmitter.emit(eventName, event)));
+
+    // Particular case for `invite` event
+    this.userAgent.on('invite', (session: SIP.sessionDescriptionHandler) => {
+      this._setupSession(session);
+      const shouldAutoAnswer = !!session.request.getHeader('alert-info');
+
+      this.eventEmitter.emit('invite', session, this.sessionWantsToDoVideo(session), shouldAutoAnswer);
+    });
+
+    transportEvents.forEach(eventName => {
+      this.userAgent.transport.on(eventName, event => {
+        this.eventEmitter.emit(eventName, event);
+      });
+    });
+  }
+
   _connectIfNeeded(): Promise<void> {
     return new Promise(resolve => {
       IssueReporter.log(IssueReporter.INFO, '[WebRtcClient][_connectIfNeeded]', this.userAgent.transport.isConnected());
       if (!this.userAgent) {
         IssueReporter.log(IssueReporter.INFO, '[WebRtcClient][_connectIfNeeded] recreating UA');
         this.userAgent = this.createUserAgent(this.uaConfigOverrides);
+        this._bindUserAgentEvents();
       }
 
       if (!this.userAgent.transport.isConnected()) {
@@ -694,13 +778,8 @@ export default class WebRTCClient extends Emitter {
         }
 
         IssueReporter.log(IssueReporter.INFO, '[WebRtcClient][_connectIfNeeded] connecting');
-        this.connectionPromise = this.userAgent.start && this.userAgent
-          .start()
-          .then(resolve)
-          .catch(error => {
-            this.connectionPromise = null;
-            console.warn('[WebRtcClient][_connectIfNeeded] error', error.message);
-          });
+        this.userAgent.start();
+        this.connectionPromise = new Promise(connectResolve => this.userAgent.transport.afterConnected(connectResolve));
 
         return this.connectionPromise;
       }
