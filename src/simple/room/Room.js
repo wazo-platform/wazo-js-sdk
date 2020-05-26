@@ -245,7 +245,7 @@ class Room extends Emitter {
   }
 
   sendDTMF(tone: string) {
-    Wazo.Phone.sendDTMF(this.callSession, tone);
+    Wazo.Phone.sendDTMF(tone, this.callSession);
   }
 
   _bindEvents() {
