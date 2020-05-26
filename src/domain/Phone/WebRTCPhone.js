@@ -826,7 +826,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     this.client.on('disconnected', () => {
       this.eventEmitter.emit(ON_UNREGISTERED);
-      this.startHeartbeat();
+
+      // Do not trigger heatbeat if already running
+      if (!this.client.hasHeartbeat()) {
+        this.startHeartbeat();
+      }
     });
   }
 

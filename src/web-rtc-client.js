@@ -8,6 +8,7 @@ import { Utils } from 'sip.js/lib/Utils';
 import { Exceptions } from 'sip.js/lib/Exceptions';
 import { Modifiers } from 'sip.js/lib/Web';
 import { URI } from 'sip.js/lib/core/messages/uri';
+import { TransportStatus } from 'sip.js/lib/Web/Transport';
 import SIP from 'sip.js';
 
 import Emitter from './utils/Emitter';
@@ -702,6 +703,10 @@ export default class WebRTCClient extends Emitter {
     return localStream;
   }
 
+  hasHeartbeat() {
+    return this.heartbeat.hasHeartbeat;
+  }
+
   startHeartbeat() {
     if (!this.userAgent) {
       this.heartbeat.stop();
@@ -731,7 +736,8 @@ export default class WebRTCClient extends Emitter {
       // Force `disconnected` to be called quickly when calling `onClose`
       this.userAgent.transport.disconnectDeferredResolve = null;
       // We have to trigger onClose manually or it can take too much time to be triggered by the transport.
-      this.userAgent.transport.onClose({});
+      this.userAgent.transport.status = TransportStatus.STATUS_CLOSING;
+      this.userAgent.transport.onClose({ code: 1000, reason: 'heartbeat failed' });
     }
   }
 
