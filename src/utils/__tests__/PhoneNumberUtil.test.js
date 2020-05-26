@@ -4,6 +4,7 @@ describe('Formatting phone numbers', () => {
   it('should not format all phone numbers', () => {
     expect(getDisplayableNumber('*143450', 'FR')).toBe('*143450');
     expect(getDisplayableNumber('*10', 'US')).toBe('*10');
+    expect(getDisplayableNumber('Wazo Fax', 'US')).toBe('Wazo Fax');
     expect(getDisplayableNumber('#23445433', 'DE')).toBe('#23445433');
   });
 
