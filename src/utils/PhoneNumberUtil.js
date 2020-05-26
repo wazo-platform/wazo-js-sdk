@@ -12,7 +12,7 @@ const shouldBeFormatted = (number: ?string) => {
     return false;
   }
 
-  return !number.includes('#') && !number.includes('*');
+  return !number.includes('#') && !number.includes('*') && !number.match(/[aA-zZ]/);
 };
 
 const isSameCountry = (country1, country2) => {
