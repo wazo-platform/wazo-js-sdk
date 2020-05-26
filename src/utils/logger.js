@@ -5,11 +5,11 @@ export default class Logger {
     return typeof process !== 'undefined' && (+process.env.DEBUG === 1 || process.env.DEBUG === 'true');
   }
 
-  static logRequest(curl: string) {
+  static log(...msg: any) {
     if (!Logger.hasDebug()) {
       return;
     }
 
-    console.info(curl);
+    console.info(...msg);
   }
 }

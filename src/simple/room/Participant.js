@@ -1,7 +1,10 @@
 // @flow
 import Emitter from '../../utils/Emitter';
+import Logger from '../../utils/logger';
+import Room, { SIGNAL_TYPE_PARTICIPANT_UPDATE } from './Room';
 
 class Participant extends Emitter {
+  room: Room;
   uuid: string;
   name: string;
   number: string;
@@ -26,13 +29,16 @@ class Participant extends Emitter {
   ON_VIDEO_UNMUTED: string;
   ON_SCREENSHARING: string;
   ON_STOP_SCREENSHARING: string;
+  ON_EXTRA_CHANGE: string;
 
   /**
    * @param rawParticipant string Participant sent via the Wazo WS
    * @param extra Object extra status of the participant
    */
-  constructor(rawParticipant: Object = {}, extra: Object = {}) {
+  constructor(room: Room, rawParticipant: Object = {}, extra: Object = {}) {
     super();
+
+    this.room = room;
 
     this.uuid = rawParticipant.user_uuid;
     this.name = (rawParticipant.caller_id_name || '').replace("\\'", "'");
@@ -46,28 +52,72 @@ class Participant extends Emitter {
     this.screensharing = false;
     this.extra = extra;
 
-    this.ON_UPDATED = 'ON_UPDATED';
-    this.ON_START_TALKING = 'ON_PARTICIPANT_START_TALKING';
-    this.ON_STOP_TALKING = 'ON_PARTICIPANT_STOP_TALKING';
-    this.ON_DISCONNECT = 'ON_PARTICIPANT_DISCONNECT';
-    this.ON_STREAM_SUBSCRIBED = 'ON_STREAM_SUBSCRIBED';
-    this.ON_STREAM_UNSUBSCRIBED = 'ON_STREAM_UNSUBSCRIBED';
-    this.ON_AUDIO_MUTED = 'ON_AUDIO_MUTED';
-    this.ON_AUDIO_UNMUTED = 'ON_AUDIO_UNMUTED';
-    this.ON_VIDEO_MUTED = 'ON_VIDEO_MUTED';
-    this.ON_VIDEO_UNMUTED = 'ON_VIDEO_UNMUTED';
-    this.ON_SCREENSHARING = 'ON_SCREENSHARING';
-    this.ON_STOP_SCREENSHARING = 'ON_STOP_SCREENSHARING';
+    this.ON_UPDATED = 'participant/ON_UPDATED';
+    this.ON_START_TALKING = 'participant/ON_START_TALKING';
+    this.ON_STOP_TALKING = 'participant/ON_STOP_TALKING';
+    this.ON_DISCONNECT = 'participant/ON_DISCONNECT';
+    this.ON_STREAM_SUBSCRIBED = 'participant/ON_STREAM_SUBSCRIBED';
+    this.ON_STREAM_UNSUBSCRIBED = 'participant/ON_STREAM_UNSUBSCRIBED';
+    this.ON_AUDIO_MUTED = 'participant/ON_AUDIO_MUTED';
+    this.ON_AUDIO_UNMUTED = 'participant/ON_AUDIO_UNMUTED';
+    this.ON_VIDEO_MUTED = 'participant/ON_VIDEO_MUTED';
+    this.ON_VIDEO_UNMUTED = 'participant/ON_VIDEO_UNMUTED';
+    this.ON_SCREENSHARING = 'participant/ON_SCREENSHARING';
+    this.ON_STOP_SCREENSHARING = 'participant/ON_STOP_SCREENSHARING';
+    this.ON_EXTRA_CHANGE = 'participant/ON_EXTRA_CHANGE';
   }
 
   triggerEvent(name: string, ...args: any[]) {
     this.eventEmitter.emit.apply(this.eventEmitter, [name, ...args]);
-    this.eventEmitter.emit(this.ON_UPDATED);
+    this.eventEmitter.emit.apply(this.eventEmitter, [this.ON_UPDATED, ...args]);
+  }
+
+  triggerUpdate(eventType: string, broadcast: boolean = true) {
+    const status: Object = { callId: this.callId };
+
+    switch (eventType) {
+      case this.ON_START_TALKING:
+      case this.ON_STOP_TALKING: {
+        status.isTalking = this.isTalking;
+        break;
+      }
+      case this.ON_AUDIO_MUTED:
+      case this.ON_AUDIO_UNMUTED: {
+        status.audioMuted = this.audioMuted;
+        break;
+      }
+      case this.ON_VIDEO_MUTED:
+      case this.ON_VIDEO_UNMUTED: {
+        status.videoMuted = this.videoMuted;
+        break;
+      }
+      case this.ON_SCREENSHARING:
+      case this.ON_STOP_SCREENSHARING: {
+        status.screensharing = this.screensharing;
+        break;
+      }
+      case this.ON_EXTRA_CHANGE: {
+        status.extra = this.extra;
+        break;
+      }
+      default:
+        break;
+    }
+
+    if (broadcast) {
+      this.broadcastStatus(status);
+    }
+
+    this.eventEmitter.emit(eventType, status);
+    this.eventEmitter.emit(this.ON_UPDATED, eventType, status);
   }
 
   onTalking(isTalking: boolean) {
+    Logger.log(`${this.name} ${isTalking ? 'is talking' : 'stopped talking'} (callId: ${this.callId})`);
     this.isTalking = isTalking;
-    this.triggerEvent(this.isTalking ? this.ON_START_TALKING : this.ON_STOP_TALKING);
+    // you may notice we're not broadcasting: since all participants are getting this info
+    // directly from asterisk, there's no need to do so
+    this.triggerUpdate(this.isTalking ? this.ON_START_TALKING : this.ON_STOP_TALKING, false);
   }
 
   onDisconnect() {
@@ -82,58 +132,58 @@ class Participant extends Emitter {
     return this.triggerEvent(this.ON_STREAM_UNSUBSCRIBED, stream);
   }
 
-  onAudioMuted() {
+  onAudioMuted(broadcast: boolean = true) {
     if (this.audioMuted) {
       return;
     }
     this.audioMuted = true;
 
-    this.triggerEvent(this.ON_AUDIO_MUTED);
+    this.triggerUpdate(this.ON_AUDIO_MUTED, broadcast);
   }
 
-  onAudioUnMuted() {
+  onAudioUnMuted(broadcast: boolean = true) {
     if (!this.audioMuted) {
       return;
     }
     this.audioMuted = false;
 
-    this.triggerEvent(this.ON_AUDIO_UNMUTED);
+    this.triggerUpdate(this.ON_AUDIO_UNMUTED, broadcast);
   }
 
-  onVideoMuted() {
+  onVideoMuted(broadcast: boolean = true) {
     if (this.videoMuted) {
       return;
     }
     this.videoMuted = true;
 
-    this.triggerEvent(this.ON_VIDEO_MUTED);
+    this.triggerUpdate(this.ON_VIDEO_MUTED, broadcast);
   }
 
-  onVideoUnMuted() {
+  onVideoUnMuted(broadcast: boolean = true) {
     if (!this.videoMuted) {
       return;
     }
     this.videoMuted = false;
 
-    this.triggerEvent(this.ON_VIDEO_UNMUTED);
+    this.triggerUpdate(this.ON_VIDEO_UNMUTED, broadcast);
   }
 
-  onScreensharing() {
+  onScreensharing(broadcast: boolean = true) {
     if (this.screensharing) {
       return;
     }
     this.screensharing = true;
 
-    this.triggerEvent(this.ON_SCREENSHARING);
+    this.triggerUpdate(this.ON_SCREENSHARING, broadcast);
   }
 
-  onStopScreensharing() {
+  onStopScreensharing(broadcast: boolean = true) {
     if (!this.screensharing) {
       return;
     }
     this.screensharing = false;
 
-    this.triggerEvent(this.ON_STOP_TALKING);
+    this.triggerUpdate(this.ON_STOP_TALKING, broadcast);
   }
 
   getStatus() {
@@ -142,40 +192,53 @@ class Participant extends Emitter {
       audioMuted: this.audioMuted,
       videoMuted: this.videoMuted,
       screensharing: this.screensharing,
+      isTalking: this.isTalking,
       extra: this.extra,
     };
   }
 
-  updateStatus(status: Object) {
-    if (status.audioMuted !== this.audioMuted) {
+  updateStatus(status: Object, broadcast: boolean = true) {
+    Logger.log(`Updating ${this.name}'s status`, status);
+
+    if (typeof status.audioMuted !== 'undefined' && status.audioMuted !== this.audioMuted) {
       if (status.audioMuted) {
-        this.onAudioMuted();
+        this.onAudioMuted(broadcast);
       } else {
-        this.onAudioUnMuted();
+        this.onAudioUnMuted(broadcast);
       }
     }
 
-    if (status.videoMuted !== this.videoMuted) {
+    if (typeof status.videoMuted !== 'undefined' && status.videoMuted !== this.videoMuted) {
       if (status.videoMuted) {
-        this.onVideoMuted();
+        this.onVideoMuted(broadcast);
       } else {
-        this.onVideoUnMuted();
+        this.onVideoUnMuted(broadcast);
       }
     }
 
-    if (status.screensharing !== this.screensharing) {
+    if (typeof status.screensharing !== 'undefined' && status.screensharing !== this.screensharing) {
       if (status.screensharing) {
-        this.onScreensharing();
+        this.onScreensharing(broadcast);
       } else {
-        this.onStopScreensharing();
+        this.onStopScreensharing(broadcast);
       }
     }
 
-    // Poor man's object comparision
-    if (JSON.stringify(this.extra) !== JSON.stringify(status.extra)) {
+    // Poor man's object comparison
+    if (typeof status.extra !== 'undefined' && JSON.stringify(this.extra) !== JSON.stringify(status.extra)) {
       this.extra = { ...this.extra, ...status.extra };
-      this.eventEmitter.emit(this.ON_UPDATED);
+      this.triggerUpdate(this.ON_EXTRA_CHANGE, broadcast);
     }
+  }
+
+  broadcastStatus(inboundStatus: Object = null) {
+    const status = inboundStatus || this.getStatus();
+    Logger.log(`Broadcasting ${this.name}'s status (callId: ${this.callId})`, status);
+    this.room.sendSignal({
+      type: SIGNAL_TYPE_PARTICIPANT_UPDATE,
+      origin: this.callId,
+      status,
+    });
   }
 }
 

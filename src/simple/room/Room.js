@@ -5,14 +5,14 @@ import sdpParser from 'sdp-transform';
 import SIP from '../../sip';
 import type CallSession from '../../domain/CallSession';
 import getApiClient from '../../service/getApiClient';
+import Logger from '../../utils/logger';
 import Emitter from '../../utils/Emitter';
 import Wazo from '../index';
 import Participant from './Participant';
+import RemoteParticipant from './RemoteParticipant';
 
-const TYPE_CHAT = 'chat';
-const TYPE_SIGNAL = 'signal';
-const TYPE_UPDATE_PARTICIPANT_STATUS = 'participant_update_status';
-const TYPE_REQUEST_PARTICIPANT_STATUS = 'participant_request_status';
+export const SIGNAL_TYPE_PARTICIPANT_UPDATE = 'signal/PARTICIPANT_UPDATE';
+export const SIGNAL_TYPE_PARTICIPANT_REQUEST = 'signal/PARTICIPANT_REQUEST';
 
 class Room extends Emitter {
   callSession: ?CallSession;
@@ -28,6 +28,8 @@ class Room extends Emitter {
   _boundOnParticipantLeft: Function;
   _boundOnScreenshareEnded: Function;
   _boundOnMessage: Function;
+  _boundOnChat: Function;
+  _boundOnSignal: Function;
   audioStream: ?any;
   audioElement: ?any;
   extra: Object;
@@ -45,7 +47,6 @@ class Room extends Emitter {
   ON_REMOVE_STREAM: string;
   ON_DISCONNECTED: string;
   ON_JOINED: string;
-  ON_TALKING: string;
 
   /**
    *
@@ -55,7 +56,12 @@ class Room extends Emitter {
    * @param callId string
    * @param extra Object
    */
-  constructor(callSession: CallSession, extension: string, sourceId: ?number, callId: ?string, extra: Object = {}) {
+  constructor(
+    callSession: CallSession,
+    extension: string, sourceId: ?number,
+    callId: ?string,
+    extra: Object = {},
+  ) {
     super();
     // Represents the room callSession
     this.callSession = callSession;
@@ -80,18 +86,20 @@ class Room extends Emitter {
     this.CONFERENCE_USER_PARTICIPANT_LEFT = Wazo.Websocket.CONFERENCE_USER_PARTICIPANT_LEFT;
     this.ON_SCREEN_SHARE_ENDED = Wazo.Phone.ON_SCREEN_SHARE_ENDED;
     this.ON_MESSAGE = Wazo.Phone.ON_MESSAGE;
-    this.ON_CHAT = 'room_on_chat';
-    this.ON_SIGNAL = 'room_on_signal';
+    this.ON_CHAT = Wazo.Phone.ON_CHAT;
+    this.ON_SIGNAL = Wazo.Phone.ON_SIGNAL;
+
     this.ON_AUDIO_STREAM = Wazo.Phone.ON_AUDIO_STREAM;
     this.ON_VIDEO_STREAM = Wazo.Phone.ON_VIDEO_STREAM;
     this.ON_REMOVE_STREAM = Wazo.Phone.ON_REMOVE_STREAM;
-    this.ON_DISCONNECTED = 'room_disconnected';
-    this.ON_JOINED = 'room_joined';
-    this.ON_TALKING = 'room_talking';
+    this.ON_DISCONNECTED = 'room/ON_DISCONNECTED';
+    this.ON_JOINED = 'room/ON_JOINED';
 
     this._boundOnParticipantJoined = this._onParticipantJoined.bind(this);
     this._boundOnParticipantLeft = this._onParticipantLeft.bind(this);
     this._boundOnMessage = this._onMessage.bind(this);
+    this._boundOnChat = this._onChat.bind(this);
+    this._boundOnSignal = this._onSignal.bind(this);
     this._boundOnScreenshareEnded = this._onScreenshareEnded.bind(this);
 
     this.unbind();
@@ -107,13 +115,12 @@ class Room extends Emitter {
    * @param constraints string
    * @returns {Promise<Room>}
    */
-  static async connect({ extension, ...constraints }: Object) {
-    // @TODO: retrieve only constraints here (eg: avoid extra)
+  static async connect({ extension, constraints, extra }: Object) {
     await Wazo.Phone.connect({ media: constraints });
     Wazo.Phone.checkSfu();
 
     const callSession = await Wazo.Phone.call(extension, constraints && !!constraints.video);
-    const room = new Room(callSession, extension, null, null, constraints.extra);
+    const room = new Room(callSession, extension, null, null, extra);
 
     // Call_created is triggered before call_accepted, so we have to listen for it here.
     let callId = '';
@@ -152,6 +159,8 @@ class Room extends Emitter {
     this.unbind();
 
     Wazo.Phone.off(this.ON_MESSAGE, this._boundOnMessage);
+    Wazo.Phone.off(this.ON_CHAT, this._boundOnChat);
+    Wazo.Phone.off(this.ON_SIGNAL, this._boundOnSignal);
     Wazo.Phone.off(this.ON_SCREEN_SHARE_ENDED, this._boundOnScreenshareEnded);
     Wazo.Websocket.off(this.CONFERENCE_USER_PARTICIPANT_JOINED, this._boundOnParticipantJoined);
     Wazo.Websocket.off(this.CONFERENCE_USER_PARTICIPANT_LEFT, this._boundOnParticipantLeft);
@@ -174,20 +183,25 @@ class Room extends Emitter {
   }
 
   sendChat(content: string) {
-    return this.sendMessage(JSON.stringify({ type: TYPE_CHAT, content }));
+    return Wazo.Phone.sendChat(content);
   }
 
-  sendSignal(content: string) {
-    return this.sendMessage(JSON.stringify({ type: TYPE_SIGNAL, content }));
+  sendSignal(content: any) {
+    return Wazo.Phone.sendSignal(content);
   }
 
-  startScreenSharing(constraints: Object) {
-    Wazo.Phone.startScreenSharing(constraints);
+  async startScreenSharing(constraints: Object) {
+    const screensharingStream = await Wazo.Phone.startScreenSharing(constraints);
+    if (!screensharingStream) {
+      console.warn('screensharing stream is null (likely due to user cancellation)');
+      return null;
+    }
 
     if (this.localParticipant) {
       this.localParticipant.onScreensharing();
-      this._sendParticipantStatus(this.localParticipant);
     }
+
+    return screensharingStream;
   }
 
   stopScreenSharing() {
@@ -195,7 +209,6 @@ class Room extends Emitter {
 
     if (this.localParticipant) {
       this.localParticipant.onStopScreensharing();
-      this._sendParticipantStatus(this.localParticipant);
     }
   }
 
@@ -204,7 +217,6 @@ class Room extends Emitter {
 
     if (this.localParticipant) {
       this.localParticipant.onVideoMuted();
-      this._sendParticipantStatus(this.localParticipant);
     }
   }
 
@@ -213,7 +225,6 @@ class Room extends Emitter {
 
     if (this.localParticipant) {
       this.localParticipant.onVideoUnMuted();
-      this._sendParticipantStatus(this.localParticipant);
     }
   }
 
@@ -222,7 +233,6 @@ class Room extends Emitter {
 
     if (this.localParticipant) {
       this.localParticipant.onAudioMuted();
-      this._sendParticipantStatus(this.localParticipant);
     }
   }
 
@@ -231,8 +241,11 @@ class Room extends Emitter {
 
     if (this.localParticipant) {
       this.localParticipant.onAudioUnMuted();
-      this._sendParticipantStatus(this.localParticipant);
     }
+  }
+
+  sendDTMF(tone: string) {
+    Wazo.Phone.sendDTMF(tone, this.callSession);
   }
 
   _bindEvents() {
@@ -288,6 +301,8 @@ class Room extends Emitter {
 
     // Phone events
     Wazo.Phone.on(this.ON_MESSAGE, this._boundOnMessage);
+    Wazo.Phone.on(this.ON_CHAT, this._boundOnChat);
+    Wazo.Phone.on(this.ON_SIGNAL, this._boundOnSignal);
     Wazo.Phone.on(this.ON_SCREEN_SHARE_ENDED, this._boundOnScreenshareEnded);
 
     [this.ON_AUDIO_STREAM, this.ON_VIDEO_STREAM, this.ON_REMOVE_STREAM].forEach(event =>
@@ -316,33 +331,75 @@ class Room extends Emitter {
           return;
         }
         this.participants[participantIdx].onTalking(isTalking);
-
-        return this.eventEmitter.emit(this.ON_TALKING, channel, this.participants[participantIdx]);
+        break;
       }
 
-      case TYPE_CHAT:
-        return this.eventEmitter.emit(this.ON_CHAT, body.content);
-
-      case TYPE_SIGNAL:
-        return this.eventEmitter.emit(this.ON_SIGNAL, body.content);
-
-      case TYPE_UPDATE_PARTICIPANT_STATUS:
-        return this._updateParticipantStatus(body.status);
-
-      case TYPE_REQUEST_PARTICIPANT_STATUS:
-        return this._sendParticipantStatus(this.localParticipant);
-
       default:
-        break;
     }
 
     this.eventEmitter.emit(this.ON_MESSAGE, body);
+  }
+
+  _onChat(content: Object) {
+    this.eventEmitter.emit(this.ON_CHAT, content);
+  }
+
+  _onSignal(content: Object) {
+    const { type } = content;
+
+    switch (type) {
+      // we're receiving a external update
+      case SIGNAL_TYPE_PARTICIPANT_UPDATE: {
+        const { status } = content;
+        const participant: ?Participant = this._getParticipantFromCallId(status.callId);
+
+        if (participant) {
+          // we're received, so no need to broadcast, hence the input false arg
+          participant.updateStatus(status, false);
+        }
+        break;
+      }
+
+      // this is a request to broadcast our current status
+      case SIGNAL_TYPE_PARTICIPANT_REQUEST: {
+        const { callId, origin } = content;
+        // callId is null, someone's requesting everyone's state;
+        // or callId is set and matches ours;
+        if (this.localParticipant && (!callId || callId === this.localParticipant.callId)) {
+          this.localParticipant.broadcastStatus();
+        }
+
+        // might as well update the requester's status
+        const requester: ?Participant = this._getParticipantFromCallId(origin.callId);
+        if (requester) {
+          // @FIXME?: when need to trigger an update on join-in; this is a bit of a hack
+          Logger.log('Trigger requester status', origin);
+          requester.triggerUpdate('REQUESTER_UPDATE');
+        }
+        break;
+      }
+
+      default: {
+        console.warn('uncaught signal', content);
+      }
+    }
+
+    this.eventEmitter.emit(Wazo.Phone.ON_SIGNAL, content);
   }
 
   async _onParticipantJoined(payload: Object) {
     const participant = payload.data;
     const session = Wazo.Auth.getSession();
     let participants = [];
+
+    // @TODO: we could use a better function name here
+    const isJoining = part => {
+      this.__associateStreams(part);
+      // @VALIDATE: no need to publicize ourselves, no?
+      if (part instanceof RemoteParticipant) {
+        this.eventEmitter.emit(this.CONFERENCE_USER_PARTICIPANT_JOINED, part);
+      }
+    };
 
     // When we join the room, we can call `getConferenceParticipantsAsUser`, not before.
     if (participant.user_uuid === session.uuid) {
@@ -352,42 +409,49 @@ class Room extends Emitter {
         participants = response.items.map(item => {
           const isMe = item.call_id === this.callId;
 
-          return isMe ? new Wazo.LocalParticipant(item, this.extra) : new Wazo.RemoteParticipant(item);
+          return isMe && item.call_id
+            ? new Wazo.LocalParticipant(this, item, this.extra)
+            : new Wazo.RemoteParticipant(this, item);
         });
+
+        this.participants = participants;
+
+        const localParticipant = participants.find(someParticipant => someParticipant instanceof Wazo.LocalParticipant);
+        if (!this.localParticipant && localParticipant) {
+          const videoStream = new Wazo.Stream(this._getLocalVideoStream(), localParticipant);
+          if (videoStream) {
+            localParticipant.streams.push(videoStream);
+            localParticipant.videoStreams.push(videoStream);
+            localParticipant.onStreamSubscribed(videoStream);
+          }
+          this.localParticipant = localParticipant;
+
+          this.connected = true;
+
+          // we're in the room, now let's request everyone's status
+          this.sendSignal({
+            type: SIGNAL_TYPE_PARTICIPANT_REQUEST,
+            origin: this.localParticipant.getStatus(),
+          });
+        }
+
+        participants.forEach(someParticipant => isJoining(someParticipant));
+        this.eventEmitter.emit(this.ON_JOINED, localParticipant, participants);
       }
-    } else {
-      participants = [new Wazo.RemoteParticipant(participant)];
-      // We can't send our status here, because for other participants the api request that retrieve all participants
-      // can be slow and we may not be in the list of participants for now.
+
+      return this.participants;
     }
 
-    this.participants = [...this.participants, ...participants];
+    const remoteParticipant: ?RemoteParticipant = !this.participants.some(p => p.callId === participant.call_id)
+      ? new Wazo.RemoteParticipant(this, participant)
+      : null;
 
-    const localParticipant = participants.find(someParticipant => someParticipant instanceof Wazo.LocalParticipant);
-    if (!this.localParticipant && localParticipant) {
-      const videoStream = new Wazo.Stream(this._getLocalVideoStream(), localParticipant);
-      if (videoStream) {
-        localParticipant.streams.push(videoStream);
-        localParticipant.videoStreams.push(videoStream);
-        localParticipant.onStreamSubscribed(videoStream);
-      }
-      this.localParticipant = localParticipant;
-
-      // Send our status to all participants when we enter the room
-      this._sendParticipantStatus(localParticipant);
-      this._requestParticipantsStatus();
-
-      this.connected = true;
-
-      this.eventEmitter.emit(this.ON_JOINED, localParticipant);
+    if (remoteParticipant) {
+      this.participants.push(remoteParticipant);
+      isJoining(remoteParticipant);
     }
 
-    participants.forEach(someParticipant => {
-      this.eventEmitter.emit(this.CONFERENCE_USER_PARTICIPANT_JOINED, someParticipant);
-      this.__associateStreams(someParticipant);
-    });
-
-    return participants;
+    return remoteParticipant;
   }
 
   _onParticipantLeft(payload: Object) {
@@ -406,38 +470,6 @@ class Room extends Emitter {
     if (this.localParticipant) {
       this.localParticipant.onStopScreensharing();
     }
-    this._sendParticipantStatus(this.localParticipant);
-  }
-
-  // Sends a `TYPE_UPDATE_PARTICIPANT_STATUS` to all participants of the room
-  _sendParticipantStatus(participant: ?Participant) {
-    if (!participant) {
-      return;
-    }
-
-    this.sendMessage(JSON.stringify({
-      type: TYPE_UPDATE_PARTICIPANT_STATUS,
-      status: participant.getStatus(),
-    }));
-  }
-
-  // Called when we receive a `TYPE_PARTICIPANT_STATUS` for a participant
-  _updateParticipantStatus(rawStatus: Object) {
-    const status = rawStatus;
-    const { callId } = status;
-    delete status.callId;
-    const participant = this._getParticipantFromCallId(callId);
-    if (!participant) {
-      return;
-    }
-
-    participant.updateStatus(status);
-  }
-
-  _requestParticipantsStatus() {
-    this.sendMessage(JSON.stringify({
-      type: TYPE_REQUEST_PARTICIPANT_STATUS,
-    }));
   }
 
   // Associate audio/video streams to the participant and triggers events on it

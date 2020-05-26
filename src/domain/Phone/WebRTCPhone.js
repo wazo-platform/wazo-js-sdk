@@ -298,19 +298,24 @@ export default class WebRTCPhone extends Emitter implements Phone {
     if (!navigator.mediaDevices) {
       return null;
     }
-    const screenShareStream = await navigator.mediaDevices.getDisplayMedia({
-      video: {
-        cursor: 'always',
-      },
-      audio: false,
-    });
 
+    return navigator.mediaDevices.getDisplayMedia({ video: { cursor: 'always' }, audio: false })
+      .then(stream => {
+        const screenShareStream = stream;
+        // $FlowFixMe
+        screenShareStream.local = true;
+        return this._continueScreenSharing(stream, constraints);
+      })
+      .catch(e => {
+        console.warn(e);
+        return null;
+      });
+  }
+
+  _continueScreenSharing(screenShareStream: MediaStream, constraints: Object) {
     if (!screenShareStream) {
-      throw new Error(`Can't create medie stream for screensharing with contraints ${JSON.stringify(constraints)}`);
+      throw new Error(`Can't create media stream for screensharing with contraints ${JSON.stringify(constraints)}`);
     }
-
-    // $FlowFixMe
-    screenShareStream.local = true;
 
     const screenTrack = screenShareStream.getVideoTracks()[0];
     const sipSession = this.currentSipSession;

@@ -130,7 +130,7 @@ export default class ApiRequester {
       const isJson = contentType.indexOf('application/json') !== -1;
 
       const curl = this._getCurlCommand(url, options, response);
-      Logger.logRequest(curl);
+      Logger.log(curl);
       IssueReporter.logRequest(curl, response);
 
       // Throw an error only if status >= 400
