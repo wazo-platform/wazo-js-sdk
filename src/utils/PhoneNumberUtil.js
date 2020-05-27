@@ -23,7 +23,12 @@ const isSameCountry = (country1, country2) => {
   return country1 === country2;
 };
 
-const getDisplayableNumber = (number: string, country: string, asYouType: boolean = false): string => {
+const getDisplayableNumber = (rawNumber: string, country: string, asYouType: boolean = false): string => {
+  if (!rawNumber) {
+    return rawNumber;
+  }
+
+  const number = String(rawNumber);
   if (!shouldBeFormatted(number)) {
     return number;
   }
