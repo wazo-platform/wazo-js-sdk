@@ -952,13 +952,17 @@ export default class WebRTCClient extends Emitter {
     const pc = session.sessionDescriptionHandler.peerConnection;
     const remoteStream = this._getRemoteStream(pc);
 
-    if (this._hasVideo() && this._isWeb()) {
-      this._addRemoteToVideoSession(this.getSipSessionId(session), remoteStream);
-    } else if (this._hasAudio() && this._isWeb()) {
-      const audio = this.audioElements[this.getSipSessionId(session)];
-      audio.srcObject = remoteStream;
-      audio.play();
+    if (!this._isWeb()) {
+      return;
     }
+
+    if (this._hasVideo()) {
+      this._addRemoteToVideoSession(this.getSipSessionId(session), remoteStream);
+    }
+
+    const audio = this.audioElements[this.getSipSessionId(session)];
+    audio.srcObject = remoteStream;
+    audio.play();
   }
 
   _addAudioStream(mediaStream: MediaStream) {
