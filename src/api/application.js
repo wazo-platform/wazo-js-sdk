@@ -90,7 +90,8 @@ export default (client: ApiRequester, baseUrl: string) => ({
     client.put(`${baseUrl}/${applicationUuid}/calls/${callId}/mute/stop`, {}, null, ApiRequester.successResponseParser),
 
   sendDTMFCall: (applicationUuid: string, callId: number, digits: number) =>
-    client.put(`${baseUrl}/${applicationUuid}/calls/${callId}/dtmf`, { digits }, null, ApiRequester.successResponseParser),
+    client.put(`${baseUrl}/${applicationUuid}/calls/${callId}/dtmf`, { digits }, null,
+      ApiRequester.successResponseParser),
 
   addCallNodes: (applicationUuid: string, nodeUuid: string, callId: string): Promise<Boolean> =>
     client.put(
