@@ -244,6 +244,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       const { label, msid } = this._parseSDP(message.data);
       let updatedCalleeName = message.getHeader('P-Asserted-Identity');
       if (updatedCalleeName) {
+        // eslint-disable-next-line
         updatedCalleeName = updatedCalleeName.split('"')[1];
       }
 
@@ -792,7 +793,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   bindClientEvents() {
     this.client.unbind();
 
-    this.client.on('invite', (sipSession: SIP.sessionDescriptionHandler, wantsToDoVideo: boolean, realCallee: ?string) => {
+    this.client.on('invite', (sipSession: SIP.sessionDescriptionHandler, wantsToDoVideo: boolean) => {
       const autoAnswer = sipSession.request.getHeader('Answer-Mode') === 'Auto';
       const withVideo = this.allowVideo ? wantsToDoVideo : false;
       const callSession = this._createIncomingCallSession(sipSession, withVideo, null, autoAnswer);
