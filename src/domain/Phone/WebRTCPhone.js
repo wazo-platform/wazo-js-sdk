@@ -242,7 +242,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     sipSession.on('reinvite', (session: SIP.InviteClientContext, message: SIP.IncomingRequestMessage) => {
       const { label, msid } = this._parseSDP(message.data);
-      return this.eventEmitter.emit(ON_REINVITE, session, message, label, msid);
+      let updatedCalleeName = message.getHeader('P-Asserted-Identity');
+      if (updatedCalleeName) {
+        updatedCalleeName = updatedCalleeName.split('"')[1];
+      }
+
+      return this.eventEmitter.emit(ON_REINVITE, session, message, label, msid, updatedCalleeName);
     });
 
     if (!sipSession.sessionDescriptionHandler) {
@@ -787,7 +792,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   bindClientEvents() {
     this.client.unbind();
 
-    this.client.on('invite', (sipSession: SIP.sessionDescriptionHandler, wantsToDoVideo: boolean) => {
+    this.client.on('invite', (sipSession: SIP.sessionDescriptionHandler, wantsToDoVideo: boolean, realCallee: ?string) => {
       const autoAnswer = sipSession.request.getHeader('Answer-Mode') === 'Auto';
       const withVideo = this.allowVideo ? wantsToDoVideo : false;
       const callSession = this._createIncomingCallSession(sipSession, withVideo, null, autoAnswer);
