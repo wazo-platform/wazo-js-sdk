@@ -568,15 +568,6 @@ client.calld.relocateCall(callId, destination, lineId);
 client.calld.updatePresence(presence);
 ```
 
-### Accessd
-```js
-client.accessd.listSubscriptions();
-client.accessd.createSubscription({ productSku, name, startDate, contractDate, autoRenew, term });
-client.accessd.getSubscription(uuid);
-client.accessd.listAuthorizations();
-client.accessd.getAuthorization(uuid);
-```
-
 ### Calling an API endpoint without WazoApiClient
 
 ```js
