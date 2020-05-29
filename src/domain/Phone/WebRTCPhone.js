@@ -242,7 +242,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     sipSession.on('reinvite', (session: SIP.InviteClientContext, message: SIP.IncomingRequestMessage) => {
       const { label, msid } = this._parseSDP(message.data);
-      return this.eventEmitter.emit(ON_REINVITE, session, message, label, msid);
+      let updatedCalleeName = message.getHeader('P-Asserted-Identity');
+      if (updatedCalleeName) {
+        // eslint-disable-next-line
+        updatedCalleeName = updatedCalleeName.split('"')[1];
+      }
+
+      return this.eventEmitter.emit(ON_REINVITE, session, message, label, msid, updatedCalleeName);
     });
 
     if (!sipSession.sessionDescriptionHandler) {

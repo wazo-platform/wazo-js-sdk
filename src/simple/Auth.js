@@ -80,7 +80,9 @@ class Auth {
     try {
       Wazo.Websocket.close();
 
-      await getApiClient().auth.deleteRefreshToken(this.clientId);
+      if (this.clientId) {
+        await getApiClient().auth.deleteRefreshToken(this.clientId);
+      }
     } catch (e) {
       // Nothing to
     }

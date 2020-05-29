@@ -32,6 +32,9 @@ export default class CallSession {
 
   displayName: string;
 
+  // Used to retrieve the real callee when doing indirect transfer
+  realDisplayName: string;
+
   number: string;
 
   callerNumber: string;
