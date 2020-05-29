@@ -36,6 +36,7 @@ export const USER_VOICEMAIL_MESSAGE_DELETED = 'user_voicemail_message_deleted';
 export const CALL_LOG_USER_CREATED = 'call_log_user_created';
 export const CALL_CREATED = 'call_created';
 export const CALL_ANSWERED = 'call_answered';
+export const CALL_DTMF_CREATED = 'call_dtmf_created';
 export const CALL_ENDED = 'call_ended';
 export const CALL_UPDATED = 'call_updated';
 export const CALL_HELD = 'call_held';
@@ -252,6 +253,7 @@ WebSocketClient.eventLists = [
   CALL_LOG_USER_CREATED,
   CALL_ANSWERED,
   CALL_CREATED,
+  CALL_DTMF_CREATED,
   CALL_ENDED,
   CALL_UPDATED,
   CALL_HELD,
