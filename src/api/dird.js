@@ -58,33 +58,53 @@ export default (client: ApiRequester, baseUrl: string) => ({
   fetchOffice365Source: (context: string): Promise<DirectorySources> =>
     client.get(`${baseUrl}/directories/${context}/sources`, { backend: 'office365' }),
 
-  fetchOffice365Contacts: (source: DirectorySource, queryParams: ContactSearchQueryParams = null): Promise<Contact[]> =>
-    client
-      .get(`${baseUrl}/backends/office365/sources/${source ? source.uuid : ''}/contacts`, queryParams)
-      .then(response => Contact.parseManyOffice365(response.items, source)),
+  fetchOffice365Contacts: (source: DirectorySource,
+    queryParams: ContactSearchQueryParams = null): ?Promise<Contact[]> => {
+    if (!source) {
+      return null;
+    }
+
+    return client
+      .get(`${baseUrl}/backends/office365/sources/${source.uuid}/contacts`, queryParams)
+      .then(response => Contact.parseManyOffice365(response.items, source));
+  },
 
   fetchWazoSource: (context: string): Promise<Sources> =>
     client.get(`${baseUrl}/directories/${context}/sources`, { backend: 'wazo' }),
 
   // Can be used with `queryParams = { uuid: uuid1, uuid2 }` to fetch multiple contacts
-  fetchWazoContacts: (source: DirectorySource, queryParams: ContactSearchQueryParams = null): Promise<Contact[]> =>
-    client
-      .get(`${baseUrl}/backends/wazo/sources/${source ? source.uuid : ''}/contacts`, queryParams)
-      .then(response => Contact.parseManyWazo(response.items, source)),
+  fetchWazoContacts: (source: DirectorySource, queryParams: ContactSearchQueryParams = null): ?Promise<Contact[]> => {
+    if (!source) {
+      return null;
+    }
+    return client
+      .get(`${baseUrl}/backends/wazo/sources/${source.uuid}/contacts`, queryParams)
+      .then(response => Contact.parseManyWazo(response.items, source));
+  },
 
   fetchGoogleSource: (context: string): Promise<Sources> =>
     client.get(`${baseUrl}/directories/${context}/sources`, { backend: 'google' }),
 
-  fetchGoogleContacts: (source: DirectorySource, queryParams: ContactSearchQueryParams = null): Promise<Contact[]> =>
-    client
-      .get(`${baseUrl}/backends/google/sources/${source ? source.uuid : ''}/contacts`, queryParams)
-      .then(response => Contact.parseManyGoogle(response.items, source)),
+  fetchGoogleContacts: (source: DirectorySource, queryParams: ContactSearchQueryParams = null): ?Promise<Contact[]> => {
+    if (!source) {
+      return null;
+    }
+
+    return client
+      .get(`${baseUrl}/backends/google/sources/${source.uuid}/contacts`, queryParams)
+      .then(response => Contact.parseManyGoogle(response.items, source));
+  },
 
   fetchConferenceSource: (context: string): Promise<Sources> =>
     client.get(`${baseUrl}/directories/${context}/sources`, { backend: 'conference' }),
 
-  fetchConferenceContacts: (source: DirectorySource): Promise<Contact[]> =>
-    client
-      .get(`${baseUrl}/backends/conference/sources/${source ? source.uuid : ''}/contacts`)
-      .then(response => Contact.parseManyConference(response.items, source)),
+  fetchConferenceContacts: (source: DirectorySource): ?Promise<Contact[]> => {
+    if (!source) {
+      return null;
+    }
+
+    return client
+      .get(`${baseUrl}/backends/conference/sources/${source.uuid}/contacts`)
+      .then(response => Contact.parseManyConference(response.items, source));
+  },
 });
