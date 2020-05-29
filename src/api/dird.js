@@ -60,7 +60,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   fetchOffice365Contacts: (source: DirectorySource, queryParams: ContactSearchQueryParams = null): Promise<Contact[]> =>
     client
-      .get(`${baseUrl}/backends/office365/sources/${source ? source.uuid : null}/contacts`, queryParams)
+      .get(`${baseUrl}/backends/office365/sources/${source ? source.uuid : ''}/contacts`, queryParams)
       .then(response => Contact.parseManyOffice365(response.items, source)),
 
   fetchWazoSource: (context: string): Promise<Sources> =>
@@ -69,7 +69,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   // Can be used with `queryParams = { uuid: uuid1, uuid2 }` to fetch multiple contacts
   fetchWazoContacts: (source: DirectorySource, queryParams: ContactSearchQueryParams = null): Promise<Contact[]> =>
     client
-      .get(`${baseUrl}/backends/wazo/sources/${source ? source.uuid : null}/contacts`, queryParams)
+      .get(`${baseUrl}/backends/wazo/sources/${source ? source.uuid : ''}/contacts`, queryParams)
       .then(response => Contact.parseManyWazo(response.items, source)),
 
   fetchGoogleSource: (context: string): Promise<Sources> =>
@@ -77,7 +77,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   fetchGoogleContacts: (source: DirectorySource, queryParams: ContactSearchQueryParams = null): Promise<Contact[]> =>
     client
-      .get(`${baseUrl}/backends/google/sources/${source ? source.uuid : null}/contacts`, queryParams)
+      .get(`${baseUrl}/backends/google/sources/${source ? source.uuid : ''}/contacts`, queryParams)
       .then(response => Contact.parseManyGoogle(response.items, source)),
 
   fetchConferenceSource: (context: string): Promise<Sources> =>
@@ -85,6 +85,6 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   fetchConferenceContacts: (source: DirectorySource): Promise<Contact[]> =>
     client
-      .get(`${baseUrl}/backends/conference/sources/${source ? source.uuid : null}/contacts`)
+      .get(`${baseUrl}/backends/conference/sources/${source ? source.uuid : ''}/contacts`)
       .then(response => Contact.parseManyConference(response.items, source)),
 });
