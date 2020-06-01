@@ -314,7 +314,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     sender.replaceTrack(screenTrack);
 
-    screenTrack.onended = async () => this.eventEmitter.emit(ON_SHARE_SCREEN_ENDED);
+    screenTrack.onended = () => this.eventEmitter.emit(ON_SHARE_SCREEN_ENDED);
 
     this.currentScreenShare = { stream: screenShareStream, sender, localStream };
 
