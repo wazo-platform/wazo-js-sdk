@@ -812,7 +812,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         this.eventEmitter.emit(ON_PLAY_INBOUND_CALL_SIGNAL_SOUND, this.audioOutputDeviceId);
       }
 
-      this.eventEmitter.emit(ON_CALL_INCOMING, callSession);
+      this.eventEmitter.emit(ON_CALL_INCOMING, callSession, wantsToDoVideo);
     });
 
     this.client.on('accepted', () => {});
