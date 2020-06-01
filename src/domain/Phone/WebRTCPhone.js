@@ -278,25 +278,30 @@ export default class WebRTCPhone extends Emitter implements Phone {
     };
   }
 
-  async startScreenSharing(constraints: Object) {
+  async startScreenSharing(constraintsOrStream: ?Object | MediaStream) {
     if (!navigator.mediaDevices) {
       return null;
     }
 
-    return navigator.mediaDevices.getDisplayMedia({ video: { cursor: 'always' }, audio: false })
-      .then(stream => {
-        const screenShareStream = stream;
-        // $FlowFixMe
-        screenShareStream.local = true;
-        return this._continueScreenSharing(stream, constraints);
-      })
-      .catch(e => {
+    let stream = constraintsOrStream;
+
+    if (!constraintsOrStream || !(constraintsOrStream instanceof MediaStream)) {
+      try {
+        const constraints = constraintsOrStream || { video: { cursor: 'always' }, audio: false };
+        stream = await navigator.mediaDevices.getDisplayMedia(constraints);
+      } catch (e) {
         console.warn(e);
         return null;
-      });
+      }
+    }
+
+    // $FlowFixMe
+    stream.local = true;
+    // $FlowFixMe
+    return this._continueScreenSharing(stream);
   }
 
-  _continueScreenSharing(screenShareStream: MediaStream, constraints: Object) {
+  _continueScreenSharing(screenShareStream: MediaStream, constraints: Object = {}) {
     if (!screenShareStream) {
       throw new Error(`Can't create media stream for screensharing with contraints ${JSON.stringify(constraints)}`);
     }
@@ -309,7 +314,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     sender.replaceTrack(screenTrack);
 
-    screenTrack.onended = async () => this.eventEmitter.emit(ON_SHARE_SCREEN_ENDED);
+    screenTrack.onended = () => this.eventEmitter.emit(ON_SHARE_SCREEN_ENDED);
 
     this.currentScreenShare = { stream: screenShareStream, sender, localStream };
 
