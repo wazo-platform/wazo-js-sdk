@@ -93,6 +93,7 @@ Alternatively, you may load the Wazo SDK from a CDN. Use one of the following Co
 ## Libraries
 ### Require / Import      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
 Depending on your preference, you may require or add the Wazo SDK to your own client application one of the following ways:
+
 #### API Client Library
 
 * `const { WazoApiClient } = require('@wazo/sdk');`
