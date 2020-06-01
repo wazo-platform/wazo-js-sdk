@@ -97,6 +97,10 @@ class Phone extends Emitter {
     return this.phone && this.phone.hangup(callSession);
   }
 
+  async accept(callSession: CallSession, videoEnabled?: boolean) {
+    return this.phone && this.phone.accept(callSession, videoEnabled);
+  }
+
   mute(callSession: CallSession) {
     return this.phone && this.phone.mute(callSession);
   }
@@ -105,8 +109,16 @@ class Phone extends Emitter {
     return this.phone && this.phone.unmute(callSession);
   }
 
+  hold(callSession: CallSession) {
+    return this.phone && this.phone.hold(callSession);
+  }
+
+  unhold(callSession: CallSession) {
+    return this.phone && this.phone.unhold(callSession);
+  }
+
   sendMessage(body: string, sipSession: SIP.sessionDescriptionHandler = null) {
-    const toSipSession = sipSession || (this.phone ? this.phone.currentSipSession : null);
+    const toSipSession = sipSession || this.getCurrentSipSession();
     if (!toSipSession || !this.phone) {
       return null;
     }
@@ -149,6 +161,10 @@ class Phone extends Emitter {
     const stream = this.phone.client.videoSessions[callSession.getId()];
 
     return stream ? stream.local : null;
+  }
+
+  getCurrentSipSession() {
+    return this.phone ? this.phone.currentSipSession : null;
   }
 
   _transferEvents() {
