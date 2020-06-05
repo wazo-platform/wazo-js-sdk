@@ -782,7 +782,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return this._createCallSession(this.sipSessions[sessionId]);
   }
 
-  sendMessage(sipSession: SIP.sessionDescriptionHandler = null, body: string) {
+  sendMessage(sipSession: SIP.sessionDescriptionHandler = null, body: string, contentType: string = 'text/plain') {
     if (!sipSession) {
       return;
     }
@@ -790,7 +790,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     sipSession.sendRequest('MESSAGE', {
       body: {
         body,
-        contentType: 'text/plain',
+        contentType,
       },
     });
   }

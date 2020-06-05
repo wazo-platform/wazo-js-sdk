@@ -117,21 +117,29 @@ class Phone extends Emitter {
     return this.phone && this.phone.unhold(callSession);
   }
 
-  sendMessage(body: string, sipSession: SIP.sessionDescriptionHandler = null) {
+  sendMessage(body: string, sipSession: SIP.sessionDescriptionHandler = null, contentType: string = 'text/plain') {
     const toSipSession = sipSession || this.getCurrentSipSession();
     if (!toSipSession || !this.phone) {
       return null;
     }
 
-    return this.phone.sendMessage(toSipSession, body);
+    return this.phone.sendMessage(toSipSession, body, contentType);
   }
 
   sendChat(content: string, sipSession: SIP.sessionDescriptionHandler = null) {
-    return this.sendMessage(JSON.stringify({ type: MESSAGE_TYPE_CHAT, content }), sipSession);
+    return this.sendMessage(
+      JSON.stringify({ type: MESSAGE_TYPE_CHAT, content }),
+      sipSession,
+      'application/json',
+    );
   }
 
   sendSignal(content: any, sipSession: SIP.sessionDescriptionHandler = null) {
-    return this.sendMessage(JSON.stringify({ type: MESSAGE_TYPE_SIGNAL, content }), sipSession);
+    return this.sendMessage(
+      JSON.stringify({ type: MESSAGE_TYPE_SIGNAL, content }),
+      sipSession,
+      'application/json',
+    );
   }
 
   turnCameraOff(callSession: CallSession) {
