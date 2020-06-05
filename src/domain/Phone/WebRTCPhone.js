@@ -787,12 +787,16 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return;
     }
 
-    sipSession.sendRequest('MESSAGE', {
-      body: {
-        body,
-        contentType,
-      },
-    });
+    try {
+      sipSession.sendRequest('MESSAGE', {
+        body: {
+          body,
+          contentType,
+        },
+      });
+    } catch (e) {
+      console.warn(e);
+    }
   }
 
   bindClientEvents() {
