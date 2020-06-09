@@ -69,7 +69,7 @@ class Phone extends Emitter {
       ...options,
     });
 
-    this.phone = new WebRTCPhone(this.client, null, true);
+    this.phone = new WebRTCPhone(this.client, options.audioDeviceOutput, true, options.audioDeviceRing);
 
     await this.client.waitForRegister();
 
