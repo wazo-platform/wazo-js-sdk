@@ -952,12 +952,12 @@ export default class WebRTCClient extends Emitter {
     const pc = session.sessionDescriptionHandler.peerConnection;
     const remoteStream = this._getRemoteStream(pc);
 
-    if (!this._isWeb()) {
-      return;
-    }
-
     if (this._hasVideo()) {
       this._addRemoteToVideoSession(this.getSipSessionId(session), remoteStream);
+    }
+
+    if (!this._isWeb()) {
+      return;
     }
 
     const audio = this.audioElements[this.getSipSessionId(session)];
@@ -999,9 +999,7 @@ export default class WebRTCClient extends Emitter {
     const pc = session.sessionDescriptionHandler.peerConnection;
     const localStream = this.getLocalStream(pc);
 
-    if (this._isWeb() && this._hasVideo()) {
-      this._addLocalToVideoSession(this.getSipSessionId(session), localStream);
-    }
+    this._addLocalToVideoSession(this.getSipSessionId(session), localStream);
   }
 
   _cleanupMedia(session: ?SIP.sessionDescriptionHandler) {
