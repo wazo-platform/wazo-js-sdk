@@ -41,11 +41,17 @@ const getDisplayableNumber = (rawNumber: string, country: string, asYouType: boo
       displayValue = formatter.inputDigit(char);
     });
   } else {
-    const parsedNumber = PhoneNumberUtil.parseAndKeepRawInput(number, country);
-    const numberCountry = PhoneNumberUtil.getRegionCodeForNumber(parsedNumber);
-    const format = isSameCountry(numberCountry, country) ? PhoneNumberFormat.NATIONAL : PhoneNumberFormat.INTERNATIONAL;
+    try {
+      const parsedNumber = PhoneNumberUtil.parseAndKeepRawInput(number, country);
+      const numberCountry = PhoneNumberUtil.getRegionCodeForNumber(parsedNumber);
+      const format = isSameCountry(numberCountry, country) ? PhoneNumberFormat.NATIONAL
+        : PhoneNumberFormat.INTERNATIONAL;
 
-    displayValue = PhoneNumberUtil.format(parsedNumber, format);
+      displayValue = PhoneNumberUtil.format(parsedNumber, format);
+    } catch (_) {
+      // Avoid to crash when phone number like `0080510` can't be parsed
+      displayValue = rawNumber;
+    }
   }
 
   return displayValue;
@@ -60,7 +66,7 @@ const getCallableNumber = (number: string, country: ?string): ?string => {
     }
     return parsePhoneNumber(number);
   } catch (_) {
-    return null;
+    return number;
   }
 };
 
