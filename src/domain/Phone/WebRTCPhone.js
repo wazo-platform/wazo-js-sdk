@@ -321,14 +321,28 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return screenShareStream;
   }
 
-  async stopScreenSharing() {
+  async stopScreenSharing(restoreLocalStream: boolean = true) {
     if (!this.currentScreenShare) {
       return;
     }
 
-    await this.currentScreenShare.stream.getVideoTracks().forEach(track => track.stop());
+    try {
+      if (this.currentScreenShare.stream) {
+        await this.currentScreenShare.stream.getVideoTracks().forEach(track => track.stop());
+      }
 
-    this.currentScreenShare.sender.replaceTrack(this.currentScreenShare.localStream.getVideoTracks()[0]);
+      if (restoreLocalStream) {
+        if (this.currentScreenShare.sender) {
+          await this.currentScreenShare.sender.replaceTrack(this.currentScreenShare.localStream.getVideoTracks()[0]);
+        }
+      } else if (this.currentScreenShare.localStream) {
+        await this.currentScreenShare.localStream.getVideoTracks().forEach(track => track.stop());
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+
+    this.currentScreenShare = null;
   }
 
   _onCallAccepted(sipSession: SIP.sessionDescriptionHandler, videoEnabled: boolean): CallSession {
