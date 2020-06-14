@@ -632,12 +632,10 @@ export default class WebRTCClient extends Emitter {
       return senders.some(sender => sender.track && sender.track.kind === 'audio' && sender.track.enabled);
     }
 
-    const localStreams = this.getLocalStream(pc);
+    const localStream = this.getLocalStream(pc);
+    const audioTracks = localStream.getAudioTracks();
 
-    return localStreams.some(stream => {
-      const audioTracks = stream.getAudioTracks();
-      return audioTracks.some(track => track.kind === 'audio' && track.enabled);
-    });
+    return audioTracks.some(track => track.kind === 'audio' && track.enabled);
   }
 
   getRemoteVideoStreamsForSession(sessionId: string) {
