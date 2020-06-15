@@ -409,6 +409,21 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return !!this.currentSipSession;
   }
 
+  // /!\ In some case with react0native webrtc the session will have only one audio stream set
+  // Maybe due to https://github.com/react-native-webrtc/react-native-webrtc/issues/401
+  // Better check directly `peerConnection.getRemoteStreams()` when on mobile rather than client.videoSessions.
+  hasActiveRemoteVideoStream() {
+    const sipSession = this.currentSipSession;
+    if (!sipSession) {
+      return false;
+    }
+
+    const { peerConnection } = sipSession.sessionDescriptionHandler;
+    const remoteStream = peerConnection.getRemoteStreams().find(stream => !!stream.getVideoTracks().length);
+
+    return remoteStream && remoteStream.getVideoTracks().some(track => !track.muted);
+  }
+
   callCount() {
     return Object.keys(this.sipSessions).length;
   }

@@ -610,15 +610,6 @@ export default class WebRTCClient extends Emitter {
     return streams.remotes.some(remote => !!remote.getVideoTracks().length);
   }
 
-  sessionHasActiveRemoteVideo(sessionId: string): boolean {
-    const streams = this.videoSessions[sessionId];
-    if (!streams || !streams.remotes) {
-      return false;
-    }
-
-    return streams.remotes.some(remote => remote.getVideoTracks().some(track => !track.muted));
-  }
-
   sessionHasVideo(sessionId: string) {
     return this.sessionHasLocalVideo(sessionId) || this.sessionHasRemoteVideo(sessionId);
   }
