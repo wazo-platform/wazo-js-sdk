@@ -409,6 +409,18 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return !!this.currentSipSession;
   }
 
+  hasActiveRemoteVideoStream() {
+    const sipSession = this.currentSipSession;
+    if (!sipSession) {
+      return false;
+    }
+
+    const { peerConnection } = sipSession.sessionDescriptionHandler;
+    const remoteStream = peerConnection.getRemoteStreams().find(stream => !!stream.getVideoTracks().length);
+
+    return remoteStream && remoteStream.getVideoTracks().some(track => !track.muted);
+  }
+
   callCount() {
     return Object.keys(this.sipSessions).length;
   }
