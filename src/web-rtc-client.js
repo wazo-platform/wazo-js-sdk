@@ -610,18 +610,6 @@ export default class WebRTCClient extends Emitter {
     return streams.remotes.some(remote => !!remote.getVideoTracks().length);
   }
 
-  // /!\ In some case with react0native webrtc the session will have only one audio stream set
-  // Maybe due to https://github.com/react-native-webrtc/react-native-webrtc/issues/401
-  // Better check directly `peerConnection.getRemoteStreams()` when on mobile.
-  sessionHasActiveRemoteVideo(sessionId: string): boolean {
-    const streams = this.videoSessions[sessionId];
-    if (!streams || !streams.remotes) {
-      return false;
-    }
-
-    return streams.remotes.some(remote => remote.getVideoTracks().some(track => !track.muted));
-  }
-
   sessionHasVideo(sessionId: string) {
     return this.sessionHasLocalVideo(sessionId) || this.sessionHasRemoteVideo(sessionId);
   }
