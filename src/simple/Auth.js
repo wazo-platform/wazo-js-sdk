@@ -1,5 +1,5 @@
 // @flow
-import type Session from '../domain/Session';
+import Session from '../domain/Session';
 import { DETAULT_EXPIRATION } from '../api/auth';
 import getApiClient, {
   setCurrentServer,
@@ -153,6 +153,9 @@ class Auth {
     setApiToken(session.token);
 
     session.profile = await getApiClient().confd.getUser(session.uuid);
+    const { wazo_version: engineVersion } = await getApiClient().confd.getInfos();
+
+    session.engineVersion = engineVersion;
 
     this.session = session;
 
