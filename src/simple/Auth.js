@@ -46,10 +46,8 @@ class Auth {
   }
 
   async logIn(username: string, password: string) {
-    const session = await getApiClient().auth.logIn({ username, password, expiration: this.expiration });
-    await this._onAuthenticated(session);
-
-    return session;
+    const rawSession = await getApiClient().auth.logIn({ username, password, expiration: this.expiration });
+    return this._onAuthenticated(rawSession);
   }
 
   async validateToken(token: string, refreshToken: string) {
@@ -63,10 +61,8 @@ class Auth {
 
     // Check if the token is valid
     try {
-      const session = await getApiClient().auth.authenticate(token);
-      await this._onAuthenticated(session);
-
-      return session;
+      const rawSession = await getApiClient().auth.authenticate(token);
+      return this._onAuthenticated(rawSession);
     } catch (e) {
       return false;
     }
@@ -152,10 +148,17 @@ class Auth {
 
     setApiToken(session.token);
 
-    session.profile = await getApiClient().confd.getUser(session.uuid);
+    const profile = await getApiClient().confd.getUser(session.uuid);
+    try {
+      const sipLines = await getApiClient().confd.getUserLinesSip(session.uuid, profile.lines.map(line => line.id));
+      profile.sipLines = sipLines.filter(line => !!line);
+    } catch (e) {
+      // When an user has only a sccp line, getSipLines return a 404
+    }
     const { wazo_version: engineVersion } = await getApiClient().confd.getInfos();
 
     session.engineVersion = engineVersion;
+    session.profile = profile;
 
     this.session = session;
 
@@ -163,7 +166,9 @@ class Auth {
 
     this.authenticated = true;
 
-    return Wazo.Websocket.open(this.host, session);
+    Wazo.Websocket.open(this.host, session);
+
+    return session;
   }
 }
 
