@@ -81,6 +81,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   audioRingDeviceId: ?string;
 
+  audioOutputVolume: number;
+
+  audioRingVolume: number;
+
   ringingEnabled: boolean;
 
   acceptedSessions: Object;
@@ -102,6 +106,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.sipSessions = {};
     this.audioOutputDeviceId = audioOutputDeviceId;
     this.audioRingDeviceId = audioRingDeviceId || audioOutputDeviceId;
+    this.audioOutputVolume = 1;
+    this.audioRingVolume = 1;
     this.incomingSessions = [];
     this.ringingEnabled = true;
     this.shouldRegisterAgain = true;
@@ -197,6 +203,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         ON_PROGRESS,
         this._createCallSession(sipSession, null, { incoming: false, ringing: true }),
         this.audioOutputDeviceId,
+        this.audioOutputVolume,
       );
     });
     sipSession.on('muted', callSession => {
@@ -370,6 +377,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.audioRingDeviceId = id;
   }
 
+  changeAudioVolume(volume: number) {
+    this.audioOutputVolume = volume;
+  }
+
+  changeRingVolume(volume: number) {
+    this.audioRingVolume = volume;
+  }
+
   changeAudioInputDevice(id: string) {
     this.client.changeAudioInputDevice(id, this.currentSipSession);
   }
@@ -393,7 +408,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.currentSipSession = undefined;
     }
 
-    this.eventEmitter.emit(ON_PLAY_HANGUP_SOUND, this.audioOutputDeviceId);
+    this.eventEmitter.emit(ON_PLAY_HANGUP_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
   }
 
   setActiveSipSession(callSession: CallSession) {
@@ -646,7 +661,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     this.sipSessions[callSession.getId()] = sipSession;
 
-    this.eventEmitter.emit(ON_PLAY_PROGRESS_SOUND, this.audioOutputDeviceId);
+    this.eventEmitter.emit(ON_PLAY_PROGRESS_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
 
     this.currentSipSession = sipSession;
 
@@ -761,10 +776,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.currentSipSession = undefined;
     }
 
-    this.eventEmitter.emit(ON_TERMINATE_SOUND, this.audioOutputDeviceId);
+    this.eventEmitter.emit(ON_TERMINATE_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
 
     if (!this.currentSipSession && this.incomingSessions.length > 0) {
-      this.eventEmitter.emit(ON_PLAY_RING_SOUND, this.audioOutputDeviceId);
+      this.eventEmitter.emit(ON_PLAY_RING_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
     }
   }
 
@@ -843,11 +858,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
       if (!this.currentSipSession) {
         if (this.ringingEnabled) {
           this.eventEmitter.emit(ON_TERMINATE_SOUND);
-          this.eventEmitter.emit(ON_PLAY_RING_SOUND, this.audioRingDeviceId);
+          this.eventEmitter.emit(ON_PLAY_RING_SOUND, this.audioRingDeviceId, this.audioRingVolume);
         }
       } else {
         this.eventEmitter.emit(ON_TERMINATE_SOUND);
-        this.eventEmitter.emit(ON_PLAY_INBOUND_CALL_SIGNAL_SOUND, this.audioOutputDeviceId);
+        this.eventEmitter.emit(ON_PLAY_INBOUND_CALL_SIGNAL_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
       }
 
       this.eventEmitter.emit(ON_CALL_INCOMING, callSession, wantsToDoVideo);

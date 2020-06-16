@@ -182,6 +182,10 @@ export default class CTIPhone extends Emitter implements Phone {
 
   changeRingDevice() {}
 
+  changeAudioVolume() {}
+
+  changeRingVolume() {}
+
   isCallUsingVideo(): boolean {
     return false;
   }
