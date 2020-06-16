@@ -377,10 +377,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.audioRingDeviceId = id;
   }
 
+  // volume is a value between 0 and 1
   changeAudioVolume(volume: number) {
     this.audioOutputVolume = volume;
   }
 
+  // volume is a value between 0 and 1
   changeRingVolume(volume: number) {
     this.audioRingVolume = volume;
   }
