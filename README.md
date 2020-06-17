@@ -676,6 +676,22 @@ phone.sendDTMF(sipSession: SIP.sessionDescriptionHandler, tone: string);
 phone.message(message: string, destination: string);
 ```
 
+## Set the audio output volume
+
+Stores a value between 0 and 1, which can be used to on your audio element
+
+```js
+phone.changeAudioOutputVolume(volume: number);
+```
+
+## Set the audio ring volume
+
+Stores a value between 0 and 1, which can be used to on your audio element
+
+```js
+phone.changeAudioRingVolume(volume: number);
+```
+
 ## Closing the RTC connection
 ```js
 phone.close();
