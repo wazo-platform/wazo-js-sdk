@@ -84,6 +84,8 @@ export interface Phone {
 
   isWebRTC(): boolean;
 
+  getUserAgent(): string;
+
   makeCall(number: string, line: Line, enableVideo?: boolean): ?CallSession | Promise<?CallSession>;
 
   mute(callSession: CallSession): PhoneVoid;
