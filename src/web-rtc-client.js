@@ -115,6 +115,7 @@ export default class WebRTCClient extends Emitter {
   constructor(config: WebRtcConfig, session: ?Session, uaConfigOverrides: ?Object) {
     super();
     this.uaConfigOverrides = uaConfigOverrides;
+    this.config = config;
     this._buildConfig(config, session).then((newConfig: WebRtcConfig) => {
       this.config = newConfig;
       this.userAgent = this.createUserAgent(uaConfigOverrides);

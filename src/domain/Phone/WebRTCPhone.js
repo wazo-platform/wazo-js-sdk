@@ -159,6 +159,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return true;
   }
 
+  getUserAgent() {
+    return (this.client && this.client.config && this.client.config.userAgentString) || 'webrtc-phone';
+  }
+
   startHeartbeat() {
     if (!this.client) {
       return;

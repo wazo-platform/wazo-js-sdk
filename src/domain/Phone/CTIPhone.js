@@ -54,6 +54,10 @@ export default class CTIPhone extends Emitter implements Phone {
     return false;
   }
 
+  getUserAgent() {
+    return 'cti-phone';
+  }
+
   startHeartbeat() {
   }
 
