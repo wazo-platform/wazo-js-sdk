@@ -980,6 +980,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       answered: sipSession.hasAnswer,
       paused: sipSession.localHold,
       isCaller: 'incoming' in extra ? !extra.incoming : false,
+      cameraEnabled: this.client.sessionWantsToDoVideo(sipSession),
       number,
       ringing: false,
       muted: false,
