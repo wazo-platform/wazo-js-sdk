@@ -860,6 +860,7 @@ export default class WebRTCClient extends Emitter {
             bundlePolicy: 'max-compat',
             iceServers: WebRTCClient.getIceServers(this.config.host),
             ...this._getRtcOptions(this.videoEnabled),
+            ...configOverrides.peerConnectionOptions || {},
           },
         },
       },
