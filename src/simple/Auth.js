@@ -148,25 +148,34 @@ class Auth {
 
     setApiToken(session.token);
 
-    const profile = await getApiClient().confd.getUser(session.uuid);
-    try {
-      const sipLines = await getApiClient().confd.getUserLinesSip(session.uuid, profile.lines.map(line => line.id));
-      profile.sipLines = sipLines.filter(line => !!line);
-    } catch (e) {
-      // When an user has only a sccp line, getSipLines return a 404
-    }
-    const { wazo_version: engineVersion } = await getApiClient().confd.getInfos();
+    const [profile, { wazo_version: engineVersion }] = await Promise.all([
+      getApiClient().confd.getUser(session.uuid),
+      getApiClient().confd.getInfos(),
+    ]);
 
     session.engineVersion = engineVersion;
     session.profile = profile;
 
-    this.session = session;
+    try {
+      const sipLines = await getApiClient().confd.getUserLinesSip(
+        session.uuid,
+        // $FlowFixMe
+        session.profile.lines.map(line => line.id),
+      );
+
+      // $FlowFixMe
+      session.profile.sipLines = sipLines.filter(line => !!line);
+    } catch (e) {
+      // When an user has only a sccp line, getSipLines return a 404
+    }
 
     this.checkSubscription(session, this.minSubscriptionType);
 
     this.authenticated = true;
 
     Wazo.Websocket.open(this.host, session);
+
+    this.session = session;
 
     return session;
   }
