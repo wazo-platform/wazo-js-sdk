@@ -384,6 +384,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   // volume is a value between 0 and 1
   changeAudioVolume(volume: number) {
     this.audioOutputVolume = volume;
+    this.client.changeAudioOutputVolume(volume);
   }
 
   // volume is a value between 0 and 1
