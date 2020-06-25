@@ -531,6 +531,12 @@ export default class WebRTCClient extends Emitter {
   }
 
   changeAudioOutputVolume(volume: number) {
+    Object.values(this.audioElements).forEach(audioElement => {
+      if (audioElement instanceof HTMLAudioElement) {
+        // eslint-disable-next-line no-param-reassign
+        audioElement.volume = volume;
+      }
+    });
     this.audioOutputVolume = volume;
   }
 
