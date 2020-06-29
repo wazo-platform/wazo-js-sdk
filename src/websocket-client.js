@@ -7,6 +7,7 @@ import IssueReporter from './service/IssueReporter';
 
 export const SOCKET_EVENTS = {
   ON_OPEN: 'onopen',
+  ON_MESSAGE: 'onmessage',
   ON_ERROR: 'onerror',
   ON_CLOSE: 'onclose',
   INITIALIZED: 'initialized',
@@ -137,6 +138,8 @@ class WebSocketClient extends Emitter {
     };
 
     this.socket.onmessage = (event: MessageEvent) => {
+      this.eventEmitter.emit(SOCKET_EVENTS.ON_MESSAGE, event.data);
+
       const message = JSON.parse(typeof event.data === 'string' ? event.data : '{}');
       let { name } = message;
       if (message.data && message.data.name) {
