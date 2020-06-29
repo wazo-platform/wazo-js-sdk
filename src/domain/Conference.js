@@ -28,6 +28,7 @@ export type ConferenceArguments = {
   started?: boolean,
 };
 
+// Pure webRtc adhoc conference
 export default class Conference {
   startTime: number;
 

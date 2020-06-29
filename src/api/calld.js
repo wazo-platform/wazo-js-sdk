@@ -155,8 +155,8 @@ export default (client: ApiRequester, baseUrl: string) => ({
   updateAdHocConference: (conferenceId: string, calls: Array<{initiator_call_id: string, call_id: string}>) =>
     client.post(`${baseUrl}/conferences/adhoc/${conferenceId}`, { calls }),
 
-  removeAdHocConferenceParticipant: (conferenceId: string, participantCallid: string) =>
-    client.delete(`${baseUrl}/conferences/adhoc/${conferenceId}/calls/${participantCallid}`, null, null,
+  removeAdHocConferenceParticipant: (conferenceId: string, participantCallId: string) =>
+    client.delete(`${baseUrl}/conferences/adhoc/${conferenceId}/calls/${participantCallId}`, null, null,
       ApiRequester.successResponseParser),
 
   deleteAdHocConference: (conferenceId: string) =>
