@@ -1,5 +1,5 @@
 // @flow
-import type Session from '../domain/Session';
+import Session from '../domain/Session';
 import { DETAULT_EXPIRATION } from '../api/auth';
 import getApiClient, {
   setCurrentServer,
@@ -46,10 +46,8 @@ class Auth {
   }
 
   async logIn(username: string, password: string) {
-    const session = await getApiClient().auth.logIn({ username, password, expiration: this.expiration });
-    await this._onAuthenticated(session);
-
-    return session;
+    const rawSession = await getApiClient().auth.logIn({ username, password, expiration: this.expiration });
+    return this._onAuthenticated(rawSession);
   }
 
   async validateToken(token: string, refreshToken: string) {
@@ -63,10 +61,8 @@ class Auth {
 
     // Check if the token is valid
     try {
-      const session = await getApiClient().auth.authenticate(token);
-      await this._onAuthenticated(session);
-
-      return session;
+      const rawSession = await getApiClient().auth.authenticate(token);
+      return this._onAuthenticated(rawSession);
     } catch (e) {
       return false;
     }
@@ -152,15 +148,36 @@ class Auth {
 
     setApiToken(session.token);
 
-    session.profile = await getApiClient().confd.getUser(session.uuid);
+    const [profile, { wazo_version: engineVersion }] = await Promise.all([
+      getApiClient().confd.getUser(session.uuid),
+      getApiClient().confd.getInfos(),
+    ]);
 
-    this.session = session;
+    session.engineVersion = engineVersion;
+    session.profile = profile;
+
+    try {
+      const sipLines = await getApiClient().confd.getUserLinesSip(
+        session.uuid,
+        // $FlowFixMe
+        session.profile.lines.map(line => line.id),
+      );
+
+      // $FlowFixMe
+      session.profile.sipLines = sipLines.filter(line => !!line);
+    } catch (e) {
+      // When an user has only a sccp line, getSipLines return a 404
+    }
 
     this.checkSubscription(session, this.minSubscriptionType);
 
     this.authenticated = true;
 
-    return Wazo.Websocket.open(this.host, session);
+    Wazo.Websocket.open(this.host, session);
+
+    this.session = session;
+
+    return session;
   }
 }
 
