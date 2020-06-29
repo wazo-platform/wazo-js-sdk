@@ -70,6 +70,7 @@ type WebRtcConfig = {
   iceCheckingTimeout: ?number,
   log?: Object,
   audioOutputDeviceId?: string,
+  audioOutputVolume?: number;
   userAgentString?: string,
   heartbeatDelay: number,
   heartbeatTimeout: number,
@@ -91,6 +92,7 @@ export default class WebRTCClient extends Emitter {
   audioStreams: Object;
   audioMixer: ?any /* ChannelMerger */;
   audioOutputDeviceId: ?string;
+  audioOutputVolume: number;
   videoSessions: Object;
   connectionPromise: ?Promise<void>;
   _boundOnHeartbeat: Function;
@@ -123,6 +125,7 @@ export default class WebRTCClient extends Emitter {
     });
 
     this.audioOutputDeviceId = config.audioOutputDeviceId;
+    this.audioOutputVolume = config.audioOutputVolume || 1;
 
     this.configureMedia(config.media);
 
@@ -525,6 +528,16 @@ export default class WebRTCClient extends Emitter {
       // eg: "INVITE not rejectable in state Completed"
     }
     this.userAgent = null;
+  }
+
+  changeAudioOutputVolume(volume: number) {
+    Object.values(this.audioElements).forEach(audioElement => {
+      if (audioElement instanceof HTMLAudioElement) {
+        // eslint-disable-next-line no-param-reassign
+        audioElement.volume = volume;
+      }
+    });
+    this.audioOutputVolume = volume;
   }
 
   changeAudioOutputDevice(id: string) {
@@ -962,6 +975,7 @@ export default class WebRTCClient extends Emitter {
 
     const audio = this.audioElements[this.getSipSessionId(session)];
     audio.srcObject = remoteStream;
+    audio.volume = this.audioOutputVolume;
     audio.play();
   }
 
