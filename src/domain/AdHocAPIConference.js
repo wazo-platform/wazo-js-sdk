@@ -1,7 +1,7 @@
 // @flow
 
 import CallSession from './CallSession';
-import getApiClient from "../service/getApiClient";
+import getApiClient from '../service/getApiClient';
 
 export type ConferenceParticipant = {
   admin: boolean,
@@ -23,14 +23,13 @@ export type ConferenceParticipants = {
 export type ConferenceArguments = {
   finished?: boolean,
   participants: CallSession[],
-  source: CallSession,
   started?: boolean,
+  startTime: ?number,
+  conferenceId: string,
 };
 
 // API adhoc conference
 export default class AdHocAPIConference {
-  source: CallSession;
-
   participants: CallSession[];
 
   started: boolean;
@@ -39,22 +38,26 @@ export default class AdHocAPIConference {
 
   conferenceId: string;
 
-  constructor({ source, participants, started, finished }: ConferenceArguments) {
-    this.source = source;
+  startTime: ?number;
+
+  constructor({ participants, started, finished, startTime, conferenceId }: ConferenceArguments) {
     this.participants = participants || [];
     this.started = started || false;
     this.finished = finished || false;
+    this.startTime = startTime;
+    this.conferenceId = conferenceId;
   }
 
   async start() {
     this.started = true;
+    this.startTime = this.participants.length ? this.participants[0].startTime : null;
 
     const conference = await getApiClient().calld.createAdHocConference(this.participants.map(callSession => ({
-      initiator_call_id: this.source.sipCallId,
-      call_id: callSession.sipCallId,
+      initiator_call_id: callSession.callId,
+      call_id: callSession.call ? callSession.call.talkingToIds[0] : null,
     })));
 
-    this.conferenceId = conference.id;
+    this.conferenceId = conference.conference_id;
 
     return this;
   }
@@ -67,8 +70,8 @@ export default class AdHocAPIConference {
     const participants = [...this.participants, ...newParticipants];
 
     await getApiClient().calld.updateAdHocConference(this.conferenceId, participants.map(callSession => ({
-      initiator_call_id: this.source.sipCallId,
-      call_id: callSession.sipCallId,
+      initiator_call_id: callSession.callId,
+      call_id: callSession.call ? callSession.call.talkingToIds[0] : null,
     })));
 
     return new AdHocAPIConference({
@@ -78,10 +81,10 @@ export default class AdHocAPIConference {
   }
 
   participantHasLeft(leaver: CallSession): AdHocAPIConference {
-    // @TODO
     return new AdHocAPIConference({
       ...this,
-      participants: this.participants.filter(participant => !participant.is(leaver)),
+      participants: this.participants.filter(participant =>
+        participant.call && participant.call.talkingToIds[0] !== leaver.getId()),
     });
   }
 
@@ -117,6 +120,16 @@ export default class AdHocAPIConference {
     });
   }
 
+  isOnHold(): boolean {
+    // @TODO
+    return false;
+  }
+
+  isMuted(): boolean {
+    // @TODO
+    return false;
+  }
+
   async hangup(): Promise<AdHocAPIConference> {
     await getApiClient().calld.deleteAdHocConference(this.conferenceId);
 
@@ -129,8 +142,9 @@ export default class AdHocAPIConference {
 
   async removeParticipant(participantToRemove: CallSession) {
     const participants = this.participants.filter(participant => !participant.is(participantToRemove));
+    const callId = participantToRemove.call ? participantToRemove.call.talkingToIds[0] : null;
 
-    await getApiClient().calld.removeAdHocConferenceParticipant(this.conferenceId, participantToRemove.sipCallId);
+    await getApiClient().calld.removeAdHocConferenceParticipant(this.conferenceId, callId);
 
     return new AdHocAPIConference({
       ...this,

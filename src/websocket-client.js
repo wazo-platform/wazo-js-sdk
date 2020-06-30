@@ -81,6 +81,7 @@ export const LINE_STATUS_UPDATED = 'line_status_updated';
 export const AGENT_STATUS_UPDATE = 'agent_status_update';
 export const AGENT_PAUSED = 'agent_paused';
 export const AGENT_UNPAUSED = 'agent_unpaused';
+export const CONFERENCE_ADHOC_PARTICIPANT_LEFT = 'conference_adhoc_participant_left';
 
 const BLACKLIST_EVENTS = [
   CHAT_MESSAGE_SENT,
@@ -300,6 +301,7 @@ WebSocketClient.eventLists = [
   AGENT_STATUS_UPDATE,
   AGENT_PAUSED,
   AGENT_UNPAUSED,
+  CONFERENCE_ADHOC_PARTICIPANT_LEFT,
 ];
 
 export default WebSocketClient;

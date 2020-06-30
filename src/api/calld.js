@@ -150,15 +150,16 @@ export default (client: ApiRequester, baseUrl: string) => ({
   cancelCallTransfer: (transferId: string) => client.delete(`${baseUrl}/users/me/transfers/${transferId}`),
 
   createAdHocConference: (calls: Array<{initiator_call_id: string, call_id: string}>) =>
-    client.post(`${baseUrl}/conferences/adhoc`, { calls }),
+    client.post(`${baseUrl}/users/me/conferences/adhoc`, { calls }),
 
   updateAdHocConference: (conferenceId: string, calls: Array<{initiator_call_id: string, call_id: string}>) =>
-    client.post(`${baseUrl}/conferences/adhoc/${conferenceId}`, { calls }),
+    client.post(`${baseUrl}/users/me/conferences/adhoc/${conferenceId}`, { calls }),
 
   removeAdHocConferenceParticipant: (conferenceId: string, participantCallId: string) =>
-    client.delete(`${baseUrl}/conferences/adhoc/${conferenceId}/calls/${participantCallId}`, null, null,
+    client.delete(`${baseUrl}/users/me/conferences/adhoc/${conferenceId}/calls/${participantCallId}`, null, null,
       ApiRequester.successResponseParser),
 
   deleteAdHocConference: (conferenceId: string) =>
-    client.delete(`${baseUrl}/conferences/adhoc/${conferenceId}`, null, null, ApiRequester.successResponseParser),
+    client.delete(`${baseUrl}/users/me/conferences/adhoc/${conferenceId}`, null, null,
+      ApiRequester.successResponseParser),
 });
