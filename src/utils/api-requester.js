@@ -54,7 +54,7 @@ export default class ApiRequester {
 
   // eslint-disable-next-line
   static successResponseParser(response: Object, isJson: boolean) {
-    return response.status === 204;
+    return response.status === 204 || response.status === 200;
   }
 
   static defaultParser(response: Object) {

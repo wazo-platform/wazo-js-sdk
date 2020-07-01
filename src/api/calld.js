@@ -149,6 +149,9 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   cancelCallTransfer: (transferId: string) => client.delete(`${baseUrl}/users/me/transfers/${transferId}`),
 
+  isAhHocConferenceAPIEnabled: () => client.head(`${baseUrl}/users/me/conferences/adhoc`, null, null,
+    ApiRequester.successResponseParser),
+
   createAdHocConference: (calls: Array<{initiator_call_id: string, call_id: string}>) =>
     client.post(`${baseUrl}/users/me/conferences/adhoc`, { calls }),
 
