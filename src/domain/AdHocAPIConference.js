@@ -45,7 +45,7 @@ export default class AdHocAPIConference {
 
   constructor({ host, participants, started, finished, startTime, conferenceId }: ConferenceArguments) {
     this.host = host;
-    this.participants = participants;
+    this.participants = participants || {};
     this.started = started || false;
     this.finished = finished || false;
     this.startTime = startTime;
