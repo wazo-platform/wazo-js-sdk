@@ -200,6 +200,10 @@ export default class CallSession {
     return { firstName, lastName };
   }
 
+  getTalkingToIds() {
+    return this.call ? this.call.talkingToIds : [];
+  }
+
   static newFrom(callSession: CallSession) {
     return newFrom(callSession, CallSession);
   }
