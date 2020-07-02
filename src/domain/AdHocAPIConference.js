@@ -21,8 +21,9 @@ export type ConferenceParticipants = {
 };
 
 export type ConferenceArguments = {
+  host: CallSession,
   finished?: boolean,
-  participants: CallSession[],
+  participants: {[string]: CallSession};
   started?: boolean,
   startTime: ?number,
   conferenceId: string,
@@ -30,7 +31,9 @@ export type ConferenceArguments = {
 
 // API adhoc conference
 export default class AdHocAPIConference {
-  participants: CallSession[];
+  host: CallSession;
+
+  participants: {[string]: CallSession};
 
   started: boolean;
 
@@ -40,8 +43,9 @@ export default class AdHocAPIConference {
 
   startTime: ?number;
 
-  constructor({ participants, started, finished, startTime, conferenceId }: ConferenceArguments) {
-    this.participants = participants || [];
+  constructor({ host, participants, started, finished, startTime, conferenceId }: ConferenceArguments) {
+    this.host = host;
+    this.participants = participants;
     this.started = started || false;
     this.finished = finished || false;
     this.startTime = startTime;
@@ -50,12 +54,11 @@ export default class AdHocAPIConference {
 
   async start() {
     this.started = true;
-    this.startTime = this.participants.length ? this.participants[0].startTime : null;
+    // $FlowFixMe
+    this.startTime = Object.values(this.participants).length ? Object.values(this.participants)[0].startTime : null;
 
-    const conference = await getApiClient().calld.createAdHocConference(this.participants.map(callSession => ({
-      initiator_call_id: callSession.callId,
-      call_id: callSession.call ? callSession.call.talkingToIds[0] : null,
-    })));
+    const participantIds = Object.keys(this.participants);
+    const conference = await getApiClient().calld.createAdHocConference(this.host.callId, participantIds);
 
     this.conferenceId = conference.conference_id;
 
@@ -63,16 +66,14 @@ export default class AdHocAPIConference {
   }
 
   getParticipants() {
-    return this.participants;
+    return Object.values(this.participants);
   }
 
-  async addParticipants(newParticipants: CallSession[]): Promise<AdHocAPIConference> {
-    const participants = [...this.participants, ...newParticipants];
+  async addParticipant(newParticipant: CallSession): Promise<AdHocAPIConference> {
+    const participantCallId = newParticipant.getTalkingToIds()[0];
+    const participants = { ...this.participants, [participantCallId]: newParticipant };
 
-    await getApiClient().calld.updateAdHocConference(this.conferenceId, participants.map(callSession => ({
-      initiator_call_id: callSession.callId,
-      call_id: callSession.call ? callSession.call.talkingToIds[0] : null,
-    })));
+    await getApiClient().calld.addAdHocConferenceParticipant(this.conferenceId, participantCallId);
 
     return new AdHocAPIConference({
       ...this,
@@ -81,15 +82,13 @@ export default class AdHocAPIConference {
   }
 
   participantHasLeft(leaver: CallSession): AdHocAPIConference {
-    return new AdHocAPIConference({
-      ...this,
-      participants: this.participants.filter(participant =>
-        participant.call && participant.call.talkingToIds[0] !== leaver.getId()),
-    });
+    delete this.participants[leaver.getId()];
+
+    return new AdHocAPIConference({ ...this, participants: this.participants });
   }
 
   hasParticipants() {
-    return this.participants.length > 0;
+    return Object.keys(this.participants).length > 0;
   }
 
   mute(): AdHocAPIConference {
@@ -141,14 +140,14 @@ export default class AdHocAPIConference {
   }
 
   async removeParticipant(participantToRemove: CallSession) {
-    const participants = this.participants.filter(participant => !participant.is(participantToRemove));
-    const callId = participantToRemove.call ? participantToRemove.call.talkingToIds[0] : null;
+    const callId = participantToRemove.getTalkingToIds()[0];
+    delete this.participants[callId];
 
     await getApiClient().calld.removeAdHocConferenceParticipant(this.conferenceId, callId);
 
     return new AdHocAPIConference({
       ...this,
-      participants,
+      participants: this.participants,
     });
   }
 }

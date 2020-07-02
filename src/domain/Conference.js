@@ -29,6 +29,7 @@ export type ConferenceArguments = {
 };
 
 // Pure webRtc adhoc conference
+// /!\ Deprecated, useAdHocAPIConference instead
 export default class Conference {
   startTime: number;
 
