@@ -60,13 +60,11 @@ type MediaConfig = {
 type WebRtcConfig = {
   displayName: string,
   host: string,
-  os: string,
   port?: number,
   authorizationUser: ?string,
   password: ?string,
   uri: string,
   media: MediaConfig,
-  maxMergeSessions: number,
   iceCheckingTimeout: ?number,
   log?: Object,
   audioOutputDeviceId?: string,

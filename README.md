@@ -1,18 +1,159 @@
+
 # Wazo's JavaScript Software Development Kit
 
 [![npm version](https://badge.fury.io/js/%40wazo%2Fsdk.svg)](https://badge.fury.io/js/%40wazo%2Fsdk)
 [![Greenkeeper badge](https://badges.greenkeeper.io/wazo-platform/wazo-js-sdk.svg)](https://greenkeeper.io/)
 
-The Wazo JavaScript Software Development Kit is an API wrapper that makes it easy to communicate with your Wazo server. It allows you to add Wazo functionalities to any JavaScript application you are developing.
+Wazo JavaScript SDK makes it easy for you to build Programmable Conversation applications.
+Use this dev kit in any JS application to leverage communication possibilities.
 
-## Usage
+## Supported Features
+Wazo's Javascript SDK allows you to use these features :
 
-### Install / Add
+- Voice : **`Voice`**
+- Video : **`Video`**
+- Chat : **`Chat`**
+- Fax : **`Fax`**
+- Users status : **`Status`**
+- Users configurations : **`Config`**
+- Directories, Logs : **`Misc`**
+## Table of contents
+
+  * [Install](#install)
+    + [Install / Add](#install---add)
+    + [Content Delivery Networks](#content-delivery-networks)
+      - [UNPKG](#unpkg)
+      - [jsDelivr](#jsdelivr)
+  * [Simple API](#simple-api)
+    + [Importing the Simple API](#importing-the-simple-api)
+    + [Authentication with the simple API](#authentication-with-the-simple-api)
+      - [Initializing](#initializing)
+      - [Setting the engine host](#setting-the-engine-host)
+      - [Authenticating an user](#authenticating-an-user)
+      - [Validating a token](#validating-a-token)
+      - [Setting a callback when a new token is refreshed](#setting-a-callback-when-a-new-token-is-refreshed)
+      - [Loggin out](#loggin-out)
+    + [Conference](#conference)
+      -  [Joining a room](#joining-a-room)
+      -  [Sending a chat message in the room](#sending-a-chat-message-in-the-room)
+      -  [Sending a custom message to all participants](#sending-a-custom-message-to-all-participants)
+      -  [Sharing the user screen](#sharing-the-user-screen)
+      -  [Stopping the screen share](#stopping-the-screen-share)
+      -  [Disabling the camera](#disabling-the-camera)
+      -  [Enabling the camera](#enabling-the-camera)
+      -  [Disabling the microphone](#disabling-the-microphone)
+      -  [Enabling the microphone](#enabling-the-microphone)
+      -  [Accessing room participants](#accessing-room-participants)
+      -  [Disconnect from the room](#disconnect-from-the-room)
+    + [Conference events](#conference-events)
+    + [Accessing the current WebRtc phone](#accessing-the-current-webrtc-phone)
+    + [Domains](#domains)
+       - [Participant](#participant)
+       - [Participant events](#participant-events)
+       - [Stream](#stream)
+  * [Advanced API](#advanced-api)
+    + [Libraries](#libraries)
+      - [Require / Import](#require---import)
+        - [API Client Library](#api-client-library)
+        - [WebRTC Library](#webrtc-library)
+        - [WebSocket Library](#websocket-library)
+    + [Authentication](#authentication)
+      - [Initialization](#initialization)
+        - [When using API Client](#when-using-api-client)
+        - [When using WebRTC](#when-using-webrtc)
+        - [When using WebSocket](#when-using-websocket)
+          * [Opening the socket](#opening-the-socket)
+          * [Closing the socket](#closing-the-socket)
+      - [Log In](#log-in)
+      - [Set token (and refresh token)](#set-token--and-refresh-token-)
+      - [Add an event when the token is refreshed](#add-an-event-when-the-token-is-refreshed)
+      - [Log Out](#log-out)
+      - [Check token](#check-token)
+      - [Other auth methods](#other-auth-methods)
+    + [Interact with the engine](#interact-with-the-engine)
+      - [Applicationd](#applicationd)
+      - [Calld](#calld)
+      - [Confd](#confd)
+      - [Dird](#dird)
+      - [callLogd](#calllogd)
+      - [Accessd](#accessd)
+      - [Calling an API endpoint without WazoApiClient](#calling-an-api-endpoint-without-wazoapiclient)
+    + [WebRTCClient](#webrtcclient)
+      - [WebRTCClient Configuration](#webrtccient-configuration)
+      - [Basic client features](#basic-client-features)
+        - [Calling a number](#calling-a-number)
+        - [Be notified to a phone call](#be-notified-to-a-phone-call)
+        - [Answering a call](#answering-a-call)
+        - [Hangup a call](#hangup-a-call)
+        - [Rejecting a call](#rejecting-a-call)
+        - [Muting a call](#muting-a-call)
+        - [Unmuting a call](#unmuting-a-call)
+        - [Holding a call](#holding-a-call)
+        - [Unholding a call](#unholding-a-call)
+        - [Transferring a call](#transferring-a-call)
+        - [Sending a DTMF tone](#sending-a-dtmf-tone)
+        - [Sending a message](#sending-a-message)
+        - [Closing the RTC connection](#closing-the-rtc-connection)
+      - [Conference features](#conference-features)
+        - [Merging sessions in one conference](#merging-sessions-in-one-conference)
+        - [Add a session to a conference](#add-a-session-to-a-conference)
+        - [Remove a session from a conference](#remove-a-session-from-a-conference)
+        - [Unmerge a sessions from a conference](#unmerge-a-sessions-from-a-conference)
+    + [WebRTCPhone](#webrtcphone)
+      - [Basic phone features](#basic-phone-features)
+        - [Calling a number](#calling-a-number)
+        - [Hangup a call](#hangup-a-call)
+        - [Accepting a call](#accepting-a-call)
+        - [Rejecting a call](#rejecting-a-call)
+        - [Holding a call](#holding-a-call)
+        - [Resuming a call](#resuming-a-call)
+        - [Muting a call](#muting-a-call)
+        - [Unmuting a call](#unmuting-a-call)
+        - [Muting camera in a call](#muting-camera-in-a-call)
+        - [Unmuting camera in a call](#unmuting-camera-in-a-call)
+        - [Sending DTMF](#sending-dtmf)
+        - [Transferring directly a call](#transferring-directly-a-call)
+        - [Transferring indirectly a call](#transferring-indirectly-a-call)
+        - [Start screen sharing](#start-screen-sharing)
+        - [Stop screen sharing](#stop-screen-sharing)
+      - [Conference phone features](#conference-phone-features)
+        - [Starting a conference](#starting-a-conference)
+        - [Adding a participant to the conference](#Adding-a-participant-to-the-conference)
+        - [Holding a conference](#Hhlding-a-conference)
+        - [Resuming a conference](#resuming-a-conference)
+        - [Muting a conference](#muting-a-conference)
+        - [Unmuting a conference](#unmuting-a-conference)
+        - [Removing participants from a conference](#removing-participants-from-a-conference)
+        - [Stopping a conference](#stopping-a-conference)
+      - [Advanced phone features](#advanced-phone-features)
+        - [Registering the phone](#registering-the-phone)
+        - [Check if the phone is registered](#check-if-the-phone-is-registered)
+        - [Un-registering the phone](#un-registering-the-phone)
+        - [Updating audio output device](#updating-audio-output-device)
+        - [Updating audio ring device](#updating-audio-ring-device)
+        - [Updating audio input device](#updating-audio-input-device)
+        - [Updating video input device](#updating-video-input-device)
+        - [Checking if it has an active call](#checking-if-it-has-an-active-call)
+        - [Retrieve the number of active calls](#retrieve-the-number-of-active-calls)
+        - [Sending a SIP message](#sending-a-sip-message)
+        - [Closing the phone](#closing-the-phone)
+        - [Starting heartbeat](#starting-heartbeat)
+        - [Stopping heatbeat](#stopping-heatbeat)
+    + [WebSocketClient](#wazo-websocket)
+      - [Web Socket features](#web-socket-features)
+        - [Opening the socket](#opening-the-socket)
+        - [Listening for event](#listening-for-event)
+        - [Updating the user token](#updating-the-user-token)
+        - [Closing the socket](#closing-the-socket)
+      
+## Install 
+ 
+### Install / Add      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
 You may install the Wazo JavaScript Software Development Kit to your project one of the following ways:
 * `npm install @wazo/sdk`
 * `yarn add @wazo/sdk`
 
-### Content Delivery Networks
+### Content Delivery Networks      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
 Alternatively, you may load the Wazo SDK from a CDN. Use one of the following Content Delivery Networks:
 
 #### UNPKG
@@ -27,7 +168,7 @@ Alternatively, you may load the Wazo SDK from a CDN. Use one of the following Co
 
 ## Simple API
 
-### Require / Import
+### Importing the Simple API
 ```js
 // For Node / packaged app
 import Wazo from '@wazo/sdk/lib/simple';
@@ -39,7 +180,7 @@ or
 <script src="https://cdn.jsdelivr.net/npm/@wazo/sdk"></script>
 ```
 
-### Authentication
+### Authentication with the simple API
 
 #### Initializing
 ```js
@@ -264,11 +405,11 @@ Triggered when a participant is talking, or stops talking.
 - `participant`: `Wazo.RemoteParticipant` or `Wazo.LocalParticipant`.
   The participant instance, your can access the `participant.isTalking` attribute to know the status.
   
-#### Accessing the current WebRtc phone
+### Accessing the current WebRtc phone
 
 You can access the current [webRtcPhone instance](#WebRTCPhone) via `Wazo.Phone.phone`.
 
-### Domain
+### Domains
 
 You can access all Wazo's domain objects in `Wazo.domain.*`, like `Wazo.domain.Session`;
 
@@ -404,16 +545,35 @@ Detaches a stream from an existing htmlElement.
 
 ## Advanced API
 
-### Require / Import
-Depending on your preference, you may require or add the Wazo SDK to your own client application one of the following ways:
+### Libraries
+#### Require / Import      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
+Depending on your preference, you may require or add the Wazo SDK to your own client application one of the following ways using:
+
+##### API Client Library
+
 * `const { WazoApiClient } = require('@wazo/sdk');`
 * `import { WazoApiClient } from '@wazo/sdk';`
 
-Depending on your environment, you can import:
+Depending on your environment you can import:
 * `@wazo/sdk/esm`: compatible with (most) **browsers only**.
 * `@wazo/sdk/lib`: runnable on `node` env.
 
-### Init
+##### WebRTC Library
+
+```js
+import { WazoWebRTCClient } from '@wazo/sdk';
+```
+
+##### WebSocket Library
+```js
+import { WazoWebSocketClient } from '@wazo/sdk';
+```
+
+### Authentication 
+#### Initialization      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
+
+##### When using API Client
+
 ```js
 const client = new WazoApiClient({
   server: 'demo.wazo.community', // required string
@@ -423,7 +583,12 @@ const client = new WazoApiClient({
 });
 ```
 
-### Log In
+##### When using WebRTC
+```js
+const session = await client.auth.logIn({ ... });
+```
+
+#### Log In      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
 ```js
 client.auth.logIn({
   expiration, // optional integer. Session life in number of seconds. If omitted, defaults to 3600 (an hour).
@@ -455,13 +620,13 @@ client.auth.logIn({
 const { refreshToken, ...result } = await client.auth.login(/* ... */);
 ```
 
-### Set token (and refresh token)
+#### Set token (and refresh token)      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
 ```js
 client.setToken(token);
 client.setRefreshToken(refreshToken);
 ```
 
-### Add an event when the token is refreshed
+#### Add an event when the token is refreshed      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
 
 ```js
 client.setOnRefreshToken((newToken) => {
@@ -469,22 +634,21 @@ client.setOnRefreshToken((newToken) => {
 });
 ```
 
-### Log Out
+#### Log Out      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
 ```js
 client.auth.logOut(token).then(/* ... */);
 // or
 await client.auth.logOut(token);
 ```
 
-### Check token
+#### Check token      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
 ```
 client.auth.checkToken(token).then(valid);
 // or
 const valid = await client.auth.checkToken(token);
 ```
 
-### Other auth methods
-
+#### Other auth methods      **`Config`** 
 ```js
 client.auth.listTenants();
 client.auth.createTenant(name);
@@ -499,7 +663,10 @@ client.auth.createPolicy(name);
 client.auth.listPolicies();
 ```
 
-### Application
+### Interact with the engine 
+#### Applicationd       **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**
+Use Applicationd to construct your own communication features.
+
 ```js
 client.application.calls(applicationUuid); // list calls
 client.application.hangupCall(applicationUuid, callId); // hangup a call
@@ -511,43 +678,12 @@ client.application.addCallNodes(applicationUuid, nodeUuid, callId); // add call 
 client.application.playCall(applicationUuid, callId, language, uri); // play a sound into a call
 ```
 
-### Calld
+#### Calld       **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**
+Use Calld to directly control interactions.
+(Please note, ctidNg endpoint is deprecated but continue to work with old version. **Please update your code**.)
+
 ```js
 client.calld.getConferenceParticipantsAsUser(conferenceId); // List participants of a conference the user is part of
-```
-
-### Confd
-```js
-client.confd.listUsers();
-client.confd.getUser(userUuid);
-client.confd.getUserLineSip(userUuid, lineId);
-client.confd.listApplications();
-```
-
-### Dird
-```js
-client.dird.search(context, term);
-client.dird.listPersonalContacts();
-client.dird.addContact(newContact);
-client.dird.editContact(contact);
-client.dird.deleteContact(contactUuid);
-client.dird.listFavorites(context);
-client.dird.markAsFavorite(source, sourceId);
-client.dird.removeFavorite(source, sourceId);
-```
-
-### Call Logd
-```js
-client.callLogd.search(search, limit);
-client.callLogd.listCallLogs(offset, limit);
-client.callLogd.listCallLogsFromDate(from, number);
-```
-
-### Calld
-
-Please note, ctidNg endpoint is deprecated but continue to work with old version. Please update your code.
-
-```js
 client.calld.answerSwitchboardQueuedCall(switchboardUuid, callId);
 client.calld.answerSwitchboardHeldCall(switchboardUuid, callId);
 client.calld.cancelCall(callId);
@@ -568,7 +704,40 @@ client.calld.relocateCall(callId, destination, lineId);
 client.calld.updatePresence(presence);
 ```
 
-### Calling an API endpoint without WazoApiClient
+#### Confd      **`Config`**
+Use Confd to interact with configurations.
+```js
+client.confd.listUsers();
+client.confd.getUser(userUuid);
+client.confd.getUserLineSip(userUuid, lineId);
+client.confd.listApplications();
+```
+
+#### Dird      **`Misc`**
+Use Dird to interact with directories.
+```js
+client.dird.search(context, term);
+client.dird.listPersonalContacts();
+client.dird.addContact(newContact);
+client.dird.editContact(contact);
+client.dird.deleteContact(contactUuid);
+client.dird.listFavorites(context);
+client.dird.markAsFavorite(source, sourceId);
+client.dird.removeFavorite(source, sourceId);
+```
+
+#### callLogd      **`Voice`**  **`Misc`**
+Use callLogd to interact with call logs.
+```js
+client.callLogd.search(search, limit);
+client.callLogd.listCallLogs(offset, limit);
+client.callLogd.listCallLogsFromDate(from, number);
+```
+
+
+#### Calling an API endpoint without WazoApiClient      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
+
+Use this generic method to request endpoints directly.
 
 ```js
 const requester = new ApiRequester({ 
@@ -584,13 +753,15 @@ const results = await requester.call('dird/0.1/personal');
 
 ```
 
-### WebRTCPhone
+### WebRTCClient
+This sample decribes the very first steps to pass a call using WebRTC.
+
 ```js
-import { WazoWebRTCClient } from '@wazo/sdk';
+import { WazoWebRTCClient } from '@wazo/sdk'; // import the library
 
-const session = await client.auth.logIn({ ... });
+const session = await client.auth.logIn({ ... }); // log in
 
-const phone = new WazoWebRTCClient({
+const client = new WazoWebRTCClient({
   displayName: 'From WEB',
   host: 'demo.wazo.community',
   media: {
@@ -603,80 +774,120 @@ const phone = new WazoWebRTCClient({
 // eventName can be on the of events : 
 // - transport: `connected`, `disconnected`, `transportError`, `message`, `closed`, `keepAliveDebounceTimeout`
 // - webrtc: `registered`, `unregistered`, `registrationFailed`, `invite`, `inviteSent`, `transportCreated`, `newTransaction`, `transactionDestroyed`, `notify`, `outOfDialogReferRequested`, `message`.
-phone.on('invite', (sipSession: SIP.sessionDescriptionHandler, hasVideo: boolean, shouldAutoAnswer: boolean) => {
+client.on('invite', (sipSession: SIP.sessionDescriptionHandler, hasVideo: boolean, shouldAutoAnswer: boolean) => {
   this.currentSipSession = sipSession;
   // ...
 });
 
 // We have to wait to be registered to be able to make a call
-await phone.waitForRegister();
+await client.waitForRegister();
 
-phone.call('1234');
+client.call('1234');
 ```
 
-### Calling a number
+#### WebRTCClient Configuration
+
 ```js
-phone.call(number: string);
+const client = new WazoWebRTCClient({
+  displayName: '', // Display name sent in SIP payload
+  host: '', // Host where to connect
+  port: '', // Port of the host (default to `443`)
+  media: {
+    audio: boolean, // If we want to send audio
+    video: boolean | document.getElementById('video'), // pointing to a `<video id="video" />` element
+    localVideo: boolean | document.getElementById('video'), // pointing to a `<video id="video" />` element
+  },
+  iceCheckingTimeout: 1000, // Time allowed to retrieve ice candidates
+  log: {}, // @see https://sipjs.com/api/0.5.0/ua_configuration_parameters/#log
+  audioOutputDeviceId: null, // The audio output device id (when we want to send audio in another destination).
+  userAgentString: null, // Customize the User-Agent SIP header
+  heartbeatDelay: 1000, // Duration in ms between 2 heartbeat (default to 2000)
+  heartbeatTimeout: 5000, // Duration in ms when to consider that the Asterisk server is not responding (default to 5000)
+  maxHeartbeats: 4, // Number of heatbeat send each time we want to check connection (default to 3)
+  
+  // When not passing session as second argument:
+  authorizationUser: '', // The SIP username
+  password: '', // The SIP user password
+  uri: '', // The SIP user identity
+}, session);
 ```
 
-### Be notified to a phone call
+#### Basic client features      **`Voice`**   **`Video`**  **`Chat`**
+
+##### Calling a number
+Use this method to dial a number.
 ```js
-phone.on('invite', (sipSession: SIP.sessionDescriptionHandler) => {
+client.call(number: string);
+```
+
+##### Be notified to a phone call
+Use this method to be notified of an incoming call.
+```js
+client.on('invite', (sipSession: SIP.sessionDescriptionHandler) => {
   this.currentSipSession = sipSession;
 });
 ```
 
-### Answering a call
+##### Answering a call
+Use this method to pick up an incoming call.
 ```js
-phone.answer(sipSession: SIP.sessionDescriptionHandler);
+client.answer(sipSession: SIP.sessionDescriptionHandler);
 ```
 
-## Hangup a call
+##### Hangup a call
+Use this method to hangup a call (the call must have been already picked up)
 ```js
-phone.hangup(sipSession: SIP.sessionDescriptionHandler);
+client.hangup(sipSession: SIP.sessionDescriptionHandler);
 ```
 
-## Rejecting a call
+##### Rejecting a call
+Use this method to deny an incoming call (Must not have been picked up already)
 ```js
-phone.reject(sipSession: SIP.sessionDescriptionHandler);
+client.reject(sipSession: SIP.sessionDescriptionHandler);
 ```
 
-## Muting a call
+##### Muting a call
+Use this method to mute yourself in a running call.
 ```js
-phone.mute(sipSession: SIP.sessionDescriptionHandler);
+client.mute(sipSession: SIP.sessionDescriptionHandler);
 ```
 
-## Umuting a call
+##### Unmuting a call
+Use this method to unmute yourself in a running call.
 ```js
-phone.unmute(sipSession: SIP.sessionDescriptionHandler);
+client.unmute(sipSession: SIP.sessionDescriptionHandler);
 ```
 
-## Holding a call
+##### Holding a call
+Use this method to put a running call on hold.
 ```js
-phone.hold(sipSession: SIP.sessionDescriptionHandler);
+client.hold(sipSession: SIP.sessionDescriptionHandler);
 ```
 
-## Unholding a call
+##### Unholding a call
+Use this method to resume a running call.
 ```js
-phone.unhold(sipSession: SIP.sessionDescriptionHandler);
+client.unhold(sipSession: SIP.sessionDescriptionHandler);
 ```
 
-## Transferring a call
+##### Transferring a call
+Use this method to transfer a call to another target.
 ```js
-phone.transfert(sipSession: SIP.sessionDescriptionHandler, target: string);
+client.transfert(sipSession: SIP.sessionDescriptionHandler, target: string);
 ```
 
-## Sending a DTMF tone
+##### Sending a DTMF tone
+Use this method to send the dual-tone multi-frequency from the phone keypad.
 ```js
-phone.sendDTMF(sipSession: SIP.sessionDescriptionHandler, tone: string);
+client.sendDTMF(sipSession: SIP.sessionDescriptionHandler, tone: string);
 ```
 
-## Sending a message
+##### Sending a message
 ```js
-phone.message(message: string, destination: string);
+client.message(destination: string, message: string);
 ```
 
-## Set the audio output volume
+#### Set the audio output volume
 
 Stores a value between 0 and 1, which can be used to on your audio element
 
@@ -684,7 +895,7 @@ Stores a value between 0 and 1, which can be used to on your audio element
 phone.changeAudioOutputVolume(volume: number);
 ```
 
-## Set the audio ring volume
+#### Set the audio ring volume
 
 Stores a value between 0 and 1, which can be used to on your audio element
 
@@ -692,49 +903,367 @@ Stores a value between 0 and 1, which can be used to on your audio element
 phone.changeAudioRingVolume(volume: number);
 ```
 
-## Closing the RTC connection
+#### Closing the RTC connection
+Use this method to put an end to an RTC connection.
+
 ```js
-phone.close();
+client.close();
 ```
 
-## Merging sessions in one conference
+#### Conference features      **`Voice`**   **`Video`**  **`Chat`** 
+##### Merging sessions in one conference
+Use this method to merge multiple calls in a new conference room.
 ```js
-phone.merge(sessions: Array<SIP.InviteClientContext>);
+client.merge(sessions: Array<SIP.InviteClientContext>);
 ```
 
-## Add a session to a conference
+##### Add a session to a conference
+Use this method to add a single call to an existing conference room.
 ```js
-phone.addToMerge(sipSession: SIP.InviteClientContext);
+client.addToMerge(sipSession: SIP.InviteClientContext);
 ```
 
-## Remove a session from a conference
+##### Remove a session from a conference
+Use this method to remove multiple participants from a conference.
 ```js
-phone.removeFromMerge(sipSession: SIP.InviteClientContext, shouldHold: boolean);
+client.removeFromMerge(sipSession: SIP.InviteClientContext, shouldHold: boolean);
 // shouldHold indicate if the session should be held after removed from session
 ```
 
-## Unmerge a sessions from a conference
+##### Unmerge a sessions from a conference
+Use this method to remove a single participant from a conference.
 ```js
-phone.unmerge(sipSessions: Array<SIP.InviteClientContext>)
+client.unmerge(sipSessions: Array<SIP.InviteClientContext>)
 ```
 
-### Wazo Websocket
+### WebRTCPhone
+Higher level of abstraction to use the `WebRtcClient`.
+
 ```js
-import { WazoWebSocketClient } from '@wazo/sdk';
+import { WazoWebRTCClient, WebRTCPhone } from '@wazo/sdk';
 
-const ws = new WazoWebSocket({
-  host, // wazo websocket host
-  // valid Wazo token
+const webRtcClient = new WazoWebRTCClient({/* See above for parameters */});
+
+const phone = new WebRTCPhone(
+  webRtcClient: WazoWebRTCClient, // Instance of WazoWebRTCClient
+  audioDeviceOutput: string, // The output device used to play audio
+  allowVideo: boolean, // Allow to send and receive video
+  audioDeviceRing, // The output device used to play ringtones
+);
+```
+
+#### Basic phone features      **`Voice`**   **`Video`**  **`Chat`**
+
+##### Calling a number
+Use this method to dial a number.
+```js
+const callSession = await phone.makeCall(
+  number: string, // The number to dial
+  line: // Not used
+  enableVideo: boolean // Optional (default to false) when we want to make a video call 
+);
+```
+
+##### Hangup a call
+Use this method to stop a call
+
+```js
+phone.hangup(
+  callSession: CallSession, // The callSession to stop
+);
+
+```
+##### Accepting a call
+Use this method to accept (answer) an incoming call
+
+```js
+phone.accept(
+  callSession: CallSession, // The callSession to accept
+  videoEnabled?: boolean // Should we accept the call with video
+);
+```
+
+##### Rejecting a call
+Use this method to reject an incoming call
+
+```js
+phone.reject(
+  callSession: CallSession // The callSession to reject
+);
+```
+
+##### Holding a call
+Use this method to put a running call on hold.
+```js
+phone.hold(
+  callSession: CallSession, // The call session to put on hold
+  withEvent: boolean = true // Should the phone triggers event
+);
+```
+
+##### Resuming a call
+Use this method to resume a running call.
+```js
+phone.unhold(callSession: CallSession);
+```
+
+##### Muting a call
+Use this method to mute yourself in a running call.
+```js
+phone.mute(
+  callSession: CallSession, // The call session to mute
+  withEvent: boolean = true // Should the phone triggers event
+);
+```
+
+##### Unmuting a call
+Use this method to unmute yourself in a running call.
+```js
+phone.unmute(callSession: CallSession);
+```
+
+##### Muting camera in a call
+Use this method to mute your camera in a running call.
+```js
+phone.turnCameraOff(callSession: CallSession);
+```
+
+##### Unmuting camera in a call
+Use this method to unmute your camera in a running call.
+```js
+phone.turnCameraOn(callSession: CallSession);
+```
+
+##### Sending DTMF
+Use this method to unmute yourself in a running call.
+```js
+phone.sendKey(callSession: CallSession, tone: string);
+```
+
+##### Transferring directly a call
+Use this method to transfer a call directly to another extension.
+```js
+phone.transfer(
+  callSession: CallSession, // The call session to transfer
+  target: string // The extension where to transfer to call
+);
+```
+
+##### Transferring indirectly a call
+Use this method to transfer a call to another extension by allowing to speak with the other participant first and validate the transfer after that.
+You have to run `makeCall` first on the target to be able to confirm the transfer with this method.
+
+```js
+phone.indirectTransfer(
+  callSession: CallSession, // The call session to transfer
+  target: string // The extension where to transfer to call
+);
+```
+
+##### Start screen sharing
+
+```js
+const screenShareStream: MediaStream = await phone.startScreenSharing({ 
+  audio: true, 
+  video: true, 
+  /* See webRtc media constraints */ 
 });
+```
 
-// 'eventName' can be one the of events listed here: http://documentation.wazo.community/en/stable/api_sdk/websocket.html
-ws.on('eventName', (data: mixed) => {
+##### Stop screen sharing
+
+```js
+phone.stopScreenSharing();
+```
+
+#### Conference phone features      **`Voice`**   **`Video`**  **`Chat`** 
+
+##### Starting a conference
+Use this method to start an ad-hoc conference.
+
+```js
+phone.startConference(participants: CallSession[]);
+```
+
+##### Adding a participant to the conference
+
+```js
+phone.addToConference(participant: CallSession);
+```
+
+##### Holding a conference
+
+```js
+phone.holdConference(participants: CallSession[]);
+```
+
+##### Resuming a conference
+
+```js
+phone.resumeConference(participants: CallSession[]);
+```
+
+##### Muting a conference
+
+```js
+phone.muteConference(participants: CallSession[]);
+```
+
+##### Unmuting a conference
+
+```js
+phone.unmuteConference(participants: CallSession[]);
+```
+
+##### Removing participants from a conference
+
+```js
+phone.removeFromConference(participants: CallSession[]);
+```
+
+##### Stopping a conference
+
+```js
+phone.hangupConference(participants: CallSession[]);
+```
+
+#### Advanced phone features      **`Voice`**   **`Video`**  **`Chat`**
+
+##### Registering the phone
+Sends a SIP `REGISTER` payload
+```js
+phone.register();
+```
+
+##### Check if the phone is registered
+
+```js
+phone.isRegistered();
+```
+
+##### Un-registering the phone
+Sends a SIP `UNREGISTER` payload
+```js
+phone.unregister();
+```
+
+##### Updating audio output device
+
+```js
+phone.changeAudioDevice(someDevice: string);
+```
+
+##### Updating audio ring device
+
+```js
+phone.changeRingDevice(someDevice: string);
+```
+
+##### Updating audio input device
+
+```js
+phone.changeAudioInputDevice(someDevice: string);
+```
+
+##### Updating video input device
+
+```js
+phone.changeVideoInputDevice(someDevice: string);
+```
+
+##### Checking if it has an active call
+
+```js
+phone.hasAnActiveCall(): boolean;
+```
+
+##### Retrieve the number of active calls
+
+```js
+phone.callCount(): number;
+```
+
+##### Sending a SIP message
+Sends a SIP MESSAGE in a session. 
+Use `phone.currentSipSession` to retrieve the current `sipSession`. 
+
+```js
+phone.sendMessage(
+  sipSession: SIP.sessionDescriptionHandler = null, The sip session where to send to message
+  body: string, // The message to SEND
+);
+```
+
+##### Closing the phone
+Disconnect the SIP webSocket transport.
+
+```js
+phone.stop();
+```
+
+##### Starting heartbeat
+Sends a SIP `OPTIONS` every X seconds, Y times and timeout after Z seconds.
+See webrtcClient's `heartbeatDelay`, `heartbeatTimeout`, `maxHeartbeats`, [configuration](#webrtccient-configuration).
+
+```js
+phone.startHeartbeat();
+```
+
+##### Stopping heatbeat
+
+```js
+phone.stopHeartbeat();
+```
+
+### Wazo WebSocket
+You can use the Wazo WebSocket to listen for real time events (eg: receiving a chat message, a presential update ...)
+
+#### Web Socket features      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**
+
+##### Opening the socket
+```js
+import { WebSocketClient } from '@wazo/sdk';
+
+const ws = new WebSocketClient({
+  host: '', // wazo websocket host
+  token: '', // valid Wazo token
+  events: [''], // List of events you want to receive (use `['*']` as wildcard).
+  version: 2, // Use version 2 of the Wazo WebSocket protocol to be informed when the token will expire.
+}, {
+  // see https://github.com/pladaria/reconnecting-websocket#available-options
 });
 
 ws.connect();
 ```
 
-## Closing the socket
+##### Listening for event
+
+```js
+import { USERS_SERVICES_DND_UPDATED, AUTH_SESSION_EXPIRE_SOON } from '@wazo/sdk/lib/websocket-client';
+
+// eventName can be on the of events here: http://documentation.wazo.community/en/stable/api_sdk/websocket.html
+ws.on('eventName', (data: mixed) => {
+});
+
+ws.on(USERS_SERVICES_DND_UPDATED, ({ enabled }) => {
+  // Do something with the new do not disturb value.
+});
+
+ws.on(AUTH_SESSION_EXPIRE_SOON, (data) => {
+  // Called when the user's token will expire soon.
+  // You should refresh it at this point (eg: by using a refreshToken).
+});
+```
+
+##### Updating the user token
+
+You can update a new token to avoid being disconnected when the old one will expire.
+
+```js
+ws.updateToken(newToken: string);
+```
+
+#### Closing the socket
 ```js
 ws.close();
 ```
