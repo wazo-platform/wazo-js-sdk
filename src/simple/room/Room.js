@@ -16,6 +16,7 @@ export const SIGNAL_TYPE_PARTICIPANT_REQUEST = 'signal/PARTICIPANT_REQUEST';
 
 class Room extends Emitter {
   callSession: ?CallSession;
+  name: string;
   extension: string;
   sourceId: ?number;
   participants: Participant[];
@@ -143,6 +144,7 @@ class Room extends Emitter {
 
     room.setSourceId(conference.sourceId);
     room.setCallId(callId);
+    room.setName(conference.name);
 
     return room;
   }
@@ -176,6 +178,10 @@ class Room extends Emitter {
 
   setCallId(callId: string) {
     this.callId = callId;
+  }
+
+  setName(name: string) {
+    this.name = name;
   }
 
   sendMessage(body: string, sipSession: any = null) {
