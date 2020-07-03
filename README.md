@@ -547,7 +547,7 @@ Detaches a stream from an existing htmlElement.
 
 ### Libraries
 #### Require / Import      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
-Depending on your preference, you may require or add the Wazo SDK to your own client application one of the following ways:
+Depending on your preference, you may require or add the Wazo SDK to your own client application one of the following ways using:
 
 ##### API Client Library
 
@@ -859,13 +859,13 @@ client.unmute(sipSession: SIP.sessionDescriptionHandler);
 ```
 
 ##### Holding a call
-Use this method to put on hold a running call.
+Use this method to put a running call on hold.
 ```js
 client.hold(sipSession: SIP.sessionDescriptionHandler);
 ```
 
 ##### Unholding a call
-Use this method to take back a running call.
+Use this method to resume a running call.
 ```js
 client.unhold(sipSession: SIP.sessionDescriptionHandler);
 ```
@@ -993,7 +993,7 @@ phone.reject(
 ```
 
 ##### Holding a call
-Use this method to put on hold a running call.
+Use this method to put a running call on hold.
 ```js
 phone.hold(
   callSession: CallSession, // The call session to put on hold
@@ -1002,7 +1002,7 @@ phone.hold(
 ```
 
 ##### Resuming a call
-Use this method to take back a running call.
+Use this method to resume a running call.
 ```js
 phone.unhold(callSession: CallSession);
 ```
