@@ -27,6 +27,7 @@ export type ConferenceArguments = {
   started?: boolean,
   startTime: ?number,
   conferenceId: string,
+  muted: ?boolean,
 };
 
 // API adhoc conference
@@ -43,13 +44,16 @@ export default class AdHocAPIConference {
 
   startTime: ?number;
 
-  constructor({ host, participants, started, finished, startTime, conferenceId }: ConferenceArguments) {
+  muted: boolean;
+
+  constructor({ host, participants, started, finished, startTime, conferenceId, muted }: ConferenceArguments) {
     this.host = host;
     this.participants = participants || {};
     this.started = started || false;
     this.finished = finished || false;
     this.startTime = startTime;
     this.conferenceId = conferenceId;
+    this.muted = muted || false;
   }
 
   async start() {
@@ -92,14 +96,14 @@ export default class AdHocAPIConference {
   }
 
   mute(): AdHocAPIConference {
-    // @TODO
+    this.muted = true;
     return new AdHocAPIConference({
       ...this,
     });
   }
 
   unmute(): AdHocAPIConference {
-    // @TODO
+    this.muted = false;
     return new AdHocAPIConference({
       ...this,
     });
@@ -125,8 +129,7 @@ export default class AdHocAPIConference {
   }
 
   isMuted(): boolean {
-    // @TODO
-    return false;
+    return this.muted;
   }
 
   async hangup(): Promise<AdHocAPIConference> {
