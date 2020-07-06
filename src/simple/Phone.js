@@ -48,7 +48,7 @@ class Phone extends Emitter {
     }
 
     this.session = session;
-    this.sipLine = sipLine || this.getWebRtcLine();
+    this.sipLine = sipLine || this.getFirstWebRtcLine();
 
     if (!this.sipLine) {
       throw new Error('Sorry, no sip lines found for this user');
@@ -87,7 +87,7 @@ class Phone extends Emitter {
     if (!this.phone) {
       return;
     }
-    const sipLine = rawSipLine || this.getWebRtcLine();
+    const sipLine = rawSipLine || this.getFirstWebRtcLine();
 
     return this.phone.makeCall(extension, sipLine, withCamera);
   }
@@ -174,7 +174,7 @@ class Phone extends Emitter {
     return this.phone ? this.phone.currentSipSession : null;
   }
 
-  getWebRtcLine() {
+  getFirstWebRtcLine() {
     const lines: any = this.getSipLines();
     return lines.find(sipLine => sipLine.isWebRtc());
   }
