@@ -28,6 +28,7 @@ type CallSessionArguments = {
 export default class CallSession {
   call: ?Call;
 
+  // Wazo's callId, like `1594062407.xxxx`
   callId: string;
 
   displayName: string;
@@ -52,6 +53,7 @@ export default class CallSession {
   // Should be computed ?
   paused: boolean;
 
+  // Asterisk callId, like `7aed6793-4405-466d-873e-92d21c2fef9f`
   sipCallId: string;
 
   sipStatus: ?number;
