@@ -46,6 +46,7 @@ type Authorization = {
 };
 
 type SessionArguments = {
+  acls?: string[],
   token: string,
   refreshToken?: ?string,
   sessionUuid?: ?string,
@@ -58,6 +59,7 @@ type SessionArguments = {
 };
 
 export default class Session {
+  acls: string[];
   token: string;
   refreshToken: ?string;
   uuid: ?string;
@@ -87,6 +89,7 @@ export default class Session {
       uuid: plain.data.metadata ? plain.data.metadata.uuid : null,
       sessionUuid: plain.data.session_uuid,
       authorizations,
+      acls: plain.data.acls ? plain.data.acls : [],
       tenantUuid: plain.data.metadata ? plain.data.metadata.tenant_uuid : undefined,
       expiresAt: new Date(`${plain.data.utc_expires_at}z`),
     });
@@ -103,6 +106,7 @@ export default class Session {
     profile,
     expiresAt,
     authorizations,
+    acls,
     engineVersion,
     refreshToken,
     sessionUuid,
@@ -113,6 +117,7 @@ export default class Session {
     this.profile = profile;
     this.expiresAt = expiresAt;
     this.authorizations = authorizations || [];
+    this.acls = acls || [];
     this.engineVersion = engineVersion;
     this.refreshToken = refreshToken;
     this.sessionUuid = sessionUuid;
