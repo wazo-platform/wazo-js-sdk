@@ -46,6 +46,7 @@ type Authorization = {
 };
 
 type SessionArguments = {
+  acls?: string[],
   token: string,
   refreshToken?: ?string,
   sessionUuid?: ?string,
@@ -58,6 +59,7 @@ type SessionArguments = {
 };
 
 export default class Session {
+  acls: string[];
   token: string;
   refreshToken: ?string;
   uuid: ?string;
