@@ -48,7 +48,7 @@ class Phone extends Emitter {
     }
 
     this.session = session;
-    this.sipLine = sipLine || this.getFirstWebRtcLine();
+    this.sipLine = sipLine || this.getPrimaryWebRtcLine();
 
     if (!this.sipLine) {
       throw new Error('Sorry, no sip lines found for this user');
@@ -87,7 +87,7 @@ class Phone extends Emitter {
     if (!this.phone) {
       return;
     }
-    const sipLine = rawSipLine || this.getFirstWebRtcLine();
+    const sipLine = rawSipLine || this.getPrimaryWebRtcLine();
 
     return this.phone.makeCall(extension, sipLine, withCamera);
   }
@@ -174,22 +174,18 @@ class Phone extends Emitter {
     return this.phone ? this.phone.currentSipSession : null;
   }
 
-  getFirstWebRtcLine() {
-    const lines: any = this.getSipLines();
-    return lines.find(sipLine => sipLine.isWebRtc());
-  }
-
-  getLineById(lineId: string) {
-    return this.getSipLines().find(line => line.id === lineId);
+  getPrimaryWebRtcLine() {
+    const session = Wazo.Auth.getSession();
+    return session.primaryWebRtcLine();
   }
 
   getPrimaryLine() {
     const session = Wazo.Auth.getSession();
-    if (!session) {
-      return null;
-    }
-
     return session.primarySipLine();
+  }
+
+  getLineById(lineId: string) {
+    return this.getSipLines().find(line => line.id === lineId);
   }
 
   getSipLines() {
