@@ -2,7 +2,6 @@
 import type SipLine from '../domain/SipLine';
 import type Session from '../domain/Session';
 import type CallSession from '../domain/CallSession';
-import getApiClient from '../service/getApiClient';
 import WebRTCPhone, * as PHONE_EVENTS from '../domain/Phone/WebRTCPhone';
 import WazoWebRTCClient, { events as clientEvents, transportEvents } from '../web-rtc-client';
 import Emitter from '../utils/Emitter';
@@ -49,7 +48,7 @@ class Phone extends Emitter {
     }
 
     this.session = session;
-    this.sipLine = sipLine || await this._getWebRtcLine();
+    this.sipLine = sipLine || this.getWebRtcLine();
 
     if (!this.sipLine) {
       throw new Error('Sorry, no sip lines found for this user');
@@ -71,9 +70,9 @@ class Phone extends Emitter {
 
     this.phone = new WebRTCPhone(this.client, options.audioDeviceOutput, true, options.audioDeviceRing);
 
-    await this.client.waitForRegister();
-
     this._transferEvents();
+
+    await this.client.waitForRegister();
   }
 
   disconnect() {
@@ -88,7 +87,7 @@ class Phone extends Emitter {
     if (!this.phone) {
       return;
     }
-    const sipLine = rawSipLine || await this._getWebRtcLine();
+    const sipLine = rawSipLine || this.getWebRtcLine();
 
     return this.phone.makeCall(extension, sipLine, withCamera);
   }
@@ -175,6 +174,33 @@ class Phone extends Emitter {
     return this.phone ? this.phone.currentSipSession : null;
   }
 
+  getWebRtcLine() {
+    const lines: any = this.getSipLines();
+    return lines.find(sipLine => sipLine.isWebRtc());
+  }
+
+  getLineById(lineId: string) {
+    return this.getSipLines().find(line => line.id === lineId);
+  }
+
+  getPrimaryLine() {
+    const session = Wazo.Auth.getSession();
+    if (!session) {
+      return null;
+    }
+
+    return session.primarySipLine();
+  }
+
+  getSipLines() {
+    const session = Wazo.Auth.getSession();
+    if (!session) {
+      return [];
+    }
+
+    return session.profile ? session.profile.sipLines : [];
+  }
+
   _transferEvents() {
     this.unbind();
     [...clientEvents, ...transportEvents].forEach(event => {
@@ -199,25 +225,12 @@ class Phone extends Emitter {
     });
   }
 
-  async _getWebRtcLine() {
-    const lines: any = await this._getSipLines();
-    return lines.find(sipLine => sipLine.isWebRtc());
-  }
-
   checkSfu() {
     const hasSfu = this.sipLine.options.some(option =>
       option[0] === 'max_audio_streams' || option[0] === 'max_video_streams');
     if (!hasSfu) {
       throw new Error('Sorry your user is not configured to support video conference');
     }
-  }
-
-  async _getSipLines() {
-    if (!this.session) {
-      return;
-    }
-    const lines = this.session.profile ? this.session.profile.lines : [];
-    return getApiClient().confd.getUserLinesSip(this.session.uuid, lines.map(line => line.id));
   }
 
   _onMessage(message: SIP.IncomingRequestMessage) {
