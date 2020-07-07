@@ -35,7 +35,7 @@ export default class CTIPhone extends Emitter implements Phone {
       mute: true,
       hold: false,
       transfer: true,
-      sendKey: false,
+      sendKey: true,
       addParticipant: false,
       record: false,
       merge: false,

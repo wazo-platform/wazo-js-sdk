@@ -149,6 +149,9 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   cancelCallTransfer: (transferId: string) => client.delete(`${baseUrl}/users/me/transfers/${transferId}`),
 
+  sendDTMF: (callId: string, digits: string) => client.put(`${baseUrl}/users/me/calls/${callId}/dtmf?digits=${digits}`,
+    null, null, ApiRequester.successResponseParser),
+
   isAhHocConferenceAPIEnabled: () => client.head(`${baseUrl}/users/me/conferences/adhoc`, null, null,
     ApiRequester.successResponseParser),
 
