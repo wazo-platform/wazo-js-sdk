@@ -15,7 +15,7 @@ export const SOCKET_EVENTS = {
   INITIALIZED: 'initialized',
 };
 
-type WebSocketClientArguments = {
+type Arguments = {
   host: string,
   token: string,
   events: Array<string>,
@@ -119,8 +119,7 @@ class WebSocketClient extends Emitter {
    * @param heartbeat
    * @param options @see https://github.com/pladaria/reconnecting-websocket#available-options
    */
-  constructor({ host, token, version = 1, events = [],
-    heartbeat: { delay, timeout, max } = {} }: WebSocketClientArguments, options: Object = {}) {
+  constructor({ host, token, version = 1, events = [], heartbeat = {} }: Arguments, options: Object = {}) {
     super();
     this.initialized = false;
 
@@ -132,6 +131,7 @@ class WebSocketClient extends Emitter {
     this.version = version;
 
     this._boundOnHeartbeat = this._onHeartbeat.bind(this);
+    const { delay, timeout, max } = heartbeat;
     this.heartbeat = new Heartbeat(delay, timeout, max);
     this.heartbeat.setSendHeartbeat(this.pingServer.bind(this));
     this.heartbeat.setOnHeartbeatTimeout(this._onHeartbeatTimeout.bind(this));
