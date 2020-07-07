@@ -1,9 +1,11 @@
 // @flow
 /* eslint-disable no-underscore-dangle */
 import ReconnectingWebSocket from 'reconnecting-websocket';
+
 import Emitter from './utils/Emitter';
 import type { WebSocketMessage } from './types/WebSocketMessage';
 import IssueReporter from './service/IssueReporter';
+import Heartbeat from './utils/Heartbeat';
 
 export const SOCKET_EVENTS = {
   ON_OPEN: 'onopen',
@@ -18,6 +20,11 @@ type WebSocketClientArguments = {
   token: string,
   events: Array<string>,
   version?: number,
+  heartbeat?: {
+    delay: number,
+    timeout: number,
+    max: number,
+  },
 };
 
 export const AUTH_SESSION_EXPIRE_SOON = 'auth_session_expire_soon';
@@ -98,6 +105,8 @@ class WebSocketClient extends Emitter {
   events: Array<string>;
   options: Object;
   socket: ?ReconnectingWebSocket;
+  _boundOnHeartbeat: Function;
+  heartbeat: Heartbeat;
 
   static eventLists: Array<string>;
 
@@ -107,9 +116,11 @@ class WebSocketClient extends Emitter {
    * @param token
    * @param events
    * @param version
+   * @param heartbeat
    * @param options @see https://github.com/pladaria/reconnecting-websocket#available-options
    */
-  constructor({ host, token, version = 1, events = [] }: WebSocketClientArguments, options: Object = {}) {
+  constructor({ host, token, version = 1, events = [],
+    heartbeat: { delay, timeout, max } = {} }: WebSocketClientArguments, options: Object = {}) {
     super();
     this.initialized = false;
 
@@ -119,6 +130,11 @@ class WebSocketClient extends Emitter {
     this.events = events;
     this.options = options;
     this.version = version;
+
+    this._boundOnHeartbeat = this._onHeartbeat.bind(this);
+    this.heartbeat = new Heartbeat(delay, timeout, max);
+    this.heartbeat.setSendHeartbeat(this.pingServer.bind(this));
+    this.heartbeat.setOnHeartbeatTimeout(this._onHeartbeatTimeout.bind(this));
   }
 
   connect() {
@@ -188,13 +204,50 @@ class WebSocketClient extends Emitter {
 
     if (this.socket) {
       // If still connected, send the token to the WS
-      if (this.socket.readyState === this.socket.OPEN && this.version >= 2) {
+      if (this.isConnected() && this.version >= 2) {
+        // $FlowFixMe
         this.socket.send(JSON.stringify({ op: 'token', data: { token } }));
         return;
       }
       // $FlowFixMe
       this.socket._url = this._getUrl();
     }
+  }
+
+  hasHeartbeat() {
+    return this.heartbeat.hasHeartbeat;
+  }
+
+  startHeartbeat() {
+    if (!this.socket) {
+      this.heartbeat.stop();
+      return;
+    }
+
+    this.off('pong', this._boundOnHeartbeat);
+    this.on('pong', this._boundOnHeartbeat);
+
+    this.heartbeat.start();
+  }
+
+  stopHeartbeat() {
+    this.heartbeat.stop();
+  }
+
+  pingServer() {
+    if (!this.socket || !this.isConnected()) {
+      return;
+    }
+
+    try {
+      this.socket.send(JSON.stringify({ op: 'ping', data: { payload: 'pong' } }));
+    } catch (_) {
+      // Nothing to do
+    }
+  }
+
+  isConnected() {
+    return this.socket && this.socket.readyState === this.socket.OPEN;
   }
 
   _handleInitMessage(message: WebSocketMessage, sock: ReconnectingWebSocket) {
@@ -223,6 +276,11 @@ class WebSocketClient extends Emitter {
   }
 
   _handleMessage(message: Object) {
+    if (message.op === 'pong') {
+      this.eventEmitter.emit('pong', message.data);
+      return;
+    }
+
     if (this.version === 1) {
       this.eventEmitter.emit(message.name, message);
       return;
@@ -235,6 +293,17 @@ class WebSocketClient extends Emitter {
 
   _getUrl() {
     return `wss://${this.host}/api/websocketd/?token=${this.token}&version=${this.version}`;
+  }
+
+  _onHeartbeat(message: Object) {
+    if (message.payload === 'pong') {
+      this.heartbeat.onHeartbeat();
+    }
+  }
+
+  async _onHeartbeatTimeout() {
+    this.close();
+    this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE, new Error('Websocket ping failure.'));
   }
 }
 
