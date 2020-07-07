@@ -60,6 +60,10 @@ export default class CallApi {
     return getApiClient().calld.mute(callId);
   }
 
+  static async sendDTMF(callId: string, digits: string): Promise<void> {
+    return getApiClient().calld.sendDTMF(callId, digits);
+  }
+
   static async unmute(callId: string): Promise<void> {
     return getApiClient().calld.unmute(callId);
   }
