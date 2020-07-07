@@ -107,6 +107,7 @@ class WebSocketClient extends Emitter {
   socket: ?ReconnectingWebSocket;
   _boundOnHeartbeat: Function;
   heartbeat: Heartbeat;
+  onHeartBeatTimeout: Function;
 
   static eventLists: Array<string>;
 
@@ -234,6 +235,10 @@ class WebSocketClient extends Emitter {
     this.heartbeat.stop();
   }
 
+  setOnHeartbeatTimeout(cb: Function) {
+    this.onHeartBeatTimeout = cb;
+  }
+
   pingServer() {
     if (!this.socket || !this.isConnected()) {
       return;
@@ -304,6 +309,9 @@ class WebSocketClient extends Emitter {
   async _onHeartbeatTimeout() {
     this.close();
     this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE, new Error('Websocket ping failure.'));
+    if (this.onHeartBeatTimeout) {
+      this.onHeartBeatTimeout();
+    }
   }
 }
 
