@@ -134,7 +134,9 @@ export default class CTIPhone extends Emitter implements Phone {
     return CallApi.confirmCallTransfer(transferId);
   }
 
-  sendKey() {}
+  sendKey(callSession: CallSession, digits: string) {
+    return CallApi.sendDTMF(callSession.callId, digits);
+  }
 
   onConnectionMade() {
     this.eventEmitter.emit('onCallAccepted');
