@@ -310,8 +310,8 @@ export default class WebRTCClient extends Emitter {
   reject(session: SIP.sessionDescriptionHandler) {
     try {
       return session.reject ? session.reject() : session.cancel();
-    } catch(e) {
-      console.warn('Error when rejecting call', e.message. e.stack);
+    } catch (e) {
+      console.warn('Error when rejecting call', e.message, e.stack);
     }
   }
 
