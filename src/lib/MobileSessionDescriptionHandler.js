@@ -162,6 +162,15 @@ export default SIPMethods =>
             return this.createOfferOrAnswer(options.RTCOfferOptions, modifiers);
           }.bind(this)
         )
+        .then(function(description) {
+          // Recreate offer containing the ICE Candidates
+          if (description.type === "offer") {
+            return this.peerConnection.createOffer()
+            .then(function(sdp) {
+              return this.createRTCSessionDescriptionInit(sdp) }.bind(this));
+          }
+          return description;
+        }.bind(this))
         .then(
           function(description) {
             this.emit('getDescription', description);
