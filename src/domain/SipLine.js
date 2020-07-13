@@ -2,6 +2,8 @@
 import newFrom from '../utils/new-from';
 import type { Endpoint } from './Line';
 
+const availableCodecs = ['vp8', 'vp9', 'h264'];
+
 type SipLineResponse = {
   id: number,
   tenant_uuid: string,
@@ -82,7 +84,13 @@ export default class SipLine {
     this.trunk = trunk;
     this.line = line;
 
-    this.hasSFU = Array.isArray(options) && options.some(option =>
+    // let's see if our line can handle video
+    const allow = Array.isArray(options) && options.find(option => option[0] === 'allow');
+    const hasVideo = Array.isArray(allow) && allow[1].split(',').some(codec => availableCodecs.some(c => c === codec));
+    this.hasVideo = hasVideo;
+
+    // and now, video-conferencing
+    this.hasVideoConf = Array.isArray(options) && options.some(option =>
       (option[0] === 'max_audio_streams' && option[1] > 0) || (option[0] === 'max_video_streams' && option[1] > 1));
 
     // Useful to compare instead of instanceof with minified code
