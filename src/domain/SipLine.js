@@ -41,6 +41,7 @@ export default class SipLine {
   links: Array<Object>;
   trunk: ?string;
   line: Endpoint;
+  hasSFU: boolean;
 
   static parse(plain: SipLineResponse): SipLine {
     return new SipLine({
@@ -80,6 +81,9 @@ export default class SipLine {
     this.links = links;
     this.trunk = trunk;
     this.line = line;
+
+    this.hasSFU = Array.isArray(options) && options.some(option =>
+      (option[0] === 'max_audio_streams' && option[1] > 0) || (option[0] === 'max_video_streams' && option[1] > 1));
 
     // Useful to compare instead of instanceof with minified code
     this.type = 'SipLine';
