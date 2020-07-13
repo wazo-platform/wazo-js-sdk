@@ -222,7 +222,7 @@ class Phone extends Emitter {
   }
 
   checkSfu() {
-    const hasSfu = this.sipLine && this.sipLine.hasSFU;
+    const hasSfu = this.sipLine && this.sipLine.hasVideoConference;
 
     if (!hasSfu) {
       throw new Error('Sorry your user is not configured to support video conference');

@@ -86,8 +86,7 @@ export default class SipLine {
 
     // let's see if our line can handle video
     const allow = Array.isArray(options) && options.find(option => option[0] === 'allow');
-    const hasVideo = Array.isArray(allow) && allow[1].split(',').some(codec => availableCodecs.some(c => c === codec));
-    this.hasVideo = hasVideo;
+    this.hasVideo = Array.isArray(allow) && allow[1].split(',').some(codec => availableCodecs.some(c => c === codec));
 
     // and now, video-conferencing
     this.hasVideoConf = Array.isArray(options) && options.some(option =>
