@@ -43,7 +43,8 @@ export default class SipLine {
   links: Array<Object>;
   trunk: ?string;
   line: Endpoint;
-  hasSFU: boolean;
+  hasVideo: boolean;
+  hasVideoConference: boolean;
 
   static parse(plain: SipLineResponse): SipLine {
     return new SipLine({
@@ -89,8 +90,9 @@ export default class SipLine {
     this.hasVideo = Array.isArray(allow) && allow[1].split(',').some(codec => availableCodecs.some(c => c === codec));
 
     // and now, video-conferencing
-    this.hasVideoConf = Array.isArray(options) && options.some(option =>
-      (option[0] === 'max_audio_streams' && option[1] > 0) || (option[0] === 'max_video_streams' && option[1] > 1));
+    this.hasVideoConference = Array.isArray(options) && !!options.some(option =>
+      (option[0] === 'max_audio_streams' && parseInt(option[1], 10) > 0)
+      || (option[0] === 'max_video_streams' && parseInt(option[1], 10) > 1));
 
     // Useful to compare instead of instanceof with minified code
     this.type = 'SipLine';
