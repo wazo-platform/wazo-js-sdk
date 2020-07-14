@@ -43,8 +43,6 @@ export default class SipLine {
   links: Array<Object>;
   trunk: ?string;
   line: Endpoint;
-  hasVideo: boolean;
-  hasVideoConference: boolean;
 
   static parse(plain: SipLineResponse): SipLine {
     return new SipLine({
@@ -73,6 +71,17 @@ export default class SipLine {
     return this.options.some(option => option[0] === 'webrtc' && option[1] === 'yes');
   }
 
+  hasVideo() {
+    const allow = this.options.find(option => option[0] === 'allow');
+    return Array.isArray(allow) && allow[1].split(',').some(codec => availableCodecs.some(c => c === codec));
+  }
+
+  hasVideoConference() {
+    return this.options.some(option =>
+      (option[0] === 'max_audio_streams' && parseInt(option[1], 10) > 0)
+      || (option[0] === 'max_video_streams' && parseInt(option[1], 10) > 1));
+  }
+
   constructor({ id, tenantUuid, username, secret, type, host, options, links, trunk, line }: SipLineArguments = {}) {
     this.id = id;
     this.tenantUuid = tenantUuid;
@@ -84,15 +93,6 @@ export default class SipLine {
     this.links = links;
     this.trunk = trunk;
     this.line = line;
-
-    // let's see if our line can handle video
-    const allow = Array.isArray(options) && options.find(option => option[0] === 'allow');
-    this.hasVideo = Array.isArray(allow) && allow[1].split(',').some(codec => availableCodecs.some(c => c === codec));
-
-    // and now, video-conferencing
-    this.hasVideoConference = Array.isArray(options) && !!options.some(option =>
-      (option[0] === 'max_audio_streams' && parseInt(option[1], 10) > 0)
-      || (option[0] === 'max_video_streams' && parseInt(option[1], 10) > 1));
 
     // Useful to compare instead of instanceof with minified code
     this.type = 'SipLine';
