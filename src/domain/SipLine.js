@@ -2,6 +2,8 @@
 import newFrom from '../utils/new-from';
 import type { Endpoint } from './Line';
 
+const availableCodecs = ['vp8', 'vp9', 'h264'];
+
 type SipLineResponse = {
   id: number,
   tenant_uuid: string,
@@ -67,6 +69,17 @@ export default class SipLine {
 
   isWebRtc() {
     return this.options.some(option => option[0] === 'webrtc' && option[1] === 'yes');
+  }
+
+  hasVideo() {
+    const allow = this.options.find(option => option[0] === 'allow');
+    return Array.isArray(allow) && allow[1].split(',').some(codec => availableCodecs.some(c => c === codec));
+  }
+
+  hasVideoConference() {
+    return this.options.some(option =>
+      (option[0] === 'max_audio_streams' && parseInt(option[1], 10) > 0)
+      || (option[0] === 'max_video_streams' && parseInt(option[1], 10) > 1));
   }
 
   constructor({ id, tenantUuid, username, secret, type, host, options, links, trunk, line }: SipLineArguments = {}) {
