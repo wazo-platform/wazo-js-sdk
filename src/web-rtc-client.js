@@ -126,6 +126,7 @@ export default class WebRTCClient extends Emitter {
     this.audioOutputVolume = config.audioOutputVolume || 1;
 
     this.configureMedia(config.media);
+    this.setMediaConstraints({ audio: config.media.audio, video: config.media.video });
 
     this.videoSessions = {};
     this.connectionPromise = null;
@@ -138,12 +139,15 @@ export default class WebRTCClient extends Emitter {
 
   configureMedia(media: MediaConfig) {
     this.hasAudio = !!media.audio;
-    this.video = media.video;
-    this.audio = media.audio;
     this.localVideo = media.localVideo;
     this.audioContext = this._isWeb() ? new (window.AudioContext || window.webkitAudioContext)() : null;
     this.audioStreams = {};
     this.audioElements = {};
+  }
+
+  setMediaConstraints(media: MediaStreamConstraints) {
+    this.video = media.video;
+    this.audio = media.audio;
   }
 
   createUserAgent(configOverrides: ?Object): UA {

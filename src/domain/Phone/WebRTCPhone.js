@@ -877,6 +877,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
   }
 
+  setMediaConstraints(media: MediaStreamConstraints) {
+    this.client.setMediaConstraints(media);
+  }
+
   bindClientEvents() {
     this.client.unbind();
 
