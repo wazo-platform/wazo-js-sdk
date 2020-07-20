@@ -271,13 +271,17 @@ export default class Contact {
   }
 
   static manyGraphQlWithNumbersParser(numbers: string[]): Function {
-    return function (response: ContactsGraphQlResponse) {
-      return response.data.me.contacts.edges.map((edge, i) => new Contact({
+    return (response: ContactsGraphQlResponse) => response.data.me.contacts.edges.map((edge, i) => {
+      if (!edge.node) {
+        return null;
+      }
+
+      return new Contact({
         name: `${edge.node.firstname || ''} ${edge.node.lastname || ''}`,
         number: numbers[i],
         backend: edge.node.wazoBackend,
-      }))
-    };
+      });
+    }).filter(contact => !!contact);
   }
 
   static fetchNumbers(plain: ContactResponse, columns: Array<?string>): Array<string> {
