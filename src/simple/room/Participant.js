@@ -183,7 +183,7 @@ class Participant extends Emitter {
     }
     this.screensharing = false;
 
-    this.triggerUpdate(this.ON_STOP_TALKING, broadcast);
+    this.triggerUpdate(this.ON_STOP_SCREENSHARING, broadcast);
   }
 
   getStatus() {
