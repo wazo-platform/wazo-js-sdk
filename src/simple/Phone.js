@@ -37,6 +37,12 @@ class Phone extends Emitter {
     const options = rawOptions;
     if (this.phone) {
       // Already connected
+
+      // let's update media constraints if they're being fed
+      if (rawOptions.media) {
+        this.phone.setMediaConstraints(rawOptions.media);
+      }
+
       return;
     }
 
