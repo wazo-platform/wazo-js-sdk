@@ -40,17 +40,18 @@
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
-    "sip.js": "^0.15.11",
     "events": "^3.1.0",
     "fstream": "^1.0.12",
     "globby": "^11.0.0",
     "google-libphonenumber": "^3.2.7",
     "js-base64": "^2.5.2",
+    "json-to-graphql-query": "^2.0.0",
     "jsrsasign": "^8.0.12",
     "moment": "^2.24.0",
     "node-fetch": "^2.6.0",
     "reconnecting-websocket": "^4.4.0",
     "sdp-transform": "^2.14.0",
+    "sip.js": "^0.15.11",
     "webrtc-adapter": "^7.5.1"
   },
   "devDependencies": {

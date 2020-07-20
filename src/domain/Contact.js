@@ -63,6 +63,24 @@ export type ContactPersonalResponse = {
   favorited: boolean,
 };
 
+export type ContactsGraphQlResponse = {
+  data: {
+    me: {
+      contacts: {
+        edges: Array<{
+          node: {
+            firstname?: string,
+            lastname?: string,
+            wazoReverse?: string,
+            wazoSourceName?: string,
+            wazoBackend?: string,
+          },
+        }>,
+      },
+    },
+  },
+};
+
 // @see: https://github.com/rt2zz/react-native-contacts#example-contact-record
 export type ContactMobileResponse = {
   recordID: string,
@@ -250,6 +268,16 @@ export default class Contact {
 
   static parseMany(response: ContactsResponse): Array<Contact> {
     return response.results.map(r => Contact.parse(r, response.column_types));
+  }
+
+  static manyGraphQlWithNumbersParser(numbers: string[]): Function {
+    return function (response: ContactsGraphQlResponse) {
+      return response.data.me.contacts.edges.map((edge, i) => new Contact({
+        name: `${edge.node.firstname || ''} ${edge.node.lastname || ''}`,
+        number: numbers[i],
+        backend: edge.node.wazoBackend,
+      }))
+    };
   }
 
   static fetchNumbers(plain: ContactResponse, columns: Array<?string>): Array<string> {
