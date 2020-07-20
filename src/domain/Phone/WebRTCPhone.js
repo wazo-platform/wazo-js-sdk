@@ -93,6 +93,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   currentScreenShare: Object;
 
+  shouldSendReinvite: boolean;
+
   constructor(
     client: WazoWebRTCClient,
     audioOutputDeviceId: ?string,
@@ -111,6 +113,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.incomingSessions = [];
     this.ringingEnabled = true;
     this.shouldRegisterAgain = true;
+    this.shouldSendReinvite = false;
 
     this.bindClientEvents();
 
@@ -511,6 +514,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return null;
     }
 
+    this.shouldSendReinvite = false;
     this.acceptedSessions[callSession.getId()] = true;
 
     this.eventEmitter.emit(ON_CALL_ANSWERED, callSession);
@@ -531,6 +535,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return;
     }
 
+    this.shouldSendReinvite = false;
     this.rejectedSessions[callSession.getId()] = true;
 
     const sipSession = this._findSipSession(callSession);
@@ -738,6 +743,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
     if (callSession) {
       this.endCurrentCall(callSession);
     }
+
+    this.shouldSendReinvite = false;
   }
 
   async hangupConference(participants: CallSession[]): Promise<void> {
@@ -909,6 +916,17 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.on('registered', () => {
       this.stopHeartbeat();
       this.eventEmitter.emit(ON_REGISTERED);
+
+      // If the phone registered with a current callSession (eg: when switching network):
+      // send a reinvite to renegociate ICE with new IP
+      if (this.shouldSendReinvite && this.currentSipSession) {
+        this.shouldSendReinvite = false;
+        try {
+          this.sendReinvite();
+        } catch (e) {
+          IssueReporter.log(IssueReporter.ERROR, `[WebRtcPhone] Reinvite error : ${e.message} (${e.stack})`);
+        }
+      }
     });
 
     this.client.on('connected', () => {
@@ -922,6 +940,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
       if (!this.client.hasHeartbeat()) {
         this.startHeartbeat();
       }
+
+      // Tell to send reinvite when reconnecting
+      this.shouldSendReinvite = true;
     });
   }
 
