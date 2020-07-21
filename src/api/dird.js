@@ -125,6 +125,12 @@ export default (client: ApiRequester, baseUrl: string) => ({
               lastname: true,
               wazoReverse: true,
               wazoBackend: true,
+              wazoSourceEntryId: true,
+              wazoSourceName: true,
+              wazoSourceId: true,
+              '... on WazoContact': {
+                userUuid: true,
+              },
             },
           },
         },
