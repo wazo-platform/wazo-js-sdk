@@ -1,4 +1,6 @@
 /* @flow */
+import { jsonToGraphQLQuery } from 'json-to-graphql-query/lib/jsonToGraphQLQuery';
+
 import ApiRequester from '../utils/api-requester';
 import type { UUID } from '../domain/types';
 import Contact from '../domain/Contact';
@@ -107,4 +109,36 @@ export default (client: ApiRequester, baseUrl: string) => ({
       .get(`${baseUrl}/backends/conference/sources/${source.uuid}/contacts`)
       .then(response => Contact.parseManyConference(response.items, source));
   },
+
+  // Graphql
+  findMultipleContactsByNumber: (numbers: string[], fields: Object = null): Promise<Contact[]> => {
+    const query = jsonToGraphQLQuery({
+      me: {
+        contacts: {
+          __args: {
+            profile: 'default',
+            extens: numbers,
+          },
+          edges: {
+            node: fields || {
+              firstname: true,
+              lastname: true,
+              wazoReverse: true,
+              wazoBackend: true,
+              wazoSourceEntryId: true,
+              wazoSourceName: true,
+              wazoSourceId: true,
+              '... on WazoContact': {
+                userUuid: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return client.post(`${baseUrl}/graphql`, { query: `{${query}}` })
+      .then(Contact.manyGraphQlWithNumbersParser(numbers));
+  },
+
 });
