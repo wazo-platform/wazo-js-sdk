@@ -25,6 +25,7 @@ class Room extends Emitter {
   localParticipant: ?Participant;
   _callIdStreamIdMap: Object;
   _unassociatedVideoStreams: Object;
+  _unassociatedParticipants: Object;
   _boundOnParticipantJoined: Function;
   _boundOnParticipantLeft: Function;
   _boundOnScreenshareEnded: Function;
@@ -76,6 +77,8 @@ class Room extends Emitter {
     this._callIdStreamIdMap = {};
     // Stream not yet associated to a participant, [streamId]: stream
     this._unassociatedVideoStreams = {};
+    // Participant not yet associated to a stream, [participant.callId = label in setDescription]: Participant
+    this._unassociatedParticipants = {};
 
     // The shared audio stream of the room
     this.audioStream = null;
@@ -267,7 +270,13 @@ class Room extends Emitter {
       }));
 
       labelMsidArray.forEach(({ label, msid }) => {
+
         this._callIdStreamIdMap[String(label)] = msid;
+
+        const participant = this._unassociatedParticipants[String(label)];
+        if (participant) {
+          this.__associateStreams(participant);
+        }
       });
     });
 
@@ -286,6 +295,12 @@ class Room extends Emitter {
     this.on(this.ON_VIDEO_STREAM, (stream, streamId) => {
       // ON_VIDEO_STREAM is called before PARTICIPANT_JOINED, so we have to keep stream in `_unassociatedVideoStreams`.
       this._unassociatedVideoStreams[streamId] = stream;
+
+      const callId = this._getCallIdFromStreamId(streamId);
+      const participant = callId ? this._getParticipantFromCallId(callId) : null;
+      if (participant) {
+        this.__associateStreams(participant);
+      }
     });
 
     this.on(this.ON_REMOVE_STREAM, stream => {
@@ -481,6 +496,11 @@ class Room extends Emitter {
   // Associate audio/video streams to the participant and triggers events on it
   __associateStreams(participant: Participant) {
     const streamId = this._callIdStreamIdMap[participant.callId];
+    if (!streamId) {
+      this._unassociatedParticipants[participant.callId] = participant;
+
+      return;
+    }
     if (!streamId || !participant || !this.localParticipant || participant.callId === this.localParticipant.callId) {
       return;
     }
@@ -494,6 +514,7 @@ class Room extends Emitter {
       participant.onStreamSubscribed(stream);
 
       delete this._unassociatedVideoStreams[streamId];
+      delete this._unassociatedParticipants[participant.callId];
     }
   }
 
