@@ -433,7 +433,9 @@ export default class WebRTCClient extends Emitter {
       this.audioStreams[this.getSipSessionId(session)] = { localAudioSource, remoteAudioSource };
 
       const sender = pc.getSenders().filter(s => s.track.kind === 'audio')[0];
-      sender.replaceTrack(audioPeerDestination.stream.getAudioTracks()[0]);
+      if (sender) {
+        sender.replaceTrack(audioPeerDestination.stream.getAudioTracks()[0]);
+      }
     };
 
     if (session.localHold && !this.isFirefox()) {
@@ -575,7 +577,9 @@ export default class WebRTCClient extends Emitter {
         const audioTrack = stream.getAudioTracks()[0];
         const sender = pc.getSenders().find(s => s.track.kind === audioTrack.kind);
 
-        sender.replaceTrack(audioTrack);
+        if (sender) {
+          sender.replaceTrack(audioTrack);
+        }
       });
     }
   }
@@ -595,19 +599,21 @@ export default class WebRTCClient extends Emitter {
         const videoTrack = stream.getVideoTracks()[0];
         const sender = pc.getSenders().find(s => s.track.kind === videoTrack.kind);
 
-        sender.replaceTrack(videoTrack);
+        if (sender) {
+          sender.replaceTrack(videoTrack);
+        }
       });
     }
   }
 
   getAudioDeviceId(): ?string {
     // $FlowFixMe
-    return this.audio && 'deviceId' in this.audio ? this.audio.deviceId.exact : null;
+    return typeof this.audio === 'object' && 'deviceId' in this.audio ? this.audio.deviceId.exact : null;
   }
 
   getVideoDeviceId(): ?string {
     // $FlowFixMe
-    return this.video && 'deviceId' in this.video ? this.video.deviceId.exact : null;
+    return typeof this.video === 'object' && 'deviceId' in this.video ? this.video.deviceId.exact : null;
   }
 
   changeVideo(enabled: boolean) {
