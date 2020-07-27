@@ -58,6 +58,10 @@ export default class Line {
   }
 
   hasExtension(extension: string) {
+    if (!this.extensions) {
+      return false;
+    }
+
     return this.extensions.some(ext => ext.exten === extension);
   }
 

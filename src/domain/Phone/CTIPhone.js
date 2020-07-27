@@ -216,5 +216,7 @@ export default class CTIPhone extends Emitter implements Phone {
 
   enableRinging() {}
 
+  sendMessage() {}
+
   disableRinging() {}
 }

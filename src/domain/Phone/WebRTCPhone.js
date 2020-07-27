@@ -345,7 +345,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const sender = pc.getSenders().find(s => s.track.kind === 'video');
     const localStream = this.client.getLocalStream(pc);
 
-    sender.replaceTrack(screenTrack);
+    if (sender) {
+      sender.replaceTrack(screenTrack);
+    }
 
     screenTrack.onended = () => this.eventEmitter.emit(ON_SHARE_SCREEN_ENDED);
 
