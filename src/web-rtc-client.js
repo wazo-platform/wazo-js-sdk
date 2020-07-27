@@ -580,6 +580,12 @@ export default class WebRTCClient extends Emitter {
         if (sender) {
           sender.replaceTrack(audioTrack);
         }
+
+        // let's update the local value
+        if (this.audio && this.audio.deviceId) {
+          // $FlowFixMe
+          this.audio.deviceId.exact = id;
+        }
       });
     }
   }
@@ -601,6 +607,12 @@ export default class WebRTCClient extends Emitter {
 
         if (sender) {
           sender.replaceTrack(videoTrack);
+        }
+
+        // let's update the local value
+        if (this.video && this.video.deviceId) {
+          // $FlowFixMe
+          this.video.deviceId.exact = id;
         }
       });
     }
