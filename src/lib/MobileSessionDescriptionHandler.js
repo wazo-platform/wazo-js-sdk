@@ -384,7 +384,7 @@ export default SIPMethods =>
           throw error;
         })
         .then(function onSetLocalDescriptionSuccess() {
-          return self.waitForIceGatheringComplete();
+          return self.waitForIceGatheringComplete(RTCOfferOptions && RTCOfferOptions.iceRestart);
         })
         .then(function readySuccess() {
           var localDescription = self.createRTCSessionDescriptionInit(self.peerConnection.localDescription);
@@ -503,9 +503,10 @@ export default SIPMethods =>
             'ICE candidate received: ' + (e.candidate.candidate === null ? null : e.candidate.candidate.trim())
           );
         } else if (e.candidate === null) {
+          // We don't have to use this
           // indicates the end of candidate gathering
-          self.logger.log('ICE candidate gathering complete');
-          self.triggerIceGatheringComplete();
+          // self.logger.log('ICE candidate gathering complete');
+          // self.triggerIceGatheringComplete();
         }
       };
 
@@ -738,8 +739,8 @@ export default SIPMethods =>
       }
     }
 
-    waitForIceGatheringComplete() {
-      if (this.isIceGatheringComplete()) {
+    waitForIceGatheringComplete(restart = false) {
+      if (!restart && this.isIceGatheringComplete()) {
         return Promise.resolve();
       } else if (!this.isIceGatheringDeferred) {
         this.iceGatheringDeferred = SIPMethods.Utils.defer();
