@@ -72,7 +72,7 @@ class Phone extends Emitter {
       password: this.sipLine.secret,
       uri: `${this.sipLine.username}@${server}`,
       ...options,
-    });
+    }, null, options.uaConfigOverrides);
 
     this.phone = new WebRTCPhone(this.client, options.audioDeviceOutput, true, options.audioDeviceRing);
 
