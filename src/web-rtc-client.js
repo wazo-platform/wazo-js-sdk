@@ -620,12 +620,12 @@ export default class WebRTCClient extends Emitter {
 
   getAudioDeviceId(): ?string {
     // $FlowFixMe
-    return typeof this.audio === 'object' && 'deviceId' in this.audio ? this.audio.deviceId.exact : null;
+    return this.audio && typeof this.audio === 'object' && 'deviceId' in this.audio ? this.audio.deviceId.exact : null;
   }
 
   getVideoDeviceId(): ?string {
     // $FlowFixMe
-    return typeof this.video === 'object' && 'deviceId' in this.video ? this.video.deviceId.exact : null;
+    return this.video && typeof this.video === 'object' && 'deviceId' in this.video ? this.video.deviceId.exact : null;
   }
 
   changeVideo(enabled: boolean) {
