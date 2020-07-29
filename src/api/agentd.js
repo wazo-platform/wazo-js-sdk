@@ -14,6 +14,14 @@ export default (client: ApiRequester, baseUrl: string) => ({
       ApiRequester.successResponseParser,
     ),
 
+  loginWithLineId: (lineId: number) =>
+    client.post(
+      `${baseUrl}/users/me/agents/login`,
+      { line_id: lineId },
+      null,
+      ApiRequester.successResponseParser,
+    ),
+
   logout: (agentNumber: string) =>
     client.post(
       `${baseUrl}/agents/by-number/${agentNumber}/logoff`,
