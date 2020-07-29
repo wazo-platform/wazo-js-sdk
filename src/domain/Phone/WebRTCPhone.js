@@ -185,7 +185,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   startHeartbeat() {
-    if (!this.client) {
+    if (!this.client || this.client.hasHeartbeat()) {
       return;
     }
 
@@ -198,6 +198,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     this.client.stopHeartbeat();
+  }
+
+  setOnHeartbeatTimeout(cb: Function) {
+    this.client.setOnHeartbeatTimeout(cb);
   }
 
   getOptions(): AvailablePhoneOptions {
