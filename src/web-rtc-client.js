@@ -625,7 +625,7 @@ export default class WebRTCClient extends Emitter {
 
   getVideoDeviceId(): ?string {
     // $FlowFixMe
-    return this.audio && typeof this.video === 'object' && 'deviceId' in this.video ? this.video.deviceId.exact : null;
+    return this.video && typeof this.video === 'object' && 'deviceId' in this.video ? this.video.deviceId.exact : null;
   }
 
   changeVideo(enabled: boolean) {
