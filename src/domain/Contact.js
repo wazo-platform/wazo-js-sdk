@@ -75,8 +75,6 @@ export type ContactsGraphQlResponse = {
             wazoSourceName?: string,
             wazoBackend?: string,
             wazoSourceEntryId?: string,
-            wazoSourceName?: string,
-            wazoSourceId?: string,
             userUuid?: string,
           },
         }>,
