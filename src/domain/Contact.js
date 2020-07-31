@@ -281,6 +281,7 @@ export default class Contact {
       return new Contact({
         name: `${edge.node.firstname || ''} ${edge.node.lastname || ''}`,
         number: numbers[i],
+        numbers: [{ label: 'primary', number: numbers[i] }],
         backend: edge.node.wazoBackend,
         source: edge.node.wazoSourceName,
         sourceId: edge.node.wazoSourceEntryId,
