@@ -614,6 +614,9 @@ export default class WebRTCClient extends Emitter {
           // $FlowFixMe
           this.video.deviceId.exact = id;
         }
+
+        // let's update the local stream
+        this._addLocalToVideoSession(this.getSipSessionId(session), stream);
       });
     }
   }
