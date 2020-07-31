@@ -95,6 +95,7 @@ export default class WebRTCClient extends Emitter {
   connectionPromise: ?Promise<void>;
   _boundOnHeartbeat: Function;
   heartbeat: Heartbeat;
+  heartbeatTimeoutCb: ?Function;
 
   static isAPrivateIp(ip: string): boolean {
     const regex = /^(?:10|127|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\..*/;
@@ -759,6 +760,10 @@ export default class WebRTCClient extends Emitter {
     this.heartbeat.stop();
   }
 
+  setOnHeartbeatTimeout(cb: Function) {
+    this.heartbeatTimeoutCb = cb;
+  }
+
   _onHeartbeat(message: string) {
     if (message.indexOf('200 OK') !== -1) {
       this.heartbeat.onHeartbeat();
@@ -766,6 +771,10 @@ export default class WebRTCClient extends Emitter {
   }
 
   async _onHeartbeatTimeout() {
+    if (this.heartbeatTimeoutCb) {
+      this.heartbeatTimeoutCb();
+    }
+
     if (this.userAgent.transport) {
       // Disconnect from WS and triggers events
       this.userAgent.transport.disconnect({ force: true });

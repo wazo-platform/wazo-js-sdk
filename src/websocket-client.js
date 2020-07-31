@@ -307,11 +307,12 @@ class WebSocketClient extends Emitter {
   }
 
   async _onHeartbeatTimeout() {
-    this.close();
-    this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE, new Error('Websocket ping failure.'));
     if (this.onHeartBeatTimeout) {
       this.onHeartBeatTimeout();
     }
+
+    this.close();
+    this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE, new Error('Websocket ping failure.'));
   }
 }
 
