@@ -490,11 +490,19 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   getLocalStreamForCall(callSession: CallSession): boolean {
-    return this.client.videoSessions[callSession.getId()].local;
+    if (!callSession) {
+      return false;
+    }
+    return this.client.videoSessions[callSession.getId()]
+      && this.client.videoSessions[callSession.getId()].local;
   }
 
   getRemoteStreamForCall(callSession: CallSession): boolean {
-    return this.client.videoSessions[callSession.getId()].remotes[0];
+    if (!callSession) {
+      return false;
+    }
+    return this.client.videoSessions[callSession.getId()]
+      && this.client.videoSessions[callSession.getId()].remotes[0];
   }
 
   startConference(participants: CallSession[]) {

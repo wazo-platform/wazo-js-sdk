@@ -615,6 +615,9 @@ export default class WebRTCClient extends Emitter {
           // $FlowFixMe
           this.video.deviceId.exact = id;
         }
+
+        // let's update the local stream
+        this._addLocalToVideoSession(this.getSipSessionId(session), stream);
       });
     }
   }
@@ -1051,6 +1054,7 @@ export default class WebRTCClient extends Emitter {
   _cleanupMedia(session: ?SIP.sessionDescriptionHandler) {
     const sessionId = this.getSipSessionId(session);
     if (session && sessionId in this.videoSessions) {
+      this.videoSessions[this.getSipSessionId(session)].local.getTracks().forEach(track => track.stop());
       delete this.videoSessions[this.getSipSessionId(session)];
     }
 
