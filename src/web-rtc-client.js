@@ -1045,6 +1045,7 @@ export default class WebRTCClient extends Emitter {
   _cleanupMedia(session: ?SIP.sessionDescriptionHandler) {
     const sessionId = this.getSipSessionId(session);
     if (session && sessionId in this.videoSessions) {
+      this.videoSessions[this.getSipSessionId(session)].local.getTracks().forEach(track => track.stop());
       delete this.videoSessions[this.getSipSessionId(session)];
     }
 
