@@ -25,6 +25,7 @@ export const ON_CALL_FAILED = 'onCallFailed';
 export const ON_CALL_ENDED = 'onCallEnded';
 export const ON_MESSAGE = 'onMessage';
 export const ON_REINVITE = 'reinvite';
+export const ON_TRACK = 'onTrack';
 export const ON_AUDIO_STREAM = 'onAudioStream';
 export const ON_VIDEO_STREAM = 'onVideoStream';
 export const ON_REMOVE_STREAM = 'onRemoveStream';
@@ -53,6 +54,7 @@ export const events = [
   ON_CALL_ENDED,
   ON_MESSAGE,
   ON_REINVITE,
+  ON_TRACK,
   ON_AUDIO_STREAM,
   ON_VIDEO_STREAM,
   ON_REMOVE_STREAM,
@@ -968,6 +970,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
       // Tell to send reinvite when reconnecting
       this.shouldSendReinvite = true;
+    });
+
+
+    this.client.on('onTrack', session => {
+      this.eventEmitter.emit(ON_TRACK, session);
     });
   }
 
