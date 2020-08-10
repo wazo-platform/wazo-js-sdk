@@ -529,7 +529,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   accept(callSession: CallSession, videoEnabled?: boolean): string | null {
     if (this.currentSipSession) {
-      this.holdSipSession(this.currentSipSession);
+      this.holdSipSession(this.currentSipSession, true);
     }
 
     if (!callSession || callSession.getId() in this.acceptedSessions) {
@@ -702,7 +702,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.client.register();
     }
     if (this.currentSipSession) {
-      this.holdSipSession(this.currentSipSession);
+      this.holdSipSession(this.currentSipSession, true);
     }
 
     let sipSession;

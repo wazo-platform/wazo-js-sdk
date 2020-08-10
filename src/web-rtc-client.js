@@ -215,10 +215,11 @@ export default class WebRTCClient extends Emitter {
 
   // eslint-disable-next-line no-unused-vars
   sessionWantsToDoVideo(session: SIP.sessionDescriptionHandler) {
-    const sdp = session.request.body;
-    const sessionHasVideo = /\r\nm=video /.test(sdp);
+    const { body } = session.request;
+    // Sometimes with InviteClientContext the body is in the body attribute ...
+    const sdp = typeof body === 'object' && body ? body.body : body;
 
-    return sessionHasVideo;
+    return /\r\nm=video /.test(sdp);
   }
 
   call(number: string, enableVideo?: boolean): SIP.InviteClientContext {
@@ -346,15 +347,19 @@ export default class WebRTCClient extends Emitter {
   }
 
   hold(session: SIP.sessionDescriptionHandler) {
+    const hasVideo = this.sessionWantsToDoVideo(session);
+    this.changeVideo(hasVideo);
     this.mute(session);
 
-    return session.hold(this._getMediaConfiguration(this.videoEnabled));
+    return session.hold(this._getMediaConfiguration(hasVideo));
   }
 
   unhold(session: SIP.sessionDescriptionHandler) {
+    const hasVideo = this.sessionWantsToDoVideo(session);
+    this.changeVideo(hasVideo);
     this.unmute(session);
 
-    return session.unhold(this._getMediaConfiguration(this.videoEnabled));
+    return session.unhold(this._getMediaConfiguration(hasVideo));
   }
 
   sendDTMF(session: SIP.sessionDescriptionHandler, tone: string) {
