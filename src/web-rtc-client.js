@@ -605,6 +605,14 @@ export default class WebRTCClient extends Emitter {
     if (session) {
       const sdh = session.sessionDescriptionHandler;
       const pc = sdh.peerConnection;
+      const localStream = this.getLocalStream(pc);
+
+      // Release old video stream
+      if (localStream) {
+        localStream.getTracks().forEach(track => {
+          track.stop();
+        });
+      }
 
       // $FlowFixMe
       navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: id } } }).then(async stream => {
