@@ -602,6 +602,10 @@ export default class WebRTCClient extends Emitter {
       return;
     }
 
+    if (this.video && typeof this.video === 'object') {
+      this.video.deviceId.exact = id;
+    }
+
     if (session) {
       const sdh = session.sessionDescriptionHandler;
       const pc = sdh.peerConnection;
