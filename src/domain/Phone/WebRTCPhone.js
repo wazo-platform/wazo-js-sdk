@@ -422,11 +422,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   changeAudioInputDevice(id: string) {
-    this.client.changeAudioInputDevice(id, this.currentSipSession);
+    return this.client.changeAudioInputDevice(id, this.currentSipSession);
   }
 
   changeVideoInputDevice(id: string) {
-    this.client.changeVideoInputDevice(id, this.currentSipSession);
+    return this.client.changeVideoInputDevice(id, this.currentSipSession);
   }
 
   _onCallTerminated(sipSession: SIP.sessionDescriptionHandler) {
