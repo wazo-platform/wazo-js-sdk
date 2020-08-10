@@ -17,7 +17,7 @@ export const ON_CALL_INCOMING = 'onCallIncoming';
 export const ON_CALL_OUTGOING = 'onCallOutgoing';
 export const ON_CALL_MUTED = 'onCallMuted';
 export const ON_CALL_UNMUTED = 'onCallUnmuted';
-export const ON_CALL_RESUMED = 'onCameraResumed';
+export const ON_CALL_RESUMED = 'onCallResumed';
 export const ON_CALL_HELD = 'onCallHeld';
 export const ON_CALL_UNHELD = 'onCallUnHeld';
 export const ON_CAMERA_DISABLED = 'onCameraDisabled';
@@ -619,13 +619,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   resume(callSession?: CallSession): void {
-    if (this.currentSipSession) {
-      this.holdSipSession(this.currentSipSession);
-    }
-
     const sipSession = this._findSipSession(callSession);
     if (!sipSession) {
       return;
+    }
+
+    // Hold current session if different from the current one (we don't want 2 sessions active at the same time).
+    if (this.currentSipSession && this.currentSipSession.id !== sipSession.id) {
+      this.holdSipSession(this.currentSipSession);
     }
 
     this.client.unhold(sipSession);
