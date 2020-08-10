@@ -1009,9 +1009,12 @@ export default class WebRTCClient extends Emitter {
     }
 
     const audio = this.audioElements[this.getSipSessionId(session)];
+    if (audio.currentTime > 0 && !audio.paused && !audio.ended && audio.readyState > 2) {
+      audio.pause();
+    }
     audio.srcObject = remoteStream;
     audio.volume = this.audioOutputVolume;
-    audio.play();
+    audio.play().catch(() => {});
   }
 
   _addAudioStream(mediaStream: MediaStream) {

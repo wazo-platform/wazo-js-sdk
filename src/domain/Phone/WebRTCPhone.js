@@ -501,8 +501,15 @@ export default class WebRTCPhone extends Emitter implements Phone {
     if (!callSession) {
       return false;
     }
-    return this.client.videoSessions[callSession.getId()]
-      && this.client.videoSessions[callSession.getId()].remotes[0];
+
+    const remotes = this.client.videoSessions[callSession.getId()]
+      && this.client.videoSessions[callSession.getId()].remotes;
+
+    if (!remotes) {
+      return false;
+    }
+
+    return remotes && remotes[remotes.length - 1];
   }
 
   startConference(participants: CallSession[]) {
