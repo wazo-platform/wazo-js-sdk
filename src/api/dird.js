@@ -125,6 +125,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
               lastname: true,
               wazoReverse: true,
               wazoBackend: true,
+              email: true,
               wazoSourceEntryId: true,
               wazoSourceName: true,
               '... on WazoContact': {

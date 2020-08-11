@@ -74,6 +74,7 @@ export type ContactsGraphQlResponse = {
             wazoReverse?: string,
             wazoSourceName?: string,
             wazoBackend?: string,
+            email?: string,
             wazoSourceEntryId?: string,
             userUuid?: string,
           },
@@ -278,6 +279,8 @@ export default class Contact {
         return null;
       }
 
+      const { email } = edge.node;
+
       return new Contact({
         name: `${edge.node.firstname || ''} ${edge.node.lastname || ''}`,
         number: numbers[i],
@@ -285,6 +288,8 @@ export default class Contact {
         backend: edge.node.wazoBackend,
         source: edge.node.wazoSourceName,
         sourceId: edge.node.wazoSourceEntryId,
+        email: email || '',
+        emails: email ? [{ label: 'primary', email }] : [],
         uuid: edge.node.userUuid,
       });
     }).filter(contact => !!contact);
