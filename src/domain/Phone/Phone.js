@@ -42,9 +42,9 @@ export interface Phone {
 
   changeRingVolume(volume: number): PhoneVoid;
 
-  changeAudioInputDevice(id: string): PhoneVoid;
+  changeAudioInputDevice(id: string): ?Promise<?MediaStream>;
 
-  changeVideoInputDevice(id: string): PhoneVoid;
+  changeVideoInputDevice(id: string): ?Promise<?MediaStream>;
 
   onConnectionMade(): PhoneVoid;
 
