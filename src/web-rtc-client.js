@@ -215,10 +215,11 @@ export default class WebRTCClient extends Emitter {
 
   // eslint-disable-next-line no-unused-vars
   sessionWantsToDoVideo(session: SIP.sessionDescriptionHandler) {
-    const sdp = session.request.body;
-    const sessionHasVideo = /\r\nm=video /.test(sdp);
+    const { body } = session.request;
+    // Sometimes with InviteClientContext the body is in the body attribute ...
+    const sdp = typeof body === 'object' && body ? body.body : body;
 
-    return sessionHasVideo;
+    return /\r\nm=video /.test(sdp);
   }
 
   call(number: string, enableVideo?: boolean): SIP.InviteClientContext {
@@ -346,15 +347,19 @@ export default class WebRTCClient extends Emitter {
   }
 
   hold(session: SIP.sessionDescriptionHandler) {
+    const hasVideo = this.sessionWantsToDoVideo(session);
+    this.changeVideo(hasVideo);
     this.mute(session);
 
-    return session.hold(this._getMediaConfiguration(this.videoEnabled));
+    return session.hold(this._getMediaConfiguration(hasVideo));
   }
 
   unhold(session: SIP.sessionDescriptionHandler) {
+    const hasVideo = this.sessionWantsToDoVideo(session);
+    this.changeVideo(hasVideo);
     this.unmute(session);
 
-    return session.unhold(this._getMediaConfiguration(this.videoEnabled));
+    return session.unhold(this._getMediaConfiguration(hasVideo));
   }
 
   sendDTMF(session: SIP.sessionDescriptionHandler, tone: string) {
@@ -566,7 +571,13 @@ export default class WebRTCClient extends Emitter {
   changeAudioInputDevice(id: string, session: ?SIP.InviteClientContext) {
     const currentId = this.getAudioDeviceId();
     if (id === currentId) {
-      return;
+      return null;
+    }
+
+    // let's update the local value
+    if (this.audio && this.audio.deviceId) {
+      // $FlowFixMe
+      this.audio.deviceId.exact = id;
     }
 
     if (session) {
@@ -574,7 +585,7 @@ export default class WebRTCClient extends Emitter {
       const pc = sdh.peerConnection;
 
       // $FlowFixMe
-      navigator.mediaDevices.getUserMedia({ audio: { deviceId: { exact: id } } }).then(async stream => {
+      return navigator.mediaDevices.getUserMedia({ audio: { deviceId: { exact: id } } }).then(async stream => {
         const audioTrack = stream.getAudioTracks()[0];
         const sender = pc.getSenders().find(s => s.track.kind === audioTrack.kind);
 
@@ -582,11 +593,7 @@ export default class WebRTCClient extends Emitter {
           sender.replaceTrack(audioTrack);
         }
 
-        // let's update the local value
-        if (this.audio && this.audio.deviceId) {
-          // $FlowFixMe
-          this.audio.deviceId.exact = id;
-        }
+        return stream;
       });
     }
   }
@@ -594,15 +601,29 @@ export default class WebRTCClient extends Emitter {
   changeVideoInputDevice(id: string, session: ?SIP.InviteClientContext) {
     const currentId = this.getVideoDeviceId();
     if (id === currentId) {
-      return;
+      return null;
+    }
+
+    // let's update the local value
+    if (this.video && this.video.deviceId) {
+      // $FlowFixMe
+      this.video.deviceId.exact = id;
     }
 
     if (session) {
       const sdh = session.sessionDescriptionHandler;
       const pc = sdh.peerConnection;
+      const localStream = this.getLocalStream(pc);
+
+      // Release old video stream
+      if (localStream) {
+        localStream.getTracks().forEach(track => {
+          track.stop();
+        });
+      }
 
       // $FlowFixMe
-      navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: id } } }).then(async stream => {
+      return navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: id } } }).then(async stream => {
         const videoTrack = stream.getVideoTracks()[0];
         const sender = pc.getSenders().find(s => s.track.kind === videoTrack.kind);
 
@@ -610,14 +631,9 @@ export default class WebRTCClient extends Emitter {
           sender.replaceTrack(videoTrack);
         }
 
-        // let's update the local value
-        if (this.video && this.video.deviceId) {
-          // $FlowFixMe
-          this.video.deviceId.exact = id;
-        }
-
         // let's update the local stream
         this._addLocalToVideoSession(this.getSipSessionId(session), stream);
+        return stream;
       });
     }
   }
@@ -986,10 +1002,12 @@ export default class WebRTCClient extends Emitter {
 
     session.sessionDescriptionHandler.on('addTrack', () => {
       this._setupRemoteMedia(session);
+      this.eventEmitter.emit('onTrack', session);
     });
 
     session.sessionDescriptionHandler.on('addStream', () => {
       this._setupRemoteMedia(session);
+      this.eventEmitter.emit('onTrack', session);
     });
 
     this.eventEmitter.emit('accepted', session);
@@ -1009,9 +1027,12 @@ export default class WebRTCClient extends Emitter {
     }
 
     const audio = this.audioElements[this.getSipSessionId(session)];
+    if (audio.currentTime > 0 && !audio.paused && !audio.ended && audio.readyState > 2) {
+      audio.pause();
+    }
     audio.srcObject = remoteStream;
     audio.volume = this.audioOutputVolume;
-    audio.play();
+    audio.play().catch(() => {});
   }
 
   _addAudioStream(mediaStream: MediaStream) {
