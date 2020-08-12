@@ -823,6 +823,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.unregister();
     this.client.close();
     this.unbind();
+
+    this.sipSessions = {};
+    this.incomingSessions = [];
+    this.currentSipSession = null;
+    this.shouldSendReinvite = false;
+    this.rejectedSessions = {};
   }
 
   isRegistered(): boolean {
