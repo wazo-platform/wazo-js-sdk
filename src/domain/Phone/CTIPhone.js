@@ -104,7 +104,7 @@ export default class CTIPhone extends Emitter implements Phone {
     this.eventEmitter.emit('onCallEnded', callSession);
   }
 
-  async hangup(callSession: CallSession): Promise<void> {
+  async hangup(callSession: CallSession): Promise<boolean> {
     try {
       await CallApi.cancelCall(callSession);
       if (this.currentCall && callSession.callId === this.currentCall.id) {
@@ -112,8 +112,10 @@ export default class CTIPhone extends Emitter implements Phone {
       }
 
       this.eventEmitter.emit('onCallEnded', callSession);
-    } catch (ex) {
+      return true;
+    } catch (_) {
       this.eventEmitter.emit('onCallFailed', callSession);
+      return false;
     }
   }
 
