@@ -2941,11 +2941,6 @@ crypto-browserify@^3.11.0:
     randombytes "^2.0.0"
     randomfill "^1.0.3"
 
-crypto-js@^3.3.0:
-  version "3.3.0"
-  resolved "https://registry.yarnpkg.com/crypto-js/-/crypto-js-3.3.0.tgz#846dd1cce2f68aacfa156c8578f926a609b7976b"
-  integrity sha512-DIT51nX0dCfKltpRiXV+/TVZq+Qq2NgF4644+K7Ttnla7zEzqc+kjJyiB96BHNyUTBxyjzRcZYpUdZa+QAqi6Q==
-
 cssom@^0.4.1:
   version "0.4.4"
   resolved "https://registry.yarnpkg.com/cssom/-/cssom-0.4.4.tgz#5a66cf93d2d0b661d80bf6a44fb65f5c2e4e0a10"
@@ -7714,14 +7709,10 @@ signal-exit@^3.0.0, signal-exit@^3.0.2:
   resolved "https://registry.yarnpkg.com/signal-exit/-/signal-exit-3.0.2.tgz#b5fdc08f1287ea1178628e415e25132b73646c6d"
   integrity sha1-tf3AjxKH6hF4Yo5BXiUTK3NkbG0=
 
-sip.js@^0.15.11:
-  version "0.15.11"
-  resolved "https://registry.yarnpkg.com/sip.js/-/sip.js-0.15.11.tgz#553151adc1cfd8e0985bed771a4534b7d263ed44"
-  integrity sha512-8sVNvQMVWRqSDGVy5Kmt6LAOrDcTYo8539e0h7xp9EtoGbRkntDuVPr9dFL/lqRK2Z6xB2xsfZe5jT2L1OcjgA==
-  dependencies:
-    crypto-js "^3.3.0"
-    events "^3.1.0"
-    tslib "^1.10.0"
+sip.js@^0.17.1:
+  version "0.17.1"
+  resolved "https://registry.yarnpkg.com/sip.js/-/sip.js-0.17.1.tgz#82d6d45939d1360726020c31731d16f0feb29cda"
+  integrity sha512-JxuPm2E4RUdmzLFpI26f0iP2A84arsXRgmfY8cbIlmK95gnZFdE8Jh1PRx8eOJlS7ACgm0WFBNL9jVEtMigh9A==
 
 sisteransi@^1.0.0:
   version "1.0.2"
@@ -8306,11 +8297,6 @@ tryer@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/tryer/-/tryer-1.0.1.tgz#f2c85406800b9b0f74c9f7465b81eaad241252f8"
   integrity sha512-c3zayb8/kWWpycWYg87P71E1S1ZL6b6IJxfb5fvsUgsf0S2MVGaDhDXXjDMpdCpfWXqptc+4mXwmiy1ypXqRAA==
-
-tslib@^1.10.0:
-  version "1.10.0"
-  resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.10.0.tgz#c3c19f95973fb0a62973fb09d90d961ee43e5c8a"
-  integrity sha512-qOebF53frne81cf0S9B41ByenJ3/IuH8yJKngAX35CmiZySA0khhkovshKK+jGCaMnVomla7gVlIcc3EvKPbTQ==
 
 tslib@^1.9.0:
   version "1.9.3"

@@ -1,7 +1,5 @@
 // @flow
 
-import SIP from 'sip.js';
-
 import ApiClient from './api-client';
 import WebRTCClient from './web-rtc-client';
 import WebSocketClient, { SOCKET_EVENTS } from './websocket-client';
@@ -88,7 +86,6 @@ export default {
   AsYouTypeFormatter,
   getDisplayableNumber,
   getCallableNumber,
-  SIP,
   WazoApiClient: ApiClient,
   WazoWebRTCClient: WebRTCClient,
   WazoWebSocketClient: WebSocketClient,

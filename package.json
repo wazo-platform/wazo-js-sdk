@@ -51,7 +51,7 @@
     "node-fetch": "^2.6.0",
     "reconnecting-websocket": "^4.4.0",
     "sdp-transform": "^2.14.0",
-    "sip.js": "^0.15.11",
+    "sip.js": "^0.17.1",
     "webrtc-adapter": "^7.5.1"
   },
   "devDependencies": {

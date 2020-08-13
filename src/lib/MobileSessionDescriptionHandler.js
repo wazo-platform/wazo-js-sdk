@@ -1,7 +1,8 @@
 /* eslint-disable */
 // @see: https://github.com/onsip/SIP.js/blob/0.13.8/src/Web/SessionDescriptionHandler.ts
 import EventEmitter from 'events';
-import { SessionDescriptionHandlerObserver } from 'sip.js/lib/Web/SessionDescriptionHandlerObserver';
+// @TODO
+// import { SessionDescriptionHandlerObserver } from 'sip.js/lib/Web/SessionDescriptionHandlerObserver';
 
 // Avoid issue with sip.js :
 // `window.addEventListener` is not a function. (In 'window.addEventListener("unload",this.unloadListener)')`
@@ -23,9 +24,9 @@ export default SIPMethods =>
      */
     static defaultFactory(session, options) {
       const logger = session.ua.getLogger('sip.invitecontext.sessionDescriptionHandler', session.id);
-      const observer = new SessionDescriptionHandlerObserver(session, options);
+      // const observer = new SessionDescriptionHandlerObserver(session, options);
 
-      return new MobileSessionDescriptionHandler(logger, observer, options);
+      return new MobileSessionDescriptionHandler(logger, null, options);
     }
 
     constructor(logger, observer, options) {
