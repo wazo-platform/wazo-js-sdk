@@ -308,7 +308,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         event.track.enabled = false;
       }
 
-      return this.eventEmitter.emit(ON_VIDEO_STREAM, stream, event.track.id);
+      return this.eventEmitter.emit(ON_VIDEO_STREAM, stream, event.track.id, event);
     };
 
     peerConnection.onremovestream = event => {
@@ -576,6 +576,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.unholdSipSession(sipSession, withEvent);
   }
 
+  atxfer(sipSession: SIP.InviteServerContext): ?Object {
+    return this.client.atxfer(sipSession);
+  }
+
   holdSipSession(sipSession: SIP.sessionDescriptionHandler, withEvent: boolean = true): void {
     if (!sipSession) {
       return;
@@ -645,7 +649,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.mute(sipSession);
 
     if (withEvent) {
-      sipSession.emit('muted', callSession);
+      sipSession.emit(ON_CALL_MUTED, callSession);
+      this.eventEmitter.emit(ON_CALL_MUTED, this._createCallSession(sipSession, callSession, { muted: true }));
     }
   }
 
@@ -658,7 +663,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.unmute(sipSession);
 
     if (withEvent) {
-      sipSession.emit('unmuted', callSession);
+      sipSession.emit(ON_CALL_UNMUTED, callSession);
+      this.eventEmitter.emit(ON_CALL_UNMUTED, this._createCallSession(sipSession, callSession, { muted: false }));
     }
   }
 
@@ -811,7 +817,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
       this.client.mute(sipSession);
       participant.mute();
-      sipSession.emit('muted', participant);
+      sipSession.emit(ON_CALL_MUTED, participant);
     });
   }
 
@@ -824,7 +830,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
       this.client.unmute(sipSession);
       participant.unmute();
-      sipSession.emit('unmuted', participant);
+      sipSession.emit(ON_CALL_UNMUTED, participant);
     });
   }
 
@@ -963,7 +969,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.on('disconnected', () => {
       this.eventEmitter.emit(ON_UNREGISTERED);
 
-      // Do not trigger heatbeat if already running
+      // Do not trigger heartbeat if already running
       if (!this.client.hasHeartbeat()) {
         this.startHeartbeat();
       }
@@ -973,8 +979,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
     });
 
 
-    this.client.on('onTrack', session => {
-      this.eventEmitter.emit(ON_TRACK, session);
+    this.client.on('onTrack', (session, event) => {
+      this.eventEmitter.emit(ON_TRACK, session, event);
     });
   }
 

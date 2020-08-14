@@ -1000,14 +1000,14 @@ export default class WebRTCClient extends Emitter {
     this._setupLocalMedia(session);
     this._setupRemoteMedia(session);
 
-    session.sessionDescriptionHandler.on('addTrack', () => {
+    session.sessionDescriptionHandler.on('addTrack', (event) => {
       this._setupRemoteMedia(session);
-      this.eventEmitter.emit('onTrack', session);
+      this.eventEmitter.emit('onTrack', session, event);
     });
 
-    session.sessionDescriptionHandler.on('addStream', () => {
+    session.sessionDescriptionHandler.on('addStream', (event) => {
       this._setupRemoteMedia(session);
-      this.eventEmitter.emit('onTrack', session);
+      this.eventEmitter.emit('onTrack', session, event);
     });
 
     this.eventEmitter.emit('accepted', session);
