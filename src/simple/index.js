@@ -7,6 +7,7 @@ import RemoteParticipant from './room/RemoteParticipant';
 import LocalParticipant from './room/LocalParticipant';
 import Stream from './room/Stream';
 import Directory from './Directory';
+import getApiClient from '../service/getApiClient';
 import { createLocalVideoStream, createLocalAudioStream } from './utils';
 
 import BadResponse from '../domain/BadResponse';
@@ -40,6 +41,7 @@ const Wazo = {
   createLocalVideoStream,
   createLocalAudioStream,
   Directory,
+  getApiClient,
 
   // Domain
   domain: {

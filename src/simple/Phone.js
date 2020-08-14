@@ -122,6 +122,18 @@ class Phone extends Emitter {
     return this.phone && this.phone.unhold(callSession);
   }
 
+  reject(callSession: CallSession) {
+    return this.phone && this.phone.reject(callSession);
+  }
+
+  transfer(callSession: CallSession, target: string) {
+    return this.phone && this.phone.transfer(callSession, target);
+  }
+
+  atxfer(sipSession: SIP.sessionDescriptionHandler) {
+    return this.phone && this.phone.atxfer(sipSession);
+  }
+
   sendMessage(body: string, sipSession: SIP.sessionDescriptionHandler = null, contentType: string = 'text/plain') {
     const toSipSession = sipSession || this.getCurrentSipSession();
     if (!toSipSession || !this.phone) {
@@ -174,6 +186,10 @@ class Phone extends Emitter {
     const stream = this.phone.client.videoSessions[callSession.getId()];
 
     return stream ? stream.local : null;
+  }
+
+  getRemoteStreamForCall(callSession: CallSession) {
+    return this.phone && this.phone.getRemoteStreamForCall(callSession);
   }
 
   getCurrentSipSession() {
