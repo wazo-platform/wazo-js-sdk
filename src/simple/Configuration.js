@@ -1,16 +1,18 @@
 // @flow
+import Auth from './Auth';
 import getApiClient from '../service/getApiClient';
 
 class Configuration {
 
   async getCurrentUser() {
-    return getApiClient().confd.getUser(Wazo.Auth.getSession().uuid);
+    const session = Auth.getSession();
+    return getApiClient().confd.getUser(session ? session.uuid : '');
   }
 
 }
 
 if (!global.wazoConfigurationInstance) {
-    global.wazoConfigurationInstance = new Configuration();
+  global.wazoConfigurationInstance = new Configuration();
 }
 
 export default global.wazoConfigurationInstance;

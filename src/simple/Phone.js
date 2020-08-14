@@ -80,8 +80,6 @@ class Phone extends Emitter {
     this.phone = new WebRTCPhone(this.client, options.audioDeviceOutput, true, options.audioDeviceRing);
 
     this._transferEvents();
-
-    await this.client.waitForRegister();
   }
 
   disconnect() {
