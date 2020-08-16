@@ -2,6 +2,7 @@
 import type Inviter from 'sip.js/lib/api/inviter';
 import type Invitation from 'sip.js/lib/api/invitation';
 import type { Message } from 'sip.js/lib/api/message';
+import { SessionState } from 'sip.js/lib/api/session-state';
 
 import type SipLine from '../domain/SipLine';
 import type Session from '../domain/Session';
@@ -22,6 +23,7 @@ class Phone extends Emitter {
 
   ON_CHAT: string;
   ON_SIGNAL: string;
+  SessionState: Object;
 
   constructor() {
     super();
@@ -34,6 +36,7 @@ class Phone extends Emitter {
 
     this.ON_CHAT = 'phone/ON_CHAT';
     this.ON_SIGNAL = 'phone/ON_SIGNAL';
+    this.SessionState = SessionState;
   }
 
   async connect(rawOptions: Object = {}, sipLine: ?SipLine = null) {

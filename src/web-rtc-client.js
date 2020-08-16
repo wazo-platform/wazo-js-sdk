@@ -17,6 +17,7 @@ import { Messager } from 'sip.js/lib/api/messager';
 import { RegistererState } from 'sip.js/lib/api/registerer-state';
 import { SessionState } from 'sip.js/lib/api/session-state';
 import { UserAgentState } from 'sip.js/lib/api/user-agent-state';
+import { holdModifier } from 'sip.js/lib/platform/web/modifiers';
 
 import Emitter from './utils/Emitter';
 import ApiClient from './api-client';
@@ -323,7 +324,7 @@ export default class WebRTCClient extends Emitter {
   hangup(session: Session) {
     try {
       this._cleanupMedia(session);
-      const { status } = session;
+      const { state } = session;
 
       if (this.getSipSessionId(session) in this.audioStreams) {
         this.removeFromMerge(session);
@@ -332,53 +333,21 @@ export default class WebRTCClient extends Emitter {
       this._cleanupMedia(session);
 
       // Check if Invitation or Inviter (Invitation = incoming call)
-      const isInviter = typeof session.cancel !== 'undefined';
-
-      const cancel = () => {
-        session.cancel();
-      };
-
-      // @TODO
-      // const reject = () => {
-      //   // eslint-disable-next-line
-      //   if (!session._canceled) {
-      //     session.reject();
-      //   }
-      // };
-
+      const isInviter = session instanceof Inviter;
+      const cancel = () => session.cancel();
+      const reject = () => session.reject();
       const bye = () => session.bye && session.bye();
 
-      // @TODO
+      // @see github.com/onsip/SIP.js/blob/f11dfd584bc9788ccfc94e03034020672b738975/src/platform/web/simple-user/simple-user.ts#L1004
       const actions = {
-        // Status 2 (STATUS_1XX_RECEIVED) : cancel
-        // [SessionStatus.STATUS_1XX_RECEIVED]: isInviter ? cancel : reject,
-        // // Status 4 (STATUS_WAITING_FOR_ANSWER) : cancel
-        // [SessionStatus.STATUS_WAITING_FOR_ANSWER]: isISC ? cancel : reject,
-        // // Status 8 (STATUS_CANCELED) : nothing to do
-        // [SessionStatus.STATUS_CANCELED]: null,
-        // // Status 9 (STATUS_TERMINATED): nothing to do
-        // [SessionStatus.STATUS_TERMINATED]: null,
-        // // Status 10 (STATUS_ANSWERED_WAITING_FOR_PRACK): bye
-        // [SessionStatus.STATUS_ANSWERED_WAITING_FOR_PRACK]: bye, // bye is the same for sdh ou isc
-        // // Status 12 (STATUS_CONFIRMED): bye
-        // [SessionStatus.STATUS_CONFIRMED]: bye, // bye is the same for sdh ou isc
+        [SessionState.Initial]: isInviter ? cancel : reject,
+        [SessionState.Establishing]: isInviter ? cancel : reject,
+        [SessionState.Established]: bye,
       };
 
       // Handle different session status
-      if (actions[status]) {
-        return actions[status]();
-      }
-
-      // For InviteServerContext
-      if (isInviter) {
-        if (session.hasAnswer && session.bye) {
-          return session.bye();
-        }
-
-        // For InviteServerContext
-        if (!session.hasAnswer) {
-          return cancel();
-        }
+      if (actions[state]) {
+        return actions[state]();
       }
 
       return bye();
@@ -467,9 +436,7 @@ export default class WebRTCClient extends Emitter {
 
     const options = {
       ...this._getMediaConfiguration(hasVideo),
-      sessionDescriptionHandlerModifiers: [
-        description => session.sessionDescriptionHandler.holdModifier(description),
-      ],
+      sessionDescriptionHandlerModifiers: [holdModifier],
     };
 
     // Send re-INVITE
@@ -485,8 +452,15 @@ export default class WebRTCClient extends Emitter {
 
     delete this.heldSessions[this.getSipSessionId(session)];
 
+    const options = {
+      ...this._getMediaConfiguration(hasVideo),
+      // We should sent an empty `sessionDescriptionHandlerModifiers` or sip.js will take the last sent modifiers
+      // (eg: holdModifier)
+      sessionDescriptionHandlerModifiers: [],
+    };
+
     // Send re-INVITE
-    return session.invite(this._getMediaConfiguration(hasVideo)).then(() => {
+    return session.invite(options).then(() => {
       this.unmute(session);
     });
   }
