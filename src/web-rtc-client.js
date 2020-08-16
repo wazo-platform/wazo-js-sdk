@@ -8,6 +8,7 @@ import type { IncomingResponse } from 'sip.js/lib/core/messages/incoming-respons
 import type { Message } from 'sip.js/lib/api/message';
 import type { Session } from 'sip.js/lib/core/session';
 import type { SessionDialog } from 'sip.js/lib/core/dialogs/session-dialog';
+import type { IncomingRequestMessage } from 'sip.js/lib/core/messages/incoming-request-message';
 
 import { UserAgent } from 'sip.js/lib/api/user-agent';
 import { stripVideo } from 'sip.js/lib/platform/web/modifiers/modifiers';
@@ -214,13 +215,12 @@ export default class WebRTCClient extends Emitter {
         }
       },
       onInvite: (invitation: Invitation) => {
-        this._setupInviter(invitation);
+        this._setupSession(invitation);
 
         // @TODO
         const shouldAutoAnswer = !!invitation.request.getHeader('alert-info');
 
         this.eventEmitter.emit(INVITE, invitation, this.sessionWantsToDoVideo(invitation), shouldAutoAnswer);
-        invitation.accept();
       },
       onMessage: (message: Message) => {
         this.eventEmitter.emit(MESSAGE, message);
@@ -267,7 +267,6 @@ export default class WebRTCClient extends Emitter {
       });
 
       return this.registerer.register().catch((e) => {
-        console.log('register error', e);
         this.eventEmitter.emit(REGISTRATION_FAILED);
         return e;
       });
@@ -299,7 +298,7 @@ export default class WebRTCClient extends Emitter {
 
     const session = new Inviter(this.userAgent, UserAgent.makeURI(`sip:${number}@${this.config.host}`));
 
-    this._setupInviter(session);
+    this._setupSession(session);
 
     const inviteOptions: InviterInviteOptions = {
       requestDelegate: {
@@ -316,7 +315,7 @@ export default class WebRTCClient extends Emitter {
     return session.invite(inviteOptions).then(() => session);
   }
 
-  answer(session: Session, enableVideo?: boolean) {
+  answer(session: Invitation, enableVideo?: boolean) {
     this.changeVideo(enableVideo || false);
     return session.accept(this._getMediaConfiguration(enableVideo || false));
   }
@@ -1045,12 +1044,23 @@ export default class WebRTCClient extends Emitter {
   }
 
   // Invitation and Inviter extends Session
-  _setupInviter(session: Session) {
+  _setupSession(session: Session) {
     session.stateChange.addListener((newState: SessionState) => {
       if (newState === SessionState.Terminated && this.getSipSessionId(session) in this.audioStreams) {
         this.removeFromMerge(session);
       }
     });
+
+    // When receiving an Invitation, the delegate is not defined.
+    if (!session.delegate) {
+      session.delegate = {};
+    }
+
+    session.delegate.onInvite = (inviteRequest: IncomingRequestMessage) => {
+      const updatedCalleeName = session.assertedIdentity && session.assertedIdentity.displayName;
+
+      return this.eventEmitter.emit(ON_REINVITE, session, inviteRequest, updatedCalleeName);
+    };
   }
 
   _onAccepted(inviter: Inviter, session: SessionDialog) {
@@ -1060,19 +1070,6 @@ export default class WebRTCClient extends Emitter {
     inviter.sessionDescriptionHandler.remoteMediaStream.onaddtrack = event => {
       this._setupRemoteMedia(inviter);
       this.eventEmitter.emit(ON_TRACK, session, event);
-    };
-
-    session.delegate.onInvite = (inviteRequest) => {
-      // @TODO
-      console.log('reinvite', inviteRequest);
-      // const { label, msid } = this._parseSDP(message.data);
-      // let updatedCalleeName = message.getHeader('P-Asserted-Identity');
-      // if (updatedCalleeName) {
-      //   // eslint-disable-next-line
-      //   updatedCalleeName = updatedCalleeName.split('"')[1];
-      // }
-      //
-      // return this.eventEmitter.emit(ON_REINVITE, session, message, label, msid, updatedCalleeName);
     };
 
     this.eventEmitter.emit(ACCEPTED, session);

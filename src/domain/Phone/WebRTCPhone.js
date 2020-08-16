@@ -534,7 +534,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     const sipSession = this._findSipSession(callSession);
     if (sipSession) {
-      this.client.reject(sipSession);
+      this.client.hangup(sipSession);
     }
   }
 
@@ -910,9 +910,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.eventEmitter.emit(ON_CALL_INCOMING, callSession, wantsToDoVideo);
     });
 
-    this.client.on('reinvite', (session: Session, message: any) => {
-
-    });
+    this.client.on(this.client.ON_REINVITE, (...args) =>
+      this.eventEmitter.emit.apply(this.eventEmitter, [this.client.ON_REINVITE, ...args]));
 
     this.client.on(this.client.ACCEPTED, () => {});
     this.client.on('ended', () => {});
