@@ -8,6 +8,8 @@ import type { IncomingResponse } from 'sip.js/lib/core/messages/incoming-respons
 import type { Session } from 'sip.js/lib/core/session';
 import type { SessionDialog } from 'sip.js/lib/core/dialogs/session-dialog';
 import type { IncomingRequestMessage } from 'sip.js/lib/core/messages/incoming-request-message';
+import type { SessionDescriptionHandlerFactoryOptions }
+  from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-factory-options';
 
 import { URI } from 'sip.js/lib/grammar/uri';
 import { UserAgent } from 'sip.js/lib/api/user-agent';
@@ -19,13 +21,18 @@ import { RegistererState } from 'sip.js/lib/api/registerer-state';
 import { SessionState } from 'sip.js/lib/api/session-state';
 import { UserAgentState } from 'sip.js/lib/api/user-agent-state';
 import { holdModifier } from 'sip.js/lib/platform/web/modifiers';
+import { defaultMediaStreamFactory }
+  from 'sip.js/lib/platform/web/session-description-handler/media-stream-factory-default';
+import { defaultPeerConnectionConfiguration }
+  from 'sip.js/lib/platform/web/session-description-handler/peer-connection-configuration-default';
+
+import WazoSessionDescriptionHandler from './lib/WazoSessionDescriptionHandler';
+import MobileSessionDescriptionHandler from './lib/MobileSessionDescriptionHandler';
 
 import Emitter from './utils/Emitter';
 import ApiClient from './api-client';
 import IssueReporter from './service/IssueReporter';
 import Heartbeat from './utils/Heartbeat';
-
-import MobileSessionDescriptionHandler from './lib/MobileSessionDescriptionHandler';
 
 // Number of times to attempt reconnection before giving up
 const reconnectionAttempts = 50;
@@ -475,7 +482,10 @@ export default class WebRTCClient extends Emitter {
   }
 
   sendDTMF(session: Inviter, tone: string) {
-    return session.dtmf(tone);
+    if (!session.sessionDescriptionHandler) {
+      return;
+    }
+    return session.sessionDescriptionHandler.sendDtmf(tone);
   }
 
   message(destination: string, message: string) {
@@ -997,6 +1007,22 @@ export default class WebRTCClient extends Emitter {
       logConnector: this.config.log ? this.config.log.connector : null,
       uri: this._makeURI(this.config.authorizationUser || ''),
       userAgentString: this.config.userAgentString || 'wazo-sdk',
+      sessionDescriptionHandlerFactory: (session: Session, options: SessionDescriptionHandlerFactoryOptions = {}) => {
+        const logger = session.userAgent.getLogger('sip.WazoSessionDescriptionHandler');
+
+        const iceGatheringTimeout = 'iceGatheringTimeout' in options ? options.iceGatheringTimeout : 3000;
+
+        const sdhOptions: SessionDescriptionHandlerConfiguration = {
+          ...options,
+          iceGatheringTimeout,
+          peerConnectionConfiguration: {
+            ...defaultPeerConnectionConfiguration(),
+            ...(options.peerConnectionConfiguration || {}),
+          },
+        };
+
+        return new WazoSessionDescriptionHandler(logger, defaultMediaStreamFactory(), sdhOptions);
+      },
       transportOptions: {
         traceSip: configOverrides.traceSip || false,
         wsServers: `wss://${this.config.host}:${this.config.port || 443}/api/asterisk/ws`,
