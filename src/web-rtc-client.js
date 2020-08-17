@@ -791,7 +791,17 @@ export default class WebRTCClient extends Emitter {
   }
 
   getSipSessionId(sipSession: ?Inviter): string {
-    return (sipSession && sipSession.message && sipSession.message.callId) || (sipSession && sipSession.id) || '';
+    if (!sipSession) {
+      return '';
+    }
+    if (sipSession.message && sipSession.message.callId) {
+      return sipSession.message.callId;
+    }
+    if (sipSession.outgoingRequestMessage) {
+      return sipSession.outgoingRequestMessage.callId;
+    }
+
+    return (sipSession.id || '').substr(0, 20);
   }
 
   async waitForRegister() {
