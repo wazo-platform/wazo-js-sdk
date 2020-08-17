@@ -1,6 +1,6 @@
 {
   "name": "@wazo/sdk",
-  "version": "0.33.0-rc.1",
+  "version": "0.33.0-rc.2",
   "description": "Wazo's JavaScript Software Development Kit.",
   "main": "dist/wazo-sdk.js",
   "author": "Wazo (http://wazo.io)",
@@ -37,7 +37,7 @@
     "format": "./node_modules/.bin/prettier-eslint --write \"src/**/*.js\" \"__tests__/**/*.js\" --single-quote --trailing-comma es5",
     "typecheck": "./node_modules/.bin/flow",
     "fetch-typedefs": "./node_modules/.bin/flow-typed install",
-    "prepublishOnly": "yarn build"
+    "prepublishOnly": "rm -rf lib/* && rm -rf esm/* && yarn build"
   },
   "dependencies": {
     "events": "^3.1.0",
