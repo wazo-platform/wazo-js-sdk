@@ -318,7 +318,13 @@ export default class WebRTCClient extends Emitter {
 
   answer(session: Invitation, enableVideo?: boolean) {
     this.changeVideo(enableVideo || false);
-    return session.accept(this._getMediaConfiguration(enableVideo || false));
+    const options = {
+      sessionDescriptionHandlerOptions: this._getMediaConfiguration(enableVideo || false),
+    };
+
+    return session.accept(options).then(() => {
+      this._onAccepted(session);
+    });
   }
 
   hangup(session: Session) {
@@ -1064,16 +1070,16 @@ export default class WebRTCClient extends Emitter {
     };
   }
 
-  _onAccepted(inviter: Inviter, session: SessionDialog) {
-    this._setupLocalMedia(inviter);
-    this._setupRemoteMedia(inviter);
+  _onAccepted(session: Session, sessionDialog?: SessionDialog) {
+    this._setupLocalMedia(session);
+    this._setupRemoteMedia(session);
 
-    inviter.sessionDescriptionHandler.remoteMediaStream.onaddtrack = event => {
-      this._setupRemoteMedia(inviter);
+    session.sessionDescriptionHandler.remoteMediaStream.onaddtrack = event => {
+      this._setupRemoteMedia(session);
       this.eventEmitter.emit(ON_TRACK, session, event);
     };
 
-    this.eventEmitter.emit(ACCEPTED, session);
+    this.eventEmitter.emit(ACCEPTED, session, sessionDialog);
   }
 
   _setupRemoteMedia(session: Session) {

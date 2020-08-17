@@ -240,13 +240,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
             this.audioOutputDeviceId,
             this.audioOutputVolume,
           );
-        case SessionState.Established:
-          this._onCallAccepted(sipSession, this.client.sessionHasVideo(this.client.getSipSessionId(sipSession)));
-
-          if (this.audioOutputDeviceId) {
-            this.client.changeAudioOutputDevice(this.audioOutputDeviceId);
-          }
-          return;
         case SessionState.Terminated:
           this._onCallTerminated(sipSession);
 
@@ -363,7 +356,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.removeIncomingSessions(sipSessionId);
     }
 
-    this.eventEmitter.emit(ON_CALL_ACCEPTED, callSession);
+    this.eventEmitter.emit(ON_CALL_ACCEPTED, callSession, videoEnabled);
 
     return callSession;
   }
@@ -923,7 +916,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.on(this.client.ON_REINVITE, (...args) =>
       this.eventEmitter.emit.apply(this.eventEmitter, [this.client.ON_REINVITE, ...args]));
 
-    this.client.on(this.client.ACCEPTED, () => {});
+    this.client.on(this.client.ACCEPTED, (sipSession: Session) => {
+      this._onCallAccepted(sipSession, this.client.sessionHasVideo(this.client.getSipSessionId(sipSession)));
+
+      if (this.audioOutputDeviceId) {
+        this.client.changeAudioOutputDevice(this.audioOutputDeviceId);
+      }
+    });
     this.client.on('ended', () => {});
 
     this.client.on(this.client.UNREGISTERED, () => {
