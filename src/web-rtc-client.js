@@ -9,6 +9,7 @@ import type { Message } from 'sip.js/lib/api/message';
 import type { Session } from 'sip.js/lib/core/session';
 import type { SessionDialog } from 'sip.js/lib/core/dialogs/session-dialog';
 import type { IncomingRequestMessage } from 'sip.js/lib/core/messages/incoming-request-message';
+import type { URI } from 'sip.js/lib/grammar/uri';
 
 import { UserAgent } from 'sip.js/lib/api/user-agent';
 import { stripVideo } from 'sip.js/lib/platform/web/modifiers/modifiers';
@@ -296,7 +297,7 @@ export default class WebRTCClient extends Emitter {
   call(number: string, enableVideo?: boolean): Promise<Session> {
     this.changeVideo(enableVideo || false);
 
-    const session = new Inviter(this.userAgent, UserAgent.makeURI(`sip:${number}@${this.config.host}`));
+    const session = new Inviter(this.userAgent, this._makeURI(number));
 
     this._setupSession(session);
 
@@ -473,7 +474,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   message(destination: string, message: string) {
-    const messager = new Messager(this.userAgent, UserAgent.makeURI(destination), message);
+    const messager = new Messager(this.userAgent, this._makeURI(destination), message);
 
     return messager.message();
   }
@@ -482,7 +483,7 @@ export default class WebRTCClient extends Emitter {
     this.hold(session);
 
     setTimeout(() => {
-      session.refer(target);
+      session.refer(this._makeURI(target));
       this.hangup(session);
     }, 50);
   }
@@ -491,21 +492,21 @@ export default class WebRTCClient extends Emitter {
   atxfer(session: Inviter) {
     this.hold(session);
 
-    return {
-      init: (target: string) => this.call(target),
-      complete: (newSession: Inviter) => {
-        this.unhold(session);
-
-        setTimeout(() => {
-          newSession.refer(session);
-          this.hangup(session);
-        }, 50);
+    const result: Object = {
+      newSession: null,
+      init: async (target: string) => {
+        result.newSession = await this.call(target);
       },
-      cancel: (newSession: Inviter) => {
-        this.hangup(newSession);
+      complete: () => {
+        session.refer(result.newSession);
+      },
+      cancel: () => {
+        this.hangup(result.newSession);
         this.unhold(session);
       },
     };
+
+    return result;
   }
 
   merge(sessions: Array<Inviter>): Array<Promise<boolean>> {
@@ -613,8 +614,8 @@ export default class WebRTCClient extends Emitter {
     }
 
     const core = this.userAgent.userAgentCore;
-    const fromURI = UserAgent.makeURI(this.config.host);
-    const toURI = UserAgent.makeURI(this.config.host);
+    const fromURI = this._makeURI(this.config.host);
+    const toURI = this._makeURI(this.config.host);
     const message = core.makeOutgoingRequestMessage('OPTIONS', toURI, fromURI, toURI, {});
 
     return core.request(message);
@@ -977,7 +978,7 @@ export default class WebRTCClient extends Emitter {
       logBuiltinEnabled: this.config.log ? this.config.log.builtinEnabled : null,
       logLevel: this.config.log ? this.config.log.logLevel : null,
       logConnector: this.config.log ? this.config.log.connector : null,
-      uri: UserAgent.makeURI(`sip:${this.config.authorizationUser || ''}@${this.config.host}`),
+      uri: this._makeURI(this.config.authorizationUser || ''),
       userAgentString: this.config.userAgentString || 'wazo-sdk',
       transportOptions: {
         traceSip: configOverrides.traceSip || false,
@@ -1269,4 +1270,9 @@ export default class WebRTCClient extends Emitter {
         });
     }, reconnectionAttempt === 1 ? 0 : reconnectionDelay * 1000);
   }
+
+  _makeURI(target: string): URI {
+    return UserAgent.makeURI(`sip:${target}@${this.config.host}`);
+  }
+
 }

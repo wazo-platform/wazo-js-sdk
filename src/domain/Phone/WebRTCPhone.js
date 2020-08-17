@@ -547,16 +547,26 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   hold(callSession: CallSession, withEvent: boolean = true): void {
     const sipSession = this._findSipSession(callSession);
-    this.holdSipSession(sipSession, withEvent);
+
+    if (sipSession) {
+      this.holdSipSession(sipSession, withEvent);
+    }
   }
 
   unhold(callSession: CallSession, withEvent: boolean = true): void {
     const sipSession = this._findSipSession(callSession);
-    this.unholdSipSession(sipSession, withEvent);
+
+    if (sipSession) {
+      this.unholdSipSession(sipSession, withEvent);
+    }
   }
 
-  atxfer(sipSession: Session): ?Object {
-    return this.client.atxfer(sipSession);
+  atxfer(callSession: CallSession): ?Object {
+    const sipSession = this._findSipSession(callSession);
+
+    if (sipSession) {
+      return this.client.atxfer(sipSession);
+    }
   }
 
   holdSipSession(sipSession: Session, withEvent: boolean = true): void {
