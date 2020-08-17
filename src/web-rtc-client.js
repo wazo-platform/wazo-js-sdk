@@ -10,8 +10,11 @@ import type { SessionDialog } from 'sip.js/lib/core/dialogs/session-dialog';
 import type { IncomingRequestMessage } from 'sip.js/lib/core/messages/incoming-request-message';
 import type { SessionDescriptionHandlerFactoryOptions }
   from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-factory-options';
+import type SessionDescriptionHandlerConfiguration
+  from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-configuration';
 
 import { URI } from 'sip.js/lib/grammar/uri';
+import { Parser } from 'sip.js/lib/core/messages/parser';
 import { UserAgent } from 'sip.js/lib/api/user-agent';
 import { stripVideo } from 'sip.js/lib/platform/web/modifiers/modifiers';
 import { Registerer } from 'sip.js/lib/api/registerer';
@@ -228,9 +231,11 @@ export default class WebRTCClient extends Emitter {
     };
 
     const ua = new UserAgent(webRTCConfiguration);
-    ua.transport.onMessage = (message: string) => {
+    ua.transport.onMessage = (rawMessage: string) => {
+      const message = Parser.parseMessage(rawMessage, ua.transport.logger);
+
       // We have to re-sent the message to the UA ...
-      ua.onTransportMessage(message);
+      ua.onTransportMessage(rawMessage);
       // And now do what we want with the message
       this.eventEmitter.emit(MESSAGE, message);
     };

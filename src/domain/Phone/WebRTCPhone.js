@@ -873,10 +873,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     try {
-      sipSession.sendRequest('MESSAGE', {
-        body: {
-          body,
-          contentType,
+      sipSession.message({
+        requestOptions: {
+          body: {
+            content: body,
+            contentType,
+          },
         },
       });
     } catch (e) {
