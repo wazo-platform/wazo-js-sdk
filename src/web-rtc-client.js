@@ -5,12 +5,11 @@ import 'webrtc-adapter';
 import type InviterInviteOptions from 'sip.js/lib/api/inviter-invite-options';
 import type Invitation from 'sip.js/lib/api/invitation';
 import type { IncomingResponse } from 'sip.js/lib/core/messages/incoming-response';
-import type { Message } from 'sip.js/lib/api/message';
 import type { Session } from 'sip.js/lib/core/session';
 import type { SessionDialog } from 'sip.js/lib/core/dialogs/session-dialog';
 import type { IncomingRequestMessage } from 'sip.js/lib/core/messages/incoming-request-message';
-import type { URI } from 'sip.js/lib/grammar/uri';
 
+import { URI } from 'sip.js/lib/grammar/uri';
 import { UserAgent } from 'sip.js/lib/api/user-agent';
 import { stripVideo } from 'sip.js/lib/platform/web/modifiers/modifiers';
 import { Registerer } from 'sip.js/lib/api/registerer';
@@ -28,13 +27,10 @@ import Heartbeat from './utils/Heartbeat';
 
 import MobileSessionDescriptionHandler from './lib/MobileSessionDescriptionHandler';
 
-// Declared here as SessionStatus.STATUS_CLOSING doesn't exists anymore on sip.js
-const STATUS_CLOSING = 2;
-
 // Number of times to attempt reconnection before giving up
-const reconnectionAttempts = 3;
+const reconnectionAttempts = 50;
 // Number of seconds to wait between reconnection attempts
-const reconnectionDelay = 4;
+const reconnectionDelay = 5;
 
 // We need to replace 0.0.0.0 to 127.0.0.1 in the sdp to avoid MOH during a createOffer.
 const replaceLocalIpModifier = (description: Object) => Promise.resolve({
@@ -209,8 +205,7 @@ export default class WebRTCClient extends Emitter {
       },
       onDisconnect: (error?: Error) => {
         if (error) {
-          this.eventEmitter.emit(TRANSPORT_ERROR);
-          this._attemptReconnection();
+          this._onTransportError();
         } else {
           this.eventEmitter.emit(DISCONNECTED);
         }
@@ -223,13 +218,17 @@ export default class WebRTCClient extends Emitter {
 
         this.eventEmitter.emit(INVITE, invitation, this.sessionWantsToDoVideo(invitation), shouldAutoAnswer);
       },
-      onMessage: (message: Message) => {
-        this.eventEmitter.emit(MESSAGE, message);
-        message.accept();
-      },
     };
 
-    return new UserAgent(webRTCConfiguration);
+    const ua = new UserAgent(webRTCConfiguration);
+    ua.transport.onMessage = (message: string) => {
+      // We have to re-sent the message to the UA ...
+      ua.onTransportMessage(message);
+      // And now do what we want with the message
+      this.eventEmitter.emit(MESSAGE, message);
+    };
+
+    return ua;
   }
 
   isConnected(): boolean {
@@ -620,8 +619,8 @@ export default class WebRTCClient extends Emitter {
     }
 
     const core = this.userAgent.userAgentCore;
-    const fromURI = this._makeURI(this.config.host);
-    const toURI = this._makeURI(this.config.host);
+    const fromURI = this._makeURI(this.config.authorizationUser || '');
+    const toURI = new URI('sip', '', this.config.host);
     const message = core.makeOutgoingRequestMessage('OPTIONS', toURI, fromURI, toURI, {});
 
     return core.request(message);
@@ -841,8 +840,8 @@ export default class WebRTCClient extends Emitter {
       return;
     }
 
-    this.eventEmitter.off('message', this._boundOnHeartbeat);
-    this.eventEmitter.on('message', this._boundOnHeartbeat);
+    this.eventEmitter.off(MESSAGE, this._boundOnHeartbeat);
+    this.eventEmitter.on(MESSAGE, this._boundOnHeartbeat);
 
     this.heartbeat.start();
   }
@@ -855,6 +854,10 @@ export default class WebRTCClient extends Emitter {
     this.heartbeatTimeoutCb = cb;
   }
 
+  _onTransportError() {
+    this.eventEmitter.emit(TRANSPORT_ERROR);
+    this._attemptReconnection();
+  }
 
   _onHeartbeat(message: string) {
     if (message.indexOf('200 OK') !== -1) {
@@ -869,12 +872,10 @@ export default class WebRTCClient extends Emitter {
 
     if (this.userAgent.transport) {
       // Disconnect from WS and triggers events
-      this.userAgent.transport.disconnect({ force: true });
-      // Force `disconnected` to be called quickly when calling `onClose`
-      this.userAgent.transport.disconnectDeferredResolve = null;
-      // We have to trigger onClose manually or it can take too much time to be triggered by the transport.
-      this.userAgent.transport.status = STATUS_CLOSING;
-      this.userAgent.transport.onClose({ code: 1000, reason: 'heartbeat failed' });
+      this.userAgent.transport.disconnect();
+
+      // We can invoke disconnect() with an error that can be catcher by `onDisconnect`, so we have to trigger it here.
+      this._onTransportError();
     }
   }
 
@@ -1268,6 +1269,7 @@ export default class WebRTCClient extends Emitter {
         .then(() => {
           // Reconnect attempt succeeded
           this.attemptingReconnection = false;
+          this.register();
         })
         .catch(() => {
           // Reconnect attempt failed
