@@ -78,8 +78,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   allowVideo: boolean;
 
-  shouldRegisterAgain: boolean;
-
   sipSessions: { [string]: Session };
 
   incomingSessions: string[];
@@ -123,7 +121,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.audioRingVolume = 1;
     this.incomingSessions = [];
     this.ringingEnabled = true;
-    this.shouldRegisterAgain = true;
     this.shouldSendReinvite = false;
 
     this.bindClientEvents();
@@ -134,8 +131,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   register() {
-    this.shouldRegisterAgain = true;
-
     if (!this.client) {
       return Promise.resolve();
     }
@@ -152,8 +147,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
     if (!this.client || !this.client.isRegistered()) {
       return;
     }
-    this.shouldRegisterAgain = false;
-
     this.client.unregister();
   }
 
@@ -929,10 +922,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     this.client.on(this.client.UNREGISTERED, () => {
       this.eventEmitter.emit(ON_UNREGISTERED);
-
-      // if (this.shouldRegisterAgain) {
-      //   this.register();
-      // }
     });
 
     this.client.on(this.client.REGISTERED, () => {
