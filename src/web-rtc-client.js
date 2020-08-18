@@ -23,7 +23,7 @@ import { Inviter } from 'sip.js/lib/api/inviter';
 import { Messager } from 'sip.js/lib/api/messager';
 import { RegistererState } from 'sip.js/lib/api/registerer-state';
 import { SessionState } from 'sip.js/lib/api/session-state';
-import { UserAgentState } from 'sip.js/lib/api/user-agent-state';
+import { TransportState } from 'sip.js/lib/api/transport-state';
 import { holdModifier } from 'sip.js/lib/platform/web/modifiers';
 import { defaultMediaStreamFactory }
   from 'sip.js/lib/platform/web/session-description-handler/media-stream-factory-default';
@@ -37,11 +37,6 @@ import Emitter from './utils/Emitter';
 import ApiClient from './api-client';
 import IssueReporter from './service/IssueReporter';
 import Heartbeat from './utils/Heartbeat';
-
-// Number of times to attempt reconnection before giving up
-const reconnectionAttempts = 50;
-// Number of seconds to wait between reconnection attempts
-const reconnectionDelay = 5;
 
 // We need to replace 0.0.0.0 to 127.0.0.1 in the sdp to avoid MOH during a createOffer.
 const replaceLocalIpModifier = (description: Object) => Promise.resolve({
@@ -159,7 +154,6 @@ export default class WebRTCClient extends Emitter {
     this._buildConfig(config, session).then((newConfig: WebRtcConfig) => {
       this.config = newConfig;
       this.userAgent = this.createUserAgent(uaConfigOverrides);
-      this.register();
     });
 
     this.audioOutputDeviceId = config.audioOutputDeviceId;
@@ -213,12 +207,16 @@ export default class WebRTCClient extends Emitter {
     webRTCConfiguration.delegate = {
       onConnect: () => {
         this.eventEmitter.emit(CONNECTED);
+        this.connectionPromise = null;
+        this.register();
       },
       onDisconnect: (error?: Error) => {
-        if (error) {
-          this._onTransportError();
-        } else {
-          this.eventEmitter.emit(DISCONNECTED);
+        this.connectionPromise = null;
+        // The UA will attempt to reconnect automatically when an error occurred
+        this.eventEmitter.emit(DISCONNECTED);
+        if (this.isRegistered()) {
+          this.registerer.terminated();
+          this.eventEmitter.emit(UNREGISTERED);
         }
       },
       onInvite: (invitation: Invitation) => {
@@ -252,7 +250,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   isConnecting(): boolean {
-    return this.userAgent && this.userAgent.state === UserAgentState.Started;
+    return this.userAgent && this.userAgent.transport && this.userAgent.transport.state === TransportState.Connecting;
   }
 
   isRegistered(): boolean {
@@ -272,6 +270,7 @@ export default class WebRTCClient extends Emitter {
     return this._connectIfNeeded().then(() => {
       this.registerer = new Registerer(this.userAgent);
       this.shouldBeConnected = true;
+      this.connectionPromise = null;
 
       // Bind registerer events
       this.registerer.stateChange.addListener(newState => {
@@ -824,7 +823,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   async waitForRegister() {
-    return new Promise(resolve => this.on('registered', resolve));
+    return new Promise(resolve => this.on(REGISTERED, resolve));
   }
 
   /**
@@ -883,45 +882,8 @@ export default class WebRTCClient extends Emitter {
     this.heartbeatTimeoutCb = cb;
   }
 
-  // @see https://github.com/onsip/SIP.js/blob/0.16.0/docs/migration-0.15-0.16.md#9-useragentreconnect-method-replaces
-  attemptReconnection(reconnectionAttempt: number = 1): void {
-    // If not intentionally connected, don't reconnect.
-    if (!this.shouldBeConnected) {
-      return;
-    }
-
-    // Reconnection attempt already in progress
-    if (this.attemptingReconnection) {
-      return;
-    }
-
-    // Reconnection maximum attempts reached
-    if (reconnectionAttempt > reconnectionAttempts) {
-      return;
-    }
-
-    // We're attempting a reconnection
-    this.attemptingReconnection = true;
-
-    setTimeout(() => {
-      // If not intentionally connected, don't reconnect.
-      if (!this.shouldBeConnected) {
-        this.attemptingReconnection = false;
-        return;
-      }
-      // Attempt reconnect
-      this.userAgent.reconnect()
-        .then(() => {
-          // Reconnect attempt succeeded
-          this.attemptingReconnection = false;
-          this.register();
-        })
-        .catch(() => {
-          // Reconnect attempt failed
-          this.attemptingReconnection = false;
-          this.attemptReconnection(reconnectionAttempt + 1);
-        });
-    }, reconnectionAttempt === 1 ? 0 : reconnectionDelay * 1000);
+  attemptReconnection(): void {
+    this.userAgent.attemptReconnection();
   }
 
   _onTransportError() {
@@ -941,8 +903,10 @@ export default class WebRTCClient extends Emitter {
     }
 
     if (this.userAgent.transport) {
-      // Disconnect from WS and triggers events
-      this.userAgent.transport.disconnect();
+      // Disconnect from WS and triggers events, but do not trigger disconnect if already disconnecting...
+      if (!this.userAgent.transport.transitioningState) {
+        await this.userAgent.transport.disconnect();
+      }
 
       // We can invoke disconnect() with an error that can be catcher by `onDisconnect`, so we have to trigger it here.
       this._onTransportError();
@@ -1057,6 +1021,8 @@ export default class WebRTCClient extends Emitter {
       logConnector: this.config.log ? this.config.log.connector : null,
       uri: this._makeURI(this.config.authorizationUser || ''),
       userAgentString: this.config.userAgentString || 'wazo-sdk',
+      reconnectionAttempts: 50,
+      reconnectionDelay: 5,
       sessionDescriptionHandlerFactory: (session: Session, options: SessionDescriptionHandlerFactoryOptions = {}) => {
         const logger = session.userAgent.getLogger('sip.WazoSessionDescriptionHandler');
 
