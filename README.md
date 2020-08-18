@@ -218,6 +218,8 @@ const session = await Wazo.Auth.logIn(username, password);
  
 Returns as `Wazo.domain.Session`. This object contains, among other information, the user's token.
 
+Note: you need to set `clientId` in your WazoAPIClient in order to get a refresh token in the returned `Session`.
+
 #### Validating a token
 
 ```js
@@ -236,6 +238,8 @@ Returns as `Wazo.domain.Session`.
 
 When the user's token is about to expire, Wazo's SDK triggers a callback so you can update it in your application.
 Like updating the new token in your localstorage / cookies.
+
+Note: you need to set `clientId` in your WazoAPIClient in order to refresh tokens.
 
 ```js
 Wazo.Auth.setOnRefreshToken(token => { /* Do something with the new token */ });
@@ -620,11 +624,15 @@ client.auth.logIn({
 const { refreshToken, ...result } = await client.auth.login(/* ... */);
 ```
 
+Note: you need to set `clientId` in your WazoAPIClient in order to get a refresh token.
+
 #### Set token (and refresh token)      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
 ```js
 client.setToken(token);
 client.setRefreshToken(refreshToken);
 ```
+
+Note: you need to set `clientId` in your WazoAPIClient in order to get a refresh token.
 
 #### Add an event when the token is refreshed      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
 
@@ -633,6 +641,8 @@ client.setOnRefreshToken((newToken) => {
   // Do something with the new token (like storing it in the localstorage...).
 });
 ```
+
+Note: you need to set `clientId` in your WazoAPIClient in order to refresh token.
 
 #### Log Out      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
 ```js
