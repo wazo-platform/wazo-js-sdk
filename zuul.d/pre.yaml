@@ -3,6 +3,7 @@
   tasks:
     - name: install yarn
       become: yes
-      package:
+      apt:
         name: yarnpkg
         state: present
+        update_cache: yes
