@@ -630,6 +630,7 @@ Note: you need to set `clientId` in your WazoAPIClient in order to get a refresh
 ```js
 client.setToken(token);
 client.setRefreshToken(refreshToken);
+client.setRefreshTokenExpiration(tokenExpirationInSeconds);
 ```
 
 Note: you need to set `clientId` in your WazoAPIClient in order to get a refresh token.
