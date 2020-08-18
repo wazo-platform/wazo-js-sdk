@@ -492,13 +492,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
     await Promise.all(mergingSessions);
   }
 
-  accept(callSession: CallSession, videoEnabled?: boolean): string | null {
+  accept(callSession: CallSession, videoEnabled?: boolean): Promise<string | null> {
     if (this.currentSipSession) {
       this.holdSipSession(this.currentSipSession, true);
     }
 
     if (!callSession || callSession.getId() in this.acceptedSessions) {
-      return null;
+      return Promise.resolve(null);
     }
 
     this.shouldSendReinvite = false;
@@ -508,12 +508,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     const sipSession = this.sipSessions[callSession.getId()];
     if (sipSession) {
-      this.client.answer(sipSession, this.allowVideo ? videoEnabled : false);
-
-      return callSession.sipCallId;
+      return this.client.answer(sipSession, this.allowVideo ? videoEnabled : false).then(() => {
+        return callSession.sipCallId;
+      });
     }
 
-    return null;
+    return Promise.resolve(null);
   }
 
   async reject(callSession: CallSession): Promise<void> {

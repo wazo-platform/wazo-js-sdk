@@ -13,6 +13,7 @@ import type { SessionDescriptionHandlerFactoryOptions }
 import type SessionDescriptionHandlerConfiguration
   from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-configuration';
 
+import { C } from 'sip.js/lib/core/messages/methods/constants';
 import { URI } from 'sip.js/lib/grammar/uri';
 import { Parser } from 'sip.js/lib/core/messages/parser';
 import { UserAgent } from 'sip.js/lib/api/user-agent';
@@ -222,8 +223,6 @@ export default class WebRTCClient extends Emitter {
       },
       onInvite: (invitation: Invitation) => {
         this._setupSession(invitation);
-
-        // @TODO
         const shouldAutoAnswer = !!invitation.request.getHeader('alert-info');
 
         this.eventEmitter.emit(INVITE, invitation, this.sessionWantsToDoVideo(invitation), shouldAutoAnswer);
@@ -238,6 +237,11 @@ export default class WebRTCClient extends Emitter {
       ua.onTransportMessage(rawMessage);
       // And now do what we want with the message
       this.eventEmitter.emit(MESSAGE, message);
+
+      if (message.method === C.MESSAGE) {
+        // We have to manually reply to MESSAGE with a 200 OK or Asterisk will hangup.
+        ua.userAgentCore.replyStateless(message, { statusCode: 200 });
+      }
     };
 
     return ua;
@@ -879,9 +883,50 @@ export default class WebRTCClient extends Emitter {
     this.heartbeatTimeoutCb = cb;
   }
 
+  // @see https://github.com/onsip/SIP.js/blob/0.16.0/docs/migration-0.15-0.16.md#9-useragentreconnect-method-replaces
+  attemptReconnection(reconnectionAttempt: number = 1): void {
+    // If not intentionally connected, don't reconnect.
+    if (!this.shouldBeConnected) {
+      return;
+    }
+
+    // Reconnection attempt already in progress
+    if (this.attemptingReconnection) {
+      return;
+    }
+
+    // Reconnection maximum attempts reached
+    if (reconnectionAttempt > reconnectionAttempts) {
+      return;
+    }
+
+    // We're attempting a reconnection
+    this.attemptingReconnection = true;
+
+    setTimeout(() => {
+      // If not intentionally connected, don't reconnect.
+      if (!this.shouldBeConnected) {
+        this.attemptingReconnection = false;
+        return;
+      }
+      // Attempt reconnect
+      this.userAgent.reconnect()
+        .then(() => {
+          // Reconnect attempt succeeded
+          this.attemptingReconnection = false;
+          this.register();
+        })
+        .catch(() => {
+          // Reconnect attempt failed
+          this.attemptingReconnection = false;
+          this.attemptReconnection(reconnectionAttempt + 1);
+        });
+    }, reconnectionAttempt === 1 ? 0 : reconnectionDelay * 1000);
+  }
+
   _onTransportError() {
     this.eventEmitter.emit(TRANSPORT_ERROR);
-    this._attemptReconnection();
+    this.attemptReconnection();
   }
 
   _onHeartbeat(message: string) {
@@ -1116,6 +1161,11 @@ export default class WebRTCClient extends Emitter {
     this._setupLocalMedia(session);
     this._setupRemoteMedia(session);
 
+    session.sessionDescriptionHandler.peerConnection.addEventListener('track', event => {
+      this._setupRemoteMedia(session);
+      this.eventEmitter.emit(ON_TRACK, session, event);
+    });
+
     session.sessionDescriptionHandler.remoteMediaStream.onaddtrack = event => {
       this._setupRemoteMedia(session);
       this.eventEmitter.emit(ON_TRACK, session, event);
@@ -1277,47 +1327,6 @@ export default class WebRTCClient extends Emitter {
     }
 
     return remoteStream;
-  }
-
-  // @see https://github.com/onsip/SIP.js/blob/0.16.0/docs/migration-0.15-0.16.md#9-useragentreconnect-method-replaces
-  _attemptReconnection(reconnectionAttempt: number = 1): void {
-    // If not intentionally connected, don't reconnect.
-    if (!this.shouldBeConnected) {
-      return;
-    }
-
-    // Reconnection attempt already in progress
-    if (this.attemptingReconnection) {
-      return;
-    }
-
-    // Reconnection maximum attempts reached
-    if (reconnectionAttempt > reconnectionAttempts) {
-      return;
-    }
-
-    // We're attempting a reconnection
-    this.attemptingReconnection = true;
-
-    setTimeout(() => {
-      // If not intentionally connected, don't reconnect.
-      if (!this.shouldBeConnected) {
-        this.attemptingReconnection = false;
-        return;
-      }
-      // Attempt reconnect
-      this.userAgent.reconnect()
-        .then(() => {
-          // Reconnect attempt succeeded
-          this.attemptingReconnection = false;
-          this.register();
-        })
-        .catch(() => {
-          // Reconnect attempt failed
-          this.attemptingReconnection = false;
-          this._attemptReconnection(reconnectionAttempt + 1);
-        });
-    }, reconnectionAttempt === 1 ? 0 : reconnectionDelay * 1000);
   }
 
   _makeURI(target: string): URI {

@@ -30,7 +30,7 @@ export type AvailablePhoneOptions = {
 };
 
 export interface Phone {
-  accept(callSession: CallSession, enableVideo: boolean): string | null;
+  accept(callSession: CallSession, enableVideo: boolean): Promise<string | null>;
 
   addToConference(participants: CallSession[]): PhoneVoid;
 
