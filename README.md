@@ -630,6 +630,7 @@ Note: you need to set `clientId` in your WazoAPIClient in order to get a refresh
 ```js
 client.setToken(token);
 client.setRefreshToken(refreshToken);
+client.setRefreshTokenExpiration(tokenExpirationInSeconds);
 ```
 
 Note: you need to set `clientId` in your WazoAPIClient in order to get a refresh token.
@@ -637,8 +638,8 @@ Note: you need to set `clientId` in your WazoAPIClient in order to get a refresh
 #### Add an event when the token is refreshed      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
 
 ```js
-client.setOnRefreshToken((newToken) => {
-  // Do something with the new token (like storing it in the localstorage...).
+client.setOnRefreshToken((newToken, newSession) => {
+  // Do something with the new token and the new session (like storing them in the localstorage...).
 });
 ```
 
