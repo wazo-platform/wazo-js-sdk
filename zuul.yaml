@@ -13,3 +13,7 @@
       jobs:
         - wazo-js-sdk-yarn-test:
             nodeset: debian10-vm
+    auto-merge:
+      jobs:
+        - wazo-js-sdk-yarn-test:
+            nodeset: debian10-vm
