@@ -686,7 +686,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     let sipSession: Session;
     try {
-      sipSession = await this.client.call(number, this.allowVideo ? enableVideo : false);
+      sipSession = this.client.call(number, this.allowVideo ? enableVideo : false);
+      this._bindEvents(sipSession);
     } catch (error) {
       console.warn(error);
       return new Promise(resolve => resolve(null));
@@ -699,7 +700,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     this.currentSipSession = sipSession;
 
-    this._bindEvents(sipSession);
 
     this.eventEmitter.emit(ON_CALL_OUTGOING, callSession);
 

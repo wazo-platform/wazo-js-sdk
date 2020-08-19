@@ -31,7 +31,7 @@ import { defaultPeerConnectionConfiguration }
   from 'sip.js/lib/platform/web/session-description-handler/peer-connection-configuration-default';
 
 import WazoSessionDescriptionHandler from './lib/WazoSessionDescriptionHandler';
-import MobileSessionDescriptionHandler from './lib/MobileSessionDescriptionHandler';
+// import MobileSessionDescriptionHandler from './lib/MobileSessionDescriptionHandler';
 
 import Emitter from './utils/Emitter';
 import ApiClient from './api-client';
@@ -213,7 +213,7 @@ export default class WebRTCClient extends Emitter {
       onDisconnect: (error?: Error) => {
         this.connectionPromise = null;
         // The UA will attempt to reconnect automatically when an error occurred
-        this.eventEmitter.emit(DISCONNECTED);
+        this.eventEmitter.emit(DISCONNECTED, error);
         if (this.isRegistered()) {
           this.registerer.terminated();
           this.eventEmitter.emit(UNREGISTERED);
@@ -308,7 +308,7 @@ export default class WebRTCClient extends Emitter {
     });
   }
 
-  call(number: string, enableVideo?: boolean): Promise<Session> {
+  call(number: string, enableVideo?: boolean): Session {
     this.changeVideo(enableVideo || false);
 
     const session = new Inviter(this.userAgent, this._makeURI(number));
@@ -327,7 +327,9 @@ export default class WebRTCClient extends Emitter {
       inviteOptions.sessionDescriptionHandlerModifiers = [stripVideo];
     }
 
-    return session.invite(inviteOptions).then(() => session);
+    // Do not await invite here or we'll miss the Establishing state transition
+    session.invite(inviteOptions);
+    return session;
   }
 
   answer(session: Invitation, enableVideo?: boolean) {
@@ -891,8 +893,9 @@ export default class WebRTCClient extends Emitter {
     this.attemptReconnection();
   }
 
-  _onHeartbeat(message: string) {
-    if (message.indexOf('200 OK') !== -1) {
+  _onHeartbeat(message: string | Object) {
+    const body = message && typeof message === 'object' ? message.data : message;
+    if (body.indexOf('200 OK') !== -1) {
       this.heartbeat.onHeartbeat();
     }
   }
@@ -1064,7 +1067,7 @@ export default class WebRTCClient extends Emitter {
 
     // Use custom SessionDescription handler for mobile
     if (!this._isWeb()) {
-      config.sessionDescriptionHandlerFactory = MobileSessionDescriptionHandler().defaultFactory;
+      // config.sessionDescriptionHandlerFactory = MobileSessionDescriptionHandler().defaultFactory;
 
       // @TODO: pass RegistererOptions to Registerer
       // config.registerOptions = {
