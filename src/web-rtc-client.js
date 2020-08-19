@@ -817,11 +817,14 @@ export default class WebRTCClient extends Emitter {
     if (sipSession.message && sipSession.message.callId) {
       return sipSession.message.callId;
     }
+
+    // For Inviter
     if (sipSession.outgoingRequestMessage) {
       return sipSession.outgoingRequestMessage.callId;
     }
 
-    return (sipSession.id || '').substr(0, 20);
+    // For Invitation
+    return (sipSession.id || '').substr(0, 36);
   }
 
   async waitForRegister() {
