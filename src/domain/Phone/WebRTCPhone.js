@@ -21,6 +21,7 @@ export const ON_CALL_RESUMED = 'onCallResumed';
 export const ON_CALL_HELD = 'onCallHeld';
 export const ON_CALL_UNHELD = 'onCallUnHeld';
 export const ON_CAMERA_DISABLED = 'onCameraDisabled';
+export const ON_CAMERA_RESUMED = 'onCameraResumed';
 export const ON_CALL_FAILED = 'onCallFailed';
 export const ON_CALL_ENDED = 'onCallEnded';
 export const ON_MESSAGE = 'onMessage';
@@ -93,6 +94,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   rejectedSessions: Object;
 
+  ignoredSessions: Object;
+
   currentScreenShare: Object;
 
   shouldSendReinvite: boolean;
@@ -121,6 +124,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     this.acceptedSessions = {};
     this.rejectedSessions = {};
+    this.ignoredSessions = {};
   }
 
   register() {
@@ -244,7 +248,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.eventEmitter.emit(ON_CALL_UNMUTED, this._createUnmutedCallSession(sipSession, callSession));
     });
     sipSession.on('cameraOn', callSession => {
-      this.eventEmitter.emit(ON_CALL_RESUMED, this._createCameraResumedCallSession(sipSession, callSession));
+      this.eventEmitter.emit(ON_CAMERA_RESUMED, this._createCameraResumedCallSession(sipSession, callSession));
     });
     sipSession.on('cameraOff', callSession => {
       this.eventEmitter.emit(ON_CAMERA_DISABLED, this._createCameraDisabledCallSession(sipSession, callSession));
@@ -440,8 +444,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     delete this.sipSessions[callSession.getId()];
+
     if (this.isCurrentCallSipSession(callSession)) {
       this.currentSipSession = undefined;
+    }
+
+    if (callSession.getId() in this.ignoredSessions) {
+      return;
     }
 
     this.eventEmitter.emit(ON_PLAY_HANGUP_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
@@ -564,6 +573,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
     if (sipSession) {
       this.client.reject(sipSession);
     }
+  }
+
+  async ignore(callSession: CallSession): Promise<void> {
+    // kill the ring
+    this.eventEmitter.emit(ON_TERMINATE_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
+    this.ignoredSessions[callSession.getId()] = true;
+    callSession.ignore();
   }
 
   hold(callSession: CallSession, withEvent: boolean = true): void {
@@ -977,7 +993,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
       // Tell to send reinvite when reconnecting
       this.shouldSendReinvite = true;
     });
-
 
     this.client.on('onTrack', (session, event) => {
       this.eventEmitter.emit(ON_TRACK, session, event);

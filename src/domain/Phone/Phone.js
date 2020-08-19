@@ -62,6 +62,8 @@ export interface Phone {
 
   getRemoteStreamForCall(callSession: CallSession): boolean;
 
+  ignore(callSession: CallSession): PhoneVoid;
+
   hangup(callSession: CallSession): PhoneVoid;
 
   hangupConference(participants: CallSession[]): PhoneVoid;

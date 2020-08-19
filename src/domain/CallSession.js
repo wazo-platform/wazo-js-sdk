@@ -23,6 +23,7 @@ type CallSessionArguments = {
   sipStatus?: number,
   startTime: number,
   autoAnswer?: boolean,
+  ignored?: boolean,
 };
 
 export default class CallSession {
@@ -64,6 +65,8 @@ export default class CallSession {
 
   autoAnswer: boolean;
 
+  ignored: boolean;
+
   type: string;
 
   constructor({
@@ -83,6 +86,7 @@ export default class CallSession {
     callerNumber,
     call,
     autoAnswer,
+    ignored,
   }: CallSessionArguments) {
     this.callId = callId;
     this.sipCallId = sipCallId;
@@ -100,6 +104,7 @@ export default class CallSession {
     this.call = call;
     this.sipStatus = sipStatus;
     this.autoAnswer = autoAnswer || false;
+    this.ignored = ignored || false;
 
     // Useful to compare instead of instanceof with minified code
     this.type = 'CallSession';
@@ -127,6 +132,10 @@ export default class CallSession {
 
   enableCamera() {
     this.cameraEnabled = true;
+  }
+
+  ignore() {
+    this.ignored = true;
   }
 
   isIncoming(): boolean {
@@ -159,6 +168,10 @@ export default class CallSession {
 
   isCameraEnabled(): boolean {
     return this.cameraEnabled;
+  }
+
+  isIgnored(): boolean {
+    return this.ignored;
   }
 
   hasAnInitialInterceptionNumber(): boolean {
