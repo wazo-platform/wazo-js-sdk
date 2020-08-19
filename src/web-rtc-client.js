@@ -267,8 +267,10 @@ export default class WebRTCClient extends Emitter {
       return Promise.resolve();
     }
 
+    const registerOptions = this._isWeb() ? {} : { extraContactHeaderParams: ['mobility=mobile'] };
+
     return this._connectIfNeeded().then(() => {
-      this.registerer = new Registerer(this.userAgent);
+      this.registerer = new Registerer(this.userAgent, registerOptions);
       this.shouldBeConnected = true;
       this.connectionPromise = null;
 
@@ -1043,7 +1045,7 @@ export default class WebRTCClient extends Emitter {
           },
         };
 
-        return new WazoSessionDescriptionHandler(logger, defaultMediaStreamFactory(), sdhOptions);
+        return new WazoSessionDescriptionHandler(logger, defaultMediaStreamFactory(), sdhOptions, this._isWeb());
       },
       transportOptions: {
         traceSip: configOverrides.traceSip || false,
@@ -1067,16 +1069,6 @@ export default class WebRTCClient extends Emitter {
         },
       },
     };
-
-    // Use custom SessionDescription handler for mobile
-    if (!this._isWeb()) {
-      // config.sessionDescriptionHandlerFactory = MobileSessionDescriptionHandler().defaultFactory;
-
-      // @TODO: pass RegistererOptions to Registerer
-      // config.registerOptions = {
-      //   extraContactHeaderParams: ['mobility=mobile'],
-      // };
-    }
 
     return { ...config, ...configOverrides };
   }
