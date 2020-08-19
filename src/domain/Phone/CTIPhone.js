@@ -111,6 +111,8 @@ export default class CTIPhone extends Emitter implements Phone {
     }
   }
 
+  ignore() {}
+
   async reject(callSession: CallSession): Promise<void> {
     await CallApi.cancelCall(callSession);
     this.eventEmitter.emit('onCallEnded', callSession);
