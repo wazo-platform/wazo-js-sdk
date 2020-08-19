@@ -700,7 +700,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     this.currentSipSession = sipSession;
 
-
     this.eventEmitter.emit(ON_CALL_OUTGOING, callSession);
 
     return new Promise(resolve => resolve(callSession));
