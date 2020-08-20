@@ -40,6 +40,42 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
   }
 
   // Overridden to avoid to use peerConnection.getReceivers and peerConnection.getSenders in react-native
+  getDescription(options?: Object = {}, modifiers?: Array<Function>): Promise<any> {
+    if (this.isWeb) {
+      return super.getDescription(options, modifiers);
+    }
+    this.logger.debug('SessionDescriptionHandler.getDescription');
+    if (this._peerConnection === undefined) {
+      return Promise.reject(new Error('Peer connection closed.'));
+    }
+    // Callback on data channel creation
+    this.onDataChannel = options.onDataChannel;
+
+    // ICE will restart upon applying an offer created with the iceRestart option
+    const iceRestart = options.offerOptions ? options.offerOptions.iceRestart : false;
+
+    // ICE gathering timeout may be set on a per call basis, otherwise the configured default is used
+    const iceTimeout = options.iceGatheringTimeout === undefined
+      ? this.sessionDescriptionHandlerConfiguration.iceGatheringTimeout
+      : options.iceGatheringTimeout;
+
+    return this.getLocalMediaStream(options)
+      .then(() => this.createDataChannel(options))
+      .then(() => this.createLocalOfferOrAnswer(options))
+      .then((sessionDescription) => this.applyModifiers(sessionDescription, modifiers))
+      .then((sessionDescription) => this.setLocalSessionDescription(sessionDescription))
+      .then(() => this.waitForIceGatheringComplete(iceRestart, iceTimeout))
+      .then(() => this._peerConnection.createOffer(options.offerOptions || {}))
+      .then((sessionDescription) => this.setLocalSessionDescription(sessionDescription))
+      .then(() => this.getLocalSessionDescription())
+      .then((sessionDescription) => ({ body: sessionDescription.sdp, contentType: 'application/sdp' }))
+      .catch((error) => {
+        this.logger.error(`SessionDescriptionHandler.getDescription failed - ${error}`);
+        throw error;
+      });
+  }
+
+  // Overridden to avoid to use peerConnection.getReceivers and peerConnection.getSenders in react-native
   setLocalMediaStream(stream: MediaStream): Promise<void> {
     if (this.isWeb) {
       return super.setLocalMediaStream(stream);

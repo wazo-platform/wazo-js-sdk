@@ -173,7 +173,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
     sipSession.reinvite({
       sessionDescriptionHandlerOptions: {
-        RTCOfferOptions: {
+        offerOptions: {
           iceRestart: true,
         },
         constraints: {
