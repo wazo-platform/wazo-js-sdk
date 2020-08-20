@@ -31,7 +31,6 @@ import { defaultPeerConnectionConfiguration }
   from 'sip.js/lib/platform/web/session-description-handler/peer-connection-configuration-default';
 
 import WazoSessionDescriptionHandler from './lib/WazoSessionDescriptionHandler';
-// import MobileSessionDescriptionHandler from './lib/MobileSessionDescriptionHandler';
 
 import Emitter from './utils/Emitter';
 import ApiClient from './api-client';
@@ -910,7 +909,7 @@ export default class WebRTCClient extends Emitter {
       this.heartbeatTimeoutCb();
     }
 
-    if (this.userAgent.transport) {
+    if (this.userAgent && this.userAgent.transport) {
       // Disconnect from WS and triggers events, but do not trigger disconnect if already disconnecting...
       if (!this.userAgent.transport.transitioningState) {
         await this.userAgent.transport.disconnect();
