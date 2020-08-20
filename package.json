@@ -1,6 +1,6 @@
 {
   "name": "@wazo/sdk",
-  "version": "0.32.43",
+  "version": "0.32.44",
   "description": "Wazo's JavaScript Software Development Kit.",
   "main": "dist/wazo-sdk.js",
   "author": "Wazo (http://wazo.io)",
