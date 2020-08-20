@@ -617,7 +617,7 @@ export default class WebRTCClient extends Emitter {
 
       // Release old video stream
       if (localStream) {
-        localStream.getTracks().forEach(track => {
+        localStream.getVideoTracks().forEach(track => {
           track.stop();
         });
       }
