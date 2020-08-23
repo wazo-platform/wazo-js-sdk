@@ -17,14 +17,13 @@ import { C } from 'sip.js/lib/core/messages/methods/constants';
 import { URI } from 'sip.js/lib/grammar/uri';
 import { Parser } from 'sip.js/lib/core/messages/parser';
 import { UserAgent } from 'sip.js/lib/api/user-agent';
-import { stripVideo } from 'sip.js/lib/platform/web/modifiers/modifiers';
+import { stripVideo, holdModifier } from 'sip.js/lib/platform/web/modifiers/modifiers';
 import { Registerer } from 'sip.js/lib/api/registerer';
 import { Inviter } from 'sip.js/lib/api/inviter';
 import { Messager } from 'sip.js/lib/api/messager';
 import { RegistererState } from 'sip.js/lib/api/registerer-state';
 import { SessionState } from 'sip.js/lib/api/session-state';
 import { TransportState } from 'sip.js/lib/api/transport-state';
-import { holdModifier } from 'sip.js/lib/platform/web/modifiers';
 import { defaultMediaStreamFactory }
   from 'sip.js/lib/platform/web/session-description-handler/media-stream-factory-default';
 import { defaultPeerConnectionConfiguration }
@@ -206,7 +205,6 @@ export default class WebRTCClient extends Emitter {
     webRTCConfiguration.delegate = {
       onConnect: () => {
         this.eventEmitter.emit(CONNECTED);
-        this.connectionPromise = null;
         this.register();
       },
       onDisconnect: (error?: Error) => {
@@ -266,6 +264,10 @@ export default class WebRTCClient extends Emitter {
       return Promise.resolve();
     }
 
+    if (this.connectionPromise || (this.registerer && this.registerer.waiting)) {
+      return Promise.resolve();
+    }
+
     const registerOptions = this._isWeb() ? {} : { extraContactHeaderParams: ['mobility=mobile'] };
 
     return this._connectIfNeeded().then(() => {
@@ -275,7 +277,7 @@ export default class WebRTCClient extends Emitter {
 
       // Bind registerer events
       this.registerer.stateChange.addListener(newState => {
-        if (newState === RegistererState.Registered) {
+        if (newState === RegistererState.Registered && this.registerer.state === RegistererState.Registered) {
           this.eventEmitter.emit(REGISTERED);
         } else if (newState === RegistererState.Unregistered) {
           this.eventEmitter.emit(UNREGISTERED);
@@ -295,7 +297,9 @@ export default class WebRTCClient extends Emitter {
       return Promise.resolve();
     }
 
-    return this.registerer.unregister();
+    return this.registerer.unregister().then(() => {
+      this._cleanupRegister();
+    });
   }
 
   stop(): Promise<any> {
@@ -304,7 +308,9 @@ export default class WebRTCClient extends Emitter {
       return Promise.resolve();
     }
 
-    return this.userAgent.stop().catch(e => {
+    return this.userAgent.stop().then(() => {
+      this._cleanupRegister();
+    }).catch(e => {
       IssueReporter.log(IssueReporter.WARN, '[WebRtcClient] close error', e.message, e.stack);
     });
   }
@@ -407,11 +413,13 @@ export default class WebRTCClient extends Emitter {
 
     this.stopHeartbeat();
 
-    if (this.userAgent.transport) {
+    if (this.userAgent && this.userAgent.transport) {
       this.userAgent.transport.disconnect();
     }
 
     this.userAgent.stateChange.removeAllListeners();
+
+    this._cleanupRegister();
 
     try {
       this.userAgent.stop();
@@ -963,7 +971,8 @@ export default class WebRTCClient extends Emitter {
     }
 
     if (this.isConnecting()) {
-      return this.userAgent.transport.connectPromise;
+      this.connectionPromise = this.userAgent.transport.connectPromise;
+      return this.connectionPromise;
     }
 
     if (this.connectionPromise) {
@@ -1290,6 +1299,13 @@ export default class WebRTCClient extends Emitter {
     }
 
     return remoteStream;
+  }
+
+  _cleanupRegister() {
+    if (this.registerer) {
+      this.registerer.stateChange.removeAllListeners();
+      this.registerer = null;
+    }
   }
 
   _makeURI(target: string): URI {
