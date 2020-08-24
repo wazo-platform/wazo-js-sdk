@@ -32,6 +32,7 @@ class Room extends Emitter {
   _boundOnMessage: Function;
   _boundOnChat: Function;
   _boundOnSignal: Function;
+  _boundSaveLocalVideoStream: Function;
   audioStream: ?any;
   audioElement: ?any;
   extra: Object;
@@ -49,6 +50,7 @@ class Room extends Emitter {
   ON_REMOVE_STREAM: string;
   ON_DISCONNECTED: string;
   ON_JOINED: string;
+  ON_VIDEO_INPUT_CHANGE: string;
 
   /**
    *
@@ -96,6 +98,7 @@ class Room extends Emitter {
     this.ON_AUDIO_STREAM = Wazo.Phone.ON_AUDIO_STREAM;
     this.ON_VIDEO_STREAM = Wazo.Phone.ON_VIDEO_STREAM;
     this.ON_REMOVE_STREAM = Wazo.Phone.ON_REMOVE_STREAM;
+    this.ON_VIDEO_INPUT_CHANGE = Wazo.Phone.ON_VIDEO_INPUT_CHANGE;
     this.ON_DISCONNECTED = 'room/ON_DISCONNECTED';
     this.ON_JOINED = 'room/ON_JOINED';
 
@@ -105,6 +108,7 @@ class Room extends Emitter {
     this._boundOnChat = this._onChat.bind(this);
     this._boundOnSignal = this._onSignal.bind(this);
     this._boundOnScreenshareEnded = this._onScreenshareEnded.bind(this);
+    this._boundSaveLocalVideoStream = this._saveLocalVideoStream.bind(this);
 
     this.unbind();
 
@@ -167,6 +171,7 @@ class Room extends Emitter {
     Wazo.Phone.off(this.ON_CHAT, this._boundOnChat);
     Wazo.Phone.off(this.ON_SIGNAL, this._boundOnSignal);
     Wazo.Phone.off(this.ON_SCREEN_SHARE_ENDED, this._boundOnScreenshareEnded);
+    Wazo.Phone.off(this.ON_VIDEO_INPUT_CHANGE, this._boundSaveLocalVideoStream);
     Wazo.Websocket.off(this.CONFERENCE_USER_PARTICIPANT_JOINED, this._boundOnParticipantJoined);
     Wazo.Websocket.off(this.CONFERENCE_USER_PARTICIPANT_LEFT, this._boundOnParticipantLeft);
 
@@ -325,6 +330,7 @@ class Room extends Emitter {
     Wazo.Phone.on(this.ON_CHAT, this._boundOnChat);
     Wazo.Phone.on(this.ON_SIGNAL, this._boundOnSignal);
     Wazo.Phone.on(this.ON_SCREEN_SHARE_ENDED, this._boundOnScreenshareEnded);
+    Wazo.Phone.on(this.ON_VIDEO_INPUT_CHANGE, this._boundSaveLocalVideoStream);
 
     [this.ON_AUDIO_STREAM, this.ON_VIDEO_STREAM, this.ON_REMOVE_STREAM].forEach(event =>
       Wazo.Phone.on(event, (...args) => this.eventEmitter.emit.apply(this.eventEmitter, [event, ...args])));
@@ -439,21 +445,19 @@ class Room extends Emitter {
 
         const localParticipant = participants.find(someParticipant => someParticipant instanceof Wazo.LocalParticipant);
         if (!this.localParticipant && localParticipant) {
-          const videoStream = new Wazo.Stream(this._getLocalVideoStream(), localParticipant);
-          if (videoStream) {
-            localParticipant.streams.push(videoStream);
-            localParticipant.videoStreams.push(videoStream);
-            localParticipant.onStreamSubscribed(videoStream);
-          }
           this.localParticipant = localParticipant;
+
+          this._saveLocalVideoStream(this._getLocalVideoStream());
 
           this.connected = true;
 
           // we're in the room, now let's request everyone's status
-          this.sendSignal({
-            type: SIGNAL_TYPE_PARTICIPANT_REQUEST,
-            origin: this.localParticipant.getStatus(),
-          });
+          if (this.localParticipant) {
+            this.sendSignal({
+              type: SIGNAL_TYPE_PARTICIPANT_REQUEST,
+              origin: this.localParticipant.getStatus(),
+            });
+          }
         }
 
         participants.forEach(someParticipant => isJoining(someParticipant));
@@ -473,6 +477,24 @@ class Room extends Emitter {
     }
 
     return remoteParticipant;
+  }
+
+  _saveLocalVideoStream(stream: MediaStream) {
+    const { localParticipant } = this;
+
+    if (!localParticipant) {
+      return;
+    }
+
+    const videoStream = new Wazo.Stream(stream, localParticipant);
+
+    if (videoStream) {
+      localParticipant.streams = [videoStream];
+      localParticipant.videoStreams = [videoStream];
+      localParticipant.onStreamSubscribed(videoStream);
+    }
+
+    return videoStream;
   }
 
   _onParticipantLeft(payload: Object) {

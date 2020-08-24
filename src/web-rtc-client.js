@@ -633,6 +633,7 @@ export default class WebRTCClient extends Emitter {
 
         // let's update the local stream
         this._addLocalToVideoSession(this.getSipSessionId(session), stream);
+        this.eventEmitter.emit('onVideoInputChange', stream);
         return stream;
       });
     }
