@@ -655,6 +655,10 @@ export default class WebRTCClient extends Emitter {
     return core.request(message);
   }
 
+  getLocalMediaStream(sipSession: Session) {
+    return sipSession ? sipSession.sessionDescriptionHandler.localMediaStream : null;
+  }
+
   getState() {
     return states[this.userAgent.state];
   }
@@ -757,6 +761,7 @@ export default class WebRTCClient extends Emitter {
         // let's update the local stream
         this._addLocalToVideoSession(this.getSipSessionId(session), stream);
         this.eventEmitter.emit('onVideoInputChange', stream);
+        sdh.setLocalMediaStream(stream);
         return stream;
       });
     }

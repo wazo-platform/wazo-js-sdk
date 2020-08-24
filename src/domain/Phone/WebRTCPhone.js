@@ -9,6 +9,7 @@ import type { Phone, AvailablePhoneOptions } from './Phone';
 import WazoWebRTCClient from '../../web-rtc-client';
 import Emitter from '../../utils/Emitter';
 import IssueReporter from '../../service/IssueReporter';
+import Session from "../Session";
 
 export const ON_USER_AGENT = 'onUserAgent';
 export const ON_REGISTERED = 'onRegistered';
@@ -876,6 +877,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
     } catch (e) {
       console.warn(e);
     }
+  }
+
+  getLocalMediaStream(callSession: CallSession) {
+    const sipSession = this._findSipSession(callSession);
+
+    return sipSession ? this.client.getLocalMediaStream(sipSession) : null;
   }
 
   setMediaConstraints(media: MediaStreamConstraints) {

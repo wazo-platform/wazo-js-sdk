@@ -192,6 +192,10 @@ class Phone extends Emitter {
     return stream ? stream.local : null;
   }
 
+  getLocalMediaStream(callSession: CallSession) {
+    return this.phone && this.phone.getLocalMediaStream(callSession);
+  }
+
   getRemoteStreamForCall(callSession: CallSession) {
     return this.phone && this.phone.getRemoteStreamForCall(callSession);
   }
