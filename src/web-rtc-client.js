@@ -1285,7 +1285,7 @@ export default class WebRTCClient extends Emitter {
   _getRemoteStream(pc: any) {
     let remoteStream;
 
-    if (pc.getReceivers) {
+    if (pc && pc.getReceivers) {
       remoteStream = typeof global !== 'undefined' && global.window && global.window.MediaStream
         ? new global.window.MediaStream() : new window.MediaStream();
       pc.getReceivers().forEach(receiver => {
