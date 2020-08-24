@@ -36,6 +36,7 @@ export const ON_PLAY_RING_SOUND = 'playRingingSound';
 export const ON_PLAY_INBOUND_CALL_SIGNAL_SOUND = 'playInboundCallSignalSound';
 export const ON_PLAY_HANGUP_SOUND = 'playHangupSound';
 export const ON_PLAY_PROGRESS_SOUND = 'playProgressSound';
+export const ON_VIDEO_INPUT_CHANGE = 'videoInputChange';
 
 export const events = [
   ON_REGISTERED,
@@ -65,6 +66,7 @@ export const events = [
   ON_PLAY_INBOUND_CALL_SIGNAL_SOUND,
   ON_PLAY_HANGUP_SOUND,
   ON_PLAY_PROGRESS_SOUND,
+  ON_VIDEO_INPUT_CHANGE,
 ];
 
 export default class WebRTCPhone extends Emitter implements Phone {
@@ -996,6 +998,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     this.client.on('onTrack', (session, event) => {
       this.eventEmitter.emit(ON_TRACK, session, event);
+    });
+
+    this.client.on('onVideoInputChange', stream => {
+      this.eventEmitter.emit(ON_VIDEO_INPUT_CHANGE, stream);
     });
   }
 
