@@ -9,7 +9,6 @@ import type { Phone, AvailablePhoneOptions } from './Phone';
 import WazoWebRTCClient from '../../web-rtc-client';
 import Emitter from '../../utils/Emitter';
 import IssueReporter from '../../service/IssueReporter';
-import Session from "../Session";
 
 export const ON_USER_AGENT = 'onUserAgent';
 export const ON_REGISTERED = 'onRegistered';

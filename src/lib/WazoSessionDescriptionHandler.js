@@ -67,9 +67,10 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       .then((sessionDescription) => this.applyModifiers(sessionDescription, modifiers))
       .then((sessionDescription) => this.setLocalSessionDescription(sessionDescription))
       .then(() => this.waitForIceGatheringComplete(iceRestart, iceTimeout))
-      .then((description: any) => isOffer ? this._peerConnection.createOffer(options.offerOptions || {}) : description)
+      .then((description: any) =>
+        (isOffer ? this._peerConnection.createOffer(options.offerOptions || {}) : description))
       .then((sessionDescription: any) =>
-        isOffer ? this.setLocalSessionDescription(sessionDescription) : sessionDescription)
+        (isOffer ? this.setLocalSessionDescription(sessionDescription) : sessionDescription))
       .then(() => this.getLocalSessionDescription())
       .then((sessionDescription) => ({ body: sessionDescription.sdp, contentType: 'application/sdp' }))
       .catch((error) => {
