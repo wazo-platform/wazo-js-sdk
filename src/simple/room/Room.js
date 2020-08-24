@@ -32,6 +32,7 @@ class Room extends Emitter {
   _boundOnMessage: Function;
   _boundOnChat: Function;
   _boundOnSignal: Function;
+  _boundSaveLocalVideoStream: Function;
   audioStream: ?any;
   audioElement: ?any;
   extra: Object;
@@ -107,6 +108,7 @@ class Room extends Emitter {
     this._boundOnChat = this._onChat.bind(this);
     this._boundOnSignal = this._onSignal.bind(this);
     this._boundOnScreenshareEnded = this._onScreenshareEnded.bind(this);
+    this._boundSaveLocalVideoStream = this._saveLocalVideoStream.bind(this);
 
     this.unbind();
 
@@ -169,7 +171,7 @@ class Room extends Emitter {
     Wazo.Phone.off(this.ON_CHAT, this._boundOnChat);
     Wazo.Phone.off(this.ON_SIGNAL, this._boundOnSignal);
     Wazo.Phone.off(this.ON_SCREEN_SHARE_ENDED, this._boundOnScreenshareEnded);
-    Wazo.Phone.off(this.ON_VIDEO_INPUT_CHANGE, this._saveLocalVideoStream.bind(this));
+    Wazo.Phone.off(this.ON_VIDEO_INPUT_CHANGE, this._boundSaveLocalVideoStream);
     Wazo.Websocket.off(this.CONFERENCE_USER_PARTICIPANT_JOINED, this._boundOnParticipantJoined);
     Wazo.Websocket.off(this.CONFERENCE_USER_PARTICIPANT_LEFT, this._boundOnParticipantLeft);
 
@@ -328,7 +330,7 @@ class Room extends Emitter {
     Wazo.Phone.on(this.ON_CHAT, this._boundOnChat);
     Wazo.Phone.on(this.ON_SIGNAL, this._boundOnSignal);
     Wazo.Phone.on(this.ON_SCREEN_SHARE_ENDED, this._boundOnScreenshareEnded);
-    Wazo.Phone.on(this.ON_VIDEO_INPUT_CHANGE, this._saveLocalVideoStream.bind(this));
+    Wazo.Phone.on(this.ON_VIDEO_INPUT_CHANGE, this._boundSaveLocalVideoStream);
 
     [this.ON_AUDIO_STREAM, this.ON_VIDEO_STREAM, this.ON_REMOVE_STREAM].forEach(event =>
       Wazo.Phone.on(event, (...args) => this.eventEmitter.emit.apply(this.eventEmitter, [event, ...args])));
