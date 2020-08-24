@@ -169,9 +169,9 @@ class Room extends Emitter {
     Wazo.Phone.off(this.ON_CHAT, this._boundOnChat);
     Wazo.Phone.off(this.ON_SIGNAL, this._boundOnSignal);
     Wazo.Phone.off(this.ON_SCREEN_SHARE_ENDED, this._boundOnScreenshareEnded);
+    Wazo.Phone.off(this.ON_VIDEO_INPUT_CHANGE, this._saveLocalVideoStream.bind(this));
     Wazo.Websocket.off(this.CONFERENCE_USER_PARTICIPANT_JOINED, this._boundOnParticipantJoined);
     Wazo.Websocket.off(this.CONFERENCE_USER_PARTICIPANT_LEFT, this._boundOnParticipantLeft);
-    Wazo.Phone.off(this.ON_VIDEO_INPUT_CHANGE, this._saveLocalVideoStream.bind(this));
 
     if (this.roomAudioElement && document.body) {
       document.body.removeChild(this.roomAudioElement);
@@ -445,8 +445,7 @@ class Room extends Emitter {
         if (!this.localParticipant && localParticipant) {
           this.localParticipant = localParticipant;
 
-          const videoStream = this._saveLocalVideoStream(this._getLocalVideoStream());
-          localParticipant.onStreamSubscribed(videoStream);
+          this._saveLocalVideoStream(this._getLocalVideoStream());
 
           this.connected = true;
 
@@ -490,6 +489,7 @@ class Room extends Emitter {
     if (videoStream) {
       localParticipant.streams = [videoStream];
       localParticipant.videoStreams = [videoStream];
+      localParticipant.onStreamSubscribed(videoStream);
     }
 
     return videoStream;
