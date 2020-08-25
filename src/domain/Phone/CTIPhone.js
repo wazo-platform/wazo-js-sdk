@@ -61,6 +61,9 @@ export default class CTIPhone extends Emitter implements Phone {
   startHeartbeat() {
   }
 
+  setOnHeartbeatTimeout() {
+  }
+
   stopHeartbeat() {
   }
 
