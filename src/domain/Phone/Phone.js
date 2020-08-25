@@ -64,7 +64,7 @@ export interface Phone {
 
   ignore(callSession: CallSession): PhoneVoid;
 
-  hangup(callSession: CallSession): PhoneVoid;
+  hangup(callSession: CallSession): Promise<boolean>;
 
   hangupConference(participants: CallSession[]): PhoneVoid;
 

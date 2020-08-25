@@ -727,10 +727,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   confirmCTIIndirectTransfer() {}
 
-  async hangup(callSession: ?CallSession): Promise<void> {
+  async hangup(callSession: ?CallSession): Promise<boolean> {
     const sipSession = this._findSipSession(callSession);
     if (!sipSession) {
-      return console.error('Call is unknown to the WebRTC phone');
+      console.error('Call is unknown to the WebRTC phone');
+      return false;
     }
 
     const sipSessionId = this.client.getSipSessionId(sipSession);
@@ -744,6 +745,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     this.shouldSendReinvite = false;
+    return true;
   }
 
   async hangupConference(participants: CallSession[]): Promise<void> {
@@ -823,6 +825,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.unregister();
     this.client.close();
     this.unbind();
+
+    this.sipSessions = {};
+    this.incomingSessions = [];
+    this.currentSipSession = null;
+    this.shouldSendReinvite = false;
+    this.rejectedSessions = {};
   }
 
   isRegistered(): boolean {
