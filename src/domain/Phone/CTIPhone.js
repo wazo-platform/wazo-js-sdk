@@ -70,9 +70,6 @@ export default class CTIPhone extends Emitter implements Phone {
   bindClientEvents() {
   }
 
-  setOnHeartbeatTimeout() {
-  }
-
   async makeCall(number: string, line: Line): Promise<?CallSession> {
     if (!number) {
       return null;
