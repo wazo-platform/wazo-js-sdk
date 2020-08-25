@@ -1,11 +1,15 @@
 // @flow
+import type Inviter from 'sip.js/lib/api/inviter';
+import type Invitation from 'sip.js/lib/api/invitation';
+import type { Message } from 'sip.js/lib/api/message';
+import { SessionState } from 'sip.js/lib/api/session-state';
+
 import type SipLine from '../domain/SipLine';
 import type Session from '../domain/Session';
 import type CallSession from '../domain/CallSession';
 import WebRTCPhone, * as PHONE_EVENTS from '../domain/Phone/WebRTCPhone';
 import WazoWebRTCClient, { events as clientEvents, transportEvents } from '../web-rtc-client';
 import Emitter from '../utils/Emitter';
-import SIP from '../sip';
 import Wazo from './index';
 
 const MESSAGE_TYPE_CHAT = 'message/TYPE_CHAT';
@@ -19,6 +23,7 @@ class Phone extends Emitter {
 
   ON_CHAT: string;
   ON_SIGNAL: string;
+  SessionState: Object;
 
   constructor() {
     super();
@@ -31,6 +36,7 @@ class Phone extends Emitter {
 
     this.ON_CHAT = 'phone/ON_CHAT';
     this.ON_SIGNAL = 'phone/ON_SIGNAL';
+    this.SessionState = SessionState;
   }
 
   async connect(rawOptions: Object = {}, sipLine: ?SipLine = null) {
@@ -77,8 +83,6 @@ class Phone extends Emitter {
     this.phone = new WebRTCPhone(this.client, options.audioDeviceOutput, true, options.audioDeviceRing);
 
     this._transferEvents();
-
-    await this.client.waitForRegister();
   }
 
   disconnect() {
@@ -130,11 +134,11 @@ class Phone extends Emitter {
     return this.phone && this.phone.transfer(callSession, target);
   }
 
-  atxfer(sipSession: SIP.sessionDescriptionHandler) {
+  atxfer(sipSession: Inviter | Invitation) {
     return this.phone && this.phone.atxfer(sipSession);
   }
 
-  sendMessage(body: string, sipSession: SIP.sessionDescriptionHandler = null, contentType: string = 'text/plain') {
+  sendMessage(body: string, sipSession: Inviter | Invitation = null, contentType: string = 'text/plain') {
     const toSipSession = sipSession || this.getCurrentSipSession();
     if (!toSipSession || !this.phone) {
       return null;
@@ -143,7 +147,7 @@ class Phone extends Emitter {
     return this.phone.sendMessage(toSipSession, body, contentType);
   }
 
-  sendChat(content: string, sipSession: SIP.sessionDescriptionHandler = null) {
+  sendChat(content: string, sipSession: Inviter | Invitation = null) {
     return this.sendMessage(
       JSON.stringify({ type: MESSAGE_TYPE_CHAT, content }),
       sipSession,
@@ -151,7 +155,7 @@ class Phone extends Emitter {
     );
   }
 
-  sendSignal(content: any, sipSession: SIP.sessionDescriptionHandler = null) {
+  sendSignal(content: any, sipSession: Inviter | Invitation = null) {
     return this.sendMessage(
       JSON.stringify({ type: MESSAGE_TYPE_SIGNAL, content }),
       sipSession,
@@ -186,6 +190,10 @@ class Phone extends Emitter {
     const stream = this.phone.client.videoSessions[callSession.getId()];
 
     return stream ? stream.local : null;
+  }
+
+  getLocalMediaStream(callSession: CallSession) {
+    return this.phone && this.phone.getLocalMediaStream(callSession);
   }
 
   getRemoteStreamForCall(callSession: CallSession) {
@@ -251,7 +259,7 @@ class Phone extends Emitter {
     }
   }
 
-  _onMessage(message: SIP.IncomingRequestMessage) {
+  _onMessage(message: Message) {
     if (message.method !== 'MESSAGE') {
       return;
     }

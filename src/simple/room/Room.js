@@ -1,8 +1,8 @@
 /* global document */
 // @flow
+import type { Message } from 'sip.js/lib/api/message';
 import sdpParser from 'sdp-transform';
 
-import SIP from '../../sip';
 import type CallSession from '../../domain/CallSession';
 import getApiClient from '../../service/getApiClient';
 import Logger from '../../utils/logger';
@@ -336,7 +336,7 @@ class Room extends Emitter {
       Wazo.Phone.on(event, (...args) => this.eventEmitter.emit.apply(this.eventEmitter, [event, ...args])));
   }
 
-  _onMessage(message: SIP.IncomingRequestMessage) {
+  _onMessage(message: Message) {
     if (message.method !== 'MESSAGE') {
       return;
     }

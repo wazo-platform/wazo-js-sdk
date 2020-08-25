@@ -61,6 +61,9 @@ export default class CTIPhone extends Emitter implements Phone {
   startHeartbeat() {
   }
 
+  setOnHeartbeatTimeout() {
+  }
+
   stopHeartbeat() {
   }
 
@@ -85,12 +88,12 @@ export default class CTIPhone extends Emitter implements Phone {
     return callSession;
   }
 
-  accept(callSession: CallSession): string | null {
+  accept(callSession: CallSession): Promise<string | null> {
     if (!this.currentCall) {
       this.currentCall = callSession.call;
     }
 
-    return callSession.getId();
+    return Promise.resolve(callSession.getId());
   }
 
   endCurrentCall(callSession: CallSession): void {
