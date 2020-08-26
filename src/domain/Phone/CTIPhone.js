@@ -12,6 +12,8 @@ import CallApi from '../../service/CallApi';
 export const TRANSFER_FLOW_ATTENDED = 'attended';
 export const TRANSFER_FLOW_BLIND = 'blind';
 
+const MINIMUM_WAZO_ENGINE_VERSION_FOR_CTI_HOLD = '20.11';
+
 export default class CTIPhone extends Emitter implements Phone {
   session: Session;
 
@@ -29,11 +31,14 @@ export default class CTIPhone extends Emitter implements Phone {
   }
 
   getOptions(): AvailablePhoneOptions {
+    const hold = this.session.hasEngineVersionGte(MINIMUM_WAZO_ENGINE_VERSION_FOR_CTI_HOLD);
+
     return {
       accept: false,
       decline: true,
       mute: true,
-      hold: false,
+      // $FlowFixMe
+      hold,
       transfer: true,
       sendKey: true,
       addParticipant: false,
@@ -151,9 +156,13 @@ export default class CTIPhone extends Emitter implements Phone {
 
   close() {}
 
-  hold() {}
+  async hold(callSession: CallSession): Promise<void> {
+    await CallApi.hold(callSession.callId);
+  }
 
-  resume() {}
+  async resume(callSession: CallSession): Promise<void> {
+    await CallApi.resume(callSession.callId);
+  }
 
   async mute(callSession: CallSession): Promise<void> {
     await CallApi.mute(callSession.callId);

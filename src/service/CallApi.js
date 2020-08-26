@@ -56,6 +56,14 @@ export default class CallApi {
     return getApiClient().calld.relocateCall(callId, 'line', line, contactIdentifier);
   }
 
+  static async hold(callId: string): Promise<void> {
+    return getApiClient().calld.hold(callId);
+  }
+
+  static async resume(callId: string): Promise<void> {
+    return getApiClient().calld.resume(callId);
+  }
+
   static async mute(callId: string): Promise<void> {
     return getApiClient().calld.mute(callId);
   }
