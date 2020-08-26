@@ -22,7 +22,6 @@ import Profile, { STATE as PROFILE_STATE, LINE_STATE } from './domain/Profile';
 import Session from './domain/Session';
 import Voicemail from './domain/Voicemail';
 import Relocation from './domain/Relocation';
-import Conference from './domain/Conference';
 import Room from './domain/Room';
 import CallSession from './domain/CallSession';
 import IndirectTransfer from './domain/IndirectTransfer';
@@ -57,7 +56,6 @@ import type {
   SwitchboardCallItem as SwitchboardCallItemType,
   SwitchboardCallItems as SwitchboardCallItemsType,
 } from './domain/SwitchboardCall';
-import type { ConferenceParticipant as ConferenceParticipantType } from './domain/Conference';
 import Wazo from './simple/index';
 
 export type NewContact = NewContactType;
@@ -71,7 +69,6 @@ export type Device = DeviceType;
 export type ChatUser = ChatUserType;
 export type Source = DirectorySourceType;
 export type Sources = DirectorySourcesType;
-export type ConferenceParticipant = ConferenceParticipantType;
 export type SwitchboardAnwseredQueuedCall = SwitchboardAnwseredQueuedCallType;
 export type SwitchboardAnwseredHeldCall = SwitchboardAnwseredHeldCallType;
 export type SwitchboardCallItem = SwitchboardCallItemType;
@@ -92,7 +89,6 @@ export default {
   BadResponse,
   ServerError,
   Call,
-  Conference,
   CallSession,
   IndirectTransfer,
   SwitchboardCall,

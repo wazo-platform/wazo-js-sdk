@@ -25,9 +25,9 @@ export type ConferenceArguments = {
   finished?: boolean,
   participants: {[string]: CallSession};
   started?: boolean,
-  startTime: ?number,
-  conferenceId: string,
-  muted: ?boolean,
+  startTime?: ?number,
+  conferenceId?: ?string,
+  muted?: boolean,
 };
 
 // API adhoc conference
@@ -52,7 +52,7 @@ export default class AdHocAPIConference {
     this.started = started || false;
     this.finished = finished || false;
     this.startTime = startTime;
-    this.conferenceId = conferenceId;
+    this.conferenceId = conferenceId || '';
     this.muted = muted || false;
   }
 

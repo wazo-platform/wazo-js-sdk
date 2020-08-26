@@ -409,6 +409,32 @@ Triggered when a participant is talking, or stops talking.
 - `participant`: `Wazo.RemoteParticipant` or `Wazo.LocalParticipant`.
   The participant instance, your can access the `participant.isTalking` attribute to know the status.
   
+#### Ad hoc Conference features      **`Voice`**   **`Video`** 
+##### Merging sessions in one conference
+Use this method to merge multiple calls in a new ad hoc conference.
+```js
+const adHocConference = Wazo.Phone.startConference(host: CallSession, otherCalls: CallSession[]): Promise<AdHocAPIConference>;
+```
+
+##### Add a call to a conference
+Use this method to add a single call to an existing conference room.
+```js
+adHocConference.addParticipant(participant: CallSession);
+```
+
+##### Remove a call from a conference
+Use this method to remove a participant from a conference.
+```js
+adHocConference.removeParticipant(callSession: CallSession);
+// shouldHold indicate if the session should be held after removed from session
+```
+
+##### Terminating a conference
+Use this method to remove a single participant from a conference.
+```js
+adHocConference.hangup();
+```
+  
 ### Accessing the current WebRtc phone
 
 You can access the current [webRtcPhone instance](#WebRTCPhone) via `Wazo.Phone.phone`.
@@ -785,7 +811,7 @@ const client = new WazoWebRTCClient({
 // eventName can be on the of events : 
 // - transport: `connected`, `disconnected`, `transportError`, `message`, `closed`, `keepAliveDebounceTimeout`
 // - webrtc: `registered`, `unregistered`, `registrationFailed`, `invite`, `inviteSent`, `transportCreated`, `newTransaction`, `transactionDestroyed`, `notify`, `outOfDialogReferRequested`, `message`.
-client.on('invite', (sipSession: SIP.sessionDescriptionHandler, hasVideo: boolean, shouldAutoAnswer: boolean) => {
+client.on('invite', (sipSession: SipSession, hasVideo: boolean, shouldAutoAnswer: boolean) => {
   this.currentSipSession = sipSession;
   // ...
 });
@@ -834,7 +860,7 @@ client.call(number: string);
 ##### Be notified to a phone call
 Use this method to be notified of an incoming call.
 ```js
-client.on('invite', (sipSession: SIP.sessionDescriptionHandler) => {
+client.on('invite', (sipSession: SipSession) => {
   this.currentSipSession = sipSession;
 });
 ```
@@ -842,55 +868,55 @@ client.on('invite', (sipSession: SIP.sessionDescriptionHandler) => {
 ##### Answering a call
 Use this method to pick up an incoming call.
 ```js
-client.answer(sipSession: SIP.sessionDescriptionHandler);
+client.answer(sipSession: SipSession);
 ```
 
 ##### Hangup a call
 Use this method to hangup a call (the call must have been already picked up)
 ```js
-client.hangup(sipSession: SIP.sessionDescriptionHandler);
+client.hangup(sipSession: SipSession);
 ```
 
 ##### Rejecting a call
 Use this method to deny an incoming call (Must not have been picked up already)
 ```js
-client.reject(sipSession: SIP.sessionDescriptionHandler);
+client.reject(sipSession: SipSession);
 ```
 
 ##### Muting a call
 Use this method to mute yourself in a running call.
 ```js
-client.mute(sipSession: SIP.sessionDescriptionHandler);
+client.mute(sipSession: SipSession);
 ```
 
 ##### Unmuting a call
 Use this method to unmute yourself in a running call.
 ```js
-client.unmute(sipSession: SIP.sessionDescriptionHandler);
+client.unmute(sipSession: SipSession);
 ```
 
 ##### Holding a call
 Use this method to put a running call on hold.
 ```js
-client.hold(sipSession: SIP.sessionDescriptionHandler);
+client.hold(sipSession: SipSession);
 ```
 
 ##### Unholding a call
 Use this method to resume a running call.
 ```js
-client.unhold(sipSession: SIP.sessionDescriptionHandler);
+client.unhold(sipSession: SipSession);
 ```
 
 ##### Transferring a call
 Use this method to transfer a call to another target.
 ```js
-client.transfert(sipSession: SIP.sessionDescriptionHandler, target: string);
+client.transfert(sipSession: SipSession, target: string);
 ```
 
 ##### Sending a DTMF tone
 Use this method to send the dual-tone multi-frequency from the phone keypad.
 ```js
-client.sendDTMF(sipSession: SIP.sessionDescriptionHandler, tone: string);
+client.sendDTMF(sipSession: SipSession, tone: string);
 ```
 
 ##### Sending a message
@@ -919,32 +945,6 @@ Use this method to put an end to an RTC connection.
 
 ```js
 client.close();
-```
-
-#### Conference features      **`Voice`**   **`Video`**  **`Chat`** 
-##### Merging sessions in one conference
-Use this method to merge multiple calls in a new conference room.
-```js
-client.merge(sessions: Array<SIP.InviteClientContext>);
-```
-
-##### Add a session to a conference
-Use this method to add a single call to an existing conference room.
-```js
-client.addToMerge(sipSession: SIP.InviteClientContext);
-```
-
-##### Remove a session from a conference
-Use this method to remove multiple participants from a conference.
-```js
-client.removeFromMerge(sipSession: SIP.InviteClientContext, shouldHold: boolean);
-// shouldHold indicate if the session should be held after removed from session
-```
-
-##### Unmerge a sessions from a conference
-Use this method to remove a single participant from a conference.
-```js
-client.unmerge(sipSessions: Array<SIP.InviteClientContext>)
 ```
 
 ### WebRTCPhone
@@ -1200,7 +1200,7 @@ Use `phone.currentSipSession` to retrieve the current `sipSession`.
 
 ```js
 phone.sendMessage(
-  sipSession: SIP.sessionDescriptionHandler = null, The sip session where to send to message
+  sipSession: SipSession = null, The sip session where to send to message
   body: string, // The message to SEND
 );
 ```

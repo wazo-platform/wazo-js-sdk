@@ -2,7 +2,6 @@
 /* eslint-disable camelcase */
 import ApiRequester from '../utils/api-requester';
 import type { UUID, RequestError } from '../domain/types';
-import type { ConferenceParticipants } from '../domain/Conference';
 import Relocation from '../domain/Relocation';
 import ChatMessage from '../domain/ChatMessage';
 import Voicemail from '../domain/Voicemail';
@@ -130,7 +129,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     return client.post(`${baseUrl}/users/me/faxes?${params}`, fax, headers);
   },
 
-  getConferenceParticipantsAsUser: async (conferenceId: string): Promise<ConferenceParticipants> =>
+  getConferenceParticipantsAsUser: async (conferenceId: string): Promise<Object> =>
     client.get(`${baseUrl}/users/me/conferences/${conferenceId}/participants`),
 
   listTrunks: () => client.get(`${baseUrl}/trunks`),

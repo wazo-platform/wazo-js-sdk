@@ -472,19 +472,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return remotes && remotes[remotes.length - 1];
   }
 
-  startConference(participants: CallSession[]) {
-    const targetedSessions = participants.map(callSession => this.sipSessions[callSession.getId()]);
-
-    this.client.merge(Object.values(targetedSessions));
-  }
-
-  async addToConference(callSessions: CallSession[]): Promise<void> {
-    const targetedSessions = callSessions.map(callSession => this.sipSessions[callSession.getId()]);
-
-    const mergingSessions = targetedSessions.map(async sipSession => this.client.addToMerge(sipSession));
-    await Promise.all(mergingSessions);
-  }
-
   accept(callSession: CallSession, videoEnabled?: boolean): Promise<string | null> {
     if (this.currentSipSession) {
       this.holdSipSession(this.currentSipSession, true);
@@ -575,28 +562,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
     if (withEvent) {
       this.eventEmitter.emit(ON_CALL_UNHELD, this._createCallSession(sipSession));
     }
-  }
-
-  holdConference(participants: CallSession[]): void {
-    participants.forEach(participant => {
-      const sipSession = this.sipSessions[participant.sipCallId];
-
-      if (sipSession && !participant.isOnHold()) {
-        this.client.hold(sipSession);
-        participant.hold();
-      }
-    });
-  }
-
-  resumeConference(participants: CallSession[]): void {
-    participants.forEach(participant => {
-      const sipSession = this.sipSessions[participant.sipCallId];
-
-      if (sipSession && participant.isOnHold()) {
-        this.client.unhold(sipSession);
-        participant.resume();
-      }
-    });
   }
 
   resume(callSession?: CallSession): void {
@@ -746,64 +711,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     this.shouldSendReinvite = false;
     return true;
-  }
-
-  async hangupConference(participants: CallSession[]): Promise<void> {
-    participants.forEach(participant => {
-      const sipSession = this.sipSessions[participant.sipCallId];
-      if (!sipSession) {
-        return;
-      }
-
-      this.client.removeFromMerge(sipSession, false);
-
-      const sipSessionId = this.client.getSipSessionId(sipSession);
-      if (sipSessionId) {
-        delete this.sipSessions[sipSessionId];
-      }
-
-      this.client.hangup(sipSession);
-      this.endCurrentCall(participant);
-    });
-  }
-
-  async removeFromConference(participants: CallSession[]): Promise<void> {
-    participants.forEach(participant => {
-      const sipSession = this.sipSessions[participant.sipCallId];
-      if (!sipSession || participant.isOnHold()) {
-        return;
-      }
-
-      this.client.removeFromMerge(sipSession, false);
-      this.client.hold(sipSession);
-      participant.hold();
-    });
-  }
-
-  muteConference(participants: CallSession[]): void {
-    participants.forEach(participant => {
-      const sipSession = this.sipSessions[participant.sipCallId];
-      if (!sipSession) {
-        return;
-      }
-
-      this.client.mute(sipSession);
-      participant.mute();
-      this.eventEmitter.emit(ON_CALL_MUTED, participant);
-    });
-  }
-
-  unmuteConference(participants: CallSession[]): void {
-    participants.forEach(participant => {
-      const sipSession = this.sipSessions[participant.sipCallId];
-      if (!sipSession) {
-        return;
-      }
-
-      this.client.unmute(sipSession);
-      participant.unmute();
-      this.eventEmitter.emit(ON_CALL_UNMUTED, participant);
-    });
   }
 
   endCurrentCall(callSession: CallSession): void {
