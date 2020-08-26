@@ -61,8 +61,6 @@ const ON_REINVITE = 'reinvite';
 export const events = [REGISTERED, UNREGISTERED, REGISTRATION_FAILED, INVITE];
 export const transportEvents = [CONNECTED, DISCONNECTED, TRANSPORT_ERROR, MESSAGE];
 
-const MAX_MERGE_SESSIONS = 4;
-
 type MediaConfig = {
   audio: Object & boolean,
   video: Object & boolean,
@@ -101,7 +99,6 @@ export default class WebRTCClient extends Emitter {
   localVideo: ?Object & ?boolean;
   audioContext: ?AudioContext;
   audioStreams: Object;
-  audioMixer: ?any /* ChannelMerger */;
   audioOutputDeviceId: ?string;
   audioOutputVolume: number;
   videoSessions: Object;
@@ -355,10 +352,6 @@ export default class WebRTCClient extends Emitter {
       this._cleanupMedia(session);
       const { state } = session;
 
-      if (this.getSipSessionId(session) in this.audioStreams) {
-        this.removeFromMerge(session);
-      }
-
       this._cleanupMedia(session);
 
       // Check if Invitation or Inviter (Invitation = incoming call)
@@ -541,105 +534,6 @@ export default class WebRTCClient extends Emitter {
     };
 
     return result;
-  }
-
-  merge(sessions: Array<Inviter>): Array<Promise<boolean>> {
-    this._checkMaxMergeSessions(sessions.length);
-    if (this.audioContext) {
-      this.audioMixer = this.audioContext.createChannelMerger(10);
-    }
-
-    if (this.audioContext && this.audioContext.state === 'suspended') {
-      this.audioContext.resume();
-    }
-
-    return sessions.map(this.addToMerge.bind(this));
-  }
-
-  addToMerge(session: Inviter) {
-    this._checkMaxMergeSessions(Object.keys(this.audioStreams).length + 1);
-
-    const sdh = session.sessionDescriptionHandler;
-    const pc = sdh.peerConnection;
-
-    const bindStreams = remoteStream => {
-      const localStream = this.getLocalStream(pc);
-      if (!this.audioContext || !this.audioMixer) {
-        return;
-      }
-
-      const localAudioSource = this.audioContext.createMediaStreamSource(localStream);
-      // $FlowFixMe
-      localAudioSource.connect(this.audioMixer);
-
-      const remoteAudioSource = this._addAudioStream(remoteStream);
-
-      // $FlowFixMe
-      const audioPeerDestination = this.audioContext.createMediaStreamDestination();
-      // $FlowFixMe
-      this.audioMixer.connect(audioPeerDestination);
-
-      this.audioStreams[this.getSipSessionId(session)] = { localAudioSource, remoteAudioSource };
-
-      const sender = pc.getSenders().filter(s => s.track.kind === 'audio')[0];
-      if (sender) {
-        sender.replaceTrack(audioPeerDestination.stream.getAudioTracks()[0]);
-      }
-    };
-
-    if (session.localHold && !this.isFirefox()) {
-      this.unhold(session);
-
-      // When call is hold we lost the current track. Wait for another one.
-      return sdh.once('addTrack', e => bindStreams(e.streams[0]));
-    }
-
-    return bindStreams(this._getRemoteStream(pc));
-  }
-
-  removeFromMerge(session: Inviter, shouldHold: boolean = true) {
-    const sdh = session.sessionDescriptionHandler;
-    const pc = sdh.peerConnection;
-    const { localAudioSource, remoteAudioSource } = this.audioStreams[this.getSipSessionId(session)];
-
-    if (remoteAudioSource) {
-      remoteAudioSource.disconnect(this.audioMixer);
-    }
-    localAudioSource.disconnect(this.audioMixer);
-
-    if (this.audioContext) {
-      const newDestination = this.audioContext.createMediaStreamDestination();
-      localAudioSource.connect(newDestination);
-      if (remoteAudioSource) {
-        remoteAudioSource.connect(newDestination);
-      }
-
-      if (pc.signalingState === 'closed' || pc.iceConnectionState === 'closed') {
-        return null;
-      }
-
-    }
-
-    delete this.audioStreams[this.getSipSessionId(session)];
-
-    if (shouldHold) {
-      this.hold(session);
-    }
-  }
-
-  unmerge(sessions: Array<Inviter>): Promise<boolean> {
-    const nbSessions = sessions.length;
-
-    const promises = sessions.map((session, i) => this.removeFromMerge(session, i < nbSessions - 1));
-
-    return new Promise((resolve, reject) => {
-      Promise.all(promises)
-        .then(() => {
-          this.audioMixer = null;
-          resolve(true);
-        })
-        .catch(reject);
-    });
   }
 
   pingServer() {
@@ -933,14 +827,6 @@ export default class WebRTCClient extends Emitter {
     }
   }
 
-  _checkMaxMergeSessions(nbSessions: number) {
-    if (nbSessions < MAX_MERGE_SESSIONS) {
-      return;
-    }
-
-    console.warn(`Merging more than ${MAX_MERGE_SESSIONS} session is not recommended, it's too expensive for CPU.`);
-  }
-
   _isWeb() {
     return typeof window === 'object' && typeof document === 'object';
   }
@@ -1116,12 +1002,6 @@ export default class WebRTCClient extends Emitter {
 
   // Invitation and Inviter extends Session
   _setupSession(session: Session) {
-    session.stateChange.addListener((newState: SessionState) => {
-      if (newState === SessionState.Terminated && this.getSipSessionId(session) in this.audioStreams) {
-        this.removeFromMerge(session);
-      }
-    });
-
     // When receiving an Invitation, the delegate is not defined.
     if (!session.delegate) {
       session.delegate = {};
@@ -1171,18 +1051,6 @@ export default class WebRTCClient extends Emitter {
     audio.srcObject = remoteStream;
     audio.volume = this.audioOutputVolume;
     audio.play().catch(() => {});
-  }
-
-  _addAudioStream(mediaStream: MediaStream) {
-    if (!this.audioContext || !mediaStream) {
-      return null;
-    }
-    const audioSource = this.audioContext.createMediaStreamSource(mediaStream);
-    if (this.audioMixer) {
-      audioSource.connect(this.audioMixer);
-    }
-
-    return audioSource;
   }
 
   _setupLocalMedia(session: Session) {

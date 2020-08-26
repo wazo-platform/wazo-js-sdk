@@ -167,22 +167,6 @@ export default class CTIPhone extends Emitter implements Phone {
 
   putOffSpeaker() {}
 
-  startConference() {}
-
-  addToConference() {}
-
-  muteConference() {}
-
-  unmuteConference() {}
-
-  holdConference() {}
-
-  resumeConference() {}
-
-  hangupConference() {}
-
-  removeFromConference() {}
-
   turnCameraOff() {}
 
   turnCameraOn() {}

@@ -25,7 +25,6 @@ import Profile from '../domain/Profile';
 import Session from '../domain/Session';
 import Voicemail from '../domain/Voicemail';
 import Relocation from '../domain/Relocation';
-import Conference from '../domain/Conference';
 import ConferenceRoom from '../domain/Room';
 import CallSession from '../domain/CallSession';
 import IndirectTransfer from '../domain/IndirectTransfer';
@@ -61,7 +60,6 @@ const Wazo = {
     Session,
     Voicemail,
     Relocation,
-    Conference,
     ConferenceRoom,
     CallSession,
     IndirectTransfer,

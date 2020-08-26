@@ -32,8 +32,6 @@ export type AvailablePhoneOptions = {
 export interface Phone {
   accept(callSession: CallSession, enableVideo: boolean): Promise<string | null>;
 
-  addToConference(participants: CallSession[]): PhoneVoid;
-
   changeAudioDevice(id: string): PhoneVoid;
 
   changeRingDevice(id: string): PhoneVoid;
@@ -66,13 +64,9 @@ export interface Phone {
 
   hangup(callSession: CallSession): Promise<boolean>;
 
-  hangupConference(participants: CallSession[]): PhoneVoid;
-
   hasAnActiveCall(): boolean;
 
   hold(callSession: CallSession): PhoneVoid;
-
-  holdConference(participants: CallSession[]): PhoneVoid;
 
   indirectTransfer(source: CallSession, destination: CallSession): PhoneVoid;
 
@@ -92,19 +86,11 @@ export interface Phone {
 
   mute(callSession: CallSession): PhoneVoid;
 
-  muteConference(participants: CallSession[]): PhoneVoid;
-
   reject(callSession: CallSession): PhoneVoid;
-
-  removeFromConference(participants: CallSession[]): PhoneVoid;
 
   resume(callSession: CallSession): PhoneVoid;
 
-  resumeConference(participants: CallSession[]): PhoneVoid;
-
   sendKey(callSession: CallSession, tone: string): PhoneVoid;
-
-  startConference(participants: CallSession[]): PhoneVoid;
 
   transfer(callSession: CallSession, target: string): PhoneVoid;
 
@@ -115,8 +101,6 @@ export interface Phone {
   unmute(callSession: CallSession): PhoneVoid;
 
   setActiveSipSession(callSession: CallSession): PhoneVoid;
-
-  unmuteConference(participants: CallSession[]): PhoneVoid;
 
   isRegistered(): boolean;
 

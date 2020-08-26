@@ -7,6 +7,7 @@ import { SessionState } from 'sip.js/lib/api/session-state';
 import type SipLine from '../domain/SipLine';
 import type Session from '../domain/Session';
 import type CallSession from '../domain/CallSession';
+import AdHocAPIConference from '../domain/AdHocAPIConference';
 import WebRTCPhone, * as PHONE_EVENTS from '../domain/Phone/WebRTCPhone';
 import WazoWebRTCClient, { events as clientEvents, transportEvents } from '../web-rtc-client';
 import Emitter from '../utils/Emitter';
@@ -108,6 +109,16 @@ class Phone extends Emitter {
 
   async accept(callSession: CallSession, videoEnabled?: boolean) {
     return this.phone && this.phone.accept(callSession, videoEnabled);
+  }
+
+  async startConference(host: CallSession, otherCalls: CallSession[]) {
+    const participants = [host, ...otherCalls].reduce((acc: Object, participant: CallSession) => {
+      acc[participant.getTalkingToIds()[0]] = participant;
+      return acc;
+    }, {});
+    const adHocConference = new AdHocAPIConference({ host, participants });
+
+    return adHocConference.start();
   }
 
   mute(callSession: CallSession) {
