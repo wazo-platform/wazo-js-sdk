@@ -149,7 +149,7 @@ export default class CTIPhone extends Emitter implements Phone {
     this.eventEmitter.emit('onCallAccepted');
   }
 
-  close() {}
+  async close() {}
 
   hold() {}
 

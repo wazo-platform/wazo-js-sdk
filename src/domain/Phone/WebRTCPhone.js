@@ -145,9 +145,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   unregister() {
     if (!this.client || !this.client.isRegistered()) {
-      return;
+      return null;
     }
-    this.client.unregister();
+    return this.client.unregister();
   }
 
   stop() {
@@ -820,9 +820,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   onConnectionMade(): void {}
 
-  close(): void {
+  async close(): Promise<void> {
     IssueReporter.log(IssueReporter.INFO, '[WebRtcPhone] close');
-    this.unregister();
+    await this.unregister();
     this.client.close();
     this.unbind();
 
