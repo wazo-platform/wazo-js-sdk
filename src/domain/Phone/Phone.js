@@ -46,7 +46,7 @@ export interface Phone {
 
   onConnectionMade(): PhoneVoid;
 
-  close(): PhoneVoid;
+  close(): Promise<PhoneVoid>;
 
   disableRinging(): PhoneVoid;
 
