@@ -157,19 +157,19 @@ export default class CTIPhone extends Emitter implements Phone {
   close() {}
 
   async hold(callSession: CallSession): Promise<void> {
-    await CallApi.hold(callSession.callId);
+    return CallApi.hold(callSession.callId);
   }
 
   async resume(callSession: CallSession): Promise<void> {
-    await CallApi.resume(callSession.callId);
+    return CallApi.resume(callSession.callId);
   }
 
   async mute(callSession: CallSession): Promise<void> {
-    await CallApi.mute(callSession.callId);
+    return CallApi.mute(callSession.callId);
   }
 
   async unmute(callSession: CallSession): Promise<void> {
-    await CallApi.unmute(callSession.callId);
+    return CallApi.unmute(callSession.callId);
   }
 
   putOnSpeaker() {}
