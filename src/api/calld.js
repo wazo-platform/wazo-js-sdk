@@ -140,6 +140,12 @@ export default (client: ApiRequester, baseUrl: string) => ({
   unmute: (callId: string) =>
     client.put(`${baseUrl}/users/me/calls/${callId}/mute/stop`, null, null, ApiRequester.successResponseParser),
 
+  hold: (callId: string) =>
+    client.put(`${baseUrl}/users/me/calls/${callId}/hold/start`, null, null, ApiRequester.successResponseParser),
+
+  resume: (callId: string) =>
+    client.put(`${baseUrl}/users/me/calls/${callId}/hold/stop`, null, null, ApiRequester.successResponseParser),
+
   // eslint-disable-next-line camelcase
   transferCall: (initiator_call: string, exten: string, flow: string) =>
     client.post(`${baseUrl}/users/me/transfers`, { initiator_call, exten, flow }),
