@@ -111,7 +111,7 @@ class Phone extends Emitter {
     return this.phone && this.phone.accept(callSession, videoEnabled);
   }
 
-  async startConference(host: CallSession, otherCalls: CallSession[]) {
+  async startConference(host: CallSession, otherCalls: CallSession[]): Promise<AdHocAPIConference> {
     const participants = [host, ...otherCalls].reduce((acc: Object, participant: CallSession) => {
       acc[participant.getTalkingToIds()[0]] = participant;
       return acc;
