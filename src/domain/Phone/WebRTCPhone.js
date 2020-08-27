@@ -208,6 +208,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.setOnHeartbeatTimeout(cb);
   }
 
+  setOnHeartbeatCallback(cb: Function) {
+    this.client.setOnHeartbeatCallback(cb);
+  }
+
   getOptions(): AvailablePhoneOptions {
     return {
       accept: true,

@@ -56,14 +56,16 @@ class IssueReporter {
     this.log(status < 500 ? 'info' : 'warn', curl);
   }
 
-  getReport() {
-    return global.wazoIssueReporterLogs
-      .map(log => `${log.date.toString().substr(0, 24)} - ${log.level} - ${log.message}`)
-      .join('\r\n');
-  }
-
   getLogs() {
     return global.wazoIssueReporterLogs;
+  }
+
+  getParsedLogs() {
+    return this.getLogs().map(log => `${log.date.toString().substr(0, 24)} - ${log.level} - ${log.message}`);
+  }
+
+  getReport() {
+    return this.getParsedLogs().join('\r\n');
   }
 
   _catchConsole() {

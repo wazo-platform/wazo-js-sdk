@@ -107,6 +107,7 @@ export default class WebRTCClient extends Emitter {
   _boundOnHeartbeat: Function;
   heartbeat: Heartbeat;
   heartbeatTimeoutCb: ?Function;
+  heartbeatCb: ?Function;
 
   attemptingReconnection: boolean;
   shouldBeConnected: boolean;
@@ -795,6 +796,10 @@ export default class WebRTCClient extends Emitter {
     this.heartbeatTimeoutCb = cb;
   }
 
+  setOnHeartbeatCallback(cb: Function) {
+    this.heartbeatCb = cb;
+  }
+
   attemptReconnection(): void {
     this.userAgent.attemptReconnection();
   }
@@ -808,6 +813,9 @@ export default class WebRTCClient extends Emitter {
     const body = message && typeof message === 'object' ? message.data : message;
     if (body.indexOf('200 OK') !== -1) {
       this.heartbeat.onHeartbeat();
+      if (this.heartbeatCb) {
+        this.heartbeatCb();
+      }
     }
   }
 

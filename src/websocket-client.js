@@ -108,6 +108,7 @@ class WebSocketClient extends Emitter {
   _boundOnHeartbeat: Function;
   heartbeat: Heartbeat;
   onHeartBeatTimeout: Function;
+  heartbeatCb: Function;
 
   static eventLists: Array<string>;
 
@@ -239,6 +240,10 @@ class WebSocketClient extends Emitter {
     this.onHeartBeatTimeout = cb;
   }
 
+  setOnHeartbeatCallback(cb: Function) {
+    this.heartbeatCb = cb;
+  }
+
   pingServer() {
     if (!this.socket || !this.isConnected()) {
       return;
@@ -283,6 +288,9 @@ class WebSocketClient extends Emitter {
   _handleMessage(message: Object) {
     if (message.op === 'pong') {
       this.eventEmitter.emit('pong', message.data);
+      if (this.heartbeatCb) {
+        this.heartbeatCb();
+      }
       return;
     }
 
@@ -307,12 +315,12 @@ class WebSocketClient extends Emitter {
   }
 
   async _onHeartbeatTimeout() {
+    this.close();
+    this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE, new Error('Websocket ping failure.'));
+
     if (this.onHeartBeatTimeout) {
       this.onHeartBeatTimeout();
     }
-
-    this.close();
-    this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE, new Error('Websocket ping failure.'));
   }
 }
 
