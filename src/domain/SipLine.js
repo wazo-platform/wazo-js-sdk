@@ -31,8 +31,6 @@ type SipLineArguments = {
 };
 
 export default class SipLine {
-  type: string;
-
   id: number;
   tenantUuid: string;
   username: string;
@@ -77,9 +75,8 @@ export default class SipLine {
   }
 
   hasVideoConference() {
-    return this.options.some(option =>
-      (option[0] === 'max_audio_streams' && parseInt(option[1], 10) > 0)
-      && (option[0] === 'max_video_streams' && parseInt(option[1], 10) > 1));
+    return this.options.some(option => (option[0] === 'max_audio_streams' && parseInt(option[1], 10) > 0))
+      && this.options.some(option => (option[0] === 'max_video_streams' && parseInt(option[1], 10) > 1));
   }
 
   constructor({ id, tenantUuid, username, secret, type, host, options, links, trunk, line }: SipLineArguments = {}) {
