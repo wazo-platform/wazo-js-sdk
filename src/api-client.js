@@ -8,6 +8,7 @@ import callLogdMethods from './api/call-logd';
 import chatdMethods from './api/chatd';
 import calldMethods from './api/calld';
 import agentdMethods from './api/agentd';
+import webhookdMethods from './api/webhookd';
 
 import ApiRequester from './utils/api-requester';
 
@@ -28,6 +29,7 @@ const CALL_LOGD_VERSION = '1.0';
 const CHATD_VERSION = '1.0';
 const CALLD_VERSION = '1.0';
 const AGENTD_VERSION = '1.0';
+const WEBHOOKD_VERSION = '1.0';
 
 export default class ApiClient {
   client: ApiRequester;
@@ -40,6 +42,7 @@ export default class ApiClient {
   chatd: Object;
   calld: Object;
   agentd: Object;
+  webhookd: Object;
 
   refreshToken: ?string;
   onRefreshToken: ?Function;
@@ -64,6 +67,7 @@ export default class ApiClient {
     this.chatd = chatdMethods(this.client, `chatd/${CHATD_VERSION}`);
     this.calld = calldMethods(this.client, `calld/${CALLD_VERSION}`);
     this.agentd = agentdMethods(this.client, `agentd/${AGENTD_VERSION}`);
+    this.webhookd = webhookdMethods(this.client, `webhookd/${WEBHOOKD_VERSION}`);
   }
 
   updateParameters({ server, agent, clientId }: { server: string, agent: ?Object, clientId: ?string }) {
