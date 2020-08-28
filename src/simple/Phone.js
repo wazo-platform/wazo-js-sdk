@@ -262,10 +262,12 @@ class Phone extends Emitter {
     });
   }
 
-  checkSfu() {
-    const hasSfu = this.sipLine && this.sipLine.hasVideoConference();
+  hasSfu() {
+    return this.sipLine && this.sipLine.hasVideoConference();
+  }
 
-    if (!hasSfu) {
+  checkSfu() {
+    if (!this.hasSfu()) {
       throw new Error('Sorry your user is not configured to support video conference');
     }
   }
