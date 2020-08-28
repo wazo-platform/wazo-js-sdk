@@ -54,8 +54,8 @@ class Subscription {
     });
   }
 
-  static parseMany(response: SubscriptionResponse[]): Subscription[] {
-    return response.map(payload => Subscription.parse(payload));
+  static parseMany(response: { items: SubscriptionResponse[] }): Subscription[] {
+    return response.items.map(payload => Subscription.parse(payload));
   }
 
   constructor({
