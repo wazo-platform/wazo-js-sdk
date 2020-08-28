@@ -125,9 +125,14 @@ class Room extends Emitter {
    */
   static async connect({ extension, constraints, extra }: Object) {
     await Wazo.Phone.connect({ media: constraints });
-    Wazo.Phone.checkSfu();
 
-    const callSession = await Wazo.Phone.call(extension, constraints && !!constraints.video);
+    const withCamera = constraints && !!constraints.video;
+
+    if (withCamera) {
+      Wazo.Phone.checkSfu();
+    }
+
+    const callSession = await Wazo.Phone.call(extension, withCamera);
     const room = new Room(callSession, extension, null, null, extra);
 
     // Call_created is triggered before call_accepted, so we have to listen for it here.
