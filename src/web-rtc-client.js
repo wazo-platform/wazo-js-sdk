@@ -37,7 +37,7 @@ import IssueReporter from './service/IssueReporter';
 import Heartbeat from './utils/Heartbeat';
 
 // We need to replace 0.0.0.0 to 127.0.0.1 in the sdp to avoid MOH during a createOffer.
-const replaceLocalIpModifier = (description: Object) => Promise.resolve({
+export const replaceLocalIpModifier = (description: Object) => Promise.resolve({
   ...description,
   sdp: description.sdp.replace('c=IN IP4 0.0.0.0', 'c=IN IP4 127.0.0.1'),
 });
@@ -674,6 +674,21 @@ export default class WebRTCClient extends Emitter {
 
   changeVideo(enabled: boolean) {
     this.videoEnabled = enabled;
+  }
+
+  reinvite(sipSession: Session) {
+    return sipSession.invite({
+      sessionDescriptionHandlerModifiers: [replaceLocalIpModifier],
+      sessionDescriptionHandlerOptions: {
+        offerOptions: {
+          iceRestart: true,
+        },
+        constraints: {
+          audio: true,
+          video: this.sessionWantsToDoVideo(sipSession),
+        },
+      },
+    });
   }
 
   sessionHasLocalVideo(sessionId: string): boolean {
