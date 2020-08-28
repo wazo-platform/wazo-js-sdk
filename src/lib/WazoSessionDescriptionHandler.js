@@ -61,6 +61,17 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
 
     const isOffer = this._peerConnection.signalingState === 'stable';
 
+    // Fetch ice ourselves for re-invite
+    const gatheredIces = [];
+    if (!this.peerConnectionDelegate) {
+      this.peerConnectionDelegate = {};
+    }
+    this.peerConnectionDelegate.onicecandidate = event => {
+      if (event.candidate) {
+        gatheredIces.push(event.candidate.candidate);
+      }
+    };
+
     return this.getLocalMediaStream(options)
       .then(() => this.createDataChannel(options))
       .then(() => this.createLocalOfferOrAnswer(options))
@@ -69,9 +80,22 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       .then(() => this.waitForIceGatheringComplete(iceRestart, iceTimeout))
       .then((description: any) =>
         (isOffer ? this._peerConnection.createOffer(options.offerOptions || {}) : description))
+      .then((sessionDescription) => this.applyModifiers(sessionDescription, modifiers))
       .then((sessionDescription: any) =>
         (isOffer ? this.setLocalSessionDescription(sessionDescription) : sessionDescription))
       .then(() => this.getLocalSessionDescription())
+      .then((localDescription) => {
+        // Avoid immutable errors
+        const newDescription = JSON.parse(JSON.stringify(localDescription));
+        // Add ice candidates if not present
+        if (newDescription.sdp.indexOf('a=candidate') === -1) {
+          gatheredIces.forEach(ice => {
+            // eslint-disable-next-line
+            newDescription.sdp += `a=${ice}${"\n"}`;
+          });
+        }
+        return newDescription;
+      })
       .then((sessionDescription) => ({ body: sessionDescription.sdp, contentType: 'application/sdp' }))
       .catch((error) => {
         this.logger.error(`SessionDescriptionHandler.getDescription failed - ${error}`);

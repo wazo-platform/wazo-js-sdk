@@ -171,17 +171,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
     if (!sipSession) {
       return;
     }
-    sipSession.reinvite({
-      sessionDescriptionHandlerOptions: {
-        offerOptions: {
-          iceRestart: true,
-        },
-        constraints: {
-          audio: true,
-          video: this.client.sessionWantsToDoVideo(sipSession),
-        },
-      },
-    });
+
+    return this.client.reinvite(sipSession);
   }
 
   getUserAgent() {
