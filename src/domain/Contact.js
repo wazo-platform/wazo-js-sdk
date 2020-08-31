@@ -251,7 +251,7 @@ export default class Contact {
 
   static merge(oldContacts: Array<Contact>, newContacts: Array<Contact>): Array<Contact> {
     return newContacts.map(current => {
-      const old = oldContacts.find(contact => contact.is(current));
+      const old = oldContacts.find(contact => contact && contact.is(current));
 
       return typeof old !== 'undefined' ? current.merge(old) : current;
     });

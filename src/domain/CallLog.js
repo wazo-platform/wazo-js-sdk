@@ -73,7 +73,7 @@ export default class CallLog {
     const allLogs: Array<CallLog> = current.concat(toMerge);
     const onlyUniqueIds: Array<number> = allLogs.map(c => c.id).filter(onlyUnique);
 
-    return onlyUniqueIds.map(id => allLogs.find(log => log.id === id));
+    return onlyUniqueIds.map(id => allLogs.find(log => log && log.id === id));
   }
 
   static parseMany(plain: Response): Array<CallLog> {

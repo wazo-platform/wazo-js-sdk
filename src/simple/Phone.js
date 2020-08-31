@@ -226,7 +226,7 @@ class Phone extends Emitter {
   }
 
   getLineById(lineId: string) {
-    return this.getSipLines().find(line => line.id === lineId);
+    return this.getSipLines().find(line => line && line.id === lineId);
   }
 
   getSipLines() {
