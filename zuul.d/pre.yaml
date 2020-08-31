@@ -6,19 +6,34 @@
       apt_key:
         url: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
         state: present
+
     - name: Add Node 12 repo
       apt_repository:
-        repo:  deb https://deb.nodesource.com/node_12.x buster main
+        repo: deb https://deb.nodesource.com/node_12.x buster main
         state: present
-        update_cache: yes
-    - name: install yarn
+
+    - name: add Yarn APT key
+      apt_key:
+        url: https://dl.yarnpkg.com/debian/pubkey.gpg
+        state: present
+
+    - name: Add Yarn repo
+      apt_repository:
+        repo: deb https://dl.yarnpkg.com/debian/ stable main
+        state: present
+
+    - name: Install Yarn
       apt:
-        name: yarnpkg
-        state: present
+        name:
+          - nodejs
+          - yarn
+        state: latest
         update_cache: yes
+
     - name: Get package facts
       package_facts:
         manager: apt
+
     - name: Show package versions
       debug:
-        msg: "yarnpkg=={{ ansible_facts.packages['yarnpkg'][0]['version'] }}, nodejs=={{ ansible_facts.packages['nodejs'][0]['version'] }}"
+        msg: "yarn=={{ ansible_facts.packages['yarn'][0]['version'] }}, nodejs=={{ ansible_facts.packages['nodejs'][0]['version'] }}"
