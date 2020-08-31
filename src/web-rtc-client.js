@@ -38,7 +38,8 @@ import Heartbeat from './utils/Heartbeat';
 
 // We need to replace 0.0.0.0 to 127.0.0.1 in the sdp to avoid MOH during a createOffer.
 export const replaceLocalIpModifier = (description: Object) => Promise.resolve({
-  ...description,
+  // description is immutable... so we have to clone it or the `type` attribute won't be returned.
+  ...JSON.parse(JSON.stringify(description)),
   sdp: description.sdp.replace('c=IN IP4 0.0.0.0', 'c=IN IP4 127.0.0.1'),
 });
 

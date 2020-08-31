@@ -315,7 +315,7 @@ class Room extends Emitter {
 
     this.on(this.ON_REMOVE_STREAM, stream => {
       const participant = this.participants.find(someParticipant =>
-        someParticipant.streams.find(someStream => someStream.id === stream.id));
+        someParticipant.streams.find(someStream => someStream && someStream.id === stream.id));
       if (!participant) {
         return;
       }

@@ -161,11 +161,11 @@ export default class Session {
   }
 
   primaryWebRtcLine(): ?SipLine {
-    return this.profile && this.profile.sipLines.find(sipLine => sipLine.isWebRtc());
+    return this.profile && this.profile.sipLines.find(sipLine => sipLine && sipLine.isWebRtc());
   }
 
   primaryCtiLine(): ?SipLine {
-    return this.profile && this.profile.sipLines.find(sipLine => !sipLine.isWebRtc());
+    return this.profile && this.profile.sipLines.find(sipLine => sipLine && !sipLine.isWebRtc());
   }
 
   primaryContext(): string {
