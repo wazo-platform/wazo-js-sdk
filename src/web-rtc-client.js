@@ -109,9 +109,6 @@ export default class WebRTCClient extends Emitter {
   heartbeatTimeoutCb: ?Function;
   heartbeatCb: ?Function;
 
-  attemptingReconnection: boolean;
-  shouldBeConnected: boolean;
-
   // sugar
   ON_USER_AGENT: string;
   REGISTERED: string;
@@ -161,8 +158,6 @@ export default class WebRTCClient extends Emitter {
     this.videoSessions = {};
     this.heldSessions = {};
     this.connectionPromise = null;
-    this.attemptingReconnection = false;
-    this.shouldBeConnected = false;
 
     this._boundOnHeartbeat = this._onHeartbeat.bind(this);
     this.heartbeat = new Heartbeat(config.heartbeatDelay, config.heartbeatTimeout, config.maxHeartbeats);
@@ -270,7 +265,6 @@ export default class WebRTCClient extends Emitter {
 
     return this._connectIfNeeded().then(() => {
       this.registerer = new Registerer(this.userAgent, registerOptions);
-      this.shouldBeConnected = true;
       this.connectionPromise = null;
 
       // Bind registerer events
@@ -951,7 +945,7 @@ export default class WebRTCClient extends Emitter {
       logConnector: this.config.log ? this.config.log.connector : null,
       uri: this._makeURI(this.config.authorizationUser || ''),
       userAgentString: this.config.userAgentString || 'wazo-sdk',
-      reconnectionAttempts: 50,
+      reconnectionAttempts: 10000,
       reconnectionDelay: 5,
       sessionDescriptionHandlerFactory: (session: Session, options: SessionDescriptionHandlerFactoryOptions = {}) => {
         const logger = session.userAgent.getLogger('sip.WazoSessionDescriptionHandler');
