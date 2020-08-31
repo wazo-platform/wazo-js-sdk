@@ -1,9 +1,24 @@
 ---
 - hosts: all
+  become: yes
   tasks:
+    - name: add Node 12 APT key
+      apt_key:
+        url: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
+        state: present
+    - name: Add Node 12 repo
+      apt_repository:
+        repo:  deb https://deb.nodesource.com/node_12.x buster main
+        state: present
+        update_cache: yes
     - name: install yarn
-      become: yes
       apt:
         name: yarnpkg
         state: present
         update_cache: yes
+    - name: Get package facts
+      package_facts:
+        manager: apt
+    - name: Show package versions
+      debug:
+        msg: "yarnpkg=={{ ansible_facts.packages['yarnpkg'][0]['version'] }}, nodejs=={{ ansible_facts.packages['nodejs'][0]['version'] }}"
