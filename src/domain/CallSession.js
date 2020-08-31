@@ -134,6 +134,10 @@ export default class CallSession {
     this.cameraEnabled = true;
   }
 
+  disableCamera() {
+    this.cameraEnabled = false;
+  }
+
   ignore() {
     this.ignored = true;
   }

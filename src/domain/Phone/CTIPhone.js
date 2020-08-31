@@ -96,12 +96,12 @@ export default class CTIPhone extends Emitter implements Phone {
     return callSession;
   }
 
-  accept(callSession: CallSession): Promise<string | null> {
+  accept(callSession: CallSession): Promise<CallSession | null> {
     if (!this.currentCall) {
       this.currentCall = callSession.call;
     }
 
-    return Promise.resolve(callSession.getId());
+    return Promise.resolve(callSession);
   }
 
   endCurrentCall(callSession: CallSession): void {

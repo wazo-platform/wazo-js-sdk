@@ -467,7 +467,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return remotes && remotes[remotes.length - 1];
   }
 
-  accept(callSession: CallSession, videoEnabled?: boolean): Promise<string | null> {
+  accept(callSession: CallSession, videoEnabled?: boolean): Promise<CallSession | null> {
     if (this.currentSipSession) {
       this.holdSipSession(this.currentSipSession, true);
     }
@@ -476,19 +476,24 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return Promise.resolve(null);
     }
 
+    if (!videoEnabled && callSession.cameraEnabled) {
+      callSession.disableCamera();
+    }
+
     this.shouldSendReinvite = false;
     this.acceptedSessions[callSession.getId()] = true;
 
     this.eventEmitter.emit(ON_CALL_ANSWERED, callSession);
 
     const sipSession = this.sipSessions[callSession.getId()];
+
     if (sipSession) {
       return this.client.answer(sipSession, this.allowVideo ? videoEnabled : false).then(() => {
-        return callSession.sipCallId;
+        return callSession;
       });
     }
 
-    return Promise.resolve(null);
+    return Promise.resolve(callSession);
   }
 
   async reject(callSession: CallSession): Promise<void> {
