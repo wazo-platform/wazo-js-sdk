@@ -1185,7 +1185,7 @@ export default class WebRTCClient extends Emitter {
           remoteStream.addTrack(track);
         }
       });
-    } else {
+    } else if (pc) {
       [remoteStream] = pc.getRemoteStreams();
     }
 

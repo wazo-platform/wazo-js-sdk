@@ -39,11 +39,8 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     return result;
   }
 
-  // Overridden to avoid to use peerConnection.getReceivers and peerConnection.getSenders in react-native
+  // Overridden to avoid to fix ice-candidates missing in the SDP in react-native and chrome canary.
   getDescription(options?: Object = {}, modifiers?: Array<Function>): Promise<any> {
-    if (this.isWeb) {
-      return super.getDescription(options, modifiers);
-    }
     this.logger.debug('SessionDescriptionHandler.getDescription');
     if (this._peerConnection === undefined) {
       return Promise.reject(new Error('Peer connection closed.'));
