@@ -811,6 +811,9 @@ export default class WebRTCClient extends Emitter {
   }
 
   attemptReconnection(): void {
+    if (!this.userAgent) {
+      return;
+    }
     this.userAgent.attemptReconnection();
   }
 
@@ -1185,7 +1188,7 @@ export default class WebRTCClient extends Emitter {
           remoteStream.addTrack(track);
         }
       });
-    } else {
+    } else if (pc) {
       [remoteStream] = pc.getRemoteStreams();
     }
 
