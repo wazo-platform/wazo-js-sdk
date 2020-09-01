@@ -811,6 +811,9 @@ export default class WebRTCClient extends Emitter {
   }
 
   attemptReconnection(): void {
+    if (!this.userAgent) {
+      return;
+    }
     this.userAgent.attemptReconnection();
   }
 
