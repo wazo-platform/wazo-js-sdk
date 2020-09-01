@@ -12,7 +12,7 @@ import CallApi from '../../service/CallApi';
 export const TRANSFER_FLOW_ATTENDED = 'attended';
 export const TRANSFER_FLOW_BLIND = 'blind';
 
-const MINIMUM_WAZO_ENGINE_VERSION_FOR_CTI_HOLD = '20.11';
+// const MINIMUM_WAZO_ENGINE_VERSION_FOR_CTI_HOLD = '20.11';
 
 export default class CTIPhone extends Emitter implements Phone {
   session: Session;
