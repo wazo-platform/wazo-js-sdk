@@ -31,14 +31,14 @@ export default class CTIPhone extends Emitter implements Phone {
   }
 
   getOptions(): AvailablePhoneOptions {
-    const hold = this.session.hasEngineVersionGte(MINIMUM_WAZO_ENGINE_VERSION_FOR_CTI_HOLD);
+    // @FIXME: temporarily disabling this option
+    // const hold = this.session.hasEngineVersionGte(MINIMUM_WAZO_ENGINE_VERSION_FOR_CTI_HOLD);
 
     return {
       accept: false,
       decline: true,
       mute: true,
-      // $FlowFixMe
-      hold,
+      hold: false,
       transfer: true,
       sendKey: true,
       addParticipant: false,
