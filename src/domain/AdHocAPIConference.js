@@ -1,7 +1,7 @@
 // @flow
 
 import CallSession from './CallSession';
-import WebRTCPhone from './Phone/WebRTCPhone';
+import type WebRTCPhone from './Phone/WebRTCPhone';
 import getApiClient from '../service/getApiClient';
 
 export type ConferenceParticipant = {
