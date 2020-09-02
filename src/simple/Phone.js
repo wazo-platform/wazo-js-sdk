@@ -116,7 +116,12 @@ class Phone extends Emitter {
       acc[participant.getTalkingToIds()[0]] = participant;
       return acc;
     }, {});
-    const adHocConference = new AdHocAPIConference({ host, participants });
+
+    if (!this.phone) {
+      return Promise.reject();
+    }
+
+    const adHocConference = new AdHocAPIConference({ phone: this.phone, host, participants });
 
     return adHocConference.start();
   }
