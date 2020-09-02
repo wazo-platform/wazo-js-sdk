@@ -628,6 +628,9 @@ export default class WebRTCClient extends Emitter {
     }
 
     if (session) {
+      if (!this.sessionWantsToDoVideo(session)) {
+        return;
+      }
       const sdh = session.sessionDescriptionHandler;
       const pc = sdh.peerConnection;
       const localStream = this.getLocalStream(pc);
