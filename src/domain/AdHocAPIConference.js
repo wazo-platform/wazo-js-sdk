@@ -1,6 +1,7 @@
 // @flow
 
 import CallSession from './CallSession';
+import type WebRTCPhone from './Phone/WebRTCPhone';
 import getApiClient from '../service/getApiClient';
 
 export type ConferenceParticipant = {
@@ -21,6 +22,7 @@ export type ConferenceParticipants = {
 };
 
 export type ConferenceArguments = {
+  phone: WebRTCPhone,
   host: CallSession,
   finished?: boolean,
   participants: {[string]: CallSession};
@@ -28,10 +30,13 @@ export type ConferenceArguments = {
   startTime?: ?number,
   conferenceId?: ?string,
   muted?: boolean,
+  paused?: boolean,
 };
 
 // API adhoc conference
 export default class AdHocAPIConference {
+  phone: WebRTCPhone;
+
   host: CallSession;
 
   participants: {[string]: CallSession};
@@ -46,7 +51,20 @@ export default class AdHocAPIConference {
 
   muted: boolean;
 
-  constructor({ host, participants, started, finished, startTime, conferenceId, muted }: ConferenceArguments) {
+  paused: boolean;
+
+  constructor({
+    phone,
+    host,
+    participants,
+    started,
+    finished,
+    startTime,
+    conferenceId,
+    muted,
+    paused,
+  }: ConferenceArguments) {
+    this.phone = phone;
     this.host = host;
     this.participants = participants || {};
     this.started = started || false;
@@ -54,6 +72,7 @@ export default class AdHocAPIConference {
     this.startTime = startTime;
     this.conferenceId = conferenceId || '';
     this.muted = muted || false;
+    this.paused = paused || false;
   }
 
   async start() {
@@ -97,6 +116,7 @@ export default class AdHocAPIConference {
 
   mute(): AdHocAPIConference {
     this.muted = true;
+    this.phone.mute(this.host);
     return new AdHocAPIConference({
       ...this,
     });
@@ -104,28 +124,30 @@ export default class AdHocAPIConference {
 
   unmute(): AdHocAPIConference {
     this.muted = false;
+    this.phone.unmute(this.host);
     return new AdHocAPIConference({
       ...this,
     });
   }
 
   hold(): AdHocAPIConference {
-    // @TODO
+    this.paused = true;
+    this.phone.hold(this.host);
     return new AdHocAPIConference({
       ...this,
     });
   }
 
   resume(): AdHocAPIConference {
-    // @TODO
+    this.paused = false;
+    this.phone.resume(this.host);
     return new AdHocAPIConference({
       ...this,
     });
   }
 
   isOnHold(): boolean {
-    // @TODO
-    return false;
+    return this.paused;
   }
 
   isMuted(): boolean {
