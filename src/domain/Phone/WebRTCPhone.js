@@ -2,6 +2,7 @@
 // @flow
 import type { Message } from 'sip.js/lib/api/message';
 import type { Session } from 'sip.js/lib/core/session';
+import { Invitation } from 'sip.js/lib/api/invitation';
 import { SessionState } from 'sip.js/lib/api/session-state';
 
 import CallSession from '../CallSession';
@@ -221,6 +222,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
     sipSession.stateChange.addListener((newState: SessionState) => {
       switch (newState) {
         case SessionState.Establishing:
+          if (sipSession instanceof Invitation) {
+            // No need to trigger progress for an invitation (eg: when we answer the call).
+            return;
+          }
           // When receiving a progress event, we know we are the caller so we have to force incoming to false
           return this.eventEmitter.emit(
             ON_PROGRESS,
