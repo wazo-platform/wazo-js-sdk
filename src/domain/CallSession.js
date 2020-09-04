@@ -7,6 +7,7 @@ import updateFrom from '../utils/update-from';
 
 type CallSessionArguments = {
   answered: boolean,
+  answeredBySystem: boolean,
   call: ?Call,
   callId: string,
   callerNumber: string,
@@ -47,6 +48,8 @@ export default class CallSession {
 
   answered: boolean;
 
+  answeredBySystem: boolean;
+
   dialedExtension: string;
 
   ringing: boolean;
@@ -71,6 +74,7 @@ export default class CallSession {
 
   constructor({
     answered,
+    answeredBySystem,
     isCaller,
     displayName,
     callId,
@@ -95,6 +99,7 @@ export default class CallSession {
     this.startTime = startTime;
     this.isCaller = isCaller;
     this.answered = answered;
+    this.answeredBySystem = answeredBySystem;
     this.ringing = ringing;
     this.paused = paused;
     this.muted = muted;
@@ -130,6 +135,10 @@ export default class CallSession {
     this.answered = true;
   }
 
+  systemAnswer() {
+    this.answeredBySystem = true;
+  }
+
   enableCamera() {
     this.cameraEnabled = true;
   }
@@ -152,6 +161,10 @@ export default class CallSession {
 
   isAnswered(): boolean {
     return this.answered;
+  }
+
+  isAnsweredBySystem(): boolean {
+    return this.answeredBySystem;
   }
 
   isRinging(): boolean {
@@ -236,6 +249,7 @@ export default class CallSession {
       muted: false,
       ringing: call.isRinging(),
       answered: call.isUp(),
+      answeredBySystem: call.isUp() && call.talkingToIds.length === 0,
       cameraEnabled: false,
       dialedExtension: call.dialedExtension,
       call,
