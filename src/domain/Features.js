@@ -1,6 +1,8 @@
 // @flow
 
 // Handle available features on the engine.
+import getApiClient from '../service/getApiClient';
+
 class Features {
   _hasChat: boolean;
   _hasVideo: boolean;
@@ -18,8 +20,10 @@ class Features {
     this._hasMobileGsm = false;
   }
 
-  fetchAccess() {
-    // @TODO: call apis
+  async fetchAccess() {
+    const policies = await getApiClient().auth.getRestrictionPolicies();
+    console.log('policies', policies);
+    
     this._hasChat = true;
     this._hasVideo = true;
     this._hasCallRecording = true;

@@ -18,6 +18,7 @@ import Session from '../domain/Session';
 
 const DEFAULT_BACKEND_USER = 'wazo_user';
 export const DETAULT_EXPIRATION = 3600;
+export const RESTRICTION_POLICY_NAME = 'wazo-enterprise-app-restrictions';
 
 export default (client: ApiRequester, baseUrl: string) => ({
   checkToken: (token: Token): Promise<Boolean> => client.head(`${baseUrl}/token/${token}`, null, {}),
@@ -171,6 +172,8 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   addUserPolicy: (userUuid: UUID, policyUuid: UUID) =>
     client.put(`${baseUrl}/users/${userUuid}/policies/${policyUuid}`),
+
+  getRestrictionPolicies: () => client.get(`${baseUrl}/policies?search=${RESTRICTION_POLICY_NAME}`),
 
   deleteUserPolicy: (userUuid: UUID, policyUuid: UUID) =>
     client.delete(`${baseUrl}/users/${userUuid}/policies/${policyUuid}`),
