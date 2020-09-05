@@ -38,6 +38,7 @@ import type { ChatUser as ChatUserType } from './domain/ChatMessage';
 import type { Device as DeviceType } from './domain/Device/Device';
 import type { WebSocketMessage as WebSocketMessageType } from './types/WebSocketMessage';
 import DebugDevice from './domain/Device/DebugDevice';
+import Checker from './checker/Checker';
 import {
   PhoneNumberUtil,
   PhoneNumberFormat,
@@ -77,6 +78,7 @@ export type WebSocketMessage = WebSocketMessageType;
 
 export default {
   ApiRequester,
+  Checker,
   Emitter,
   PhoneNumberUtil,
   PhoneNumberFormat,

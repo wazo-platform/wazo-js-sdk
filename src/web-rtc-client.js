@@ -384,7 +384,7 @@ export default class WebRTCClient extends Emitter {
     }
   }
 
-  close() {
+  async close() {
     IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] close', !!this.userAgent);
     this._cleanupMedia();
     this.connectionPromise = null;
@@ -403,7 +403,7 @@ export default class WebRTCClient extends Emitter {
     this.stopHeartbeat();
 
     if (this.userAgent && this.userAgent.transport) {
-      this.userAgent.transport.disconnect();
+      await this.userAgent.transport.disconnect();
     }
 
     this.userAgent.stateChange.removeAllListeners();
@@ -411,7 +411,7 @@ export default class WebRTCClient extends Emitter {
     this._cleanupRegister();
 
     try {
-      this.userAgent.stop();
+      await this.userAgent.stop();
     } catch (_) {
       // Avoid to raise exception when trying to close with hanged-up sessions remaining
       // eg: "INVITE not rejectable in state Completed"

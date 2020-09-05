@@ -1,0 +1,46 @@
+/* global MediaStream */
+import WebRTCClient from '../../web-rtc-client';
+
+export default {
+  name: 'WebRTC',
+  check: (server, session) => new Promise((resolve, reject) => {
+    if (typeof MediaStream === 'undefined') {
+      return resolve('Skipped on node');
+    }
+
+    const client = new WebRTCClient({
+      host: server,
+      media: {
+        audio: true,
+      },
+    }, session);
+
+    const handleError = (message) => {
+      client.close();
+      reject(new Error(message));
+    };
+
+    const handleSuccess = async () => {
+      client.stopHeartbeat();
+      await client.close();
+      resolve();
+    };
+
+    client.on(client.TRANSPORT_ERROR, error => {
+      handleError(`Transport error : ${error}`);
+    });
+
+    client.on(client.REGISTERED, () => {
+      const sipSession = client.call('*10');
+      if (!sipSession || !client.getSipSessionId(sipSession)) {
+        return handleError('Unable to make call through WebRTC');
+      }
+
+      setTimeout(() => {
+        client.hangup(sipSession);
+
+        handleSuccess();
+      }, 1000);
+    });
+  }),
+};
