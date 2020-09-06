@@ -15,6 +15,13 @@ export default {
 
     // Check simple API call
     try {
+      await client.auth.getPushNotificationSenderId(session.uuid);
+      await client.auth.getProviders();
+    } catch (e) {
+      handleApiError('wazo-auth', e);
+    }
+
+    try {
       await client.callLogd.listCallLogs();
     } catch (e) {
       handleApiError('wazo-callogd', e);
@@ -22,9 +29,17 @@ export default {
 
     try {
       await client.calld.listCalls();
-      await client.calld.listVoicemails();
     } catch (e) {
       handleApiError('wazo-calld', e);
+    }
+
+    try {
+      await client.calld.listVoicemails();
+    } catch (e) {
+      // API throws a 404 when no voicemail
+      if (e.status !== 404) {
+        handleApiError('wazo-calld', e);
+      }
     }
 
     try {
