@@ -449,6 +449,9 @@ export default class WebRTCClient extends Emitter {
     if (sessionId in this.heldSessions) {
       return Promise.resolve();
     }
+    if (session.pendingReinvite) {
+      return Promise.resolve();
+    }
     this.heldSessions[sessionId] = true;
 
     const hasVideo = this.sessionWantsToDoVideo(session);
@@ -466,6 +469,10 @@ export default class WebRTCClient extends Emitter {
   }
 
   unhold(session: Inviter) {
+    if (session.pendingReinvite) {
+      return Promise.resolve();
+    }
+
     const hasVideo = this.sessionWantsToDoVideo(session);
     this.changeVideo(hasVideo);
     this.unmute(session);
@@ -719,6 +726,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     const localStream = this.getLocalStream(pc);
+    // $FlowFixMe
     const audioTracks = localStream.getAudioTracks();
 
     return audioTracks.some(track => track.kind === 'audio' && track.enabled);
@@ -769,7 +777,7 @@ export default class WebRTCClient extends Emitter {
           localStream.addTrack(track);
         }
       });
-    } else {
+    } else if (pc) {
       [localStream] = pc.getLocalStreams();
     }
 
