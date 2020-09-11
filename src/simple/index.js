@@ -29,6 +29,7 @@ import ConferenceRoom from '../domain/Room';
 import CallSession from '../domain/CallSession';
 import IndirectTransfer from '../domain/IndirectTransfer';
 import SwitchboardCall from '../domain/SwitchboardCall';
+import IssueReporter from '../service/IssueReporter';
 
 const Wazo = {
   Auth,
@@ -43,6 +44,7 @@ const Wazo = {
   Configuration,
   Directory,
   getApiClient,
+  IssueReporter,
 
   // Domain
   domain: {
