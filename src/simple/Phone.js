@@ -88,6 +88,11 @@ class Phone extends Emitter {
 
   disconnect() {
     if (this.phone) {
+      if (this.phone.hasAnActiveCall()) {
+        // $FlowFixMe
+        this.phone.hangup();
+      }
+      // $FlowFixMe
       this.phone.close();
     }
 
