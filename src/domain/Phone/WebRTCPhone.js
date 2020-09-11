@@ -141,6 +141,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }).catch(error => {
       // Avoid exception on `t.server.scheme` in sip transport when losing the webrtc socket connection
       console.error('[WebRtcPhone] register error', error, error.message, error.stack);
+      IssueReporter.log(IssueReporter.ERROR, `[WebRtcPhone] register error ${error.message}, ${error.stack}`);
     });
   }
 
@@ -488,6 +489,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     const sipSession = this.sipSessions[callSession.getId()];
     if (sipSession) {
+      IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] accept ${sipSession.id}`);
+
       return this.client.answer(sipSession, this.allowVideo ? videoEnabled : false).then(() => {
         return callSession.sipCallId;
       });
@@ -507,6 +510,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     const sipSession = this._findSipSession(callSession);
     if (sipSession) {
+      IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] reject ${sipSession.id}`);
+
       this.client.hangup(sipSession);
     }
   }
@@ -538,6 +543,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const sipSession = this._findSipSession(callSession);
 
     if (sipSession) {
+      IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] atxfer ${sipSession.id}`);
+
       return this.client.atxfer(sipSession);
     }
   }
@@ -546,6 +553,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
     if (!sipSession) {
       return;
     }
+
+    IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] holld ${sipSession.id}`);
 
     this.client.hold(sipSession);
     if (withEvent) {
@@ -557,6 +566,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     if (!sipSession) {
       return;
     }
+    IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] unhold ${sipSession.id}`);
 
     this.client.unhold(sipSession);
     if (withEvent) {
@@ -570,8 +580,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return;
     }
 
+    IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] resume ${sipSession.id}`);
+
     // Hold current session if different from the current one (we don't want 2 sessions active at the same time).
     if (this.currentSipSession && this.currentSipSession.id !== sipSession.id) {
+      IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] hold call ${this.currentSipSession.id} after resume`);
       this.holdSipSession(this.currentSipSession, callSession);
     }
 
@@ -586,6 +599,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return;
     }
 
+    IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] mute ${sipSession.id}`);
     this.client.mute(sipSession);
 
     if (withEvent) {
@@ -599,6 +613,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return;
     }
 
+    IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] unmute ${sipSession.id}`);
     this.client.unmute(sipSession);
 
     if (withEvent) {
@@ -611,6 +626,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     if (!sipSession) {
       return;
     }
+    IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] turnCameraOn ${sipSession.id}`);
 
     this.client.toggleCameraOn(sipSession);
 
@@ -622,6 +638,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     if (!sipSession) {
       return;
     }
+    IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] turnCameraOff ${sipSession.id}`);
 
     this.client.toggleCameraOff(sipSession);
     this.eventEmitter.emit(ON_CAMERA_DISABLED, this._createCameraDisabledCallSession(sipSession, callSession));
@@ -633,6 +650,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return;
     }
 
+    IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] sendKey ${sipSession.id}: ${tone}`);
     this.client.sendDTMF(sipSession, tone);
   }
 
@@ -642,6 +660,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
     if (!number) {
       return new Promise(resolve => resolve(null));
     }
+    IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] Call ${number}, ${line.id}, ${String(enableVideo)}`);
+
     if (!this.client.isRegistered()) {
       await this.client.register();
     }
@@ -655,6 +675,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this._bindEvents(sipSession);
     } catch (error) {
       console.warn(error);
+      IssueReporter.log(IssueReporter.WARN, `[WebRtcPhone] Call error ${error.message}, ${error.stack}`);
       return new Promise(resolve => resolve(null));
     }
     const callSession = this._createOutgoingCallSession(sipSession, enableVideo || false);
@@ -676,12 +697,16 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return;
     }
 
+    IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] transfer ${sipSession.id} to ${target}`);
+
     this.client.transfer(sipSession, target);
   }
 
   async indirectTransfer(source: CallSession, destination: CallSession): Promise<void> {
     const sipSession = this.sipSessions[source.sipCallId];
     const sipSessionTarget = this.sipSessions[destination.sipCallId];
+
+    IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] indirectTransfer ${sipSession.id} to ${sipSessionTarget.id}`);
 
     await sipSessionTarget.refer(sipSession);
   }
@@ -698,6 +723,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
       console.error('Call is unknown to the WebRTC phone');
       return false;
     }
+
+    IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] hangup ${sipSession.id}`);
 
     const sipSessionId = this.client.getSipSessionId(sipSession);
     if (sipSessionId) {
@@ -779,6 +806,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return;
     }
 
+    IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] sendMessage ${sipSession.id}`);
+
     try {
       sipSession.message({
         requestOptions: {
@@ -809,6 +838,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.on(this.client.INVITE, (sipSession: Session, wantsToDoVideo: boolean) => {
       const autoAnswer = sipSession.request.getHeader('Answer-Mode') === 'Auto';
       const withVideo = this.allowVideo ? wantsToDoVideo : false;
+      IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] invite ${sipSession.id}, 
+        ${String(withVideo)}, ${String(autoAnswer)}`);
+
       const callSession = this._createIncomingCallSession(sipSession, withVideo, null, autoAnswer);
       this.incomingSessions.push(callSession.getId());
       this._bindEvents(sipSession);
@@ -828,10 +860,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.eventEmitter.emit(ON_CALL_INCOMING, callSession, wantsToDoVideo);
     });
 
-    this.client.on(this.client.ON_REINVITE, (...args) =>
-      this.eventEmitter.emit.apply(this.eventEmitter, [this.client.ON_REINVITE, ...args]));
+    this.client.on(this.client.ON_REINVITE, (...args) => {
+      IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] reinvite ${JSON.stringify(args)}`);
+      this.eventEmitter.emit.apply(this.eventEmitter, [this.client.ON_REINVITE, ...args]);
+    });
 
     this.client.on(this.client.ACCEPTED, (sipSession: Session) => {
+      IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] accepted ${sipSession.id}`);
+
       this._onCallAccepted(sipSession, this.client.sessionHasVideo(this.client.getSipSessionId(sipSession)));
 
       if (this.audioOutputDeviceId) {
@@ -841,10 +877,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.on('ended', () => {});
 
     this.client.on(this.client.UNREGISTERED, () => {
+      IssueReporter.log(IssueReporter.INFO, '[WebRtcPhone] unregistered');
       this.eventEmitter.emit(ON_UNREGISTERED);
     });
 
     this.client.on(this.client.REGISTERED, () => {
+      IssueReporter.log(IssueReporter.INFO, '[WebRtcPhone] registered');
       this.stopHeartbeat();
       this.eventEmitter.emit(ON_REGISTERED);
 
@@ -861,10 +899,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
     });
 
     this.client.on(this.client.CONNECTED, () => {
+      IssueReporter.log(IssueReporter.INFO, '[WebRtcPhone] client connected');
+
       this.stopHeartbeat();
     });
 
     this.client.on(this.client.DISCONNECTED, () => {
+      IssueReporter.log(IssueReporter.INFO, '[WebRtcPhone] client discconnected');
+
       this.eventEmitter.emit(ON_UNREGISTERED);
 
       // Do not trigger heartbeat if already running
