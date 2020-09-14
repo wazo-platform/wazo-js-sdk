@@ -26,6 +26,7 @@ type CallSessionArguments = {
   startTime: number,
   autoAnswer?: boolean,
   ignored?: boolean,
+  screensharing: boolean,
 };
 
 export default class CallSession {
@@ -73,6 +74,8 @@ export default class CallSession {
 
   ignored: boolean;
 
+  screensharing: boolean;
+
   type: string;
 
   constructor({
@@ -95,6 +98,7 @@ export default class CallSession {
     call,
     autoAnswer,
     ignored,
+    screensharing,
   }: CallSessionArguments) {
     this.callId = callId;
     this.sipCallId = sipCallId;
@@ -115,6 +119,7 @@ export default class CallSession {
     this.sipStatus = sipStatus;
     this.autoAnswer = autoAnswer || false;
     this.ignored = ignored || false;
+    this.screensharing = screensharing || false;
 
     // Useful to compare instead of instanceof with minified code
     this.type = 'CallSession';
@@ -160,6 +165,14 @@ export default class CallSession {
     this.ignored = true;
   }
 
+  startScreenSharing() {
+    this.screensharing = true;
+  }
+
+  stopScreenSharing() {
+    this.screensharing = false;
+  }
+
   isIncoming(): boolean {
     return !this.isCaller && !this.answered;
   }
@@ -202,6 +215,10 @@ export default class CallSession {
 
   isIgnored(): boolean {
     return this.ignored;
+  }
+
+  isScreenSharing(): boolean {
+    return this.screensharing;
   }
 
   hasAnInitialInterceptionNumber(): boolean {
@@ -265,6 +282,7 @@ export default class CallSession {
       isCaller: call.isCaller,
       muted: false,
       videoMuted: false,
+      screensharing: false,
       ringing: call.isRinging(),
       answered: call.isUp(),
       answeredBySystem: call.isUp() && call.talkingToIds.length === 0,

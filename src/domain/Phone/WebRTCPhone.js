@@ -34,6 +34,7 @@ export const ON_TRACK = 'onTrack';
 export const ON_AUDIO_STREAM = 'onAudioStream';
 export const ON_VIDEO_STREAM = 'onVideoStream';
 export const ON_REMOVE_STREAM = 'onRemoveStream';
+export const ON_SHARE_SCREEN_STARTED = 'onScreenShareStarted';
 export const ON_SHARE_SCREEN_ENDED = 'onScreenShareEnded';
 export const ON_TERMINATE_SOUND = 'terminateSound';
 export const ON_PLAY_RING_SOUND = 'playRingingSound';
@@ -280,16 +281,17 @@ export default class WebRTCPhone extends Emitter implements Phone {
     };
   }
 
-  async startScreenSharing(constraintsOrStream: ?Object | MediaStream) {
+  async startScreenSharing(constraintsOrStream: ?Object | MediaStream, callSession?: CallSession) {
     if (!navigator.mediaDevices) {
       return null;
     }
 
     let stream = constraintsOrStream;
+    let constraints = null;
 
     if (!constraintsOrStream || !(constraintsOrStream instanceof MediaStream)) {
       try {
-        const constraints = constraintsOrStream || { video: { cursor: 'always' }, audio: false };
+        constraints = constraintsOrStream || { video: { cursor: 'always' }, audio: false };
         stream = await navigator.mediaDevices.getDisplayMedia(constraints);
       } catch (e) {
         console.warn(e);
@@ -300,10 +302,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
     // $FlowFixMe
     stream.local = true;
     // $FlowFixMe
-    return this._continueScreenSharing(stream);
+    return this._continueScreenSharing(stream, constraints, callSession);
   }
 
-  _continueScreenSharing(screenShareStream: MediaStream, constraints: Object = {}) {
+  _continueScreenSharing(screenShareStream: MediaStream, constraints: Object = {}, callSession?: CallSession) {
     if (!screenShareStream) {
       throw new Error(`Can't create media stream for screensharing with contraints ${JSON.stringify(constraints)}`);
     }
@@ -318,14 +320,16 @@ export default class WebRTCPhone extends Emitter implements Phone {
       sender.replaceTrack(screenTrack);
     }
 
-    screenTrack.onended = () => this.eventEmitter.emit(ON_SHARE_SCREEN_ENDED);
+    screenTrack.onended = () => this.eventEmitter.emit(ON_SHARE_SCREEN_ENDED, callSession);
 
     this.currentScreenShare = { stream: screenShareStream, sender, localStream };
+
+    this.eventEmitter.emit(ON_SHARE_SCREEN_STARTED, callSession);
 
     return screenShareStream;
   }
 
-  async stopScreenSharing(restoreLocalStream: boolean = true) {
+  async stopScreenSharing(restoreLocalStream: boolean = true, callSession?: CallSession) {
     if (!this.currentScreenShare) {
       return;
     }
@@ -346,6 +350,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       console.warn(e);
     }
 
+    this.eventEmitter.emit(ON_SHARE_SCREEN_ENDED, callSession);
     this.currentScreenShare = null;
   }
 
