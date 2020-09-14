@@ -3,6 +3,12 @@
 // Handle available features on the engine.
 import getApiClient from '../service/getApiClient';
 
+export const FEATURES = ['chat', 'video', 'call_recording', 'fax', 'mobile_double_call', 'mobile_gsm'];
+
+export const getScopeName = (featureName: string) => `enterprise.app.${featureName}`;
+
+const scopesToCheck = FEATURES.map(getScopeName);
+
 class Features {
   _hasChat: boolean;
   _hasVideo: boolean;
@@ -21,15 +27,19 @@ class Features {
   }
 
   async fetchAccess() {
-    const policies = await getApiClient().auth.getRestrictionPolicies();
-    console.log('policies', policies);
-    
-    this._hasChat = true;
-    this._hasVideo = true;
-    this._hasCallRecording = true;
-    this._hasFax = true;
-    this._hasMobileDoubleCall = true;
-    this._hasMobileGsm = true;
+    const response = await getApiClient().auth.getRestrictionPolicies(scopesToCheck);
+    if (!response) {
+      return;
+    }
+    const { scopes } = response;
+    console.log('response', response);
+
+    this._hasChat = this._hasFeatures(scopes, 'chat');
+    this._hasVideo = this._hasFeatures(scopes, 'video');
+    this._hasCallRecording = this._hasFeatures(scopes, 'call_recording');
+    this._hasFax = this._hasFeatures(scopes, 'fax');
+    this._hasMobileDoubleCall = this._hasFeatures(scopes, 'mobile_double_call');
+    this._hasMobileGsm = this._hasFeatures(scopes, 'mobile_gsm');
   }
 
   hasChat() { return this._hasChat; }
@@ -38,6 +48,8 @@ class Features {
   hasFax() { return this._hasFax; }
   hasMobileDoubleCall() { return this._hasMobileDoubleCall; }
   hasMobileGsm() { return this._hasMobileGsm; }
+
+  _hasFeatures = (scopes: Object, featureName: string) => scopes[getScopeName(featureName)] === true;
 
 }
 

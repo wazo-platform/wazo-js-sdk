@@ -173,7 +173,8 @@ export default (client: ApiRequester, baseUrl: string) => ({
   addUserPolicy: (userUuid: UUID, policyUuid: UUID) =>
     client.put(`${baseUrl}/users/${userUuid}/policies/${policyUuid}`),
 
-  getRestrictionPolicies: () => client.get(`${baseUrl}/policies?search=${RESTRICTION_POLICY_NAME}`),
+  getRestrictionPolicies: (scopes: string[]) =>
+    client.post(`${baseUrl}/token/${client.token}/scopes/check`, { scopes }),
 
   deleteUserPolicy: (userUuid: UUID, policyUuid: UUID) =>
     client.delete(`${baseUrl}/users/${userUuid}/policies/${policyUuid}`),
