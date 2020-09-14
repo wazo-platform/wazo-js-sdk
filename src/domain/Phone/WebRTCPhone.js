@@ -182,6 +182,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   startHeartbeat() {
+    IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] startHeartbeat ${String(!!this.client)} 
+      ${String(this.client.hasHeartbeat())}`);
     if (!this.client || this.client.hasHeartbeat()) {
       return;
     }
@@ -190,6 +192,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   stopHeartbeat() {
+    IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] stopHeartbeat ${String(!!this.client)}`);
     if (!this.client) {
       return;
     }
@@ -203,6 +206,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   setOnHeartbeatCallback(cb: Function) {
     this.client.setOnHeartbeatCallback(cb);
+  }
+
+  reconnect() {
+    IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] reconnect ${String(!!this.client)}`);
+    if (!this.client) {
+      return;
+    }
+    this.client.attemptReconnection();
   }
 
   getOptions(): AvailablePhoneOptions {
