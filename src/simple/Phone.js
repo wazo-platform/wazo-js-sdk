@@ -230,6 +230,10 @@ class Phone extends Emitter {
     return session.primaryWebRtcLine();
   }
 
+  getOutputDevice() {
+    return this.phone ? this.phone.audioOutputDeviceId : null;
+  }
+
   getPrimaryLine() {
     const session = Wazo.Auth.getSession();
     return session.primarySipLine();

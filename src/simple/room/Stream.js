@@ -42,7 +42,7 @@ class Stream {
   }
 
   get id() {
-    return this.htmlStream.id;
+    return this.htmlStream ? this.htmlStream.id : null;
   }
 }
 
