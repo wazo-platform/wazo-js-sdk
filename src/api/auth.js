@@ -18,7 +18,6 @@ import Session from '../domain/Session';
 
 const DEFAULT_BACKEND_USER = 'wazo_user';
 export const DETAULT_EXPIRATION = 3600;
-export const RESTRICTION_POLICY_NAME = 'wazo-enterprise-app-restrictions';
 
 export default (client: ApiRequester, baseUrl: string) => ({
   checkToken: (token: Token): Promise<Boolean> => client.head(`${baseUrl}/token/${token}`, null, {}),

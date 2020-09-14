@@ -1,6 +1,5 @@
 // @flow
 
-// Handle available features on the engine.
 import getApiClient from '../service/getApiClient';
 
 export const FEATURES = ['chat', 'video', 'call_recording', 'fax', 'mobile_double_call', 'mobile_gsm'];
@@ -9,6 +8,7 @@ export const getScopeName = (featureName: string) => `enterprise.app.${featureNa
 
 const scopesToCheck = FEATURES.map(getScopeName);
 
+// Handle available features on the engine.
 class Features {
   _hasChat: boolean;
   _hasVideo: boolean;
@@ -18,21 +18,25 @@ class Features {
   _hasMobileGsm: boolean;
 
   constructor() {
-    this._hasChat = false;
-    this._hasVideo = false;
-    this._hasCallRecording = false;
-    this._hasFax = false;
-    this._hasMobileDoubleCall = false;
-    this._hasMobileGsm = false;
+    this._hasChat = true;
+    this._hasVideo = true;
+    this._hasCallRecording = true;
+    this._hasFax = true;
+    this._hasMobileDoubleCall = true;
+    this._hasMobileGsm = true;
   }
 
   async fetchAccess() {
-    const response = await getApiClient().auth.getRestrictionPolicies(scopesToCheck);
+    let response;
+    try {
+      response = await getApiClient().auth.getRestrictionPolicies(scopesToCheck);
+    } catch (_) {
+      // Noting to do because everything should be available even if the API is not available
+    }
     if (!response) {
       return;
     }
     const { scopes } = response;
-    console.log('response', response);
 
     this._hasChat = this._hasFeatures(scopes, 'chat');
     this._hasVideo = this._hasFeatures(scopes, 'video');
@@ -49,7 +53,9 @@ class Features {
   hasMobileDoubleCall() { return this._hasMobileDoubleCall; }
   hasMobileGsm() { return this._hasMobileGsm; }
 
-  _hasFeatures = (scopes: Object, featureName: string) => scopes[getScopeName(featureName)] === true;
+  _hasFeatures(scopes: Object, featureName: string) {
+    return scopes[getScopeName(featureName)] === true;
+  }
 
 }
 
