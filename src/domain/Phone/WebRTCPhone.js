@@ -320,11 +320,17 @@ export default class WebRTCPhone extends Emitter implements Phone {
       sender.replaceTrack(screenTrack);
     }
 
-    screenTrack.onended = () => this.eventEmitter.emit(ON_SHARE_SCREEN_ENDED, callSession);
+    screenTrack.onended = () => this.eventEmitter.emit(
+      ON_SHARE_SCREEN_ENDED,
+      this._createCallSession(sipSession, callSession, { screensharing: false }),
+    );
 
     this.currentScreenShare = { stream: screenShareStream, sender, localStream };
 
-    this.eventEmitter.emit(ON_SHARE_SCREEN_STARTED, callSession);
+    this.eventEmitter.emit(
+      ON_SHARE_SCREEN_STARTED,
+      this._createCallSession(sipSession, callSession, { screensharing: true }),
+    );
 
     return screenShareStream;
   }
@@ -350,7 +356,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
       console.warn(e);
     }
 
-    this.eventEmitter.emit(ON_SHARE_SCREEN_ENDED, callSession);
+    const sipSession = this.currentSipSession;
+
+    this.eventEmitter.emit(
+      ON_SHARE_SCREEN_ENDED,
+      this._createCallSession(sipSession, callSession, { screensharing: false }),
+    );
+
     this.currentScreenShare = null;
   }
 
