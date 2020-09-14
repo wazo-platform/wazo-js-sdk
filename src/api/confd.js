@@ -46,7 +46,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
       }
       const line = user.lines[0];
 
-      return this.getUserLineSip(userUuid, line.id);
+      return this.getUserLineSip(userUuid, line.uuid || line.id);
     });
   },
 

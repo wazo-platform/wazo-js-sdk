@@ -49,14 +49,29 @@ export default class SipLine {
   line: Endpoint;
 
   static parse(plain: SipLineResponse): SipLine {
+    let username = plain.username;
+    let secret = plain.secret;
+    let host = plain.host;
+
+    // Since 20.13 engine so options are now in section
+    if(plain.auth_section_options) {
+      const usernameOption = plain.auth_section_options.find(option => option[0] === "username")
+      const secretOption = plain.auth_section_options.find(option => option[0] === "password")
+      const hostOption = plain.endpoint_section_options.find(option => option[0] === "media_address")
+
+      username = usernameOption ? usernameOption[1] : null;
+      secret = secretOption ? secretOption[1] : null;
+      host = hostOption ? hostOption[1] : null;
+    }
+
     return new SipLine({
       id: plain.id,
       uuid: plain.uuid,
       tenantUuid: plain.tenant_uuid,
-      username: plain.username,
-      secret: plain.secret,
+      username: username,
+      secret: secret,
       type: plain.type,
-      host: plain.host,
+      host: host,
       options: plain.options,
       endpointSectionOptions: plain.endpoint_section_options,
       links: plain.links,
