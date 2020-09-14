@@ -112,8 +112,8 @@ class Phone extends Emitter {
     return this.phone && this.phone.hangup(callSession);
   }
 
-  async accept(callSession: CallSession, videoEnabled?: boolean) {
-    return this.phone && this.phone.accept(callSession, videoEnabled);
+  async accept(callSession: CallSession, cameraEnabled?: boolean) {
+    return this.phone && this.phone.accept(callSession, cameraEnabled);
   }
 
   async startConference(host: CallSession, otherCalls: CallSession[]): Promise<AdHocAPIConference> {

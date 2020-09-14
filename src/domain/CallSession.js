@@ -16,6 +16,7 @@ type CallSessionArguments = {
   displayName: string,
   isCaller: boolean,
   muted: boolean,
+  videoMuted: boolean,
   number: string,
   paused: boolean,
   ringing: boolean,
@@ -64,6 +65,8 @@ export default class CallSession {
 
   muted: boolean;
 
+  videoMuted: boolean;
+
   cameraEnabled: boolean;
 
   autoAnswer: boolean;
@@ -79,6 +82,7 @@ export default class CallSession {
     displayName,
     callId,
     muted,
+    videoMuted,
     number,
     paused,
     ringing,
@@ -103,6 +107,7 @@ export default class CallSession {
     this.ringing = ringing;
     this.paused = paused;
     this.muted = muted;
+    this.videoMuted = videoMuted;
     this.callerNumber = callerNumber;
     this.cameraEnabled = cameraEnabled;
     this.dialedExtension = dialedExtension || '';
@@ -129,6 +134,14 @@ export default class CallSession {
 
   unmute() {
     this.muted = false;
+  }
+
+  muteVideo() {
+    this.videoMuted = true;
+  }
+
+  unmuteVideo() {
+    this.videoMuted = false;
   }
 
   answer() {
@@ -177,6 +190,10 @@ export default class CallSession {
 
   isMuted(): boolean {
     return this.muted;
+  }
+
+  isVideoMuted(): boolean {
+    return this.videoMuted;
   }
 
   isCameraEnabled(): boolean {
@@ -247,6 +264,7 @@ export default class CallSession {
       paused: call.isOnHold(),
       isCaller: call.isCaller,
       muted: false,
+      videoMuted: false,
       ringing: call.isRinging(),
       answered: call.isUp(),
       answeredBySystem: call.isUp() && call.talkingToIds.length === 0,

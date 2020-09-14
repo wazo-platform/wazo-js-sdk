@@ -993,7 +993,7 @@ Use this method to accept (answer) an incoming call
 ```js
 phone.accept(
   callSession: CallSession, // The callSession to accept
-  videoEnabled?: boolean // Should we accept the call with video
+  cameraEnabled?: boolean // Should we accept the call with video
 );
 ```
 
