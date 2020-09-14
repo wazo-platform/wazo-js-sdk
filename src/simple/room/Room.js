@@ -299,6 +299,11 @@ class Room extends Emitter {
         if (document.body) {
           document.body.appendChild(this.roomAudioElement);
         }
+        // $FlowFixMe
+        if (this.roomAudioElement.setSinkId) {
+          // $FlowFixMe
+          this.roomAudioElement.setSinkId(Wazo.Phone.getOutputDevice());
+        }
       }
     });
 
