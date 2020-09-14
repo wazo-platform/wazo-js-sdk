@@ -798,6 +798,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   startHeartbeat() {
+    IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] startHeartbeat', !!this.userAgent);
     if (!this.userAgent) {
       this.heartbeat.stop();
       return;
@@ -810,6 +811,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   stopHeartbeat() {
+    IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] stopHeartbeat');
     this.heartbeat.stop();
   }
 
@@ -822,6 +824,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   attemptReconnection(): void {
+    IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] attemptReconnection', !!this.userAgent);
     if (!this.userAgent) {
       return;
     }
@@ -836,6 +839,7 @@ export default class WebRTCClient extends Emitter {
   _onHeartbeat(message: string | Object) {
     const body = message && typeof message === 'object' ? message.data : message;
     if (body.indexOf('200 OK') !== -1) {
+      IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] onHeartbeat');
       this.heartbeat.onHeartbeat();
       if (this.heartbeatCb) {
         this.heartbeatCb();
@@ -844,6 +848,9 @@ export default class WebRTCClient extends Emitter {
   }
 
   async _onHeartbeatTimeout() {
+    IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] onHeartbeatTimeout', !!this.userAgent,
+      !!this.heartbeatTimeoutCb);
+
     if (this.heartbeatTimeoutCb) {
       this.heartbeatTimeoutCb();
     }
