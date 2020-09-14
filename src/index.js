@@ -15,6 +15,7 @@ import ChatMessage from './domain/ChatMessage';
 import ChatRoom from './domain/ChatRoom';
 import Contact from './domain/Contact';
 import COUNTRIES from './domain/Country';
+import Features from './domain/Features';
 import ForwardOption, { FORWARD_KEYS } from './domain/ForwardOption';
 import Line from './domain/Line';
 import NotificationOptions from './domain/NotificationOptions';
@@ -90,6 +91,7 @@ export default {
   ServerError,
   Call,
   CallSession,
+  Features,
   IndirectTransfer,
   SwitchboardCall,
   CallLog,
