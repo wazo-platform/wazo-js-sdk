@@ -839,10 +839,12 @@ export default class WebRTCClient extends Emitter {
   _onHeartbeat(message: string | Object) {
     const body = message && typeof message === 'object' ? message.data : message;
     if (body.indexOf('200 OK') !== -1) {
-      IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] onHeartbeat');
-      this.heartbeat.onHeartbeat();
-      if (this.heartbeatCb) {
-        this.heartbeatCb();
+      IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] onHeartbeat', this.hasHeartbeat());
+      if (this.hasHeartbeat()) {
+        this.heartbeat.onHeartbeat();
+        if (this.heartbeatCb) {
+          this.heartbeatCb();
+        }
       }
     }
   }

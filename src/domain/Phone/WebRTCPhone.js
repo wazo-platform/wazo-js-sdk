@@ -182,8 +182,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   startHeartbeat() {
-    IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] startHeartbeat ${String(!!this.client)} 
-      ${String(this.client.hasHeartbeat())}`);
+    IssueReporter.log(IssueReporter.INFO, '[WebRtcPhone] startHeartbeat', !!this.client, this.client.hasHeartbeat());
     if (!this.client || this.client.hasHeartbeat()) {
       return;
     }
@@ -192,7 +191,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   stopHeartbeat() {
-    IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] stopHeartbeat ${String(!!this.client)}`);
+    IssueReporter.log(IssueReporter.INFO, '[WebRtcPhone] stopHeartbeat', !!this.client);
     if (!this.client) {
       return;
     }
@@ -209,7 +208,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   reconnect() {
-    IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] reconnect ${String(!!this.client)}`);
+    IssueReporter.log(IssueReporter.INFO, '[WebRtcPhone] reconnect', !!this.client);
     if (!this.client) {
       return;
     }
@@ -849,8 +848,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.on(this.client.INVITE, (sipSession: Session, wantsToDoVideo: boolean) => {
       const autoAnswer = sipSession.request.getHeader('Answer-Mode') === 'Auto';
       const withVideo = this.allowVideo ? wantsToDoVideo : false;
-      IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] invite ${sipSession.id}, 
-        ${String(withVideo)}, ${String(autoAnswer)}`);
+      IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] invite ${sipSession.id}`, withVideo, autoAnswer);
 
       const callSession = this._createIncomingCallSession(sipSession, withVideo, null, autoAnswer);
       this.incomingSessions.push(callSession.getId());
