@@ -13,6 +13,7 @@ type SipLineResponse = {
   type: string,
   host: string,
   options: ?Array<Array<string>>,
+  auth_section_options: ?Array<Array<string>>,
   endpoint_section_options: ?Array<Array<string>>,
   links: Array<Object>,
   trunk: ?string,
@@ -49,29 +50,30 @@ export default class SipLine {
   line: Endpoint;
 
   static parse(plain: SipLineResponse): SipLine {
-    let username = plain.username;
-    let secret = plain.secret;
-    let host = plain.host;
+    let { username, secret, host } = plain;
 
     // Since 20.13 engine so options are now in section
-    if(plain.auth_section_options) {
-      const usernameOption = plain.auth_section_options.find(option => option[0] === "username")
-      const secretOption = plain.auth_section_options.find(option => option[0] === "password")
-      const hostOption = plain.endpoint_section_options.find(option => option[0] === "media_address")
+    if (plain.auth_section_options) {
+      // $FlowFixMe
+      const findOption = (name: string) => plain.auth_section_options.find(option => option[0] === name);
 
-      username = usernameOption ? usernameOption[1] : null;
-      secret = secretOption ? secretOption[1] : null;
-      host = hostOption ? hostOption[1] : null;
+      const usernameOption = findOption('username');
+      const secretOption = findOption('password');
+      const hostOption = findOption('media_address');
+
+      username = usernameOption ? usernameOption[1] : '';
+      secret = secretOption ? secretOption[1] : '';
+      host = hostOption ? hostOption[1] : '';
     }
 
     return new SipLine({
       id: plain.id,
       uuid: plain.uuid,
       tenantUuid: plain.tenant_uuid,
-      username: username,
-      secret: secret,
+      username,
+      secret,
       type: plain.type,
-      host: host,
+      host,
       options: plain.options,
       endpointSectionOptions: plain.endpoint_section_options,
       links: plain.links,
