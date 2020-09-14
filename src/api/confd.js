@@ -29,7 +29,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     client.put(`${baseUrl}/users/${userUuid}/services/dnd`, { enabled }, null, ApiRequester.successResponseParser),
 
   getUserLineSip: (userUuid: string, lineId: string): Promise<SipLine> =>
-    client.get(`${baseUrl}/users/${userUuid}/lines/${lineId}/associated/endpoints/sip`).then(SipLine.parse),
+    client.get(`${baseUrl}/users/${userUuid}/lines/${lineId}/associated/endpoints/sip?view=merged`).then(SipLine.parse),
 
   getUserLinesSip(userUuid: string, lineIds: string[]): Promise<SipLine>[] {
     // We have to catch all exception, unless Promise.all will returns an empty array for 2 lines with a custom one:
@@ -46,7 +46,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
       }
       const line = user.lines[0];
 
-      return this.getUserLineSip(userUuid, line.id);
+      return this.getUserLineSip(userUuid, line.uuid || line.id);
     });
   },
 
