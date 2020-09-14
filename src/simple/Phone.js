@@ -273,7 +273,7 @@ class Phone extends Emitter {
   }
 
   hasSfu() {
-    return this.sipLine && this.sipLine.hasVideoConference(this.session);
+    return this.sipLine && this.sipLine.hasVideoConference();
   }
 
   checkSfu() {

@@ -1,10 +1,8 @@
 // @flow
 import newFrom from '../utils/new-from';
-import Session from './Session';
 import type { Endpoint } from './Line';
 
 const availableCodecs = ['vp8', 'vp9', 'h264'];
-export const MINIMUM_WAZO_ENGINE_VERSION_FOR_PJSIP = '20.13';
 
 type SipLineResponse = {
   id: number,
@@ -78,27 +76,24 @@ export default class SipLine {
     return this.id === line.id;
   }
 
-  getOptions(session: Session): Array<Object> {
-    if (session.hasEngineVersionGte(MINIMUM_WAZO_ENGINE_VERSION_FOR_PJSIP)) {
-      return this.endpointSectionOptions || [];
-    }
-
-    return this.options || [];
+  getOptions(): Array<Object> {
+    // `options` params have beend remove since 20.13... we should now use endpointSectionOptions
+    return this.endpointSectionOptions || this.options || [];
   }
 
-  isWebRtc(session: Session) {
-    return this.getOptions(session).some(option => option[0] === 'webrtc' && option[1] === 'yes');
+  isWebRtc() {
+    return this.getOptions().some(option => option[0] === 'webrtc' && option[1] === 'yes');
   }
 
-  hasVideo(session: Session) {
-    const allow = this.getOptions(session).find(option => option[0] === 'allow');
+  hasVideo() {
+    const allow = this.getOptions().find(option => option[0] === 'allow');
     return Array.isArray(allow) && allow[1].split(',').some(codec => availableCodecs.some(c => c === codec));
   }
 
-  hasVideoConference(session: Session) {
+  hasVideoConference() {
     return (
-      this.getOptions(session).some(option => option[0] === 'max_audio_streams' && parseInt(option[1], 10) > 0)
-      && this.getOptions(session).some(option => option[0] === 'max_video_streams' && parseInt(option[1], 10) > 1)
+      this.getOptions().some(option => option[0] === 'max_audio_streams' && parseInt(option[1], 10) > 0)
+      && this.getOptions().some(option => option[0] === 'max_video_streams' && parseInt(option[1], 10) > 1)
     );
   }
 
