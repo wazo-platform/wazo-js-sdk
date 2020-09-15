@@ -35,6 +35,7 @@ export const ON_AUDIO_STREAM = 'onAudioStream';
 export const ON_VIDEO_STREAM = 'onVideoStream';
 export const ON_REMOVE_STREAM = 'onRemoveStream';
 export const ON_SHARE_SCREEN_STARTED = 'onScreenShareStarted';
+export const ON_SHARE_SCREEN_ENDING = 'onScreenShareEnding';
 export const ON_SHARE_SCREEN_ENDED = 'onScreenShareEnded';
 export const ON_TERMINATE_SOUND = 'terminateSound';
 export const ON_PLAY_RING_SOUND = 'playRingingSound';
@@ -286,13 +287,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return null;
     }
 
-    let stream = constraintsOrStream;
+    let screenShareStream = constraintsOrStream;
     let constraints = null;
 
     if (!constraintsOrStream || !(constraintsOrStream instanceof MediaStream)) {
       try {
         constraints = constraintsOrStream || { video: { cursor: 'always' }, audio: false };
-        stream = await navigator.mediaDevices.getDisplayMedia(constraints);
+        screenShareStream = await navigator.mediaDevices.getDisplayMedia(constraints);
       } catch (e) {
         console.warn(e);
         return null;
@@ -300,12 +301,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     // $FlowFixMe
-    stream.local = true;
-    // $FlowFixMe
-    return this._continueScreenSharing(stream, constraints, callSession);
-  }
+    screenShareStream.local = true;
 
-  _continueScreenSharing(screenShareStream: MediaStream, constraints: Object = {}, callSession?: CallSession) {
     if (!screenShareStream) {
       throw new Error(`Can't create media stream for screensharing with contraints ${JSON.stringify(constraints)}`);
     }
@@ -321,10 +318,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     screenTrack.onended = () => this.eventEmitter.emit(
-      ON_SHARE_SCREEN_ENDED,
-      this._createCallSession(sipSession, callSession, { screensharing: false }),
+      ON_SHARE_SCREEN_ENDING,
+      this._createCallSession(sipSession, callSession),
     );
-
     this.currentScreenShare = { stream: screenShareStream, sender, localStream };
 
     this.eventEmitter.emit(
@@ -360,7 +356,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     this.eventEmitter.emit(
       ON_SHARE_SCREEN_ENDED,
-      this._createCallSession(sipSession, callSession, { screensharing: false }),
+      callSession ? this._createCallSession(sipSession, callSession, { screensharing: false }) : null,
     );
 
     this.currentScreenShare = null;
