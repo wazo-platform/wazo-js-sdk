@@ -54,7 +54,12 @@ class Features {
   hasMobileGsm() { return this._hasMobileGsm; }
 
   _hasFeatures(scopes: Object, featureName: string) {
-    return scopes[getScopeName(featureName)] === true;
+    const scopeName = getScopeName(featureName);
+    if (!(scopeName in scopes)) {
+      // Assume that the feature is available if not present (available by default)
+      return true;
+    }
+    return scopes[scopeName] === true;
   }
 
 }
