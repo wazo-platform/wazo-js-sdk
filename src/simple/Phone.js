@@ -197,7 +197,7 @@ class Phone extends Emitter {
   }
 
   stopScreenSharing(callSession?: CallSession) {
-    return this.phone && this.phone.stopScreenSharing(false, callSession);
+    return this.phone && this.phone.stopScreenSharing(undefined, callSession);
   }
 
   sendDTMF(tone: string, callSession: CallSession) {
