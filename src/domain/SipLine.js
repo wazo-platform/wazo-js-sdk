@@ -12,9 +12,9 @@ type SipLineResponse = {
   secret: string,
   type: string,
   host: string,
-  options: ?Array<Array<string>>,
-  auth_section_options: ?Array<Array<string>>,
-  endpoint_section_options: ?Array<Array<string>>,
+  options: ?string[][],
+  auth_section_options: ?string[][],
+  endpoint_section_options: ?string[][],
   links: Array<Object>,
   trunk: ?string,
   line: Endpoint,
@@ -28,8 +28,8 @@ type SipLineArguments = {
   secret: string,
   type: string,
   host: string,
-  options: ?Array<Array<string>>,
-  endpointSectionOptions: ?Array<Array<string>>,
+  options: ?string[][],
+  endpointSectionOptions: ?string[][],
   links: Array<Object>,
   trunk: ?string,
   line: Endpoint,
@@ -43,8 +43,8 @@ export default class SipLine {
   secret: string;
   type: string;
   host: string;
-  options: ?Array<Array<string>>;
-  endpointSectionOptions: ?Array<Array<string>>;
+  options: ?string[][];
+  endpointSectionOptions: ?string[][];
   links: Array<Object>;
   trunk: ?string;
   line: Endpoint;
@@ -55,11 +55,11 @@ export default class SipLine {
     // Since 20.13 engine so options are now in section
     if (plain.auth_section_options) {
       // $FlowFixMe
-      const findOption = (name: string) => plain.auth_section_options.find(option => option[0] === name);
+      const findOption = (options: string[][], name: string) => options.find(option => option[0] === name);
 
-      const usernameOption = findOption('username');
-      const secretOption = findOption('password');
-      const hostOption = findOption('media_address');
+      const usernameOption = findOption(plain.auth_section_options, 'username');
+      const secretOption = findOption(plain.auth_section_options, 'password');
+      const hostOption = findOption(plain.endpoint_section_options, 'media_address');
 
       username = usernameOption ? usernameOption[1] : '';
       secret = secretOption ? secretOption[1] : '';
