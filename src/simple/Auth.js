@@ -35,12 +35,12 @@ class Auth {
 
     setApiClientId(this.clientId);
     setRefreshExpiration(this.expiration);
-    setOnRefreshToken(token => {
+    setOnRefreshToken((token: string, session: Session) => {
       setApiToken(token);
       Wazo.Websocket.updateToken(token);
 
       if (this.onRefreshTokenCallback) {
-        this.onRefreshTokenCallback(token);
+        this.onRefreshTokenCallback(token, session);
       }
     });
   }

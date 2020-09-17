@@ -52,6 +52,10 @@ class Websocket extends Emitter {
     this.ws.updateToken(token);
   }
 
+  isOpen() {
+    return this.ws && this.ws.isConnected();
+  }
+
   close() {
     if (this.ws) {
       this.ws.close();
