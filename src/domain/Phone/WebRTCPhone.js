@@ -670,7 +670,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     if (!number) {
       return new Promise(resolve => resolve(null));
     }
-    IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] Call ${number}, ${line.id}, ${String(enableVideo)}`);
+    IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] Call ${number}`, line ? line.id : null, enableVideo);
 
     if (!this.client.isRegistered()) {
       await this.client.register();
