@@ -676,7 +676,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       await this.client.register();
     }
     if (this.currentSipSession) {
-      this.holdSipSession(this.currentSipSession, null, true);
+      this.holdSipSession(this.currentSipSession, undefined, true);
     }
 
     let sipSession: Session;
