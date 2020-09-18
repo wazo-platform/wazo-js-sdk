@@ -184,7 +184,7 @@ or
 
 #### Initializing
 ```js
-Wazo.Auth.init(clientId, tokenExpiration, minSubscriptionType);
+Wazo.Auth.init(clientId, tokenExpiration, minSubscriptionType, authorizationName);
 ```
 
 - `clientId`: string (optional)
@@ -195,6 +195,9 @@ Wazo.Auth.init(clientId, tokenExpiration, minSubscriptionType);
   
 - `minSubscriptionType`: number (optional)
   - Defines the minimum user subscription type that allows access to your application.
+  
+- `authorizationName`: string (optional)
+  - Defines the name of the authorization the user should have to ba able to login.
   
 #### Setting the engine host
 
