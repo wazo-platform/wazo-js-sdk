@@ -1,5 +1,5 @@
 /* global window */
-import Auth from './Auth';
+import Auth, { InvalidSubscription, InvalidAuthorization } from './Auth';
 import Phone from './Phone';
 import Websocket from './Websocket';
 import Room from './room/Room';
@@ -69,6 +69,10 @@ const Wazo = {
     IndirectTransfer,
     SwitchboardCall,
   },
+
+  // Error
+  InvalidSubscription,
+  InvalidAuthorization,
 };
 
 if (window) {

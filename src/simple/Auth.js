@@ -1,4 +1,5 @@
 // @flow
+/* eslint-disable max-classes-per-file */
 import Session from '../domain/Session';
 import { DETAULT_EXPIRATION } from '../api/auth';
 import getApiClient, {
@@ -12,10 +13,14 @@ import getApiClient, {
 
 import Wazo from './index';
 
+export class InvalidSubscription extends Error {}
+export class InvalidAuthorization extends Error {}
+
 class Auth {
   clientId: string;
   expiration: number;
   minSubscriptionType: number;
+  authorizationName: ?string;
   host: ?string;
   session: ?Session;
   onRefreshTokenCallback: ?Function;
@@ -26,10 +31,11 @@ class Auth {
     this.authenticated = false;
   }
 
-  init(clientId: string, expiration: number, minSubscriptionType: number) {
+  init(clientId: string, expiration: number, minSubscriptionType: number, authorizationName: ?string) {
     this.clientId = clientId;
     this.expiration = expiration;
     this.minSubscriptionType = minSubscriptionType;
+    this.authorizationName = authorizationName;
     this.host = null;
     this.session = null;
 
@@ -97,10 +103,21 @@ class Auth {
     this.onRefreshTokenCallback = callback;
   }
 
+  checkAuthorizations(session: Session, authorizationName: ?string) {
+    if (!authorizationName) {
+      return;
+    }
+    const { authorizations } = session;
+    if (!authorizations.find(authorization => authorization.rules.find(rule => rule.name === authorizationName))) {
+      throw new InvalidAuthorization(`No authorization '${authorizationName || ''}' found for your account.`);
+    }
+  }
+
   checkSubscription(session: Session, minSubscriptionType: number) {
     const userSubscriptionType = session.profile ? session.profile.subscriptionType : null;
     if (!userSubscriptionType || userSubscriptionType <= minSubscriptionType) {
-      throw new Error(`Invalid subscription ${userSubscriptionType || ''}, required at least ${minSubscriptionType}`);
+      const message = `Invalid subscription ${userSubscriptionType || ''}, required at least ${minSubscriptionType}`;
+      throw new InvalidSubscription(message);
     }
   }
 
@@ -148,13 +165,28 @@ class Auth {
 
     setApiToken(session.token);
 
-    const [profile, { wazo_version: engineVersion }] = await Promise.all([
-      getApiClient().confd.getUser(session.uuid),
-      getApiClient().confd.getInfos(),
-    ]);
+    try {
+      const [profile, { wazo_version: engineVersion }] = await Promise.all([
+        getApiClient().confd.getUser(session.uuid),
+        getApiClient().confd.getInfos(),
+      ]);
 
-    session.engineVersion = engineVersion;
-    session.profile = profile;
+      session.engineVersion = engineVersion;
+      session.profile = profile;
+
+      this.checkAuthorizations(session, this.authorizationName);
+      this.checkSubscription(session, this.minSubscriptionType);
+    } catch (e) {
+      // Destroy tokens when validation fails
+      if (this.clientId) {
+        await getApiClient().auth.deleteRefreshToken(this.clientId);
+      }
+      if (session) {
+        await getApiClient().auth.logOut(session.token);
+      }
+
+      throw e;
+    }
 
     try {
       const sipLines = await getApiClient().confd.getUserLinesSip(
@@ -168,8 +200,6 @@ class Auth {
     } catch (e) {
       // When an user has only a sccp line, getSipLines return a 404
     }
-
-    this.checkSubscription(session, this.minSubscriptionType);
 
     this.authenticated = true;
 
