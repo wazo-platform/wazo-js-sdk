@@ -239,6 +239,19 @@ class Phone extends Emitter {
     return this.phone && this.phone.getRemoteStreamForCall(callSession);
   }
 
+  // Returns remote streams directly from the peerConnection
+  getRemoteStreamsForCall(callSession: CallSession) {
+    return this.phone ? this.phone.getRemoteStreamsForCall(callSession) : [];
+  }
+
+  getRemoteVideoStreamForCall(callSession: CallSession) {
+    return this.getRemoteStreamsForCall(callSession).find(stream => !!stream.getVideoTracks().length);
+  }
+
+  getRemoteAudioStreamForCall(callSession: CallSession) {
+    return this.getRemoteStreamsForCall(callSession).find(stream => !!stream.getAudioTracks().length);
+  }
+
   getCurrentSipSession() {
     return this.phone ? this.phone.currentSipSession : null;
   }
