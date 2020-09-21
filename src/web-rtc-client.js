@@ -401,12 +401,12 @@ export default class WebRTCClient extends Emitter {
     }
 
     this.stopHeartbeat();
+    this.userAgent.delegate = null;
+    this.userAgent.stateChange.removeAllListeners();
 
     if (this.userAgent && this.userAgent.transport) {
       this.userAgent.transport.disconnect();
     }
-
-    this.userAgent.stateChange.removeAllListeners();
 
     this._cleanupRegister();
 
