@@ -553,7 +553,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   getLocalMediaStream(sipSession: Session) {
-    return sipSession ? sipSession.sessionDescriptionHandler.localMediaStream : null;
+    return sipSession && sipSession.sessionDescriptionHandler ? sipSession.sessionDescriptionHandler.localMediaStream : null;
   }
 
   getState() {
