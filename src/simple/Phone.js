@@ -10,7 +10,9 @@ import type CallSession from '../domain/CallSession';
 import AdHocAPIConference from '../domain/AdHocAPIConference';
 import WebRTCPhone, * as PHONE_EVENTS from '../domain/Phone/WebRTCPhone';
 import WazoWebRTCClient, { events as clientEvents, transportEvents } from '../web-rtc-client';
+import IssueReporter from '../service/IssueReporter';
 import Emitter from '../utils/Emitter';
+
 import Wazo from './index';
 
 const MESSAGE_TYPE_CHAT = 'message/TYPE_CHAT';
@@ -70,6 +72,18 @@ class Phone extends Emitter {
     const [host, port = 443] = server.split(':');
 
     options.media = options.media || { audio: true, video: false };
+    options.uaConfigOverrides = options.uaConfigOverrides || {};
+
+    options.log = options.log || {};
+
+    if (IssueReporter.enabled) {
+      options.uaConfigOverrides.traceSip = true;
+
+      options.log.builtinEnabled = false;
+      options.log.connector = (level, category, label, content) => {
+        IssueReporter.log(IssueReporter.INFO, `[SIP message][${level}][${category}]`, content.substr(0, 300));
+      };
+    }
 
     this.client = new WazoWebRTCClient({
       host,
