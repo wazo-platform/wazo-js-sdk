@@ -31,6 +31,7 @@ import IndirectTransfer from '../domain/IndirectTransfer';
 import SwitchboardCall from '../domain/SwitchboardCall';
 import IssueReporter from '../service/IssueReporter';
 import Features from '../domain/Features';
+import Checker from '../checker/Checker';
 
 const Wazo = {
   Auth,
@@ -47,6 +48,7 @@ const Wazo = {
   getApiClient,
   IssueReporter,
   Features,
+  Checker,
 
   // Domain
   domain: {

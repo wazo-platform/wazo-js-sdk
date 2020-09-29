@@ -33,7 +33,7 @@ class Checker {
     }
   }
 
-  addCheck = (check: Object) => {
+  addCheck(check: Object) {
     this.checks.push(check);
   }
 

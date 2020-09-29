@@ -16,7 +16,7 @@ export default {
     // Check simple API call
     try {
       await client.auth.getPushNotificationSenderId(session.uuid);
-      await client.auth.getProviders();
+      await client.auth.getProviders(session.uuid);
     } catch (e) {
       handleApiError('wazo-auth', e);
     }

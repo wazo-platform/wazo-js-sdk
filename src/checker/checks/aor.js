@@ -5,9 +5,14 @@ export default {
   check: async (server, session) => {
     const apiClient = new WazoApiClient({ server });
     apiClient.setToken(session.token);
+    const line = session.primaryWebRtcLine();
+    if (!line) {
+      return 'No WebRTC line for this user';
+    }
+    const { username } = line;
 
     try {
-      const aors = await apiClient.amid.getAors('115ti73v');
+      const aors = await apiClient.amid.getAors(username);
       const nbAors = aors.length;
       const availableAors = aors.filter(aor => aor.status === 'Reachable');
 
