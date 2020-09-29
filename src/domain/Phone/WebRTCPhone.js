@@ -512,6 +512,20 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return remotes && remotes[remotes.length - 1];
   }
 
+  getRemoteStreamsForCall(callSession: CallSession): Object[] {
+    if (!callSession) {
+      return [];
+    }
+
+    const sipSession = this.sipSessions[callSession.getId()];
+    if (!sipSession || !sipSession.sessionDescriptionHandler) {
+      return [];
+    }
+
+    const { peerConnection } = sipSession.sessionDescriptionHandler;
+    return peerConnection.getRemoteStreams();
+  }
+
   accept(callSession: CallSession, cameraEnabled?: boolean): Promise<string | null> {
     IssueReporter.log(IssueReporter.INFO, '[WebRtcPhone] accept', callSession.getId(), cameraEnabled);
     if (this.currentSipSession) {

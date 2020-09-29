@@ -42,14 +42,13 @@ class Phone extends Emitter {
     this.SessionState = SessionState;
   }
 
-  async connect(rawOptions: Object = {}, sipLine: ?SipLine = null) {
-    const options = rawOptions;
+  async connect(options: Object = {}, sipLine: ?SipLine = null) {
     if (this.phone) {
       // Already connected
 
       // let's update media constraints if they're being fed
-      if (rawOptions.media) {
-        this.phone.setMediaConstraints(rawOptions.media);
+      if (options.media) {
+        this.phone.setMediaConstraints(options.media);
       }
 
       return;
@@ -69,8 +68,17 @@ class Phone extends Emitter {
       throw new Error('Sorry, no sip lines found for this user');
     }
 
+    this.connectWithCredentials(server, this.sipLine, session.displayName(), options);
+  }
+
+  connectWithCredentials(server: string, sipLine: SipLine, displayName: string, rawOptions: Object = {}) {
+    if (this.phone) {
+      // Already connected
+      return;
+    }
     const [host, port = 443] = server.split(':');
 
+    const options = rawOptions;
     options.media = options.media || { audio: true, video: false };
     options.uaConfigOverrides = options.uaConfigOverrides || {};
 
@@ -88,10 +96,10 @@ class Phone extends Emitter {
     this.client = new WazoWebRTCClient({
       host,
       port,
-      displayName: session.displayName(),
-      authorizationUser: this.sipLine.username,
-      password: this.sipLine.secret,
-      uri: `${this.sipLine.username}@${server}`,
+      displayName,
+      authorizationUser: sipLine.username,
+      password: sipLine.secret,
+      uri: `${sipLine.username}@${server}`,
       ...options,
     }, null, options.uaConfigOverrides);
 
@@ -233,6 +241,19 @@ class Phone extends Emitter {
 
   getRemoteStreamForCall(callSession: CallSession) {
     return this.phone && this.phone.getRemoteStreamForCall(callSession);
+  }
+
+  // Returns remote streams directly from the peerConnection
+  getRemoteStreamsForCall(callSession: CallSession) {
+    return this.phone ? this.phone.getRemoteStreamsForCall(callSession) : [];
+  }
+
+  getRemoteVideoStreamForCall(callSession: CallSession) {
+    return this.getRemoteStreamsForCall(callSession).find(stream => !!stream.getVideoTracks().length);
+  }
+
+  getRemoteAudioStreamForCall(callSession: CallSession) {
+    return this.getRemoteStreamsForCall(callSession).find(stream => !!stream.getAudioTracks().length);
   }
 
   getCurrentSipSession() {
