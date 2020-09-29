@@ -16,6 +16,7 @@ type CallSessionArguments = {
   displayName: string,
   isCaller: boolean,
   muted: boolean,
+  videoMuted: boolean,
   number: string,
   paused: boolean,
   ringing: boolean,
@@ -25,6 +26,7 @@ type CallSessionArguments = {
   startTime: number,
   autoAnswer?: boolean,
   ignored?: boolean,
+  screensharing: boolean,
 };
 
 export default class CallSession {
@@ -64,11 +66,15 @@ export default class CallSession {
 
   muted: boolean;
 
+  videoMuted: boolean;
+
   cameraEnabled: boolean;
 
   autoAnswer: boolean;
 
   ignored: boolean;
+
+  screensharing: boolean;
 
   type: string;
 
@@ -79,6 +85,7 @@ export default class CallSession {
     displayName,
     callId,
     muted,
+    videoMuted,
     number,
     paused,
     ringing,
@@ -91,6 +98,7 @@ export default class CallSession {
     call,
     autoAnswer,
     ignored,
+    screensharing,
   }: CallSessionArguments) {
     this.callId = callId;
     this.sipCallId = sipCallId;
@@ -103,6 +111,7 @@ export default class CallSession {
     this.ringing = ringing;
     this.paused = paused;
     this.muted = muted;
+    this.videoMuted = videoMuted;
     this.callerNumber = callerNumber;
     this.cameraEnabled = cameraEnabled;
     this.dialedExtension = dialedExtension || '';
@@ -110,6 +119,7 @@ export default class CallSession {
     this.sipStatus = sipStatus;
     this.autoAnswer = autoAnswer || false;
     this.ignored = ignored || false;
+    this.screensharing = screensharing || false;
 
     // Useful to compare instead of instanceof with minified code
     this.type = 'CallSession';
@@ -131,6 +141,14 @@ export default class CallSession {
     this.muted = false;
   }
 
+  muteVideo() {
+    this.videoMuted = true;
+  }
+
+  unmuteVideo() {
+    this.videoMuted = false;
+  }
+
   answer() {
     this.answered = true;
   }
@@ -145,6 +163,14 @@ export default class CallSession {
 
   ignore() {
     this.ignored = true;
+  }
+
+  startScreenSharing() {
+    this.screensharing = true;
+  }
+
+  stopScreenSharing() {
+    this.screensharing = false;
   }
 
   isIncoming(): boolean {
@@ -179,12 +205,20 @@ export default class CallSession {
     return this.muted;
   }
 
+  isVideoMuted(): boolean {
+    return this.videoMuted;
+  }
+
   isCameraEnabled(): boolean {
     return this.cameraEnabled;
   }
 
   isIgnored(): boolean {
     return this.ignored;
+  }
+
+  isScreenSharing(): boolean {
+    return this.screensharing;
   }
 
   hasAnInitialInterceptionNumber(): boolean {
@@ -247,6 +281,8 @@ export default class CallSession {
       paused: call.isOnHold(),
       isCaller: call.isCaller,
       muted: false,
+      videoMuted: false,
+      screensharing: false,
       ringing: call.isRinging(),
       answered: call.isUp(),
       answeredBySystem: call.isUp() && call.talkingToIds.length === 0,
