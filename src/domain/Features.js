@@ -55,7 +55,7 @@ class Features {
 
   _hasFeatures(scopes: Object, featureName: string) {
     const scopeName = getScopeName(featureName);
-    if (!(scopeName in scopes)) {
+    if (!scopes || !(scopeName in scopes)) {
       // Assume that the feature is available if not present (available by default)
       return true;
     }
