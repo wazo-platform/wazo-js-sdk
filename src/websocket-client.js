@@ -98,6 +98,8 @@ const BLACKLIST_EVENTS = [
   CHATD_USER_ROOM_CREATED,
 ];
 
+export const HEARTBEAT_ENGINE_VERSION = '20.09';
+
 class WebSocketClient extends Emitter {
   initialized: boolean;
   host: string;
