@@ -72,6 +72,10 @@ class Phone extends Emitter {
   }
 
   connectWithCredentials(server: string, sipLine: SipLine, displayName: string, rawOptions: Object = {}) {
+    if (this.phone) {
+      // Already connected
+      return;
+    }
     const [host, port = 443] = server.split(':');
 
     const options = rawOptions;
