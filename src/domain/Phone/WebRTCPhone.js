@@ -576,7 +576,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   unhold(callSession: CallSession, withEvent: boolean = true): void {
-    IssueReporter.log(IssueReporter.INFO, '[WebRtcPhone] unhold', callSession.getId());
+    IssueReporter.log(IssueReporter.INFO, '[WebRtcPhone] unhold', callSession ? callSession.getId() : null);
 
     const sipSession = this._findSipSession(callSession);
 
