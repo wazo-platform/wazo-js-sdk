@@ -13,6 +13,7 @@ type CallResponse = {
   dialed_extension: string,
   status: string,
   is_caller: boolean,
+  line_id: ?number,
   creation_time: string,
   on_hold: boolean,
   muted: boolean,
@@ -28,6 +29,7 @@ type CallArguments = {
   calleeName: string,
   calleeNumber: string,
   dialedExtension: string,
+  lineId: ?number;
   onHold: boolean,
   muted: boolean,
   status: string,
@@ -45,6 +47,7 @@ export default class Call {
   calleeName: string;
   calleeNumber: string;
   dialedExtension: string;
+  lineId: ?number;
   isCaller: boolean;
   onHold: boolean;
   muted: boolean;
@@ -69,6 +72,7 @@ export default class Call {
       muted: plain.muted,
       onHold: plain.on_hold,
       status: plain.status,
+      lineId: plain.line_id,
       startingTime: moment(plain.creation_time).toDate(),
       talkingToIds: Object.keys(plain.talking_to || {}),
     });
@@ -87,6 +91,7 @@ export default class Call {
     calleeNumber,
     dialedExtension,
     isCaller,
+    lineId,
     muted,
     onHold,
     status,
@@ -103,6 +108,7 @@ export default class Call {
     this.muted = muted;
     this.onHold = onHold;
     this.isCaller = isCaller;
+    this.lineId = lineId;
     this.status = status;
     this.startingTime = startingTime;
     this.talkingToIds = talkingToIds || [];
