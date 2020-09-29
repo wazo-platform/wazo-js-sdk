@@ -883,8 +883,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.eventEmitter.emit(ON_CALL_INCOMING, callSession, wantsToDoVideo);
     });
 
-    this.client.on(this.client.ON_REINVITE, (inviter, request) => {
-      IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] reinvite ${inviter.id} (${request.id})`);
+    this.client.on(this.client.ON_REINVITE, (...args) => {
+      IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] reinvite ${args[0].id} (${args[1].id})`);
       this.eventEmitter.emit.apply(this.eventEmitter, [this.client.ON_REINVITE, ...args]);
     });
 
