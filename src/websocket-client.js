@@ -168,7 +168,8 @@ class WebSocketClient extends Emitter {
       }
 
       if (BLACKLIST_EVENTS.indexOf(name) === -1) {
-        IssueReporter.log(IssueReporter.INFO, '[WebSocketClient] onmessage', event.data);
+        // $FlowFixMe
+        IssueReporter.log(IssueReporter.INFO, '[WebSocketClient] onmessage', `${event.data.substr(0, 600)}...`);
       }
 
       if (!this.initialized) {

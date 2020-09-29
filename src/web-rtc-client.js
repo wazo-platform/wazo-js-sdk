@@ -198,10 +198,12 @@ export default class WebRTCClient extends Emitter {
 
     webRTCConfiguration.delegate = {
       onConnect: () => {
+        IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] connected');
         this.eventEmitter.emit(CONNECTED);
         this.register();
       },
       onDisconnect: (error?: Error) => {
+        IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] disconnected', error);
         this.connectionPromise = null;
         // The UA will attempt to reconnect automatically when an error occurred
         this.eventEmitter.emit(DISCONNECTED, error);
@@ -211,6 +213,7 @@ export default class WebRTCClient extends Emitter {
         }
       },
       onInvite: (invitation: Invitation) => {
+        IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] onInvite', invitation.id, invitation.remoteURI);
         this._setupSession(invitation);
         const shouldAutoAnswer = !!invitation.request.getHeader('alert-info');
 
@@ -309,6 +312,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   call(number: string, enableVideo?: boolean): Session {
+    IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] call', number, enableVideo);
     this.changeVideo(enableVideo || false);
 
     const session = new Inviter(this.userAgent, this._makeURI(number));
@@ -318,7 +322,11 @@ export default class WebRTCClient extends Emitter {
     const inviteOptions: InviterInviteOptions = {
       requestDelegate: {
         onAccept: (response: IncomingResponse) => this._onAccepted(session, response.session),
-        onReject: (response: IncomingResponse) => this.eventEmitter.emit(REJECTED, session, response),
+        onReject: (response: IncomingResponse) => {
+          IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] onReject', session.id, session.fromTag);
+
+          this.eventEmitter.emit(REJECTED, session, response);
+        },
       },
       sessionDescriptionHandlerOptions: this._getMediaConfiguration(enableVideo || false),
     };
@@ -1050,6 +1058,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     session.delegate.onInvite = (inviteRequest: IncomingRequestMessage) => {
+      IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] onReinvite');
       const updatedCalleeName = session.assertedIdentity && session.assertedIdentity.displayName;
 
       return this.eventEmitter.emit(ON_REINVITE, session, inviteRequest, updatedCalleeName);
@@ -1057,6 +1066,8 @@ export default class WebRTCClient extends Emitter {
   }
 
   _onAccepted(session: Session, sessionDialog?: SessionDialog) {
+    IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] onAccepted', session.id, session.remoteTag);
+
     this._setupLocalMedia(session);
     this._setupRemoteMedia(session);
 
