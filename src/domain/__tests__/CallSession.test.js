@@ -29,4 +29,12 @@ describe('CallSession domain', () => {
     expect(callSession.isCaller).toBe(false);
     expect(callSession.dialedExtension).toBe('');
   });
+
+  it('should compare 2 callSession', () => {
+    const cs1 = new CallSession({ callId: 123, sipCallId: 456 });
+    const cs2 = new CallSession({ callId: 123, sipCallId: null });
+
+    expect(cs1.is(cs2)).toBeTruthy();
+    expect(cs2.is(cs1)).toBeTruthy();
+  });
 });

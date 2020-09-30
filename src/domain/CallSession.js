@@ -241,7 +241,11 @@ export default class CallSession {
   }
 
   is(callSession: CallSession) {
-    return this.isId(callSession.getId());
+    if (!callSession) {
+      return false;
+    }
+
+    return this.isId(callSession.sipCallId) || this.isId(callSession.callId);
   }
 
   isId(id: string): boolean {
