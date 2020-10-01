@@ -83,9 +83,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   sipSessions: { [string]: Session };
 
+  callSessions: { [string]: CallSession };
+
   incomingSessions: string[];
 
   currentSipSession: Session;
+
+  currentCallSession: ?CallSession;
 
   audioOutputDeviceId: ?string;
 
@@ -118,6 +122,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client = client;
     this.allowVideo = allowVideo;
     this.sipSessions = {};
+    this.callSessions = {};
     this.audioOutputDeviceId = audioOutputDeviceId;
     this.audioRingDeviceId = audioRingDeviceId || audioOutputDeviceId;
     this.audioOutputVolume = 1;
@@ -375,6 +380,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const callSession = this._createAcceptedCallSession(sipSession, cameraEnabled);
     this.sipSessions[callSession.getId()] = sipSession;
     this.currentSipSession = sipSession;
+    this.currentCallSession = callSession;
 
     this.eventEmitter.emit(ON_TERMINATE_SOUND);
     const sipSessionId = this.client.getSipSessionId(sipSession);
@@ -433,9 +439,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     delete this.sipSessions[callSession.getId()];
+    delete this.callSessions[callSession.getId()];
 
     if (this.isCurrentCallSipSession(callSession)) {
       this.currentSipSession = undefined;
+      this.currentCallSession = undefined;
     }
 
     if (callSession.getId() in this.ignoredSessions) {
@@ -452,6 +460,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     this.currentSipSession = sipSessionId;
+    this.currentCallSession = callSession;
   }
 
   hasAnActiveCall() {
@@ -653,6 +662,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.unhold(sipSession);
     this.eventEmitter.emit(ON_CALL_RESUMED, this._createCallSession(sipSession, callSession));
     this.currentSipSession = sipSession;
+    if (callSession) {
+      this.currentCallSession = callSession;
+    }
   }
 
   mute(callSession: ?CallSession, withEvent: boolean = true): void {
@@ -733,7 +745,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       await this.client.register();
     }
     if (this.currentSipSession) {
-      this.holdSipSession(this.currentSipSession, undefined, true);
+      this.holdSipSession(this.currentSipSession, this.currentCallSession, true);
     }
 
     let sipSession: Session;
@@ -752,6 +764,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.eventEmitter.emit(ON_PLAY_PROGRESS_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
 
     this.currentSipSession = sipSession;
+    this.currentCallSession = callSession;
 
     this.eventEmitter.emit(ON_CALL_OUTGOING, callSession);
 
@@ -796,6 +809,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const sipSessionId = this.client.getSipSessionId(sipSession);
     if (sipSessionId) {
       delete this.sipSessions[sipSessionId];
+      if (callSession) {
+        delete this.callSessions[callSession.getId()];
+      }
     }
 
     this.client.hangup(sipSession);
@@ -810,6 +826,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   endCurrentCall(callSession: CallSession): void {
     if (this.isCurrentCallSipSession(callSession)) {
       this.currentSipSession = undefined;
+      this.currentCallSession = null;
     }
 
     this.eventEmitter.emit(ON_TERMINATE_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
@@ -830,6 +847,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.sipSessions = {};
     this.incomingSessions = [];
     this.currentSipSession = null;
+    this.currentCallSession = null;
     this.shouldSendReinvite = false;
     this.rejectedSessions = {};
   }
@@ -1058,7 +1076,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const number = sipSession.remoteIdentity.uri._normal.user;
     const { state } = sipSession;
 
-    return new CallSession({
+    const callSession = new CallSession({
       callId: fromSession && fromSession.callId,
       sipCallId: this.client.getSipSessionId(sipSession),
       sipStatus: state,
@@ -1074,6 +1092,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
       videoMuted: fromSession ? fromSession.isVideoMuted() : false,
       ...extra,
     });
+
+    this.callSessions[callSession.getId()] = callSession;
+
+    return callSession;
   }
 
   // Find a corresponding sipSession from a CallSession
