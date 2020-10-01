@@ -987,7 +987,7 @@ export default class WebRTCClient extends Emitter {
       reconnectionDelay: 5,
       sessionDescriptionHandlerFactory: (session: Session, options: SessionDescriptionHandlerFactoryOptions = {}) => {
         const logger = session.userAgent.getLogger('sip.WazoSessionDescriptionHandler');
-
+        const isWeb = this._isWeb();
         const iceGatheringTimeout = 'iceGatheringTimeout' in options ? options.iceGatheringTimeout : 3000;
 
         const sdhOptions: SessionDescriptionHandlerConfiguration = {
@@ -999,7 +999,7 @@ export default class WebRTCClient extends Emitter {
           },
         };
 
-        return new WazoSessionDescriptionHandler(logger, defaultMediaStreamFactory(), sdhOptions, this._isWeb());
+        return new WazoSessionDescriptionHandler(logger, defaultMediaStreamFactory(), sdhOptions, isWeb, session);
       },
       transportOptions: {
         traceSip: configOverrides.traceSip || false,

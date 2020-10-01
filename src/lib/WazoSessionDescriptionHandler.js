@@ -2,6 +2,7 @@
 // @flow
 import EventEmitter from 'events';
 
+import type { Session } from 'sip.js/lib/core/session';
 import type { Logger } from 'sip.js/lib/core/log/logger';
 import type { MediaStreamFactory } from 'sip.js/lib/platform/web/session-description-handler/media-stream-factory';
 import type SessionDescriptionHandlerConfiguration
@@ -15,11 +16,13 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     mediaStreamFactory: MediaStreamFactory,
     sessionDescriptionHandlerConfiguration?: SessionDescriptionHandlerConfiguration,
     isWeb: boolean,
+    session: Session,
   ) {
     super(logger, mediaStreamFactory, sessionDescriptionHandlerConfiguration);
 
     this.eventEmitter = new EventEmitter();
     this.isWeb = isWeb;
+    this.session = session;
   }
 
   on(event: string, callback: Function) {
@@ -160,30 +163,16 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       return super.sendDtmf(tones, options);
     }
 
-    // Use getLocalStreams to fetch dtmfSender instead of getSenders
-    let dtmfSender;
-    const streams = this.peerConnection.getLocalStreams();
-    if (streams.length > 0) {
-      const audioTracks = streams[0].getAudioTracks();
-      if (audioTracks.length > 0) {
-        dtmfSender = this.peerConnection.createDTMFSender(audioTracks[0]);
-      }
-    }
+    this.logger.log(`DTMF sent via INFO: ${tones.toString()}`);
 
-    if (!dtmfSender) {
-      return false;
-    }
-    try {
-      dtmfSender.insertDTMF(tones, options.duration, options.interToneGap);
-    } catch (e) {
-      if (e.type === 'InvalidStateError' || e.type === 'InvalidCharacterError') {
-        this.logger.error(e);
-        return false;
-      }
-      throw e;
-    }
-    this.logger.log(`DTMF sent via RTP: ${tones.toString()}`);
-    return true;
+    const body = {
+      contentDisposition: 'render',
+      contentType: 'application/dtmf-relay',
+      content: `Signal=${tones}\r\nDuration=${options.duration || 1000}`,
+    };
+    const requestOptions = { body };
+
+    return this.session.info({ requestOptions });
   }
 
   // Overridden to avoid to use peerConnection.getReceivers and peerConnection.getSenders in react-native
