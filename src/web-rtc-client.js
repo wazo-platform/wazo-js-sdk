@@ -315,7 +315,12 @@ export default class WebRTCClient extends Emitter {
     IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] call', number, enableVideo);
     this.changeVideo(enableVideo || false);
 
-    const session = new Inviter(this.userAgent, this._makeURI(number));
+    const inviterOptions = {};
+    if (!enableVideo) {
+      inviterOptions.sessionDescriptionHandlerModifiersReInvite = [stripVideo];
+    }
+
+    const session = new Inviter(this.userAgent, this._makeURI(number), inviterOptions);
 
     this._setupSession(session);
 
