@@ -124,7 +124,7 @@ class Phone extends Emitter {
     this.phone = null;
   }
 
-  // If audioOnly is set to true, all video stream will be remove, even remotes ones.
+  // If audioOnly is set to true, all video stream will be removed, even remotes ones.
   async call(extension: string, withCamera: boolean = false, rawSipLine: ?SipLine = null, audioOnly: boolean = false) {
     if (!this.phone) {
       return;
