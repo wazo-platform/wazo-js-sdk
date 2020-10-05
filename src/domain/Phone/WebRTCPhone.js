@@ -175,13 +175,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return true;
   }
 
-  sendReinvite() {
-    const sipSession = this.currentSipSession;
+  sendReinvite(sipSession: Session, newConstraints: Object = null) {
     if (!sipSession) {
       return;
     }
 
-    return this.client.reinvite(sipSession);
+    return this.client.reinvite(sipSession, newConstraints);
   }
 
   getUserAgent() {
@@ -454,7 +453,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   setActiveSipSession(callSession: CallSession) {
-    const sipSessionId = this._findSipSession(callSession);
+    const sipSessionId = this.findSipSession(callSession);
     if (!sipSessionId) {
       return;
     }
@@ -573,7 +572,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.shouldSendReinvite = false;
     this.rejectedSessions[callSession.getId()] = true;
 
-    const sipSession = this._findSipSession(callSession);
+    const sipSession = this.findSipSession(callSession);
     if (sipSession) {
       IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] reject ${sipSession.id}`);
 
@@ -591,7 +590,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   hold(callSession: CallSession, withEvent: boolean = true): void {
     IssueReporter.log(IssueReporter.INFO, '[WebRtcPhone] hold', callSession.getId());
 
-    const sipSession = this._findSipSession(callSession);
+    const sipSession = this.findSipSession(callSession);
 
     if (sipSession) {
       this.holdSipSession(sipSession, callSession, withEvent);
@@ -601,7 +600,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   unhold(callSession: CallSession, withEvent: boolean = true): void {
     IssueReporter.log(IssueReporter.INFO, '[WebRtcPhone] unhold', callSession ? callSession.getId() : null);
 
-    const sipSession = this._findSipSession(callSession);
+    const sipSession = this.findSipSession(callSession);
 
     if (sipSession) {
       this.unholdSipSession(sipSession, callSession, withEvent);
@@ -609,7 +608,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   atxfer(callSession: CallSession): ?Object {
-    const sipSession = this._findSipSession(callSession);
+    const sipSession = this.findSipSession(callSession);
 
     if (sipSession) {
       IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] atxfer ${sipSession.id}`);
@@ -646,7 +645,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   resume(callSession?: CallSession): void {
     IssueReporter.log(IssueReporter.INFO, '[WebRtcPhone] resume', callSession ? callSession.getId() : null);
 
-    const sipSession = this._findSipSession(callSession);
+    const sipSession = this.findSipSession(callSession);
     if (!sipSession) {
       return;
     }
@@ -670,7 +669,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   mute(callSession: ?CallSession, withEvent: boolean = true): void {
     IssueReporter.log(IssueReporter.INFO, '[WebRtcPhone] mute', callSession ? callSession.getId() : null);
 
-    const sipSession = this._findSipSession(callSession);
+    const sipSession = this.findSipSession(callSession);
     if (!sipSession) {
       return;
     }
@@ -686,7 +685,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   unmute(callSession: ?CallSession, withEvent: boolean = true): void {
     IssueReporter.log(IssueReporter.INFO, '[WebRtcPhone] unmute', callSession ? callSession.getId() : null);
 
-    const sipSession = this._findSipSession(callSession);
+    const sipSession = this.findSipSession(callSession);
     if (!sipSession) {
       return;
     }
@@ -700,7 +699,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   turnCameraOn(callSession?: CallSession): void {
-    const sipSession = this._findSipSession(callSession);
+    const sipSession = this.findSipSession(callSession);
     if (!sipSession) {
       return;
     }
@@ -712,7 +711,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   turnCameraOff(callSession?: CallSession): void {
-    const sipSession = this._findSipSession(callSession);
+    const sipSession = this.findSipSession(callSession);
     if (!sipSession) {
       return;
     }
@@ -723,7 +722,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   sendKey(callSession: ?CallSession, tone: string): void {
-    const sipSession = this._findSipSession(callSession);
+    const sipSession = this.findSipSession(callSession);
     if (!sipSession) {
       return;
     }
@@ -734,9 +733,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   // Should be async to match CTIPhone definition
   // @TODO: line is not used here
-  async makeCall(number: string, line: any, cameraEnabled?: boolean): Promise<?CallSession> {
+  async makeCall(number: string, line: any, cameraEnabled?: boolean, videoOnly: boolean = false): Promise<?CallSession> {
     if (!number) {
-      return new Promise(resolve => resolve(null));
+      return Promise.resolve(null);
     }
 
     IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] makeCall ${number}`, line ? line.id : null, cameraEnabled);
@@ -750,12 +749,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     let sipSession: Session;
     try {
-      sipSession = this.client.call(number, this.allowVideo ? cameraEnabled : false);
+      sipSession = this.client.call(number, this.allowVideo ? cameraEnabled : false, videoOnly);
       this._bindEvents(sipSession);
     } catch (error) {
       console.warn(error);
       IssueReporter.log(IssueReporter.WARN, `[WebRtcPhone] makeCall error ${error.message}, ${error.stack}`);
-      return new Promise(resolve => resolve(null));
+      return Promise.resolve(null);
     }
     const callSession = this._createOutgoingCallSession(sipSession, cameraEnabled || false);
 
@@ -768,11 +767,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     this.eventEmitter.emit(ON_CALL_OUTGOING, callSession);
 
-    return new Promise(resolve => resolve(callSession));
+    return Promise.resolve(callSession);
   }
 
   transfer(callSession: ?CallSession, target: string): void {
-    const sipSession = this._findSipSession(callSession);
+    const sipSession = this.findSipSession(callSession);
     if (!sipSession) {
       return;
     }
@@ -798,7 +797,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   confirmCTIIndirectTransfer() {}
 
   async hangup(callSession: ?CallSession): Promise<boolean> {
-    const sipSession = this._findSipSession(callSession);
+    const sipSession = this.findSipSession(callSession);
     if (!sipSession) {
       console.error('Call is unknown to the WebRTC phone', callSession ? callSession.sipCallId : null,
         callSession ? callSession.callId : null, Object.keys(this.sipSessions));
@@ -911,7 +910,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   getLocalMediaStream(callSession: CallSession) {
-    const sipSession = this._findSipSession(callSession);
+    const sipSession = this.findSipSession(callSession);
 
     return sipSession ? this.client.getLocalMediaStream(sipSession) : null;
   }
@@ -978,7 +977,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       if (this.shouldSendReinvite && this.currentSipSession) {
         this.shouldSendReinvite = false;
         try {
-          this.sendReinvite();
+          this.sendReinvite(this.currentSipSession);
         } catch (e) {
           IssueReporter.log(IssueReporter.ERROR, `[WebRtcPhone] Reinvite error : ${e.message} (${e.stack})`);
         }
@@ -1016,6 +1015,20 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.on(this.client.MESSAGE, (message: Message) => {
       this.eventEmitter.emit(ON_MESSAGE, message);
     });
+  }
+
+  // Find a corresponding sipSession from a CallSession
+  findSipSession(callSession: ?CallSession): ?Session {
+    const keys = Object.keys(this.sipSessions);
+    const keyIndex = keys.findIndex(sessionId => callSession && callSession.isId(sessionId));
+    if (keyIndex === -1) {
+      const currentSipSessionId = this.currentSipSession
+        ? this.client.getSipSessionId(this.currentSipSession)
+        : Object.keys(this.sipSessions)[0];
+      return currentSipSessionId ? this.sipSessions[currentSipSessionId] : null;
+    }
+
+    return this.sipSessions[keys[keyIndex]];
   }
 
   _createIncomingCallSession(
@@ -1099,20 +1112,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.callSessions[callSession.getId()] = callSession;
 
     return callSession;
-  }
-
-  // Find a corresponding sipSession from a CallSession
-  _findSipSession(callSession: ?CallSession): ?Session {
-    const keys = Object.keys(this.sipSessions);
-    const keyIndex = keys.findIndex(sessionId => callSession && callSession.isId(sessionId));
-    if (keyIndex === -1) {
-      const currentSipSessionId = this.currentSipSession
-        ? this.client.getSipSessionId(this.currentSipSession)
-        : Object.keys(this.sipSessions)[0];
-      return currentSipSessionId ? this.sipSessions[currentSipSessionId] : null;
-    }
-
-    return this.sipSessions[keys[keyIndex]];
   }
 
   _parseSDP(sdp: string) {

@@ -321,12 +321,12 @@ export default class WebRTCClient extends Emitter {
     });
   }
 
-  call(number: string, enableVideo?: boolean): Session {
+  call(number: string, enableVideo?: boolean, videoOnly: boolean = false): Session {
     IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] call', number, enableVideo);
     this.changeVideo(enableVideo || false);
 
     const inviterOptions = {};
-    if (!enableVideo) {
+    if (videoOnly) {
       inviterOptions.sessionDescriptionHandlerModifiersReInvite = [stripVideo];
     }
 
@@ -336,7 +336,7 @@ export default class WebRTCClient extends Emitter {
 
     const inviteOptions: InviterInviteOptions = {
       requestDelegate: {
-        onAccept: (response: IncomingResponse) => this._onAccepted(session, response.session),
+        onAccept: (response: IncomingResponse) => this._onAccepted(session, response.session, true),
         onReject: (response: IncomingResponse) => {
           IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] onReject', session.id, session.fromTag);
 
@@ -346,7 +346,7 @@ export default class WebRTCClient extends Emitter {
       sessionDescriptionHandlerOptions: this._getMediaConfiguration(enableVideo || false),
     };
 
-    if (!enableVideo) {
+    if (videoOnly) {
       inviteOptions.sessionDescriptionHandlerModifiers = [stripVideo];
     }
 
@@ -704,14 +704,21 @@ export default class WebRTCClient extends Emitter {
     this.videoEnabled = enabled;
   }
 
-  reinvite(sipSession: Session) {
+  reinvite(sipSession: Session, newConstraints: ?Object = null) {
+    if (newConstraints) {
+      this.changeVideo(!!newConstraints.video);
+    }
+
     return sipSession.invite({
+      requestDelegate: {
+        onAccept: (response: IncomingResponse) => this._onAccepted(sipSession, response.session, false),
+      },
       sessionDescriptionHandlerModifiers: [replaceLocalIpModifier],
       sessionDescriptionHandlerOptions: {
         offerOptions: {
           iceRestart: true,
         },
-        constraints: {
+        constraints: newConstraints || {
           audio: true,
           video: this.sessionWantsToDoVideo(sipSession),
         },
@@ -1087,7 +1094,7 @@ export default class WebRTCClient extends Emitter {
     };
   }
 
-  _onAccepted(session: Session, sessionDialog?: SessionDialog) {
+  _onAccepted(session: Session, sessionDialog?: SessionDialog, withEvent: boolean = true) {
     IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] onAccepted', session.id, session.remoteTag);
 
     this._setupLocalMedia(session);
@@ -1105,7 +1112,9 @@ export default class WebRTCClient extends Emitter {
       this.eventEmitter.emit(ON_TRACK, session, event);
     };
 
-    this.eventEmitter.emit(ACCEPTED, session, sessionDialog);
+    if (withEvent) {
+      this.eventEmitter.emit(ACCEPTED, session, sessionDialog);
+    }
   }
 
   _setupRemoteMedia(session: Session) {
@@ -1113,9 +1122,7 @@ export default class WebRTCClient extends Emitter {
     const pc = session.sessionDescriptionHandler.peerConnection;
     const remoteStream = this._getRemoteStream(pc);
 
-    if (this._hasVideo()) {
-      this._addRemoteToVideoSession(this.getSipSessionId(session), remoteStream);
-    }
+    this._addRemoteToVideoSession(this.getSipSessionId(session), remoteStream);
 
     if (!this._isWeb()) {
       return;
