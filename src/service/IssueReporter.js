@@ -40,11 +40,14 @@ class IssueReporter {
     if (!this.enabled) {
       return;
     }
-    global.wazoIssueReporterLogs.push({
-      level,
-      date: new Date(),
-      message: args.join(', '),
-    });
+    const date = new Date();
+    const message = args.join(', ');
+    global.wazoIssueReporterLogs.push({ level, date, message });
+
+    // Log the message in the console anyway
+    // eslint-disable-next-line
+    const oldMethod = this.oldConsoleMethods[level] || console.log;
+    oldMethod.apply(oldMethod, [date, message]);
   }
 
   logRequest(curl: string, response: Object) {
