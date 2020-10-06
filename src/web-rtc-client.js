@@ -366,7 +366,6 @@ export default class WebRTCClient extends Emitter {
 
   hangup(session: Session) {
     try {
-      this._cleanupMedia(session);
       const { state } = session;
 
       this._cleanupMedia(session);
