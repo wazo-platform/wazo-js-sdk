@@ -293,9 +293,17 @@ export default class WebRTCClient extends Emitter {
       return Promise.resolve();
     }
 
-    return this.registerer.unregister().then(() => {
+    try {
+      return this.registerer.unregister().then(() => {
+        this._cleanupRegister();
+      }).catch(() => {
+        this._cleanupRegister();
+      });
+    } catch (_) {
+      // Avoid issue with `undefined is not an object (evaluating 'new.target.prototype')` when trigerring a new
+      // error when the registerer is in a bad state
       this._cleanupRegister();
-    });
+    }
   }
 
   stop(): Promise<any> {
@@ -358,7 +366,6 @@ export default class WebRTCClient extends Emitter {
 
   hangup(session: Session) {
     try {
-      this._cleanupMedia(session);
       const { state } = session;
 
       this._cleanupMedia(session);
