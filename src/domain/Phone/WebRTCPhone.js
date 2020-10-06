@@ -538,7 +538,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   accept(callSession: CallSession, cameraEnabled?: boolean): Promise<string | null> {
     IssueReporter.log(IssueReporter.INFO, '[WebRtcPhone] accept', callSession.getId(), cameraEnabled);
     if (this.currentSipSession) {
-      this.holdSipSession(this.currentSipSession, callSession, true);
+      this.holdSipSession(this.currentSipSession, this.currentCallSession, true);
     }
 
     if (!callSession || callSession.getId() in this.acceptedSessions) {
