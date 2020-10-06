@@ -800,7 +800,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
   async hangup(callSession: ?CallSession): Promise<boolean> {
     const sipSession = this._findSipSession(callSession);
     if (!sipSession) {
-      console.error('Call is unknown to the WebRTC phone');
+      console.error('Call is unknown to the WebRTC phone', callSession ? callSession.sipCallId : null,
+        callSession ? callSession.callId : null, Object.keys(this.sipSessions));
       return false;
     }
 
