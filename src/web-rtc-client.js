@@ -312,6 +312,8 @@ export default class WebRTCClient extends Emitter {
       return Promise.resolve();
     }
 
+    this.unregister();
+
     return this.userAgent.stop().then(() => {
       this._cleanupRegister();
     }).catch(e => {
@@ -1243,6 +1245,7 @@ export default class WebRTCClient extends Emitter {
 
   _cleanupRegister() {
     if (this.registerer) {
+      this.registerer.dispose();
       this.registerer.stateChange.removeAllListeners();
       this.registerer = null;
     }
