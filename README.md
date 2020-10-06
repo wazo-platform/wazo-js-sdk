@@ -609,7 +609,7 @@ import { WazoWebSocketClient } from '@wazo/sdk';
 
 ```js
 const client = new WazoApiClient({
-  server: 'demo.wazo.community', // required string
+  server: 'stack.dev.wazo.io', // required string
   agent: null, // http(s).Agent instance, allows custom proxy, unsecured https, certificate etc.
   clientId: null, // Set an identifier for your app when using refreshToken
   isMobile: false,
@@ -781,7 +781,7 @@ Use this generic method to request endpoints directly.
 
 ```js
 const requester = new ApiRequester({ 
-  server: 'demo.wazo.community', // Engine server
+  server: 'stack.dev.wazo.io', // Engine server
   refreshTokenCallback: () => {}, // Called when the token is refreshed
   clientId: 'my-id', // ClientId used for refreshToken
   agent: null, // http(s).Agent instance, allows custom proxy, unsecured https, certificate etc.
@@ -803,7 +803,7 @@ const session = await client.auth.logIn({ ... }); // log in
 
 const client = new WazoWebRTCClient({
   displayName: 'From WEB',
-  host: 'demo.wazo.community',
+  host: 'stack.dev.wazo.io',
   media: {
     audio: boolean,
     video: boolean | document.getElementById('video'), // pointing to a `<video id="video" />` element
