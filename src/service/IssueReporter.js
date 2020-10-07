@@ -1,5 +1,6 @@
 /* global window */
 // @flow
+import moment from 'moment';
 
 global.wazoIssueReporterLogs = [];
 
@@ -40,7 +41,7 @@ class IssueReporter {
     if (!this.enabled) {
       return;
     }
-    const date = new Date();
+    const date = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
     const message = args.join(', ');
     global.wazoIssueReporterLogs.push({ level, date, message });
 
