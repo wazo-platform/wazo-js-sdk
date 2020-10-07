@@ -88,6 +88,7 @@ class Phone extends Emitter {
       options.uaConfigOverrides.traceSip = true;
 
       options.log.builtinEnabled = false;
+      options.log.logLevel = 'debug';
       options.log.connector = (level, category, label, content) => {
         IssueReporter.log(IssueReporter.INFO, `[SIP message][${level}][${category}]`, content.substr(0, 300));
       };
