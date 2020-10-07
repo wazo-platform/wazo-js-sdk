@@ -1024,6 +1024,7 @@ export default class WebRTCClient extends Emitter {
         },
         peerConnectionOptions: {
           iceCheckingTimeout: this.config.iceCheckingTimeout || 1000,
+          iceGatheringTimeout: this.config.iceCheckingTimeout || 1000,
           rtcConfiguration: {
             rtcpMuxPolicy: 'require',
             iceServers: WebRTCClient.getIceServers(this.config.host),
