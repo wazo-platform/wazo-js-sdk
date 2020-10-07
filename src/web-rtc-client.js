@@ -714,12 +714,6 @@ export default class WebRTCClient extends Emitter {
       video: this.sessionWantsToDoVideo(sipSession),
     };
 
-    const modifiers = [replaceLocalIpModifier];
-
-    if (!constraints.video) {
-      modifiers.push(disableVideo);
-    }
-
     return sipSession.invite({
       requestDelegate: {
         onAccept: (response: IncomingResponse) => {
@@ -729,7 +723,7 @@ export default class WebRTCClient extends Emitter {
           this._onAccepted(sipSession, response.session, false);
         },
       },
-      sessionDescriptionHandlerModifiers: modifiers,
+      sessionDescriptionHandlerModifiers: [replaceLocalIpModifier],
       sessionDescriptionHandlerOptions: {
         constraints,
         offerOptions: {
