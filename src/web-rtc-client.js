@@ -43,6 +43,8 @@ export const replaceLocalIpModifier = (description: Object) => Promise.resolve({
   sdp: description.sdp.replace('c=IN IP4 0.0.0.0', 'c=IN IP4 127.0.0.1'),
 });
 
+const DEFAULT_ICE_GATHERING_TIMEOUT = 3000;
+
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
 
 // events
@@ -995,7 +997,8 @@ export default class WebRTCClient extends Emitter {
       sessionDescriptionHandlerFactory: (session: Session, options: SessionDescriptionHandlerFactoryOptions = {}) => {
         const logger = session.userAgent.getLogger('sip.WazoSessionDescriptionHandler');
         const isWeb = this._isWeb();
-        const iceGatheringTimeout = 'iceGatheringTimeout' in options ? options.iceGatheringTimeout : 3000;
+        const iceGatheringTimeout = 'peerConnectionOptions' in options
+          ? options.peerConnectionOptions.iceGatheringTimeout || DEFAULT_ICE_GATHERING_TIMEOUT : DEFAULT_ICE_GATHERING_TIMEOUT;
 
         const sdhOptions: SessionDescriptionHandlerConfiguration = {
           ...options,
