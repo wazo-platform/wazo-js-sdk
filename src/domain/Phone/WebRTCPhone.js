@@ -858,10 +858,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   enableRinging(): Promise<void> | void {
+    IssueReporter.log(IssueReporter.INFO, '[WebRtcPhone] enableRinging');
     this.ringingEnabled = true;
   }
 
   disableRinging(): Promise<void> | void {
+    IssueReporter.log(IssueReporter.INFO, '[WebRtcPhone] disableRinging');
     this.ringingEnabled = false;
   }
 
