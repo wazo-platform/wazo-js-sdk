@@ -43,7 +43,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
       .put(`${baseUrl}/personal/${contact.sourceId || contact.id || ''}`, getContactPayload(contact))
       .then(Contact.parsePersonal),
 
-  importContacts: (csv: String): Promise<Contact[]> => {
+  importContacts: (csv: string): Promise<Contact[]> => {
     const headers = {
       'Content-Type': 'text/csv; charset=utf-8',
       'X-Auth-Token': client.token,
