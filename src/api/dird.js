@@ -49,7 +49,8 @@ export default (client: ApiRequester, baseUrl: string) => ({
       'X-Auth-Token': client.token,
     };
 
-    return client.post(`${baseUrl}/personal/import`, csv, headers).then(Contact.parseManyPersonal);
+    return client.post(`${baseUrl}/personal/import`, csv, headers)
+      .then(result => Contact.parseManyPersonal(result.created));
   },
 
   deleteContact: (contactUuid: UUID) => client.delete(`${baseUrl}/personal/${contactUuid}`),
