@@ -2,7 +2,7 @@
 
 export default class BadResponse extends Error {
   static fromResponse(error: Object, status: number) {
-    return new BadResponse(error.message, status, error.timestamp, error.error_id, error.details);
+    return new BadResponse(error.message, status, error.timestamp, error.error_id, error.details, error);
   }
 
   static fromText(response: string, status: number) {
@@ -14,6 +14,7 @@ export default class BadResponse extends Error {
   timestamp: ?number;
   errorId: ?string;
   details: ?Object;
+  error: ?Error;
 
   constructor(
     message: string,
@@ -21,6 +22,7 @@ export default class BadResponse extends Error {
     timestamp: ?number = null,
     errorId: ?string = null,
     details: ?Object = null,
+    error: ?Error = null,
   ) {
     super(message);
 
@@ -28,5 +30,6 @@ export default class BadResponse extends Error {
     this.status = status;
     this.errorId = errorId;
     this.details = details;
+    this.error = error;
   }
 }
