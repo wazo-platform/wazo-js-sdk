@@ -82,10 +82,9 @@ class Phone extends Emitter {
     options.media = options.media || { audio: true, video: false };
     options.uaConfigOverrides = options.uaConfigOverrides || {};
 
-    options.log = options.log || {};
-
     if (IssueReporter.enabled) {
       options.uaConfigOverrides.traceSip = true;
+      options.log = options.log || {};
 
       options.log.builtinEnabled = false;
       options.log.logLevel = 'debug';
