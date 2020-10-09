@@ -43,6 +43,15 @@ export default (client: ApiRequester, baseUrl: string) => ({
       .put(`${baseUrl}/personal/${contact.sourceId || contact.id || ''}`, getContactPayload(contact))
       .then(Contact.parsePersonal),
 
+  importContacts: (csv: String): Promise<Contact[]> => {
+    const headers = {
+      'Content-Type': 'text/csv; charset=utf-8',
+      'X-Auth-Token': client.token,
+    };
+
+    return client.post(`${baseUrl}/personal/import`, csv, headers).then(Contact.parseManyPersonal);
+  },
+
   deleteContact: (contactUuid: UUID) => client.delete(`${baseUrl}/personal/${contactUuid}`),
 
   listFavorites: (context: string): Promise<Array<Contact>> =>
