@@ -45,6 +45,12 @@ export const replaceLocalIpModifier = (description: Object) => Promise.resolve({
 
 const DEFAULT_ICE_TIMEOUT = 3000;
 
+const disableVideo = (description: Object) => Promise.resolve({
+  // description is immutable... so we have to clone it or the `type` attribute won't be returned.
+  ...JSON.parse(JSON.stringify(description)),
+  sdp: description.sdp.replace(/m=video [0-9]+/, 'm=video 0'),
+});
+
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
 
 // events
