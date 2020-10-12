@@ -382,7 +382,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.currentCallSession = callSession;
 
     this.eventEmitter.emit(ON_TERMINATE_SOUND);
-    const sipSessionId = this.client.getSipSessionId(sipSession);
+    const sipSessionId = this.getSipSessionId(sipSession);
     if (sipSessionId) {
       this.removeIncomingSessions(sipSessionId);
     }
@@ -432,7 +432,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     this.eventEmitter.emit(ON_TERMINATE_SOUND);
 
-    const sipSessionId = this.client.getSipSessionId(sipSession);
+    const sipSessionId = this.getSipSessionId(sipSession);
     if (sipSessionId) {
       this.removeIncomingSessions(sipSessionId);
     }
@@ -490,7 +490,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return false;
     }
 
-    return this.currentSipSession && this.client.getSipSessionId(this.currentSipSession) === callSession.getId();
+    return this.currentSipSession && this.getSipSessionId(this.currentSipSession) === callSession.getId();
   }
 
   isCallUsingVideo(callSession: CallSession): boolean {
@@ -733,7 +733,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   // Should be async to match CTIPhone definition
   // @TODO: line is not used here
-  async makeCall(number: string, line: any, cameraEnabled?: boolean, videoOnly: boolean = false): Promise<?CallSession> {
+  async makeCall(number: string, line: any, cameraEnabled?: boolean,
+    audioOnly: boolean = false): Promise<?CallSession> {
     if (!number) {
       return Promise.resolve(null);
     }
@@ -749,7 +750,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     let sipSession: Session;
     try {
-      sipSession = this.client.call(number, this.allowVideo ? cameraEnabled : false, videoOnly);
+      sipSession = this.client.call(number, this.allowVideo ? cameraEnabled : false, audioOnly);
       this._bindEvents(sipSession);
     } catch (error) {
       console.warn(error);
@@ -806,7 +807,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] hangup ${sipSession.id}`);
 
-    const sipSessionId = this.client.getSipSessionId(sipSession);
+    const sipSessionId = this.getSipSessionId(sipSession);
     if (sipSessionId) {
       delete this.sipSessions[sipSessionId];
       if (callSession) {
@@ -954,7 +955,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.on(this.client.ACCEPTED, (sipSession: Session) => {
       IssueReporter.log(IssueReporter.INFO, `[WebRtcPhone] accepted ${sipSession.id}`);
 
-      this._onCallAccepted(sipSession, this.client.sessionHasVideo(this.client.getSipSessionId(sipSession)));
+      this._onCallAccepted(sipSession, this.client.sessionHasVideo(this.getSipSessionId(sipSession)));
 
       if (this.audioOutputDeviceId) {
         this.client.changeAudioOutputDevice(this.audioOutputDeviceId);
@@ -1023,12 +1024,16 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const keyIndex = keys.findIndex(sessionId => callSession && callSession.isId(sessionId));
     if (keyIndex === -1) {
       const currentSipSessionId = this.currentSipSession
-        ? this.client.getSipSessionId(this.currentSipSession)
+        ? this.getSipSessionId(this.currentSipSession)
         : Object.keys(this.sipSessions)[0];
       return currentSipSessionId ? this.sipSessions[currentSipSessionId] : null;
     }
 
     return this.sipSessions[keys[keyIndex]];
+  }
+
+  getSipSessionId(sipSession: Session) {
+    return this.client.getSipSessionId(sipSession);
   }
 
   _createIncomingCallSession(
@@ -1094,7 +1099,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     const callSession = new CallSession({
       callId: fromSession && fromSession.callId,
-      sipCallId: this.client.getSipSessionId(sipSession),
+      sipCallId: this.getSipSessionId(sipSession),
       sipStatus: state,
       displayName: sipSession.remoteIdentity.displayName || number,
       startTime: fromSession ? fromSession.startTime : new Date(),

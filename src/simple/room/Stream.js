@@ -7,6 +7,12 @@ class Stream {
   htmlStream: MediaStream;
   participant: Participant;
 
+  static detachStream = (stream: any) => {
+    stream.getTracks().forEach(track => {
+      track.stop();
+    });
+  }
+
   constructor(htmlStream: MediaStream, participant: Participant) {
     this.htmlStream = htmlStream;
     this.participant = participant;
@@ -36,9 +42,7 @@ class Stream {
   }
 
   detach() {
-    this.htmlStream.getTracks().forEach(track => {
-      track.stop();
-    });
+    Stream.detachStream(this.htmlStream);
   }
 
   get id() {

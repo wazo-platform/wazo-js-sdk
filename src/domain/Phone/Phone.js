@@ -82,7 +82,8 @@ export interface Phone {
 
   getUserAgent(): string;
 
-  makeCall(number: string, line: Line, enableVideo?: boolean): ?CallSession | Promise<?CallSession>;
+  makeCall(number: string, line: Line, enableVideo?: boolean,
+    audioOnly?: boolean): ?CallSession | Promise<?CallSession>;
 
   mute(callSession: CallSession): PhoneVoid;
 
