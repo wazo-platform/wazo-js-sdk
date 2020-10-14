@@ -1032,6 +1032,12 @@ export default class WebRTCClient extends Emitter {
             ...configOverrides.peerConnectionOptions || {},
           },
         },
+        // Configuration used in SDH to create the PeerConnection
+        peerConnectionConfiguration: {
+          rtcpMuxPolicy: 'require',
+          iceServers: WebRTCClient.getIceServers(this.config.host),
+          ...configOverrides.peerConnectionOptions || {},
+        },
       },
     };
 
