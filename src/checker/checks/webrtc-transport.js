@@ -1,7 +1,7 @@
 import WebRTCClient from '../../web-rtc-client';
 
 export default {
-  name: 'WebRTC Transport (WS)',
+  name: 'WebRTC Transport (WS) ~30s',
   check: (server, session) => new Promise((resolve, reject) => {
     const client = new WebRTCClient({
       host: server,
