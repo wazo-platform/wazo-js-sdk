@@ -7,7 +7,7 @@ class Stream {
   htmlStream: MediaStream;
   participant: Participant;
 
-  static detachStream = (stream: any) => {
+  static detachStream(stream: any) {
     stream.getTracks().forEach(track => {
       track.stop();
     });

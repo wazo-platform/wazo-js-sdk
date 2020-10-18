@@ -87,8 +87,6 @@ class Phone extends Emitter {
       options.uaConfigOverrides.traceSip = true;
       options.log = options.log || {};
 
-      options.log = options.log || {};
-
       options.log.builtinEnabled = false;
       options.log.logLevel = 'debug';
       options.log.connector = (level, category, label, content) => {

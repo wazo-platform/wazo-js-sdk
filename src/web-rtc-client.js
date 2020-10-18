@@ -45,12 +45,6 @@ export const replaceLocalIpModifier = (description: Object) => Promise.resolve({
 
 const DEFAULT_ICE_TIMEOUT = 3000;
 
-const disableVideo = (description: Object) => Promise.resolve({
-  // description is immutable... so we have to clone it or the `type` attribute won't be returned.
-  ...JSON.parse(JSON.stringify(description)),
-  sdp: description.sdp.replace(/m=video [0-9]+/, 'm=video 0'),
-});
-
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
 
 // events
@@ -715,18 +709,22 @@ export default class WebRTCClient extends Emitter {
       this.changeVideo(!!newConstraints.video);
     }
 
-    const constraints = newConstraints || {
-      audio: true,
-      video: this.sessionWantsToDoVideo(sipSession),
-    };
+    const shouldDoVideo = newConstraints ? newConstraints.video : this.sessionWantsToDoVideo(sipSession);
+    const { constraints } = this._getMediaConfiguration(shouldDoVideo);
 
     return sipSession.invite({
       requestDelegate: {
         onAccept: (response: IncomingResponse) => {
           // Update the SDP body to be able to call sessionWantsToDoVideo correctly in `_setup[Local|Remote]Media`.
           // Can't set directly sipSession.body because it's a getter.
-          sipSession.incomingInviteRequest.message.body = response.message.body;
+          if (sipSession instanceof Inviter) {
+            sipSession.outgoingRequestMessage.body.body = response.message.body;
+          } else {
+            sipSession.incomingInviteRequest.message.body = response.message.body;
+          }
           this._onAccepted(sipSession, response.session, false);
+
+          return this.eventEmitter.emit(ON_REINVITE, sipSession, response);
         },
       },
       sessionDescriptionHandlerModifiers: [replaceLocalIpModifier],
