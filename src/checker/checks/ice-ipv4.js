@@ -1,9 +1,18 @@
 /* global MediaStream, RTCPeerConnection */
+
 import { parseCandidate } from '../../utils/webrtc';
 
-// @see https://webrtchacks.com/symmetric-nat/
+const checkIsIPV4 = ip => {
+  const blocks = ip.split('.');
+  if (blocks.length !== 4) {
+    return false;
+  }
+
+  return blocks.every(block => parseInt(block, 10) >= 0 && parseInt(block, 10) <= 255);
+};
+
 export default {
-  name: 'Symmetric NAT',
+  name: 'Non IP v4 ice',
   check: () => new Promise((resolve, reject) => {
     if (typeof MediaStream === 'undefined') {
       return resolve('Skipped on node');
@@ -18,23 +27,21 @@ export default {
 
     pc.createDataChannel('wazo-check-nat');
 
-    const candidates = {};
+    const ips = [];
 
     pc.onicecandidate = e => {
       if (e.candidate && e.candidate.candidate.indexOf('srflx') !== -1) {
-        const cand = parseCandidate(e.candidate.candidate);
-        if (!candidates[cand.relatedPort]) candidates[cand.relatedPort] = [];
-        candidates[cand.relatedPort].push(cand.port);
+        const candidate = parseCandidate(e.candidate.candidate);
+        ips.push(candidate.ip);
       } else if (!e.candidate) {
-        if (Object.keys(candidates).length === 1) {
-          const ports = candidates[Object.keys(candidates)[0]];
+        if (ips.every(checkIsIPV4)) {
+          resolve();
+        } else {
+          const nonIPV4 = ips.find(ip => !checkIsIPV4(ip));
 
-          if (ports.length === 1) {
-            resolve();
-          } else {
-            reject(new Error('Symmetric NAT detected, you should use a TURN server.'));
-          }
+          reject(new Error(`Non IPv4 ice candidate found : ${nonIPV4}.`));
         }
+
       }
     };
 

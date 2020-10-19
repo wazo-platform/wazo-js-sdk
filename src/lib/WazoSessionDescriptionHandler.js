@@ -88,7 +88,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         // Avoid immutable errors
         const newDescription = JSON.parse(JSON.stringify(localDescription));
         // Add ice candidates if not present
-        if (newDescription.sdp.indexOf('a=candidate') === -1) {
+        if (newDescription && newDescription.sdp.indexOf('a=candidate') === -1) {
           gatheredIces.forEach(ice => {
             // eslint-disable-next-line
             newDescription.sdp += `a=${ice}${"\n"}`;
