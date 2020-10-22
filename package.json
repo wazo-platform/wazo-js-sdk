@@ -1,6 +1,6 @@
 {
   "name": "@wazo/sdk",
-  "version": "0.33.42",
+  "version": "0.34.0-rc.0",
   "description": "Wazo's JavaScript Software Development Kit.",
   "main": "dist/wazo-sdk.js",
   "author": "Wazo (http://wazo.io)",
@@ -41,6 +41,7 @@
   },
   "dependencies": {
     "events": "^3.2.0",
+    "fluent-logger": "^3.4.1",
     "fstream": "^1.0.12",
     "globby": "^11.0.1",
     "google-libphonenumber": "^3.2.12",
