@@ -22,7 +22,7 @@ type ConstructorParams = {
 const methods = ['head', 'get', 'post', 'put', 'delete'];
 
 // Use a function here to be able to mock it in tests
-const realFetch = () => {
+export const realFetch = () => {
   if (typeof document !== 'undefined') {
     // Browser
     return window.fetch;

@@ -1,7 +1,8 @@
 /* global window */
 // @flow
 import moment from 'moment';
-import fluentLogger from 'fluent-logger';
+
+import { realFetch } from '../utils/api-requester';
 
 global.wazoIssueReporterLogs = [];
 
@@ -14,7 +15,7 @@ class IssueReporter {
   consoleMethods: string[];
   oldConsoleMethods: Object;
   enabled: boolean;
-  hasRemoteClient: boolean;
+  remoteClientConfiguration: ?Object;
 
   constructor() {
     this.INFO = 'info';
@@ -25,21 +26,15 @@ class IssueReporter {
     this.consoleMethods = [this.INFO, this.LOG, this.WARN, this.ERROR];
     this.oldConsoleMethods = {};
     this.enabled = false;
-    this.hasRemoteClient = false;
+    this.remoteClientConfiguration = null;
   }
 
   init() {
     this._catchConsole();
   }
 
-  configureRemoteClient(host: string, port: string|number) {
-    fluentLogger.configure('fluent', {
-      host,
-      port,
-      timeout: 3.0,
-    });
-
-    this.hasRemoteClient = true;
+  configureRemoteClient(configuration: Object = { tag: 'wazo-sdk', host: null, port: null, extra: {} }) {
+    this.remoteClientConfiguration = configuration;
   }
 
   enable() {
@@ -63,9 +58,7 @@ class IssueReporter {
     const oldMethod = this.oldConsoleMethods[level] || console.log;
     oldMethod.apply(oldMethod, [date, message]);
 
-    if (this.hasRemoteClient) {
-      fluentLogger.emit(level, { date, message });
-    }
+    this._sendToRemoteLogger(level, { date, message });
   }
 
   logRequest(curl: string, response: Object) {
@@ -99,6 +92,28 @@ class IssueReporter {
         // Use old console method to log it normally
         this.oldConsoleMethods[methodName].apply(null, args);
       };
+    });
+  }
+
+  _sendToRemoteLogger(level: string, payload: Object) {
+    if (!this.remoteClientConfiguration) {
+      return;
+    }
+
+    const { tag, host, port, extra } = this.remoteClientConfiguration;
+    const url = `http://${host}:${port}/${tag}`;
+
+    realFetch()(url, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        level,
+        ...payload,
+        ...extra,
+      }),
     });
   }
 }
