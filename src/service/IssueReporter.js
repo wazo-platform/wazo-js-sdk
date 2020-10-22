@@ -1,6 +1,7 @@
 /* global window */
 // @flow
 import moment from 'moment';
+import fluentLogger from 'fluent-logger';
 
 global.wazoIssueReporterLogs = [];
 
@@ -13,6 +14,7 @@ class IssueReporter {
   consoleMethods: string[];
   oldConsoleMethods: Object;
   enabled: boolean;
+  hasRemoteClient: boolean;
 
   constructor() {
     this.INFO = 'info';
@@ -23,10 +25,21 @@ class IssueReporter {
     this.consoleMethods = [this.INFO, this.LOG, this.WARN, this.ERROR];
     this.oldConsoleMethods = {};
     this.enabled = false;
+    this.hasRemoteClient = false;
   }
 
   init() {
     this._catchConsole();
+  }
+
+  configureRemoteClient(host: string, port: string|number) {
+    fluentLogger.configure('fluent', {
+      host,
+      port,
+      timeout: 3.0,
+    });
+
+    this.hasRemoteClient = true;
   }
 
   enable() {
@@ -49,6 +62,10 @@ class IssueReporter {
     // eslint-disable-next-line
     const oldMethod = this.oldConsoleMethods[level] || console.log;
     oldMethod.apply(oldMethod, [date, message]);
+
+    if (this.hasRemoteClient) {
+      fluentLogger.emit(level, { date, message });
+    }
   }
 
   logRequest(curl: string, response: Object) {
