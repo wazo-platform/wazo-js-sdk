@@ -1,4 +1,5 @@
 /* global window */
+/* eslint-disable prefer-destructuring */
 // @flow
 import moment from 'moment';
 
@@ -6,24 +7,32 @@ import { realFetch } from '../utils/api-requester';
 
 global.wazoIssueReporterLogs = [];
 
+const TRACE = 'trace';
+const DEBUG = 'debug';
+const INFO = 'info';
+const LOG = 'log';
+const WARN = 'warn';
+const ERROR = 'error';
+
+const consoleMethods = [INFO, LOG, WARN, ERROR];
+const logLevels = [TRACE, DEBUG, INFO, LOG, WARN, ERROR];
+
 class IssueReporter {
   INFO: string;
   LOG: string;
   WARN: string;
   ERROR: string;
 
-  consoleMethods: string[];
   oldConsoleMethods: Object;
   enabled: boolean;
   remoteClientConfiguration: ?Object;
 
   constructor() {
-    this.INFO = 'info';
-    this.LOG = 'log';
-    this.WARN = 'warn';
-    this.ERROR = 'error';
+    this.INFO = INFO;
+    this.LOG = LOG;
+    this.WARN = WARN;
+    this.ERROR = ERROR;
 
-    this.consoleMethods = [this.INFO, this.LOG, this.WARN, this.ERROR];
     this.oldConsoleMethods = {};
     this.enabled = false;
     this.remoteClientConfiguration = null;
@@ -33,7 +42,7 @@ class IssueReporter {
     this._catchConsole();
   }
 
-  configureRemoteClient(configuration: Object = { tag: 'wazo-sdk', host: null, port: null, extra: {} }) {
+  configureRemoteClient(configuration: Object = { tag: 'wazo-sdk', host: null, port: null, level: null, extra: {} }) {
     this.remoteClientConfiguration = configuration;
   }
 
@@ -45,12 +54,38 @@ class IssueReporter {
     this.enabled = false;
   }
 
+  loggerFor(category: string) {
+    const logger = (level: string, ...args: any) => {
+      this.log.apply(this, [level, `logger-category=${category}`, ...args]);
+    };
+
+    logger.INFO = this.INFO;
+    logger.LOG = this.LOG;
+    logger.WARN = this.WARN;
+    logger.ERROR = this.ERROR;
+
+    return logger;
+  }
+
   log(level: string, ...args: any) {
     if (!this.enabled) {
       return;
     }
+
+    // Handle category label
+    let category = null;
+    if (args[0].indexOf('logger-category=') === 0) {
+      category = args[0].split('=')[1];
+      // eslint-disable-next-line no-param-reassign
+      args[0] = args.splice(1);
+    }
+
     const date = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
-    const message = args.join(', ');
+    let message = args.join(', ');
+
+    if (category) {
+      message = `[${category}] ${message}`;
+    }
     global.wazoIssueReporterLogs.push({ level, date, message });
 
     // Log the message in the console anyway
@@ -58,7 +93,7 @@ class IssueReporter {
     const oldMethod = this.oldConsoleMethods[level] || console.log;
     oldMethod.apply(oldMethod, [date, message]);
 
-    this._sendToRemoteLogger(level, { date, message });
+    this._sendToRemoteLogger(level, { date, message, category });
   }
 
   logRequest(curl: string, response: Object) {
@@ -83,7 +118,7 @@ class IssueReporter {
   }
 
   _catchConsole() {
-    this.consoleMethods.forEach((methodName: string) => {
+    consoleMethods.forEach((methodName: string) => {
       // eslint-disable-next-line
       this.oldConsoleMethods[methodName] = console[methodName];
       window.console[methodName] = (...args) => {
@@ -100,7 +135,10 @@ class IssueReporter {
       return;
     }
 
-    const { tag, host, port, extra } = this.remoteClientConfiguration;
+    const { tag, host, port, extra, level: minLevel } = this.remoteClientConfiguration;
+    if (minLevel && !this._isLevelAbove(level, minLevel)) {
+      return;
+    }
     const url = `http://${host}:${port}/${tag}`;
 
     realFetch()(url, {
@@ -115,6 +153,10 @@ class IssueReporter {
         ...extra,
       }),
     });
+  }
+
+  _isLevelAbove(level1: string, level2: string) {
+    return logLevels.indexOf(level1) >= logLevels.indexOf(level2);
   }
 }
 
