@@ -19,6 +19,8 @@ import Wazo from './index';
 const MESSAGE_TYPE_CHAT = 'message/TYPE_CHAT';
 const MESSAGE_TYPE_SIGNAL = 'message/TYPE_SIGNAL';
 
+const sipLogger = IssueReporter.loggerFor('sip');
+
 class Phone extends Emitter {
   client: WazoWebRTCClient;
   phone: ?WebRTCPhone;
@@ -90,7 +92,7 @@ class Phone extends Emitter {
       options.log.builtinEnabled = false;
       options.log.logLevel = 'debug';
       options.log.connector = (level, category, label, content) => {
-        IssueReporter.log(IssueReporter.INFO, `[SIP message][${level}][${category}]`, content.substr(0, 300));
+        sipLogger.log(sipLogger.TRACE, `[${category}]`, content.substr(0, 300));
       };
     }
 

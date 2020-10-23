@@ -5,14 +5,16 @@ import sdpParser from 'sdp-transform';
 
 import type CallSession from '../../domain/CallSession';
 import getApiClient from '../../service/getApiClient';
-import Logger from '../../utils/logger';
 import Emitter from '../../utils/Emitter';
 import Wazo from '../index';
 import Participant from './Participant';
 import RemoteParticipant from './RemoteParticipant';
+import IssueReporter from '../../service/IssueReporter';
 
 export const SIGNAL_TYPE_PARTICIPANT_UPDATE = 'signal/PARTICIPANT_UPDATE';
 export const SIGNAL_TYPE_PARTICIPANT_REQUEST = 'signal/PARTICIPANT_REQUEST';
+
+const logger = IssueReporter.loggerFor('room');
 
 class Room extends Emitter {
   callSession: ?CallSession;
@@ -410,7 +412,7 @@ class Room extends Emitter {
         const requester: ?Participant = this._getParticipantFromCallId(origin.callId);
         if (requester) {
           // @FIXME?: when need to trigger an update on join-in; this is a bit of a hack
-          Logger.log('Trigger requester status', origin);
+          logger.log(logger.INFO, 'Trigger requester status', origin);
           requester.triggerUpdate('REQUESTER_UPDATE');
         }
         break;

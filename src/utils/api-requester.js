@@ -6,7 +6,6 @@ import { Base64 } from 'js-base64';
 
 import BadResponse from '../domain/BadResponse';
 import ServerError from '../domain/ServerError';
-import Logger from './logger';
 import isMobile from './isMobile';
 import type { Token } from '../domain/types';
 import IssueReporter from '../service/IssueReporter';
@@ -130,7 +129,6 @@ export default class ApiRequester {
       const isJson = contentType.indexOf('application/json') !== -1;
 
       const curl = this._getCurlCommand(url, options, response);
-      Logger.log(curl);
       IssueReporter.logRequest(curl, response);
 
       // Throw an error only if status >= 400

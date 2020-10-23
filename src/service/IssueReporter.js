@@ -13,9 +13,9 @@ const INFO = 'info';
 const LOG = 'log';
 const WARN = 'warn';
 const ERROR = 'error';
-
-const consoleMethods = [INFO, LOG, WARN, ERROR];
-const logLevels = [TRACE, DEBUG, INFO, LOG, WARN, ERROR];
+const CONSOLE_METHODS = [INFO, LOG, WARN, ERROR];
+const LOG_LEVELS = [TRACE, DEBUG, INFO, LOG, WARN, ERROR];
+const CATEGORY_PREFIX = 'logger-category=';
 
 class IssueReporter {
   INFO: string;
@@ -54,9 +54,9 @@ class IssueReporter {
     this.enabled = false;
   }
 
-  loggerFor(category: string) {
+  loggerFor(category: string): any {
     const logger = (level: string, ...args: any) => {
-      this.log.apply(this, [level, `logger-category=${category}`, ...args]);
+      this.log.apply(this, [level, this._makeCategory(category), ...args]);
     };
 
     logger.INFO = this.INFO;
@@ -74,7 +74,7 @@ class IssueReporter {
 
     // Handle category label
     let category = null;
-    if (args[0].indexOf('logger-category=') === 0) {
+    if (args[0].indexOf(CATEGORY_PREFIX) === 0) {
       category = args[0].split('=')[1];
       // eslint-disable-next-line no-param-reassign
       args[0] = args.splice(1);
@@ -102,7 +102,7 @@ class IssueReporter {
     }
     const { status } = response;
 
-    this.log(status < 500 ? 'info' : 'warn', curl);
+    this.log(status < 500 ? TRACE : WARN, this._makeCategory('http'), curl);
   }
 
   getLogs() {
@@ -118,7 +118,7 @@ class IssueReporter {
   }
 
   _catchConsole() {
-    consoleMethods.forEach((methodName: string) => {
+    CONSOLE_METHODS.forEach((methodName: string) => {
       // eslint-disable-next-line
       this.oldConsoleMethods[methodName] = console[methodName];
       window.console[methodName] = (...args) => {
@@ -156,7 +156,11 @@ class IssueReporter {
   }
 
   _isLevelAbove(level1: string, level2: string) {
-    return logLevels.indexOf(level1) >= logLevels.indexOf(level2);
+    return LOG_LEVELS.indexOf(level1) >= LOG_LEVELS.indexOf(level2);
+  }
+
+  _makeCategory(category: string) {
+    return `${CATEGORY_PREFIX}${category}`;
   }
 }
 

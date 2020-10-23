@@ -46,6 +46,7 @@ export const replaceLocalIpModifier = (description: Object) => Promise.resolve({
 const DEFAULT_ICE_TIMEOUT = 3000;
 
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
+const logger = IssueReporter.loggerFor('webrtc-client');
 
 // events
 const REGISTERED = 'registered';
@@ -200,12 +201,12 @@ export default class WebRTCClient extends Emitter {
 
     webRTCConfiguration.delegate = {
       onConnect: () => {
-        IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] connected');
+        logger.log(logger.INFO, 'connected');
         this.eventEmitter.emit(CONNECTED);
         this.register();
       },
       onDisconnect: (error?: Error) => {
-        IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] disconnected', error);
+        logger.log(logger.INFO, 'disconnected', error);
         this.connectionPromise = null;
         // The UA will attempt to reconnect automatically when an error occurred
         this.eventEmitter.emit(DISCONNECTED, error);
@@ -215,7 +216,7 @@ export default class WebRTCClient extends Emitter {
         }
       },
       onInvite: (invitation: Invitation) => {
-        IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] onInvite', invitation.id, invitation.remoteURI);
+        logger.log(logger.INFO, 'onInvite', invitation.id, invitation.remoteURI);
         this._setupSession(invitation);
         const shouldAutoAnswer = !!invitation.request.getHeader('alert-info');
 
@@ -254,9 +255,9 @@ export default class WebRTCClient extends Emitter {
   }
 
   register(): Promise<any> {
-    IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] register', !!this.userAgent, this.isRegistered());
+    logger.log(logger.INFO, 'register', !!this.userAgent, this.isRegistered());
     if (!this.userAgent) {
-      IssueReporter.log(IssueReporter.INFO, '[WebRtcClient][register] recreating UA');
+      logger.log(logger.INFO, '[register] recreating UA');
       this.userAgent = this.createUserAgent(this.uaConfigOverrides);
     }
     if (!this.userAgent || this.isRegistered()) {
@@ -290,7 +291,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   unregister() {
-    IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] unregister', !!this.userAgent);
+    logger.log(logger.INFO, 'unregister', !!this.userAgent);
     if (!this.registerer) {
       return Promise.resolve();
     }
@@ -309,7 +310,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   stop(): Promise<any> {
-    IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] stop', !!this.userAgent);
+    logger.log(logger.INFO, 'stop', !!this.userAgent);
     if (!this.userAgent) {
       return Promise.resolve();
     }
@@ -317,12 +318,12 @@ export default class WebRTCClient extends Emitter {
     return this.userAgent.stop().then(() => {
       this._cleanupRegister();
     }).catch(e => {
-      IssueReporter.log(IssueReporter.WARN, '[WebRtcClient] close error', e.message, e.stack);
+      logger.log(logger.WARN, 'close error', e.message, e.stack);
     });
   }
 
   call(number: string, enableVideo?: boolean, audioOnly: boolean = false): Session {
-    IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] call', number, enableVideo);
+    logger.log(logger.INFO, 'call', number, enableVideo);
     this.changeVideo(enableVideo || false);
 
     const inviterOptions = {};
@@ -338,7 +339,7 @@ export default class WebRTCClient extends Emitter {
       requestDelegate: {
         onAccept: (response: IncomingResponse) => this._onAccepted(session, response.session, true),
         onReject: (response: IncomingResponse) => {
-          IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] onReject', session.id, session.fromTag);
+          logger.log(logger.INFO, 'onReject', session.id, session.fromTag);
 
           this.eventEmitter.emit(REJECTED, session, response);
         },
@@ -407,7 +408,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   async close() {
-    IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] close', !!this.userAgent);
+    logger.log(logger.INFO, 'close', !!this.userAgent);
     this._cleanupMedia();
     this.connectionPromise = null;
 
@@ -839,7 +840,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   startHeartbeat() {
-    IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] startHeartbeat', !!this.userAgent);
+    logger.log(logger.INFO, 'startHeartbeat', !!this.userAgent);
     if (!this.userAgent) {
       this.heartbeat.stop();
       return;
@@ -852,7 +853,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   stopHeartbeat() {
-    IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] stopHeartbeat');
+    logger.log(logger.INFO, 'stopHeartbeat');
     this.heartbeat.stop();
   }
 
@@ -865,7 +866,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   attemptReconnection(): void {
-    IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] attemptReconnection', !!this.userAgent);
+    logger.log(logger.INFO, 'attemptReconnection', !!this.userAgent);
     if (!this.userAgent) {
       return;
     }
@@ -880,7 +881,7 @@ export default class WebRTCClient extends Emitter {
   _onHeartbeat(message: string | Object) {
     const body = message && typeof message === 'object' ? message.data : message;
     if (body.indexOf('200 OK') !== -1) {
-      IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] onHeartbeat', this.hasHeartbeat());
+      logger.log(logger.INFO, 'onHeartbeat', this.hasHeartbeat());
       if (this.hasHeartbeat()) {
         this.heartbeat.onHeartbeat();
         if (this.heartbeatCb) {
@@ -891,7 +892,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   async _onHeartbeatTimeout() {
-    IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] onHeartbeatTimeout', !!this.userAgent,
+    logger.log(logger.INFO, 'onHeartbeatTimeout', !!this.userAgent,
       !!this.heartbeatTimeoutCb);
 
     if (this.heartbeatTimeoutCb) {
@@ -933,9 +934,9 @@ export default class WebRTCClient extends Emitter {
   }
 
   _connectIfNeeded(): Promise<void> {
-    IssueReporter.log(IssueReporter.INFO, '[WebRtcClient][_connectIfNeeded]', this.isConnected());
+    logger.log(logger.INFO, '[_connectIfNeeded]', this.isConnected());
     if (!this.userAgent) {
-      IssueReporter.log(IssueReporter.INFO, '[WebRtcClient][_connectIfNeeded] recreating UA');
+      logger.log(logger.INFO, '[_connectIfNeeded] recreating UA');
       this.userAgent = this.createUserAgent(this.uaConfigOverrides);
     }
 
@@ -952,7 +953,7 @@ export default class WebRTCClient extends Emitter {
       return this.connectionPromise;
     }
 
-    IssueReporter.log(IssueReporter.INFO, '[WebRtcClient][_connectIfNeeded] connecting');
+    logger.log(logger.INFO, '[_connectIfNeeded] connecting');
     this.connectionPromise = this.userAgent.start();
 
     return this.connectionPromise;
@@ -1025,7 +1026,7 @@ export default class WebRTCClient extends Emitter {
       reconnectionAttempts: 10000,
       reconnectionDelay: 5,
       sessionDescriptionHandlerFactory: (session: Session, options: SessionDescriptionHandlerFactoryOptions = {}) => {
-        const logger = session.userAgent.getLogger('sip.WazoSessionDescriptionHandler');
+        const uaLogger = session.userAgent.getLogger('sip.WazoSessionDescriptionHandler');
         const isWeb = this._isWeb();
         const iceGatheringTimeout = 'peerConnectionOptions' in options
           ? options.peerConnectionOptions.iceGatheringTimeout || DEFAULT_ICE_TIMEOUT : DEFAULT_ICE_TIMEOUT;
@@ -1039,7 +1040,7 @@ export default class WebRTCClient extends Emitter {
           },
         };
 
-        return new WazoSessionDescriptionHandler(logger, defaultMediaStreamFactory(), sdhOptions, isWeb, session);
+        return new WazoSessionDescriptionHandler(uaLogger, defaultMediaStreamFactory(), sdhOptions, isWeb, session);
       },
       transportOptions: {
         traceSip: configOverrides.traceSip || false,
@@ -1110,7 +1111,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     session.delegate.onInvite = (inviteRequest: IncomingRequestMessage) => {
-      IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] onReinvite');
+      logger.log(logger.INFO, 'onReinvite');
       const updatedCalleeName = session.assertedIdentity && session.assertedIdentity.displayName;
 
       // Update SDP
@@ -1125,7 +1126,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   _onAccepted(session: Session, sessionDialog?: SessionDialog, withEvent: boolean = true) {
-    IssueReporter.log(IssueReporter.INFO, '[WebRtcClient] onAccepted', session.id, session.remoteTag);
+    logger.log(logger.INFO, 'onAccepted', session.id, session.remoteTag);
 
     this._setupLocalMedia(session);
     this._setupRemoteMedia(session);
