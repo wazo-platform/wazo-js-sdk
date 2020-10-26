@@ -1,5 +1,5 @@
 /* global window */
-/* eslint-disable prefer-destructuring */
+/* eslint-disable prefer-destructuring, no-param-reassign */
 // @flow
 import moment from 'moment';
 
@@ -17,7 +17,18 @@ const CONSOLE_METHODS = [INFO, LOG, WARN, ERROR];
 const LOG_LEVELS = [TRACE, DEBUG, INFO, LOG, WARN, ERROR];
 const CATEGORY_PREFIX = 'logger-category=';
 
+const addLevelsTo = (instance: Object) => {
+  instance.TRACE = TRACE;
+  instance.INFO = INFO;
+  instance.LOG = LOG;
+  instance.WARN = WARN;
+  instance.ERROR = ERROR;
+
+  return instance;
+};
+
 class IssueReporter {
+  TRACE: string;
   INFO: string;
   LOG: string;
   WARN: string;
@@ -28,10 +39,7 @@ class IssueReporter {
   remoteClientConfiguration: ?Object;
 
   constructor() {
-    this.INFO = INFO;
-    this.LOG = LOG;
-    this.WARN = WARN;
-    this.ERROR = ERROR;
+    addLevelsTo(this);
 
     this.oldConsoleMethods = {};
     this.enabled = false;
@@ -59,12 +67,7 @@ class IssueReporter {
       this.log.apply(this, [level, this._makeCategory(category), ...args]);
     };
 
-    logger.INFO = this.INFO;
-    logger.LOG = this.LOG;
-    logger.WARN = this.WARN;
-    logger.ERROR = this.ERROR;
-
-    return logger;
+    return addLevelsTo(logger);
   }
 
   log(level: string, ...args: any) {
@@ -90,7 +93,7 @@ class IssueReporter {
 
     // Log the message in the console anyway
     // eslint-disable-next-line
-    const oldMethod = this.oldConsoleMethods[level] || console.log;
+    const oldMethod = this.oldConsoleMethods[level] || this.oldConsoleMethods.log;
     oldMethod.apply(oldMethod, [date, message]);
 
     this._sendToRemoteLogger(level, { date, message, category });
@@ -136,7 +139,7 @@ class IssueReporter {
     }
 
     const { tag, host, port, extra, level: minLevel } = this.remoteClientConfiguration;
-    if (minLevel && !this._isLevelAbove(level, minLevel)) {
+    if (!minLevel || this._isLevelAbove(minLevel, level)) {
       return;
     }
     const url = `http://${host}:${port}/${tag}`;
@@ -156,7 +159,7 @@ class IssueReporter {
   }
 
   _isLevelAbove(level1: string, level2: string) {
-    return LOG_LEVELS.indexOf(level1) >= LOG_LEVELS.indexOf(level2);
+    return LOG_LEVELS.indexOf(level1) > LOG_LEVELS.indexOf(level2);
   }
 
   _makeCategory(category: string) {
