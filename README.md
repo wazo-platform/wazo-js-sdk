@@ -14,6 +14,7 @@ Wazo's Javascript SDK allows you to use these features :
 - Video : **`Video`**
 - Chat : **`Chat`**
 - Fax : **`Fax`**
+- Log : **`Log`**
 - Users status : **`Status`**
 - Users configurations : **`Config`**
 - Directories, Logs : **`Misc`**
@@ -70,6 +71,7 @@ Wazo's Javascript SDK allows you to use these features :
       - [Log Out](#log-out)
       - [Check token](#check-token)
       - [Other auth methods](#other-auth-methods)
+    + [Sending logs to fluentd via a http endpoint](#sending-logs-to-fluentd-via-a-http-endpoint)
     + [Interact with the engine](#interact-with-the-engine)
       - [Applicationd](#applicationd)
       - [Calld](#calld)
@@ -703,7 +705,7 @@ client.auth.createPolicy(name);
 client.auth.listPolicies();
 ```
 
-### Sending logs to fluentd via an http endpoint
+### Sending logs to fluentd via a http endpoint      **`Log`**
 
 ```
 import Wazo from '@wazo/sdk/lib/simple';
