@@ -721,7 +721,7 @@ Wazo.IssueReporter.configureRemoteClient({
 });
 ```
 
-Using le logger :
+Using the logger :
 ```
 // Log with for category, this will send a `category` attribute in every logs for this logger.
 const logger = Wazo.IssueReporter.loggerFor('my_category');
