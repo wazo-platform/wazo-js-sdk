@@ -47,6 +47,7 @@ const Wazo = {
   Directory,
   getApiClient,
   IssueReporter,
+  loggerFor: IssueReporter.loggerFor.bind(IssueReporter),
   Features,
   Checker,
 

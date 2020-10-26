@@ -703,6 +703,34 @@ client.auth.createPolicy(name);
 client.auth.listPolicies();
 ```
 
+### Sending logs to fluentd via an http endpoint
+
+```
+import Wazo from '@wazo/sdk/lib/simple';
+
+Wazo.IssueReporter.enable();
+Wazo.IssueReporter.configureRemoteClient({
+    host: 'localhost', // fluentd http host
+    port: 9880, // fluentd http port
+    tag: 'name of your application,
+    level: 'trace', // Min log level to be sent
+    extra: {
+      // Extra info sent for every logs
+      user_uuid: '...',
+    },
+});
+```
+
+Using le logger :
+```
+// Log with for category, this will send a `category` attribute in every logs for this logger.
+const logger = Wazo.IssueReporter.loggerFor('my_category');
+logger(logger.TRACE, 'my log');
+
+// or simply
+Wazo.IssueReporter.log(Wazo.IssueReporter.INFO, 'my log');
+```
+
 ### Interact with the engine 
 #### Applicationd       **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**
 Use Applicationd to construct your own communication features.

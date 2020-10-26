@@ -99,6 +99,7 @@ const BLACKLIST_EVENTS = [
 ];
 
 export const HEARTBEAT_ENGINE_VERSION = '20.09';
+const logger = IssueReporter.loggerFor('wazo-ws');
 
 class WebSocketClient extends Emitter {
   initialized: boolean;
@@ -143,19 +144,19 @@ class WebSocketClient extends Emitter {
   }
 
   connect() {
-    IssueReporter.log(IssueReporter.INFO, '[WebSocketClient][connect]');
+    logger.log(logger.INFO, '[WebSocketClient][connect]');
     this.socket = new ReconnectingWebSocket(this._getUrl(), [], this.options);
     if (this.options.binaryType) {
       this.socket.binaryType = this.options.binaryType;
     }
 
     this.socket.onopen = () => {
-      IssueReporter.log(IssueReporter.INFO, '[WebSocketClient][connect] onopen');
+      logger.log(logger.INFO, '[WebSocketClient][connect] onopen');
       this.eventEmitter.emit(SOCKET_EVENTS.ON_OPEN);
     };
 
     this.socket.onerror = error => {
-      IssueReporter.log(IssueReporter.ERROR, '[WebSocketClient] onerror', error.message, error.stack);
+      logger.log(logger.ERROR, 'onerror', error.message, error.stack);
       this.eventEmitter.emit(SOCKET_EVENTS.ON_ERROR, error);
     };
 
@@ -171,7 +172,7 @@ class WebSocketClient extends Emitter {
 
       if (BLACKLIST_EVENTS.indexOf(name) === -1) {
         // $FlowFixMe
-        IssueReporter.log(IssueReporter.INFO, '[WebSocketClient] onmessage', `${event.data.substr(0, 600)}...`);
+        logger.log(logger.TRACE, 'onmessage', `${event.data.substr(0, 600)}...`);
       }
 
       if (!this.initialized) {
@@ -182,7 +183,7 @@ class WebSocketClient extends Emitter {
     };
 
     this.socket.onclose = error => {
-      IssueReporter.log(IssueReporter.INFO, '[WebSocketClient] onclose', error.message, error.stack);
+      logger.log(logger.INFO, 'onclose', error.message, error.stack);
       this.initialized = false;
       this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE, error);
 
@@ -206,7 +207,7 @@ class WebSocketClient extends Emitter {
 
   updateToken(token: string) {
     this.token = token;
-    IssueReporter.log(IssueReporter.INFO, '[WebSocketClient] updateToken', !!this.socket);
+    logger.log(logger.INFO, 'updateToken', !!this.socket);
 
     if (this.socket) {
       // If still connected, send the token to the WS
