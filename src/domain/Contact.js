@@ -276,25 +276,31 @@ export default class Contact {
   }
 
   static manyGraphQlWithNumbersParser(numbers: string[]): Function {
-    return (response: ContactsGraphQlResponse) => response.data.me.contacts.edges.map((edge, i) => {
-      if (!edge.node) {
-        return null;
+    return (response: ContactsGraphQlResponse) => {
+      if (!response.data.me || !response.data.me.contacts) {
+        return [];
       }
 
-      const { email } = edge.node;
+      return response.data.me.contacts.edges.map((edge, i) => {
+        if (!edge.node) {
+          return null;
+        }
 
-      return new Contact({
-        name: `${edge.node.firstname || ''} ${edge.node.lastname || ''}`,
-        number: numbers[i],
-        numbers: [{ label: 'primary', number: numbers[i] }],
-        backend: edge.node.wazoBackend,
-        source: edge.node.wazoSourceName,
-        sourceId: edge.node.wazoSourceEntryId,
-        email: email || '',
-        emails: email ? [{ label: 'primary', email }] : [],
-        uuid: edge.node.userUuid,
-      });
-    }).filter(contact => !!contact).filter(Contact.filterSourceId);
+        const { email } = edge.node;
+
+        return new Contact({
+          name: `${edge.node.firstname || ''} ${edge.node.lastname || ''}`,
+          number: numbers[i],
+          numbers: [{ label: 'primary', number: numbers[i] }],
+          backend: edge.node.wazoBackend,
+          source: edge.node.wazoSourceName,
+          sourceId: edge.node.wazoSourceEntryId,
+          email: email || '',
+          emails: email ? [{ label: 'primary', email }] : [],
+          uuid: edge.node.userUuid,
+        });
+      }).filter(contact => !!contact).filter(Contact.filterSourceId);
+    };
   }
 
   static fetchNumbers(plain: ContactResponse, columns: Array<?string>): Array<string> {
