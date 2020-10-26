@@ -56,6 +56,7 @@ type SessionArguments = {
   expiresAt: Date,
   authorizations?: Array<Authorization>,
   engineVersion?: ?string,
+  engineUuid?: ?string,
 };
 
 export default class Session {
@@ -64,6 +65,7 @@ export default class Session {
   refreshToken: ?string;
   uuid: ?string;
   tenantUuid: ?string;
+  engineUuid: ?string;
   sessionUuid: ?string;
   engineVersion: ?string;
   profile: ?Profile;
@@ -92,6 +94,7 @@ export default class Session {
       acls: plain.data.acls ? plain.data.acls : [],
       tenantUuid: plain.data.metadata ? plain.data.metadata.tenant_uuid : undefined,
       expiresAt: new Date(`${plain.data.utc_expires_at}z`),
+      engineUuid: plain.data.xivo_uuid,
     });
   }
 
@@ -110,6 +113,7 @@ export default class Session {
     engineVersion,
     refreshToken,
     sessionUuid,
+    engineUuid,
   }: SessionArguments = {}) {
     this.token = token;
     this.uuid = uuid;
@@ -121,6 +125,7 @@ export default class Session {
     this.engineVersion = engineVersion;
     this.refreshToken = refreshToken;
     this.sessionUuid = sessionUuid;
+    this.engineUuid = engineUuid;
   }
 
   hasExpired(date: Date = new Date()): boolean {
