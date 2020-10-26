@@ -25,7 +25,7 @@ export default {
       ],
     });
 
-    pc.createDataChannel('wazo-check-nat');
+    pc.createDataChannel('wazo-check-ipv4');
 
     const ips = [];
 
