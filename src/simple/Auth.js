@@ -25,19 +25,21 @@ class Auth {
   session: ?Session;
   onRefreshTokenCallback: ?Function;
   authenticated: boolean;
+  mobile: boolean;
 
   constructor() {
     this.expiration = DETAULT_EXPIRATION;
     this.authenticated = false;
   }
 
-  init(clientId: string, expiration: number, minSubscriptionType: number, authorizationName: ?string) {
+  init(clientId: string, expiration: number, minSubscriptionType: number, authorizationName: ?string, mobile: boolean) {
     this.clientId = clientId;
     this.expiration = expiration;
     this.minSubscriptionType = minSubscriptionType;
     this.authorizationName = authorizationName;
     this.host = null;
     this.session = null;
+    this.mobile = mobile || false;
 
     setApiClientId(this.clientId);
     setRefreshExpiration(this.expiration);
@@ -52,7 +54,17 @@ class Auth {
   }
 
   async logIn(username: string, password: string) {
-    const rawSession = await getApiClient().auth.logIn({ username, password, expiration: this.expiration });
+    const rawSession = await getApiClient().auth.logIn({
+      username,
+      password,
+      expiration: this.expiration,
+      mobile: this.mobile,
+    });
+    return this._onAuthenticated(rawSession);
+  }
+
+  async logInViaRefreshToken(refreshToken: string) {
+    const rawSession = await getApiClient().auth.refreshToken(refreshToken, null, this.expiration, this.mobile);
     return this._onAuthenticated(rawSession);
   }
 
@@ -78,11 +90,11 @@ class Auth {
     return getApiClient().auth.refreshToken(refreshToken, null, this.expiration);
   }
 
-  async logout() {
+  async logout(deleteRefreshToken: boolean = true) {
     try {
       Wazo.Websocket.close();
 
-      if (this.clientId) {
+      if (this.clientId && deleteRefreshToken) {
         await getApiClient().auth.deleteRefreshToken(this.clientId);
       }
     } catch (e) {
@@ -148,6 +160,12 @@ class Auth {
     }
 
     return this.session.profile.lastName;
+  }
+
+  setClientId(clientId: string) {
+    this.clientId = clientId;
+
+    setApiClientId(this.clientId);
   }
 
   getName() {
