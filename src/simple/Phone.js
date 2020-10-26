@@ -13,6 +13,7 @@ import WazoWebRTCClient, { events as clientEvents, transportEvents } from '../we
 import IssueReporter from '../service/IssueReporter';
 import Emitter from '../utils/Emitter';
 
+import Stream from './room/Stream';
 import Wazo from './index';
 
 const MESSAGE_TYPE_CHAT = 'message/TYPE_CHAT';
@@ -121,13 +122,14 @@ class Phone extends Emitter {
     this.phone = null;
   }
 
-  async call(extension: string, withCamera: boolean = false, rawSipLine: ?SipLine = null) {
+  // If audioOnly is set to true, all video stream will be removed, even remotes ones.
+  async call(extension: string, withCamera: boolean = false, rawSipLine: ?SipLine = null, audioOnly: boolean = false) {
     if (!this.phone) {
       return;
     }
     const sipLine = rawSipLine || this.getPrimaryWebRtcLine();
 
-    return this.phone.makeCall(extension, sipLine, withCamera);
+    return this.phone.makeCall(extension, sipLine, withCamera, audioOnly);
   }
 
   async hangup(callSession: CallSession) {
@@ -179,6 +181,27 @@ class Phone extends Emitter {
 
   atxfer(sipSession: Inviter | Invitation) {
     return this.phone && this.phone.atxfer(sipSession);
+  }
+
+  async reinvite(callSession: CallSession, newConstraints: Object = null) {
+    if (!this.phone) {
+      return;
+    }
+    const result = await this.phone.sendReinvite(this.phone.findSipSession(callSession), newConstraints);
+
+    // Release local video stream when downgrading to audio
+    if (newConstraints && !newConstraints.video) {
+      const localVideoStream = Wazo.Phone.getLocalVideoStream(callSession);
+      if (localVideoStream) {
+        Stream.detachStream(localVideoStream);
+      }
+    }
+
+    return result;
+  }
+
+  getSipSessionId(sipSession: Session): ?string {
+    return this.phone ? this.phone.getSipSessionId(sipSession) : null;
   }
 
   sendMessage(body: string, sipSession: Inviter | Invitation = null, contentType: string = 'text/plain') {
