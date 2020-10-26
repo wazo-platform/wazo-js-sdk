@@ -997,13 +997,13 @@ export default class WebRTCClient extends Emitter {
     this.videoSessions[sessionId].remotes.push(stream);
   }
 
-  _removeLocalToVideoSession(sessionId: string) {
+  _removeLocalVideoSession(sessionId: string) {
     this._initializeVideoSession(sessionId);
 
     this.videoSessions[sessionId].local = null;
   }
 
-  _removeRemoteToVideoSession(sessionId: string) {
+  __removeRemoteVideoSession(sessionId: string) {
     this._initializeVideoSession(sessionId);
 
     this.videoSessions[sessionId].remotes = [];
@@ -1162,7 +1162,7 @@ export default class WebRTCClient extends Emitter {
       this._addRemoteToVideoSession(sessionId, remoteStream);
     } else {
       // Cleanup the video streams
-      this._removeRemoteToVideoSession(sessionId);
+      this.__removeRemoteVideoSession(sessionId);
     }
 
     if (!this._isWeb() || !remoteStream) {
@@ -1196,7 +1196,7 @@ export default class WebRTCClient extends Emitter {
     const sessionId = this.getSipSessionId(session);
 
     if (!this.sessionWantsToDoVideo(session)) {
-      this._removeLocalToVideoSession(sessionId);
+      this._removeLocalVideoSession(sessionId);
       return;
     }
 
