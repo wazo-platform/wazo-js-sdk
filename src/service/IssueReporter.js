@@ -41,7 +41,7 @@ class IssueReporter {
   constructor() {
     addLevelsTo(this);
 
-    this.oldConsoleMethods = {};
+    this.oldConsoleMethods = null;
     this.enabled = false;
     this.remoteClientConfiguration = null;
   }
@@ -55,6 +55,10 @@ class IssueReporter {
   }
 
   enable() {
+    if (!this.oldConsoleMethods) {
+      this.init();
+    }
+
     this.enabled = true;
   }
 
@@ -77,35 +81,56 @@ class IssueReporter {
 
     // Handle category label
     let category = null;
+    let extra = {};
     if (args[0].indexOf(CATEGORY_PREFIX) === 0) {
       category = args[0].split('=')[1];
       // eslint-disable-next-line no-param-reassign
-      args[0] = args.splice(1);
+      args.splice(0, 1);
+    }
+
+    // Handle extra data as object for the last argument
+    const lastArg = args[args.length - 1];
+    if (lastArg && typeof lastArg === 'object' && Object.keys(lastArg).length) {
+      extra = lastArg;
+      // eslint-disable-next-line no-param-reassign
+      args.splice(1, 1);
     }
 
     const date = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
-    let message = args.join(', ');
+    const message = args.join(', ');
+    let consoleMessage = message;
+
+    if (Object.keys(extra).length) {
+      consoleMessage = `(${JSON.stringify(extra)}) ${consoleMessage}`;
+    }
 
     if (category) {
-      message = `[${category}] ${message}`;
+      consoleMessage = `[${category}] ${consoleMessage}`;
     }
-    global.wazoIssueReporterLogs.push({ level, date, message });
+
+    global.wazoIssueReporterLogs.push({ level, date, consoleMessage });
 
     // Log the message in the console anyway
     // eslint-disable-next-line
     const oldMethod = this.oldConsoleMethods[level] || this.oldConsoleMethods.log;
-    oldMethod.apply(oldMethod, [date, message]);
+    oldMethod.apply(oldMethod, [date, consoleMessage]);
 
-    this._sendToRemoteLogger(level, { date, message, category });
+    this._sendToRemoteLogger(level, { date, message, category, ...extra });
   }
 
-  logRequest(curl: string, response: Object) {
+  logRequest(url: string, options: Object, response: Object) {
     if (!this.enabled) {
       return;
     }
     const { status } = response;
+    const curl = this._getCurlCommand(url, options);
 
-    this.log(status < 500 ? TRACE : WARN, this._makeCategory('http'), curl);
+    this.log(status < 500 ? TRACE : WARN, this._makeCategory('http'), curl, {
+      status,
+      method: options.method,
+      requestHeaders: options.headers,
+      responseHeaders: response.headers,
+    });
   }
 
   getLogs() {
@@ -121,6 +146,7 @@ class IssueReporter {
   }
 
   _catchConsole() {
+    this.oldConsoleMethods = {};
     CONSOLE_METHODS.forEach((methodName: string) => {
       // eslint-disable-next-line
       this.oldConsoleMethods[methodName] = console[methodName];
@@ -164,6 +190,18 @@ class IssueReporter {
 
   _makeCategory(category: string) {
     return `${CATEGORY_PREFIX}${category}`;
+  }
+
+  _getCurlCommand(url: string, { method, body }: Object) {
+    let curl = `${method !== 'get' ? `-X ${method.toUpperCase()}` : ''}`;
+
+    curl += ` ${url}`;
+
+    if (body) {
+      curl += ` -d '${body}'`;
+    }
+
+    return curl;
   }
 }
 

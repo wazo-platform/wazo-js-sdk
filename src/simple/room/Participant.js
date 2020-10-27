@@ -116,7 +116,7 @@ class Participant extends Emitter {
   }
 
   onTalking(isTalking: boolean) {
-    logger(logger.INFO, `${this.name} ${isTalking ? 'is talking' : 'stopped talking'} (callId: ${this.callId})`);
+    logger(logger.INFO, 'onTalking', { name: this.name, isTalking, callId: this.callId });
     this.isTalking = isTalking;
     // you may notice we're not broadcasting: since all participants are getting this info
     // directly from asterisk, there's no need to do so
@@ -201,7 +201,7 @@ class Participant extends Emitter {
   }
 
   updateStatus(status: Object, broadcast: boolean = true) {
-    logger(logger.INFO, `Updating ${this.name}'s status`, status);
+    logger(logger.INFO, 'Updating status', { name: this.name, status });
 
     if (typeof status.audioMuted !== 'undefined' && status.audioMuted !== this.audioMuted) {
       if (status.audioMuted) {
@@ -236,7 +236,7 @@ class Participant extends Emitter {
 
   broadcastStatus(inboundStatus: Object = null) {
     const status = inboundStatus || this.getStatus();
-    logger(logger.INFO, `Broadcasting ${this.name}'s status (callId: ${this.callId})`, status);
+    logger(logger.INFO, 'Broadcasting status', { callId: this.callId, status });
 
     this.room.sendSignal({
       type: SIGNAL_TYPE_PARTICIPANT_UPDATE,

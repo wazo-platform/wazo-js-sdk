@@ -33,11 +33,11 @@ class Checker {
       try {
         // eslint-disable-next-line no-await-in-loop
         const result = await check(this.server, this.session);
-        logger(logger.INFO, `Checking ${name} success.${result ? ` : ${result}` : ''}`);
+        logger(logger.INFO, `Checking ${name} success.`, { result });
 
         onCheckResult(name, result);
       } catch (e) {
-        logger(logger.INFO, `Checking ${name} failure : ${e.message}`);
+        logger(logger.INFO, `Checking ${name} failure`, { message: e.message });
 
         onCheckResult(name, e);
       }

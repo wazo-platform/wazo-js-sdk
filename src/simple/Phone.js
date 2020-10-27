@@ -94,9 +94,9 @@ class Phone extends Emitter {
       options.log.logLevel = 'debug';
       options.log.connector = (level, category, label, content) => {
         if (category === 'sip.Transport' && content.indexOf('Received WebSocket text message:') !== -1) {
-          protocolLogger(protocolLogger.TRACE, `[${category}]`, content.substr(0, 300));
+          protocolLogger(protocolLogger.TRACE, content.substr(0, 300), { class: category });
         } else {
-          sipLogger(sipLogger.TRACE, `[${category}]`, content.substr(0, 300));
+          sipLogger(sipLogger.TRACE, content.substr(0, 300), { class: category });
         }
       };
     }

@@ -144,19 +144,19 @@ class WebSocketClient extends Emitter {
   }
 
   connect() {
-    logger(logger.INFO, '[WebSocketClient][connect]');
+    logger(logger.INFO, 'connect method started');
     this.socket = new ReconnectingWebSocket(this._getUrl(), [], this.options);
     if (this.options.binaryType) {
       this.socket.binaryType = this.options.binaryType;
     }
 
     this.socket.onopen = () => {
-      logger(logger.INFO, '[WebSocketClient][connect] onopen');
+      logger(logger.INFO, 'onopen', { method: 'connect' });
       this.eventEmitter.emit(SOCKET_EVENTS.ON_OPEN);
     };
 
     this.socket.onerror = error => {
-      logger(logger.ERROR, 'onerror', error.message, error.stack);
+      logger(logger.ERROR, 'onerror', { message: error.message, stack: error.stack });
       this.eventEmitter.emit(SOCKET_EVENTS.ON_ERROR, error);
     };
 
@@ -172,7 +172,7 @@ class WebSocketClient extends Emitter {
 
       if (BLACKLIST_EVENTS.indexOf(name) === -1) {
         // $FlowFixMe
-        logger(logger.TRACE, 'onmessage', `${event.data.substr(0, 600)}...`);
+        logger(logger.TRACE, `${event.data.substr(0, 600)}...`, { method: 'onmessage' });
       }
 
       if (!this.initialized) {
@@ -183,7 +183,7 @@ class WebSocketClient extends Emitter {
     };
 
     this.socket.onclose = error => {
-      logger(logger.INFO, 'onclose', error.message, error.stack);
+      logger(logger.INFO, 'onclose', { message: error.message, stack: error.stack });
       this.initialized = false;
       this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE, error);
 
@@ -207,7 +207,7 @@ class WebSocketClient extends Emitter {
 
   updateToken(token: string) {
     this.token = token;
-    logger(logger.INFO, 'updateToken', !!this.socket);
+    logger(logger.INFO, `updateToken: ${this._getUrl()}`, { socket: !!this.socket });
 
     if (this.socket) {
       // If still connected, send the token to the WS
