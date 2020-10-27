@@ -705,7 +705,9 @@ client.auth.createPolicy(name);
 client.auth.listPolicies();
 ```
 
-### Sending logs to fluentd via a http endpoint      **`Log`**
+### Sending logs to fluentd via a http endpoint
+
+#### Logger       **`Log`**
 
 ```
 import Wazo from '@wazo/sdk/lib/simple';
