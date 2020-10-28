@@ -113,6 +113,7 @@ class WebSocketClient extends Emitter {
   heartbeat: Heartbeat;
   onHeartBeatTimeout: Function;
   heartbeatCb: Function;
+  eventLists: string[];
 
   static eventLists: Array<string>;
 
@@ -141,6 +142,8 @@ class WebSocketClient extends Emitter {
     this.heartbeat = new Heartbeat(delay, timeout, max);
     this.heartbeat.setSendHeartbeat(this.pingServer.bind(this));
     this.heartbeat.setOnHeartbeatTimeout(this._onHeartbeatTimeout.bind(this));
+
+    this.eventLists = WebSocketClient.eventLists;
   }
 
   connect() {
