@@ -20,6 +20,8 @@ type ConstructorParams = {
 
 const methods = ['head', 'get', 'post', 'put', 'delete'];
 
+const logger = IssueReporter.loggerFor('api');
+
 // Use a function here to be able to mock it in tests
 export const realFetch = () => {
   if (typeof document !== 'undefined') {
@@ -135,9 +137,10 @@ export default class ApiRequester {
         const promise = isJson ? response.json() : response.text();
         const exceptionClass = response.status >= 500 ? ServerError : BadResponse;
 
-        return promise.then(async err => {
+        return promise.then(async (err: Object) => {
           // Check if the token is still valid
           if (firstCall && this._checkTokenExpired(response, err)) {
+            logger(logger.WARN, 'token expired', { error: err.reason });
             // Replay the call after refreshing the token
             return this._replayWithNewToken(err, path, method, body, headers, parse);
           }
@@ -174,7 +177,10 @@ export default class ApiRequester {
     const isTokenNotFound = this._isTokenNotFound(err);
     let newPath = path;
 
+    logger(logger.INFO, 'refreshing token');
+
     return this.refreshTokenCallback().then(() => {
+      logger(logger.INFO, 'token refreshed', { isTokenNotFound });
       if (isTokenNotFound) {
         const pathParts = path.split('/');
         pathParts.pop();

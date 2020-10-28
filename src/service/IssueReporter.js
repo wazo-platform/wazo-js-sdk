@@ -123,13 +123,19 @@ class IssueReporter {
       return;
     }
     const { status } = response;
-    const curl = this._getCurlCommand(url, options);
 
-    this.log(status < 500 ? TRACE : WARN, this._makeCategory('http'), curl, {
+    let level = TRACE;
+    if (status >= 400 && status < 500) {
+      level = WARN;
+    } else if (status >= 500) {
+      level = ERROR;
+    }
+
+    this.log(level, this._makeCategory('http'), url, {
       status,
+      body: options.options,
       method: options.method,
-      requestHeaders: options.headers,
-      responseHeaders: response.headers,
+      headers: options.headers,
     });
   }
 
@@ -190,18 +196,6 @@ class IssueReporter {
 
   _makeCategory(category: string) {
     return `${CATEGORY_PREFIX}${category}`;
-  }
-
-  _getCurlCommand(url: string, { method, body }: Object) {
-    let curl = `${method !== 'get' ? `-X ${method.toUpperCase()}` : ''}`;
-
-    curl += ` ${url}`;
-
-    if (body) {
-      curl += ` -d '${body}'`;
-    }
-
-    return curl;
   }
 }
 

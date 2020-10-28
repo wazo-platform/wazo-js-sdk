@@ -19,8 +19,10 @@ import Wazo from './index';
 const MESSAGE_TYPE_CHAT = 'message/TYPE_CHAT';
 const MESSAGE_TYPE_SIGNAL = 'message/TYPE_SIGNAL';
 
-const sipLogger = IssueReporter.loggerFor('sip');
-const protocolLogger = IssueReporter.loggerFor('protocol');
+const sipLogger = IssueReporter.loggerFor('sip.js');
+const protocolLogger = IssueReporter.loggerFor('sip');
+
+const protocolDebugMessages = ['Received WebSocket text message:', 'Sending WebSocket message:'];
 
 class Phone extends Emitter {
   client: WazoWebRTCClient;
@@ -92,11 +94,15 @@ class Phone extends Emitter {
 
       options.log.builtinEnabled = false;
       options.log.logLevel = 'debug';
-      options.log.connector = (level, category, label, content) => {
-        if (category === 'sip.Transport' && content.indexOf('Received WebSocket text message:') !== -1) {
-          protocolLogger(protocolLogger.TRACE, content.substr(0, 300), { class: category });
+      options.log.connector = (level, className, label, content) => {
+        const protocolIndex = protocolDebugMessages.findIndex(prefix => content.indexOf(prefix) !== -1);
+        if (className === 'sip.Transport' && protocolIndex !== -1) {
+          let message = content.replace(`${protocolDebugMessages[protocolIndex]}\n\n`, '');
+          message = message.replace('\r\n', '\n').substr(0, 300);
+
+          protocolLogger(protocolLogger.TRACE, message, { className });
         } else {
-          sipLogger(sipLogger.TRACE, content.substr(0, 300), { class: category });
+          sipLogger(sipLogger.TRACE, content.substr(0, 300), { className });
         }
       };
     }

@@ -12,6 +12,7 @@ import webhookdMethods from './api/webhookd';
 import amidMethods from './api/amid';
 
 import ApiRequester from './utils/api-requester';
+import IssueReporter from './service/IssueReporter';
 
 type ConstructorParams = {
   server: string,
@@ -32,6 +33,8 @@ const CALLD_VERSION = '1.0';
 const AGENTD_VERSION = '1.0';
 const WEBHOOKD_VERSION = '1.0';
 const AMID_VERSION = '1.0';
+
+const logger = IssueReporter.loggerFor('api');
 
 export default class ApiClient {
   client: ApiRequester;
@@ -82,10 +85,18 @@ export default class ApiClient {
   }
 
   async forceRefreshToken() {
+    logger(logger.INFO, 'forceRefreshToken');
     return this.refreshTokenCallback();
   }
 
   async refreshTokenCallback() {
+    logger(logger.INFO, 'refreshTokenCallback', {
+      refreshToken: this.refreshToken,
+      refreshBackend: this.refreshBackend,
+      refreshExpiration: this.refreshExpiration,
+      isMobile: this.isMobile,
+    });
+
     if (!this.refreshToken) {
       return null;
     }
@@ -97,6 +108,8 @@ export default class ApiClient {
       this.isMobile,
     );
 
+    logger(logger.INFO, 'token refreshed', { token: session.token });
+
     if (this.onRefreshToken) {
       this.onRefreshToken(session.token, session);
     }
@@ -107,18 +120,26 @@ export default class ApiClient {
   }
 
   setToken(token: string) {
+    logger(logger.INFO, 'setToken', { token });
+
     this.client.setToken(token);
   }
 
   setTenant(tenant: string) {
+    logger(logger.INFO, 'setTenant', { tenant });
+
     this.client.setTenant(tenant);
   }
 
   setRefreshToken(refreshToken: ?string) {
+    logger(logger.INFO, 'setRefreshToken', { refreshToken });
+
     this.refreshToken = refreshToken;
   }
 
   setClientId(clientId: ?string) {
+    logger(logger.INFO, 'setClientId', { clientId });
+
     this.client.clientId = clientId;
   }
 
@@ -127,14 +148,20 @@ export default class ApiClient {
   }
 
   setRefreshExpiration(refreshExpiration: number) {
+    logger(logger.INFO, 'setRefreshExpiration', { refreshExpiration });
+
     this.refreshExpiration = refreshExpiration;
   }
 
   setRefreshBackend(refreshBackend: string) {
+    logger(logger.INFO, 'setRefreshBackend', { refreshBackend });
+
     this.refreshBackend = refreshBackend;
   }
 
   setIsMobile(isMobile: boolean) {
+    logger(logger.INFO, 'setIsMobile', { isMobile });
+
     this.isMobile = isMobile;
   }
 }
