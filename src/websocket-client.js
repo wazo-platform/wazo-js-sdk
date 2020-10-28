@@ -148,7 +148,7 @@ class WebSocketClient extends Emitter {
 
   connect() {
     logger(logger.INFO, 'connect method started');
-    this.socket = new ReconnectingWebSocket(this._getUrl(), [], this.options);
+    this.socket = new ReconnectingWebSocket(this._getUrl.bind(this), [], this.options);
     if (this.options.binaryType) {
       this.socket.binaryType = this.options.binaryType;
     }
@@ -159,7 +159,7 @@ class WebSocketClient extends Emitter {
     };
 
     this.socket.onerror = error => {
-      logger(logger.ERROR, 'onerror', { message: error.message, stack: error.stack });
+      logger(logger.ERROR, 'onerror', error);
       this.eventEmitter.emit(SOCKET_EVENTS.ON_ERROR, error);
     };
 
@@ -186,7 +186,7 @@ class WebSocketClient extends Emitter {
     };
 
     this.socket.onclose = error => {
-      logger(logger.INFO, 'onclose', { message: error.message, stack: error.stack });
+      logger(logger.INFO, 'onclose', error);
       this.initialized = false;
       this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE, error);
 
@@ -210,17 +210,14 @@ class WebSocketClient extends Emitter {
 
   updateToken(token: string) {
     this.token = token;
-    logger(logger.INFO, `updateToken: ${this._getUrl()}`, { socket: !!this.socket });
+    logger(logger.INFO, 'updateToken', { url: this._getUrl(), token, socket: !!this.socket });
 
     if (this.socket) {
       // If still connected, send the token to the WS
       if (this.isConnected() && this.version >= 2) {
         // $FlowFixMe
         this.socket.send(JSON.stringify({ op: 'token', data: { token } }));
-        return;
       }
-      // $FlowFixMe
-      this.socket._url = this._getUrl();
     }
   }
 

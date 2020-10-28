@@ -10,11 +10,14 @@ import getApiClient, {
   setRefreshExpiration,
   setOnRefreshToken,
 } from '../service/getApiClient';
+import IssueReporter from '../service/IssueReporter';
 
 import Wazo from './index';
 
 export class InvalidSubscription extends Error {}
 export class InvalidAuthorization extends Error {}
+
+const logger = IssueReporter.loggerFor('simple-auth');
 
 class Auth {
   clientId: string;
@@ -34,7 +37,7 @@ class Auth {
 
   init(clientId: string, expiration: number, minSubscriptionType: number, authorizationName: ?string, mobile: boolean) {
     this.clientId = clientId;
-    this.expiration = expiration;
+    this.expiration = 60;
     this.minSubscriptionType = minSubscriptionType;
     this.authorizationName = authorizationName;
     this.host = null;
@@ -44,6 +47,7 @@ class Auth {
     setApiClientId(this.clientId);
     setRefreshExpiration(this.expiration);
     setOnRefreshToken((token: string, session: Session) => {
+      logger(logger.INFO, 'onRefreshToken', { token });
       setApiToken(token);
       Wazo.Websocket.updateToken(token);
 

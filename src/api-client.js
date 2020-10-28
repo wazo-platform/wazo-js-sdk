@@ -120,26 +120,18 @@ export default class ApiClient {
   }
 
   setToken(token: string) {
-    logger(logger.INFO, 'setToken', { token });
-
     this.client.setToken(token);
   }
 
   setTenant(tenant: string) {
-    logger(logger.INFO, 'setTenant', { tenant });
-
     this.client.setTenant(tenant);
   }
 
   setRefreshToken(refreshToken: ?string) {
-    logger(logger.INFO, 'setRefreshToken', { refreshToken });
-
     this.refreshToken = refreshToken;
   }
 
   setClientId(clientId: ?string) {
-    logger(logger.INFO, 'setClientId', { clientId });
-
     this.client.clientId = clientId;
   }
 
@@ -148,20 +140,14 @@ export default class ApiClient {
   }
 
   setRefreshExpiration(refreshExpiration: number) {
-    logger(logger.INFO, 'setRefreshExpiration', { refreshExpiration });
-
     this.refreshExpiration = refreshExpiration;
   }
 
   setRefreshBackend(refreshBackend: string) {
-    logger(logger.INFO, 'setRefreshBackend', { refreshBackend });
-
     this.refreshBackend = refreshBackend;
   }
 
   setIsMobile(isMobile: boolean) {
-    logger(logger.INFO, 'setIsMobile', { isMobile });
-
     this.isMobile = isMobile;
   }
 }

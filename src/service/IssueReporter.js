@@ -101,7 +101,7 @@ class IssueReporter {
     let consoleMessage = message;
 
     if (Object.keys(extra).length) {
-      consoleMessage = `(${JSON.stringify(extra)}) ${consoleMessage}`;
+      consoleMessage = `${consoleMessage} (${JSON.stringify(extra)})`;
     }
 
     if (category) {
@@ -133,7 +133,7 @@ class IssueReporter {
 
     this.log(level, this._makeCategory('http'), url, {
       status,
-      body: options.options,
+      body: options.body,
       method: options.method,
       headers: options.headers,
     });

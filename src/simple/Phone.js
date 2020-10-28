@@ -19,6 +19,7 @@ import Wazo from './index';
 const MESSAGE_TYPE_CHAT = 'message/TYPE_CHAT';
 const MESSAGE_TYPE_SIGNAL = 'message/TYPE_SIGNAL';
 
+const logger = IssueReporter.loggerFor('simple-phone');
 const sipLogger = IssueReporter.loggerFor('sip.js');
 const protocolLogger = IssueReporter.loggerFor('sip');
 
@@ -97,12 +98,11 @@ class Phone extends Emitter {
       options.log.connector = (level, className, label, content) => {
         const protocolIndex = protocolDebugMessages.findIndex(prefix => content.indexOf(prefix) !== -1);
         if (className === 'sip.Transport' && protocolIndex !== -1) {
-          let message = content.replace(`${protocolDebugMessages[protocolIndex]}\n\n`, '');
-          message = message.replace('\r\n', '\n').substr(0, 300);
+          const message = content.replace(`${protocolDebugMessages[protocolIndex]}\n\n`, '').replace('\r\n', '\n');
 
           protocolLogger(protocolLogger.TRACE, message, { className });
         } else {
-          sipLogger(sipLogger.TRACE, content.substr(0, 300), { className });
+          sipLogger(sipLogger.TRACE, content, { className });
         }
       };
     }
@@ -125,6 +125,7 @@ class Phone extends Emitter {
   disconnect() {
     if (this.phone) {
       if (this.phone.hasAnActiveCall()) {
+        logger(logger.INFO, 'hangup call on disconnect');
         // $FlowFixMe
         this.phone.hangup();
       }
@@ -146,10 +147,14 @@ class Phone extends Emitter {
   }
 
   async hangup(callSession: CallSession) {
+    logger(logger.INFO, 'hangup', { callId: callSession.getId() });
+
     return this.phone && this.phone.hangup(callSession);
   }
 
   async accept(callSession: CallSession, cameraEnabled?: boolean) {
+    logger(logger.INFO, 'accept', { callId: callSession.getId(), cameraEnabled });
+
     return this.phone && this.phone.accept(callSession, cameraEnabled);
   }
 

@@ -46,7 +46,7 @@ export default class ApiRequester {
   token: string;
   tenant: ?string;
   refreshTokenCallback: Function;
-  refreshTokenPromise: Promise;
+  refreshTokenPromise: ?Promise<any>;
 
   head: Function;
   get: Function;
