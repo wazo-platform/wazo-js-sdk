@@ -133,7 +133,7 @@ class IssueReporter {
 
     this.log(level, this._makeCategory('http'), url, {
       status,
-      body: options.body,
+      body: JSON.stringify(options.body).replace(/"/g, "'").replace(/\\/g, ''),
       method: options.method,
       headers: options.headers,
     });
