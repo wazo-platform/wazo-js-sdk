@@ -46,6 +46,7 @@ export default class ApiRequester {
   token: string;
   tenant: ?string;
   refreshTokenCallback: Function;
+  refreshTokenPromise: Promise;
 
   head: Function;
   get: Function;
@@ -79,6 +80,7 @@ export default class ApiRequester {
     this.agent = agent;
     this.clientId = clientId;
     this.refreshTokenCallback = refreshTokenCallback;
+    this.refreshTokenPromise = null;
     if (token) {
       this.token = token;
     }
@@ -176,10 +178,12 @@ export default class ApiRequester {
   ) {
     const isTokenNotFound = this._isTokenNotFound(err);
     let newPath = path;
+    logger(logger.INFO, 'refreshing token', { inProgress: !!this.refreshTokenPromise });
 
-    logger(logger.INFO, 'refreshing token');
+    this.refreshTokenPromise = this.refreshTokenPromise || this.refreshTokenCallback();
 
-    return this.refreshTokenCallback().then(() => {
+    return this.refreshTokenPromise.then(() => {
+      this.refreshTokenPromise = null;
       logger(logger.INFO, 'token refreshed', { isTokenNotFound });
       if (isTokenNotFound) {
         const pathParts = path.split('/');
