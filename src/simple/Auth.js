@@ -37,7 +37,7 @@ class Auth {
 
   init(clientId: string, expiration: number, minSubscriptionType: number, authorizationName: ?string, mobile: boolean) {
     this.clientId = clientId;
-    this.expiration = 60;
+    this.expiration = expiration;
     this.minSubscriptionType = minSubscriptionType;
     this.authorizationName = authorizationName;
     this.host = null;
