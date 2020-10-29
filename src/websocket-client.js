@@ -158,9 +158,9 @@ class WebSocketClient extends Emitter {
       this.eventEmitter.emit(SOCKET_EVENTS.ON_OPEN);
     };
 
-    this.socket.onerror = error => {
-      logger(logger.ERROR, 'onerror', error);
-      this.eventEmitter.emit(SOCKET_EVENTS.ON_ERROR, error);
+    this.socket.onerror = event => {
+      logger(logger.ERROR, 'onerror', event.target);
+      this.eventEmitter.emit(SOCKET_EVENTS.ON_ERROR, event);
     };
 
     this.socket.onmessage = (event: MessageEvent) => {
