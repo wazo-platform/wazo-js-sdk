@@ -147,9 +147,13 @@ export default class ApiRequester {
             return this._replayWithNewToken(err, path, method, body, headers, parse);
           }
 
-          throw typeof err === 'string'
+          const error = typeof err === 'string'
             ? exceptionClass.fromText(err, response.status)
             : exceptionClass.fromResponse(err, response.status);
+
+          logger(logger.ERROR, 'API error', error);
+
+          throw error;
         });
       }
 
