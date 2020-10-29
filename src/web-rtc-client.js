@@ -1004,7 +1004,7 @@ export default class WebRTCClient extends Emitter {
     this.videoSessions[sessionId].local = null;
   }
 
-  __removeRemoteVideoSession(sessionId: string) {
+  _removeRemoteVideoSession(sessionId: string) {
     this._initializeVideoSession(sessionId);
 
     this.videoSessions[sessionId].remotes = [];
@@ -1153,17 +1153,15 @@ export default class WebRTCClient extends Emitter {
     // When calling _setupRemoteMedia from the 'track' event, the session SDP is not yet updated with m=video section
     // So we have to check the king of stream in the event
     const sessionHasVideo = event ? event.track.kind === 'video' : this.sessionWantsToDoVideo(session);
-    let remoteStream;
+    const pc = session.sessionDescriptionHandler.peerConnection;
+    const remoteStream = this._getRemoteStream(pc);
 
     // If there is a video track, it will attach the video and audio to the same element
     if (sessionHasVideo) {
-      const pc = session.sessionDescriptionHandler.peerConnection;
-      remoteStream = this._getRemoteStream(pc);
-
       this._addRemoteToVideoSession(sessionId, remoteStream);
     } else {
       // Cleanup the video streams
-      this.__removeRemoteVideoSession(sessionId);
+      this._removeRemoteVideoSession(sessionId);
     }
 
     if (!this._isWeb() || !remoteStream) {
