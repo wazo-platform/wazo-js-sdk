@@ -29,7 +29,7 @@ class Phone extends Emitter {
   client: WazoWebRTCClient;
   phone: ?WebRTCPhone;
   session: Session;
-  sipLine: SipLine;
+  sipLine: ?SipLine;
 
   ON_CHAT: string;
   ON_SIGNAL: string;
@@ -303,7 +303,7 @@ class Phone extends Emitter {
 
   getPrimaryWebRtcLine() {
     const session = Wazo.Auth.getSession();
-    return session.primaryWebRtcLine();
+    return session ? session.primaryWebRtcLine() : null;
   }
 
   getOutputDevice() {
@@ -312,7 +312,7 @@ class Phone extends Emitter {
 
   getPrimaryLine() {
     const session = Wazo.Auth.getSession();
-    return session.primarySipLine();
+    return session ? session.primarySipLine() : null;
   }
 
   getLineById(lineId: string) {
