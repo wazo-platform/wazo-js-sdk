@@ -101,7 +101,13 @@ class IssueReporter {
     let consoleMessage = message;
 
     if (Object.keys(extra).length) {
-      consoleMessage = `${consoleMessage} (${JSON.stringify(extra)})`;
+      let parsedExtra = '[not parsable object]';
+      try {
+        parsedExtra = JSON.stringify(extra);
+      } catch (e) {
+        // Nothing to do
+      }
+      consoleMessage = `${consoleMessage} (${parsedExtra})`;
     }
 
     if (category) {
