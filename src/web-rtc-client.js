@@ -1152,7 +1152,8 @@ export default class WebRTCClient extends Emitter {
     const sessionId = this.getSipSessionId(session);
     // When calling _setupRemoteMedia from the 'track' event, the session SDP is not yet updated with m=video section
     // So we have to check the king of stream in the event
-    const sessionHasVideo = event ? event.track.kind === 'video' : this.sessionWantsToDoVideo(session);
+    // @TODO: find a better way to know if we want to do video by call.
+    const sessionHasVideo = event ? event.track.kind === 'video' : this._hasVideo();
     const pc = session.sessionDescriptionHandler.peerConnection;
     const remoteStream = this._getRemoteStream(pc);
 
