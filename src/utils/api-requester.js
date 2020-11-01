@@ -142,7 +142,7 @@ export default class ApiRequester {
         return promise.then(async (err: Object) => {
           // Check if the token is still valid
           if (firstCall && this._checkTokenExpired(response, err)) {
-            logger(logger.WARN, 'token expired', { error: err.reason });
+            logger.warn('token expired', { error: err.reason });
             // Replay the call after refreshing the token
             return this._replayWithNewToken(err, path, method, body, headers, parse);
           }
@@ -151,7 +151,7 @@ export default class ApiRequester {
             ? exceptionClass.fromText(err, response.status)
             : exceptionClass.fromResponse(err, response.status);
 
-          logger(logger.ERROR, 'API error', error);
+          logger.error('API error', error);
 
           throw error;
         });
@@ -182,13 +182,13 @@ export default class ApiRequester {
   ) {
     const isTokenNotFound = this._isTokenNotFound(err);
     let newPath = path;
-    logger(logger.INFO, 'refreshing token', { inProgress: !!this.refreshTokenPromise });
+    logger.info('refreshing token', { inProgress: !!this.refreshTokenPromise });
 
     this.refreshTokenPromise = this.refreshTokenPromise || this.refreshTokenCallback();
 
     return this.refreshTokenPromise.then(() => {
       this.refreshTokenPromise = null;
-      logger(logger.INFO, 'token refreshed', { isTokenNotFound });
+      logger.info('token refreshed', { isTokenNotFound });
       if (isTokenNotFound) {
         const pathParts = path.split('/');
         pathParts.pop();

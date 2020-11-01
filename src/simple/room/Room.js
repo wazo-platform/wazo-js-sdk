@@ -412,7 +412,7 @@ class Room extends Emitter {
         const requester: ?Participant = this._getParticipantFromCallId(origin.callId);
         if (requester) {
           // @FIXME?: when need to trigger an update on join-in; this is a bit of a hack
-          logger(logger.INFO, 'Trigger requester status', { origin });
+          logger.info('Trigger requester status', { origin });
           requester.triggerUpdate('REQUESTER_UPDATE');
         }
         break;

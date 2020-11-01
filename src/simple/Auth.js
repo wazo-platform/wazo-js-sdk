@@ -47,7 +47,7 @@ class Auth {
     setApiClientId(this.clientId);
     setRefreshExpiration(this.expiration);
     setOnRefreshToken((token: string, session: Session) => {
-      logger(logger.INFO, 'onRefreshToken', { token });
+      logger.info('onRefreshToken', { token });
       setApiToken(token);
       Wazo.Websocket.updateToken(token);
 

@@ -17,12 +17,22 @@ const CONSOLE_METHODS = [INFO, LOG, WARN, ERROR];
 const LOG_LEVELS = [TRACE, DEBUG, INFO, LOG, WARN, ERROR];
 const CATEGORY_PREFIX = 'logger-category=';
 
-const addLevelsTo = (instance: Object) => {
+const addLevelsTo = (instance: Object, withMethods = false) => {
   instance.TRACE = TRACE;
+  instance.DEBUG = DEBUG;
   instance.INFO = INFO;
   instance.LOG = LOG;
   instance.WARN = WARN;
   instance.ERROR = ERROR;
+
+  if (withMethods) {
+    instance.trace = (...args) => instance.apply(null, [TRACE, ...args]);
+    instance.debug = (...args) => instance.apply(null, [DEBUG, ...args]);
+    instance.info = (...args) => instance.apply(null, [INFO, ...args]);
+    instance.log = (...args) => instance.apply(null, [LOG, ...args]);
+    instance.warn = (...args) => instance.apply(null, [WARN, ...args]);
+    instance.error = (...args) => instance.apply(null, [ERROR, ...args]);
+  }
 
   return instance;
 };
@@ -71,7 +81,7 @@ class IssueReporter {
       this.log.apply(this, [level, this._makeCategory(category), ...args]);
     };
 
-    return addLevelsTo(logger);
+    return addLevelsTo(logger, true);
   }
 
   log(level: string, ...args: any) {

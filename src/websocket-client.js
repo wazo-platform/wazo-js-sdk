@@ -147,19 +147,19 @@ class WebSocketClient extends Emitter {
   }
 
   connect() {
-    logger(logger.INFO, 'connect method started');
+    logger.info('connect method started');
     this.socket = new ReconnectingWebSocket(this._getUrl.bind(this), [], this.options);
     if (this.options.binaryType) {
       this.socket.binaryType = this.options.binaryType;
     }
 
     this.socket.onopen = () => {
-      logger(logger.INFO, 'onopen', { method: 'connect' });
+      logger.info('onopen', { method: 'connect' });
       this.eventEmitter.emit(SOCKET_EVENTS.ON_OPEN);
     };
 
     this.socket.onerror = event => {
-      logger(logger.ERROR, 'onerror', event.target);
+      logger.error('onerror', event.target);
       this.eventEmitter.emit(SOCKET_EVENTS.ON_ERROR, event);
     };
 
@@ -175,7 +175,7 @@ class WebSocketClient extends Emitter {
 
       if (BLACKLIST_EVENTS.indexOf(name) === -1) {
         // $FlowFixMe
-        logger(logger.TRACE, `${event.data.substr(0, 600)}...`, { method: 'onmessage' });
+        logger.trace(`${event.data.substr(0, 600)}...`, { method: 'onmessage' });
       }
 
       if (!this.initialized) {
@@ -186,7 +186,7 @@ class WebSocketClient extends Emitter {
     };
 
     this.socket.onclose = error => {
-      logger(logger.INFO, 'onclose', error);
+      logger.info('onclose', error);
       this.initialized = false;
       this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE, error);
 
@@ -210,7 +210,7 @@ class WebSocketClient extends Emitter {
 
   updateToken(token: string) {
     this.token = token;
-    logger(logger.INFO, 'updateToken', { url: this._getUrl(), token, socket: !!this.socket });
+    logger.info('updateToken', { url: this._getUrl(), token, socket: !!this.socket });
 
     if (this.socket) {
       // If still connected, send the token to the WS

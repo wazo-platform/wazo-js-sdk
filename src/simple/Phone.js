@@ -125,7 +125,7 @@ class Phone extends Emitter {
   disconnect() {
     if (this.phone) {
       if (this.phone.hasAnActiveCall()) {
-        logger(logger.INFO, 'hangup call on disconnect');
+        logger.info('hangup call on disconnect');
         // $FlowFixMe
         this.phone.hangup();
       }
@@ -147,13 +147,13 @@ class Phone extends Emitter {
   }
 
   async hangup(callSession: CallSession) {
-    logger(logger.INFO, 'hangup', { callId: callSession.getId() });
+    logger.info('hangup', { callId: callSession.getId() });
 
     return this.phone && this.phone.hangup(callSession);
   }
 
   async accept(callSession: CallSession, cameraEnabled?: boolean) {
-    logger(logger.INFO, 'accept', { callId: callSession.getId(), cameraEnabled });
+    logger.info('accept', { callId: callSession.getId(), cameraEnabled });
 
     return this.phone && this.phone.accept(callSession, cameraEnabled);
   }

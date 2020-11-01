@@ -85,12 +85,12 @@ export default class ApiClient {
   }
 
   async forceRefreshToken() {
-    logger(logger.INFO, 'forceRefreshToken');
+    logger.info('forceRefreshToken');
     return this.refreshTokenCallback();
   }
 
   async refreshTokenCallback() {
-    logger(logger.INFO, 'refreshTokenCallback', {
+    logger.info('refreshTokenCallback', {
       refreshToken: this.refreshToken,
       refreshBackend: this.refreshBackend,
       refreshExpiration: this.refreshExpiration,
@@ -108,7 +108,7 @@ export default class ApiClient {
       this.isMobile,
     );
 
-    logger(logger.INFO, 'token refreshed', { token: session.token });
+    logger.info('token refreshed', { token: session.token });
 
     if (this.onRefreshToken) {
       this.onRefreshToken(session.token, session);
