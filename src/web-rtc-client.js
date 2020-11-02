@@ -438,7 +438,8 @@ export default class WebRTCClient extends Emitter {
     this._cleanupRegister();
 
     try {
-      await this.userAgent.stop();
+      // Don't wait here, It can take ~30s to stop ...
+      this.userAgent.stop();
     } catch (_) {
       // Avoid to raise exception when trying to close with hanged-up sessions remaining
       // eg: "INVITE not rejectable in state Completed"
