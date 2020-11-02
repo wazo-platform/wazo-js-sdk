@@ -4,6 +4,7 @@
 import moment from 'moment';
 
 import { realFetch } from '../utils/api-requester';
+import isMobile from "../utils/isMobile";
 
 global.wazoIssueReporterLogs = [];
 
@@ -126,9 +127,11 @@ class IssueReporter {
 
     global.wazoIssueReporterLogs.push({ level, date, consoleMessage });
 
-    // Log the message in the console anyway
+    // Log the message in the console anyway (but don't console.error on mobile)
+    const consoleLevel = isMobile() && level === 'error' ? WARN : level;
+
     // eslint-disable-next-line
-    const oldMethod = this.oldConsoleMethods[level] || this.oldConsoleMethods.log;
+    const oldMethod = this.oldConsoleMethods[consoleLevel] || this.oldConsoleMethods.log;
     oldMethod.apply(oldMethod, [date, consoleMessage]);
 
     this._sendToRemoteLogger(level, { date, message, category, ...extra });
@@ -174,9 +177,13 @@ class IssueReporter {
       this.oldConsoleMethods[methodName] = console[methodName];
       window.console[methodName] = (...args) => {
         // Store message
-        this.log(methodName, args.join(' '));
-        // Use old console method to log it normally
-        this.oldConsoleMethods[methodName].apply(null, args);
+        try {
+          this.log(methodName, args.join(' '));
+          // Use old console method to log it normally
+          this.oldConsoleMethods[methodName].apply(null, args);
+        } catch (e) {
+          // Avoid circular structure issues
+        }
       };
     });
   }

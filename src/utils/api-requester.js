@@ -158,6 +158,10 @@ export default class ApiRequester {
       }
 
       return newParse(response, isJson);
+    }).catch(error => {
+      logger.error('Fetch failed', { url, options, message: error.message, stack: error.stack });
+
+      throw error;
     });
   }
 

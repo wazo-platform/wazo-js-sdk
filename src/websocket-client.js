@@ -185,18 +185,23 @@ class WebSocketClient extends Emitter {
       }
     };
 
-    this.socket.onclose = error => {
-      logger.info('onclose', error);
+    this.socket.onclose = event => {
+      // Can't be converted to JSON (circular structure)
+      logger.info('onclose', { reason: event.reason, code: event.code, readyState: event.target.readyState });
       this.initialized = false;
-      this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE, error);
+      this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE, event);
 
-      switch (error.code) {
+      switch (event.code) {
         case 4002:
           break;
         case 4003:
           break;
         default:
       }
+    };
+
+    this.socket.onerror = event => {
+      logger.info('onerror', { message: event.message, code: event.code, readyState: event.target.readyState });
     };
   }
 

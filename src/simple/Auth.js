@@ -143,6 +143,18 @@ class Auth {
     setCurrentServer(host);
   }
 
+  setApiToken(token: string) {
+    setApiToken(token);
+  }
+
+  setRefreshToken(refreshToken: string) {
+    setRefreshToken(refreshToken);
+  }
+
+  setIsMobile(mobile: boolean) {
+    this.mobile = mobile;
+  }
+
   getHost() {
     return this.host;
   }
