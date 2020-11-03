@@ -101,9 +101,9 @@ class Phone extends Emitter {
           const direction = protocolIndex === 0 ? 'receiving' : 'sending';
           const message = content.replace(`${protocolDebugMessages[protocolIndex]}\n\n`, '').replace('\r\n', '\n');
 
-          protocolLogger(protocolLogger.TRACE, message, { className, direction });
+          protocolLogger.trace(message, { className, direction });
         } else {
-          sipLogger(sipLogger.TRACE, content, { className });
+          sipLogger.trace(content, { className });
         }
       };
     }
