@@ -5,6 +5,7 @@ import { realFetch } from '../../utils/api-requester';
 jest.mock('../../utils/api-requester');
 
 let fetch;
+IssueReporter.enable();
 
 describe('IssueReporter', () => {
   beforeEach(() => {
@@ -35,10 +36,22 @@ describe('IssueReporter', () => {
   });
 
   it('should not send if verbosity is lower than required', () => {
-
     // Lower level
     IssueReporter.configureRemoteClient({ level: 'info' });
     IssueReporter._sendToRemoteLogger('trace');
     expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('should log extra data', () => {
+    jest.spyOn(IssueReporter, '_sendToRemoteLogger').mockImplementation(() => {});
+
+    IssueReporter.log('log', 'logger-category=http', 'my message', { status: 200 });
+
+    expect(IssueReporter._sendToRemoteLogger).toHaveBeenCalledWith('log', {
+      date: expect.anything(),
+      message: 'my message',
+      category: 'http',
+      status: 200,
+    });
   });
 });

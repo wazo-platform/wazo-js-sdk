@@ -12,6 +12,7 @@ import webhookdMethods from './api/webhookd';
 import amidMethods from './api/amid';
 
 import ApiRequester from './utils/api-requester';
+import IssueReporter from './service/IssueReporter';
 
 type ConstructorParams = {
   server: string,
@@ -32,6 +33,8 @@ const CALLD_VERSION = '1.0';
 const AGENTD_VERSION = '1.0';
 const WEBHOOKD_VERSION = '1.0';
 const AMID_VERSION = '1.0';
+
+const logger = IssueReporter.loggerFor('api');
 
 export default class ApiClient {
   client: ApiRequester;
@@ -82,10 +85,18 @@ export default class ApiClient {
   }
 
   async forceRefreshToken() {
+    logger.info('forceRefreshToken');
     return this.refreshTokenCallback();
   }
 
   async refreshTokenCallback() {
+    logger.info('refreshTokenCallback', {
+      refreshToken: this.refreshToken,
+      refreshBackend: this.refreshBackend,
+      refreshExpiration: this.refreshExpiration,
+      isMobile: this.isMobile,
+    });
+
     if (!this.refreshToken) {
       return null;
     }
@@ -96,6 +107,8 @@ export default class ApiClient {
       this.refreshExpiration,
       this.isMobile,
     );
+
+    logger.info('token refreshed', { token: session.token });
 
     if (this.onRefreshToken) {
       this.onRefreshToken(session.token, session);

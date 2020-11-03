@@ -20,6 +20,8 @@ type ConstructorParams = {
 
 const methods = ['head', 'get', 'post', 'put', 'delete'];
 
+const logger = IssueReporter.loggerFor('api');
+
 // Use a function here to be able to mock it in tests
 export const realFetch = () => {
   if (typeof document !== 'undefined') {
@@ -44,6 +46,7 @@ export default class ApiRequester {
   token: string;
   tenant: ?string;
   refreshTokenCallback: Function;
+  refreshTokenPromise: ?Promise<any>;
 
   head: Function;
   get: Function;
@@ -77,6 +80,7 @@ export default class ApiRequester {
     this.agent = agent;
     this.clientId = clientId;
     this.refreshTokenCallback = refreshTokenCallback;
+    this.refreshTokenPromise = null;
     if (token) {
       this.token = token;
     }
@@ -128,28 +132,36 @@ export default class ApiRequester {
       const contentType = response.headers.get('content-type') || '';
       const isJson = contentType.indexOf('application/json') !== -1;
 
-      const curl = this._getCurlCommand(url, options, response);
-      IssueReporter.logRequest(curl, response);
+      IssueReporter.logRequest(url, options, response);
 
       // Throw an error only if status >= 400
       if ((isHead && response.status >= 500) || (!isHead && response.status >= 400)) {
         const promise = isJson ? response.json() : response.text();
         const exceptionClass = response.status >= 500 ? ServerError : BadResponse;
 
-        return promise.then(async err => {
+        return promise.then(async (err: Object) => {
           // Check if the token is still valid
           if (firstCall && this._checkTokenExpired(response, err)) {
+            logger.warn('token expired', { error: err.reason });
             // Replay the call after refreshing the token
             return this._replayWithNewToken(err, path, method, body, headers, parse);
           }
 
-          throw typeof err === 'string'
+          const error = typeof err === 'string'
             ? exceptionClass.fromText(err, response.status)
             : exceptionClass.fromResponse(err, response.status);
+
+          logger.error('API error', error);
+
+          throw error;
         });
       }
 
       return newParse(response, isJson);
+    }).catch(error => {
+      logger.error('Fetch failed', { url, options, message: error.message, stack: error.stack });
+
+      throw error;
     });
   }
 
@@ -174,8 +186,13 @@ export default class ApiRequester {
   ) {
     const isTokenNotFound = this._isTokenNotFound(err);
     let newPath = path;
+    logger.info('refreshing token', { inProgress: !!this.refreshTokenPromise });
 
-    return this.refreshTokenCallback().then(() => {
+    this.refreshTokenPromise = this.refreshTokenPromise || this.refreshTokenCallback();
+
+    return this.refreshTokenPromise.then(() => {
+      this.refreshTokenPromise = null;
+      logger.info('token refreshed', { isTokenNotFound });
       if (isTokenNotFound) {
         const pathParts = path.split('/');
         pathParts.pop();
@@ -204,23 +221,6 @@ export default class ApiRequester {
     const url = `${this.baseUrl}/${path}`;
 
     return method === 'get' && body && Object.keys(body).length ? `${url}?${ApiRequester.getQueryString(body)}` : url;
-  }
-
-  _getCurlCommand(url: string, { method, body, headers }: Object, response: Object) {
-    const { status } = response;
-
-    let curl = `${status} - curl ${method !== 'get' ? `-X ${method.toUpperCase()}` : ''}`;
-    Object.keys(headers).forEach(headerName => {
-      curl += ` -H '${headerName}: ${headers[headerName]}'`;
-    });
-
-    curl += ` ${url}`;
-
-    if (body) {
-      curl += ` -d '${body}'`;
-    }
-
-    return curl;
   }
 
   get baseUrl(): string {

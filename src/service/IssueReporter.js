@@ -4,6 +4,7 @@
 import moment from 'moment';
 
 import { realFetch } from '../utils/api-requester';
+import isMobile from '../utils/isMobile';
 
 global.wazoIssueReporterLogs = [];
 
@@ -17,12 +18,22 @@ const CONSOLE_METHODS = [INFO, LOG, WARN, ERROR];
 const LOG_LEVELS = [TRACE, DEBUG, INFO, LOG, WARN, ERROR];
 const CATEGORY_PREFIX = 'logger-category=';
 
-const addLevelsTo = (instance: Object) => {
+const addLevelsTo = (instance: Object, withMethods = false) => {
   instance.TRACE = TRACE;
+  instance.DEBUG = DEBUG;
   instance.INFO = INFO;
   instance.LOG = LOG;
   instance.WARN = WARN;
   instance.ERROR = ERROR;
+
+  if (withMethods) {
+    instance.trace = (...args) => instance.apply(null, [TRACE, ...args]);
+    instance.debug = (...args) => instance.apply(null, [DEBUG, ...args]);
+    instance.info = (...args) => instance.apply(null, [INFO, ...args]);
+    instance.log = (...args) => instance.apply(null, [LOG, ...args]);
+    instance.warn = (...args) => instance.apply(null, [WARN, ...args]);
+    instance.error = (...args) => instance.apply(null, [ERROR, ...args]);
+  }
 
   return instance;
 };
@@ -41,7 +52,7 @@ class IssueReporter {
   constructor() {
     addLevelsTo(this);
 
-    this.oldConsoleMethods = {};
+    this.oldConsoleMethods = null;
     this.enabled = false;
     this.remoteClientConfiguration = null;
   }
@@ -55,6 +66,10 @@ class IssueReporter {
   }
 
   enable() {
+    if (!this.oldConsoleMethods) {
+      this.init();
+    }
+
     this.enabled = true;
   }
 
@@ -67,7 +82,7 @@ class IssueReporter {
       this.log.apply(this, [level, this._makeCategory(category), ...args]);
     };
 
-    return addLevelsTo(logger);
+    return addLevelsTo(logger, true);
   }
 
   log(level: string, ...args: any) {
@@ -77,35 +92,70 @@ class IssueReporter {
 
     // Handle category label
     let category = null;
+    let extra = {};
     if (args[0].indexOf(CATEGORY_PREFIX) === 0) {
       category = args[0].split('=')[1];
       // eslint-disable-next-line no-param-reassign
-      args[0] = args.splice(1);
+      args.splice(0, 1);
+    }
+
+    // Handle extra data as object for the last argument
+    const lastArg = args[args.length - 1];
+    if (lastArg && typeof lastArg === 'object' && Object.keys(lastArg).length) {
+      extra = lastArg;
+      // eslint-disable-next-line no-param-reassign
+      args.splice(1, 1);
     }
 
     const date = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
-    let message = args.join(', ');
+    const message = args.join(', ');
+    let consoleMessage = message;
+
+    if (Object.keys(extra).length) {
+      let parsedExtra = '[not parsable object]';
+      try {
+        parsedExtra = JSON.stringify(extra);
+      } catch (e) {
+        // Nothing to do
+      }
+      consoleMessage = `${consoleMessage} (${parsedExtra})`;
+    }
 
     if (category) {
-      message = `[${category}] ${message}`;
+      consoleMessage = `[${category}] ${consoleMessage}`;
     }
-    global.wazoIssueReporterLogs.push({ level, date, message });
 
-    // Log the message in the console anyway
+    global.wazoIssueReporterLogs.push({ level, date, consoleMessage });
+
+    // Log the message in the console anyway (but don't console.error on mobile)
+    const consoleLevel = isMobile() && level === 'error' ? WARN : level;
+
     // eslint-disable-next-line
-    const oldMethod = this.oldConsoleMethods[level] || this.oldConsoleMethods.log;
-    oldMethod.apply(oldMethod, [date, message]);
+    const oldMethod = this.oldConsoleMethods[consoleLevel] || this.oldConsoleMethods.log;
+    oldMethod.apply(oldMethod, [date, consoleMessage]);
 
-    this._sendToRemoteLogger(level, { date, message, category });
+    this._sendToRemoteLogger(level, { date, message, category, ...extra });
   }
 
-  logRequest(curl: string, response: Object) {
+  logRequest(url: string, options: Object, response: Object) {
     if (!this.enabled) {
       return;
     }
     const { status } = response;
 
-    this.log(status < 500 ? TRACE : WARN, this._makeCategory('http'), curl);
+    let level = TRACE;
+    if (status >= 400 && status < 500) {
+      level = WARN;
+    } else if (status >= 500) {
+      level = ERROR;
+    }
+
+    this.log(level, this._makeCategory('http'), url, {
+      status,
+      body: JSON.stringify(options.body).replace(/"/g, "'").replace(/\\/g, ''),
+      method: options.method,
+      headers: options.headers,
+    });
   }
 
   getLogs() {
@@ -121,14 +171,19 @@ class IssueReporter {
   }
 
   _catchConsole() {
+    this.oldConsoleMethods = {};
     CONSOLE_METHODS.forEach((methodName: string) => {
       // eslint-disable-next-line
       this.oldConsoleMethods[methodName] = console[methodName];
       window.console[methodName] = (...args) => {
         // Store message
-        this.log(methodName, args.join(' '));
-        // Use old console method to log it normally
-        this.oldConsoleMethods[methodName].apply(null, args);
+        try {
+          this.log(methodName, args.join(' '));
+          // Use old console method to log it normally
+          this.oldConsoleMethods[methodName].apply(null, args);
+        } catch (e) {
+          // Avoid circular structure issues
+        }
       };
     });
   }

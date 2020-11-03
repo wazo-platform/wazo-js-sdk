@@ -113,6 +113,7 @@ class WebSocketClient extends Emitter {
   heartbeat: Heartbeat;
   onHeartBeatTimeout: Function;
   heartbeatCb: Function;
+  eventLists: string[];
 
   static eventLists: Array<string>;
 
@@ -141,23 +142,25 @@ class WebSocketClient extends Emitter {
     this.heartbeat = new Heartbeat(delay, timeout, max);
     this.heartbeat.setSendHeartbeat(this.pingServer.bind(this));
     this.heartbeat.setOnHeartbeatTimeout(this._onHeartbeatTimeout.bind(this));
+
+    this.eventLists = WebSocketClient.eventLists;
   }
 
   connect() {
-    logger(logger.INFO, '[WebSocketClient][connect]');
-    this.socket = new ReconnectingWebSocket(this._getUrl(), [], this.options);
+    logger.info('connect method started');
+    this.socket = new ReconnectingWebSocket(this._getUrl.bind(this), [], this.options);
     if (this.options.binaryType) {
       this.socket.binaryType = this.options.binaryType;
     }
 
     this.socket.onopen = () => {
-      logger(logger.INFO, '[WebSocketClient][connect] onopen');
+      logger.info('onopen', { method: 'connect' });
       this.eventEmitter.emit(SOCKET_EVENTS.ON_OPEN);
     };
 
-    this.socket.onerror = error => {
-      logger(logger.ERROR, 'onerror', error.message, error.stack);
-      this.eventEmitter.emit(SOCKET_EVENTS.ON_ERROR, error);
+    this.socket.onerror = event => {
+      logger.error('onerror', event.target);
+      this.eventEmitter.emit(SOCKET_EVENTS.ON_ERROR, event);
     };
 
     this.socket.onmessage = (event: MessageEvent) => {
@@ -172,7 +175,7 @@ class WebSocketClient extends Emitter {
 
       if (BLACKLIST_EVENTS.indexOf(name) === -1) {
         // $FlowFixMe
-        logger(logger.TRACE, 'onmessage', `${event.data.substr(0, 600)}...`);
+        logger.trace(`${event.data.substr(0, 600)}...`, { method: 'onmessage' });
       }
 
       if (!this.initialized) {
@@ -182,18 +185,23 @@ class WebSocketClient extends Emitter {
       }
     };
 
-    this.socket.onclose = error => {
-      logger(logger.INFO, 'onclose', error.message, error.stack);
+    this.socket.onclose = event => {
+      // Can't be converted to JSON (circular structure)
+      logger.info('onclose', { reason: event.reason, code: event.code, readyState: event.target.readyState });
       this.initialized = false;
-      this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE, error);
+      this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE, event);
 
-      switch (error.code) {
+      switch (event.code) {
         case 4002:
           break;
         case 4003:
           break;
         default:
       }
+    };
+
+    this.socket.onerror = event => {
+      logger.info('onerror', { message: event.message, code: event.code, readyState: event.target.readyState });
     };
   }
 
@@ -207,17 +215,14 @@ class WebSocketClient extends Emitter {
 
   updateToken(token: string) {
     this.token = token;
-    logger(logger.INFO, 'updateToken', !!this.socket);
+    logger.info('updateToken', { url: this._getUrl(), token, socket: !!this.socket });
 
     if (this.socket) {
       // If still connected, send the token to the WS
       if (this.isConnected() && this.version >= 2) {
         // $FlowFixMe
         this.socket.send(JSON.stringify({ op: 'token', data: { token } }));
-        return;
       }
-      // $FlowFixMe
-      this.socket._url = this._getUrl();
     }
   }
 

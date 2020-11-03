@@ -2,9 +2,13 @@
 import type Session from '../domain/Session';
 import WazoWebSocketClient, * as SOCKET_EVENTS from '../websocket-client';
 import Emitter from '../utils/Emitter';
+import IssueReporter from '../service/IssueReporter';
+
+const logger = IssueReporter.loggerFor('simple-ws-client');
 
 class Websocket extends Emitter {
   ws: ?WazoWebSocketClient;
+  eventLists: string[];
 
   constructor() {
     super();
@@ -14,11 +18,13 @@ class Websocket extends Emitter {
       // $FlowFixMe
       this[key] = SOCKET_EVENTS[key];
     });
+    this.eventLists = WazoWebSocketClient.eventLists;
 
     this.ws = null;
   }
 
   open(host: string, session: Session) {
+    logger.info('open', { host, token: session.token });
     this.ws = new WazoWebSocketClient(
       {
         host,
@@ -46,6 +52,8 @@ class Websocket extends Emitter {
   }
 
   updateToken(token: string) {
+    logger.info('updateToken', { token, ws: !!this.ws });
+
     if (!this.ws) {
       return;
     }

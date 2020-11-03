@@ -3,6 +3,7 @@ import ApiRequester from '../utils/api-requester';
 import type { UUID, ListConfdUsersResponse, ListApplicationsResponse } from '../domain/types';
 import Profile from '../domain/Profile';
 import SipLine from '../domain/SipLine';
+import ExternalApp from '../domain/ExternalApp';
 
 export default (client: ApiRequester, baseUrl: string) => ({
   listUsers: (): Promise<ListConfdUsersResponse> => client.get(`${baseUrl}/users`, null),
@@ -53,4 +54,17 @@ export default (client: ApiRequester, baseUrl: string) => ({
   listApplications: (): Promise<ListApplicationsResponse> => client.get(`${baseUrl}/applications`, null),
 
   getInfos: (): Promise<{ uuid: string, wazo_version: string }> => client.get(`${baseUrl}/infos`, null),
+
+  getExternalApps: (userUuid: string): Promise<ExternalApp[]> =>
+    client.get(`${baseUrl}/users/${userUuid}/external/apps`).then(ExternalApp.parseMany),
+
+  getExternalApp: async (userUuid: string, name: string): Promise<?ExternalApp> => {
+    const url = `${baseUrl}/users/${userUuid}/external/apps/${name}?view=fallback`;
+
+    try {
+      return await client.get(url).then(ExternalApp.parse);
+    } catch (e) {
+      return null;
+    }
+  },
 });

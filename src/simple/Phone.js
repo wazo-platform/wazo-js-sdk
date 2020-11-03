@@ -19,14 +19,17 @@ import Wazo from './index';
 const MESSAGE_TYPE_CHAT = 'message/TYPE_CHAT';
 const MESSAGE_TYPE_SIGNAL = 'message/TYPE_SIGNAL';
 
-const sipLogger = IssueReporter.loggerFor('sip');
-const protocolLogger = IssueReporter.loggerFor('protocol');
+const logger = IssueReporter.loggerFor('simple-phone');
+const sipLogger = IssueReporter.loggerFor('sip.js');
+const protocolLogger = IssueReporter.loggerFor('sip');
+
+const protocolDebugMessages = ['Received WebSocket text message:', 'Sending WebSocket message:'];
 
 class Phone extends Emitter {
   client: WazoWebRTCClient;
   phone: ?WebRTCPhone;
   session: Session;
-  sipLine: SipLine;
+  sipLine: ?SipLine;
 
   ON_CHAT: string;
   ON_SIGNAL: string;
@@ -92,11 +95,15 @@ class Phone extends Emitter {
 
       options.log.builtinEnabled = false;
       options.log.logLevel = 'debug';
-      options.log.connector = (level, category, label, content) => {
-        if (category === 'sip.Transport' && content.indexOf('Received WebSocket text message:') !== -1) {
-          protocolLogger(protocolLogger.TRACE, `[${category}]`, content.substr(0, 300));
+      options.log.connector = (level, className, label, content) => {
+        const protocolIndex = protocolDebugMessages.findIndex(prefix => content.indexOf(prefix) !== -1);
+        if (className === 'sip.Transport' && protocolIndex !== -1) {
+          const direction = protocolIndex === 0 ? 'receiving' : 'sending';
+          const message = content.replace(`${protocolDebugMessages[protocolIndex]}\n\n`, '').replace('\r\n', '\n');
+
+          protocolLogger.trace(message, { className, direction });
         } else {
-          sipLogger(sipLogger.TRACE, `[${category}]`, content.substr(0, 300));
+          sipLogger.trace(content, { className });
         }
       };
     }
@@ -119,6 +126,7 @@ class Phone extends Emitter {
   disconnect() {
     if (this.phone) {
       if (this.phone.hasAnActiveCall()) {
+        logger.info('hangup call on disconnect');
         // $FlowFixMe
         this.phone.hangup();
       }
@@ -140,10 +148,14 @@ class Phone extends Emitter {
   }
 
   async hangup(callSession: CallSession) {
+    logger.info('hangup', { callId: callSession.getId() });
+
     return this.phone && this.phone.hangup(callSession);
   }
 
   async accept(callSession: CallSession, cameraEnabled?: boolean) {
+    logger.info('accept', { callId: callSession.getId(), cameraEnabled });
+
     return this.phone && this.phone.accept(callSession, cameraEnabled);
   }
 
@@ -292,7 +304,7 @@ class Phone extends Emitter {
 
   getPrimaryWebRtcLine() {
     const session = Wazo.Auth.getSession();
-    return session.primaryWebRtcLine();
+    return session ? session.primaryWebRtcLine() : null;
   }
 
   getOutputDevice() {
@@ -301,7 +313,7 @@ class Phone extends Emitter {
 
   getPrimaryLine() {
     const session = Wazo.Auth.getSession();
-    return session.primarySipLine();
+    return session ? session.primarySipLine() : null;
   }
 
   getLineById(lineId: string) {
