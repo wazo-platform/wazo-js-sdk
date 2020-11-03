@@ -4,7 +4,7 @@
 import moment from 'moment';
 
 import { realFetch } from '../utils/api-requester';
-import isMobile from "../utils/isMobile";
+import isMobile from '../utils/isMobile';
 
 global.wazoIssueReporterLogs = [];
 
