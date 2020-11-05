@@ -125,7 +125,7 @@ class IssueReporter {
       consoleMessage = `[${category}] ${consoleMessage}`;
     }
 
-    global.wazoIssueReporterLogs.push({ level, date, consoleMessage });
+    global.wazoIssueReporterLogs.push({ level, date, message: consoleMessage });
 
     // Log the message in the console anyway (but don't console.error on mobile)
     const consoleLevel = isMobile() && level === 'error' ? WARN : level;
