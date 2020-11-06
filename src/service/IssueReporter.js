@@ -137,11 +137,12 @@ class IssueReporter {
     this._sendToRemoteLogger(level, { date, message, category, ...extra });
   }
 
-  logRequest(url: string, options: Object, response: Object) {
+  logRequest(url: string, options: Object, response: Object, start: Date) {
     if (!this.enabled) {
       return;
     }
     const { status } = response;
+    const duration = new Date() - start;
 
     let level = TRACE;
     if (status >= 400 && status < 500) {
@@ -155,6 +156,7 @@ class IssueReporter {
       body: JSON.stringify(options.body).replace(/"/g, "'").replace(/\\/g, ''),
       method: options.method,
       headers: options.headers,
+      duration,
     });
   }
 
