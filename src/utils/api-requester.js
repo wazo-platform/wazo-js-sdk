@@ -128,11 +128,13 @@ export default class ApiRequester {
       agent: this.agent,
     };
 
+    const start = new Date();
+
     return realFetch()(url, options).then(response => {
       const contentType = response.headers.get('content-type') || '';
       const isJson = contentType.indexOf('application/json') !== -1;
 
-      IssueReporter.logRequest(url, options, response);
+      IssueReporter.logRequest(url, options, response, start);
 
       // Throw an error only if status >= 400
       if ((isHead && response.status >= 500) || (!isHead && response.status >= 400)) {
