@@ -38,6 +38,17 @@ const addLevelsTo = (instance: Object, withMethods = false) => {
   return instance;
 };
 
+const safeStringify = (object: Object) => {
+  const result = '[not parsable object]';
+  try {
+    return JSON.stringify(object);
+  } catch (e) {
+    // Nothing to do
+  }
+
+  return result;
+};
+
 class IssueReporter {
   TRACE: string;
   INFO: string;
@@ -120,12 +131,7 @@ class IssueReporter {
     let consoleMessage = message;
 
     if (Object.keys(extra).length) {
-      let parsedExtra = '[not parsable object]';
-      try {
-        parsedExtra = JSON.stringify(extra);
-      } catch (e) {
-        // Nothing to do
-      }
+      const parsedExtra = safeStringify(extra);
       consoleMessage = `${consoleMessage} (${parsedExtra})`;
     }
 
@@ -215,7 +221,7 @@ class IssueReporter {
         Accept: 'application/json',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
+      body: safeStringify({
         level,
         ...payload,
         ...extra,
