@@ -7,9 +7,13 @@ jest.mock('../../utils/api-requester');
 let fetch;
 IssueReporter.enable();
 
+class MyError extends Error {}
+
 describe('IssueReporter', () => {
   beforeEach(() => {
     fetch = jest.fn();
+    jest.resetAllMocks();
+
     realFetch.mockImplementation(() => fetch);
   });
 
@@ -52,6 +56,21 @@ describe('IssueReporter', () => {
       message: 'my message',
       category: 'http',
       status: 200,
+    });
+  });
+
+  it('should log an error', () => {
+    jest.spyOn(IssueReporter, '_sendToRemoteLogger').mockImplementation(() => {});
+
+    IssueReporter.log('error', 'logger-category=http', 'my message', new MyError('nope'));
+
+    expect(IssueReporter._sendToRemoteLogger).toHaveBeenCalledWith('error', {
+      date: expect.anything(),
+      message: 'my message',
+      category: 'http',
+      errorMessage: 'nope',
+      errorStack: expect.anything(),
+      errorType: 'MyError',
     });
   });
 });

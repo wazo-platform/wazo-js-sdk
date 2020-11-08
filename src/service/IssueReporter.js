@@ -101,8 +101,16 @@ class IssueReporter {
 
     // Handle extra data as object for the last argument
     const lastArg = args[args.length - 1];
-    if (lastArg && typeof lastArg === 'object' && Object.keys(lastArg).length) {
-      extra = lastArg;
+    if (lastArg && ((typeof lastArg === 'object' && Object.keys(lastArg).length) || lastArg instanceof Error)) {
+      if (lastArg instanceof Error) {
+        extra = {
+          errorMessage: lastArg.message,
+          errorStack: lastArg.stack,
+          errorType: lastArg.constructor.name,
+        };
+      } else {
+        extra = lastArg;
+      }
       // eslint-disable-next-line no-param-reassign
       args.splice(1, 1);
     }
