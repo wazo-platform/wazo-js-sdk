@@ -1332,10 +1332,14 @@ export default class WebRTCClient extends Emitter {
       return;
     }
     const sessionId = this.getSipSessionId(session);
-    this.statsIntervals[sessionId] = setInterval(async () => {
+
+    getStats(pc, (result: Object) => {
+      const { results, internal, nomore, ...stats } = result;
+      this.statsIntervals[sessionId] = nomore;
+
       statsLogger.trace('stats', {
         sessionId,
-        stats: await this._getStatsReport(pc),
+        ...stats,
       });
     }, SEND_STATS_DELAY);
   }
@@ -1344,17 +1348,9 @@ export default class WebRTCClient extends Emitter {
     const sessionId = this.getSipSessionId(session);
 
     if (sessionId in this.statsIntervals) {
-      clearInterval(this.statsIntervals[sessionId]);
+      this.statsIntervals[sessionId]();
       delete this.statsIntervals[sessionId];
     }
-  }
-
-  _getStatsReport(peerConnection: Oject) {
-    return new Promise((resolve: Function) => {
-      getStats(peerConnection, (result: Object) => {
-        resolve(IssueReporter.removeSlashes(JSON.stringify(result)));
-      });
-    });
   }
 
   _makeURI(target: string): URI {
