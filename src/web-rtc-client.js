@@ -878,6 +878,10 @@ export default class WebRTCClient extends Emitter {
     this.heartbeatCb = cb;
   }
 
+  onCallEnded(session: Session) {
+    this._stopSendingStats(session);
+  }
+
   attemptReconnection(): void {
     logger.info('attemptReconnection', { userAgent: !!this.userAgent });
     if (!this.userAgent) {
