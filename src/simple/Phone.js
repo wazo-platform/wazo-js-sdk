@@ -96,7 +96,9 @@ class Phone extends Emitter {
       options.log.builtinEnabled = false;
       options.log.logLevel = 'debug';
       options.log.connector = (level, className, label, content) => {
-        const protocolIndex = protocolDebugMessages.findIndex(prefix => content.indexOf(prefix) !== -1);
+        const protocolIndex = content && content.indexOf
+          ? protocolDebugMessages.findIndex(prefix => content.indexOf(prefix) !== -1) : -1;
+
         if (className === 'sip.Transport' && protocolIndex !== -1) {
           const direction = protocolIndex === 0 ? 'receiving' : 'sending';
           const message = content.replace(`${protocolDebugMessages[protocolIndex]}\n\n`, '').replace('\r\n', '\n');
