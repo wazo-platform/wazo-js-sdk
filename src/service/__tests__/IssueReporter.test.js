@@ -1,4 +1,5 @@
 /* eslint-disable no-underscore-dangle */
+/* eslint-disable no-useless-escape */
 import IssueReporter from '../IssueReporter';
 import { realFetch } from '../../utils/api-requester';
 
@@ -72,5 +73,12 @@ describe('IssueReporter', () => {
       errorStack: expect.anything(),
       errorType: 'MyError',
     });
+  });
+
+  it('remove slashes', () => {
+    expect(IssueReporter.removeSlashes('\\')).toBe('');
+    expect(IssueReporter.removeSlashes('\\"')).toBe("'");
+    expect(IssueReporter.removeSlashes('\"')).toBe("'");
+    expect(IssueReporter.removeSlashes('\\\"')).toBe("'");
   });
 });

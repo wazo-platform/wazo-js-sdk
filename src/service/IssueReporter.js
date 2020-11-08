@@ -96,6 +96,10 @@ class IssueReporter {
     return addLevelsTo(logger, true);
   }
 
+  removeSlashes(str: string) {
+    return str.replace(/"/g, "'").replace(/\\/g, '');
+  }
+
   log(level: string, ...args: any) {
     if (!this.enabled) {
       return;
@@ -167,7 +171,7 @@ class IssueReporter {
 
     this.log(level, this._makeCategory('http'), url, {
       status,
-      body: JSON.stringify(options.body).replace(/"/g, "'").replace(/\\/g, ''),
+      body: this.removeSlashes(JSON.stringify(options.body)),
       method: options.method,
       headers: options.headers,
       duration,
@@ -213,7 +217,9 @@ class IssueReporter {
     if (!minLevel || this._isLevelAbove(minLevel, level)) {
       return;
     }
-    const url = `http://${host}:${port}/${tag}`;
+
+    const isSecure = +port === 443;
+    const url = `http${isSecure ? 's' : ''}://${host}${isSecure ? '' : `:${port}`}/${tag}`;
 
     realFetch()(url, {
       method: 'POST',

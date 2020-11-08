@@ -28,6 +28,7 @@ import { defaultMediaStreamFactory }
   from 'sip.js/lib/platform/web/session-description-handler/media-stream-factory-default';
 import { defaultPeerConnectionConfiguration }
   from 'sip.js/lib/platform/web/session-description-handler/peer-connection-configuration-default';
+import getStats from 'getstats';
 
 import WazoSessionDescriptionHandler from './lib/WazoSessionDescriptionHandler';
 
@@ -44,9 +45,11 @@ export const replaceLocalIpModifier = (description: Object) => Promise.resolve({
 });
 
 const DEFAULT_ICE_TIMEOUT = 3000;
+const SEND_STATS_DELAY = 5000;
 
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
 const logger = IssueReporter.loggerFor('webrtc-client');
+const statsLogger = IssueReporter.loggerFor('webrtc-stats');
 
 // events
 const REGISTERED = 'registered';
@@ -112,6 +115,7 @@ export default class WebRTCClient extends Emitter {
   heartbeat: Heartbeat;
   heartbeatTimeoutCb: ?Function;
   heartbeatCb: ?Function;
+  statsIntervals: Object;
 
   // sugar
   ON_USER_AGENT: string;
@@ -161,6 +165,7 @@ export default class WebRTCClient extends Emitter {
 
     this.videoSessions = {};
     this.heldSessions = {};
+    this.statsIntervals = {};
     this.connectionPromise = null;
 
     this._boundOnHeartbeat = this._onHeartbeat.bind(this);
@@ -344,6 +349,7 @@ export default class WebRTCClient extends Emitter {
         onAccept: (response: IncomingResponse) => this._onAccepted(session, response.session, true),
         onReject: (response: IncomingResponse) => {
           logger.info('onReject', { id: session.id, fromTag: session.fromTag });
+          this._stopSendingStats(session);
 
           this.eventEmitter.emit(REJECTED, session, response);
         },
@@ -374,6 +380,8 @@ export default class WebRTCClient extends Emitter {
   hangup(session: Session) {
     try {
       const { state } = session;
+
+      this._stopSendingStats(session);
 
       this._cleanupMedia(session);
 
@@ -886,8 +894,9 @@ export default class WebRTCClient extends Emitter {
   _onHeartbeat(message: string | Object) {
     const body = message && typeof message === 'object' ? message.data : message;
     if (body.indexOf('200 OK') !== -1) {
-      logger.info('onHeartbeat', { hasHeartbeat: this.hasHeartbeat() });
       if (this.hasHeartbeat()) {
+        logger.info('onHeartbeat', { hasHeartbeat: this.hasHeartbeat() });
+
         this.heartbeat.onHeartbeat();
         if (this.heartbeatCb) {
           this.heartbeatCb();
@@ -1150,6 +1159,8 @@ export default class WebRTCClient extends Emitter {
     if (withEvent) {
       this.eventEmitter.emit(ACCEPTED, session, sessionDialog);
     }
+
+    this._startSendingStats(session);
   }
 
   _setupRemoteMedia(session: Session, event: ?any) {
@@ -1313,6 +1324,37 @@ export default class WebRTCClient extends Emitter {
       this.registerer.stateChange.removeAllListeners();
       this.registerer = null;
     }
+  }
+
+  _startSendingStats(session: Session) {
+    const pc = session.sessionDescriptionHandler.peerConnection;
+    if (!pc) {
+      return;
+    }
+    const sessionId = this.getSipSessionId(session);
+    this.statsIntervals[sessionId] = setInterval(async () => {
+      statsLogger.trace('stats', {
+        sessionId,
+        stats: await this._getStatsReport(pc),
+      });
+    }, SEND_STATS_DELAY);
+  }
+
+  _stopSendingStats(session: Session) {
+    const sessionId = this.getSipSessionId(session);
+
+    if (sessionId in this.statsIntervals) {
+      clearInterval(this.statsIntervals[sessionId]);
+      delete this.statsIntervals[sessionId];
+    }
+  }
+
+  _getStatsReport(peerConnection: Oject) {
+    return new Promise((resolve: Function) => {
+      getStats(peerConnection, (result: Object) => {
+        resolve(IssueReporter.removeSlashes(JSON.stringify(result)));
+      });
+    });
   }
 
   _makeURI(target: string): URI {
