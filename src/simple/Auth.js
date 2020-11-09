@@ -111,6 +111,9 @@ class Auth {
       // Nothing to
     }
 
+    setApiToken(null);
+    setRefreshToken(null);
+
     this.session = null;
     this.authenticated = false;
   }
@@ -198,6 +201,9 @@ class Auth {
     }
 
     setApiToken(session.token);
+    if (session.refreshToken) {
+      setRefreshToken(session.refreshToken);
+    }
 
     try {
       const [profile, { wazo_version: engineVersion }] = await Promise.all([
