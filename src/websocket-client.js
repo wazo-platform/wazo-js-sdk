@@ -176,8 +176,7 @@ class WebSocketClient extends Emitter {
 
       if (BLACKLIST_EVENTS.indexOf(name) === -1) {
         // $FlowFixMe
-        const msg = IssueReporter.removeSlashes(event.data.substr(0, 600));
-        messageLogger.trace(`${msg}...`, { method: 'onmessage' });
+        messageLogger.trace(`${IssueReporter.removeSlashes(event.data)}...`, { method: 'onmessage' });
       }
 
       if (!this.initialized) {
@@ -226,6 +225,8 @@ class WebSocketClient extends Emitter {
       if (this.isConnected() && this.version >= 2) {
         // $FlowFixMe
         this.socket.send(JSON.stringify({ op: 'token', data: { token } }));
+      } else if (!this.isConnected()) {
+        this.reconnect('token refreshed');
       }
     }
   }
@@ -276,6 +277,14 @@ class WebSocketClient extends Emitter {
 
   isConnected() {
     return this.socket && this.socket.readyState === this.socket.OPEN;
+  }
+
+  reconnect(reason: string) {
+    logger.info('reconnect', { reason, socket: !!this.socket });
+    if (!this.socket) {
+      return;
+    }
+    this.socket.reconnect(reason);
   }
 
   _handleInitMessage(message: WebSocketMessage, sock: ReconnectingWebSocket) {

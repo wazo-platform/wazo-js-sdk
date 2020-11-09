@@ -104,7 +104,7 @@ export default class ApiRequester {
     this.token = token;
   }
 
-  call(
+  async call(
     path: string,
     method: string = 'get',
     body: ?Object = null,
@@ -127,6 +127,11 @@ export default class ApiRequester {
       headers: this.getHeaders(headers),
       agent: this.agent,
     };
+
+    if (this.refreshTokenPromise) {
+      logger.info('A token is already refreshing, waiting ...', { url });
+      await this.refreshTokenPromise;
+    }
 
     const start = new Date();
 

@@ -154,6 +154,10 @@ class Auth {
     setRefreshToken(refreshToken);
   }
 
+  forceRefreshToken() {
+    getApiClient().forceRefreshToken();
+  }
+
   setIsMobile(mobile: boolean) {
     this.mobile = mobile;
   }
