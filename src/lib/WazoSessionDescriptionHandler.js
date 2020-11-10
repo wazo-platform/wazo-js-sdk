@@ -7,8 +7,8 @@ import type { Logger } from 'sip.js/lib/core/log/logger';
 import type { MediaStreamFactory } from 'sip.js/lib/platform/web/session-description-handler/media-stream-factory';
 import type SessionDescriptionHandlerConfiguration
   from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-configuration';
-
-import { SessionDescriptionHandler } from 'sip.js/lib/platform/web/session-description-handler';
+import { SessionDescriptionHandler }
+  from 'sip.js/lib/platform/web/session-description-handler/session-description-handler';
 
 class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
   constructor(
