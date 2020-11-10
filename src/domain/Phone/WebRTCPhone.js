@@ -429,6 +429,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
   _onCallTerminated(sipSession: Session) {
     logger.info('_onCallTerminated', { sipId: sipSession.id });
 
+    this.client.onCallEnded(sipSession);
+
     const callSession = this._createCallSession(sipSession);
 
     this.eventEmitter.emit(ON_TERMINATE_SOUND);

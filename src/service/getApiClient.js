@@ -23,11 +23,11 @@ export const setCurrentServer = (newServer: string) => {
   global.wazoCurrentServer = newServer;
 };
 
-export const setApiToken = (newToken: string, forServer: ?string = null) => {
+export const setApiToken = (newToken: ?string, forServer: ?string = null) => {
   global.wazoClientToken[forServer] = newToken;
 };
 
-export const setRefreshToken = (newRefreshToken: string, forServer: ?string = null) => {
+export const setRefreshToken = (newRefreshToken: ?string, forServer: ?string = null) => {
   global.wazoRefreshToken[forServer] = newRefreshToken;
 };
 

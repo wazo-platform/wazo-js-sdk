@@ -8,11 +8,14 @@ import type { Phone, AvailablePhoneOptions } from './Phone';
 import Emitter from '../../utils/Emitter';
 
 import CallApi from '../../service/CallApi';
+import IssueReporter from '../../service/IssueReporter';
 
 export const TRANSFER_FLOW_ATTENDED = 'attended';
 export const TRANSFER_FLOW_BLIND = 'blind';
 
 // const MINIMUM_WAZO_ENGINE_VERSION_FOR_CTI_HOLD = '20.11';
+
+const logger = IssueReporter.loggerFor('cti-phone');
 
 export default class CTIPhone extends Emitter implements Phone {
   session: Session;
@@ -25,6 +28,7 @@ export default class CTIPhone extends Emitter implements Phone {
 
   constructor(session: Session, isMobile: boolean = false, callbackAllLines: boolean = false) {
     super();
+    logger.info('CTI Phone created');
     this.session = session;
     this.isMobile = isMobile;
     this.callbackAllLines = callbackAllLines;
@@ -79,6 +83,8 @@ export default class CTIPhone extends Emitter implements Phone {
   }
 
   async makeCall(number: string, line: Line): Promise<?CallSession> {
+    logger.info('makeCall', { number });
+
     if (!number) {
       return null;
     }
@@ -97,6 +103,8 @@ export default class CTIPhone extends Emitter implements Phone {
   }
 
   accept(callSession: CallSession): Promise<string | null> {
+    logger.info('accept', { callId: callSession.getId(), number: callSession.number });
+
     if (!this.currentCall) {
       this.currentCall = callSession.call;
     }
@@ -105,11 +113,15 @@ export default class CTIPhone extends Emitter implements Phone {
   }
 
   endCurrentCall(callSession: CallSession): void {
+    logger.info('endCurrentCall', { callId: callSession.getId(), number: callSession.number });
+
     this.currentCall = undefined;
     this.eventEmitter.emit('onCallEnded', callSession);
   }
 
   async hangup(callSession: CallSession): Promise<boolean> {
+    logger.info('hangup', { callId: callSession.getId(), number: callSession.number });
+
     try {
       await CallApi.cancelCall(callSession);
       if (this.currentCall && callSession.callId === this.currentCall.id) {
@@ -118,7 +130,9 @@ export default class CTIPhone extends Emitter implements Phone {
 
       this.eventEmitter.emit('onCallEnded', callSession);
       return true;
-    } catch (_) {
+    } catch (e) {
+      logger.error('hangup error', e);
+
       this.eventEmitter.emit('onCallFailed', callSession);
       return false;
     }
@@ -127,53 +141,77 @@ export default class CTIPhone extends Emitter implements Phone {
   ignore() {}
 
   async reject(callSession: CallSession): Promise<void> {
+    logger.info('reject', { callId: callSession.getId(), number: callSession.number });
+
     await CallApi.cancelCall(callSession);
     this.eventEmitter.emit('onCallEnded', callSession);
   }
 
   async transfer(callSession: CallSession, number: string): Promise<void> {
+    logger.info('transfer', { callId: callSession.getId(), number: callSession.number, to: number });
+
     await CallApi.transferCall(callSession.callId, number, TRANSFER_FLOW_BLIND);
   }
 
   indirectTransfer() {}
 
   async initiateCTIIndirectTransfer(callSession: CallSession, number: string): Promise<any> {
+    logger.info('indirect transfer', { callId: callSession.getId(), number: callSession.number, to: number });
+
     return CallApi.transferCall(callSession.callId, number, TRANSFER_FLOW_ATTENDED);
   }
 
   async cancelCTIIndirectTransfer(transferId: string): Promise<any> {
+    logger.info('cancel transfer', { transferId });
+
     return CallApi.cancelCallTransfer(transferId);
   }
 
   async confirmCTIIndirectTransfer(transferId: string): Promise<any> {
+    logger.info('confirm transfer', { transferId });
+
     return CallApi.confirmCallTransfer(transferId);
   }
 
   sendKey(callSession: CallSession, digits: string) {
+    logger.info('sendKey', { callId: callSession.getId(), number: callSession.number, digits });
+
     return CallApi.sendDTMF(callSession.callId, digits);
   }
 
   onConnectionMade() {
+    logger.info('onConnectionMade');
+
     this.eventEmitter.emit('onCallAccepted');
   }
 
   async close() {
+    logger.info('close');
+
     return Promise.resolve();
   }
 
   async hold(callSession: CallSession): Promise<void> {
+    logger.info('hold', { callId: callSession.getId(), number: callSession.number });
+
     return CallApi.hold(callSession.callId);
   }
 
   async resume(callSession: CallSession): Promise<void> {
+    logger.info('resume', { callId: callSession.getId(), number: callSession.number });
+
     return CallApi.resume(callSession.callId);
   }
 
   async mute(callSession: CallSession): Promise<void> {
+    logger.info('mute', { callId: callSession.getId(), number: callSession.number });
+
     return CallApi.mute(callSession.callId);
   }
 
   async unmute(callSession: CallSession): Promise<void> {
+    logger.info('unmute', { callId: callSession.getId(), number: callSession.number });
+
     return CallApi.unmute(callSession.callId);
   }
 

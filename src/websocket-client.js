@@ -100,6 +100,7 @@ const BLACKLIST_EVENTS = [
 
 export const HEARTBEAT_ENGINE_VERSION = '20.09';
 const logger = IssueReporter.loggerFor('wazo-ws');
+const messageLogger = IssueReporter.loggerFor('wazo-ws-message');
 
 class WebSocketClient extends Emitter {
   initialized: boolean;
@@ -175,7 +176,7 @@ class WebSocketClient extends Emitter {
 
       if (BLACKLIST_EVENTS.indexOf(name) === -1) {
         // $FlowFixMe
-        logger.trace(`${event.data.substr(0, 600)}...`, { method: 'onmessage' });
+        messageLogger.trace(`${IssueReporter.removeSlashes(event.data)}...`, { method: 'onmessage' });
       }
 
       if (!this.initialized) {
@@ -206,6 +207,8 @@ class WebSocketClient extends Emitter {
   }
 
   close(): void {
+    logger.info('close', { socket: !!this.socket });
+
     if (!this.socket) {
       return;
     }
@@ -222,6 +225,8 @@ class WebSocketClient extends Emitter {
       if (this.isConnected() && this.version >= 2) {
         // $FlowFixMe
         this.socket.send(JSON.stringify({ op: 'token', data: { token } }));
+      } else if (!this.isConnected()) {
+        this.reconnect('token refreshed');
       }
     }
   }
@@ -231,6 +236,8 @@ class WebSocketClient extends Emitter {
   }
 
   startHeartbeat() {
+    logger.info('startHeartbeat');
+
     if (!this.socket) {
       this.heartbeat.stop();
       return;
@@ -243,6 +250,8 @@ class WebSocketClient extends Emitter {
   }
 
   stopHeartbeat() {
+    logger.info('stopHeartbeat');
+
     this.heartbeat.stop();
   }
 
@@ -268,6 +277,14 @@ class WebSocketClient extends Emitter {
 
   isConnected() {
     return this.socket && this.socket.readyState === this.socket.OPEN;
+  }
+
+  reconnect(reason: string) {
+    logger.info('reconnect', { reason, socket: !!this.socket });
+    if (!this.socket) {
+      return;
+    }
+    this.socket.reconnect(reason);
   }
 
   _handleInitMessage(message: WebSocketMessage, sock: ReconnectingWebSocket) {
@@ -315,16 +332,22 @@ class WebSocketClient extends Emitter {
   }
 
   _getUrl() {
-    return `wss://${this.host}/api/websocketd/?token=${this.token}&version=${this.version}`;
+    const url = `wss://${this.host}/api/websocketd/?token=${this.token}&version=${this.version}`;
+    logger.log('url', { url });
+
+    return url;
   }
 
   _onHeartbeat(message: Object) {
     if (message.payload === 'pong') {
       this.heartbeat.onHeartbeat();
+      logger.log('onHeartbeat');
     }
   }
 
   async _onHeartbeatTimeout() {
+    logger.log('_onHeartbeatTimeout');
+
     this.close();
     this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE, new Error('Websocket ping failure.'));
 

@@ -5,6 +5,7 @@ import Emitter from '../utils/Emitter';
 import IssueReporter from '../service/IssueReporter';
 
 const { SOCKET_EVENTS, ...OTHER_EVENTS } = WebSocketClient;
+const ALL_EVENTS = [...Object.values(SOCKET_EVENTS), ...Object.values(OTHER_EVENTS)];
 
 const logger = IssueReporter.loggerFor('simple-ws-client');
 
@@ -47,7 +48,7 @@ class Websocket extends Emitter {
     this.ws.connect();
 
     // Re-emit all events
-    Object.values(SOCKET_EVENTS).forEach((event: any) => {
+    ALL_EVENTS.forEach((event: any) => {
       if (!this.ws) {
         return;
       }
