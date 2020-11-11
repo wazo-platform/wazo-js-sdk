@@ -56,7 +56,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   staticLogout: () =>
     client.post(
-      `${baseUrl}/users/me/agent/logout`,
+      `${baseUrl}/users/me/agents/logoff`,
       null,
       null,
       ApiRequester.successResponseParser,
