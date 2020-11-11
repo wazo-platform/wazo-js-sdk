@@ -12,6 +12,8 @@ import type { SessionDescriptionHandlerFactoryOptions }
   from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-factory-options';
 import type SessionDescriptionHandlerConfiguration
   from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-configuration';
+import type SessionDescriptionHandler
+  from 'sip.js/lib/platform/web/session-description-handler/session-description-handler';
 
 import { C } from 'sip.js/lib/core/messages/methods/constants';
 import { URI } from 'sip.js/lib/grammar/uri';
@@ -1126,6 +1128,20 @@ export default class WebRTCClient extends Emitter {
     if (!session.delegate) {
       session.delegate = {};
     }
+
+    session.delegate.onSessionDescriptionHandler = (sdh: SessionDescriptionHandler) => {
+      sdh.peerConnectionDelegate = {
+        onicecandidateerror: (error: Object) => {
+          logger.error('onicecandidateerror', {
+            address: error.address,
+            port: error.port,
+            errorCode: error.errorCode,
+            errorText: error.errorText,
+            url: error.url,
+          });
+        },
+      };
+    };
 
     session.delegate.onInvite = (inviteRequest: IncomingRequestMessage) => {
       logger.info('delegate.onReinvite');
