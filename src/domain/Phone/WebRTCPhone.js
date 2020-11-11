@@ -1,9 +1,12 @@
 /* global navigator */
+/* eslint-disable no-param-reassign */
+/* eslint-disable no-underscore-dangle */
 // @flow
 import type { Message } from 'sip.js/lib/api/message';
 import type { Session } from 'sip.js/lib/core/session';
 import { Invitation } from 'sip.js/lib/api/invitation';
 import { SessionState } from 'sip.js/lib/api/session-state';
+import type { IncomingRequestMessage } from 'sip.js/lib/core/messages/incoming-request-message';
 
 import CallSession from '../CallSession';
 import type { Phone, AvailablePhoneOptions } from './Phone';
@@ -26,6 +29,7 @@ export const ON_CALL_HELD = 'onCallHeld';
 export const ON_CALL_UNHELD = 'onCallUnHeld';
 export const ON_CAMERA_DISABLED = 'onCameraDisabled';
 export const ON_CAMERA_RESUMED = 'onCameraResumed';
+export const ON_CALL_CANCELED = 'onCallCanceled';
 export const ON_CALL_FAILED = 'onCallFailed';
 export const ON_CALL_ENDED = 'onCallEnded';
 export const ON_MESSAGE = 'onMessage';
@@ -238,6 +242,18 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   _bindEvents(sipSession: Session) {
+    if (sipSession._onCancel) {
+      // Monkey patch to know when canceled with the CANCEL message
+      const onCancel = sipSession._onCancel.bind(sipSession);
+      sipSession._onCancel = (message: IncomingRequestMessage) => {
+        onCancel(message);
+        const elsewhere = message.data.indexOf('reason=26') !== -1;
+        this.eventEmitter.emit(ON_CALL_CANCELED, this._createCallSession(sipSession), elsewhere);
+      };
+    } else {
+      console.warn('sipSession._onCancel not found, please update the wazo SDK accordingly');
+    }
+
     sipSession.stateChange.addListener((newState: SessionState) => {
       switch (newState) {
         case SessionState.Establishing:
