@@ -46,14 +46,6 @@ export default (client: ApiRequester, baseUrl: string) => ({
       ApiRequester.successResponseParser,
     ),
 
-  staticLogin: () =>
-    client.post(
-      `${baseUrl}/users/me/agents/login`,
-      null,
-      null,
-      ApiRequester.successResponseParser,
-    ),
-
   staticLogout: () =>
     client.post(
       `${baseUrl}/users/me/agents/logoff`,

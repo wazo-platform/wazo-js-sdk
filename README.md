@@ -809,13 +809,12 @@ client.agentd.logout(agentNumber);
 client.agentd.pause(agentNumber);
 client.agentd.resume(agentNumber);
 ```
-Log in with line ID only (engine version > 20.11)
+Log in with line ID only (engine version > 20.11 -- recommended)
 ```js
 client.agentd.loginWithLineId(lineId);
 ```
-Recommended methods (engine version >= 20.17)
+No-args methods (engine version >= 20.17 -- recommended)
 ```js
-client.agentd.staticLogin();
 client.agentd.staticLogout();
 client.agentd.staticPause();
 client.agentd.staticResume();
