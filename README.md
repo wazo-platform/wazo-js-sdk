@@ -77,6 +77,7 @@ Wazo's Javascript SDK allows you to use these features :
       - [Calld](#calld)
       - [Confd](#confd)
       - [Dird](#dird)
+      - [Agentd](#agentd)
       - [callLogd](#calllogd)
       - [Accessd](#accessd)
       - [Calling an API endpoint without WazoApiClient](#calling-an-api-endpoint-without-wazoapiclient)
@@ -796,6 +797,28 @@ client.dird.deleteContact(contactUuid);
 client.dird.listFavorites(context);
 client.dird.markAsFavorite(source, sourceId);
 client.dird.removeFavorite(source, sourceId);
+```
+
+#### Agentd      **`Misc`**
+Use Agentd to handle agent states
+
+Legacy (all versions)
+```js
+client.agentd.login(agentNumber, context, extension);
+client.agentd.logout(agentNumber);
+client.agentd.pause(agentNumber);
+client.agentd.resume(agentNumber);
+```
+Log in with line ID only (engine version > 20.11)
+```js
+client.agentd.loginWithLineId(lineId);
+```
+Recommended methods (engine version >= 20.17)
+```js
+client.agentd.staticLogin();
+client.agentd.staticLogout();
+client.agentd.staticPause();
+client.agentd.staticResume();
 ```
 
 #### callLogd      **`Voice`**  **`Misc`**
