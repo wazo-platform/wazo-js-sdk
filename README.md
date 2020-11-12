@@ -804,6 +804,7 @@ Use Agentd to handle agent states
 
 Legacy (all versions)
 ```js
+client.agentd.getAgent(agentNumber);
 client.agentd.login(agentNumber, context, extension);
 client.agentd.logout(agentNumber);
 client.agentd.pause(agentNumber);
@@ -815,6 +816,7 @@ client.agentd.loginWithLineId(lineId);
 ```
 No-args methods (engine version >= 20.17 -- recommended)
 ```js
+client.agentd.getStatus();
 client.agentd.staticLogout();
 client.agentd.staticPause();
 client.agentd.staticResume();
