@@ -5,17 +5,17 @@ import { realFetch } from '../../utils/api-requester';
 
 jest.mock('../../utils/api-requester');
 
-let fetch;
 IssueReporter.enable();
 
 class MyError extends Error {}
 
 describe('IssueReporter', () => {
   beforeEach(() => {
-    fetch = jest.fn();
     jest.resetAllMocks();
 
-    realFetch.mockImplementation(() => fetch);
+    realFetch.mockImplementation(() => () => ({
+      catch: () => {},
+    }));
   });
 
   it('should compute level order', () => {
@@ -30,21 +30,21 @@ describe('IssueReporter', () => {
     // Same level
     IssueReporter.configureRemoteClient({ level: 'trace' });
     IssueReporter._sendToRemoteLogger('info');
-    expect(fetch).toHaveBeenCalled();
+    expect(realFetch).toHaveBeenCalled();
   });
 
   it('should send if verbosity is equal than required', () => {
     // Same level
     IssueReporter.configureRemoteClient({ level: 'trace' });
     IssueReporter._sendToRemoteLogger('trace');
-    expect(fetch).toHaveBeenCalled();
+    expect(realFetch).toHaveBeenCalled();
   });
 
   it('should not send if verbosity is lower than required', () => {
     // Lower level
     IssueReporter.configureRemoteClient({ level: 'info' });
     IssueReporter._sendToRemoteLogger('trace');
-    expect(fetch).not.toHaveBeenCalled();
+    expect(realFetch).not.toHaveBeenCalled();
   });
 
   it('should log extra data', () => {
