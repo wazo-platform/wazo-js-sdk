@@ -45,4 +45,30 @@ export default (client: ApiRequester, baseUrl: string) => ({
       null,
       ApiRequester.successResponseParser,
     ),
+
+  getStatus: (): Promise<Agent> => client.get(`${baseUrl}/users/me/agents`, null).then(Agent.parse),
+
+  staticLogout: () =>
+    client.post(
+      `${baseUrl}/users/me/agents/logoff`,
+      null,
+      null,
+      ApiRequester.successResponseParser,
+    ),
+
+  staticPause: () =>
+    client.post(
+      `${baseUrl}/users/me/agents/pause`,
+      { reason: 'songbird_reason' },
+      null,
+      ApiRequester.successResponseParser,
+    ),
+
+  staticResume: () =>
+    client.post(
+      `${baseUrl}/users/me/agents/unpause`,
+      null,
+      null,
+      ApiRequester.successResponseParser,
+    ),
 });
