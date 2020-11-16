@@ -47,6 +47,7 @@ export const ON_PLAY_INBOUND_CALL_SIGNAL_SOUND = 'playInboundCallSignalSound';
 export const ON_PLAY_HANGUP_SOUND = 'playHangupSound';
 export const ON_PLAY_PROGRESS_SOUND = 'playProgressSound';
 export const ON_VIDEO_INPUT_CHANGE = 'videoInputChange';
+export const ON_CALL_ERROR = 'onCallError';
 
 export const events = [
   ON_USER_AGENT,
@@ -78,6 +79,7 @@ export const events = [
   ON_PLAY_HANGUP_SOUND,
   ON_PLAY_PROGRESS_SOUND,
   ON_VIDEO_INPUT_CHANGE,
+  ON_CALL_ERROR,
 ];
 
 const logger = IssueReporter.loggerFor('webrtc-phone');
@@ -786,6 +788,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.currentCallSession = callSession;
 
     this.eventEmitter.emit(ON_CALL_OUTGOING, callSession);
+
+    // If an invite promise exists, catch exceptions on it to trigger error like OverConstraintsError.
+    if (sipSession.invitePromise) {
+      sipSession.invitePromise.catch(error => {
+        this.eventEmitter.emit(ON_CALL_ERROR, error, callSession);
+      });
+    }
 
     return Promise.resolve(callSession);
   }

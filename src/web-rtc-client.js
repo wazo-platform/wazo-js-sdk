@@ -364,7 +364,8 @@ export default class WebRTCClient extends Emitter {
     }
 
     // Do not await invite here or we'll miss the Establishing state transition
-    session.invite(inviteOptions);
+    const promise = session.invite(inviteOptions);
+    session.invitePromise = promise;
     return session;
   }
 
