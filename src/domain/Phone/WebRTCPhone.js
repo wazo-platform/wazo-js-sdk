@@ -250,7 +250,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         const elsewhere = message.data.indexOf('cause=26') !== -1 && message.data.indexOf('completed elsewhere') !== -1;
         this.eventEmitter.emit(ON_CALL_CANCELED, this._createCallSession(sipSession), elsewhere);
       };
-    } else {
+    } else if (sipSession instanceof Invitation) {
       console.warn('sipSession._onCancel not found, please update the wazo SDK accordingly');
     }
 
@@ -998,7 +998,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
       // If the phone registered with a current callSession (eg: when switching network):
       // send a reinvite to renegociate ICE with new IP
-      if (this.shouldSendReinvite && this.currentSipSession) {
+      if (this.shouldSendReinvite && this.currentSipSession
+        && this.currentSipSession.state === SessionState.Established) {
         this.shouldSendReinvite = false;
         try {
           this.sendReinvite(this.currentSipSession);
