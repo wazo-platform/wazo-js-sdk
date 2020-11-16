@@ -41,7 +41,7 @@ const addLevelsTo = (instance: Object, withMethods = false) => {
 };
 
 const safeStringify = (object: Object) => {
-  const result = '[not parsable object]';
+  const result = '{"message": "Not parsable JSON"}';
   try {
     return JSON.stringify(object);
   } catch (e) {
