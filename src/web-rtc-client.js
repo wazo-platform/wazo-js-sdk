@@ -364,7 +364,8 @@ export default class WebRTCClient extends Emitter {
     }
 
     // Do not await invite here or we'll miss the Establishing state transition
-    session.invite(inviteOptions);
+    const promise = session.invite(inviteOptions);
+    session.invitePromise = promise;
     return session;
   }
 
@@ -441,9 +442,7 @@ export default class WebRTCClient extends Emitter {
     this.userAgent.delegate = null;
     this.userAgent.stateChange.removeAllListeners();
 
-    if (this.userAgent && this.userAgent.transport) {
-      await this.userAgent.transport.disconnect();
-    }
+    await this._disconnectTransport();
 
     this._cleanupRegister();
 
@@ -920,7 +919,7 @@ export default class WebRTCClient extends Emitter {
 
     if (this.userAgent && this.userAgent.transport) {
       // Disconnect from WS and triggers events, but do not trigger disconnect if already disconnecting...
-      if (!this.userAgent.transport.transitioningState) {
+      if (!this.userAgent.transport.transitioningState && !this.userAgent.transport.disconnectPromise) {
         await this.userAgent.transport.disconnect();
       }
 
@@ -1375,6 +1374,13 @@ export default class WebRTCClient extends Emitter {
 
   _makeURI(target: string): URI {
     return UserAgent.makeURI(`sip:${target}@${this.config.host}`);
+  }
+
+  async _disconnectTransport() {
+    // Check if `disconnectPromise` is not present to avoid `Disconnect promise must not be defined` errors.
+    if (this.userAgent && this.userAgent.transport && !this.userAgent.transport.disconnectPromise) {
+      await this.userAgent.transport.disconnect();
+    }
   }
 
 }

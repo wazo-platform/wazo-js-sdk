@@ -47,6 +47,7 @@ export const ON_PLAY_INBOUND_CALL_SIGNAL_SOUND = 'playInboundCallSignalSound';
 export const ON_PLAY_HANGUP_SOUND = 'playHangupSound';
 export const ON_PLAY_PROGRESS_SOUND = 'playProgressSound';
 export const ON_VIDEO_INPUT_CHANGE = 'videoInputChange';
+export const ON_CALL_ERROR = 'onCallError';
 
 export const events = [
   ON_USER_AGENT,
@@ -78,6 +79,7 @@ export const events = [
   ON_PLAY_HANGUP_SOUND,
   ON_PLAY_PROGRESS_SOUND,
   ON_VIDEO_INPUT_CHANGE,
+  ON_CALL_ERROR,
 ];
 
 const logger = IssueReporter.loggerFor('webrtc-phone');
@@ -250,7 +252,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         const elsewhere = message.data.indexOf('cause=26') !== -1 && message.data.indexOf('completed elsewhere') !== -1;
         this.eventEmitter.emit(ON_CALL_CANCELED, this._createCallSession(sipSession), elsewhere);
       };
-    } else {
+    } else if (sipSession instanceof Invitation) {
       console.warn('sipSession._onCancel not found, please update the wazo SDK accordingly');
     }
 
@@ -787,6 +789,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     this.eventEmitter.emit(ON_CALL_OUTGOING, callSession);
 
+    // If an invite promise exists, catch exceptions on it to trigger error like OverConstraintsError.
+    if (sipSession.invitePromise) {
+      sipSession.invitePromise.catch(error => {
+        this.eventEmitter.emit(ON_CALL_ERROR, error, callSession);
+      });
+    }
+
     return Promise.resolve(callSession);
   }
 
@@ -998,7 +1007,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
       // If the phone registered with a current callSession (eg: when switching network):
       // send a reinvite to renegociate ICE with new IP
-      if (this.shouldSendReinvite && this.currentSipSession) {
+      if (this.shouldSendReinvite && this.currentSipSession
+        && this.currentSipSession.state === SessionState.Established) {
         this.shouldSendReinvite = false;
         try {
           this.sendReinvite(this.currentSipSession);
