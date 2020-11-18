@@ -9,6 +9,16 @@ export type IndirectTransferArguments = {
   sourceId: string,
 };
 
+type Reponse = {
+  id: string,
+  initiator_uuid: string,
+  transferred_call: string,
+  initiator_call: string,
+  recipient_call: string,
+  status: string,
+  flow: string,
+}
+
 export default class IndirectTransfer {
   sourceId: string;
 
@@ -23,6 +33,13 @@ export default class IndirectTransfer {
     return new IndirectTransfer({
       sourceId: source.getId(),
       destinationId: destination.getId(),
+    });
+  }
+
+  static parseFromApi(plain: Reponse) {
+    return new IndirectTransfer({
+      sourceId: plain.initiator_call,
+      destinationId: plain.recipient_call,
     });
   }
 

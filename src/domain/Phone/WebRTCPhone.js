@@ -574,6 +574,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     if (sipSession) {
       logger.info('accept', { sipId: sipSession.id });
 
+      // $FlowFixMe
       return this.client.answer(sipSession, this.allowVideo ? cameraEnabled : false).then(() => {
         return callSession.sipCallId;
       });
@@ -756,11 +757,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
   // @TODO: line is not used here
   async makeCall(number: string, line: any, cameraEnabled?: boolean,
     audioOnly: boolean = false): Promise<?CallSession> {
+    logger.info('makeCall', { number, lineId: line ? line.id : null, cameraEnabled });
     if (!number) {
       return Promise.resolve(null);
     }
-
-    logger.info('makeCall', { number, lineId: line ? line.id : null, cameraEnabled });
 
     if (!this.client.isRegistered()) {
       await this.client.register();
@@ -1127,14 +1127,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   _createCallSession(sipSession: Session, fromSession?: ?CallSession, extra: Object = {}): CallSession {
     // eslint-disable-next-line
-    const number = sipSession.remoteIdentity.uri._normal.user;
+    const number = sipSession ? sipSession.remoteIdentity.uri._normal.user : null;
     const { state } = sipSession;
 
     const callSession = new CallSession({
       callId: fromSession && fromSession.callId,
       sipCallId: this.getSipSessionId(sipSession),
       sipStatus: state,
-      displayName: sipSession.remoteIdentity.displayName || number,
+      displayName: sipSession ? sipSession.remoteIdentity.displayName || number : number,
       startTime: fromSession ? fromSession.startTime : new Date(),
       answered: state === SessionState.Established,
       paused: this.client.isCallHeld(sipSession),

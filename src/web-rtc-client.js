@@ -370,6 +370,9 @@ export default class WebRTCClient extends Emitter {
   }
 
   answer(session: Invitation, enableVideo?: boolean) {
+    if (!session || !session.accept) {
+      return;
+    }
     this.changeVideo(enableVideo || false);
     const options = {
       sessionDescriptionHandlerOptions: this._getMediaConfiguration(enableVideo || false),

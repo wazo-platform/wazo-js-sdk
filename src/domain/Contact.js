@@ -277,7 +277,7 @@ export default class Contact {
 
   static manyGraphQlWithNumbersParser(numbers: string[]): Function {
     return (response: ContactsGraphQlResponse) => {
-      if (!response.data.me || !response.data.me.contacts) {
+      if (!response.data || !response.data.me || !response.data.me.contacts) {
         return [];
       }
 
