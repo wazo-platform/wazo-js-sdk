@@ -257,6 +257,10 @@ export default class CTIPhone extends Emitter implements Phone {
     return true;
   }
 
+  getCurrentCallSession(): ?CallSession {
+    return this.currentCall ? CallSession.parseCall(this.session, this.currentCall) : null;
+  }
+
   enableRinging() {}
 
   sendMessage() {}

@@ -165,7 +165,7 @@ export default class CallLog {
       return this.destination;
     }
 
-    return session.hasExtension(this.source.extension) ? this.destination : this.source;
+    return session && session.hasExtension(this.source.extension) ? this.destination : this.source;
   }
 
   isNewMissedCall(): boolean {

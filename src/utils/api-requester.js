@@ -208,6 +208,9 @@ export default class ApiRequester {
       }
 
       return this.call(newPath, method, body, headers, parse, false);
+    }).catch((e) => {
+      this.refreshTokenPromise = null;
+      throw e;
     });
   }
 

@@ -1,4 +1,5 @@
 /* global document */
+/* eslint-disable no-param-reassign */
 // @flow
 import type Participant from './Participant';
 import Wazo from '../index';
@@ -33,8 +34,12 @@ class Stream {
     element.onloadedmetadata = () => {
       const tracks = this.htmlStream ? this.htmlStream.getVideoTracks() : [];
       tracks.forEach(track => {
-        // eslint-disable-next-line
-        track.enabled = true;
+        // Do not re-enable the track if already mounted.
+        if (!track.loaded) {
+          track.enabled = true;
+        }
+        // $FlowFixMe
+        track.loaded = true;
       });
     };
 

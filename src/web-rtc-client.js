@@ -364,12 +364,15 @@ export default class WebRTCClient extends Emitter {
     }
 
     // Do not await invite here or we'll miss the Establishing state transition
-    const promise = session.invite(inviteOptions);
-    session.invitePromise = promise;
+    session.invitePromise = session.invite(inviteOptions);
     return session;
   }
 
   answer(session: Invitation, enableVideo?: boolean) {
+    if (!session || !session.accept) {
+      logger.warn('No session to answer, or not an invitation');
+      return;
+    }
     this.changeVideo(enableVideo || false);
     const options = {
       sessionDescriptionHandlerOptions: this._getMediaConfiguration(enableVideo || false),
@@ -377,6 +380,10 @@ export default class WebRTCClient extends Emitter {
 
     return session.accept(options).then(() => {
       this._onAccepted(session);
+    }).catch(e => {
+      logger.error('Answer error', e);
+
+      throw e;
     });
   }
 

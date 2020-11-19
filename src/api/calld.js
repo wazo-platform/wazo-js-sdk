@@ -6,6 +6,7 @@ import Relocation from '../domain/Relocation';
 import ChatMessage from '../domain/ChatMessage';
 import Voicemail from '../domain/Voicemail';
 import Call from '../domain/Call';
+import IndirectTransfer from '../domain/IndirectTransfer';
 
 type CallQuery = {
   from_mobile: boolean,
@@ -148,7 +149,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   // eslint-disable-next-line camelcase
   transferCall: (initiator_call: string, exten: string, flow: string) =>
-    client.post(`${baseUrl}/users/me/transfers`, { initiator_call, exten, flow }),
+    client.post(`${baseUrl}/users/me/transfers`, { initiator_call, exten, flow }).then(IndirectTransfer.parseFromApi),
 
   confirmCallTransfer: (transferId: string) => client.put(`${baseUrl}/users/me/transfers/${transferId}/complete`),
 

@@ -510,13 +510,16 @@ class Room extends Emitter {
   }
 
   _onParticipantLeft(payload: Object) {
-    const leftParticipant = this.participants.find(participant => participant.callId === payload.data.call_id);
+    const leftParticipant = this.participants.find(participant =>
+      participant && participant.callId === payload.data.call_id);
+
     // Trigger Participant.ON_DISCONNECT event
     if (leftParticipant) {
       leftParticipant.onDisconnect();
     }
 
-    this.participants = this.participants.filter(participant => participant.callId !== payload.data.call_id);
+    this.participants = this.participants.filter(participant =>
+      participant && participant.callId !== payload.data.call_id);
     this.eventEmitter.emit(this.CONFERENCE_USER_PARTICIPANT_LEFT, leftParticipant);
   }
 
