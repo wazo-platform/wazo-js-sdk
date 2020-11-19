@@ -562,6 +562,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     if (!callSession || callSession.getId() in this.acceptedSessions) {
+      logger.warn('no CallSession to accept, or callSession already accepted.');
       return Promise.resolve(null);
     }
 
@@ -572,13 +573,18 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     const sipSession = this.sipSessions[callSession.getId()];
     if (sipSession) {
-      logger.info('accept', { sipId: sipSession.id });
+      logger.info('accept, session found', { sipId: sipSession.id });
 
       // $FlowFixMe
       return this.client.answer(sipSession, this.allowVideo ? cameraEnabled : false).then(() => {
         return callSession.sipCallId;
+      }).catch(e => {
+        logger.error(e);
+        throw e;
       });
     }
+
+    logger.warn('no CallSession found to accept.');
 
     return Promise.resolve(null);
   }
