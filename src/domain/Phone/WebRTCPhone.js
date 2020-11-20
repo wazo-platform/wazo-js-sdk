@@ -573,6 +573,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     const sipSession = this.sipSessions[callSession.getId()];
     if (sipSession) {
+      if (sipSession.state === SessionState.Terminated || sipSession.state === SessionState.Terminating) {
+        logger.warn('Trying to answer a terminated sipSession.');
+
+        return Promise.resolve(null);
+      }
+
       logger.info('accept, session found', { sipId: sipSession.id });
 
       // $FlowFixMe
