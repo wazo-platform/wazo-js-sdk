@@ -5,6 +5,8 @@ import newFrom from '../utils/new-from';
 import updateFrom from '../utils/update-from';
 
 export type IndirectTransferArguments = {
+  status?: string,
+  id?: string,
   destinationId: string,
   sourceId: string,
 };
@@ -20,13 +22,19 @@ type Reponse = {
 }
 
 export default class IndirectTransfer {
+  status: ?string;
+
+  id: ?string;
+
   sourceId: string;
 
   destinationId: string;
 
-  constructor({ sourceId, destinationId }: IndirectTransferArguments) {
+  constructor({ sourceId, destinationId, status, id }: IndirectTransferArguments) {
     this.sourceId = sourceId;
     this.destinationId = destinationId;
+    this.status = status;
+    this.id = id;
   }
 
   static parseFromCallSession(source: CallSession, destination: CallSession) {
@@ -38,6 +46,8 @@ export default class IndirectTransfer {
 
   static parseFromApi(plain: Reponse) {
     return new IndirectTransfer({
+      id: plain.id,
+      status: plain.status,
       sourceId: plain.initiator_call,
       destinationId: plain.recipient_call,
     });
