@@ -272,7 +272,7 @@ export default class Contact {
   }
 
   static parseMany(response: ContactsResponse): Array<Contact> {
-    return response.results.map(r => Contact.parse(r, response.column_types)).filter(Contact.filterSourceId);
+    return response.results.map(r => Contact.parse(r, response.column_types));
   }
 
   static manyGraphQlWithNumbersParser(numbers: string[]): Function {
@@ -299,7 +299,7 @@ export default class Contact {
           emails: email ? [{ label: 'primary', email }] : [],
           uuid: edge.node.userUuid,
         });
-      }).filter(contact => !!contact).filter(Contact.filterSourceId);
+      }).filter(contact => !!contact);
     };
   }
 
@@ -337,7 +337,7 @@ export default class Contact {
   }
 
   static parseManyPersonal(results: Array<ContactPersonalResponse>): Array<?Contact> {
-    return results.map(r => Contact.parsePersonal(r)).filter(Contact.filterSourceId);
+    return results.map(r => Contact.parsePersonal(r));
   }
 
   static parsePersonal(plain: ContactPersonalResponse): Contact {
@@ -384,7 +384,7 @@ export default class Contact {
   }
 
   static parseManyOffice365(response: Office365Response[], source: DirectorySource): Array<Contact> {
-    return response.map(r => Contact.parseOffice365(r, source)).filter(Contact.filterSourceId);
+    return response.map(r => Contact.parseOffice365(r, source));
   }
 
   static parseOffice365(single: Office365Response, source: DirectorySource): Contact {
@@ -419,7 +419,7 @@ export default class Contact {
   }
 
   static parseManyGoogle(response: GoogleResponse[], source: DirectorySource): Array<Contact> {
-    return response.map(r => Contact.parseGoogle(r, source)).filter(Contact.filterSourceId);
+    return response.map(r => Contact.parseGoogle(r, source));
   }
 
   static parseGoogle(single: GoogleResponse, source: DirectorySource): Contact {
@@ -450,7 +450,7 @@ export default class Contact {
   }
 
   static parseManyWazo(response: WazoResponse[], source: DirectorySource): Array<Contact> {
-    return response.map(r => Contact.parseWazo(r, source)).filter(Contact.filterSourceId);
+    return response.map(r => Contact.parseWazo(r, source));
   }
 
   static parseWazo(single: WazoResponse, source: DirectorySource): Contact {
@@ -482,7 +482,7 @@ export default class Contact {
   }
 
   static parseManyConference(response: ConferenceResponse[], source: DirectorySource): Array<Contact> {
-    return response.map(r => Contact.parseConference(r, source)).filter(Contact.filterSourceId);
+    return response.map(r => Contact.parseConference(r, source));
   }
 
   static parseConference(single: ConferenceResponse, source: DirectorySource): Contact {
