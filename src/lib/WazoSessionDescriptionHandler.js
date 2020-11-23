@@ -168,7 +168,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       return super.sendDtmf(tones, options);
     }
 
-    this.logger(`DTMF sent via INFO: ${tones.toString()}`);
+    this.logger.debug(`DTMF sent via INFO: ${tones.toString()}`);
 
     const body = {
       contentDisposition: 'render',
