@@ -104,9 +104,9 @@ const messageLogger = IssueReporter.loggerFor('wazo-ws-message');
 
 class WebSocketClient extends Emitter {
   initialized: boolean;
-  host: string;
+  host: ?string;
   version: number;
-  token: string;
+  token: ?string;
   events: Array<string>;
   options: Object;
   socket: ?ReconnectingWebSocket;
@@ -148,14 +148,14 @@ class WebSocketClient extends Emitter {
   }
 
   connect() {
-    logger.info('connect method started');
+    logger.info('connect method started', { host: this.host, token: this.token });
     this.socket = new ReconnectingWebSocket(this._getUrl.bind(this), [], this.options);
     if (this.options.binaryType) {
       this.socket.binaryType = this.options.binaryType;
     }
 
     this.socket.onopen = () => {
-      logger.info('onopen', { method: 'connect' });
+      logger.info('onopen', { method: 'connect', host: this.host });
       this.eventEmitter.emit(SOCKET_EVENTS.ON_OPEN);
     };
 
@@ -188,7 +188,13 @@ class WebSocketClient extends Emitter {
 
     this.socket.onclose = event => {
       // Can't be converted to JSON (circular structure)
-      logger.info('onclose', { reason: event.reason, code: event.code, readyState: event.target.readyState });
+      logger.info('onclose', {
+        reason: event.reason,
+        code: event.code,
+        readyState: event.target.readyState,
+        host: this.host,
+        token: this.token,
+      });
       this.initialized = false;
       this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE, event);
 
@@ -207,7 +213,9 @@ class WebSocketClient extends Emitter {
   }
 
   close(): void {
-    logger.info('close', { socket: !!this.socket });
+    logger.info('close', { socket: !!this.socket, host: this.host, token: this.token });
+    this.host = null;
+    this.token = null;
 
     if (!this.socket) {
       return;
@@ -236,7 +244,7 @@ class WebSocketClient extends Emitter {
   }
 
   startHeartbeat() {
-    logger.info('startHeartbeat');
+    logger.info('startHeartbeat', { host: this.host, token: this.token });
 
     if (!this.socket) {
       this.heartbeat.stop();
@@ -250,7 +258,7 @@ class WebSocketClient extends Emitter {
   }
 
   stopHeartbeat() {
-    logger.info('stopHeartbeat');
+    logger.info('stopHeartbeat', { host: this.host, token: this.token });
 
     this.heartbeat.stop();
   }
@@ -280,7 +288,7 @@ class WebSocketClient extends Emitter {
   }
 
   reconnect(reason: string) {
-    logger.info('reconnect', { reason, socket: !!this.socket });
+    logger.info('reconnect', { reason, socket: !!this.socket, host: this.host, token: this.token });
     if (!this.socket) {
       return;
     }
@@ -332,7 +340,10 @@ class WebSocketClient extends Emitter {
   }
 
   _getUrl() {
-    const url = `wss://${this.host}/api/websocketd/?token=${this.token}&version=${this.version}`;
+    if (!this.host || !this.token) {
+      return null;
+    }
+    const url = `wss://${this.host}/api/websocketd/?token=${this.token || ''}&version=${this.version}`;
     logger.log('url', { url });
 
     return url;
@@ -346,7 +357,7 @@ class WebSocketClient extends Emitter {
   }
 
   async _onHeartbeatTimeout() {
-    logger.log('_onHeartbeatTimeout');
+    logger.log('_onHeartbeatTimeout', { host: this.host, token: this.token });
 
     this.close();
     this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE, new Error('Websocket ping failure.'));
