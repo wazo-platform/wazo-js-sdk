@@ -1140,7 +1140,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   _createCallSession(sipSession: Session, fromSession?: ?CallSession, extra: Object = {}): CallSession {
     // eslint-disable-next-line
     const number = sipSession ? sipSession.remoteIdentity.uri._normal.user : null;
-    const { state } = sipSession;
+    const { state } = sipSession || {};
 
     const callSession = new CallSession({
       callId: fromSession && fromSession.callId,
