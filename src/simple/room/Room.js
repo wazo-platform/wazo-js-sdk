@@ -14,7 +14,7 @@ import IssueReporter from '../../service/IssueReporter';
 export const SIGNAL_TYPE_PARTICIPANT_UPDATE = 'signal/PARTICIPANT_UPDATE';
 export const SIGNAL_TYPE_PARTICIPANT_REQUEST = 'signal/PARTICIPANT_REQUEST';
 
-const logger = IssueReporter.loggerFor('room');
+const logger = IssueReporter.loggerFor('sdk-room');
 
 class Room extends Emitter {
   callSession: ?CallSession;
@@ -64,11 +64,14 @@ class Room extends Emitter {
    */
   constructor(
     callSession: CallSession,
-    extension: string, sourceId: ?number,
+    extension: string,
+    sourceId: ?number,
     callId: ?string,
     extra: Object = {},
   ) {
     super();
+    logger.info('Constructor', { callId, extension, sourceId });
+
     // Represents the room callSession
     this.callSession = callSession;
     this.extension = extension;
@@ -126,6 +129,8 @@ class Room extends Emitter {
    * @returns {Promise<Room>}
    */
   static async connect({ extension, constraints, audioOnly = false, extra }: Object) {
+    logger.info('connect', { extension, audioOnly });
+
     await Wazo.Phone.connect({ media: constraints });
 
     const withCamera = constraints && !!constraints.video;
@@ -141,6 +146,7 @@ class Room extends Emitter {
     let callId = '';
     Wazo.Websocket.once(Wazo.Websocket.CALL_CREATED, ({ data }) => {
       callId = data.call_id;
+      room.setCallId(callId);
     });
 
     // Wait for the call to be accepted
@@ -156,6 +162,8 @@ class Room extends Emitter {
     // Retrieve conference
     const conference = contacts.find(contact => contact.numbers.find(number => number.number === extension));
 
+    logger.info('connected ', { sourceId: conference.sourceId, callId, name: conference.name });
+
     room.setSourceId(conference.sourceId);
     room.setCallId(callId);
     room.setName(conference.name);
@@ -164,10 +172,14 @@ class Room extends Emitter {
   }
 
   static disconnect() {
+    logger.info('static disconnect');
+
     Wazo.Phone.disconnect();
   }
 
   async disconnect() {
+    logger.info('disconnect');
+
     await Wazo.Phone.hangup(this.callSession);
     this.callSession = null;
     this.eventEmitter.emit(this.ON_DISCONNECTED, this);
@@ -188,14 +200,20 @@ class Room extends Emitter {
   }
 
   setSourceId(sourceId: number) {
+    logger.info('setSourceId', { sourceId });
+
     this.sourceId = sourceId;
   }
 
   setCallId(callId: string) {
+    logger.info('callId', { callId });
+
     this.callId = callId;
   }
 
   setName(name: string) {
+    logger.info('setName', { name });
+
     this.name = name;
   }
 
@@ -212,6 +230,8 @@ class Room extends Emitter {
   }
 
   async startScreenSharing(constraints: Object) {
+    logger.info('startScreenSharing', { constraints });
+
     const screensharingStream = await Wazo.Phone.startScreenSharing(constraints);
     if (!screensharingStream) {
       console.warn('screensharing stream is null (likely due to user cancellation)');
@@ -226,6 +246,8 @@ class Room extends Emitter {
   }
 
   stopScreenSharing() {
+    logger.info('stopScreenSharing');
+
     Wazo.Phone.stopScreenSharing();
 
     if (this.localParticipant) {
@@ -234,6 +256,8 @@ class Room extends Emitter {
   }
 
   turnCameraOff() {
+    logger.info('turnCameraOff');
+
     Wazo.Phone.turnCameraOff(this.callSession);
 
     if (this.localParticipant) {
@@ -242,6 +266,8 @@ class Room extends Emitter {
   }
 
   turnCameraOn() {
+    logger.info('turnCameraOn');
+
     Wazo.Phone.turnCameraOn(this.callSession);
 
     if (this.localParticipant) {
@@ -250,6 +276,8 @@ class Room extends Emitter {
   }
 
   mute() {
+    logger.info('mute');
+
     Wazo.Phone.mute(this.callSession);
 
     if (this.localParticipant) {
@@ -258,6 +286,8 @@ class Room extends Emitter {
   }
 
   unmute() {
+    logger.info('unmute');
+
     Wazo.Phone.unmute(this.callSession);
 
     if (this.localParticipant) {
@@ -266,6 +296,8 @@ class Room extends Emitter {
   }
 
   sendDTMF(tone: string) {
+    logger.info('sendDTMF', { tone });
+
     Wazo.Phone.sendDTMF(tone, this.callSession);
   }
 
@@ -293,6 +325,8 @@ class Room extends Emitter {
     });
 
     this.on(this.ON_AUDIO_STREAM, stream => {
+      logger.info('onAudioStream');
+
       this.audioStream = stream;
       if (document.createElement) {
         this.roomAudioElement = document.createElement('audio');
@@ -310,6 +344,8 @@ class Room extends Emitter {
     });
 
     this.on(this.ON_VIDEO_STREAM, (stream, streamId) => {
+      logger.info('onVideoStream');
+
       // ON_VIDEO_STREAM is called before PARTICIPANT_JOINED, so we have to keep stream in `_unassociatedVideoStreams`.
       this._unassociatedVideoStreams[streamId] = stream;
 
@@ -321,6 +357,8 @@ class Room extends Emitter {
     });
 
     this.on(this.ON_REMOVE_STREAM, stream => {
+      logger.info('onRemoveStream');
+
       const participant = this.participants.find(someParticipant =>
         someParticipant.streams.find(someStream => someStream && someStream.id === stream.id));
       if (!participant) {
@@ -442,9 +480,14 @@ class Room extends Emitter {
 
     // When we join the room, we can call `getConferenceParticipantsAsUser`, not before.
     if (participant.user_uuid === session.uuid) {
+      logger.info('user joined');
+
       // Retrieve participants via an API calls
-      const response = await getApiClient().calld.getConferenceParticipantsAsUser(this.sourceId);
+      const conferenceId = this.sourceId || payload.data.conference_id;
+      const response = await getApiClient().calld.getConferenceParticipantsAsUser(conferenceId);
+      logger.info('fetching conference participants', { conferenceId });
       if (response) {
+        logger.info('conference participants fetched', { nb: response.items.length });
         participants = response.items.map(item => {
           const isMe = item.call_id === this.callId;
 
@@ -482,6 +525,8 @@ class Room extends Emitter {
     const remoteParticipant: ?RemoteParticipant = !this.participants.some(p => p.callId === participant.call_id)
       ? new Wazo.RemoteParticipant(this, participant)
       : null;
+
+    logger.info('other user joined', { callId: participant.call_id, remoteParticipant: !!remoteParticipant });
 
     if (remoteParticipant) {
       this.participants.push(remoteParticipant);
