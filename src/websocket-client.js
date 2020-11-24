@@ -222,6 +222,7 @@ class WebSocketClient extends Emitter {
     }
 
     this.socket.close();
+    this.socket = null;
   }
 
   updateToken(token: string) {
@@ -341,9 +342,9 @@ class WebSocketClient extends Emitter {
 
   _getUrl() {
     if (!this.host || !this.token) {
-      return '';
+      this.close();
     }
-    const url = `wss://${this.host}/api/websocketd/?token=${this.token || ''}&version=${this.version}`;
+    const url = `wss://${this.host || ''}/api/websocketd/?token=${this.token || ''}&version=${this.version}`;
     logger.log('url', { url });
 
     return url;
