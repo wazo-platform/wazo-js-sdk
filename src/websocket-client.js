@@ -341,7 +341,7 @@ class WebSocketClient extends Emitter {
 
   _getUrl() {
     if (!this.host || !this.token) {
-      return null;
+      return '';
     }
     const url = `wss://${this.host}/api/websocketd/?token=${this.token || ''}&version=${this.version}`;
     logger.log('url', { url });
