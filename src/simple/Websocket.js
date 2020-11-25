@@ -71,9 +71,9 @@ class Websocket extends Emitter {
     return this.ws && this.ws.isConnected();
   }
 
-  close() {
+  close(force: boolean = false) {
     if (this.ws) {
-      this.ws.close();
+      this.ws.close(force);
     }
     this.unbind();
   }

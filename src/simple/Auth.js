@@ -96,7 +96,7 @@ class Auth {
 
   async logout(deleteRefreshToken: boolean = true) {
     try {
-      Wazo.Websocket.close();
+      Wazo.Websocket.close(true);
 
       if (this.clientId && deleteRefreshToken) {
         await getApiClient().auth.deleteRefreshToken(this.clientId);

@@ -212,17 +212,19 @@ class WebSocketClient extends Emitter {
     };
   }
 
-  close(): void {
+  close(force: boolean = false): void {
     logger.info('close', { socket: !!this.socket, host: this.host, token: this.token });
-    this.host = null;
-    this.token = null;
 
     if (!this.socket) {
       return;
     }
 
     this.socket.close();
-    this.socket = null;
+    if (force) {
+      this.host = null;
+      this.token = null;
+      this.socket = null;
+    }
   }
 
   updateToken(token: string) {
