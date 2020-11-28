@@ -176,7 +176,9 @@ class WebSocketClient extends Emitter {
 
       if (BLACKLIST_EVENTS.indexOf(name) === -1) {
         // $FlowFixMe
-        messageLogger.trace(`${IssueReporter.removeSlashes(event.data)}...`, { method: 'onmessage' });
+        messageLogger.trace(IssueReporter.removeSlashes(event.data), { method: 'onmessage' });
+      } else {
+        messageLogger.trace(`{"name": "${name}", "info": "content not shown"}`, { method: 'onmessage' });
       }
 
       if (!this.initialized) {
