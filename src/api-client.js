@@ -85,12 +85,12 @@ export default class ApiClient {
   }
 
   async forceRefreshToken() {
-    logger.info('forceRefreshToken');
+    logger.info('forcing refresh token, calling callback');
     return this.refreshTokenCallback();
   }
 
   async refreshTokenCallback() {
-    logger.info('refreshTokenCallback', {
+    logger.info('refresh token callback called', {
       refreshToken: this.refreshToken,
       refreshBackend: this.refreshBackend,
       refreshExpiration: this.refreshExpiration,
