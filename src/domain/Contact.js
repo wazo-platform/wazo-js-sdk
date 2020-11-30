@@ -140,7 +140,7 @@ type ContactArguments = {
   personal?: boolean,
   state?: string,
   source?: string,
-  sourceId?: string,
+  sourceId?: ?string,
   lineState?: string,
   lastActivity?: string;
   mobile?: boolean,
@@ -242,7 +242,7 @@ export default class Contact {
   lastActivity: ?string;
   mobile: ?boolean;
   source: ?string;
-  sourceId: string;
+  sourceId: ?string;
   status: ?string;
   backend: ?string;
   personalStatus: string;
@@ -294,7 +294,7 @@ export default class Contact {
           numbers: [{ label: 'primary', number: numbers[i] }],
           backend: edge.node.wazoBackend,
           source: edge.node.wazoSourceName,
-          sourceId: edge.node.wazoSourceEntryId,
+          sourceId: edge.node.wazoSourceEntryId || '',
           email: email || '',
           emails: email ? [{ label: 'primary', email }] : [],
           uuid: edge.node.userUuid,
@@ -330,7 +330,7 @@ export default class Contact {
       endpointId: plain.relations.endpoint_id,
       personal: plain.column_values[columns.indexOf('personal')],
       source: plain.source,
-      sourceId: plain.relations.source_entry_id,
+      sourceId: plain.relations.source_entry_id || '',
       uuid: plain.relations.user_uuid,
       backend: plain.backend || '',
     });
@@ -348,7 +348,7 @@ export default class Contact {
       email: plain.email || '',
       emails: plain.email ? [{ label: 'primary', email: plain.email }] : [],
       source: 'personal',
-      sourceId: plain.id,
+      sourceId: plain.id || '',
       entreprise: plain.entreprise || '',
       birthday: plain.birthday || '',
       address: plain.address || '',
@@ -374,7 +374,7 @@ export default class Contact {
       email: plain.emailAddresses.length ? plain.emailAddresses[0].email : '',
       emails: plain.emailAddresses.length ? [{ label: 'primary', email: plain.emailAddresses[0].email }] : [],
       source: SOURCE_MOBILE,
-      sourceId: plain.recordID,
+      sourceId: plain.recordID || '',
       birthday: plain.birthday ? `${plain.birthday.year}-${plain.birthday.month}-${plain.birthday.day}` : '',
       address,
       note: plain.note || '',
@@ -408,7 +408,7 @@ export default class Contact {
     }
 
     return new Contact({
-      sourceId: single.id,
+      sourceId: single.id || '',
       name: single.displayName,
       number: numbers.length ? numbers[0].number : '',
       numbers,
@@ -439,7 +439,7 @@ export default class Contact {
     }
 
     return new Contact({
-      sourceId: single.id,
+      sourceId: single.id || '',
       name: single.name,
       number: numbers.length ? numbers[0].number : '',
       numbers,
@@ -471,7 +471,7 @@ export default class Contact {
 
     return new Contact({
       uuid: single.uuid,
-      sourceId: String(single.id),
+      sourceId: String(single.id) || '',
       name: `${single.firstname}${single.lastname ? ` ${single.lastname}` : ''}`,
       number: numbers.length ? numbers[0].number : '',
       numbers,
@@ -506,10 +506,6 @@ export default class Contact {
 
   static newFrom(contact: Contact) {
     return newFrom(contact, Contact);
-  }
-
-  static filterSourceId(contact: Object) {
-    return contact.sourceId !== null && typeof contact.sourceId !== 'undefined' && contact.sourceId !== '';
   }
 
   constructor({
@@ -547,7 +543,7 @@ export default class Contact {
     this.email = email;
     this.emails = emails;
     this.source = source;
-    this.sourceId = sourceId || '';
+    this.sourceId = sourceId;
     this.entreprise = entreprise;
     this.birthday = birthday;
     this.address = address;
@@ -576,7 +572,7 @@ export default class Contact {
   }
 
   is(other: Contact): boolean {
-    const sameSourceId = !!this.sourceId && !!other.sourceId && this.sourceId === other.sourceId;
+    const sameSourceId = this.sourceId !== null && other.sourceId !== null && this.sourceId === other.sourceId;
     const sameUuid = !!this.uuid && !!other.uuid && this.uuid === other.uuid;
 
     const hasSameId = sameSourceId || sameUuid;
