@@ -287,9 +287,11 @@ export default class Contact {
         }
 
         const { email } = edge.node;
+        const name = edge.node.firstname && edge.node.lastname
+          ? `${edge.node.firstname || ''} ${edge.node.lastname || ''}` : edge.node.wazoReverse;
 
         return new Contact({
-          name: `${edge.node.firstname || ''} ${edge.node.lastname || ''}`,
+          name,
           number: numbers[i],
           numbers: [{ label: 'primary', number: numbers[i] }],
           backend: edge.node.wazoBackend,
