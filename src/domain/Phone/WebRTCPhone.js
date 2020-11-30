@@ -290,12 +290,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
       const event = rawEvent;
       const [stream] = event.streams;
 
-      if (event.track.kind === 'audio') {
+      if (event && event.track.kind === 'audio') {
         return this.eventEmitter.emit(ON_AUDIO_STREAM, stream);
       }
 
       // not sure this does anything
-      if (event.track.kind === 'video') {
+      if (event && event.track.kind === 'video') {
         event.track.enabled = false;
       }
 
@@ -977,11 +977,17 @@ export default class WebRTCPhone extends Emitter implements Phone {
       if (!this.currentSipSession) {
         if (this.ringingEnabled) {
           this.eventEmitter.emit(ON_TERMINATE_SOUND);
-          this.eventEmitter.emit(ON_PLAY_RING_SOUND, this.audioRingDeviceId, this.audioRingVolume);
+          // Use a timeout to avoid race condition with `ON_TERMINATE_SOUND` event
+          setTimeout(() => {
+            this.eventEmitter.emit(ON_PLAY_RING_SOUND, this.audioRingDeviceId, this.audioRingVolume);
+          }, 10);
         }
       } else {
         this.eventEmitter.emit(ON_TERMINATE_SOUND);
-        this.eventEmitter.emit(ON_PLAY_INBOUND_CALL_SIGNAL_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
+        // Use a timeout to avoid race condition with `ON_TERMINATE_SOUND` event
+        setTimeout(() => {
+          this.eventEmitter.emit(ON_PLAY_INBOUND_CALL_SIGNAL_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
+        }, 10);
       }
 
       this.eventEmitter.emit(ON_CALL_INCOMING, callSession, wantsToDoVideo);
