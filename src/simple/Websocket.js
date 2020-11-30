@@ -31,7 +31,7 @@ class Websocket extends Emitter {
   }
 
   open(host: string, session: Session) {
-    logger.info('open', { host, token: session.token });
+    logger.info('open simple WebSocket', { host, token: session.token });
     this.ws = new WazoWebSocketClient(
       {
         host,
@@ -59,7 +59,7 @@ class Websocket extends Emitter {
   }
 
   updateToken(token: string) {
-    logger.info('updateToken', { token, ws: !!this.ws });
+    logger.info('update token via simple Websocket', { token, ws: !!this.ws });
 
     if (!this.ws) {
       return;

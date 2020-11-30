@@ -83,7 +83,7 @@ export default class CTIPhone extends Emitter implements Phone {
   }
 
   async makeCall(number: string, line: Line): Promise<?CallSession> {
-    logger.info('makeCall', { number });
+    logger.info('make CTI call', { number });
 
     if (!number) {
       return null;
@@ -106,7 +106,7 @@ export default class CTIPhone extends Emitter implements Phone {
     if (!callSession) {
       return Promise.resolve(null);
     }
-    logger.info('accept', { callId: callSession.getId(), number: callSession.number });
+    logger.info('accept CTI call', { callId: callSession.getId(), number: callSession.number });
 
     if (!this.currentCall) {
       this.currentCall = callSession.call;
@@ -119,7 +119,7 @@ export default class CTIPhone extends Emitter implements Phone {
     if (!callSession) {
       return;
     }
-    logger.info('endCurrentCall', { callId: callSession.getId(), number: callSession.number });
+    logger.info('end current CTI call', { callId: callSession.getId(), number: callSession.number });
 
     this.currentCall = undefined;
     this.eventEmitter.emit('onCallEnded', callSession);
@@ -129,7 +129,7 @@ export default class CTIPhone extends Emitter implements Phone {
     if (!callSession) {
       return Promise.resolve(false);
     }
-    logger.info('hangup', { callId: callSession.getId(), number: callSession.number });
+    logger.info('hangup CTI call', { callId: callSession.getId(), number: callSession.number });
 
     try {
       await CallApi.cancelCall(callSession);
@@ -140,7 +140,7 @@ export default class CTIPhone extends Emitter implements Phone {
       this.eventEmitter.emit('onCallEnded', callSession);
       return true;
     } catch (e) {
-      logger.error('hangup error', e);
+      logger.error('hangup CTI call, error', e);
 
       this.eventEmitter.emit('onCallFailed', callSession);
       return false;
@@ -153,7 +153,7 @@ export default class CTIPhone extends Emitter implements Phone {
     if (!callSession) {
       return;
     }
-    logger.info('reject', { callId: callSession.getId(), number: callSession.number });
+    logger.info('reject CTI call', { callId: callSession.getId(), number: callSession.number });
 
     await CallApi.cancelCall(callSession);
     this.eventEmitter.emit('onCallEnded', callSession);
@@ -163,7 +163,7 @@ export default class CTIPhone extends Emitter implements Phone {
     if (!callSession) {
       return;
     }
-    logger.info('transfer', { callId: callSession.getId(), number: callSession.number, to: number });
+    logger.info('transfer CTI call', { callId: callSession.getId(), number: callSession.number, to: number });
 
     await CallApi.transferCall(callSession.callId, number, TRANSFER_FLOW_BLIND);
   }
@@ -174,19 +174,19 @@ export default class CTIPhone extends Emitter implements Phone {
     if (!callSession) {
       return;
     }
-    logger.info('indirect transfer', { callId: callSession.getId(), number: callSession.number, to: number });
+    logger.info('indirect CTI transfer', { callId: callSession.getId(), number: callSession.number, to: number });
 
     return CallApi.transferCall(callSession.callId, number, TRANSFER_FLOW_ATTENDED);
   }
 
   async cancelCTIIndirectTransfer(transferId: string): Promise<any> {
-    logger.info('cancel transfer', { transferId });
+    logger.info('cancel CTI transfer', { transferId });
 
     return CallApi.cancelCallTransfer(transferId);
   }
 
   async confirmCTIIndirectTransfer(transferId: string): Promise<any> {
-    logger.info('confirm transfer', { transferId });
+    logger.info('confirm CTI transfer', { transferId });
 
     return CallApi.confirmCallTransfer(transferId);
   }
@@ -195,19 +195,19 @@ export default class CTIPhone extends Emitter implements Phone {
     if (!callSession) {
       return;
     }
-    logger.info('sendKey', { callId: callSession.getId(), number: callSession.number, digits });
+    logger.info('send CTI key', { callId: callSession.getId(), number: callSession.number, digits });
 
     return CallApi.sendDTMF(callSession.callId, digits);
   }
 
   onConnectionMade() {
-    logger.info('onConnectionMade');
+    logger.info('on CTI connection made');
 
     this.eventEmitter.emit('onCallAccepted');
   }
 
   async close() {
-    logger.info('close');
+    logger.info('CTI close');
 
     return Promise.resolve();
   }
@@ -216,7 +216,7 @@ export default class CTIPhone extends Emitter implements Phone {
     if (!callSession) {
       return;
     }
-    logger.info('hold', { callId: callSession.getId(), number: callSession.number });
+    logger.info('CTI hold', { callId: callSession.getId(), number: callSession.number });
 
     return CallApi.hold(callSession.callId);
   }
@@ -225,7 +225,7 @@ export default class CTIPhone extends Emitter implements Phone {
     if (!callSession) {
       return;
     }
-    logger.info('resume', { callId: callSession.getId(), number: callSession.number });
+    logger.info('CTI resume', { callId: callSession.getId(), number: callSession.number });
 
     return CallApi.resume(callSession.callId);
   }
@@ -234,7 +234,7 @@ export default class CTIPhone extends Emitter implements Phone {
     if (!callSession) {
       return;
     }
-    logger.info('mute', { callId: callSession.getId(), number: callSession.number });
+    logger.info('CTI mute', { callId: callSession.getId(), number: callSession.number });
 
     return CallApi.mute(callSession.callId);
   }
@@ -243,7 +243,7 @@ export default class CTIPhone extends Emitter implements Phone {
     if (!callSession) {
       return;
     }
-    logger.info('unmute', { callId: callSession.getId(), number: callSession.number });
+    logger.info('CTI unmute', { callId: callSession.getId(), number: callSession.number });
 
     return CallApi.unmute(callSession.callId);
   }

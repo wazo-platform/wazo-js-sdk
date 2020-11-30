@@ -70,7 +70,7 @@ class Room extends Emitter {
     extra: Object = {},
   ) {
     super();
-    logger.info('Constructor', { callId, extension, sourceId });
+    logger.info('room initialized', { callId, extension, sourceId });
 
     // Represents the room callSession
     this.callSession = callSession;
@@ -126,10 +126,12 @@ class Room extends Emitter {
    *
    * @param extension string
    * @param constraints string
+   * @param audioOnly boolean
+   * @param extra Object
    * @returns {Promise<Room>}
    */
   static async connect({ extension, constraints, audioOnly = false, extra }: Object) {
-    logger.info('connect', { extension, audioOnly });
+    logger.info('connecting to room', { extension, audioOnly });
 
     await Wazo.Phone.connect({ media: constraints });
 
@@ -162,7 +164,7 @@ class Room extends Emitter {
     // Retrieve conference
     const conference = contacts.find(contact => contact.numbers.find(number => number.number === extension));
 
-    logger.info('connected ', { sourceId: conference.sourceId, callId, name: conference.name });
+    logger.info('connected to room', { sourceId: conference.sourceId, callId, name: conference.name });
 
     room.setSourceId(conference.sourceId);
     room.setCallId(callId);
@@ -172,13 +174,13 @@ class Room extends Emitter {
   }
 
   static disconnect() {
-    logger.info('static disconnect');
+    logger.info('static disconnection to room');
 
     Wazo.Phone.disconnect();
   }
 
   async disconnect() {
-    logger.info('disconnect');
+    logger.info('disconnection to room called');
 
     await Wazo.Phone.hangup(this.callSession);
     this.callSession = null;
@@ -200,19 +202,19 @@ class Room extends Emitter {
   }
 
   setSourceId(sourceId: number) {
-    logger.info('setSourceId', { sourceId });
+    logger.info('set room source id', { sourceId });
 
     this.sourceId = sourceId;
   }
 
   setCallId(callId: string) {
-    logger.info('callId', { callId });
+    logger.info('set room call id', { callId });
 
     this.callId = callId;
   }
 
   setName(name: string) {
-    logger.info('setName', { name });
+    logger.info('set room name', { name });
 
     this.name = name;
   }
@@ -230,7 +232,7 @@ class Room extends Emitter {
   }
 
   async startScreenSharing(constraints: Object) {
-    logger.info('startScreenSharing', { constraints });
+    logger.info('start room screen sharing', { constraints });
 
     const screensharingStream = await Wazo.Phone.startScreenSharing(constraints);
     if (!screensharingStream) {
@@ -246,7 +248,7 @@ class Room extends Emitter {
   }
 
   stopScreenSharing() {
-    logger.info('stopScreenSharing');
+    logger.info('stop room screen sharing');
 
     Wazo.Phone.stopScreenSharing();
 
@@ -256,7 +258,7 @@ class Room extends Emitter {
   }
 
   turnCameraOff() {
-    logger.info('turnCameraOff');
+    logger.info('turn room camera off');
 
     Wazo.Phone.turnCameraOff(this.callSession);
 
@@ -266,7 +268,7 @@ class Room extends Emitter {
   }
 
   turnCameraOn() {
-    logger.info('turnCameraOn');
+    logger.info('turn room camera on');
 
     Wazo.Phone.turnCameraOn(this.callSession);
 
@@ -276,7 +278,7 @@ class Room extends Emitter {
   }
 
   mute() {
-    logger.info('mute');
+    logger.info('mute room');
 
     Wazo.Phone.mute(this.callSession);
 
@@ -286,7 +288,7 @@ class Room extends Emitter {
   }
 
   unmute() {
-    logger.info('unmute');
+    logger.info('unmute room');
 
     Wazo.Phone.unmute(this.callSession);
 
@@ -296,7 +298,7 @@ class Room extends Emitter {
   }
 
   sendDTMF(tone: string) {
-    logger.info('sendDTMF', { tone });
+    logger.info('send room DTMF', { tone });
 
     Wazo.Phone.sendDTMF(tone, this.callSession);
   }
@@ -325,7 +327,7 @@ class Room extends Emitter {
     });
 
     this.on(this.ON_AUDIO_STREAM, stream => {
-      logger.info('onAudioStream');
+      logger.info('on room audio stream');
 
       this.audioStream = stream;
       if (document.createElement) {
@@ -344,7 +346,7 @@ class Room extends Emitter {
     });
 
     this.on(this.ON_VIDEO_STREAM, (stream, streamId) => {
-      logger.info('onVideoStream');
+      logger.info('on room video stream');
 
       // ON_VIDEO_STREAM is called before PARTICIPANT_JOINED, so we have to keep stream in `_unassociatedVideoStreams`.
       this._unassociatedVideoStreams[streamId] = stream;
@@ -357,7 +359,7 @@ class Room extends Emitter {
     });
 
     this.on(this.ON_REMOVE_STREAM, stream => {
-      logger.info('onRemoveStream');
+      logger.info('on room remove stream');
 
       const participant = this.participants.find(someParticipant =>
         someParticipant.streams.find(someStream => someStream && someStream.id === stream.id));
@@ -450,7 +452,7 @@ class Room extends Emitter {
         const requester: ?Participant = this._getParticipantFromCallId(origin.callId);
         if (requester) {
           // @FIXME?: when need to trigger an update on join-in; this is a bit of a hack
-          logger.info('Trigger requester status', { origin });
+          logger.info('trigger room requester status', { origin });
           requester.triggerUpdate('REQUESTER_UPDATE');
         }
         break;
@@ -480,7 +482,7 @@ class Room extends Emitter {
 
     // When we join the room, we can call `getConferenceParticipantsAsUser`, not before.
     if (participant.user_uuid === session.uuid) {
-      logger.info('user joined');
+      logger.info('room current user joined');
 
       // Retrieve participants via an API calls
       const conferenceId = this.sourceId || payload.data.conference_id;
@@ -526,7 +528,7 @@ class Room extends Emitter {
       ? new Wazo.RemoteParticipant(this, participant)
       : null;
 
-    logger.info('other user joined', { callId: participant.call_id, remoteParticipant: !!remoteParticipant });
+    logger.info('other room user joined', { callId: participant.call_id, remoteParticipant: !!remoteParticipant });
 
     if (remoteParticipant) {
       this.participants.push(remoteParticipant);

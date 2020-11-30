@@ -150,13 +150,13 @@ class Phone extends Emitter {
   }
 
   async hangup(callSession: CallSession) {
-    logger.info('hangup', { callId: callSession.getId() });
+    logger.info('hangup via simple phone', { callId: callSession.getId() });
 
     return this.phone && this.phone.hangup(callSession);
   }
 
   async accept(callSession: CallSession, cameraEnabled?: boolean) {
-    logger.info('accept', { callId: callSession.getId(), cameraEnabled });
+    logger.info('accept via simple phone', { callId: callSession.getId(), cameraEnabled });
 
     return this.phone && this.phone.accept(callSession, cameraEnabled);
   }
