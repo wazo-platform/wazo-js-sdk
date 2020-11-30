@@ -658,7 +658,7 @@ export default class WebRTCClient extends Emitter {
       // $FlowFixMe
       return navigator.mediaDevices.getUserMedia({ audio: { deviceId: { exact: id } } }).then(async stream => {
         const audioTrack = stream.getAudioTracks()[0];
-        const sender = pc.getSenders().find(s => s.track.kind === audioTrack.kind);
+        const sender = pc.getSenders().find(s => s.track && s.track.kind === audioTrack.kind);
 
         if (sender) {
           sender.replaceTrack(audioTrack);
@@ -699,7 +699,7 @@ export default class WebRTCClient extends Emitter {
       // $FlowFixMe
       return navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: id } } }).then(async stream => {
         const videoTrack = stream.getVideoTracks()[0];
-        const sender = pc.getSenders().find(s => s.track.kind === videoTrack.kind);
+        const sender = pc.getSenders().find(s => s.track && s.track.kind === videoTrack.kind);
 
         if (sender) {
           sender.replaceTrack(videoTrack);
@@ -794,7 +794,7 @@ export default class WebRTCClient extends Emitter {
     // $FlowFixMe
     const audioTracks = localStream.getAudioTracks();
 
-    return audioTracks.some(track => track.kind === 'audio' && track.enabled);
+    return audioTracks.some(track => track && track.kind === 'audio' && track.enabled);
   }
 
   getRemoteVideoStreamsForSession(sessionId: string) {
@@ -1297,7 +1297,7 @@ export default class WebRTCClient extends Emitter {
 
     if (pc.getSenders) {
       pc.getSenders().forEach(sender => {
-        if (sender.track && sender.track.kind === 'audio') {
+        if (sender && sender.track && sender.track.kind === 'audio') {
           // eslint-disable-next-line
           sender.track.enabled = !muteAudio;
         }
