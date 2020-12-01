@@ -470,7 +470,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return;
     }
 
-    this.eventEmitter.emit(ON_PLAY_HANGUP_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
+    if (!sipSession.isCanceled) {
+      this.eventEmitter.emit(ON_PLAY_HANGUP_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
+    }
   }
 
   setActiveSipSession(callSession: CallSession) {
