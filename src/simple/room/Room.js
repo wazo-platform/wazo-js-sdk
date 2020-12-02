@@ -166,9 +166,12 @@ class Room extends Emitter {
 
     logger.info('connected to room', { sourceId: conference.sourceId, callId, name: conference.name });
 
-    room.setSourceId(conference.sourceId);
+    if (conference) {
+      room.setSourceId(conference.sourceId);
+      room.setName(conference.name);
+    }
+
     room.setCallId(callId);
-    room.setName(conference.name);
 
     return room;
   }
