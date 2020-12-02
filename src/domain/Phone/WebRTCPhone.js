@@ -338,7 +338,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const screenTrack = screenShareStream.getVideoTracks()[0];
     const sipSession = this.currentSipSession;
     const pc = sipSession.sessionDescriptionHandler.peerConnection;
-    const sender = pc.getSenders().find(s => s.track.kind === 'video');
+    const sender = pc && pc.getSenders().find(s => s.track.kind === 'video');
     const localStream = this.client.getLocalStream(pc);
 
     if (sender) {
