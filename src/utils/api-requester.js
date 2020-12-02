@@ -180,7 +180,7 @@ export default class ApiRequester {
   }
 
   _isTokenNotFound(err: Object) {
-    return err.reason && err.reason[0] === 'No such token';
+    return err && err.reason && err.reason[0] === 'No such token';
   }
 
   _replayWithNewToken(
