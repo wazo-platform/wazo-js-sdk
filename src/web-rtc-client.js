@@ -774,7 +774,7 @@ export default class WebRTCClient extends Emitter {
     if (!streams || !streams.remotes) {
       return false;
     }
-    return streams.remotes.some(remote => !!remote.getVideoTracks().length);
+    return streams.remotes.some(remote => remote && !!remote.getVideoTracks().length);
   }
 
   sessionHasVideo(sessionId: string) {
