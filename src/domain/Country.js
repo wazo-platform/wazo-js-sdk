@@ -4,9 +4,13 @@ export default {
   FRANCE: 'FR',
   GERMANY: 'DE',
   ITALY: 'IT',
+  LUXEMBOURG: 'LU',
+  MALAYSIA: 'MY',
   PORTUGAL: 'PT',
   SPAIN: 'ES',
   SWITZERLAND: 'CH',
   UNITED_KINGDOM: 'GB',
   UNITED_STATES: 'US',
+  POLAND: 'PL',
+  NETHERLANDS: 'NL',
 };
