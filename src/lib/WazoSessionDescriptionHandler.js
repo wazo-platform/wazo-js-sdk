@@ -9,6 +9,9 @@ import type SessionDescriptionHandlerConfiguration
   from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-configuration';
 import { SessionDescriptionHandler }
   from 'sip.js/lib/platform/web/session-description-handler/session-description-handler';
+import IssueReporter from '../service/IssueReporter';
+
+const wazoLogger = IssueReporter.loggerFor('webrtc-sdh');
 
 class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
   constructor(
@@ -72,6 +75,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       this.peerConnectionDelegate = {};
     }
     this.peerConnectionDelegate.onicecandidate = event => {
+      wazoLogger.info('onicecandidate', event.candidate.candidate);
       if (event.candidate) {
         gatheredIces.push(event.candidate.candidate);
       }
@@ -103,6 +107,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       })
       .then((sessionDescription) => ({ body: sessionDescription.sdp, contentType: 'application/sdp' }))
       .catch((error) => {
+        wazoLogger.error('error when creating media', error);
         this.logger.error(`SessionDescriptionHandler.getDescription failed - ${error}`);
         throw error;
       });
@@ -138,6 +143,8 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
           try {
             pc.addStream(localStream);
           } catch (error) {
+            wazoLogger.error('set local stream error', error);
+
             this.logger.error(`SessionDescriptionHandler.setLocalMediaStream - failed to add sender ${kind} track`);
             throw error;
           }
@@ -182,6 +189,8 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
 
   // Overridden to avoid to use peerConnection.getReceivers and peerConnection.getSenders in react-native
   close(): void {
+    wazoLogger.info('closing sdh');
+
     if (this.isWeb) {
       return super.close();
     }
