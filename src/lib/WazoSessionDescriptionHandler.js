@@ -189,7 +189,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
 
   // Overridden to avoid to use peerConnection.getReceivers and peerConnection.getSenders in react-native
   close(): void {
-    wazoLogger.error('closing sdh');
+    wazoLogger.info('closing sdh');
 
     if (this.isWeb) {
       return super.close();
