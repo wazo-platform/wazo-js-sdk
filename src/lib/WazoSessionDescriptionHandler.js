@@ -75,7 +75,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       this.peerConnectionDelegate = {};
     }
     this.peerConnectionDelegate.onicecandidate = event => {
-      wazoLogger.info('onicecandidate', event.candidate.candidate);
+      wazoLogger.info('onicecandidate', event.candidate ? event.candidate.candidate : { done: true });
       if (event.candidate) {
         gatheredIces.push(event.candidate.candidate);
       }

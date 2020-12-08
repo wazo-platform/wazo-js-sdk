@@ -474,7 +474,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     if (!sipSession.isCanceled) {
-      this.eventEmitter.emit(ON_PLAY_HANGUP_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
+      setTimeout(() => {
+        this.eventEmitter.emit(ON_PLAY_HANGUP_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
+      }, 10);
     }
   }
 
@@ -981,18 +983,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
       if (!this.currentSipSession) {
         if (this.ringingEnabled) {
-          this.eventEmitter.emit(ON_TERMINATE_SOUND);
-          // Use a timeout to avoid race condition with `ON_TERMINATE_SOUND` event
-          setTimeout(() => {
-            this.eventEmitter.emit(ON_PLAY_RING_SOUND, this.audioRingDeviceId, this.audioRingVolume);
-          }, 10);
+          this.eventEmitter.emit(ON_PLAY_RING_SOUND, this.audioRingDeviceId, this.audioRingVolume);
         }
       } else {
-        this.eventEmitter.emit(ON_TERMINATE_SOUND);
-        // Use a timeout to avoid race condition with `ON_TERMINATE_SOUND` event
-        setTimeout(() => {
-          this.eventEmitter.emit(ON_PLAY_INBOUND_CALL_SIGNAL_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
-        }, 10);
+        this.eventEmitter.emit(ON_PLAY_INBOUND_CALL_SIGNAL_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
       }
 
       this.eventEmitter.emit(ON_CALL_INCOMING, callSession, wantsToDoVideo);
