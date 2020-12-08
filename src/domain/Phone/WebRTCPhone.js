@@ -746,7 +746,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     this.client.toggleCameraOn(sipSession);
 
-    this.eventEmitter.emit(ON_CALL_RESUMED, this._createCameraResumedCallSession(sipSession, callSession));
+    this.eventEmitter.emit(ON_CAMERA_RESUMED, this._createCameraResumedCallSession(sipSession, callSession));
   }
 
   turnCameraOff(callSession?: CallSession): void {
