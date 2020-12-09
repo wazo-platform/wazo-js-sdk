@@ -52,6 +52,7 @@
     "node-fetch": "^2.6.1",
     "reconnecting-websocket": "^4.4.0",
     "sdp-transform": "^2.14.0",
+    "semver": "^7.3.4",
     "sip.js": "^0.17.1",
     "webrtc-adapter": "^7.7.0"
   },

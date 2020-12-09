@@ -32,6 +32,7 @@ import SwitchboardCall from '../domain/SwitchboardCall';
 import IssueReporter from '../service/IssueReporter';
 import Features from '../domain/Features';
 import Checker from '../checker/Checker';
+import VersionChecker, { InvalidVersion } from '../service/VersionChecker';
 
 const Wazo = {
   Auth,
@@ -50,6 +51,7 @@ const Wazo = {
   loggerFor: IssueReporter.loggerFor.bind(IssueReporter),
   Features,
   Checker,
+  VersionChecker,
 
   // Domain
   domain: {
@@ -76,6 +78,7 @@ const Wazo = {
   // Error
   InvalidSubscription,
   InvalidAuthorization,
+  InvalidVersion,
 };
 
 if (window) {
