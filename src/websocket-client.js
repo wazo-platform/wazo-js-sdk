@@ -13,6 +13,7 @@ export const SOCKET_EVENTS = {
   ON_ERROR: 'onerror',
   ON_CLOSE: 'onclose',
   INITIALIZED: 'initialized',
+  ON_AUTH_FAILED: 'on_auth_failed',
 };
 
 type Arguments = {
@@ -90,7 +91,6 @@ export const AGENT_PAUSED = 'agent_paused';
 export const AGENT_UNPAUSED = 'agent_unpaused';
 export const CONFERENCE_ADHOC_PARTICIPANT_LEFT = 'conference_adhoc_participant_left';
 export const CONFERENCE_ADHOC_DELETED = 'conference_adhoc_deleted';
-export const ON_AUTH_FAILED = 'on_auth_failed';
 
 const BLACKLIST_EVENTS = [
   CHAT_MESSAGE_SENT,
@@ -203,7 +203,7 @@ class WebSocketClient extends Emitter {
 
       switch (event.code) {
         case 4002:
-          this.eventEmitter.emit(ON_AUTH_FAILED);
+          this.eventEmitter.emit(SOCKET_EVENTS.ON_AUTH_FAILED);
           break;
         case 4003:
           break;
@@ -440,7 +440,6 @@ WebSocketClient.eventLists = [
   AGENT_UNPAUSED,
   CONFERENCE_ADHOC_PARTICIPANT_LEFT,
   CONFERENCE_ADHOC_DELETED,
-  ON_AUTH_FAILED,
 ];
 
 export default WebSocketClient;
