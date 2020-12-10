@@ -13,6 +13,7 @@ export const SOCKET_EVENTS = {
   ON_ERROR: 'onerror',
   ON_CLOSE: 'onclose',
   INITIALIZED: 'initialized',
+  ON_AUTH_FAILED: 'on_auth_failed',
 };
 
 type Arguments = {
@@ -202,6 +203,7 @@ class WebSocketClient extends Emitter {
 
       switch (event.code) {
         case 4002:
+          this.eventEmitter.emit(SOCKET_EVENTS.ON_AUTH_FAILED);
           break;
         case 4003:
           break;
