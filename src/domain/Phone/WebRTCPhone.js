@@ -880,7 +880,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.eventEmitter.emit(ON_TERMINATE_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
 
     if (!this.currentSipSession && this.incomingSessions.length > 0) {
-      this.eventEmitter.emit(ON_PLAY_RING_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
+      this.eventEmitter.emit(ON_PLAY_RING_SOUND,
+        this.audioOutputDeviceId,
+        this.audioOutputVolume,
+        this.currentCallSession);
     }
   }
 
@@ -983,7 +986,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
       if (!this.currentSipSession) {
         if (this.ringingEnabled) {
-          this.eventEmitter.emit(ON_PLAY_RING_SOUND, this.audioRingDeviceId, this.audioRingVolume);
+          this.eventEmitter.emit(ON_PLAY_RING_SOUND, this.audioRingDeviceId, this.audioRingVolume, callSession);
         }
       } else {
         this.eventEmitter.emit(ON_PLAY_INBOUND_CALL_SIGNAL_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
