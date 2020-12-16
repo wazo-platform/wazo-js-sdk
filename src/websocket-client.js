@@ -224,6 +224,8 @@ class WebSocketClient extends Emitter {
     }
 
     this.socket.close();
+    this.initialized = false;
+
     if (force) {
       this.host = null;
       this.token = null;
