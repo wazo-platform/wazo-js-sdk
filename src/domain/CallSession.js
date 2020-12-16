@@ -1,4 +1,5 @@
 // @flow
+import { SessionState } from 'sip.js/lib/api/session-state';
 
 import Call from './Call';
 import Session from './Session';
@@ -227,6 +228,18 @@ export default class CallSession {
 
   isAnInterception(): boolean {
     return this.dialedExtension.startsWith('*8');
+  }
+
+  isEstablished(): boolean {
+    return this.sipStatus === SessionState.Established;
+  }
+
+  isTerminating(): boolean {
+    return this.sipStatus === SessionState.Terminating;
+  }
+
+  isTerminated(): boolean {
+    return this.sipStatus === SessionState.Terminated;
   }
 
   getElapsedTimeInSeconds() {
