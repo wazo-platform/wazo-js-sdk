@@ -39,6 +39,11 @@
     "fetch-typedefs": "./node_modules/.bin/flow-typed install",
     "prepublishOnly": "rm -rf lib/* && rm -rf esm/* && yarn build"
   },
+  "jest": {
+    "transformIgnorePatterns": [
+      "node_modules/?!(sip.js\/lib\/api\/session-state)"
+    ]
+  },
   "dependencies": {
     "events": "^3.2.0",
     "fstream": "^1.0.12",
