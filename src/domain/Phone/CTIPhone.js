@@ -290,6 +290,10 @@ export default class CTIPhone extends Emitter implements Phone {
     return true;
   }
 
+  hasActiveRemoteVideoStream(): boolean {
+    return false;
+  }
+
   getCurrentCallSession(): ?CallSession {
     return this.currentCall ? CallSession.parseCall(this.session, this.currentCall) : null;
   }
