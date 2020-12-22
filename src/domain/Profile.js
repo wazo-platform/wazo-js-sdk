@@ -78,6 +78,7 @@ type ProfileResponse = {
     lastname: string,
     uuid: string,
   }>,
+  online_call_record_enabled: ?boolean,
 };
 
 type ProfileArguments = {
@@ -106,6 +107,7 @@ type ProfileArguments = {
   },
   switchboards: Array<any>,
   callPickupTargetUsers?: Array<{ firstname: string, lastname: string, uuid: string }>,
+  onlineCallRecordEnabled?: boolean,
 };
 
 export default class Profile {
@@ -119,6 +121,7 @@ export default class Profile {
   mobileNumber: string;
   forwards: Array<ForwardOption>;
   doNotDisturb: ?boolean;
+  onlineCallRecordEnabled: ?boolean;
   state: ?string;
   voicemail: ?{ id: number, name: string };
   status: string;
@@ -148,6 +151,7 @@ export default class Profile {
       agent: plain.agent,
       status: '',
       callPickupTargetUsers: plain.call_pickup_target_users || [],
+      onlineCallRecordEnabled: plain.online_call_record_enabled,
     });
   }
 
@@ -173,7 +177,8 @@ export default class Profile {
     status,
     sipLines,
     callPickupTargetUsers,
-  }: $Shape<ProfileArguments> = {}) {
+    onlineCallRecordEnabled,
+}: $Shape<ProfileArguments> = {}) {
     this.id = id;
     this.firstName = firstName;
     this.lastName = lastName;
@@ -190,6 +195,7 @@ export default class Profile {
     this.agent = agent;
     this.status = status;
     this.callPickupTargetUsers = callPickupTargetUsers;
+    this.onlineCallRecordEnabled = onlineCallRecordEnabled;
 
     this.sipLines = sipLines || [];
   }
