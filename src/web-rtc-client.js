@@ -266,7 +266,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   register(): Promise<any> {
-    logger.info('sdk webrtc register', { userAgent: !!this.userAgent, registered: this.isRegistered() });
+    logger.info('sdk webrtc registering...', { userAgent: !!this.userAgent, registered: this.isRegistered() });
     if (!this.userAgent) {
       logger.info('sdk webrtc recreating User Agent');
       this.userAgent = this.createUserAgent(this.uaConfigOverrides);
@@ -302,13 +302,14 @@ export default class WebRTCClient extends Emitter {
   }
 
   unregister() {
-    logger.info('sdk webrtc unregister', { userAgent: !!this.userAgent });
+    logger.info('sdk webrtc unregistering..', { userAgent: !!this.userAgent });
     if (!this.registerer) {
       return Promise.resolve();
     }
 
     try {
       return this.registerer.unregister().then(() => {
+        logger.info('sdk webrtc unregistered');
         this._cleanupRegister();
       }).catch(() => {
         this._cleanupRegister();

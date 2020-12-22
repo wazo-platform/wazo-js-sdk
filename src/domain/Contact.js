@@ -149,6 +149,7 @@ type ContactArguments = {
   personalStatus?: string,
   sessions?: Array<{ uuid: string, mobile: boolean}>,
   doNotDisturb?: boolean,
+  ringing?: boolean,
 };
 
 type Office365Response = {
@@ -248,6 +249,7 @@ export default class Contact {
   personalStatus: string;
   sessions: ?Array<{ uuid: string, mobile: boolean}>;
   doNotDisturb: ?boolean;
+  ringing: ?boolean;
 
   static merge(oldContacts: Array<Contact>, newContacts: Array<Contact>): Array<Contact> {
     return newContacts.map(current => {
@@ -536,6 +538,7 @@ export default class Contact {
     personalStatus,
     sessions,
     doNotDisturb,
+    ringing,
   }: ContactArguments = {}) {
     this.id = id;
     this.uuid = uuid;
@@ -562,6 +565,7 @@ export default class Contact {
     this.personalStatus = personalStatus || '';
     this.sessions = sessions || [];
     this.doNotDisturb = doNotDisturb;
+    this.ringing = ringing;
 
     // Useful to compare instead of instanceof with minified code
     this.type = 'Contact';
@@ -616,8 +620,8 @@ export default class Contact {
     return this.lineState === LINE_STATE.TALKING || this.lineState === LINE_STATE.HOLDING;
   }
 
-  isRinging(): boolean {
-    return this.lineState === LINE_STATE.RINGING;
+  isRinging(): ?boolean {
+    return this.ringing;
   }
 
   isInUseOrRinging(): boolean {
