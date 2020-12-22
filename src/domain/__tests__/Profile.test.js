@@ -68,6 +68,7 @@ describe('Profile domain', () => {
       call_pickup_target_users: [
         { uuid: 'uuid-0', firstname: 'FirstName-0', lastname: 'LastName-0' },
       ],
+      online_call_record_enabled: true,
     };
 
     const profile = Profile.parse(plain);
@@ -96,6 +97,7 @@ describe('Profile domain', () => {
         callPickupTargetUsers: [
           { uuid: 'uuid-0', firstname: 'FirstName-0', lastname: 'LastName-0' },
         ],
+        onlineCallRecordEnabled: true,
       }),
     );
   });

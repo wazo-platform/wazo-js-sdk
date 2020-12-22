@@ -107,7 +107,7 @@ type ProfileArguments = {
   },
   switchboards: Array<any>,
   callPickupTargetUsers?: Array<{ firstname: string, lastname: string, uuid: string }>,
-  onlineCallRecordEnabled?: boolean,
+  onlineCallRecordEnabled?: ?boolean,
 };
 
 export default class Profile {
@@ -178,7 +178,7 @@ export default class Profile {
     sipLines,
     callPickupTargetUsers,
     onlineCallRecordEnabled,
-}: $Shape<ProfileArguments> = {}) {
+  }: $Shape<ProfileArguments> = {}) {
     this.id = id;
     this.firstName = firstName;
     this.lastName = lastName;
