@@ -922,7 +922,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return null;
     }
 
-    return this._createCallSession(this.currentSipSession);
+    return this._createCallSession(this.currentSipSession, this.currentCallSession);
   }
 
   hasIncomingCallSession(): boolean {
