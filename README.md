@@ -211,6 +211,17 @@ Wazo.Auth.setHost(host);
 - `host`: string
   - URL to your host (include port if needed).
 
+#### Customizing all the `fetch` options
+
+```js
+Wazo.Auth.fetchOptions({
+  referrer: '',
+});
+```
+
+- `options`: Object
+  - Options passed to all the `fetch` requests of the SDK.
+
 ### Authenticating an user
 ```
 const session = await Wazo.Auth.logIn(username, password);

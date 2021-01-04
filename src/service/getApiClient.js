@@ -14,6 +14,7 @@ global.wazoOnRefreshToken = global.wazoOnRefreshToken || {};
 global.wazoRefreshExpiration = global.wazoRefreshExpiration || {};
 global.wazoRefreshBackend = global.wazoRefreshBackend || {};
 global.wazoIsMobile = global.wazoIsMobile || {};
+global.wazoFetchOptions = global.wazoFetchOptions || {};
 
 export const setApiClientId = (clientId: string, forServer: ?string = null) => {
   global.wazoClientId[forServer] = clientId;
@@ -47,6 +48,10 @@ export const setIsMobile = (isMobile: boolean, forServer: ?string = null) => {
   global.wazoIsMobile[forServer] = isMobile;
 };
 
+export const setFetchOptions = (fetchOptions: Object, forServer: ?string = null) => {
+  global.wazoFetchOptions[forServer] = fetchOptions;
+};
+
 const fillClient = (apiClient: WazoApiClient) => {
   const { server, token, clientId } = apiClient.client;
 
@@ -56,6 +61,8 @@ const fillClient = (apiClient: WazoApiClient) => {
   apiClient.setClientId(global.wazoClientId[server] || global.wazoClientId[null] || clientId);
 
   apiClient.setRefreshToken(global.wazoRefreshToken[server] || global.wazoRefreshToken[null] || apiClient.refreshToken);
+
+  apiClient.setFetchOptions(global.wazoFetchOptions[server] || global.wazoFetchOptions[null] || apiClient.fetchOptions);
 
   apiClient.setOnRefreshToken(
     global.wazoOnRefreshToken[server] || global.wazoOnRefreshToken[null] || apiClient.onRefreshToken,

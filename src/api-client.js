@@ -20,6 +20,7 @@ type ConstructorParams = {
   clientId?: string,
   refreshToken?: ?string,
   isMobile?: ?boolean,
+  fetchOptions?: Object,
 };
 
 const AUTH_VERSION = '0.1';
@@ -57,8 +58,8 @@ export default class ApiClient {
   isMobile: boolean;
 
   // @see https://github.com/facebook/flow/issues/183#issuecomment-358607052
-  constructor({ server, agent = null, refreshToken, clientId, isMobile = false }: ConstructorParams) {
-    this.updateParameters({ server, agent, clientId });
+  constructor({ server, agent = null, refreshToken, clientId, isMobile = false, fetchOptions }: ConstructorParams) {
+    this.updateParameters({ server, agent, clientId, fetchOptions });
     this.refreshToken = refreshToken;
     this.isMobile = isMobile || false;
   }
@@ -77,9 +78,9 @@ export default class ApiClient {
     this.amid = amidMethods(this.client, `amid/${AMID_VERSION}`);
   }
 
-  updateParameters({ server, agent, clientId }: { server: string, agent: ?Object, clientId: ?string }) {
+  updateParameters({ server, agent, clientId, fetchOptions }: Object) {
     const refreshTokenCallback = this.refreshTokenCallback.bind(this);
-    this.client = new ApiRequester({ server, agent, refreshTokenCallback, clientId });
+    this.client = new ApiRequester({ server, agent, refreshTokenCallback, clientId, fetchOptions });
 
     this.initializeEndpoints();
   }
@@ -149,5 +150,9 @@ export default class ApiClient {
 
   setIsMobile(isMobile: boolean) {
     this.isMobile = isMobile;
+  }
+
+  setFetchOptions(fetchOptions: Object) {
+    this.client.setFetchOptions(fetchOptions);
   }
 }
