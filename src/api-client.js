@@ -56,6 +56,7 @@ export default class ApiClient {
   refreshExpiration: ?number;
   refreshBackend: ?string;
   isMobile: boolean;
+  fetchOptions: Object;
 
   // @see https://github.com/facebook/flow/issues/183#issuecomment-358607052
   constructor({ server, agent = null, refreshToken, clientId, isMobile = false, fetchOptions }: ConstructorParams) {
@@ -153,6 +154,7 @@ export default class ApiClient {
   }
 
   setFetchOptions(fetchOptions: Object) {
+    this.fetchOptions = fetchOptions;
     this.client.setFetchOptions(fetchOptions);
   }
 }
