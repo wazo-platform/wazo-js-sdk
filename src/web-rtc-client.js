@@ -14,6 +14,7 @@ import type SessionDescriptionHandlerConfiguration
   from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-configuration';
 import type SessionDescriptionHandler
   from 'sip.js/lib/platform/web/session-description-handler/session-description-handler';
+import { UserAgentState } from 'sip.js/lib/api/user-agent-state';
 
 import { C } from 'sip.js/lib/core/messages/methods/constants';
 import { URI } from 'sip.js/lib/grammar/uri';
@@ -69,7 +70,7 @@ const ON_REINVITE = 'reinvite';
 
 export const events = [REGISTERED, UNREGISTERED, REGISTRATION_FAILED, INVITE];
 export const transportEvents = [CONNECTED, DISCONNECTED, TRANSPORT_ERROR, MESSAGE];
-const MAX_REGISTER_TRIES = 3;
+const MAX_REGISTER_TRIES = 10;
 
 type MediaConfig = {
   audio: Object & boolean,
@@ -301,12 +302,19 @@ export default class WebRTCClient extends Emitter {
 
       if (tries <= MAX_REGISTER_TRIES) {
         logger.info('sdk webrtc registering, retrying...', { tries });
-        setTimeout(() => this.register(tries + 1), 500);
+        setTimeout(() => this.register(tries + 1), 300);
       }
     };
 
     return this._connectIfNeeded().then(() => {
-      logger.info('sdk webrtc registering, transport connected', { registerOptions });
+      // Avoid race condition with the close method called just before register and setting userAgent to null
+      // during the resolution of the primise.
+      if (!this.userAgent) {
+        logger.info('sdk webrtc recreating User Agent after connection');
+        this.userAgent = this.createUserAgent(this.uaConfigOverrides);
+      }
+
+      logger.info('sdk webrtc registering, transport connected', { registerOptions, ua: !!this.userAgent });
       this.registerer = new Registerer(this.userAgent, registerOptions);
       this.connectionPromise = null;
 
@@ -512,6 +520,7 @@ export default class WebRTCClient extends Emitter {
       // eg: "INVITE not rejectable in state Completed"
     }
     this.userAgent = null;
+    logger.info('sdk webrtc client closed');
   }
 
   getNumber(session: Inviter): ?String {
@@ -1055,7 +1064,11 @@ export default class WebRTCClient extends Emitter {
       return this.connectionPromise;
     }
 
-    logger.info('needs to connect');
+    logger.info('WebRTC UA needs to connect');
+
+    // Force UA to reconnect
+    this.userAgent.transitionState(UserAgentState.Stopped);
+    this.userAgent.transport.transitionState(TransportState.Disconnected);
     this.connectionPromise = this.userAgent.start();
 
     return this.connectionPromise;
