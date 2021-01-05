@@ -293,6 +293,18 @@ export default class WebRTCClient extends Emitter {
 
     const registerOptions = this._isWeb() ? {} : { extraContactHeaderParams: ['mobility=mobile'] };
 
+    const onRegisterFailed = () => {
+      this.connectionPromise = null;
+      if (this.registerer) {
+        this.registerer.waitingToggle(false);
+      }
+
+      if (tries <= MAX_REGISTER_TRIES) {
+        logger.info('sdk webrtc registering, retrying...', { tries });
+        setTimeout(() => this.register(tries + 1), 500);
+      }
+    };
+
     return this._connectIfNeeded().then(() => {
       logger.info('sdk webrtc registering, transport connected', { registerOptions });
       this.registerer = new Registerer(this.userAgent, registerOptions);
@@ -309,19 +321,25 @@ export default class WebRTCClient extends Emitter {
         }
       });
 
-      return this.registerer.register().catch((e) => {
+      const options = {
+        requestDelegate: {
+          onReject: response => {
+            logger.error('sdk webrtc registering, rejected', { response });
+
+            onRegisterFailed();
+          },
+        },
+      };
+
+      return this.registerer.register(options).catch((e) => {
         logger.error('sdk webrtc registering, error', e);
 
         this.eventEmitter.emit(REGISTRATION_FAILED);
         return e;
       });
     }).catch(error => {
-      this.connectionPromise = null;
       logger.error('sdk webrtc registering, transport error', error);
-      if (tries <= MAX_REGISTER_TRIES) {
-        logger.info('sdk webrtc registering, retrying...');
-        return this.register(tries + 1);
-      }
+      onRegisterFailed();
     });
   }
 
