@@ -18,7 +18,7 @@ const CONSOLE_METHODS = [INFO, LOG, WARN, ERROR];
 const LOG_LEVELS = [TRACE, DEBUG, INFO, LOG, WARN, ERROR];
 const CATEGORY_PREFIX = 'logger-category=';
 
-const MAX_REMOTE_RETRY = 5;
+const MAX_REMOTE_RETRY = 100;
 
 const addLevelsTo = (instance: Object, withMethods = false) => {
   instance.TRACE = TRACE;
@@ -234,12 +234,12 @@ class IssueReporter {
         ...payload,
         ...extra,
       }),
-    }).catch(e => {
-      if (e.message === 'Failed to fetch') {
-        setTimeout(() => {
-          this._sendToRemoteLogger(level, payload, retry + 1);
-        }, 5000);
-      }
+    }).catch(() => {
+      setTimeout(() => {
+        // eslint-disable-next-line no-underscore-dangle
+        payload._retry = retry + 1;
+        this._sendToRemoteLogger(level, payload, retry + 1);
+      }, 5000 + retry * 1000);
     });
   }
 
