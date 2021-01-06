@@ -300,6 +300,26 @@ class Room extends Emitter {
     }
   }
 
+  hold() {
+    logger.info('hold room');
+
+    Wazo.Phone.hold(this.callSession);
+
+    if (this.localParticipant) {
+      this.localParticipant.onHold();
+    }
+  }
+
+  unhold() {
+    logger.info('unhold room');
+
+    Wazo.Phone.unhold(this.callSession);
+
+    if (this.localParticipant) {
+      this.localParticipant.onUnhold();
+    }
+  }
+
   sendDTMF(tone: string) {
     logger.info('send room DTMF', { tone });
 
