@@ -400,7 +400,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.currentSipSession = sipSession;
     this.currentCallSession = callSession;
 
-    this.eventEmitter.emit(ON_TERMINATE_SOUND);
+    this.eventEmitter.emit(ON_TERMINATE_SOUND, callSession, 'call accpeted');
     const sipSessionId = this.getSipSessionId(sipSession);
     if (sipSessionId) {
       this.removeIncomingSessions(sipSessionId);
@@ -453,7 +453,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     setTimeout(() => {
       // Avoid race condition when the other is calling and hanging up immediately
-      this.eventEmitter.emit(ON_TERMINATE_SOUND);
+      this.eventEmitter.emit(ON_TERMINATE_SOUND, callSession, 'call terminated');
     }, 5);
 
     const sipSessionId = this.getSipSessionId(sipSession);
@@ -475,7 +475,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     if (!sipSession.isCanceled) {
       setTimeout(() => {
-        this.eventEmitter.emit(ON_PLAY_HANGUP_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
+        this.eventEmitter.emit(ON_PLAY_HANGUP_SOUND, this.audioOutputDeviceId, this.audioOutputVolume, callSession);
       }, 10);
     }
   }
@@ -605,7 +605,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   async reject(callSession: CallSession): Promise<void> {
     logger.info('reject WebRTC called', { id: callSession.getId() });
 
-    this.eventEmitter.emit(ON_TERMINATE_SOUND);
+    this.eventEmitter.emit(ON_TERMINATE_SOUND, callSession, 'call locally rejected');
     if (!callSession || callSession.getId() in this.rejectedSessions) {
       return;
     }
@@ -622,8 +622,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   async ignore(callSession: CallSession): Promise<void> {
+    logger.info('WebRTC ignore', { id: callSession.getId() });
+
     // kill the ring
-    this.eventEmitter.emit(ON_TERMINATE_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
+    this.eventEmitter.emit(ON_TERMINATE_SOUND, callSession, 'ignoring call');
     this.ignoredSessions[callSession.getId()] = true;
     callSession.ignore();
   }
@@ -877,7 +879,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.currentCallSession = null;
     }
 
-    this.eventEmitter.emit(ON_TERMINATE_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
+    this.eventEmitter.emit(ON_TERMINATE_SOUND, callSession, 'locally ended');
 
     if (!this.currentSipSession && this.incomingSessions.length > 0) {
       this.eventEmitter.emit(ON_PLAY_RING_SOUND,
@@ -989,7 +991,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
           this.eventEmitter.emit(ON_PLAY_RING_SOUND, this.audioRingDeviceId, this.audioRingVolume, callSession);
         }
       } else {
-        this.eventEmitter.emit(ON_PLAY_INBOUND_CALL_SIGNAL_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
+        this.eventEmitter.emit(ON_PLAY_INBOUND_CALL_SIGNAL_SOUND,
+          this.audioOutputDeviceId,
+          this.audioOutputVolume,
+          callSession);
       }
 
       this.eventEmitter.emit(ON_CALL_INCOMING, callSession, wantsToDoVideo);
