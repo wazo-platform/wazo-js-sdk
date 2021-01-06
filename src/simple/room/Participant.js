@@ -35,7 +35,7 @@ class Participant extends Emitter {
   ON_STOP_SCREENSHARING: string;
   ON_EXTRA_CHANGE: string;
   ON_HOLD: string;
-  ON_UNHOLD: string;
+  ON_RESUME: string;
 
   /**
    * @param rawParticipant string Participant sent via the Wazo WS
@@ -73,7 +73,7 @@ class Participant extends Emitter {
     this.ON_STOP_SCREENSHARING = 'participant/ON_STOP_SCREENSHARING';
     this.ON_EXTRA_CHANGE = 'participant/ON_EXTRA_CHANGE';
     this.ON_HOLD = 'participant/ON_HOLD';
-    this.ON_UNHOLD = 'participant/ON_UNHOLD';
+    this.ON_RESUME = 'participant/ON_RESUME';
   }
 
   triggerEvent(name: string, ...args: any[]) {
@@ -106,7 +106,7 @@ class Participant extends Emitter {
         break;
       }
       case this.ON_HOLD:
-      case this.ON_UNHOLD: {
+      case this.ON_RESUME: {
         status.isOnHold = this.isOnHold;
         break;
       }
@@ -209,13 +209,13 @@ class Participant extends Emitter {
     this.triggerUpdate(this.ON_HOLD, broadcast);
   }
 
-  onUnhold(broadcast: boolean = true) {
+  onResume(broadcast: boolean = true) {
     if (!this.isOnHold) {
       return;
     }
     this.isOnHold = false;
 
-    this.triggerUpdate(this.ON_UNHOLD, broadcast);
+    this.triggerUpdate(this.ON_RESUME, broadcast);
   }
 
   getStatus() {
@@ -260,7 +260,7 @@ class Participant extends Emitter {
       if (status.isOnHold) {
         this.onHold(broadcast);
       } else {
-        this.onUnhold(broadcast);
+        this.onResume(broadcast);
       }
     }
 

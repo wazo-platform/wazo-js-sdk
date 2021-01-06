@@ -310,13 +310,13 @@ class Room extends Emitter {
     }
   }
 
-  unhold() {
-    logger.info('unhold room');
+  resume() {
+    logger.info('resume room');
 
-    Wazo.Phone.unhold(this.callSession);
+    Wazo.Phone.resume(this.callSession);
 
     if (this.localParticipant) {
-      this.localParticipant.onUnhold();
+      this.localParticipant.onResume();
     }
   }
 
