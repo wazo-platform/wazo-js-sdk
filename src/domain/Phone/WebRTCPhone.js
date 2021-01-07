@@ -400,7 +400,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.currentSipSession = sipSession;
     this.currentCallSession = callSession;
 
-    this.eventEmitter.emit(ON_TERMINATE_SOUND, callSession, 'call accpeted');
+    this.eventEmitter.emit(ON_TERMINATE_SOUND, callSession, 'call accepted');
     const sipSessionId = this.getSipSessionId(sipSession);
     if (sipSessionId) {
       this.removeIncomingSessions(sipSessionId);
@@ -605,7 +605,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   async reject(callSession: CallSession): Promise<void> {
     logger.info('reject WebRTC called', { id: callSession.getId() });
 
-    this.eventEmitter.emit(ON_TERMINATE_SOUND, callSession, 'call locally rejected');
+    this.eventEmitter.emit(ON_TERMINATE_SOUND, callSession, 'call rejected locally');
     if (!callSession || callSession.getId() in this.rejectedSessions) {
       return;
     }
