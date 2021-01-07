@@ -717,9 +717,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     logger.info('WebRTC muting', { sipId: sipSession.id });
     this.client.mute(sipSession);
+    const newCallSession = this._createCallSession(sipSession, callSession, { muted: true });
+
+    if (this.currentCallSession && newCallSession.is(this.currentCallSession)) {
+      this.currentCallSession = newCallSession;
+    }
 
     if (withEvent) {
-      this.eventEmitter.emit(ON_CALL_MUTED, this._createCallSession(sipSession, callSession, { muted: true }));
+      this.eventEmitter.emit(ON_CALL_MUTED, newCallSession);
     }
   }
 
@@ -733,9 +738,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     logger.info('WebRTC unmuting', { sipId: sipSession.id });
     this.client.unmute(sipSession);
+    const newCallSession = this._createCallSession(sipSession, callSession, { muted: false });
+
+    if (this.currentCallSession && newCallSession.is(this.currentCallSession)) {
+      this.currentCallSession = newCallSession;
+    }
 
     if (withEvent) {
-      this.eventEmitter.emit(ON_CALL_UNMUTED, this._createCallSession(sipSession, callSession, { muted: false }));
+      this.eventEmitter.emit(ON_CALL_UNMUTED, newCallSession);
     }
   }
 
