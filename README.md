@@ -115,8 +115,8 @@ Wazo's Javascript SDK allows you to use these features :
         - [Muting camera in a call](#muting-camera-in-a-call)
         - [Unmuting camera in a call](#unmuting-camera-in-a-call)
         - [Sending DTMF](#sending-dtmf)
-        - [Transferring directly a call](#transferring-directly-a-call)
-        - [Transferring indirectly a call](#transferring-indirectly-a-call)
+        - [Make a blind transfer](#make-a-blind-transfer)
+        - [Make an attended transfer](#make-an-attended-transfer)
         - [Start screen sharing](#start-screen-sharing)
         - [Stop screen sharing](#stop-screen-sharing)
       - [Conference phone features](#conference-phone-features)
@@ -966,10 +966,30 @@ Use this method to resume a running call.
 client.unhold(sipSession: SipSession);
 ```
 
-##### Transferring a call
-Use this method to transfer a call to another target.
+##### Make a blind transfer
+Use this method to transfer a call to another target, without introduction
 ```js
-client.transfert(sipSession: SipSession, target: string);
+client.transfer(sipSession: SipSession, target: string);
+```
+
+##### Make an attended transfer
+Use this method to transfer a call to another target, but first introduce the caller to the transfer target. The transfer may be cancelled (hangup the transfer target) or completed (hangup the transfer initiator).
+```js
+transfer = client.atxfer(sipSession: SipSession);
+
+// Start the transfer to a phone number, starts a new SIP session in the process
+transfer.init(target: string)
+
+// Get the new SIP session to the target of the transfer
+targetSession = transfer.newSession
+
+// Complete the transfer.
+// transfer.init(...) must be called first.
+transfer.complete()
+
+// Cancel the transfer.
+// transfer.init(...) must be called first.
+transfer.cancel()
 ```
 
 ##### Sending a DTMF tone
@@ -1110,8 +1130,11 @@ Use this method to unmute yourself in a running call.
 phone.sendKey(callSession: CallSession, tone: string);
 ```
 
-##### Transferring directly a call
-Use this method to transfer a call directly to another extension.
+##### Transferring a call
+
+###### Blind transfer
+
+Use this method to transfer a call directly to another extension, without introduction
 ```js
 phone.transfer(
   callSession: CallSession, // The call session to transfer
@@ -1119,7 +1142,8 @@ phone.transfer(
 );
 ```
 
-##### Transferring indirectly a call
+###### Attended transfer
+
 Use this method to transfer a call to another extension by allowing to speak with the other participant first and validate the transfer after that.
 You have to run `makeCall` first on the target to be able to confirm the transfer with this method.
 
