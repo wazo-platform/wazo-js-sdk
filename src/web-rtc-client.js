@@ -295,6 +295,7 @@ export default class WebRTCClient extends Emitter {
     const registerOptions = this._isWeb() ? {} : { extraContactHeaderParams: ['mobility=mobile'] };
 
     const onRegisterFailed = () => {
+      logger.info('sdk webrtc registering failed', { tries, registerer: !!this.registerer });
       this.connectionPromise = null;
       if (this.registerer) {
         this.registerer.waitingToggle(false);
@@ -361,7 +362,7 @@ export default class WebRTCClient extends Emitter {
       return this.registerer.unregister().then(() => {
         logger.info('sdk webrtc unregistered');
         this._cleanupRegister();
-      }).catch((e) => {
+      }).catch(e => {
         logger.error('sdk webrtc unregistering, promise error', e);
         this._cleanupRegister();
       });
