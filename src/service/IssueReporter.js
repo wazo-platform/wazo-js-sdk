@@ -6,8 +6,6 @@ import moment from 'moment';
 import { realFetch } from '../utils/api-requester';
 import isMobile from '../utils/isMobile';
 
-global.wazoIssueReporterLogs = [];
-
 const TRACE = 'trace';
 const DEBUG = 'debug';
 const INFO = 'info';
@@ -145,8 +143,6 @@ class IssueReporter {
       consoleMessage = `[${category}] ${consoleMessage}`;
     }
 
-    global.wazoIssueReporterLogs.push({ level, date, message: consoleMessage });
-
     // Log the message in the console anyway (but don't console.error on mobile)
     const consoleLevel = isMobile() && level === 'error' ? WARN : level;
 
@@ -180,12 +176,15 @@ class IssueReporter {
     });
   }
 
+  // Logs aren't stored anymore
   getLogs() {
-    return global.wazoIssueReporterLogs;
+    console.warn('IssueReporter\'s logs aren\'t stored anymore. Please use fluentd to store them');
+    return [];
   }
 
   getParsedLogs() {
-    return this.getLogs().map(log => `${log.date.toString().substr(0, 24)} - ${log.level} - ${log.message}`);
+    console.warn('IssueReporter\'s logs aren\'t stored anymore. Please use fluentd to store them');
+    return [];
   }
 
   getReport() {
