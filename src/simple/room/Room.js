@@ -237,7 +237,7 @@ class Room extends Emitter {
   async startScreenSharing(constraints: Object) {
     logger.info('start room screen sharing', { constraints });
 
-    const screensharingStream = await Wazo.Phone.startScreenSharing(constraints);
+    const screensharingStream = await Wazo.Phone.startScreenSharing(constraints, this.callSession);
     if (!screensharingStream) {
       console.warn('screensharing stream is null (likely due to user cancellation)');
       return null;
@@ -250,10 +250,10 @@ class Room extends Emitter {
     return screensharingStream;
   }
 
-  stopScreenSharing() {
+  stopScreenSharing(restoreLocalStream: boolean = true) {
     logger.info('stop room screen sharing');
 
-    Wazo.Phone.stopScreenSharing();
+    Wazo.Phone.stopScreenSharing(this.callSession, restoreLocalStream);
 
     if (this.localParticipant) {
       this.localParticipant.onStopScreensharing();
