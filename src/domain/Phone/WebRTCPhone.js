@@ -290,12 +290,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
       const event = rawEvent;
       const [stream] = event.streams;
 
-      if (event && event.track.kind === 'audio') {
+      if (event && event.track && event.track.kind === 'audio') {
         return this.eventEmitter.emit(ON_AUDIO_STREAM, stream);
       }
 
       // not sure this does anything
-      if (event && event.track.kind === 'video') {
+      if (event && event.track && event.track.kind === 'video') {
         event.track.enabled = false;
       }
 
@@ -338,7 +338,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const screenTrack = screenShareStream.getVideoTracks()[0];
     const sipSession = this.currentSipSession;
     const pc = sipSession.sessionDescriptionHandler.peerConnection;
-    const sender = pc && pc.getSenders().find(s => s.track.kind === 'video');
+    const sender = pc && pc.getSenders().find(s => s && s.track && s.track.kind === 'video');
     const localStream = this.client.getLocalStream(pc);
 
     if (sender) {

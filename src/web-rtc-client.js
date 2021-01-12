@@ -738,7 +738,7 @@ export default class WebRTCClient extends Emitter {
       // $FlowFixMe
       return navigator.mediaDevices.getUserMedia({ audio: { deviceId: { exact: id } } }).then(async stream => {
         const audioTrack = stream.getAudioTracks()[0];
-        const sender = pc && pc.getSenders().find(s => s && s.track && s.track.kind === audioTrack.kind);
+        const sender = pc && pc.getSenders().find(s => s && audioTrack && s.track && s.track.kind === audioTrack.kind);
 
         if (sender) {
           sender.replaceTrack(audioTrack);
@@ -779,7 +779,7 @@ export default class WebRTCClient extends Emitter {
       // $FlowFixMe
       return navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: id } } }).then(async stream => {
         const videoTrack = stream.getVideoTracks()[0];
-        const sender = pc && pc.getSenders().find(s => s && s.track && s.track.kind === videoTrack.kind);
+        const sender = pc && pc.getSenders().find(s => s && videoTrack && s.track && s.track.kind === videoTrack.kind);
 
         if (sender) {
           sender.replaceTrack(videoTrack);
@@ -1292,7 +1292,7 @@ export default class WebRTCClient extends Emitter {
     // When calling _setupRemoteMedia from the 'track' event, the session SDP is not yet updated with m=video section
     // So we have to check the king of stream in the event
     // @TODO: find a better way to know if we want to do video by call.
-    const sessionHasVideo = event ? event.track.kind === 'video' : this._hasVideo();
+    const sessionHasVideo = event && event.track ? event.track.kind === 'video' : this._hasVideo();
     const pc = session.sessionDescriptionHandler.peerConnection;
     const remoteStream = this._getRemoteStream(pc);
 
@@ -1406,7 +1406,7 @@ export default class WebRTCClient extends Emitter {
 
     if (pc.getSenders) {
       pc.getSenders().forEach(sender => {
-        if (sender.track && sender.track.kind === 'video') {
+        if (sender && sender.track && sender.track.kind === 'video') {
           // eslint-disable-next-line
           sender.track.enabled = !muteCamera;
         }
@@ -1459,6 +1459,7 @@ export default class WebRTCClient extends Emitter {
 
     getStats(pc, (result: Object) => {
       const { results, internal, nomore, ...stats } = result;
+      logger.trace('Stop sending stats for call', { sessionId });
       this.statsIntervals[sessionId] = nomore;
 
       statsLogger.trace('stats', {
@@ -1470,8 +1471,10 @@ export default class WebRTCClient extends Emitter {
 
   _stopSendingStats(session: Session) {
     const sessionId = this.getSipSessionId(session);
+    logger.trace('Check for stopping stats', { sessionId, ids: Object.keys(this.statsIntervals) });
 
     if (sessionId in this.statsIntervals) {
+      logger.trace('Stop sending stats for call', { sessionId });
       this.statsIntervals[sessionId]();
       delete this.statsIntervals[sessionId];
     }
