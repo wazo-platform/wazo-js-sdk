@@ -164,7 +164,11 @@ class Room extends Emitter {
     // Retrieve conference
     const conference = contacts.find(contact => contact.numbers.find(number => number.number === extension));
 
-    logger.info('connected to room', { sourceId: conference.sourceId, callId, name: conference.name });
+    logger.info('connected to room', {
+      sourceId: conference ? conference.sourceId : null,
+      callId,
+      name: conference ? conference.name : null,
+    });
 
     if (conference) {
       room.setSourceId(conference.sourceId);
@@ -327,6 +331,9 @@ class Room extends Emitter {
   }
 
   _bindEvents() {
+    if (!Wazo.Phone.phone) {
+      return;
+    }
     // Retrieve mapping
     Wazo.Phone.phone.currentSipSession.sessionDescriptionHandler.on('setDescription', ({ type, sdp: rawSdp }) => {
       if (type !== 'offer') {
