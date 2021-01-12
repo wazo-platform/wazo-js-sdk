@@ -1094,7 +1094,11 @@ phone.hold(
 ##### Resuming a call
 Use this method to resume a running call.
 ```js
-phone.unhold(callSession: CallSession);
+phone.resume(callSession: CallSession);
+```
+Please note that `phone.resume()` is the preferred method
+```js
+phone.unhold(callSession: CallSession); // deprecated
 ```
 
 ##### Muting a call

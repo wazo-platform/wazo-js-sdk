@@ -192,6 +192,10 @@ class Phone extends Emitter {
     return this.phone && this.phone.unhold(callSession);
   }
 
+  resume(callSession: CallSession) {
+    return this.phone && this.phone.resume(callSession);
+  }
+
   reject(callSession: CallSession) {
     return this.phone && this.phone.reject(callSession);
   }

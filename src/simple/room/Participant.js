@@ -18,6 +18,7 @@ class Participant extends Emitter {
   audioMuted: boolean;
   videoMuted: boolean;
   screensharing: boolean;
+  isOnHold: boolean;
   extra: Object;
 
   ON_UPDATED: string;
@@ -33,6 +34,8 @@ class Participant extends Emitter {
   ON_SCREENSHARING: string;
   ON_STOP_SCREENSHARING: string;
   ON_EXTRA_CHANGE: string;
+  ON_HOLD: string;
+  ON_RESUME: string;
 
   /**
    * @param rawParticipant string Participant sent via the Wazo WS
@@ -53,6 +56,7 @@ class Participant extends Emitter {
     this.audioMuted = false;
     this.videoMuted = false;
     this.screensharing = false;
+    this.isOnHold = false;
     this.extra = extra;
 
     this.ON_UPDATED = 'participant/ON_UPDATED';
@@ -68,6 +72,8 @@ class Participant extends Emitter {
     this.ON_SCREENSHARING = 'participant/ON_SCREENSHARING';
     this.ON_STOP_SCREENSHARING = 'participant/ON_STOP_SCREENSHARING';
     this.ON_EXTRA_CHANGE = 'participant/ON_EXTRA_CHANGE';
+    this.ON_HOLD = 'participant/ON_HOLD';
+    this.ON_RESUME = 'participant/ON_RESUME';
   }
 
   triggerEvent(name: string, ...args: any[]) {
@@ -97,6 +103,11 @@ class Participant extends Emitter {
       case this.ON_SCREENSHARING:
       case this.ON_STOP_SCREENSHARING: {
         status.screensharing = this.screensharing;
+        break;
+      }
+      case this.ON_HOLD:
+      case this.ON_RESUME: {
+        status.isOnHold = this.isOnHold;
         break;
       }
       case this.ON_EXTRA_CHANGE: {
@@ -189,6 +200,24 @@ class Participant extends Emitter {
     this.triggerUpdate(this.ON_STOP_SCREENSHARING, broadcast);
   }
 
+  onHold(broadcast: boolean = true) {
+    if (this.isOnHold) {
+      return;
+    }
+    this.isOnHold = true;
+
+    this.triggerUpdate(this.ON_HOLD, broadcast);
+  }
+
+  onResume(broadcast: boolean = true) {
+    if (!this.isOnHold) {
+      return;
+    }
+    this.isOnHold = false;
+
+    this.triggerUpdate(this.ON_RESUME, broadcast);
+  }
+
   getStatus() {
     return {
       callId: this.callId,
@@ -224,6 +253,14 @@ class Participant extends Emitter {
         this.onScreensharing(broadcast);
       } else {
         this.onStopScreensharing(broadcast);
+      }
+    }
+
+    if (typeof status.isOnHold !== 'undefined' && status.isOnHold !== this.isOnHold) {
+      if (status.isOnHold) {
+        this.onHold(broadcast);
+      } else {
+        this.onResume(broadcast);
       }
     }
 
