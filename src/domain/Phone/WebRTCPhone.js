@@ -643,7 +643,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   unhold(callSession: CallSession, withEvent: boolean = true): void {
     logger.info('WebRTC unhold', { id: callSession ? callSession.getId() : null });
 
-    console.warn('Please note that `phone.unhold()` is being deprecated`; phone.resume()` is the preferred method');
+    console.warn('Please note that `phone.unhold()` is being deprecated; `phone.resume()` is the preferred method');
 
     const sipSession = this.findSipSession(callSession);
 
