@@ -894,13 +894,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     this.eventEmitter.emit(ON_TERMINATE_SOUND, callSession, 'locally ended');
-
-    if (!this.currentSipSession && this.incomingSessions.length > 0) {
-      this.eventEmitter.emit(ON_PLAY_RING_SOUND,
-        this.audioOutputDeviceId,
-        this.audioOutputVolume,
-        this.currentCallSession);
-    }
   }
 
   onConnectionMade(): void {}
