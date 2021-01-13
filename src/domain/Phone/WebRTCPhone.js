@@ -851,7 +851,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     logger.info('WebRTC indirect transfer', { sipId: sipSession.id, target: sipSessionTarget.id });
 
-    await sipSessionTarget.refer(sipSession);
+    return sipSessionTarget.refer(sipSession).then(() => {
+      return this.hangup(destination);
+    });
   }
 
   initiateCTIIndirectTransfer() {}
