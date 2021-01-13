@@ -248,6 +248,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
       // Monkey patch to know when canceled with the CANCEL message
       const onCancel = sipSession._onCancel.bind(sipSession);
       sipSession._onCancel = (message: IncomingRequestMessage) => {
+        logger.trace('on sip session canceled', { callId: message.callId });
+
         onCancel(message);
         const elsewhere = message.data.indexOf('cause=26') !== -1 && message.data.indexOf('completed elsewhere') !== -1;
         this.eventEmitter.emit(ON_CALL_CANCELED, this._createCallSession(sipSession), elsewhere);
@@ -892,13 +894,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     this.eventEmitter.emit(ON_TERMINATE_SOUND, callSession, 'locally ended');
-
-    if (!this.currentSipSession && this.incomingSessions.length > 0) {
-      this.eventEmitter.emit(ON_PLAY_RING_SOUND,
-        this.audioOutputDeviceId,
-        this.audioOutputVolume,
-        this.currentCallSession);
-    }
   }
 
   onConnectionMade(): void {}

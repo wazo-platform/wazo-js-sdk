@@ -435,6 +435,11 @@ export default class WebRTCClient extends Emitter {
     };
 
     return session.accept(options).then(() => {
+      if (session.isCanceled) {
+        logger.error('accepted a canceled session (or was canceled during the accept phase).', { id: session.id });
+        this.onCallEnded(session);
+        return;
+      }
       logger.info('sdk webrtc answer, accepted.');
       this._onAccepted(session);
     }).catch(e => {
