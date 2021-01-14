@@ -10,6 +10,7 @@ import Directory from './Directory';
 import Configuration from './Configuration';
 import getApiClient from '../service/getApiClient';
 import { createLocalVideoStream, createLocalAudioStream } from './utils';
+import { CanceledCallError } from '../web-rtc-client';
 
 import BadResponse from '../domain/BadResponse';
 import ServerError from '../domain/ServerError';
@@ -76,6 +77,7 @@ const Wazo = {
   // Error
   InvalidSubscription,
   InvalidAuthorization,
+  CanceledCallError,
 };
 
 if (window) {

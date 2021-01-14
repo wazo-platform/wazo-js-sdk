@@ -1,5 +1,5 @@
 // @flow
-/* eslint-disable class-methods-use-this, no-param-reassign */
+/* eslint-disable class-methods-use-this, no-param-reassign, max-classes-per-file */
 /* global window, document, navigator */
 import 'webrtc-adapter';
 import type InviterInviteOptions from 'sip.js/lib/api/inviter-invite-options';
@@ -70,6 +70,8 @@ const ON_REINVITE = 'reinvite';
 
 export const events = [REGISTERED, UNREGISTERED, REGISTRATION_FAILED, INVITE];
 export const transportEvents = [CONNECTED, DISCONNECTED, TRANSPORT_ERROR, MESSAGE];
+export class CanceledCallError extends Error {}
+
 const MAX_REGISTER_TRIES = 10;
 
 type MediaConfig = {
@@ -436,9 +438,11 @@ export default class WebRTCClient extends Emitter {
 
     return session.accept(options).then(() => {
       if (session.isCanceled) {
-        logger.error('accepted a canceled session (or was canceled during the accept phase).', { id: session.id });
+        const message = 'accepted a canceled session (or was canceled during the accept phase).';
+        logger.error(message, { id: session.id });
         this.onCallEnded(session);
-        return;
+
+        throw new CanceledCallError(message);
       }
       logger.info('sdk webrtc answer, accepted.');
       this._onAccepted(session);

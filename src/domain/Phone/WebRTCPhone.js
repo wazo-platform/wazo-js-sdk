@@ -595,6 +595,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         return callSession.sipCallId;
       }).catch(e => {
         logger.error(e);
+        this.endCurrentCall(callSession);
         throw e;
       });
     }
