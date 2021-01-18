@@ -274,9 +274,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
           );
         case SessionState.Terminated:
           logger.info('WebRTC phone - call terminated', { sipId: sipSession.id });
-          this._onCallTerminated(sipSession);
 
-          return this.eventEmitter.emit(ON_CALL_ENDED, this._createCallSession(sipSession));
+          this.eventEmitter.emit(ON_CALL_ENDED, this._createCallSession(sipSession));
+
+          return this._onCallTerminated(sipSession);
         default:
           break;
       }
@@ -469,6 +470,20 @@ export default class WebRTCPhone extends Emitter implements Phone {
     if (this.isCurrentCallSipSession(callSession)) {
       this.currentSipSession = undefined;
       this.currentCallSession = undefined;
+    }
+
+    // Re-trigger incoming call event for remaining incoming calls
+    if (this.hasIncomingCallSession()) {
+      const nextCallSession = this.getIncomingCallSession();
+      // Avoid race condition
+      setTimeout(() => {
+        if (this.ringingEnabled) {
+          this.eventEmitter.emit(ON_PLAY_RING_SOUND, this.audioRingDeviceId, this.audioRingVolume, nextCallSession);
+        }
+
+        // $FlowFixMe
+        this.eventEmitter.emit(ON_CALL_INCOMING, nextCallSession, nextCallSession.cameraEnabled);
+      }, 100);
     }
 
     if (callSession.getId() in this.ignoredSessions) {
@@ -891,12 +906,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   endCurrentCall(callSession: CallSession): void {
-    if (this.isCurrentCallSipSession(callSession)) {
-      this.currentSipSession = undefined;
-      this.currentCallSession = null;
-    }
-
-    this.eventEmitter.emit(ON_TERMINATE_SOUND, callSession, 'locally ended');
+    return this._onCallTerminated(callSession);
   }
 
   onConnectionMade(): void {}
