@@ -326,7 +326,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         // $FlowFixMe
         screenShareStream = await navigator.mediaDevices.getDisplayMedia(constraints);
       } catch (e) {
-        console.warn(e);
+        logger.warn('WebRTC - stop screen sharing, error', e);
         return null;
       }
     }
@@ -906,7 +906,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   endCurrentCall(callSession: CallSession): void {
-    return this._onCallTerminated(callSession);
+    if (this.isCurrentCallSipSession(callSession)) {
+      this.currentSipSession = undefined;
+      this.currentCallSession = null;
+    }
+
+    this.eventEmitter.emit(ON_TERMINATE_SOUND, callSession, 'locally ended');
   }
 
   onConnectionMade(): void {}
@@ -1172,14 +1177,15 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   _createCallSession(sipSession: Session, fromSession?: ?CallSession, extra: Object = {}): CallSession {
     // eslint-disable-next-line
-    const number = sipSession ? sipSession.remoteIdentity.uri._normal.user : null;
+    const identity = sipSession ? sipSession.remoteIdentity || sipSession.assertedIdentity : null;
+    const number = identity ? identity.uri._normal.user : null;
     const { state } = sipSession || {};
 
     const callSession = new CallSession({
       callId: fromSession && fromSession.callId,
       sipCallId: this.getSipSessionId(sipSession),
       sipStatus: state,
-      displayName: sipSession ? sipSession.remoteIdentity.displayName || number : number,
+      displayName: identity ? identity.displayName || number : number,
       startTime: fromSession ? fromSession.startTime : new Date(),
       answered: state === SessionState.Established,
       paused: this.client.isCallHeld(sipSession),

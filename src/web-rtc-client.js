@@ -482,7 +482,7 @@ export default class WebRTCClient extends Emitter {
 
       return bye();
     } catch (error) {
-      console.warn('sdk webrtc hangup, error', error);
+      logger.warn('sdk webrtc hangup, error', error);
     }
 
     return null;
@@ -494,7 +494,7 @@ export default class WebRTCClient extends Emitter {
     try {
       return session.reject ? session.reject() : session.cancel();
     } catch (e) {
-      console.warn('Error when rejecting call', e.message, e.stack);
+      logger.warn('Error when rejecting call', e.message, e.stack);
     }
   }
 
@@ -940,7 +940,7 @@ export default class WebRTCClient extends Emitter {
 
   // eslint-disable-next-line no-unused-vars
   sessionWantsToDoVideo(session: Inviter) {
-    const { body } = session.request;
+    const { body } = session.request || session;
     // Sometimes with InviteClientContext the body is in the body attribute ...
     const sdp = typeof body === 'object' && body ? body.body : body;
 
