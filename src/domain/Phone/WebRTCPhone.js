@@ -620,6 +620,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return Promise.resolve(null);
   }
 
+  isAccepted(callSession: CallSession): boolean {
+    return callSession?.getId() in this.acceptedSessions;
+  }
+
   async reject(callSession: CallSession): Promise<void> {
     logger.info('reject WebRTC called', { id: callSession.getId() });
 
