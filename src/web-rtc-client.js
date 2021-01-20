@@ -447,7 +447,7 @@ export default class WebRTCClient extends Emitter {
       logger.info('sdk webrtc answer, accepted.');
       this._onAccepted(session);
     }).catch(e => {
-      logger.error('answer call error', e);
+      logger.error(`answer call error for ${session ? session.id : 'n/a'}`, e);
 
       throw e;
     });
