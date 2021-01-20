@@ -180,4 +180,21 @@ export default (client: ApiRequester, baseUrl: string) => ({
   deleteAdHocConference: (conferenceId: string) =>
     client.delete(`${baseUrl}/users/me/conferences/adhoc/${conferenceId}`, null, null,
       ApiRequester.successResponseParser),
+
+  startRecording: (callId: string) =>
+    client.put(`${baseUrl}/users/me/calls/${callId}/record/start`, null, null,
+      ApiRequester.successResponseParser),
+
+  stopRecording: (callId: string) =>
+    client.put(`${baseUrl}/users/me/calls/${callId}/record/stop`, null, null,
+      ApiRequester.successResponseParser),
+
+  pauseRecording: (callId: string) =>
+    client.put(`${baseUrl}/users/me/calls/${callId}/record/pause`, null, null,
+      ApiRequester.successResponseParser),
+
+  resumeRecording: (callId: string) =>
+    client.put(`${baseUrl}/users/me/calls/${callId}/record/resume`, null, null,
+      ApiRequester.successResponseParser),
+
 });
