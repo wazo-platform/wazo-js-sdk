@@ -585,9 +585,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.holdSipSession(this.currentSipSession, this.currentCallSession, true);
     }
 
-    if (!callSession || callSession.getId() in this.acceptedSessions) {
-      logger.warn('no CallSession to accept, or CallSession already accepted.');
+    if (!callSession) {
+      logger.warn('no CallSession to accept.');
       return Promise.resolve(null);
+    }
+
+    if (callSession.getId() in this.acceptedSessions) {
+      logger.warn('CallSession already accepted.');
+      return Promise.resolve(callSession.sipCallId);
     }
 
     this.shouldSendReinvite = false;
