@@ -16,6 +16,7 @@ type ConstructorParams = {
   clientId: ?string,
   refreshTokenCallback: Function,
   token?: string,
+  fetchOptions: ?Object,
 };
 
 const methods = ['head', 'get', 'post', 'put', 'delete'];
@@ -45,6 +46,7 @@ export default class ApiRequester {
   clientId: ?string;
   token: string;
   tenant: ?string;
+  fetchOptions: Object;
   refreshTokenCallback: Function;
   refreshTokenPromise: ?Promise<any>;
 
@@ -75,12 +77,13 @@ export default class ApiRequester {
   }
 
   // @see https://github.com/facebook/flow/issues/183#issuecomment-358607052
-  constructor({ server, refreshTokenCallback, clientId, agent = null, token = null }: ConstructorParams) {
+  constructor({ server, refreshTokenCallback, clientId, agent = null, token = null, fetchOptions }: ConstructorParams) {
     this.server = server;
     this.agent = agent;
     this.clientId = clientId;
     this.refreshTokenCallback = refreshTokenCallback;
     this.refreshTokenPromise = null;
+    this.fetchOptions = fetchOptions || {};
     if (token) {
       this.token = token;
     }
@@ -102,6 +105,10 @@ export default class ApiRequester {
 
   setToken(token: string) {
     this.token = token;
+  }
+
+  setFetchOptions(options: Object) {
+    this.fetchOptions = options;
   }
 
   async call(
@@ -126,6 +133,7 @@ export default class ApiRequester {
       body: newBody,
       headers: this.getHeaders(headers),
       agent: this.agent,
+      ...(this.fetchOptions || {}),
     };
 
     if (this.refreshTokenPromise) {

@@ -9,6 +9,7 @@ import getApiClient, {
   setApiClientId,
   setRefreshExpiration,
   setOnRefreshToken,
+  setFetchOptions,
 } from '../service/getApiClient';
 import IssueReporter from '../service/IssueReporter';
 
@@ -55,6 +56,10 @@ class Auth {
         this.onRefreshTokenCallback(token, session);
       }
     });
+  }
+
+  setFetchOptions(options: Object) {
+    setFetchOptions(options);
   }
 
   async logIn(username: string, password: string) {
