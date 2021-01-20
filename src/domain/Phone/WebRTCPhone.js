@@ -580,7 +580,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   accept(callSession: CallSession, cameraEnabled?: boolean): Promise<string | null> {
-    logger.info('WebRTC phone - accept call', { id: callSession.getId(), cameraEnabled });
+    logger.info('WebRTC phone - accept call', { id: callSession ? callSession.getId() : 'n/a', cameraEnabled });
     if (this.currentSipSession) {
       this.holdSipSession(this.currentSipSession, this.currentCallSession, true);
     }
@@ -591,7 +591,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     if (callSession.getId() in this.acceptedSessions) {
-      logger.warn('CallSession already accepted.');
+      logger.warn('CallSession already accepted.', { id: callSession ? callSession.getId() : 'n/a' });
       return Promise.resolve(callSession.sipCallId);
     }
 
@@ -620,7 +620,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       });
     }
 
-    logger.warn('no CallSession found to accept.');
+    logger.warn('no CallSession found to accept.', { id: callSession ? callSession.getId() : 'n/a' });
 
     return Promise.resolve(null);
   }
