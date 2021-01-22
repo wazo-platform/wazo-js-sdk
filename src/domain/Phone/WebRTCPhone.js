@@ -453,7 +453,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.onCallEnded(sipSession);
 
     const callSession = this._createCallSession(sipSession);
-    const isFirstIncomingCall = callSession.is(this.getIncomingCallSession());
+    const isFirstIncomingCall = this.incomingSessions.length === 1 || callSession.is(this.getIncomingCallSession());
 
     setTimeout(() => {
       // Avoid race condition when the other is calling and hanging up immediately
