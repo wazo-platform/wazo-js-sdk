@@ -253,7 +253,7 @@ export default class CallSession {
     return this.sipCallId || this.callId;
   }
 
-  is(callSession: CallSession) {
+  is(callSession: ?CallSession) {
     if (!callSession) {
       return false;
     }

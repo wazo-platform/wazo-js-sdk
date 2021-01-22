@@ -453,6 +453,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.onCallEnded(sipSession);
 
     const callSession = this._createCallSession(sipSession);
+    const isFirstIncomingCall = callSession.is(this.getIncomingCallSession());
 
     setTimeout(() => {
       // Avoid race condition when the other is calling and hanging up immediately
@@ -472,8 +473,16 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.currentCallSession = undefined;
     }
 
+    const hasIncomingCallSession = this.hasIncomingCallSession();
+
     // Re-trigger incoming call event for remaining incoming calls
-    if (this.hasIncomingCallSession()) {
+    logger.info('WebRTC phone - check to re-trigger incoming call', {
+      sipId: sipSession.id,
+      isFirstIncomingCall,
+      hasIncomingCallSession,
+    });
+
+    if (hasIncomingCallSession && isFirstIncomingCall) {
       const nextCallSession = this.getIncomingCallSession();
       // Avoid race condition
       setTimeout(() => {
