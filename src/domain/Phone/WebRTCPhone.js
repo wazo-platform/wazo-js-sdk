@@ -980,6 +980,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     const sessionId = this.incomingSessions[0];
+    if (!(sessionId in this.sipSessions)) {
+      return null;
+    }
 
     return this._createCallSession(this.sipSessions[sessionId]);
   }
