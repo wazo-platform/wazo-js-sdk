@@ -453,7 +453,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.onCallEnded(sipSession);
 
     const callSession = this._createCallSession(sipSession);
-    const isFirstIncomingCall = this.incomingSessions.length === 1 || callSession.is(this.getIncomingCallSession());
+    const isCurrentSession = this.isCurrentCallSipSession(callSession);
+    // If the terminated call was an incoming call, we have to re-trigger if it's was the first incoming call
+    // Otherwise, we have to re-trigger an incoming call event if another call is incoming
+    const shouldRetrigger = isCurrentSession
+      ? this.incomingSessions.length : callSession.is(this.getIncomingCallSession());
 
     setTimeout(() => {
       // Avoid race condition when the other is calling and hanging up immediately
@@ -468,7 +472,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     delete this.sipSessions[callSession.getId()];
     delete this.callSessions[callSession.getId()];
 
-    if (this.isCurrentCallSipSession(callSession)) {
+    if (isCurrentSession) {
       this.currentSipSession = undefined;
       this.currentCallSession = undefined;
     }
@@ -478,11 +482,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
     // Re-trigger incoming call event for remaining incoming calls
     logger.info('WebRTC phone - check to re-trigger incoming call', {
       sipId: sipSession.id,
-      isFirstIncomingCall,
+      shouldRetrigger,
       hasIncomingCallSession,
     });
 
-    if (hasIncomingCallSession && isFirstIncomingCall) {
+    if (hasIncomingCallSession && shouldRetrigger) {
       const nextCallSession = this.getIncomingCallSession();
       // Avoid race condition
       setTimeout(() => {
@@ -907,16 +911,16 @@ export default class WebRTCPhone extends Emitter implements Phone {
     logger.info('WebRTC hangup', { sipId: sipSession.id });
 
     const sipSessionId = this.getSipSessionId(sipSession);
-    if (sipSessionId) {
+
+    this.client.hangup(sipSession);
+    if (callSession) {
+      // Removal in `this.sipSessions` and `this.callSessions` will be done in `_onCallTerminated`.
+      this.endCurrentCall(callSession);
+    } else if (sipSessionId) {
       delete this.sipSessions[sipSessionId];
       if (callSession) {
         delete this.callSessions[callSession.getId()];
       }
-    }
-
-    this.client.hangup(sipSession);
-    if (callSession) {
-      this.endCurrentCall(callSession);
     }
 
     this.shouldSendReinvite = false;
