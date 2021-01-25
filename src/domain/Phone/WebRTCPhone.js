@@ -491,7 +491,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
       // Avoid race condition
       setTimeout(() => {
         if (this.ringingEnabled) {
-          this.eventEmitter.emit(ON_PLAY_RING_SOUND, this.audioRingDeviceId, this.audioRingVolume, nextCallSession);
+          if (!this.currentCallSession) {
+            this.eventEmitter.emit(ON_PLAY_RING_SOUND, this.audioRingDeviceId, this.audioRingVolume, nextCallSession);
+          } else {
+            this.eventEmitter.emit(ON_PLAY_INBOUND_CALL_SIGNAL_SOUND,
+              this.audioOutputDeviceId,
+              this.audioOutputVolume,
+              nextCallSession);
+          }
         }
 
         // $FlowFixMe
