@@ -454,15 +454,20 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     const callSession = this._createCallSession(sipSession);
     const isCurrentSession = this.isCurrentCallSipSession(callSession);
+    const isCurrentIncomingCall = callSession.is(this.getIncomingCallSession());
+
     // If the terminated call was an incoming call, we have to re-trigger if it's was the first incoming call
     // Otherwise, we have to re-trigger an incoming call event if another call is incoming
-    const shouldRetrigger = isCurrentSession
-      ? this.incomingSessions.length : callSession.is(this.getIncomingCallSession());
+    const shouldRetrigger = isCurrentSession ? this.incomingSessions.length : isCurrentIncomingCall;
 
-    setTimeout(() => {
-      // Avoid race condition when the other is calling and hanging up immediately
-      this.eventEmitter.emit(ON_TERMINATE_SOUND, callSession, 'call terminated');
-    }, 5);
+    // Terminate incoming sound only for the ringing call
+    // (so another terminated call won't stop the incoming call sound)
+    if (isCurrentIncomingCall) {
+      setTimeout(() => {
+        // Avoid race condition when the other is calling and hanging up immediately
+        this.eventEmitter.emit(ON_TERMINATE_SOUND, callSession, 'call terminated');
+      }, 5);
+    }
 
     const sipSessionId = this.getSipSessionId(sipSession);
     if (sipSessionId) {
