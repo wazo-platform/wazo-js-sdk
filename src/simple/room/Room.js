@@ -132,7 +132,7 @@ class Room extends Emitter {
    * @returns {Promise<Room>}
    */
   static async connect({ extension, constraints, audioOnly = false, extra, room }: Object) {
-    logger.info('connecting to room', { extension, audioOnly });
+    logger.info('connecting to room', { extension, audioOnly, room: !!room });
 
     if (!room) {
       await Wazo.Phone.connect({ media: constraints });
