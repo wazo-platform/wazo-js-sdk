@@ -128,33 +128,37 @@ class Room extends Emitter {
    * @param constraints string
    * @param audioOnly boolean
    * @param extra Object
+   * @param room ?Room
    * @returns {Promise<Room>}
    */
-  static async connect({ extension, constraints, audioOnly = false, extra }: Object) {
+  static async connect({ extension, constraints, audioOnly = false, extra, room }: Object) {
     logger.info('connecting to room', { extension, audioOnly });
 
-    await Wazo.Phone.connect({ media: constraints });
+    if (!room) {
+      await Wazo.Phone.connect({ media: constraints });
 
-    const withCamera = constraints && !!constraints.video;
+      const withCamera = constraints && !!constraints.video;
 
-    if (withCamera) {
-      Wazo.Phone.checkSfu();
+      if (withCamera) {
+        Wazo.Phone.checkSfu();
+      }
+
+      const callSession = await Wazo.Phone.call(extension, withCamera, null, audioOnly);
+      // eslint-disable-next-line no-param-reassign
+      room = new Room(callSession, extension, null, null, extra);
+
+      // Wait for the call to be accepted
+      await new Promise((resolve, reject) => {
+        Wazo.Phone.once(Wazo.Phone.ON_CALL_ACCEPTED, resolve);
+        Wazo.Phone.once(Wazo.Phone.ON_CALL_FAILED, reject);
+      });
     }
-
-    const callSession = await Wazo.Phone.call(extension, withCamera, null, audioOnly);
-    const room = new Room(callSession, extension, null, null, extra);
 
     // Call_created is triggered before call_accepted, so we have to listen for it here.
     let callId = '';
     Wazo.Websocket.once(Wazo.Websocket.CALL_CREATED, ({ data }) => {
       callId = data.call_id;
       room.setCallId(callId);
-    });
-
-    // Wait for the call to be accepted
-    await new Promise((resolve, reject) => {
-      Wazo.Phone.once(Wazo.Phone.ON_CALL_ACCEPTED, resolve);
-      Wazo.Phone.once(Wazo.Phone.ON_CALL_FAILED, reject);
     });
 
     // Fetch conference source
