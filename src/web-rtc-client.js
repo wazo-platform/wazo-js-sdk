@@ -1468,7 +1468,6 @@ export default class WebRTCClient extends Emitter {
 
     getStats(pc, (result: Object) => {
       const { results, internal, nomore, ...stats } = result;
-      logger.trace('Stop sending stats for call', { sessionId });
       this.statsIntervals[sessionId] = nomore;
 
       statsLogger.trace('stats', {
