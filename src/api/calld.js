@@ -157,7 +157,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   sendDTMF: (callId: string, digits: string) =>
     client.put(`${baseUrl}/users/me/calls/${callId}/dtmf?digits=${encodeURIComponent(digits)}`,
-    null, null, ApiRequester.successResponseParser),
+      null, null, ApiRequester.successResponseParser),
 
   // @deprecated: check for engine version >= 20.12 instead
   isAhHocConferenceAPIEnabled: () => client.head(`${baseUrl}/users/me/conferences/adhoc`, null, null,
