@@ -143,6 +143,12 @@ class Room extends Emitter {
         Wazo.Phone.checkSfu();
       }
 
+      // Call_created is triggered before call_accepted, so we have to listen for it here.
+      Wazo.Websocket.once(Wazo.Websocket.CALL_CREATED, ({ data }) => {
+        logger.info('room call received via WS', { callId: data.call_id });
+        room.setCallId(data.call_id);
+      });
+
       const callSession = await Wazo.Phone.call(extension, withCamera, null, audioOnly);
       // eslint-disable-next-line no-param-reassign
       room = new Room(callSession, extension, null, null, extra);
@@ -154,12 +160,9 @@ class Room extends Emitter {
       });
     }
 
-    // Call_created is triggered before call_accepted, so we have to listen for it here.
-    let callId = '';
-    Wazo.Websocket.once(Wazo.Websocket.CALL_CREATED, ({ data }) => {
-      callId = data.call_id;
-      room.setCallId(callId);
-    });
+    if (room.callSession && room.callSession.call) {
+      room.setCallId(room.callSession.call.id);
+    }
 
     // Fetch conference source
     const sources = await getApiClient().dird.fetchConferenceSource('default');
@@ -170,7 +173,6 @@ class Room extends Emitter {
 
     logger.info('connected to room', {
       sourceId: conference ? conference.sourceId : null,
-      callId,
       name: conference ? conference.name : null,
     });
 
@@ -178,8 +180,6 @@ class Room extends Emitter {
       room.setSourceId(conference.sourceId);
       room.setName(conference.name);
     }
-
-    room.setCallId(callId);
 
     return room;
   }
@@ -221,7 +221,9 @@ class Room extends Emitter {
   setCallId(callId: string) {
     logger.info('set room call id', { callId });
 
-    this.callId = callId;
+    if (callId) {
+      this.callId = callId;
+    }
   }
 
   setName(name: string) {
