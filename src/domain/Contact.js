@@ -22,6 +22,7 @@ export type NewContact = {
   birthday: ?string,
   note: ?string,
   sessions: ?Array<{ uuid: string, mobile: boolean}>,
+  connected: ?boolean,
 };
 
 export type ContactResponse = {
@@ -148,6 +149,7 @@ type ContactArguments = {
   backend?: string,
   personalStatus?: string,
   sessions?: Array<{ uuid: string, mobile: boolean}>,
+  connected?: boolean,
   doNotDisturb?: boolean,
   ringing?: boolean,
 };
@@ -248,6 +250,7 @@ export default class Contact {
   backend: ?string;
   personalStatus: string;
   sessions: ?Array<{ uuid: string, mobile: boolean}>;
+  connected: ?boolean;
   doNotDisturb: ?boolean;
   ringing: ?boolean;
 
@@ -537,6 +540,7 @@ export default class Contact {
     backend,
     personalStatus,
     sessions,
+    connected,
     doNotDisturb,
     ringing,
   }: ContactArguments = {}) {
@@ -564,6 +568,7 @@ export default class Contact {
     this.backend = backend;
     this.personalStatus = personalStatus || '';
     this.sessions = sessions || [];
+    this.connected = connected;
     this.doNotDisturb = doNotDisturb;
     this.ringing = ringing;
 
