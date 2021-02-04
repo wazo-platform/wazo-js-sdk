@@ -20,6 +20,7 @@ export const LINE_STATE = {
   RINGING: 'ringing',
   TALKING: 'talking',
   UNAVAILABLE: 'unavailable',
+  PROGRESSING: 'progressing',
 };
 
 type ProfileResponse = {
