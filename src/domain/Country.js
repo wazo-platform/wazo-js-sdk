@@ -3,6 +3,7 @@ export default {
   CANADA: 'CA',
   FRANCE: 'FR',
   GERMANY: 'DE',
+  ISRAEL: 'IL',
   ITALY: 'IT',
   LUXEMBOURG: 'LU',
   MALAYSIA: 'MY',
