@@ -4,6 +4,7 @@ export default {
   FRANCE: 'FR',
   GERMANY: 'DE',
   ITALY: 'IT',
+  ISRAEL: 'IL',
   LUXEMBOURG: 'LU',
   MALAYSIA: 'MY',
   MONACO: 'MC',
