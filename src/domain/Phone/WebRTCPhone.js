@@ -184,6 +184,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   sendReinvite(sipSession: Session, newConstraints: Object = null) {
+    logger.info('WebRTC phone - send reinvite', { sessionId: sipSession ? sipSession.id : null, newConstraints });
+
     if (!sipSession) {
       return;
     }
@@ -1088,7 +1090,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
     });
 
     this.client.on(this.client.REGISTERED, () => {
-      logger.info('WebRTC registered', { shouldSendReinvite: this.shouldSendReinvite });
+      logger.info('WebRTC registered', {
+        shouldSendReinvite: this.shouldSendReinvite,
+        state: this.currentSipSession ? this.currentSipSession.state : null,
+        currentSipSession: !!this.currentSipSession,
+      });
       this.stopHeartbeat();
       this.eventEmitter.emit(ON_REGISTERED);
 
