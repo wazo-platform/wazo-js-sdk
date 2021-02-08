@@ -143,6 +143,7 @@ type ContactArguments = {
   source?: string,
   sourceId?: ?string,
   lineState?: string,
+  previousPresential?: string,
   lastActivity?: string;
   mobile?: boolean,
   status?: string,
@@ -242,6 +243,7 @@ export default class Contact {
   personal: ?boolean;
   state: ?string;
   lineState: ?string;
+  previousPresential: ?string;
   lastActivity: ?string;
   mobile: ?boolean;
   source: ?string;
@@ -543,6 +545,7 @@ export default class Contact {
     connected,
     doNotDisturb,
     ringing,
+    previousPresential,
   }: ContactArguments = {}) {
     this.id = id;
     this.uuid = uuid;
@@ -571,6 +574,7 @@ export default class Contact {
     this.connected = connected;
     this.doNotDisturb = doNotDisturb;
     this.ringing = ringing;
+    this.previousPresential = previousPresential;
 
     // Useful to compare instead of instanceof with minified code
     this.type = 'Contact';
@@ -631,6 +635,10 @@ export default class Contact {
 
   isInUseOrRinging(): boolean {
     return this.lineState === LINE_STATE.TALKING || this.lineState === LINE_STATE.RINGING;
+  }
+
+  isProgressing(): boolean {
+    return this.lineState === LINE_STATE.PROGRESSING;
   }
 
   merge(old: Contact): Contact {
