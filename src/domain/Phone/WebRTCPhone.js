@@ -32,6 +32,7 @@ export const ON_CAMERA_RESUMED = 'onCameraResumed';
 export const ON_CALL_CANCELED = 'onCallCanceled';
 export const ON_CALL_FAILED = 'onCallFailed';
 export const ON_CALL_ENDED = 'onCallEnded';
+export const ON_CALL_ENDING = 'onCallEnding';
 export const ON_MESSAGE = 'onMessage';
 export const ON_REINVITE = 'reinvite';
 export const ON_TRACK = 'onTrack';
@@ -274,6 +275,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
             this.audioOutputDeviceId,
             this.audioOutputVolume,
           );
+        case SessionState.Terminating:
+          logger.info('WebRTC phone - call terminating', { sipId: sipSession.id });
+
+          this.eventEmitter.emit(ON_CALL_ENDING, this._createCallSession(sipSession));
+
+          break;
         case SessionState.Terminated:
           logger.info('WebRTC phone - call terminated', { sipId: sipSession.id });
 
@@ -939,6 +946,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     this.shouldSendReinvite = false;
     return true;
+  }
+
+  forceCancel(sipSession: Session): void {
+    if (!sipSession) {
+      return;
+    }
+    sipSession.outgoingInviteRequest.cancel();
   }
 
   endCurrentCall(callSession: CallSession): void {

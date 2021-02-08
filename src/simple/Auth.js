@@ -63,6 +63,8 @@ class Auth {
   }
 
   async logIn(username: string, password: string) {
+    this.authenticated = false;
+    this.session = null;
     const rawSession = await getApiClient().auth.logIn({
       username,
       password,
