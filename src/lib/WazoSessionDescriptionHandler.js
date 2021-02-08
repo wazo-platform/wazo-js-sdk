@@ -47,11 +47,6 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
 
   // Overridden to avoid to fix ice-candidates missing in the SDP in react-native and chrome canary.
   getDescription(options?: Object = {}, modifiers?: Array<Function>): Promise<any> {
-    const isReinvite = !('disableVideo' in options);
-    if (isReinvite) {
-      // Calling createOffer twice in a reinvite create `undefined` sdp in modifiers
-      return super.getDescription(options, modifiers);
-    }
     this.logger.debug('SessionDescriptionHandler.getDescription');
     if (this._peerConnection === undefined) {
       return Promise.reject(new Error('Peer connection closed.'));
