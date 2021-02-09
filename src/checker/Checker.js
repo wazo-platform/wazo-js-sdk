@@ -11,11 +11,13 @@ const logger = IssueReporter.loggerFor('engine-check');
 class Checker {
   session: Session;
   server: string;
+  externalAppConfig: Object;
   checks: Object[];
 
-  constructor(server: string, session: Session) {
+  constructor(server: string, session: Session, externalAppConfig: Object = {}) {
     this.server = server;
     this.session = session;
+    this.externalAppConfig = externalAppConfig;
     this.checks = [...checks];
   }
 
@@ -32,7 +34,7 @@ class Checker {
       onCheckBegin(name);
       try {
         // eslint-disable-next-line no-await-in-loop
-        const result = await check(this.server, this.session);
+        const result = await check(this.server, this.session, this.externalAppConfig);
         logger.info(`Checking ${name} success.`, { result });
 
         onCheckResult(name, result);
