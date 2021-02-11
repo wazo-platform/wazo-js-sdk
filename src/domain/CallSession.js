@@ -28,6 +28,8 @@ type CallSessionArguments = {
   autoAnswer?: boolean,
   ignored?: boolean,
   screensharing: boolean,
+  recording: boolean,
+  recordingPaused: boolean,
 };
 
 export default class CallSession {
@@ -79,6 +81,10 @@ export default class CallSession {
 
   type: string;
 
+  recording: boolean;
+
+  recordingPaused: boolean;
+
   constructor({
     answered,
     answeredBySystem,
@@ -100,6 +106,8 @@ export default class CallSession {
     autoAnswer,
     ignored,
     screensharing,
+    recording,
+    recordingPaused,
   }: CallSessionArguments) {
     this.callId = callId;
     this.sipCallId = sipCallId;
@@ -121,6 +129,8 @@ export default class CallSession {
     this.autoAnswer = autoAnswer || false;
     this.ignored = ignored || false;
     this.screensharing = screensharing || false;
+    this.recording = recording || false;
+    this.recordingPaused = recordingPaused || false;
 
     // Useful to compare instead of instanceof with minified code
     this.type = 'CallSession';
@@ -222,6 +232,14 @@ export default class CallSession {
     return this.screensharing;
   }
 
+  isRecording(): boolean {
+    return this.recording;
+  }
+
+  recordingIsPaused(): boolean {
+    return this.recordingPaused;
+  }
+
   hasAnInitialInterceptionNumber(): boolean {
     return this.number.startsWith('*8');
   }
@@ -300,6 +318,8 @@ export default class CallSession {
       muted: false,
       videoMuted: false,
       screensharing: false,
+      recording: call.isRecording(),
+      recordingPaused: false, // @TODO
       ringing: call.isRinging(),
       answered: call.isUp(),
       answeredBySystem: call.isUp() && call.talkingToIds.length === 0,

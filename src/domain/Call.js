@@ -3,6 +3,8 @@
 import moment from 'moment';
 import newFrom from '../utils/new-from';
 
+const RECORD_STATE_ACTIVE = 'active';
+
 type CallResponse = {
   call_id: string,
   sip_call_id: string,
@@ -18,6 +20,7 @@ type CallResponse = {
   on_hold: boolean,
   muted: boolean,
   talking_to: Object,
+  record_state: boolean,
 };
 
 type CallArguments = {
@@ -35,6 +38,7 @@ type CallArguments = {
   status: string,
   startingTime: Date,
   talkingToIds: string[],
+  recording: boolean,
 };
 
 export default class Call {
@@ -54,6 +58,7 @@ export default class Call {
   status: string;
   startingTime: Date;
   talkingToIds: string[];
+  recording: boolean;
 
   static parseMany(plain: Array<CallResponse>): Array<Call> {
     return plain.map((plainCall: CallResponse) => Call.parse(plainCall));
@@ -75,6 +80,7 @@ export default class Call {
       lineId: plain.line_id,
       startingTime: moment(plain.creation_time).toDate(),
       talkingToIds: Object.keys(plain.talking_to || {}),
+      recording: plain.record_state === RECORD_STATE_ACTIVE,
     });
   }
 
@@ -97,6 +103,7 @@ export default class Call {
     status,
     startingTime,
     talkingToIds,
+    recording,
   }: CallArguments = {}) {
     this.id = id;
     this.sipCallId = sipCallId;
@@ -112,6 +119,7 @@ export default class Call {
     this.status = status;
     this.startingTime = startingTime;
     this.talkingToIds = talkingToIds || [];
+    this.recording = recording;
 
     // Useful to compare instead of instanceof with minified code
     this.type = 'Call';
@@ -176,5 +184,9 @@ export default class Call {
 
   resume(): void {
     this.onHold = false;
+  }
+
+  isRecording(): boolean {
+    return this.recording;
   }
 }
