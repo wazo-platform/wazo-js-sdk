@@ -1252,6 +1252,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
       ringing: false,
       muted: fromSession ? fromSession.isMuted() : false,
       videoMuted: fromSession ? fromSession.isVideoMuted() : false,
+      recording: fromSession ? fromSession.isRecording() : false,
+      recordingPaused: false, // @TODO
       ...extra,
     });
 
