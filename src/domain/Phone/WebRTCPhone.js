@@ -1079,7 +1079,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
     });
 
     this.client.on(this.client.ON_REINVITE, (...args) => {
-      logger.info('WebRTC reinvite', { sessionId: args[0].id, inviteId: args[1].id, updatedCalleeName: args[2] });
+      logger.info('WebRTC reinvite', {
+        sessionId: args[0].id,
+        inviteId: args[1].id,
+        updatedCalleeName: args[2],
+        updatedNumber: args[3],
+      });
+
       const sipSession = args[0];
       // Update callSession
       this._createCallSession(sipSession);

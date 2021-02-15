@@ -1251,10 +1251,12 @@ export default class WebRTCClient extends Emitter {
 
     session.delegate.onInvite = (inviteRequest: IncomingRequestMessage) => {
       let updatedCalleeName = null;
+      let updatedNumber = null;
       if (session.assertedIdentity) {
-        updatedCalleeName = session.assertedIdentity.displayName || session.assertedIdentity.uri.normal.user;
+        updatedNumber = session.assertedIdentity.uri.normal.user;
+        updatedCalleeName = session.assertedIdentity.displayName || updatedNumber;
       }
-      logger.info('re-invite received', { updatedCalleeName });
+      logger.info('re-invite received', { updatedCalleeName, updatedNumber });
 
       // Update SDP
       // Remote video is handled by the `track` event. Here we're dealing with video stream removal.
@@ -1267,7 +1269,7 @@ export default class WebRTCClient extends Emitter {
         this._setupRemoteMedia(session);
       }
 
-      return this.eventEmitter.emit(ON_REINVITE, session, inviteRequest, updatedCalleeName);
+      return this.eventEmitter.emit(ON_REINVITE, session, inviteRequest, updatedCalleeName, updatedNumber);
     };
   }
 
