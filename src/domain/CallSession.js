@@ -43,6 +43,8 @@ export default class CallSession {
   // Used to retrieve the real callee when doing indirect transfer
   realDisplayName: string;
 
+  updatedNumber: string;
+
   number: string;
 
   callerNumber: string;
