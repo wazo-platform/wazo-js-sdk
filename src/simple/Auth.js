@@ -141,8 +141,8 @@ class Auth {
 
   checkSubscription(session: Session, minSubscriptionType: number) {
     const userSubscriptionType = session.profile ? session.profile.subscriptionType : null;
-    if (!userSubscriptionType || userSubscriptionType <= minSubscriptionType) {
-      const message = `Invalid subscription ${userSubscriptionType || ''}, required at least ${minSubscriptionType}`;
+    if (userSubscriptionType === null || +userSubscriptionType <= minSubscriptionType) {
+      const message = `Invalid subscription ${userSubscriptionType || 'n/a'}, required at least ${minSubscriptionType}`;
       throw new InvalidSubscription(message);
     }
   }
@@ -226,7 +226,9 @@ class Auth {
       session.profile = profile;
 
       this.checkAuthorizations(session, this.authorizationName);
-      this.checkSubscription(session, this.minSubscriptionType);
+      if (this.minSubscriptionType !== null) {
+        this.checkSubscription(session, this.minSubscriptionType);
+      }
     } catch (e) {
       // Destroy tokens when validation fails
       if (this.clientId) {
