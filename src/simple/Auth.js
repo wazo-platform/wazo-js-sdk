@@ -23,7 +23,7 @@ const logger = IssueReporter.loggerFor('simple-auth');
 class Auth {
   clientId: string;
   expiration: number;
-  minSubscriptionType: number;
+  minSubscriptionType: ?number;
   authorizationName: ?string;
   host: ?string;
   session: ?Session;
@@ -34,12 +34,17 @@ class Auth {
   constructor() {
     this.expiration = DETAULT_EXPIRATION;
     this.authenticated = false;
+    this.minSubscriptionType = null;
   }
 
-  init(clientId: string, expiration: number, minSubscriptionType: number, authorizationName: ?string, mobile: boolean) {
+  init(clientId: string,
+    expiration: number,
+    minSubscriptionType: ?number,
+    authorizationName: ?string,
+    mobile: boolean) {
     this.clientId = clientId;
     this.expiration = expiration;
-    this.minSubscriptionType = minSubscriptionType;
+    this.minSubscriptionType = minSubscriptionType || null;
     this.authorizationName = authorizationName;
     this.host = null;
     this.session = null;
@@ -227,7 +232,7 @@ class Auth {
 
       this.checkAuthorizations(session, this.authorizationName);
       if (this.minSubscriptionType !== null) {
-        this.checkSubscription(session, this.minSubscriptionType);
+        this.checkSubscription(session, +this.minSubscriptionType);
       }
     } catch (e) {
       // Destroy tokens when validation fails
