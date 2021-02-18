@@ -47,7 +47,7 @@
   "dependencies": {
     "events": "^3.2.0",
     "fstream": "^1.0.12",
-    "getstats": "^1.2.0",
+    "getstats": "manuquentin/getStats#fix_undefined_results",
     "globby": "^11.0.1",
     "google-libphonenumber": "^3.2.15",
     "js-base64": "^3.6.0",
