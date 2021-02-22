@@ -415,8 +415,10 @@ export default class WebRTCClient extends Emitter {
       sessionDescriptionHandlerOptions: this._getMediaConfiguration(enableVideo || false),
     };
 
+    inviteOptions.sessionDescriptionHandlerModifiers = [replaceLocalIpModifier];
+
     if (audioOnly) {
-      inviteOptions.sessionDescriptionHandlerModifiers = [stripVideo];
+      inviteOptions.sessionDescriptionHandlerModifiers.push(stripVideo);
     }
 
     // Do not await invite here or we'll miss the Establishing state transition
