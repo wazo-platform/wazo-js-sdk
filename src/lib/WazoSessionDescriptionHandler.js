@@ -10,8 +10,11 @@ import type SessionDescriptionHandlerConfiguration
 import { SessionDescriptionHandler }
   from 'sip.js/lib/platform/web/session-description-handler/session-description-handler';
 import IssueReporter from '../service/IssueReporter';
+import { isSdpValid } from '../utils/sdp';
 
 const wazoLogger = IssueReporter.loggerFor('webrtc-sdh');
+const MAX_WAIT_FOR_ICE_TRIES = 20;
+const WAIT_FOR_ICE_TIMEOUT = 500;
 
 class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
   constructor(
@@ -65,15 +68,12 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     const isOffer = this._peerConnection.signalingState === 'stable';
 
     // Fetch ice ourselves for re-invite
-    const gatheredIces = [];
+    const shouldRecreateOffer = isOffer && this._peerConnection;
     if (!this.peerConnectionDelegate) {
       this.peerConnectionDelegate = {};
     }
     this.peerConnectionDelegate.onicecandidate = event => {
       wazoLogger.info('onicecandidate', event.candidate ? event.candidate.candidate : { done: true });
-      if (event.candidate) {
-        gatheredIces.push(event.candidate.candidate);
-      }
     };
 
     return this.getLocalMediaStream(options)
@@ -82,24 +82,8 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       .then((sessionDescription) => this.applyModifiers(sessionDescription, modifiers))
       .then((sessionDescription) => this.setLocalSessionDescription(sessionDescription))
       .then(() => this.waitForIceGatheringComplete(iceRestart, iceTimeout))
-      .then((description: any) =>
-        (isOffer && this._peerConnection ? this._peerConnection.createOffer(options.offerOptions || {}) : description))
+      .then(() => (shouldRecreateOffer ? this._waitForValidSdp(options) : this.getLocalSessionDescription()))
       .then((sessionDescription) => this.applyModifiers(sessionDescription, modifiers))
-      .then((sessionDescription: any) =>
-        (isOffer ? this.setLocalSessionDescription(sessionDescription) : sessionDescription))
-      .then(() => this.getLocalSessionDescription())
-      .then((localDescription) => {
-        // Avoid immutable errors
-        const newDescription = JSON.parse(JSON.stringify(localDescription));
-        // Add ice candidates if not present
-        if (newDescription && newDescription.sdp.indexOf('a=candidate') === -1) {
-          gatheredIces.forEach(ice => {
-            // eslint-disable-next-line
-            newDescription.sdp += `a=${ice}${"\n"}`;
-          });
-        }
-        return newDescription;
-      })
       .then((sessionDescription) => ({ body: sessionDescription.sdp, contentType: 'application/sdp' }))
       .catch((error) => {
         wazoLogger.error('error when creating media', error);
@@ -215,6 +199,35 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     }
     this._peerConnection.close();
     this._peerConnection = undefined;
+  }
+
+  _waitForValidSdp = async (options: Object) => {
+    let tries = 0;
+
+    // Retrieve new SDP to check for candidate before entering the loop
+    let description = await this._peerConnection.createOffer(options.offerOptions || {});
+
+    // Check if ice candidates are received
+    while (!isSdpValid(description.sdp) && tries < MAX_WAIT_FOR_ICE_TRIES) {
+      wazoLogger.trace('SessionDescriptionHandler._waitForValidSdp, waiting for ice', {
+        tries,
+        max: MAX_WAIT_FOR_ICE_TRIES,
+      });
+      // Loop in waitForIceGatheringComplete 10 times every seconds until we got ice
+      tries++;
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise(resolve => setTimeout(resolve, WAIT_FOR_ICE_TIMEOUT));
+      // eslint-disable-next-line no-await-in-loop
+      description = await this._peerConnection.createOffer(options.offerOptions || {});
+    }
+
+    if (tries === MAX_WAIT_FOR_ICE_TRIES) {
+      const error = 'No valid SDP found, can\'t make call';
+      wazoLogger.error(error, { tries, max: MAX_WAIT_FOR_ICE_TRIES });
+      throw new Error(error);
+    }
+
+    return description;
   }
 }
 
