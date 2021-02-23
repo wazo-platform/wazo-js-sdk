@@ -8,7 +8,7 @@ export default class ServerError extends BadResponse {
       status,
       error.timestamp,
       error.error_id,
-      error.details
+      error.details,
     );
   }
 
