@@ -1,5 +1,5 @@
 /* eslint-disable max-len */
-import { getCandidates, isSdpValid } from '../sdp';
+import { getCandidates, isSdpValid, parseCandidate, areCandidateValid } from '../sdp';
 
 const goodSdp = `
 c=IN IP4 203.0.113.1
@@ -39,6 +39,8 @@ m=audio 54400 RTP/SAVPF 0 96
 a=candidate:0 1 UDP 2113667327 203.0.113.1 54400 typ host
 `;
 
+const candidate = 'candidate:3996450952 1 udp 41819903 14.72.2.1 57021 typ relay raddr 0.0.0.0 rport 0 generation 0 ufrag Ja/g network-id 3 network-cost 10';
+
 describe('SDP utils', () => {
   describe('Parsing candidates', () => {
     it('should return all candidates', async () => {
@@ -51,10 +53,29 @@ describe('SDP utils', () => {
       expect(isSdpValid(goodSdp)).toBeTruthy();
 
       expect(getCandidates(badMobileSdp).length).toBe(0);
+      expect(getCandidates(null).length).toBe(0);
+      expect(getCandidates('').length).toBe(0);
+      expect(getCandidates('nothing!').length).toBe(0);
     });
   });
 
-  describe('Validating sdl', () => {
+  describe('Parsing candidate', () => {
+    it('should parse a single candidate', async () => {
+      const parsed = parseCandidate(candidate);
+
+      expect(parsed.type).toBe('relay');
+      expect(parsed.ip).toBe('14.72.2.1');
+    });
+  });
+
+  describe('Validating candidates', () => {
+    it('should parse a single candidate', async () => {
+      expect(areCandidateValid([null])).toBeFalsy();
+      expect(areCandidateValid([parseCandidate(candidate)])).toBeTruthy();
+    });
+  });
+
+  describe('Validating sdp', () => {
     it('should tell if a sdp is valid', async () => {
       expect(isSdpValid(goodSdp)).toBeTruthy();
       expect(isSdpValid(badSdp)).toBeFalsy();
