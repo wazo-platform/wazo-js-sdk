@@ -1,7 +1,7 @@
 /* global MediaStream, RTCPeerConnection */
 import { parseCandidate } from '../../utils/webrtc';
 
-const timeoutDuration = 5000;
+const timeoutDuration = 8000;
 
 // @see https://webrtchacks.com/symmetric-nat/
 export default {
@@ -15,10 +15,6 @@ export default {
     const rawCandidates = [];
     let nbCandidates = 0;
 
-    const timeout = setTimeout(() => {
-      reject(new Error(`Timed out after ${timeoutDuration}, ${nbCandidates} candidates : ${rawCandidates.join(', ')}`));
-    }, timeoutDuration);
-
     const pc = new RTCPeerConnection({
       iceServers: [
         { urls: 'stun:stun.wazo.io:443' },
@@ -26,6 +22,26 @@ export default {
         { urls: 'stun:stun2.l.google.com:19302' },
       ],
     });
+
+    let timeout;
+
+    const onEnded = () => {
+      clearTimeout(timeout);
+
+      if (Object.keys(candidates).length === 0) {
+        reject(new Error(`Timed out (${timeoutDuration}ms), ${nbCandidates} candidates : ${rawCandidates.join(', ')}`));
+        return;
+      }
+      const ports = candidates[Object.keys(candidates)[0]];
+
+      if (ports.length === 1) {
+        resolve();
+      } else {
+        reject(new Error('Symmetric NAT detected, you should use a TURN server.'));
+      }
+    };
+
+    timeout = setTimeout(onEnded, timeoutDuration);
 
     pc.createDataChannel('wazo-check-nat');
 
@@ -41,17 +57,7 @@ export default {
         if (!candidates[cand.relatedPort]) candidates[cand.relatedPort] = [];
         candidates[cand.relatedPort].push(cand.port);
       } else if (!e.candidate) {
-        if (Object.keys(candidates).length === 1) {
-          const ports = candidates[Object.keys(candidates)[0]];
-
-          clearTimeout(timeout);
-
-          if (ports.length === 1) {
-            resolve();
-          } else {
-            reject(new Error('Symmetric NAT detected, you should use a TURN server.'));
-          }
-        }
+        onEnded();
       }
     };
 

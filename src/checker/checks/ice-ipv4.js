@@ -62,7 +62,7 @@ export default {
         }
       } else if (!e.candidate) {
         if (!hasSrflxOrRelay) {
-          return resolve('No `srflx` or `relay` found in ice candidate. Please consider using a TURN server.');
+          return reject(new Error('No `srflx` or `relay` found in candidate. Please consider using a TURN server.'));
         }
         if (ips.every(checkIsIPV4)) {
           resolve();
