@@ -87,8 +87,14 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       .then((sessionDescription) => this.applyModifiers(sessionDescription, modifiers))
       .then((sessionDescription) => this.setLocalSessionDescription(sessionDescription))
       .then(() => this.waitForIceGatheringComplete(iceRestart, iceTimeout))
-      .then(() => (isOffer ? this._waitForValidSdp(options) : this._waitForValidGatheredIce()))
-      .then((sessionDescription) => this.applyModifiers(sessionDescription, modifiers))
+      .then(this._waitForValidGatheredIce)
+      .then((description: any) => {
+        if (!this._peerConnection) {
+          throw new Error('No peer connection');
+        }
+
+        return isOffer ? this._peerConnection.createOffer(options.offerOptions || {}) : description;
+      })
       .then((sessionDescription) => ({ body: sessionDescription.sdp, contentType: 'application/sdp' }))
       .catch((error) => {
         wazoLogger.error('error when creating media', error);
@@ -206,36 +212,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     this._peerConnection = undefined;
   }
 
-  _waitForValidSdp = async (options: Object) => {
-    let tries = 0;
-
-    // Retrieve new SDP to check for candidate before entering the loop
-    let description = await this._peerConnection.createOffer(options.offerOptions || {});
-
-    // Check if ice candidates are received
-    while (!isSdpValid(description.sdp) && tries < MAX_WAIT_FOR_ICE_TRIES) {
-      wazoLogger.trace('SessionDescriptionHandler._waitForValidSdp, waiting for ice', {
-        tries,
-        max: MAX_WAIT_FOR_ICE_TRIES,
-      });
-      // Loop in waitForIceGatheringComplete x times every y seconds until we got ice
-      tries++;
-      // eslint-disable-next-line no-await-in-loop
-      await new Promise(resolve => setTimeout(resolve, WAIT_FOR_ICE_TIMEOUT));
-      // eslint-disable-next-line no-await-in-loop
-      description = await this._peerConnection.createOffer(options.offerOptions || {});
-    }
-
-    if (tries === MAX_WAIT_FOR_ICE_TRIES) {
-      const error = 'No valid SDP found, can\'t make call';
-      wazoLogger.error(error, { tries, max: MAX_WAIT_FOR_ICE_TRIES });
-      throw new Error(error);
-    }
-
-    return description;
-  }
-
-  _waitForValidGatheredIce = async () => {
+  _waitForValidGatheredIce = async (): Object => {
     let tries = 0;
 
     while (!areCandidateValid(this.gatheredCandidates)) {
