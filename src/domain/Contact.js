@@ -260,7 +260,7 @@ export default class Contact {
     return newContacts.map(current => {
       const old = oldContacts.find(contact => contact && contact.is(current));
 
-      return typeof old !== 'undefined' ? current.merge(old) : current;
+      return old ? current.merge(old) : current;
     });
   }
 
@@ -642,9 +642,11 @@ export default class Contact {
   }
 
   merge(old: Contact): Contact {
-    this.state = old.state;
-    this.status = old.status;
-    this.mobile = old.mobile;
+    Object.keys(old).filter(key => key !== 'lineState').forEach(key => {
+      // $FlowFixMe
+      this[key] = old[key] || this[key];
+    });
+
     if (old.lineState && !this.lineState) {
       this.lineState = old.lineState;
     }

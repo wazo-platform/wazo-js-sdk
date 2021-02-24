@@ -155,4 +155,16 @@ describe('Contact domain', () => {
       }),
     );
   });
+
+  it('should merge 2 contact', () => {
+    // $FlowFixMe
+    const contact = new Contact({ uuid: 'uuid-12345', lastActivity: 'yesterday', birthday: null });
+    // $FlowFixMe
+    const contact2 = new Contact({ uuid: 'uuid-12345', lastActivity: null, birthday: 'tomorrow' });
+
+    const result = contact.merge(contact2);
+
+    expect(result.lastActivity).toBe('yesterday');
+    expect(result.birthday).toBe('tomorrow');
+  });
 });
