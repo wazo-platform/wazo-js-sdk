@@ -10,7 +10,7 @@ import type SessionDescriptionHandlerConfiguration
 import { SessionDescriptionHandler }
   from 'sip.js/lib/platform/web/session-description-handler/session-description-handler';
 import IssueReporter from '../service/IssueReporter';
-import { areCandidateValid, isSdpValid, parseCandidate } from '../utils/sdp';
+import { areCandidateValid, parseCandidate } from '../utils/sdp';
 
 const wazoLogger = IssueReporter.loggerFor('webrtc-sdh');
 const MAX_WAIT_FOR_ICE_TRIES = 20;
