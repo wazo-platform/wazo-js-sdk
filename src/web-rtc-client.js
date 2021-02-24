@@ -67,6 +67,7 @@ const ACCEPTED = 'accepted';
 const REJECTED = 'rejected';
 const ON_TRACK = 'onTrack';
 const ON_REINVITE = 'reinvite';
+const ON_ERROR = 'onError';
 
 export const events = [REGISTERED, UNREGISTERED, REGISTRATION_FAILED, INVITE];
 export const transportEvents = [CONNECTED, DISCONNECTED, TRANSPORT_ERROR, MESSAGE];
@@ -137,6 +138,7 @@ export default class WebRTCClient extends Emitter {
   REJECTED: string;
   ON_TRACK: string;
   ON_REINVITE: string;
+  ON_ERROR: string;
 
   static isAPrivateIp(ip: string): boolean {
     const regex = /^(?:10|127|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\..*/;
@@ -192,6 +194,7 @@ export default class WebRTCClient extends Emitter {
     this.REJECTED = REJECTED;
     this.ON_TRACK = ON_TRACK;
     this.ON_REINVITE = ON_REINVITE;
+    this.ON_ERROR = ON_ERROR;
   }
 
   configureMedia(media: MediaConfig) {
@@ -1238,6 +1241,10 @@ export default class WebRTCClient extends Emitter {
     }
 
     session.delegate.onSessionDescriptionHandler = (sdh: SessionDescriptionHandler) => {
+      sdh.on('error', e => {
+        this.eventEmitter.emit(ON_ERROR, e);
+      });
+
       sdh.peerConnectionDelegate = {
         onicecandidateerror: (error: Object) => {
           logger.error('on icecandidate error', {

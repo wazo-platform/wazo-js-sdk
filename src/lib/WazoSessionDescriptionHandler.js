@@ -215,7 +215,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
   _waitForValidGatheredIce = async (): Object => {
     let tries = 0;
 
-    while (!areCandidateValid(this.gatheredCandidates)) {
+    while (!areCandidateValid(this.gatheredCandidates) && tries < MAX_WAIT_FOR_ICE_TRIES) {
       wazoLogger.trace('SessionDescriptionHandler._waitForValidGatheredIce, waiting for ice', {
         tries,
         max: MAX_WAIT_FOR_ICE_TRIES,
@@ -227,10 +227,15 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       await new Promise(resolve => setTimeout(resolve, WAIT_FOR_ICE_TIMEOUT));
     }
 
-    if (tries === MAX_WAIT_FOR_ICE_TRIES) {
-      const error = 'No valid candidates found, can\'t answer the call';
-      wazoLogger.error(error, { tries, max: MAX_WAIT_FOR_ICE_TRIES });
-      throw new Error(error);
+    if (tries >= MAX_WAIT_FOR_ICE_TRIES) {
+      const errorMsg = 'No valid candidates found, can\'t answer the call';
+      const error = new Error(errorMsg);
+      wazoLogger.error(errorMsg, { tries, max: MAX_WAIT_FOR_ICE_TRIES });
+
+      // Emit an error, because sip.js catches the exception and switch to status Terminated.
+      this.eventEmitter.emit('error', error);
+
+      throw error;
     }
 
     return this.getLocalSessionDescription();
