@@ -1,5 +1,7 @@
 /* eslint-disable max-len */
-import { getCandidates, isSdpValid, parseCandidate, areCandidateValid } from '../sdp';
+import sdpParser from 'sdp-transform';
+
+import { getCandidates, isSdpValid, parseCandidate, areCandidateValid, fixSdp } from '../sdp';
 
 const goodSdp = `
 c=IN IP4 203.0.113.1
@@ -15,7 +17,7 @@ t=0 0
 a=group:BUNDLE audio
 a=msid-semantic: WMS 2a3e8274-4db9-4f34-8f1e-55253704e963
 m=audio 9 UDP/TLS/RTP/SAVPF 111 103 104 9 102 0 8 106 105 13 110 112 113 126
-c=IN IP4 127.0.0.1
+c=IN IP4 0.0.0.0
 a=rtcp:9 IN IP4 0.0.0.0
 a=ice-ufrag:FPMp
 a=ice-pwd:yf5Yd+nYwcUHsGtD0pmDWudF
@@ -80,6 +82,19 @@ describe('SDP utils', () => {
       expect(isSdpValid(goodSdp)).toBeTruthy();
       expect(isSdpValid(badSdp)).toBeFalsy();
       expect(isSdpValid(badMobileSdp)).toBeFalsy();
+    });
+  });
+
+  describe('Fixing sdp', () => {
+    it('should fix a SDP without candidate or IN ip', async () => {
+      const candidates = [parseCandidate(candidate)];
+
+      const fixedSdp = fixSdp(badMobileSdp, candidates);
+      const parsed = sdpParser.parse(fixedSdp);
+
+      expect(parsed.media[0].candidates.length).toBe(1);
+      expect(parsed.origin.address).toBe('14.72.2.1');
+      expect(fixedSdp.indexOf('IN 0.0.0.0')).toBe(-1);
     });
   });
 });
