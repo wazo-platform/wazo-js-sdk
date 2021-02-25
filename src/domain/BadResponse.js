@@ -2,7 +2,14 @@
 
 export default class BadResponse extends Error {
   static fromResponse(error: Object, status: number) {
-    return new BadResponse(error.message, status, error.timestamp, error.error_id, error.details, error);
+    return new BadResponse(
+      error.message || JSON.stringify(error),
+      status,
+      error.timestamp,
+      error.error_id,
+      error.details,
+      error,
+    );
   }
 
   static fromText(response: string, status: number) {
