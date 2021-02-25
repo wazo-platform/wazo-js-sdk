@@ -62,12 +62,18 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     // ICE will restart upon applying an offer created with the iceRestart option
     const iceRestart = options.offerOptions ? options.offerOptions.iceRestart : false;
 
+    // We should wait for ice when iceRestart (reinvite) or for the first invite
+    // We shouldn't wait for ice when holding or resuming the call
+    const shouldWaitForIce = iceRestart || ('constraints' in options);
+
     // ICE gathering timeout may be set on a per call basis, otherwise the configured default is used
     const iceTimeout = options.iceGatheringTimeout === undefined
       ? this.sessionDescriptionHandlerConfiguration.iceGatheringTimeout
       : options.iceGatheringTimeout;
 
     const isOffer = this._peerConnection.signalingState === 'stable';
+
+    wazoLogger.trace('getting SDP description', { iceRestart, shouldWaitForIce, iceTimeout });
 
     // Fetch ice ourselves for re-invite
     this.gatheredCandidates = [];
@@ -87,7 +93,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       .then((sessionDescription) => this.applyModifiers(sessionDescription, modifiers))
       .then((sessionDescription) => this.setLocalSessionDescription(sessionDescription))
       .then(() => this.waitForIceGatheringComplete(iceRestart, iceTimeout))
-      .then(this._waitForValidGatheredIce)
+      .then(shouldWaitForIce ? this._waitForValidGatheredIce.bind(this) : this.getLocalSessionDescription.bind(this))
       .then((description: any) => {
         if (!this._peerConnection) {
           throw new Error('No peer connection');
