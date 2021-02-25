@@ -10,7 +10,7 @@ import type SessionDescriptionHandlerConfiguration
 import { SessionDescriptionHandler }
   from 'sip.js/lib/platform/web/session-description-handler/session-description-handler';
 import IssueReporter from '../service/IssueReporter';
-import { areCandidateValid, parseCandidate } from '../utils/sdp';
+import { areCandidateValid, fixSdp, parseCandidate } from '../utils/sdp';
 
 const wazoLogger = IssueReporter.loggerFor('webrtc-sdh');
 const MAX_WAIT_FOR_ICE_TRIES = 20;
@@ -81,7 +81,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       this.peerConnectionDelegate = {};
     }
     this.peerConnectionDelegate.onicecandidate = event => {
-      wazoLogger.info('onicecandidate', event.candidate ? event.candidate.candidate : { done: true });
+      wazoLogger.trace('onicecandidate', event.candidate ? event.candidate.candidate : { done: true });
       if (event.candidate) {
         this.gatheredCandidates.push(parseCandidate(event.candidate.candidate));
       }
@@ -95,10 +95,21 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       .then(shouldWaitForIce ? this._waitForValidGatheredIce.bind(this) : this.getLocalSessionDescription.bind(this))
       .then((description: any) => {
         if (!this._peerConnection) {
-          throw new Error('No peer connection');
+          throw new Error('No peer connection to get sdh local description');
         }
 
-        return isOffer ? this._peerConnection.createOffer(options.offerOptions || {}) : description;
+        if (isOffer) {
+          return this._peerConnection.createOffer(options.offerOptions || {});
+        }
+
+        // @TODO: find a better way to set sdp in answer.
+        //  We can't call createAnswer again, so we have to put candidates manually with fixSdp
+        const { sdp } = description;
+        return {
+          ...description,
+          // Fix sdp only when no candidates
+          sdp: sdp.indexOf('a=candidate') === -1 ? fixSdp(sdp, this.gatheredCandidates) : sdp,
+        };
       })
       .then((sessionDescription) => this.applyModifiers(sessionDescription, modifiers))
       .then((sessionDescription) => ({ body: sessionDescription.sdp, contentType: 'application/sdp' }))
@@ -243,6 +254,9 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
 
       throw error;
     }
+
+    // eslint-disable-next-line
+    wazoLogger.trace('Found valid candidates', { tries, candidates: JSON.stringify(this.gatheredCandidates) });
 
     return this.getLocalSessionDescription();
   }
