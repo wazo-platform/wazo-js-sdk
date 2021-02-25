@@ -10,10 +10,15 @@ import type SessionDescriptionHandlerConfiguration
 import { SessionDescriptionHandler }
   from 'sip.js/lib/platform/web/session-description-handler/session-description-handler';
 import IssueReporter from '../service/IssueReporter';
+import { areCandidateValid, parseCandidate } from '../utils/sdp';
 
 const wazoLogger = IssueReporter.loggerFor('webrtc-sdh');
+const MAX_WAIT_FOR_ICE_TRIES = 20;
+const WAIT_FOR_ICE_TIMEOUT = 500;
 
 class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
+  gatheredCandidates: Array<?string>;
+
   constructor(
     logger: Logger,
     mediaStreamFactory: MediaStreamFactory,
@@ -65,14 +70,14 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     const isOffer = this._peerConnection.signalingState === 'stable';
 
     // Fetch ice ourselves for re-invite
-    const gatheredIces = [];
+    this.gatheredCandidates = [];
     if (!this.peerConnectionDelegate) {
       this.peerConnectionDelegate = {};
     }
     this.peerConnectionDelegate.onicecandidate = event => {
       wazoLogger.info('onicecandidate', event.candidate ? event.candidate.candidate : { done: true });
       if (event.candidate) {
-        gatheredIces.push(event.candidate.candidate);
+        this.gatheredCandidates.push(parseCandidate(event.candidate.candidate));
       }
     };
 
@@ -82,23 +87,13 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       .then((sessionDescription) => this.applyModifiers(sessionDescription, modifiers))
       .then((sessionDescription) => this.setLocalSessionDescription(sessionDescription))
       .then(() => this.waitForIceGatheringComplete(iceRestart, iceTimeout))
-      .then((description: any) =>
-        (isOffer && this._peerConnection ? this._peerConnection.createOffer(options.offerOptions || {}) : description))
-      .then((sessionDescription) => this.applyModifiers(sessionDescription, modifiers))
-      .then((sessionDescription: any) =>
-        (isOffer ? this.setLocalSessionDescription(sessionDescription) : sessionDescription))
-      .then(() => this.getLocalSessionDescription())
-      .then((localDescription) => {
-        // Avoid immutable errors
-        const newDescription = JSON.parse(JSON.stringify(localDescription));
-        // Add ice candidates if not present
-        if (newDescription && newDescription.sdp.indexOf('a=candidate') === -1) {
-          gatheredIces.forEach(ice => {
-            // eslint-disable-next-line
-            newDescription.sdp += `a=${ice}${"\n"}`;
-          });
+      .then(this._waitForValidGatheredIce)
+      .then((description: any) => {
+        if (!this._peerConnection) {
+          throw new Error('No peer connection');
         }
-        return newDescription;
+
+        return isOffer ? this._peerConnection.createOffer(options.offerOptions || {}) : description;
       })
       .then((sessionDescription) => ({ body: sessionDescription.sdp, contentType: 'application/sdp' }))
       .catch((error) => {
@@ -215,6 +210,35 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     }
     this._peerConnection.close();
     this._peerConnection = undefined;
+  }
+
+  _waitForValidGatheredIce = async (): Object => {
+    let tries = 0;
+
+    while (!areCandidateValid(this.gatheredCandidates) && tries < MAX_WAIT_FOR_ICE_TRIES) {
+      wazoLogger.trace('SessionDescriptionHandler._waitForValidGatheredIce, waiting for ice', {
+        tries,
+        max: MAX_WAIT_FOR_ICE_TRIES,
+      });
+
+      tries++;
+
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise(resolve => setTimeout(resolve, WAIT_FOR_ICE_TIMEOUT));
+    }
+
+    if (tries >= MAX_WAIT_FOR_ICE_TRIES) {
+      const errorMsg = 'No valid candidates found, can\'t answer the call';
+      const error = new Error(errorMsg);
+      wazoLogger.error(errorMsg, { tries, max: MAX_WAIT_FOR_ICE_TRIES });
+
+      // Emit an error, because sip.js catches the exception and switch to status Terminated.
+      this.eventEmitter.emit('error', error);
+
+      throw error;
+    }
+
+    return this.getLocalSessionDescription();
   }
 }
 
