@@ -98,17 +98,25 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
           throw new Error('No peer connection to get sdh local description');
         }
 
-        if (isOffer) {
-          return this._peerConnection.createOffer(options.offerOptions || {});
+        // Try to update sdp with a createOffer
+        return isOffer ? this._peerConnection.createOffer(options.offerOptions || {}) : description;
+      })
+      .then(description => {
+        const { sdp } = description;
+        // Check if we got ICEs
+        if (sdp.indexOf('a=candidate') !== -1) {
+          return description;
         }
+
+        wazoLogger.info('No ICE candidates found in SDP, fixing it with gathered ices', this.gatheredCandidates);
 
         // @TODO: find a better way to set sdp in answer.
         //  We can't call createAnswer again, so we have to put candidates manually with fixSdp
-        const { sdp } = description;
+        // In reinvite, createOffer doesn't update the SDP
         return {
           ...description,
           // Fix sdp only when no candidates
-          sdp: sdp.indexOf('a=candidate') === -1 ? fixSdp(sdp, this.gatheredCandidates) : sdp,
+          sdp: fixSdp(sdp, this.gatheredCandidates),
         };
       })
       .then((sessionDescription) => this.applyModifiers(sessionDescription, modifiers))
