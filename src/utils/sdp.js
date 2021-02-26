@@ -48,6 +48,7 @@ export const fixSdp = (sdp: string, candidates: Object[]): string => {
 
   parsedSdp.media = parsedSdp.media.map(media => ({
     ...media,
+    port: mainCandidate ? mainCandidate.port : media.port,
     candidates: (media.candidates || []).concat(candidates),
   }));
 

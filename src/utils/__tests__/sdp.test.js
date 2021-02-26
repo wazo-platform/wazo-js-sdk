@@ -93,6 +93,7 @@ describe('SDP utils', () => {
       const parsed = sdpParser.parse(fixedSdp);
 
       expect(parsed.media[0].candidates.length).toBe(1);
+      expect(parsed.media[0].port).toBe(57021);
       expect(parsed.origin.address).toBe('14.72.2.1');
       expect(fixedSdp.indexOf('IN 0.0.0.0')).toBe(-1);
     });
