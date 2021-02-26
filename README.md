@@ -861,7 +861,7 @@ const results = await requester.call('dird/0.1/personal');
 ```
 
 ### WebRTCClient
-This sample decribes the very first steps to pass a call using WebRTC.
+This sample decribes the very first steps to place a call using WebRTC.
 
 ```js
 import { WazoWebRTCClient } from '@wazo/sdk'; // import the library
@@ -895,7 +895,7 @@ client.call('1234');
 #### WebRTCClient Configuration
 
 ```js
-const client = new WazoWebRTCClient({
+const config = {
   displayName: '', // Display name sent in SIP payload
   host: '', // Host where to connect
   port: '', // Port of the host (default to `443`)
@@ -916,7 +916,19 @@ const client = new WazoWebRTCClient({
   authorizationUser: '', // The SIP username
   password: '', // The SIP user password
   uri: '', // The SIP user identity
-}, session);
+}
+
+const uaConfigOverrides = {
+  peerConnectionOptions: {
+    iceServers = [
+      {urls: "stun.example.com:443"},  // STUN server
+      {urls: "turn:turn.example.com:443", username: "login", credential: "secret" },  // TURN server
+      ...
+    ]
+  }
+}
+
+const client = new WazoWebRTCClient(config, session, /* optional */ uaConfigOverrides);
 ```
 
 #### Basic client features      **`Voice`**   **`Video`**  **`Chat`**
