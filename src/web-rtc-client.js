@@ -597,9 +597,7 @@ export default class WebRTCClient extends Emitter {
     };
 
     // Send re-INVITE
-    return session.invite(options).then(() => {
-      this.mute(session);
-    });
+    return session.invite(options);
   }
 
   unhold(session: Inviter) {
@@ -615,7 +613,6 @@ export default class WebRTCClient extends Emitter {
 
     const hasVideo = this.sessionWantsToDoVideo(session);
     this.changeVideo(hasVideo);
-    this.unmute(session);
 
     delete this.heldSessions[this.getSipSessionId(session)];
 
@@ -627,9 +624,7 @@ export default class WebRTCClient extends Emitter {
     };
 
     // Send re-INVITE
-    return session.invite(options).then(() => {
-      this.unmute(session);
-    });
+    return session.invite(options);
   }
 
   isCallHeld(session: Inviter) {
