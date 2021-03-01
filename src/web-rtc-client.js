@@ -302,7 +302,7 @@ export default class WebRTCClient extends Emitter {
     const onRegisterFailed = () => {
       logger.info('sdk webrtc registering failed', { tries, registerer: !!this.registerer });
       this.connectionPromise = null;
-      if (this.registerer) {
+      if (this.registerer && this.registerer.waiting) {
         this.registerer.waitingToggle(false);
       }
 
@@ -529,7 +529,7 @@ export default class WebRTCClient extends Emitter {
 
     try {
       // Don't wait here, It can take ~30s to stop ...
-      this.userAgent.stop();
+      this.userAgent.stop().catch(console.error);
     } catch (_) {
       // Avoid to raise exception when trying to close with hanged-up sessions remaining
       // eg: "INVITE not rejectable in state Completed"
@@ -1018,7 +1018,11 @@ export default class WebRTCClient extends Emitter {
     if (this.userAgent && this.userAgent.transport) {
       // Disconnect from WS and triggers events, but do not trigger disconnect if already disconnecting...
       if (!this.userAgent.transport.transitioningState && !this.userAgent.transport.disconnectPromise) {
-        await this.userAgent.transport.disconnect();
+        try {
+          await this.userAgent.transport.disconnect();
+        } catch (e) {
+          logger.error('Transport disconnection after heartbeat timeout, error', e);
+        }
       }
 
       // We can invoke disconnect() with an error that can be catcher by `onDisconnect`, so we have to trigger it here.
@@ -1077,9 +1081,13 @@ export default class WebRTCClient extends Emitter {
     logger.info('WebRTC UA needs to connect');
 
     // Force UA to reconnect
-    this.userAgent.transitionState(UserAgentState.Stopped);
-    this.userAgent.transport.transitionState(TransportState.Disconnected);
-    this.connectionPromise = this.userAgent.start();
+    if (this.userAgent.state !== UserAgentState.Stopped) {
+      this.userAgent.transitionState(UserAgentState.Stopped);
+    }
+    if (this.userAgent.transport.state !== TransportState.Disconnected) {
+      this.userAgent.transport.transitionState(TransportState.Disconnected);
+    }
+    this.connectionPromise = this.userAgent.start().catch(console.error);
 
     return this.connectionPromise;
   }
@@ -1501,7 +1509,11 @@ export default class WebRTCClient extends Emitter {
   async _disconnectTransport() {
     // Check if `disconnectPromise` is not present to avoid `Disconnect promise must not be defined` errors.
     if (this.userAgent && this.userAgent.transport && !this.userAgent.transport.disconnectPromise) {
-      await this.userAgent.transport.disconnect();
+      try {
+        await this.userAgent.transport.disconnect();
+      } catch (e) {
+        logger.error('WebRTC transport disconnect, error', e);
+      }
     }
   }
 
