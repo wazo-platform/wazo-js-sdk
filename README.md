@@ -921,7 +921,7 @@ const config = {
 const uaConfigOverrides = {
   peerConnectionOptions: {
     iceServers = [
-      {urls: "stun.example.com:443"},  // STUN server
+      {urls: "stun:stun.example.com:443"},  // STUN server
       {urls: "turn:turn.example.com:443", username: "login", credential: "secret" },  // TURN server
       ...
     ]
