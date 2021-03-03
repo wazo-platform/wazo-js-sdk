@@ -323,7 +323,9 @@ export default class WebRTCClient extends Emitter {
       logger.info('sdk webrtc registering, transport connected', { registerOptions, ua: !!this.userAgent });
       this.registerer = new Registerer(this.userAgent, registerOptions);
       this.connectionPromise = null;
-      this._monkeyPatchRegisterer(this.registerer);
+      if (!this._isWeb()) {
+        this._monkeyPatchRegisterer(this.registerer);
+      }
 
       // Bind registerer events
       this.registerer.stateChange.addListener(newState => {
