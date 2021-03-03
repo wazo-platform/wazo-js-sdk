@@ -323,6 +323,7 @@ export default class WebRTCClient extends Emitter {
       logger.info('sdk webrtc registering, transport connected', { registerOptions, ua: !!this.userAgent });
       this.registerer = new Registerer(this.userAgent, registerOptions);
       this.connectionPromise = null;
+      this._monkeyPatchRegisterer(this.registerer);
 
       // Bind registerer events
       this.registerer.stateChange.addListener(newState => {
@@ -355,6 +356,29 @@ export default class WebRTCClient extends Emitter {
       logger.error('sdk webrtc registering, transport error', error);
       onRegisterFailed();
     });
+  }
+
+  // Monkey patching sip.js to avoid issues during register.onReject
+  _monkeyPatchRegisterer = (registerer: ?Registerer) => {
+    if (!registerer) {
+      return;
+    }
+    const oldWaitingToggle = registerer.waitingToggle.bind(registerer);
+    const oldUnregistered = registerer.unregistered.bind(registerer);
+
+    registerer.waitingToggle = (waiting: boolean) => {
+      if (registerer.waiting === waiting) {
+        return;
+      }
+      oldWaitingToggle(waiting);
+    };
+
+    registerer.unregistered = () => {
+      if (registerer.state === RegistererState.Terminated) {
+        return;
+      }
+      oldUnregistered();
+    };
   }
 
   unregister() {
