@@ -723,37 +723,40 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
   }
 
-  holdSipSession(sipSession: Session, callSession: ?CallSession, withEvent: boolean = true): void {
+  holdSipSession(sipSession: Session, callSession: ?CallSession, withEvent: boolean = true): Promise<any> {
     if (!sipSession) {
-      return;
+      return new Promise((resolve, reject) => reject(new Error('No session to hold')));
     }
-
     logger.info('WebRTC hold sip session', { sipId: sipSession.id });
 
-    this.client.hold(sipSession);
+    const promise = this.client.hold(sipSession);
     if (withEvent) {
       this.eventEmitter.emit(ON_CALL_HELD, this._createCallSession(sipSession, callSession));
     }
+
+    return promise;
   }
 
-  unholdSipSession(sipSession: Session, callSession: ?CallSession, withEvent: boolean = true): void {
+  unholdSipSession(sipSession: Session, callSession: ?CallSession, withEvent: boolean = true): Promise<any> {
     if (!sipSession) {
-      return;
+      return new Promise((resolve, reject) => reject(new Error('No session to unhold')));
     }
     logger.info('WebRTC unhold', { sipId: sipSession.id });
 
-    this.client.unhold(sipSession);
+    const promise = this.client.unhold(sipSession);
     if (withEvent) {
       this.eventEmitter.emit(ON_CALL_UNHELD, this._createCallSession(sipSession, callSession));
     }
+
+    return promise;
   }
 
-  resume(callSession?: CallSession): void {
+  resume(callSession?: CallSession): Promise<any> {
     logger.info('WebRTC resume called', { id: callSession ? callSession.getId() : null });
 
     const sipSession = this.findSipSession(callSession);
     if (!sipSession) {
-      return;
+      return new Promise((resolve, reject) => reject(new Error('No session to resume')));
     }
 
     logger.info('WebRTC resuming', { sipId: sipSession.id });
@@ -764,12 +767,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.holdSipSession(this.currentSipSession, callSession);
     }
 
-    this.client.unhold(sipSession);
+    const promise = this.client.unhold(sipSession);
     this.eventEmitter.emit(ON_CALL_RESUMED, this._createCallSession(sipSession, callSession));
     this.currentSipSession = sipSession;
     if (callSession) {
       this.currentCallSession = callSession;
     }
+
+    return promise;
   }
 
   mute(callSession: ?CallSession, withEvent: boolean = true): void {
@@ -860,7 +865,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
       await this.client.register();
     }
     if (this.currentSipSession) {
-      this.holdSipSession(this.currentSipSession, this.currentCallSession, true);
+      this.holdSipSession(this.currentSipSession, this.currentCallSession, true).catch(e => {
+        logger.warn('Unable to hold current session when making another call', e);
+      });
     }
 
     let sipSession: Session;
