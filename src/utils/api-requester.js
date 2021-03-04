@@ -128,10 +128,15 @@ export default class ApiRequester {
     const isHead = method === 'head';
     const hasEmptyResponse = method === 'delete' || isHead;
     const newParse = hasEmptyResponse ? ApiRequester.successResponseParser : parse;
+
+    const fetchOptions = { ...this.fetchOptions || {} };
+    const extraHeaders = fetchOptions.headers || {};
+    delete fetchOptions.headers;
+
     const options = {
       method,
       body: newBody,
-      headers: this.getHeaders(headers),
+      headers: { ...this.getHeaders(headers), ...extraHeaders },
       agent: this.agent,
       ...(this.fetchOptions || {}),
     };
