@@ -138,7 +138,7 @@ export default class ApiRequester {
       body: newBody,
       headers: { ...this.getHeaders(headers), ...extraHeaders },
       agent: this.agent,
-      ...(this.fetchOptions || {}),
+      ...fetchOptions,
     };
 
     if (this.refreshTokenPromise) {
