@@ -237,7 +237,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     this._peerConnection = undefined;
   }
 
-  _waitForValidGatheredIce = async (): Object => {
+  async _waitForValidGatheredIce(): Object {
     let tries = 0;
 
     while (!areCandidateValid(this.gatheredCandidates) && tries < MAX_WAIT_FOR_ICE_TRIES) {

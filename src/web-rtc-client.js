@@ -361,7 +361,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   // Monkey patching sip.js to avoid issues during register.onReject
-  _monkeyPatchRegisterer = (registerer: ?Registerer) => {
+  _monkeyPatchRegisterer(registerer: ?Registerer) {
     if (!registerer) {
       return;
     }
