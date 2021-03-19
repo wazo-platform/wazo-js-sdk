@@ -956,7 +956,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   forceCancel(sipSession: Session): void {
-    if (!sipSession) {
+    if (!sipSession || !sipSession.outgoingInviteRequest) {
       return;
     }
     sipSession.outgoingInviteRequest.cancel();
