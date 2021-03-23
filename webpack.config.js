@@ -15,34 +15,34 @@ module.exports = {
   module: {
     rules: [
       {
-          test: /\.jsx?$/,
-          enforce: "pre",
-          use: ["remove-flow-types-loader"],
-          include: path.join(__dirname, "src")
+        test: /\.jsx?$/,
+        enforce: 'pre',
+        use: ['remove-flow-types-loader'],
+        include: path.join(__dirname, 'src'),
       },
       {
         test: /\.mjs$/,
         type: 'javascript/auto',
-        use: []
+        use: [],
       },
       {
         test: /\.js$/,
         exclude: /(node_modules)/,
         use: {
           loader: 'babel-loader',
-        }
-      }
-    ]
+        },
+      },
+    ],
   },
   plugins: [
     new webpack.IgnorePlugin(/^encoding$/, /node-fetch/),
     new webpack.DefinePlugin({
       'process.env': {
-        'NODE_ENV': `"${process.env.NODE_ENV}"`,
-        'DEBUG': `"${process.env.DEBUG}"`
-      }
-    })
+        NODE_ENV: `"${process.env.NODE_ENV}"`,
+        DEBUG: `"${process.env.DEBUG}"`,
+      },
+    }),
   ],
 
-  devtool: 'source-map'
+  devtool: 'source-map',
 };
