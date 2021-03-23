@@ -617,10 +617,11 @@ export default class WebRTCClient extends Emitter {
     const hasVideo = this.sessionWantsToDoVideo(session);
     this.changeVideo(hasVideo);
 
-    const options = {
-      ...this._getMediaConfiguration(hasVideo),
-      sessionDescriptionHandlerModifiers: [holdModifier],
+    session.sessionDescriptionHandlerOptionsReInvite = {
+      hold: true,
     };
+
+    const options = this._getMediaConfiguration(hasVideo);
 
     // Send re-INVITE
     return session.invite(options);
@@ -641,13 +642,11 @@ export default class WebRTCClient extends Emitter {
     this.changeVideo(hasVideo);
 
     delete this.heldSessions[this.getSipSessionId(session)];
-
-    const options = {
-      ...this._getMediaConfiguration(hasVideo),
-      // We should sent an empty `sessionDescriptionHandlerModifiers` or sip.js will take the last sent modifiers
-      // (eg: holdModifier)
-      sessionDescriptionHandlerModifiers: [],
+    session.sessionDescriptionHandlerOptionsReInvite = {
+      hold: false,
     };
+
+    const options = this._getMediaConfiguration(hasVideo);
 
     // Send re-INVITE
     return session.invite(options);
@@ -1176,7 +1175,9 @@ export default class WebRTCClient extends Emitter {
       displayName: this.config.displayName,
       autoStart: true,
       hackIpInContact: true,
-      hackWssInTransport: true,
+      contactParams: {
+        transport: 'wss',
+      },
       logBuiltinEnabled: this.config.log ? this.config.log.builtinEnabled : null,
       logLevel: this.config.log ? this.config.log.logLevel : null,
       logConnector: this.config.log ? this.config.log.connector : null,
