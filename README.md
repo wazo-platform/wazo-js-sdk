@@ -654,7 +654,7 @@ client.auth.logIn({
     auth_id
   },
   // should be used for other request
-  acls,
+  acl,
   utc_expires_at,
   xivo_uuid,
   issued_at,
@@ -713,7 +713,7 @@ client.auth.addUserPolicy(userUuid, policyUuid);
 client.auth.deleteUser();
 client.auth.listUsers();
 client.auth.listGroups();
-client.auth.createPolicy(name);
+client.auth.createPolicy(name, description, acl);
 client.auth.listPolicies();
 ```
 

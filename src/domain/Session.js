@@ -1,4 +1,5 @@
 // @flow
+/* eslint-disable no-nested-ternary */
 import { KEYUTIL, jws, b64utoutf8 } from 'jsrsasign';
 
 import { swarmPublicKey } from '../../config';
@@ -18,7 +19,8 @@ type Response = {
     token: Token,
     refresh_token?: Token,
     session_uuid: UUID,
-    acls: Array<string>,
+    acls?: Array<string>, // deprecated
+    acl?: Array<string>,
     utc_expires_at: string,
     xivo_uuid: string,
     issued_at: string,
@@ -46,7 +48,8 @@ type Authorization = {
 };
 
 type SessionArguments = {
-  acls?: string[],
+  acls?: string[], // deprecated
+  acl?: string[],
   token: string,
   refreshToken?: ?string,
   sessionUuid?: ?string,
@@ -60,7 +63,7 @@ type SessionArguments = {
 };
 
 export default class Session {
-  acls: string[];
+  acl: string[];
   token: string;
   refreshToken: ?string;
   uuid: ?string;
@@ -91,7 +94,7 @@ export default class Session {
       uuid: plain.data.metadata ? plain.data.metadata.uuid : null,
       sessionUuid: plain.data.session_uuid,
       authorizations,
-      acls: plain.data.acls ? plain.data.acls : [],
+      acl: plain.data.acls ? plain.data.acls : plain.data.acl ? plain.data.acl : [],
       tenantUuid: plain.data.metadata ? plain.data.metadata.tenant_uuid : undefined,
       expiresAt: new Date(`${plain.data.utc_expires_at}z`),
       engineUuid: plain.data.xivo_uuid,
@@ -109,7 +112,7 @@ export default class Session {
     profile,
     expiresAt,
     authorizations,
-    acls,
+    acl,
     engineVersion,
     refreshToken,
     sessionUuid,
@@ -121,7 +124,7 @@ export default class Session {
     this.profile = profile;
     this.expiresAt = expiresAt;
     this.authorizations = authorizations || [];
-    this.acls = acls || [];
+    this.acl = acl || [];
     this.engineVersion = engineVersion;
     this.refreshToken = refreshToken;
     this.sessionUuid = sessionUuid;
@@ -210,5 +213,10 @@ export default class Session {
 
   hasExtension(extension: string): boolean {
     return this.allNumbers().some(number => number === extension);
+  }
+
+  get acls(): ?Array<string> {
+    console.warn('`acls` property of Session has been removed in Wazo\'s SDK, please use `acl` instead.');
+    return this.acl;
   }
 }
