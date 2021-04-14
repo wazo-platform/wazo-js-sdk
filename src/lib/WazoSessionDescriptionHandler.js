@@ -288,19 +288,19 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         const directionToOffer = (currentDirection: Object): Object => {
           switch (currentDirection) {
             case 'inactive':
-              return options?.hold ? 'inactive' : 'recvonly';
+              return options && options.hold ? 'inactive' : 'recvonly';
             case 'recvonly':
-              return options?.hold ? 'inactive' : 'recvonly';
+              return options && options.hold ? 'inactive' : 'recvonly';
             case 'sendonly':
               if (isConference) {
-                return options?.hold ? 'inactive' : 'sendrecv';
+                return options && options.hold ? 'inactive' : 'sendrecv';
               }
-              return options?.hold ? 'sendonly' : 'sendrecv';
+              return options && options.hold ? 'sendonly' : 'sendrecv';
             case 'sendrecv':
               if (isConference) {
-                return options?.hold ? 'inactive' : 'sendrecv';
+                return options && options.hold ? 'inactive' : 'sendrecv';
               }
-              return options?.hold ? 'sendonly' : 'sendrecv';
+              return options && options.hold ? 'sendonly' : 'sendrecv';
             case 'stopped':
               return 'stopped';
             default:
@@ -358,9 +358,9 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
             case 'recvonly':
               return 'sendonly';
             case 'sendonly':
-              return options?.hold ? 'inactive' : 'recvonly';
+              return options && options.hold ? 'inactive' : 'recvonly';
             case 'sendrecv':
-              return options?.hold ? 'sendonly' : 'sendrecv';
+              return options && options.hold ? 'sendonly' : 'sendrecv';
             default:
               throw new Error('Should never happen');
           }
