@@ -51,7 +51,8 @@ export type Group = {
 };
 
 export type Policy = {
-  acl_templates: Array<string>,
+  acl_templates: Array<string>, // Deprecated
+  acl: Array<string>,
   description: ?string,
   tenant_uuid: UUID,
   uuid: UUID,
