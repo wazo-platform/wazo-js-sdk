@@ -231,7 +231,8 @@ export default (client: ApiRequester, baseUrl: string) => ({
     const body = {
       name,
       description,
-      acl_templates: aclTemplates,
+      acl_templates: aclTemplates, // deprecated
+      acl: aclTemplates,
     };
 
     client.post(`${baseUrl}/policies`, body);

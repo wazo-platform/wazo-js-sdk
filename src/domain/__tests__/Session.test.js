@@ -9,7 +9,7 @@ describe('Session domain', () => {
     const plain = {
       data: {
         token: 'b93ae6bd-08d7-4001-9e61-057e72bbc4b3',
-        acls: [
+        acl: [
           'calld.lines.*.presences.read',
           'calld.switchboards.#',
           'calld.transfers.*.complete.update',
@@ -62,7 +62,7 @@ describe('Session domain', () => {
       new Session({
         token: 'b93ae6bd-08d7-4001-9e61-057e72bbc4b3',
         refreshToken: null,
-        acls: [
+        acl: [
           'calld.lines.*.presences.read',
           'calld.switchboards.#',
           'calld.transfers.*.complete.update',
@@ -388,5 +388,13 @@ describe('Session domain', () => {
         });
       });
     });
+  });
+
+  it('Should return `acl` when accessing `acls` property since it\'s deprecated', () => {
+    const acl = ['calld.lines.*.presences.read'];
+    const session = new Session({ acl, expiresAt: new Date(), token: 'abc' });
+
+    expect(session.acls).toEqual(acl);
+    expect(session.acl).toEqual(acl);
   });
 });
