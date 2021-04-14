@@ -20,7 +20,7 @@ import { C } from 'sip.js/lib/core/messages/methods/constants';
 import { URI } from 'sip.js/lib/grammar/uri';
 import { Parser } from 'sip.js/lib/core/messages/parser';
 import { UserAgent } from 'sip.js/lib/api/user-agent';
-import { stripVideo, holdModifier } from 'sip.js/lib/platform/web/modifiers/modifiers';
+import { stripVideo } from 'sip.js/lib/platform/web/modifiers/modifiers';
 import { Registerer } from 'sip.js/lib/api/registerer';
 import { Inviter } from 'sip.js/lib/api/inviter';
 import { Messager } from 'sip.js/lib/api/messager';
@@ -597,7 +597,7 @@ export default class WebRTCClient extends Emitter {
     this._toggleVideo(session, true);
   }
 
-  hold(session: Inviter) {
+  hold(session: Inviter, isConference: boolean = false) {
     const sessionId = this.getSipSessionId(session);
     logger.info('sdk webrtc hold', {
       id: session.id,
@@ -622,12 +622,13 @@ export default class WebRTCClient extends Emitter {
     };
 
     const options = this._getMediaConfiguration(hasVideo);
+    options.conference = isConference;
 
     // Send re-INVITE
     return session.invite(options);
   }
 
-  unhold(session: Inviter) {
+  unhold(session: Inviter, isConference: boolean = false) {
     logger.info('sdk webrtc unhold', {
       id: session.id,
       keys: Object.keys(this.heldSessions),
@@ -647,6 +648,7 @@ export default class WebRTCClient extends Emitter {
     };
 
     const options = this._getMediaConfiguration(hasVideo);
+    options.conference = isConference;
 
     // Send re-INVITE
     return session.invite(options);
@@ -1245,7 +1247,7 @@ export default class WebRTCClient extends Emitter {
     };
   }
 
-  _getMediaConfiguration(enableVideo: boolean) {
+  _getMediaConfiguration(enableVideo: boolean): Object {
     return {
       constraints: {
         audio: this._getAudioConstraints(),
