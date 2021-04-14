@@ -218,6 +218,9 @@ export default class WebRTCClient extends Emitter {
       onConnect: () => {
         logger.info('sdk webrtc connected', { method: 'delegate.onConnect' });
         this.eventEmitter.emit(CONNECTED);
+        if (!this.isRegistered() && this.registerer && this.registerer.waiting) {
+          this.registerer.waitingToggle(false);
+        }
         this.register();
       },
       onDisconnect: (error?: Error) => {
@@ -227,6 +230,9 @@ export default class WebRTCClient extends Emitter {
         this.eventEmitter.emit(DISCONNECTED, error);
         if (this.isRegistered()) {
           this.registerer.terminated();
+          if (this.registerer && this.registerer.waiting) {
+            this.registerer.waitingToggle(false);
+          }
           this.eventEmitter.emit(UNREGISTERED);
         }
       },
