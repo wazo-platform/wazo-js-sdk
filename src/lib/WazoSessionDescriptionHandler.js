@@ -88,6 +88,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     };
 
     return this.getLocalMediaStream(options)
+      .then(() => this.updateDirection(options))
       .then(() => this.createDataChannel(options))
       .then(() => this.createLocalOfferOrAnswer(options))
       .then((sessionDescription) => this.setLocalSessionDescription(sessionDescription))
