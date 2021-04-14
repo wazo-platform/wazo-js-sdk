@@ -321,7 +321,7 @@ class Room extends Emitter {
   hold() {
     logger.info('hold room');
 
-    Wazo.Phone.hold(this.callSession);
+    Wazo.Phone.hold(this.callSession, true);
 
     if (this.localParticipant) {
       this.localParticipant.onHold();
@@ -331,7 +331,7 @@ class Room extends Emitter {
   resume() {
     logger.info('resume room');
 
-    Wazo.Phone.resume(this.callSession);
+    Wazo.Phone.resume(this.callSession, true);
 
     if (this.localParticipant) {
       this.localParticipant.onResume();

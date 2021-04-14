@@ -286,20 +286,18 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         this.logger.debug('SessionDescriptionHandler.updateDirection - setting offer direction');
         // determine the direction to offer given the current direction and hold state
         const directionToOffer = (currentDirection: Object): Object => {
+          if (isConference) {
+            return options && options.hold ? 'inactive' : 'sendrecv';
+          }
+
           switch (currentDirection) {
             case 'inactive':
               return options && options.hold ? 'inactive' : 'recvonly';
             case 'recvonly':
               return options && options.hold ? 'inactive' : 'recvonly';
             case 'sendonly':
-              if (isConference) {
-                return options && options.hold ? 'inactive' : 'sendrecv';
-              }
               return options && options.hold ? 'sendonly' : 'sendrecv';
             case 'sendrecv':
-              if (isConference) {
-                return options && options.hold ? 'inactive' : 'sendrecv';
-              }
               return options && options.hold ? 'sendonly' : 'sendrecv';
             case 'stopped':
               return 'stopped';

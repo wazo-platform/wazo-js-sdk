@@ -651,10 +651,10 @@ export default class WebRTCClient extends Emitter {
 
     session.sessionDescriptionHandlerOptionsReInvite = {
       hold: true,
+      conference: isConference,
     };
 
     const options = this._getMediaConfiguration(hasVideo);
-    options.conference = isConference;
 
     // Send re-INVITE
     return session.invite(options);
@@ -677,10 +677,10 @@ export default class WebRTCClient extends Emitter {
     delete this.heldSessions[this.getSipSessionId(session)];
     session.sessionDescriptionHandlerOptionsReInvite = {
       hold: false,
+      conference: isConference,
     };
 
     const options = this._getMediaConfiguration(hasVideo);
-    options.conference = isConference;
 
     // Send re-INVITE
     return session.invite(options);

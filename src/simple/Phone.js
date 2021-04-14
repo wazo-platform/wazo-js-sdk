@@ -203,16 +203,16 @@ class Phone extends Emitter {
     }
   }
 
-  hold(callSession: CallSession) {
-    return this.phone && this.phone.hold(callSession);
+  hold(callSession: CallSession, isConference = false) {
+    return this.phone && this.phone.hold(callSession, true, isConference);
   }
 
-  unhold(callSession: CallSession) {
-    return this.phone && this.phone.unhold(callSession);
+  unhold(callSession: CallSession, isConference = false) {
+    return this.phone && this.phone.unhold(callSession, true, isConference);
   }
 
-  resume(callSession: CallSession) {
-    return this.phone && this.phone.resume(callSession);
+  resume(callSession: CallSession, isConference = false) {
+    return this.phone && this.phone.resume(callSession, isConference);
   }
 
   reject(callSession: CallSession) {
