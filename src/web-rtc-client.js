@@ -329,9 +329,7 @@ export default class WebRTCClient extends Emitter {
       logger.info('sdk webrtc registering, transport connected', { registerOptions, ua: !!this.userAgent });
       this.registerer = new Registerer(this.userAgent, registerOptions);
       this.connectionPromise = null;
-      if (!this._isWeb()) {
-        this._monkeyPatchRegisterer(this.registerer);
-      }
+      this._monkeyPatchRegisterer(this.registerer);
 
       // Bind registerer events
       this.registerer.stateChange.addListener(newState => {
@@ -465,8 +463,9 @@ export default class WebRTCClient extends Emitter {
     logger.info('sdk webrtc answer call', { id: session.id, enableVideo });
 
     if (!session || !session.accept) {
-      logger.warn('No session to answer, or not an invitation');
-      return;
+      const error = 'No session to answer, or not an invitation';
+      logger.warn(error);
+      return Promise.reject(new Error(error));
     }
     this.changeVideo(enableVideo || false);
     const options = {
