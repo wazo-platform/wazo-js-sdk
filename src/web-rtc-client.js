@@ -1370,6 +1370,8 @@ export default class WebRTCClient extends Emitter {
     // Safari hack, because you cannot call .play() from a non user action
     if (this._hasAudio() && this._isWeb()) {
       const audio: any = document.createElement('audio');
+      const id = this.getSipSessionId(session);
+      audio.setAttribute('id', `audio-${id}`);
 
       if (audio.setSinkId && this.audioOutputDeviceId) {
         audio.setSinkId(this.audioOutputDeviceId);
@@ -1378,7 +1380,7 @@ export default class WebRTCClient extends Emitter {
       if (document.body) {
         document.body.appendChild(audio);
       }
-      this.audioElements[this.getSipSessionId(session)] = audio;
+      this.audioElements[id] = audio;
     }
 
     const sessionId = this.getSipSessionId(session);
