@@ -114,7 +114,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         //  We can't call createAnswer again, so we have to put candidates manually with fixSdp
         // In reinvite, createOffer doesn't update the SDP
         return {
-          ...description,
+          type: description.type,
           // Fix sdp only when no candidates
           sdp: fixSdp(sdp, this.gatheredCandidates),
         };
