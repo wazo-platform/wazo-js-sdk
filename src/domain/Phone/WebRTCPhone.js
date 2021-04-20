@@ -246,6 +246,20 @@ export default class WebRTCPhone extends Emitter implements Phone {
     };
   }
 
+  onConnect() {
+    if (!this.client) {
+      return Promise.reject(new Error('No webrtc client'));
+    }
+    return this.client.onConnect();
+  }
+
+  onDisconnect() {
+    if (!this.client) {
+      return Promise.reject(new Error('No webrtc client'));
+    }
+    return this.client.onDisconnect();
+  }
+
   _bindEvents(sipSession: Session) {
     if (sipSession._onCancel) {
       // Monkey patch to know when canceled with the CANCEL message

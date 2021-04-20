@@ -82,6 +82,12 @@ export default class CTIPhone extends Emitter implements Phone {
   bindClientEvents() {
   }
 
+  onConnect() {
+  }
+
+  onDisconnect() {
+  }
+
   async makeCall(number: string, line: Line): Promise<?CallSession> {
     logger.info('make CTI call', { number });
 

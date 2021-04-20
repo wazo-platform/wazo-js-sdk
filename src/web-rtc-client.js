@@ -215,27 +215,8 @@ export default class WebRTCClient extends Emitter {
     logger.info('sdk webrtc, creating UA', { webRTCConfiguration });
 
     webRTCConfiguration.delegate = {
-      onConnect: () => {
-        logger.info('sdk webrtc connected', { method: 'delegate.onConnect' });
-        this.eventEmitter.emit(CONNECTED);
-        if (!this.isRegistered() && this.registerer && this.registerer.waiting) {
-          this.registerer.waitingToggle(false);
-        }
-        this.register();
-      },
-      onDisconnect: (error?: Error) => {
-        logger.info('sdk webrtc disconnected', { method: 'delegate.onConnect', error });
-        this.connectionPromise = null;
-        // The UA will attempt to reconnect automatically when an error occurred
-        this.eventEmitter.emit(DISCONNECTED, error);
-        if (this.isRegistered()) {
-          this.registerer.terminated();
-          if (this.registerer && this.registerer.waiting) {
-            this.registerer.waitingToggle(false);
-          }
-          this.eventEmitter.emit(UNREGISTERED);
-        }
-      },
+      onConnect: this.onConnect.bind(this),
+      onDisconnect: this.onDisconnect.bind(this),
       onInvite: (invitation: Invitation) => {
         logger.info('sdk webrtc on invite', {
           method: 'delegate.onInvite',
@@ -277,6 +258,29 @@ export default class WebRTCClient extends Emitter {
 
   isRegistered(): boolean {
     return this.registerer && this.registerer.state === RegistererState.Registered;
+  }
+
+  onConnect() {
+    logger.info('sdk webrtc connected', { method: 'delegate.onConnect' });
+    this.eventEmitter.emit(CONNECTED);
+    if (!this.isRegistered() && this.registerer && this.registerer.waiting) {
+      this.registerer.waitingToggle(false);
+    }
+    return this.register();
+  }
+
+  async onDisconnect(error?: Error) {
+    logger.info('sdk webrtc disconnected', { method: 'delegate.onConnect', error });
+    this.connectionPromise = null;
+    // The UA will attempt to reconnect automatically when an error occurred
+    this.eventEmitter.emit(DISCONNECTED, error);
+    if (this.isRegistered()) {
+      await this.unregister();
+      if (this.registerer && this.registerer.waiting) {
+        this.registerer.waitingToggle(false);
+      }
+      this.eventEmitter.emit(UNREGISTERED);
+    }
   }
 
   register(tries: number = 0): Promise<any> {
