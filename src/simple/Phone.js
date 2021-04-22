@@ -125,15 +125,15 @@ class Phone extends Emitter {
     this._transferEvents();
   }
 
-  disconnect() {
+  async disconnect() {
     if (this.phone) {
       if (this.phone.hasAnActiveCall()) {
         logger.info('hangup call on disconnect');
         // $FlowFixMe
-        this.phone.hangup();
+        await this.phone.hangup();
       }
       // $FlowFixMe
-      this.phone.close();
+      await this.phone.close();
     }
 
     this.phone = null;
