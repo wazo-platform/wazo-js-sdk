@@ -15,7 +15,7 @@ export const TRANSFER_FLOW_BLIND = 'blind';
 
 // const MINIMUM_WAZO_ENGINE_VERSION_FOR_CTI_HOLD = '20.11';
 
-const logger = IssueReporter.loggerFor('cti-phone');
+const logger = IssueReporter ? IssueReporter.loggerFor('cti-phone') : console;
 
 export default class CTIPhone extends Emitter implements Phone {
   session: Session;

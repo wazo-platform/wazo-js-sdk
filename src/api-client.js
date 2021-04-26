@@ -35,7 +35,7 @@ const AGENTD_VERSION = '1.0';
 const WEBHOOKD_VERSION = '1.0';
 const AMID_VERSION = '1.0';
 
-const logger = IssueReporter.loggerFor('api');
+const logger = IssueReporter ? IssueReporter.loggerFor('api') : console;
 
 export default class ApiClient {
   client: ApiRequester;

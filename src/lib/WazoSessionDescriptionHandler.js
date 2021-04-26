@@ -12,7 +12,7 @@ import { SessionDescriptionHandler }
 import IssueReporter from '../service/IssueReporter';
 import { areCandidateValid, fixSdp, parseCandidate } from '../utils/sdp';
 
-const wazoLogger = IssueReporter.loggerFor('webrtc-sdh');
+const wazoLogger = IssueReporter ? IssueReporter.loggerFor('webrtc-sdh') : console;
 const MAX_WAIT_FOR_ICE_TRIES = 20;
 const WAIT_FOR_ICE_TIMEOUT = 500;
 

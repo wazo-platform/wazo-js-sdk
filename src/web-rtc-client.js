@@ -51,8 +51,8 @@ const DEFAULT_ICE_TIMEOUT = 3000;
 const SEND_STATS_DELAY = 5000;
 
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
-const logger = IssueReporter.loggerFor('webrtc-client');
-const statsLogger = IssueReporter.loggerFor('webrtc-stats');
+const logger = IssueReporter ? IssueReporter.loggerFor('webrtc-client') : console;
+const statsLogger = IssueReporter ? IssueReporter.loggerFor('webrtc-stats') : console;
 
 // events
 const REGISTERED = 'registered';
@@ -168,8 +168,10 @@ export default class WebRTCClient extends Emitter {
     this.audioOutputDeviceId = config.audioOutputDeviceId;
     this.audioOutputVolume = config.audioOutputVolume || 1;
 
-    this.configureMedia(config.media);
-    this.setMediaConstraints({ audio: config.media.audio, video: config.media.video });
+    if (config.media) {
+      this.configureMedia(config.media);
+      this.setMediaConstraints({ audio: config.media.audio, video: config.media.video });
+    }
 
     this.videoSessions = {};
     this.heldSessions = {};
@@ -592,6 +594,27 @@ export default class WebRTCClient extends Emitter {
     logger.info('sdk webrtc unmute', { id: session.id });
 
     this._toggleAudio(session, false);
+  }
+
+  isAudioMuted(session: Inviter): boolean {
+    let muted = true;
+    const pc = session.sessionDescriptionHandler.peerConnection;
+
+    if (pc.getSenders) {
+      pc.getSenders().forEach(sender => {
+        if (sender && sender.track && sender.track.kind === 'audio') {
+          muted = muted && !sender.track.enabled;
+        }
+      });
+    } else {
+      pc.getLocalStreams().forEach(stream => {
+        stream.getAudioTracks().forEach(track => {
+          muted = muted && !track.enabled;
+        });
+      });
+    }
+
+    return muted;
   }
 
   toggleCameraOn(session: Inviter) {
