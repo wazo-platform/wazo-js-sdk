@@ -20,7 +20,7 @@ import { C } from 'sip.js/lib/core/messages/methods/constants';
 import { URI } from 'sip.js/lib/grammar/uri';
 import { Parser } from 'sip.js/lib/core/messages/parser';
 import { UserAgent } from 'sip.js/lib/api/user-agent';
-import { stripVideo, holdModifier } from 'sip.js/lib/platform/web/modifiers/modifiers';
+import { stripVideo } from 'sip.js/lib/platform/web/modifiers/modifiers';
 import { Registerer } from 'sip.js/lib/api/registerer';
 import { Inviter } from 'sip.js/lib/api/inviter';
 import { Messager } from 'sip.js/lib/api/messager';
@@ -629,7 +629,7 @@ export default class WebRTCClient extends Emitter {
     this._toggleVideo(session, true);
   }
 
-  hold(session: Inviter) {
+  hold(session: Inviter, isConference: boolean = false) {
     const sessionId = this.getSipSessionId(session);
     logger.info('sdk webrtc hold', {
       id: session.id,
@@ -649,16 +649,18 @@ export default class WebRTCClient extends Emitter {
     const hasVideo = this.sessionWantsToDoVideo(session);
     this.changeVideo(hasVideo);
 
-    const options = {
-      ...this._getMediaConfiguration(hasVideo),
-      sessionDescriptionHandlerModifiers: [holdModifier],
+    session.sessionDescriptionHandlerOptionsReInvite = {
+      hold: true,
+      conference: isConference,
     };
+
+    const options = this._getMediaConfiguration(hasVideo);
 
     // Send re-INVITE
     return session.invite(options);
   }
 
-  unhold(session: Inviter) {
+  unhold(session: Inviter, isConference: boolean = false) {
     logger.info('sdk webrtc unhold', {
       id: session.id,
       keys: Object.keys(this.heldSessions),
@@ -673,13 +675,12 @@ export default class WebRTCClient extends Emitter {
     this.changeVideo(hasVideo);
 
     delete this.heldSessions[this.getSipSessionId(session)];
-
-    const options = {
-      ...this._getMediaConfiguration(hasVideo),
-      // We should sent an empty `sessionDescriptionHandlerModifiers` or sip.js will take the last sent modifiers
-      // (eg: holdModifier)
-      sessionDescriptionHandlerModifiers: [],
+    session.sessionDescriptionHandlerOptionsReInvite = {
+      hold: false,
+      conference: isConference,
     };
+
+    const options = this._getMediaConfiguration(hasVideo);
 
     // Send re-INVITE
     return session.invite(options);
@@ -1208,7 +1209,9 @@ export default class WebRTCClient extends Emitter {
       displayName: this.config.displayName,
       autoStart: true,
       hackIpInContact: true,
-      hackWssInTransport: true,
+      contactParams: {
+        transport: 'wss',
+      },
       logBuiltinEnabled: this.config.log ? this.config.log.builtinEnabled : null,
       logLevel: this.config.log ? this.config.log.logLevel : null,
       logConnector: this.config.log ? this.config.log.connector : null,
@@ -1276,7 +1279,7 @@ export default class WebRTCClient extends Emitter {
     };
   }
 
-  _getMediaConfiguration(enableVideo: boolean) {
+  _getMediaConfiguration(enableVideo: boolean): Object {
     return {
       constraints: {
         audio: this._getAudioConstraints(),

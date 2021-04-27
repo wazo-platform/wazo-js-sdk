@@ -9,6 +9,8 @@ import type SessionDescriptionHandlerConfiguration
   from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-configuration';
 import { SessionDescriptionHandler }
   from 'sip.js/lib/platform/web/session-description-handler/session-description-handler';
+import { SessionDescriptionHandlerOptions }
+  from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-options';
 import IssueReporter from '../service/IssueReporter';
 import { areCandidateValid, fixSdp, parseCandidate } from '../utils/sdp';
 
@@ -62,6 +64,8 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     // ICE will restart upon applying an offer created with the iceRestart option
     const iceRestart = options.offerOptions ? options.offerOptions.iceRestart : false;
 
+    const isConference = options ? !!options.conference : false;
+
     // We should wait for ice when iceRestart (reinvite) or for the first invite
     // We shouldn't wait for ice when holding or resuming the call
     const shouldWaitForIce = iceRestart || ('constraints' in options);
@@ -88,6 +92,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     };
 
     return this.getLocalMediaStream(options)
+      .then(() => this.updateDirection(options, isConference))
       .then(() => this.createDataChannel(options))
       .then(() => this.createLocalOfferOrAnswer(options))
       .then((sessionDescription) => this.setLocalSessionDescription(sessionDescription))
@@ -267,6 +272,117 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     wazoLogger.trace('Found valid candidates', { tries, candidates: JSON.stringify(this.gatheredCandidates) });
 
     return this.getLocalSessionDescription();
+  }
+
+  // Overridden to send `inactive` in conference
+  updateDirection(options?: SessionDescriptionHandlerOptions, isConference: boolean = false): Promise<void> {
+    if (this._peerConnection === undefined) {
+      return Promise.reject(new Error('Peer connection closed.'));
+    }
+
+    switch (this._peerConnection.signalingState) {
+      case 'stable': {
+        // if we are stable, assume we are creating a local offer
+        this.logger.debug('SessionDescriptionHandler.updateDirection - setting offer direction');
+        // determine the direction to offer given the current direction and hold state
+        const directionToOffer = (currentDirection: Object): Object => {
+          if (isConference) {
+            return options && options.hold ? 'inactive' : 'sendrecv';
+          }
+
+          switch (currentDirection) {
+            case 'inactive':
+              return options && options.hold ? 'inactive' : 'recvonly';
+            case 'recvonly':
+              return options && options.hold ? 'inactive' : 'recvonly';
+            case 'sendonly':
+              return options && options.hold ? 'sendonly' : 'sendrecv';
+            case 'sendrecv':
+              return options && options.hold ? 'sendonly' : 'sendrecv';
+            case 'stopped':
+              return 'stopped';
+            default:
+              throw new Error('Should never happen');
+          }
+        };
+        // set the transceiver direction to the offer direction
+        this._peerConnection.getTransceivers().forEach((transceiver) => {
+          if (transceiver.direction /* guarding, but should always be true */) {
+            const offerDirection = directionToOffer(transceiver.direction);
+            if (transceiver.direction !== offerDirection) {
+              // eslint-disable-next-line no-param-reassign
+              transceiver.direction = offerDirection;
+            }
+          }
+        });
+      }
+        break;
+      case 'have-remote-offer': {
+        // if we have a remote offer, assume we are creating a local answer
+        this.logger.debug('SessionDescriptionHandler.updateDirection - setting answer direction');
+
+        // FIXME: This is not the correct way to determine the answer direction as it is only
+        // considering first match in the offered SDP and using that to determine the answer direction.
+        // While that may be fine for our current use cases, it is not a generally correct approach.
+        // determine the offered direction
+        const offeredDirection = ((): 'inactive' | 'recvonly' | 'sendonly' | 'sendrecv' => {
+          const description = this._peerConnection.remoteDescription;
+          if (!description) {
+            throw new Error('Failed to read remote offer');
+          }
+          const searchResult = /a=sendrecv\r\n|a=sendonly\r\n|a=recvonly\r\n|a=inactive\r\n/.exec(description.sdp);
+          if (searchResult) {
+            switch (searchResult[0]) {
+              case 'a=inactive\r\n':
+                return 'inactive';
+              case 'a=recvonly\r\n':
+                return 'recvonly';
+              case 'a=sendonly\r\n':
+                return 'sendonly';
+              case 'a=sendrecv\r\n':
+                return 'sendrecv';
+              default:
+                throw new Error('Should never happen');
+            }
+          }
+          return 'sendrecv';
+        })();
+
+        // determine the answer direction based on the offered direction and our hold state
+        const answerDirection = ((): 'inactive' | 'recvonly' | 'sendonly' | 'sendrecv' => {
+          switch (offeredDirection) {
+            case 'inactive':
+              return 'inactive';
+            case 'recvonly':
+              return 'sendonly';
+            case 'sendonly':
+              return options && options.hold ? 'inactive' : 'recvonly';
+            case 'sendrecv':
+              return options && options.hold ? 'sendonly' : 'sendrecv';
+            default:
+              throw new Error('Should never happen');
+          }
+        })();
+
+        // set the transceiver direction to the answer direction
+        this._peerConnection.getTransceivers().forEach((transceiver) => {
+          if (transceiver.direction /* guarding, but should always be true */) {
+            if (transceiver.direction !== 'stopped' && transceiver.direction !== answerDirection) {
+              // eslint-disable-next-line no-param-reassign
+              transceiver.direction = answerDirection;
+            }
+          }
+        });
+      }
+        break;
+      case 'have-local-offer':
+      case 'have-local-pranswer':
+      case 'have-remote-pranswer':
+      case 'closed':
+      default:
+        return Promise.reject(new Error(`Invalid signaling state ${this._peerConnection.signalingState}`));
+    }
+    return Promise.resolve();
   }
 }
 
