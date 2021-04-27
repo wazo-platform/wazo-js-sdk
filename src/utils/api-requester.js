@@ -21,7 +21,7 @@ type ConstructorParams = {
 
 const methods = ['head', 'get', 'post', 'put', 'delete'];
 
-const logger = IssueReporter.loggerFor('api');
+const logger = IssueReporter ? IssueReporter.loggerFor('api') : console;
 
 // Use a function here to be able to mock it in tests
 export const realFetch = () => {

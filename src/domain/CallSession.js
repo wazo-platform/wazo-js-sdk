@@ -317,7 +317,7 @@ export default class CallSession {
       startTime: +call.startingTime,
       paused: call.isOnHold(),
       isCaller: call.isCaller,
-      muted: false,
+      muted: call.muted,
       videoMuted: false,
       screensharing: false,
       recording: call.isRecording(),

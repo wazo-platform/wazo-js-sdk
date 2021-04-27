@@ -177,11 +177,30 @@ class Phone extends Emitter {
   }
 
   mute(callSession: CallSession) {
+    this.muteViaAPI(callSession);
     return this.phone && this.phone.mute(callSession);
   }
 
   unmute(callSession: CallSession) {
+    this.unmuteViaAPI(callSession);
+
     return this.phone && this.phone.unmute(callSession);
+  }
+
+  muteViaAPI(callSession: CallSession) {
+    if (callSession && callSession.callId) {
+      Wazo.getApiClient().calld.mute(callSession.callId).catch(e => {
+        logger.error('Mute via API, error', e);
+      });
+    }
+  }
+
+  unmuteViaAPI(callSession: CallSession) {
+    if (callSession && callSession.callId) {
+      Wazo.getApiClient().calld.unmute(callSession.callId).catch(e => {
+        logger.error('Unmute via API, error', e);
+      });
+    }
   }
 
   hold(callSession: CallSession) {
@@ -370,7 +389,7 @@ class Phone extends Emitter {
   }
 
   _onMessage(message: Message) {
-    if (message.method !== 'MESSAGE') {
+    if (!message || message.method !== 'MESSAGE') {
       return;
     }
 

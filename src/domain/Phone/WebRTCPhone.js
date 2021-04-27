@@ -833,6 +833,15 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
   }
 
+  isAudioMuted(callSession: CallSession): boolean {
+    const sipSession = this.findSipSession(callSession);
+    if (!sipSession) {
+      return true;
+    }
+
+    return this.client.isAudioMuted(sipSession);
+  }
+
   turnCameraOn(callSession?: CallSession): void {
     const sipSession = this.findSipSession(callSession);
     if (!sipSession) {
