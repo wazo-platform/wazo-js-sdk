@@ -597,6 +597,10 @@ export default class WebRTCClient extends Emitter {
   }
 
   isAudioMuted(session: Inviter): boolean {
+    if (!session.sessionDescriptionHandler) {
+      return false;
+    }
+
     let muted = true;
     const pc = session.sessionDescriptionHandler.peerConnection;
 
