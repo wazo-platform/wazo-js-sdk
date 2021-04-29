@@ -74,6 +74,19 @@ const Wazo = {
     SwitchboardCall,
   },
 
+  // Api
+  get api() { return getApiClient(); },
+  get agentd() { return getApiClient().agentd; },
+  get amid() { return getApiClient().amid; },
+  get application() { return getApiClient().application; },
+  get auth() { return getApiClient().auth; },
+  get callLogs() { return getApiClient().callLogs; },
+  get calld() { return getApiClient().calld; },
+  get chatd() { return getApiClient().chatd; },
+  get confd() { return getApiClient().confd; },
+  get dird() { return getApiClient().dird; },
+  get webhookd() { return getApiClient().webhookd; },
+
   // Error
   InvalidSubscription,
   InvalidAuthorization,
