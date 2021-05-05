@@ -265,7 +265,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       // Emit an error, because sip.js catches the exception and switch to status Terminated.
       this.eventEmitter.emit('error', error);
 
-      throw error;
+      wazoLogger.error('No valid candidates found', { tries, candidates: JSON.stringify(this.gatheredCandidates) });
     }
 
     // eslint-disable-next-line
