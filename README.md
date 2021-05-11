@@ -79,7 +79,7 @@ Wazo's Javascript SDK allows you to use these features :
       - [Dird](#dird)
       - [Agentd](#agentd)
       - [callLogd](#calllogd)
-      - [Accessd](#accessd)
+      - [Chatd](#chatd)
       - [Calling an API endpoint without WazoApiClient](#calling-an-api-endpoint-without-wazoapiclient)
     + [WebRTCClient](#webrtcclient)
       - [WebRTCClient Configuration](#webrtccient-configuration)
@@ -841,6 +841,21 @@ client.callLogd.listCallLogs(offset, limit);
 client.callLogd.listCallLogsFromDate(from, number);
 ```
 
+#### Chatd      **`Chat`** **`Status`**
+Use chatd to send and retrieve chat messages and user statuses.
+```js
+client.chatd.getContactStatusInfo(contactUuid: UUID);
+client.chatd.getState(contactUuid: UUID);
+client.chatd.getLineState(contactUuid: UUID);
+client.chatd.getMultipleLineState(contactUuids: ?Array<UUID>);
+client.chatd.getUserRooms();
+client.chatd.updateState(contactUuid: UUID, state: string);
+client.chatd.updateStatus(contactUuid: UUID, state: string, status: string);
+client.chatd.createRoom(name: string, users: Array<ChatUser>);
+client.chatd.getRoomMessages(roomUuid: string);
+client.chatd.sendRoomMessage(roomUuid: string, message: ChatMessage);
+client.chatd.getMessages(options: GetMessagesOptions);
+```
 
 #### Calling an API endpoint without WazoApiClient      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
 

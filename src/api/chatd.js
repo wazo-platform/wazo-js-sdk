@@ -50,10 +50,14 @@ export default (client: ApiRequester, baseUrl: string) => ({
       .get(`${baseUrl}/users/${contactUuid}/presences`)
       .then((response: PresenceResponse) => Profile.getLinesState(response.lines)),
 
-  getMultipleLineState: async (contactUuids: Array<UUID>): Promise<string> =>
-    client
-      .get(`${baseUrl}/users/presences`, { user_uuid: contactUuids.join(',') })
-      .then((response: PresenceListResponse) => response.items),
+  getMultipleLineState: async (contactUuids: ?Array<UUID>): Promise<string> => {
+    const body = {};
+    if (contactUuids && contactUuids.length) {
+      body.user_uuid = contactUuids.join(',');
+    }
+
+    return client.get(`${baseUrl}/users/presences`, body).then((response: PresenceListResponse) => response.items);
+  },
 
   getUserRooms: async (): Promise<Array<ChatRoom>> => client.get(`${baseUrl}/users/me/rooms`).then(ChatRoom.parseMany),
 
