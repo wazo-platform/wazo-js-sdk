@@ -146,7 +146,9 @@ class Room extends Emitter {
       // Call_created is triggered before call_accepted, so we have to listen for it here.
       Wazo.Websocket.once(Wazo.Websocket.CALL_CREATED, ({ data }) => {
         logger.info('room call received via WS', { callId: data.call_id });
-        room.setCallId(data.call_id);
+        if (room) {
+          room.setCallId(data.call_id);
+        }
       });
 
       const callSession = await Wazo.Phone.call(extension, withCamera, null, audioOnly);
@@ -160,7 +162,7 @@ class Room extends Emitter {
       });
     }
 
-    if (room.callSession && room.callSession.call) {
+    if (room && room.callSession && room.callSession.call) {
       room.setCallId(room.callSession.call.id);
     }
 
@@ -345,7 +347,7 @@ class Room extends Emitter {
   }
 
   _bindEvents() {
-    if (!Wazo.Phone.phone) {
+    if (!Wazo.Phone.phone || !Wazo.Phone.phone.currentSipSession) {
       return;
     }
     // Retrieve mapping
