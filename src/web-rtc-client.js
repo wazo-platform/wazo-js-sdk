@@ -241,7 +241,7 @@ export default class WebRTCClient extends Emitter {
       // And now do what we want with the message
       this.eventEmitter.emit(MESSAGE, message);
 
-      if (message.method === C.MESSAGE) {
+      if (message && message.method === C.MESSAGE) {
         // We have to manually reply to MESSAGE with a 200 OK or Asterisk will hangup.
         ua.userAgentCore.replyStateless(message, { statusCode: 200 });
       }
@@ -341,7 +341,8 @@ export default class WebRTCClient extends Emitter {
       this.registerer.stateChange.addListener(newState => {
         logger.info('sdk webrtc registering, state changed', { newState });
 
-        if (newState === RegistererState.Registered && this.registerer.state === RegistererState.Registered) {
+        if (newState === RegistererState.Registered && this.registerer
+          && this.registerer.state === RegistererState.Registered) {
           this.eventEmitter.emit(REGISTERED);
         } else if (newState === RegistererState.Unregistered) {
           this.eventEmitter.emit(UNREGISTERED);
@@ -603,6 +604,9 @@ export default class WebRTCClient extends Emitter {
 
     let muted = true;
     const pc = session.sessionDescriptionHandler.peerConnection;
+    if (!pc) {
+      return false;
+    }
 
     if (pc.getSenders) {
       pc.getSenders().forEach(sender => {
@@ -1059,7 +1063,7 @@ export default class WebRTCClient extends Emitter {
 
   _onHeartbeat(message: string | Object) {
     const body = message && typeof message === 'object' ? message.data : message;
-    if (body.indexOf('200 OK') !== -1) {
+    if (body && body.indexOf('200 OK') !== -1) {
       if (this.hasHeartbeat()) {
         logger.info('on heartbeat received from Asterisk', { hasHeartbeat: this.hasHeartbeat() });
 
