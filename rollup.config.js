@@ -58,6 +58,7 @@ if (typeof(window) === 'undefined') {
   };
 } else {
   window.global = window.global || window;
+  global.window = global;
 }
     `,
   },
