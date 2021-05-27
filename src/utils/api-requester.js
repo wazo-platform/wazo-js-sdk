@@ -24,21 +24,23 @@ const methods = ['head', 'get', 'post', 'put', 'delete'];
 const logger = IssueReporter ? IssueReporter.loggerFor('api') : console;
 
 // Use a function here to be able to mock it in tests
-export const realFetch = () => {
+const getRealFetch = () => {
   if (typeof document !== 'undefined') {
     // Browser
-    return window.fetch;
+    return () => window.fetch;
   }
 
   if (isMobile()) {
     // React native
-    return fetch;
+    return () => fetch;
   }
 
   // nodejs
   // this package is disable for react-native in package.json because it requires nodejs modules
-  return require('node-fetch/lib/index');
+  return () => require('node-fetch/lib/index');
 };
+
+export const realFetch = getRealFetch();
 
 export default class ApiRequester {
   server: string;
