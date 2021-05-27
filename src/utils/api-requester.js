@@ -24,23 +24,25 @@ const methods = ['head', 'get', 'post', 'put', 'delete'];
 const logger = IssueReporter ? IssueReporter.loggerFor('api') : console;
 
 // Use a function here to be able to mock it in tests
-const getRealFetch = () => {
+export const realFetch = () => {
+  let isNode = false;
   if (typeof document !== 'undefined') {
     // Browser
-    return () => window.fetch;
+    return window.fetch;
   }
 
   if (isMobile()) {
     // React native
-    return () => fetch;
+    return fetch;
   }
+
+  isNode = true;
 
   // nodejs
   // this package is disable for react-native in package.json because it requires nodejs modules
-  return () => require('node-fetch/lib/index');
+  // $FlowFixMe
+  return require(isNode ? 'node-fetch/lib/index' : '');
 };
-
-export const realFetch = getRealFetch();
 
 export default class ApiRequester {
   server: string;
