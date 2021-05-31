@@ -27,7 +27,7 @@ const csjConfigs = globby.sync('src/**/*.js').map(inputFile => ({
   ],
 }));
 
-const configs = esmConfigs.concat(csjConfigs);
+const configs = [];
 
 const plugins = [
   flow(),
@@ -57,8 +57,7 @@ if (typeof(window) === 'undefined') {
     addEventListener: {},
   };
 } else {
-  window.global = window.global || window;
-  global.window = global;
+  window.global = window.global || {};
 }
     `,
   },
