@@ -57,7 +57,7 @@ if (typeof(window) === 'undefined') {
     addEventListener: {},
   };
 } else {
-  window.global = window.global || {};
+  window.global = window.global || window;
 }
     `,
   },
