@@ -27,7 +27,7 @@ const csjConfigs = globby.sync('src/**/*.js').map(inputFile => ({
   ],
 }));
 
-const configs = [];
+const configs = esmConfigs.concat(csjConfigs);
 
 const plugins = [
   flow(),
