@@ -37,7 +37,14 @@ export const realFetch = () => {
 
   // nodejs
   // this package is disable for react-native in package.json because it requires nodejs modules
-  return require('node-fetch/lib/index');
+  // Used to trick the optimizer to avoid requiring `node-fetch/lib/index` directly
+  // It causes to require it on browsers when delivered by a nodejs engine (cf: vitejs).
+  try {
+    // $FlowFixMe
+    return require(Math.random() >= 0 ? 'node-fetch/lib/index' : '');
+  } catch (e) {
+    return fetch;
+  }
 };
 
 export default class ApiRequester {
