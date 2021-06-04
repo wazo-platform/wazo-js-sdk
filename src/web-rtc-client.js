@@ -380,14 +380,14 @@ export default class WebRTCClient extends Emitter {
     const oldUnregistered = registerer.unregistered.bind(registerer);
 
     registerer.waitingToggle = (waiting: boolean) => {
-      if (registerer.waiting === waiting) {
+      if (!registerer || registerer.waiting === waiting) {
         return;
       }
       oldWaitingToggle(waiting);
     };
 
     registerer.unregistered = () => {
-      if (registerer.state === RegistererState.Terminated) {
+      if (!registerer || registerer.state === RegistererState.Terminated) {
         return;
       }
       oldUnregistered();
@@ -760,7 +760,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   getState() {
-    return states[this.userAgent.state];
+    return this.userAgent ? states[this.userAgent.state] : UserAgentState.Stopped;
   }
 
   getContactIdentifier() {
@@ -1148,10 +1148,10 @@ export default class WebRTCClient extends Emitter {
     logger.info('WebRTC UA needs to connect');
 
     // Force UA to reconnect
-    if (this.userAgent.state !== UserAgentState.Stopped) {
+    if (this.userAgent && this.userAgent.state !== UserAgentState.Stopped) {
       this.userAgent.transitionState(UserAgentState.Stopped);
     }
-    if (this.userAgent.transport.state !== TransportState.Disconnected) {
+    if (this.userAgent.transport && this.userAgent.transport.state !== TransportState.Disconnected) {
       this.userAgent.transport.transitionState(TransportState.Disconnected);
     }
     this.connectionPromise = this.userAgent.start().catch(console.error);
