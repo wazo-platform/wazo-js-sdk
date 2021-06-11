@@ -64,7 +64,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     // ICE will restart upon applying an offer created with the iceRestart option
     const iceRestart = options.offerOptions ? options.offerOptions.iceRestart : false;
 
-    const isConference = options ? !!options.conference : false;
+    const forceInactive = options ? !!options.forceInactive : false;
 
     // We should wait for ice when iceRestart (reinvite) or for the first invite
     // We shouldn't wait for ice when holding or resuming the call
@@ -92,7 +92,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     };
 
     return this.getLocalMediaStream(options)
-      .then(() => this.updateDirection(options, isConference))
+      .then(() => this.updateDirection(options, forceInactive))
       .then(() => this.createDataChannel(options))
       .then(() => this.createLocalOfferOrAnswer(options))
       .then((sessionDescription) => this.setLocalSessionDescription(sessionDescription))
@@ -274,8 +274,8 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     return this.getLocalSessionDescription();
   }
 
-  // Overridden to send `inactive` in conference
-  updateDirection(options?: SessionDescriptionHandlerOptions, isConference: boolean = false): Promise<void> {
+  // Overridden to send `inactive` in forceInactive
+  updateDirection(options?: SessionDescriptionHandlerOptions, forceInactive: boolean = false): Promise<void> {
     if (this._peerConnection === undefined) {
       return Promise.reject(new Error('Peer connection closed.'));
     }
@@ -291,7 +291,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         this.logger.debug('SessionDescriptionHandler.updateDirection - setting offer direction');
         // determine the direction to offer given the current direction and hold state
         const directionToOffer = (currentDirection: Object): Object => {
-          if (isConference) {
+          if (forceInactive) {
             return options && options.hold ? 'inactive' : 'sendrecv';
           }
 

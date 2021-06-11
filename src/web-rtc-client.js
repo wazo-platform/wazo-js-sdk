@@ -637,7 +637,7 @@ export default class WebRTCClient extends Emitter {
     this._toggleVideo(session, true);
   }
 
-  hold(session: Inviter, isConference: boolean = false) {
+  hold(session: Inviter, forceInactive: boolean = false) {
     const sessionId = this.getSipSessionId(session);
     logger.info('sdk webrtc hold', {
       id: session.id,
@@ -659,7 +659,7 @@ export default class WebRTCClient extends Emitter {
 
     session.sessionDescriptionHandlerOptionsReInvite = {
       hold: true,
-      conference: isConference,
+      forceInactive,
     };
 
     const options = this._getMediaConfiguration(hasVideo);
@@ -668,7 +668,7 @@ export default class WebRTCClient extends Emitter {
     return session.invite(options);
   }
 
-  unhold(session: Inviter, isConference: boolean = false) {
+  unhold(session: Inviter, forceInactive: boolean = false) {
     logger.info('sdk webrtc unhold', {
       id: session.id,
       keys: Object.keys(this.heldSessions),
@@ -685,7 +685,7 @@ export default class WebRTCClient extends Emitter {
     delete this.heldSessions[this.getSipSessionId(session)];
     session.sessionDescriptionHandlerOptionsReInvite = {
       hold: false,
-      conference: isConference,
+      forceInactive,
     };
 
     const options = this._getMediaConfiguration(hasVideo);

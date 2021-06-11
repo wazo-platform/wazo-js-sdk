@@ -1125,14 +1125,19 @@ Use this method to put a running call on hold.
 ```js
 phone.hold(
   callSession: CallSession, // The call session to put on hold
-  withEvent: boolean = true // Should the phone triggers event
+  withEvent: boolean = true, // Should the phone triggers event
+  forceInactive: boolean = false // Force to send `inactive` in the SDP instead of `sendonly`. Usefull in conference and video call
 );
 ```
 
 ##### Resuming a call
 Use this method to resume a running call.
 ```js
-phone.resume(callSession: CallSession);
+phone.resume(
+  callSession: CallSession,
+  withEvent: boolean = true, // Should the phone triggers event
+  forceInactive: boolean = false // Force to send `inactive` in the SDP instead of `sendonly`. Usefull in conference and video call
+);
 ```
 Please note that `phone.resume()` is the preferred method
 ```js
