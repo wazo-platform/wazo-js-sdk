@@ -20,7 +20,7 @@ import { C } from 'sip.js/lib/core/messages/methods/constants';
 import { URI } from 'sip.js/lib/grammar/uri';
 import { Parser } from 'sip.js/lib/core/messages/parser';
 import { UserAgent } from 'sip.js/lib/api/user-agent';
-import { stripVideo } from 'sip.js/lib/platform/web/modifiers/modifiers';
+import { stripVideo, holdModifier } from 'sip.js/lib/platform/web/modifiers/modifiers';
 import { Registerer } from 'sip.js/lib/api/registerer';
 import { Inviter } from 'sip.js/lib/api/inviter';
 import { Messager } from 'sip.js/lib/api/messager';
@@ -663,6 +663,9 @@ export default class WebRTCClient extends Emitter {
     };
 
     const options = this._getMediaConfiguration(hasVideo);
+    if (!this._isWeb()) {
+      options.sessionDescriptionHandlerModifiers = [holdModifier];
+    }
 
     // Send re-INVITE
     return session.invite(options);
@@ -689,6 +692,11 @@ export default class WebRTCClient extends Emitter {
     };
 
     const options = this._getMediaConfiguration(hasVideo);
+    if (!this._isWeb()) {
+      // We should sent an empty `sessionDescriptionHandlerModifiers` or sip.js will take the last sent modifiers
+      // (eg: holdModifier)
+      options.sessionDescriptionHandlerModifiers = [];
+    }
 
     // Send re-INVITE
     return session.invite(options);
