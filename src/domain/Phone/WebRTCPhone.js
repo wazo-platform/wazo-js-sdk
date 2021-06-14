@@ -1292,15 +1292,18 @@ export default class WebRTCPhone extends Emitter implements Phone {
     });
   }
 
-  _createCallSession(sipSession: Session, fromSession?: ?CallSession, extra: Object = {}): CallSession {
+  _createCallSession(sipSession: Session, previousCallSession?: ?CallSession, extra: Object = {}): CallSession {
     // eslint-disable-next-line
     const identity = sipSession ? sipSession.remoteIdentity || sipSession.assertedIdentity : null;
     const number = identity ? identity.uri._normal.user : null;
     const { state } = sipSession || {};
 
+    const sipCallId = this.getSipSessionId(sipSession);
+    const fromSession = previousCallSession || this.callSessions[sipCallId];
+
     const callSession = new CallSession({
       callId: fromSession && fromSession.callId,
-      sipCallId: this.getSipSessionId(sipSession),
+      sipCallId,
       sipStatus: state,
       displayName: identity ? identity.displayName || number : number,
       startTime: fromSession ? fromSession.startTime : new Date(),
