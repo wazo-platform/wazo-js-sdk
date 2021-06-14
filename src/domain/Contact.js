@@ -153,6 +153,7 @@ type ContactArguments = {
   connected?: boolean,
   doNotDisturb?: boolean,
   ringing?: boolean,
+  lines?: Object[],
 };
 
 type Office365Response = {
@@ -255,6 +256,7 @@ export default class Contact {
   connected: ?boolean;
   doNotDisturb: ?boolean;
   ringing: ?boolean;
+  lines: Object[];
 
   static merge(oldContacts: Array<Contact>, newContacts: Array<Contact>): Array<Contact> {
     return newContacts.map(current => {
@@ -546,6 +548,7 @@ export default class Contact {
     doNotDisturb,
     ringing,
     previousPresential,
+    lines,
   }: ContactArguments = {}) {
     this.id = id;
     this.uuid = uuid;
@@ -575,6 +578,7 @@ export default class Contact {
     this.doNotDisturb = doNotDisturb;
     this.ringing = ringing;
     this.previousPresential = previousPresential;
+    this.lines = lines || [];
 
     // Useful to compare instead of instanceof with minified code
     this.type = 'Contact';
