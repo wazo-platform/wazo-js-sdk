@@ -373,7 +373,7 @@ class Room extends Emitter {
     });
 
     this.on(this.ON_AUDIO_STREAM, stream => {
-      logger.info('on room audio stream');
+      logger.info('on room audio stream', { streamId: stream ? stream.id : null });
 
       this.audioStream = stream;
       if (document.createElement) {
@@ -392,7 +392,7 @@ class Room extends Emitter {
     });
 
     this.on(this.ON_VIDEO_STREAM, (stream, streamId) => {
-      logger.info('on room video stream');
+      logger.info('on room video stream', { streamId });
 
       // ON_VIDEO_STREAM is called before PARTICIPANT_JOINED, so we have to keep stream in `_unassociatedVideoStreams`.
       this._unassociatedVideoStreams[streamId] = stream;
@@ -405,7 +405,7 @@ class Room extends Emitter {
     });
 
     this.on(this.ON_REMOVE_STREAM, stream => {
-      logger.info('on room remove stream');
+      logger.info('on room remove stream', { streamId: stream ? stream.id : null });
 
       const participant = this.participants.find(someParticipant =>
         someParticipant.streams.find(someStream => someStream && someStream.id === stream.id));
