@@ -56,6 +56,7 @@ export default class ApiRequester {
   fetchOptions: Object;
   refreshTokenCallback: Function;
   refreshTokenPromise: ?Promise<any>;
+  shouldLogErrors: boolean;
 
   head: Function;
   get: Function;
@@ -95,6 +96,8 @@ export default class ApiRequester {
       this.token = token;
     }
 
+    this.shouldLogErrors = true;
+
     methods.forEach(method => {
       // $FlowFixMe
       ApiRequester.prototype[method] = function sugar(...args) {
@@ -116,6 +119,14 @@ export default class ApiRequester {
 
   setFetchOptions(options: Object) {
     this.fetchOptions = options;
+  }
+
+  disableErrorLogging() {
+    this.shouldLogErrors = false;
+  }
+
+  enableErrorLogging() {
+    this.shouldLogErrors = true;
   }
 
   async call(
@@ -178,7 +189,9 @@ export default class ApiRequester {
             ? exceptionClass.fromText(err, response.status)
             : exceptionClass.fromResponse(err, response.status);
 
-          logger.error('API error', error);
+          if (this.shouldLogErrors) {
+            logger.error('API error', error);
+          }
 
           throw error;
         });
@@ -186,7 +199,9 @@ export default class ApiRequester {
 
       return newParse(response, isJson);
     }).catch(error => {
-      logger.error('Fetch failed', { url, options, message: error.message, stack: error.stack });
+      if (this.shouldLogErrors) {
+        logger.error('Fetch failed', {url, options, message: error.message, stack: error.stack});
+      }
 
       throw error;
     });

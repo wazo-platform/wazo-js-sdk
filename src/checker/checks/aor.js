@@ -5,6 +5,8 @@ export default {
   check: async (server, session) => {
     const apiClient = new WazoApiClient({ server });
     apiClient.setToken(session.token);
+    apiClient.disableErrorLogging();
+
     const line = session.primaryWebRtcLine();
     if (!line) {
       return 'No WebRTC line for this user';
