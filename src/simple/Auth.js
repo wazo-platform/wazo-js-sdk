@@ -44,7 +44,7 @@ class Auth {
     mobile: boolean) {
     this.clientId = clientId;
     this.expiration = expiration;
-    this.minSubscriptionType = minSubscriptionType || null;
+    this.minSubscriptionType = typeof minSubscriptionType === 'undefined' ? null : minSubscriptionType;
     this.authorizationName = authorizationName;
     this.host = null;
     this.session = null;
