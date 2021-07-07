@@ -37,12 +37,12 @@
     "format": "./node_modules/.bin/prettier-eslint --write \"src/**/*.js\" \"__tests__/**/*.js\" --single-quote --trailing-comma es5",
     "typecheck": "./node_modules/.bin/flow",
     "fetch-typedefs": "./node_modules/.bin/flow-typed install",
-    "prepublishOnly": "rm -rf lib/* && rm -rf esm/* && yarn build",
-    "postinstall": "rm -rf ./node_modules/webpack-cli/lib/utils/__tests__"
+    "prepublishOnly": "./node_modules/.bin/rimraf lib/* esm/* && yarn build",
+    "postinstall": "./node_modules/.bin/rimraf ./node_modules/webpack-cli/lib/utils/__tests__"
   },
   "jest": {
     "transformIgnorePatterns": [
-      "node_modules/?!(sip.js\/lib\/api\/session-state)"
+      "node_modules/?!(sip.js/lib/api/session-state)"
     ]
   },
   "dependencies": {
@@ -82,6 +82,7 @@
     "jsonlint": "^1.6.3",
     "prettier-eslint-cli": "^5.0.1",
     "remove-flow-types-loader": "^1.1.0",
+    "rimraf": "^3.0.2",
     "rollup": "^2.42.3",
     "rollup-plugin-babel": "^4.4.0",
     "rollup-plugin-commonjs": "^10.1.0",
