@@ -104,6 +104,10 @@ class SwitchboardCall {
     updateFrom(this, switchboardCall);
   }
 
+  getId() {
+    return this.id;
+  }
+
   static newFrom(switchboardCall: SwitchboardCall) {
     return newFrom(switchboardCall, SwitchboardCall);
   }
