@@ -37,6 +37,44 @@ export const isSdpValid = (sdp: ?string): boolean => {
   return areCandidateValid(candidates);
 };
 
+export const fixBundle = (sdp: string): string => {
+  const parsedSdp = sdpParser.parse(sdp);
+  const bundleIndex = parsedSdp.groups.findIndex(group => group.type === 'BUNDLE');
+  if (bundleIndex !== -1) {
+    parsedSdp.groups[bundleIndex].mids = parsedSdp.media.map((media, index) => index).join(' ');
+  }
+
+  return sdpParser.write(parsedSdp);
+};
+
+export const fixInactiveVideo = (sdp: string): string => {
+  const parsedSdp = sdpParser.parse(sdp);
+  if (parsedSdp.media[1].type === 'video' && parsedSdp.media[1].direction === 'inactive') {
+    delete parsedSdp.media[1].direction;
+  }
+
+  return sdpParser.write(parsedSdp);
+};
+
+export const disableLocalVideo = (sdp: string): string => {
+  const parsedSdp = sdpParser.parse(sdp);
+  if (parsedSdp.media[1].type === 'video' && parsedSdp.media[1].port > 10) {
+    parsedSdp.media[1].port = 0;
+  }
+
+  return sdpParser.write(parsedSdp);
+};
+
+export const removeLocalVideo = (sdp: string): string => {
+  const parsedSdp = sdpParser.parse(sdp);
+  if (parsedSdp.media[1].type === 'video' && parsedSdp.media[1].port > 10) {
+    parsedSdp.media.splice(1, 1);
+    return fixBundle(sdpParser.write(parsedSdp));
+  }
+
+  return sdp;
+};
+
 export const fixSdp = (sdp: string, candidates: Object[]): string => {
   const parsedSdp = sdpParser.parse(sdp);
   const mainCandidate = getSrflxOrRelay(candidates)[0];

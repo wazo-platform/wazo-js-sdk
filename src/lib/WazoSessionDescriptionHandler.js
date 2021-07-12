@@ -12,7 +12,14 @@ import { SessionDescriptionHandler }
 import { SessionDescriptionHandlerOptions }
   from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-options';
 import IssueReporter from '../service/IssueReporter';
-import { areCandidateValid, fixSdp, parseCandidate } from '../utils/sdp';
+import {
+  areCandidateValid,
+  fixSdp,
+  parseCandidate,
+  disableLocalVideo,
+  fixBundle,
+  fixInactiveVideo,
+} from '../utils/sdp';
 
 const wazoLogger = IssueReporter ? IssueReporter.loggerFor('webrtc-sdh') : console;
 const MAX_WAIT_FOR_ICE_TRIES = 20;
@@ -123,6 +130,27 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
           // Fix sdp only when no candidates
           sdp: fixSdp(sdp, this.gatheredCandidates),
         };
+      })
+      .then(description => {
+        const { sdp } = description;
+
+        if (iceRestart) {
+          // When downgrading to audio with a `constraints.video = false` the sdp still contains m=video with a port > 10.
+          if (!options.constraints.video && sdp.match(/m=video/)) {
+            return {
+              type: description.type,
+              sdp: disableLocalVideo(sdp),
+            };
+          }
+
+          // When upgrading again to video, we've got 2 section m but a bundle containing only `0`
+          return {
+            type: description.type,
+            sdp: fixInactiveVideo(fixBundle(sdp)),
+          };
+        }
+
+        return description;
       })
       .then((sessionDescription) => this.applyModifiers(sessionDescription, modifiers))
       .then((sessionDescription) => ({ body: sessionDescription.sdp, contentType: 'application/sdp' }))
