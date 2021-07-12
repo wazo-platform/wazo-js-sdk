@@ -37,8 +37,7 @@
     "format": "./node_modules/.bin/prettier-eslint --write \"src/**/*.js\" \"__tests__/**/*.js\" --single-quote --trailing-comma es5",
     "typecheck": "./node_modules/.bin/flow",
     "fetch-typedefs": "./node_modules/.bin/flow-typed install",
-    "prepublishOnly": "./node_modules/.bin/rimraf lib/* esm/* && yarn build",
-    "postinstall": "./node_modules/.bin/rimraf ./node_modules/webpack-cli/lib/utils/__tests__"
+    "prepublishOnly": "./node_modules/.bin/rimraf lib/* esm/* && yarn build"
   },
   "jest": {
     "transformIgnorePatterns": [
