@@ -11,6 +11,7 @@ import {
   disableLocalVideo,
   fixBundle,
   fixInactiveVideo,
+  isLocalVideoInactive,
 } from '../sdp';
 
 const goodSdp = `
@@ -75,7 +76,9 @@ a=msid-semantic: WMS 11d5ae22-b66b-4837-aedb-b9f8bed3a80b
 a=group:BUNDLE 0 
 m=audio 65050 UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126
 c=IN IP4 74.59.196.3
+a=mid:0
 m=video 65050 UDP/TLS/RTP/SAVPF 96 97 98 99 100 101 102 121 127 120 125 107 108 109 35 36 124 119 123 118 114 115 116
+a=mid:1
 `;
 
 const inactiveVideo = `
@@ -173,6 +176,14 @@ describe('SDP utils', () => {
       const parsed = sdpParser.parse(invalid);
 
       expect(parsed.groups[0].mids).toBe('0 1');
+    });
+  });
+
+  describe('Checking inactive local video', () => {
+    it('should check if the a=inactive tag is present', async () => {
+      const inactive = isLocalVideoInactive(inactiveVideo);
+
+      expect(inactive).toBeTruthy();
     });
   });
 

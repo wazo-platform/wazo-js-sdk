@@ -41,7 +41,8 @@ export const fixBundle = (sdp: string): string => {
   const parsedSdp = sdpParser.parse(sdp);
   const bundleIndex = parsedSdp.groups.findIndex(group => group.type === 'BUNDLE');
   if (bundleIndex !== -1) {
-    parsedSdp.groups[bundleIndex].mids = parsedSdp.media.map((media, index) => index).join(' ');
+    parsedSdp.groups[bundleIndex].mids = parsedSdp.media
+      .map((media, index) => ('mid' in media ? media.mid : index)).join(' ');
   }
 
   return sdpParser.write(parsedSdp);
@@ -54,6 +55,12 @@ export const fixInactiveVideo = (sdp: string): string => {
   }
 
   return sdpParser.write(parsedSdp);
+};
+
+export const isLocalVideoInactive = (sdp: string): boolean => {
+  const parsedSdp = sdpParser.parse(sdp);
+
+  return parsedSdp.media[1].type === 'video' && parsedSdp.media[1].direction === 'inactive'
 };
 
 export const disableLocalVideo = (sdp: string): string => {

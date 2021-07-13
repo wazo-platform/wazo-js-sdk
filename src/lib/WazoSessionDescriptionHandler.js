@@ -19,6 +19,7 @@ import {
   disableLocalVideo,
   fixBundle,
   fixInactiveVideo,
+  isLocalVideoInactive,
 } from '../utils/sdp';
 
 const wazoLogger = IssueReporter ? IssueReporter.loggerFor('webrtc-sdh') : console;
@@ -134,16 +135,16 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       .then(description => {
         const { sdp } = description;
 
-        if (iceRestart) {
-          // When downgrading to audio with a `constraints.video = false` the sdp still contains m=video with a port > 10.
-          if (!options.constraints.video && sdp.match(/m=video/)) {
-            return {
-              type: description.type,
-              sdp: disableLocalVideo(sdp),
-            };
-          }
+        // When downgrading to audio with a `constraints.video = false` the sdp still contains m=video with a port > 10.
+        if (!options.constraints.video && sdp.match(/m=video/)) {
+          return {
+            type: description.type,
+            sdp: disableLocalVideo(sdp),
+          };
+        }
 
-          // When upgrading again to video, we've got 2 section m but a bundle containing only `0`
+        // When upgrading again to video, we've got 2 section m but a bundle containing only `0`
+        if (options.constraints.video && isLocalVideoInactive(sdp)) {
           return {
             type: description.type,
             sdp: fixInactiveVideo(fixBundle(sdp)),
@@ -153,6 +154,14 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         return description;
       })
       .then((sessionDescription) => this.applyModifiers(sessionDescription, modifiers))
+      .then((sessionDescription) => {
+        this.setLocalSessionDescription(sessionDescription);
+
+        // Set new constraints to avoid the constraints check issue in `sdh.getLocalMediaStream` later.
+        this.localMediaStreamConstraints = options.constraints;
+
+        return sessionDescription;
+      })
       .then((sessionDescription) => ({ body: sessionDescription.sdp, contentType: 'application/sdp' }))
       .catch((error) => {
         wazoLogger.error('error when creating media', error);
