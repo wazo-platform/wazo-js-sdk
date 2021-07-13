@@ -399,7 +399,37 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
       if (restoreLocalStream) {
         if (this.currentScreenShare.sender) {
-          await this.currentScreenShare.sender.replaceTrack(this.currentScreenShare.localStream.getVideoTracks()[0]);
+          const track = this.currentScreenShare.localStream.getVideoTracks()[0];
+          await this.currentScreenShare.sender.replaceTrack(track);
+
+          if (callSession && callSession.isVideoMuted()) {
+            logger.info('session\'s video is muted, muting track');
+            let loop = 0;
+            const minLoops = 4;
+            const maxLoops = 20;
+            const loopDelay = 50; // milliseconds
+            // note: admittedly a tad kludgy: afaik, there's no way to establish track readiness so we need to test
+            // over an arbitrary length of time; 1 second appears to be sufficient, along a 200ms minimum testing period.
+            // Preliminary testing indicate that the minimum testing period is generally fine, with nominal exceptions.
+            const interval = setInterval(() => {
+              if (track.enabled) {
+                track.enabled = false;
+              }
+
+              if (!track.enabled && loop > minLoops) {
+                clearInterval(interval);
+              }
+
+              if (track.enabled && loop > maxLoops) {
+                logger.error(
+                  'Unable to mute the track as requested following a screenshare, bailing',
+                  { maxLoops, loopDelay },
+                );
+                clearInterval(interval);
+              }
+              loop++;
+            }, loopDelay);
+          }
         }
       } else if (this.currentScreenShare.localStream) {
         await this.currentScreenShare.localStream.getVideoTracks().forEach(track => track.stop());
