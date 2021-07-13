@@ -126,8 +126,6 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       })
       .then((sessionDescription) => this.applyModifiers(sessionDescription, modifiers))
       .then((sessionDescription) => {
-        this.setLocalSessionDescription(sessionDescription);
-
         // Set new constraints to avoid the constraints check issue in `sdh.getLocalMediaStream` later.
         this.localMediaStreamConstraints = options.constraints;
 
