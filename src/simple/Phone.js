@@ -236,12 +236,15 @@ class Phone extends Emitter {
     const hasRemoteVideo = this.phone.getRemoteVideoReceiver(callSession);
     if (contraints && contraints.video && hasRemoteVideo) {
       // $FlowFixMe
-      await this.phone.changeVideoInputDevice(null);
+      await this.phone.changeVideoInputDevice(typeof newConstraints.video === 'string' ? newConstraints.video : null);
+      // $FlowFixMe
       if (!this.phone.getRemoteStreamForCall(callSession)) {
-        // Fill remote stream
+        // Fill remote stream that is not set when answering a video call in audio
+        // $FlowFixMe
         this.phone.setRemoteStreamForCall(callSession);
       }
 
+      // Removing constraints to send a reinvite without new streams
       contraints = null;
     }
 
