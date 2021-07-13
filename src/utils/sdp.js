@@ -60,7 +60,7 @@ export const fixInactiveVideo = (sdp: string): string => {
 export const isLocalVideoInactive = (sdp: string): boolean => {
   const parsedSdp = sdpParser.parse(sdp);
 
-  return parsedSdp.media[1].type === 'video' && parsedSdp.media[1].direction === 'inactive'
+  return parsedSdp.media[1].type === 'video' && parsedSdp.media[1].direction === 'inactive';
 };
 
 export const disableLocalVideo = (sdp: string): string => {
