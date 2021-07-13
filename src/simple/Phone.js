@@ -233,10 +233,15 @@ class Phone extends Emitter {
       return;
     }
 
-    const hasRemoteVideo = this.phone.client.getRemoteVideoStreamsForSession(callSession.getId()).length;
+    const hasRemoteVideo = this.phone.getRemoteVideoReceiver(callSession);
     if (contraints && contraints.video && hasRemoteVideo) {
       // $FlowFixMe
       await this.phone.changeVideoInputDevice(null);
+      if (!this.phone.getRemoteStreamForCall(callSession)) {
+        // Fill remote stream
+        this.phone.setRemoteStreamForCall(callSession);
+      }
+
       contraints = null;
     }
 

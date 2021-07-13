@@ -470,6 +470,17 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return this.client.changeVideoInputDevice(id, this.currentSipSession);
   }
 
+  getPeerConnection(callSession: CallSession) {
+    const sipSession = this.sipSessions[callSession.getId()];
+
+    return sipSession ? sipSession.sessionDescriptionHandler.peerConnection : null;
+  }
+
+  getRemoteVideoReceiver(callSession: CallSession): boolean {
+    const pc = this.getPeerConnection(callSession);
+    return pc ? pc.getReceivers().find(receiver => receiver.track.kind === 'video') : false;
+  }
+
   _onCallTerminated(sipSession: Session) {
     logger.info('WebRTC phone - on call terminated', { sipId: sipSession.id });
 
@@ -611,6 +622,20 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     return remotes && remotes[remotes.length - 1];
+  }
+
+  setRemoteStreamForCall(callSession: CallSession): void {
+    const pc = this.getPeerConnection(callSession);
+    if (!pc) {
+      return;
+    }
+
+    const streams = pc.getRemoteStreams();
+    if (streams.length === 1) {
+      // Only audio stream
+      return;
+    }
+    this.client._addRemoteToVideoSession(callSession.sipCallId, streams[1]);
   }
 
   getRemoteStreamsForCall(callSession: CallSession): Object[] {
