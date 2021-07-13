@@ -228,13 +228,23 @@ class Phone extends Emitter {
   }
 
   async reinvite(callSession: CallSession, newConstraints: Object = null) {
+    let contraints = newConstraints;
     if (!this.phone) {
       return;
     }
-    const result = await this.phone.sendReinvite(this.phone.findSipSession(callSession), newConstraints);
+
+    const hasRemoteVideo = this.phone.client.getRemoteVideoStreamsForSession(callSession.getId()).length;
+    if (contraints && contraints.video && hasRemoteVideo) {
+      // $FlowFixMe
+      await this.phone.changeVideoInputDevice(null);
+      contraints = null;
+    }
+
+    // $FlowFixMe
+    const result = await this.phone.sendReinvite(this.phone.findSipSession(callSession), contraints);
 
     // Release local video stream when downgrading to audio
-    if (newConstraints && !newConstraints.video) {
+    if (contraints && !contraints.video) {
       const localVideoStream = Wazo.Phone.getLocalVideoStream(callSession);
       if (localVideoStream) {
         Stream.detachStream(localVideoStream);

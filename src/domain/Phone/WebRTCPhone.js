@@ -464,7 +464,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return this.client.changeAudioInputDevice(id, this.currentSipSession);
   }
 
-  changeVideoInputDevice(id: string) {
+  changeVideoInputDevice(id: ?string) {
     logger.info('WebRTC phone - change video input device', { deviceId: id });
 
     return this.client.changeVideoInputDevice(id, this.currentSipSession);

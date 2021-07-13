@@ -833,7 +833,7 @@ export default class WebRTCClient extends Emitter {
     }
   }
 
-  changeVideoInputDevice(id: string, session: ?Inviter) {
+  changeVideoInputDevice(id: ?string, session: ?Inviter) {
     const currentId = this.getVideoDeviceId();
     if (id === currentId) {
       return null;
@@ -860,10 +860,16 @@ export default class WebRTCClient extends Emitter {
         });
       }
 
+      const constraints = {
+        video: id ? { deviceId: { exact: id } } : true,
+      };
       // $FlowFixMe
-      return navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: id } } }).then(async stream => {
+      return navigator.mediaDevices.getUserMedia(constraints).then(async stream => {
         const videoTrack = stream.getVideoTracks()[0];
-        const sender = pc && pc.getSenders().find(s => videoTrack && s && s.track && s.track.kind === videoTrack.kind);
+        let sender = pc && pc.getSenders().find(s => videoTrack && s && s.track && s.track.kind === videoTrack.kind);
+        if (!sender) {
+          sender = pc && pc.getSenders().find(s => !s.track);
+        }
 
         if (sender) {
           sender.replaceTrack(videoTrack);
@@ -872,7 +878,11 @@ export default class WebRTCClient extends Emitter {
         // let's update the local stream
         this._addLocalToVideoSession(this.getSipSessionId(session), stream);
         this.eventEmitter.emit('onVideoInputChange', stream);
-        sdh.setLocalMediaStream(stream);
+        try {
+          await sdh.setLocalMediaStream(stream);
+        } catch (_) {
+          // Nothing to do
+        }
         return stream;
       });
     }
@@ -880,12 +890,14 @@ export default class WebRTCClient extends Emitter {
 
   getAudioDeviceId(): ?string {
     // $FlowFixMe
-    return this.audio && typeof this.audio === 'object' && 'deviceId' in this.audio ? this.audio.deviceId.exact : null;
+    return this.audio && typeof this.audio === 'object' && 'deviceId' in this.audio
+      ? this.audio.deviceId.exact : undefined;
   }
 
   getVideoDeviceId(): ?string {
     // $FlowFixMe
-    return this.video && typeof this.video === 'object' && 'deviceId' in this.video ? this.video.deviceId.exact : null;
+    return this.video && typeof this.video === 'object' && 'deviceId' in this.video
+      ? this.video.deviceId.exact : undefined;
   }
 
   changeVideo(enabled: boolean) {
@@ -1399,9 +1411,6 @@ export default class WebRTCClient extends Emitter {
     // If there is a video track, it will attach the video and audio to the same element
     if (sessionHasVideo) {
       this._addRemoteToVideoSession(sessionId, remoteStream);
-    } else {
-      // Cleanup the video streams
-      this._removeRemoteVideoSession(sessionId);
     }
 
     if (!this._isWeb() || !remoteStream) {
