@@ -68,7 +68,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
 
     // We should wait for ice when iceRestart (reinvite) or for the first invite
     // We shouldn't wait for ice when holding or resuming the call
-    const shouldWaitForIce = iceRestart || ('constraints' in options);
+    const shouldWaitForIce = !this.session.pendingReinviteAck && (iceRestart || ('constraints' in options));
 
     // ICE gathering timeout may be set on a per call basis, otherwise the configured default is used
     const iceTimeout = options.iceGatheringTimeout === undefined

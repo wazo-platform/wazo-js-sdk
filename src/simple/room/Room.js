@@ -35,6 +35,7 @@ class Room extends Emitter {
   _boundOnChat: Function;
   _boundOnSignal: Function;
   _boundSaveLocalVideoStream: Function;
+  _boundOnReinvite: Function;
   audioStream: ?any;
   audioElement: ?any;
   extra: Object;
@@ -114,6 +115,7 @@ class Room extends Emitter {
     this._boundOnSignal = this._onSignal.bind(this);
     this._boundOnScreenshareEnded = this._onScreenshareEnded.bind(this);
     this._boundSaveLocalVideoStream = this._saveLocalVideoStream.bind(this);
+    this._boundOnReinvite = this._onReinvite.bind(this);
 
     this.unbind();
 
@@ -206,6 +208,7 @@ class Room extends Emitter {
     Wazo.Phone.off(this.ON_SIGNAL, this._boundOnSignal);
     Wazo.Phone.off(this.ON_SCREEN_SHARE_ENDED, this._boundOnScreenshareEnded);
     Wazo.Phone.off(this.ON_VIDEO_INPUT_CHANGE, this._boundSaveLocalVideoStream);
+    Wazo.Phone.phone.off(Wazo.Phone.phone.client.ON_REINVITE, this._boundOnReinvite);
     Wazo.Websocket.off(this.CONFERENCE_USER_PARTICIPANT_JOINED, this._boundOnParticipantJoined);
     Wazo.Websocket.off(this.CONFERENCE_USER_PARTICIPANT_LEFT, this._boundOnParticipantLeft);
 
@@ -355,22 +358,13 @@ class Room extends Emitter {
       if (type !== 'offer') {
         return;
       }
-      const sdp = sdpParser.parse(rawSdp);
-      const labelMsidArray = sdp.media.filter(media => !!media.label).map(({ label, msid }) => ({
-        label: String(label),
-        msid: msid.split(' ')[1],
-      }));
 
-      labelMsidArray.forEach(({ label, msid }) => {
-
-        this._callIdStreamIdMap[String(label)] = msid;
-
-        const participant = this._unassociatedParticipants[String(label)];
-        if (participant) {
-          this.__associateStreams(participant);
-        }
-      });
+      this._mapMsid(rawSdp);
     });
+
+    // Listen to REINVITE to ba able to map msid after upgrading to video in a  audio only conference
+    // This allow to map msid with the non parsed (eg without the `stripVideo` modifier) SDP
+    Wazo.Phone.phone.on(Wazo.Phone.phone.client.ON_REINVITE, this._boundOnReinvite);
 
     this.on(this.ON_AUDIO_STREAM, stream => {
       logger.info('on room audio stream');
@@ -392,7 +386,7 @@ class Room extends Emitter {
     });
 
     this.on(this.ON_VIDEO_STREAM, (stream, streamId) => {
-      logger.info('on room video stream');
+      logger.info('on room video stream', { streamId });
 
       // ON_VIDEO_STREAM is called before PARTICIPANT_JOINED, so we have to keep stream in `_unassociatedVideoStreams`.
       this._unassociatedVideoStreams[streamId] = stream;
@@ -416,6 +410,35 @@ class Room extends Emitter {
       participant.videoStreams = participant.videoStreams.filter(someStream => someStream.id !== stream.id);
       participant.streams = participant.streams.filter(someStream => someStream.id !== stream.id);
       participant.onStreamUnSubscribed(stream);
+    });
+  }
+
+  _onReinvite(session: any, inviteRequest: any) {
+    const body = inviteRequest.body || inviteRequest.message.body;
+    if (body) {
+      this._mapMsid(body);
+
+      // Re-associate video streams
+      this.participants.forEach(participant => {
+        this.__associateStreams(participant);
+      });
+    }
+  }
+
+  _mapMsid(rawSdp: String) {
+    const sdp = sdpParser.parse(rawSdp);
+    const labelMsidArray = sdp.media.filter(media => !!media.label).map(({ label, msid }) => ({
+      label: String(label),
+      msid: msid.split(' ')[1],
+    }));
+
+    labelMsidArray.forEach(({ label, msid }) => {
+      this._callIdStreamIdMap[String(label)] = msid;
+
+      const participant = this._unassociatedParticipants[String(label)];
+      if (participant) {
+        this.__associateStreams(participant);
+      }
     });
   }
 

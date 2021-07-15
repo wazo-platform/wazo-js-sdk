@@ -12,6 +12,9 @@ import {
   fixBundle,
   fixInactiveVideo,
   isLocalVideoInactive,
+  randomMid,
+  toggleVideoDirection,
+  hasAnActiveVideo,
 } from '../sdp';
 
 const goodSdp = `
@@ -86,11 +89,13 @@ INVITE sip:127.0.0.1:5039;transport=ws SIP/2.0
 
 v=0
 a=msid-semantic: WMS 11d5ae22-b66b-4837-aedb-b9f8bed3a80b
-a=group:BUNDLE 0 1
+a=group:BUNDLE 0 video-1
 m=audio 65050 UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126
+a=mid:0
 c=IN IP4 74.59.196.3
 m=video 65050 UDP/TLS/RTP/SAVPF 96 97 98 99 100 101 102 121 127 120 125 107 108 109 35 36 124 119 123 118 114 115 116
 a=inactive
+a=mid:video-1
 `;
 
 describe('SDP utils', () => {
@@ -193,6 +198,33 @@ describe('SDP utils', () => {
       const parsed = sdpParser.parse(inactive);
 
       expect(parsed.media[1].direction).toBe(undefined);
+    });
+  });
+
+  describe('Randomize mid', () => {
+    it('should set random mid', async () => {
+      const inactive = randomMid(inactiveVideo);
+      const parsed = sdpParser.parse(inactive);
+
+      expect(parsed.media[0].mid).not.toBe('0');
+      expect(parsed.media[1].mid).not.toBe('video-1');
+    });
+  });
+
+  describe('Deactivate video', () => {
+    it('should set inactive to each video sections', async () => {
+      const sdp = toggleVideoDirection(videoReinvite, 'inactive');
+      const parsed = sdpParser.parse(sdp);
+
+      expect(parsed.media[1].direction).toBe('inactive');
+      expect(parsed.media[2].direction).toBe('inactive');
+    });
+  });
+
+  describe('Checking if video is active ', () => {
+    it('should return true if a section video is active', async () => {
+      expect(hasAnActiveVideo(videoReinvite)).toBeTruthy();
+      expect(hasAnActiveVideo(inactiveVideo)).toBeFalsy();
     });
   });
 });

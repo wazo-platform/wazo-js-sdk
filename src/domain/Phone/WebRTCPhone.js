@@ -184,14 +184,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return true;
   }
 
-  sendReinvite(sipSession: Session, newConstraints: Object = null) {
+  sendReinvite(sipSession: Session, newConstraints: Object = null, conference: boolean = false) {
     logger.info('WebRTC phone - send reinvite', { sessionId: sipSession ? sipSession.id : null, newConstraints });
 
     if (!sipSession) {
       return;
     }
 
-    return this.client.reinvite(sipSession, newConstraints);
+    return this.client.reinvite(sipSession, newConstraints, conference);
   }
 
   getUserAgent() {

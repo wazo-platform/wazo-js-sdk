@@ -227,13 +227,13 @@ class Phone extends Emitter {
     return this.phone && this.phone.atxfer(sipSession);
   }
 
-  async reinvite(callSession: CallSession, newConstraints: Object = null) {
+  async reinvite(callSession: CallSession, newConstraints: Object = null, conference: boolean = false) {
     let contraints = newConstraints;
     if (!this.phone) {
       return;
     }
 
-    const hasRemoteVideo = this.phone.getRemoteVideoReceiver(callSession);
+    const hasRemoteVideo = !!this.phone.getRemoteVideoReceiver(callSession);
     if (contraints && contraints.video && hasRemoteVideo) {
       // $FlowFixMe
       await this.phone.changeVideoInputDevice(typeof newConstraints.video === 'string' ? newConstraints.video : null);
@@ -249,7 +249,7 @@ class Phone extends Emitter {
     }
 
     // $FlowFixMe
-    const result = await this.phone.sendReinvite(this.phone.findSipSession(callSession), contraints);
+    const result = await this.phone.sendReinvite(this.phone.findSipSession(callSession), contraints, conference);
 
     // Release local video stream when downgrading to audio
     if (contraints && !contraints.video) {
