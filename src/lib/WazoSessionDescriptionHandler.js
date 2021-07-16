@@ -68,7 +68,8 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
 
     // We should wait for ice when iceRestart (reinvite) or for the first invite
     // We shouldn't wait for ice when holding or resuming the call
-    const shouldWaitForIce = iceRestart || ('constraints' in options);
+    // We shouldn't wait for ice when receiving a reinvite (eg: pendingReinviteAck = true)
+    const shouldWaitForIce = !this.session.pendingReinviteAck && (iceRestart || ('constraints' in options));
 
     // ICE gathering timeout may be set on a per call basis, otherwise the configured default is used
     const iceTimeout = options.iceGatheringTimeout === undefined
@@ -108,6 +109,12 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       })
       .then(description => {
         const { sdp } = description;
+
+        // Stop local video stream directly when entering a conference in audio mode
+        if (isConference && !options.enableVideo) {
+          this.peerConnection.getSenders()[1].track.stop();
+        }
+
         // Check if we got ICEs
         if (sdp.indexOf('a=candidate') !== -1) {
           return description;
@@ -125,6 +132,12 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         };
       })
       .then((sessionDescription) => this.applyModifiers(sessionDescription, modifiers))
+      .then((sessionDescription) => {
+        // Set new constraints to avoid the constraints check issue in `sdh.getLocalMediaStream` later.
+        this.localMediaStreamConstraints = options.constraints;
+
+        return sessionDescription;
+      })
       .then((sessionDescription) => ({ body: sessionDescription.sdp, contentType: 'application/sdp' }))
       .catch((error) => {
         wazoLogger.error('error when creating media', error);

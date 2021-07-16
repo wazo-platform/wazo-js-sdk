@@ -20,7 +20,7 @@ import { C } from 'sip.js/lib/core/messages/methods/constants';
 import { URI } from 'sip.js/lib/grammar/uri';
 import { Parser } from 'sip.js/lib/core/messages/parser';
 import { UserAgent } from 'sip.js/lib/api/user-agent';
-import { stripVideo, holdModifier } from 'sip.js/lib/platform/web/modifiers/modifiers';
+import { holdModifier } from 'sip.js/lib/platform/web/modifiers/modifiers';
 import { Registerer } from 'sip.js/lib/api/registerer';
 import { Inviter } from 'sip.js/lib/api/inviter';
 import { Messager } from 'sip.js/lib/api/messager';
@@ -39,6 +39,7 @@ import Emitter from './utils/Emitter';
 import ApiClient from './api-client';
 import IssueReporter from './service/IssueReporter';
 import Heartbeat from './utils/Heartbeat';
+import { activateVideoModifier, deactivateVideoModifier, hasAnActiveVideo } from './utils/sdp';
 
 // We need to replace 0.0.0.0 to 127.0.0.1 in the sdp to avoid MOH during a createOffer.
 export const replaceLocalIpModifier = (description: Object) => Promise.resolve({
@@ -429,13 +430,13 @@ export default class WebRTCClient extends Emitter {
     });
   }
 
-  call(number: string, enableVideo?: boolean, audioOnly: boolean = false): Session {
+  call(number: string, enableVideo?: boolean, audioOnly: boolean = false, conference: boolean = false): Session {
     logger.info('sdk webrtc creating call', { number, enableVideo, audioOnly });
     this.changeVideo(enableVideo || false);
 
     const inviterOptions = {};
     if (audioOnly) {
-      inviterOptions.sessionDescriptionHandlerModifiersReInvite = [stripVideo];
+      inviterOptions.sessionDescriptionHandlerModifiersReInvite = [deactivateVideoModifier];
     }
 
     const session = new Inviter(this.userAgent, this._makeURI(number), inviterOptions);
@@ -452,13 +453,13 @@ export default class WebRTCClient extends Emitter {
           this.eventEmitter.emit(REJECTED, session, response);
         },
       },
-      sessionDescriptionHandlerOptions: this._getMediaConfiguration(enableVideo || false),
+      sessionDescriptionHandlerOptions: this._getMediaConfiguration(enableVideo || false, conference),
     };
 
     inviteOptions.sessionDescriptionHandlerModifiers = [replaceLocalIpModifier];
 
     if (audioOnly) {
-      inviteOptions.sessionDescriptionHandlerModifiers.push(stripVideo);
+      inviteOptions.sessionDescriptionHandlerModifiers.push(deactivateVideoModifier);
     }
 
     // Do not await invite here or we'll miss the Establishing state transition
@@ -833,7 +834,7 @@ export default class WebRTCClient extends Emitter {
     }
   }
 
-  changeVideoInputDevice(id: string, session: ?Inviter) {
+  changeVideoInputDevice(id: ?string, session: ?Inviter) {
     const currentId = this.getVideoDeviceId();
     if (id === currentId) {
       return null;
@@ -860,10 +861,16 @@ export default class WebRTCClient extends Emitter {
         });
       }
 
+      const constraints = {
+        video: id ? { deviceId: { exact: id } } : true,
+      };
       // $FlowFixMe
-      return navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: id } } }).then(async stream => {
+      return navigator.mediaDevices.getUserMedia(constraints).then(async stream => {
         const videoTrack = stream.getVideoTracks()[0];
-        const sender = pc && pc.getSenders().find(s => videoTrack && s && s.track && s.track.kind === videoTrack.kind);
+        let sender = pc && pc.getSenders().find(s => videoTrack && s && s.track && s.track.kind === videoTrack.kind);
+        if (!sender) {
+          sender = pc && pc.getSenders().find(s => !s.track);
+        }
 
         if (sender) {
           sender.replaceTrack(videoTrack);
@@ -872,7 +879,11 @@ export default class WebRTCClient extends Emitter {
         // let's update the local stream
         this._addLocalToVideoSession(this.getSipSessionId(session), stream);
         this.eventEmitter.emit('onVideoInputChange', stream);
-        sdh.setLocalMediaStream(stream);
+        try {
+          await sdh.setLocalMediaStream(stream);
+        } catch (_) {
+          // Nothing to do
+        }
         return stream;
       });
     }
@@ -880,22 +891,37 @@ export default class WebRTCClient extends Emitter {
 
   getAudioDeviceId(): ?string {
     // $FlowFixMe
-    return this.audio && typeof this.audio === 'object' && 'deviceId' in this.audio ? this.audio.deviceId.exact : null;
+    return this.audio && typeof this.audio === 'object' && 'deviceId' in this.audio
+      ? this.audio.deviceId.exact : undefined;
   }
 
   getVideoDeviceId(): ?string {
     // $FlowFixMe
-    return this.video && typeof this.video === 'object' && 'deviceId' in this.video ? this.video.deviceId.exact : null;
+    return this.video && typeof this.video === 'object' && 'deviceId' in this.video
+      ? this.video.deviceId.exact : undefined;
   }
 
   changeVideo(enabled: boolean) {
     this.videoEnabled = enabled;
   }
 
-  reinvite(sipSession: Session, newConstraints: ?Object = null) {
+  reinvite(sipSession: Session, newConstraints: ?Object = null, conference: boolean = false) {
     if (newConstraints) {
       this.changeVideo(!!newConstraints.video);
     }
+
+    // When upgrading to video, remove the `deactivateVideoModifier` modifiers
+    if (newConstraints && newConstraints.video) {
+      const modifiers = sipSession.sessionDescriptionHandlerModifiersReInvite;
+      sipSession.sessionDescriptionHandlerModifiersReInvite = modifiers.filter(modifier =>
+        modifier !== deactivateVideoModifier);
+      sipSession.sessionDescriptionHandlerModifiersReInvite.push(activateVideoModifier);
+    }
+
+    sipSession.sessionDescriptionHandlerOptionsReInvite = {
+      ...sipSession.sessionDescriptionHandlerOptionsReInvite,
+      conference,
+    };
 
     const shouldDoVideo = newConstraints ? newConstraints.video : this.sessionWantsToDoVideo(sipSession);
     const { constraints } = this._getMediaConfiguration(shouldDoVideo);
@@ -1019,7 +1045,7 @@ export default class WebRTCClient extends Emitter {
     // Sometimes with InviteClientContext the body is in the body attribute ...
     const sdp = typeof body === 'object' && body ? body.body : body;
 
-    return /\r\nm=video [0-9]+\s/.test(sdp);
+    return hasAnActiveVideo(sdp);
   }
 
   hasHeartbeat() {
@@ -1295,13 +1321,14 @@ export default class WebRTCClient extends Emitter {
     };
   }
 
-  _getMediaConfiguration(enableVideo: boolean): Object {
+  _getMediaConfiguration(enableVideo: boolean, conference: boolean = false): Object {
     return {
       constraints: {
         audio: this._getAudioConstraints(),
-        video: this._getVideoConstraints(),
+        video: conference ? true : this._getVideoConstraints(),
       },
-      disableVideo: !enableVideo,
+      enableVideo,
+      conference,
       offerOptions: {
         OfferToReceiveAudio: this._hasAudio(),
         OfferToReceiveVideo: enableVideo,
@@ -1338,7 +1365,7 @@ export default class WebRTCClient extends Emitter {
       };
     };
 
-    session.delegate.onInvite = (inviteRequest: IncomingRequestMessage) => {
+    session.delegate.onInvite = (inviteRequest: IncomingRequestMessage, modifiedSdp: String) => {
       let updatedCalleeName = null;
       let updatedNumber = null;
       if (session.assertedIdentity) {
@@ -1350,9 +1377,9 @@ export default class WebRTCClient extends Emitter {
       // Update SDP
       // Remote video is handled by the `track` event. Here we're dealing with video stream removal.
       if (session.incomingInviteRequest) {
-        session.incomingInviteRequest.message.body = inviteRequest.body;
+        session.incomingInviteRequest.message.body = modifiedSdp || inviteRequest.body;
       } else {
-        session.outgoingInviteRequest.message.body.body = inviteRequest.body;
+        session.outgoingInviteRequest.message.body.body = modifiedSdp || inviteRequest.body;
       }
       if (!this.sessionWantsToDoVideo(session)) {
         this._setupRemoteMedia(session);
@@ -1368,23 +1395,31 @@ export default class WebRTCClient extends Emitter {
     this._setupLocalMedia(session);
     this._setupRemoteMedia(session);
 
-    if (session.sessionDescriptionHandler.peerConnection) {
-      session.sessionDescriptionHandler.peerConnection.addEventListener('track', event => {
-        this._setupRemoteMedia(session, event);
-        this.eventEmitter.emit(ON_TRACK, session, event);
-      });
-    }
+    const onTrack = (event: any) => {
+      // Stop video track in audio only mode
+      if (this._isAudioOnly(session) && event.track.kind === 'video') {
+        event.track.stop();
+      }
 
-    session.sessionDescriptionHandler.remoteMediaStream.onaddtrack = event => {
       this._setupRemoteMedia(session, event);
       this.eventEmitter.emit(ON_TRACK, session, event);
     };
+
+    if (session.sessionDescriptionHandler.peerConnection) {
+      session.sessionDescriptionHandler.peerConnection.addEventListener('track', onTrack);
+    }
+
+    session.sessionDescriptionHandler.remoteMediaStream.onaddtrack = onTrack;
 
     if (withEvent) {
       this.eventEmitter.emit(ACCEPTED, session, sessionDialog);
     }
 
     this._startSendingStats(session);
+  }
+
+  _isAudioOnly(session: Session): boolean {
+    return session.sessionDescriptionHandlerModifiersReInvite.find(modifier => modifier === deactivateVideoModifier);
   }
 
   _setupRemoteMedia(session: Session, event: ?any) {
@@ -1399,9 +1434,6 @@ export default class WebRTCClient extends Emitter {
     // If there is a video track, it will attach the video and audio to the same element
     if (sessionHasVideo) {
       this._addRemoteToVideoSession(sessionId, remoteStream);
-    } else {
-      // Cleanup the video streams
-      this._removeRemoteVideoSession(sessionId);
     }
 
     if (!this._isWeb() || !remoteStream) {
