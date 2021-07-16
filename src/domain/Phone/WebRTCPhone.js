@@ -913,7 +913,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   // Should be async to match CTIPhone definition
   // @TODO: line is not used here
   async makeCall(number: string, line: any, cameraEnabled?: boolean,
-    audioOnly: boolean = false): Promise<?CallSession> {
+    audioOnly: boolean = false, conference: boolean = false): Promise<?CallSession> {
     logger.info('make WebRTC call', { number, lineId: line ? line.id : null, cameraEnabled });
     if (!number) {
       return Promise.resolve(null);
@@ -930,7 +930,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     let sipSession: Session;
     try {
-      sipSession = this.client.call(number, this.allowVideo ? cameraEnabled : false, audioOnly);
+      sipSession = this.client.call(number, this.allowVideo ? cameraEnabled : false, audioOnly, conference);
       this._bindEvents(sipSession);
     } catch (error) {
       console.warn(error);

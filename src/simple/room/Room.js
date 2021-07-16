@@ -10,6 +10,7 @@ import Wazo from '../index';
 import Participant from './Participant';
 import RemoteParticipant from './RemoteParticipant';
 import IssueReporter from '../../service/IssueReporter';
+import type {Session} from "sip.js/lib/core/session";
 
 export const SIGNAL_TYPE_PARTICIPANT_UPDATE = 'signal/PARTICIPANT_UPDATE';
 export const SIGNAL_TYPE_PARTICIPANT_REQUEST = 'signal/PARTICIPANT_REQUEST';
@@ -153,7 +154,7 @@ class Room extends Emitter {
         }
       });
 
-      const callSession = await Wazo.Phone.call(extension, withCamera, null, audioOnly);
+      const callSession = await Wazo.Phone.call(extension, withCamera, null, audioOnly, true);
       // eslint-disable-next-line no-param-reassign
       room = new Room(callSession, extension, null, null, extra);
 
@@ -347,6 +348,17 @@ class Room extends Emitter {
     logger.info('send room DTMF', { tone });
 
     Wazo.Phone.sendDTMF(tone, this.callSession);
+  }
+
+  async sendReinvite(sipSession: Session, newConstraints: Object = null) {
+    await Wazo.Phone.phone.sendReinvite(sipSession, newConstraints, true);
+
+    if (this.localParticipant && newConstraints && newConstraints.video) {
+      const pc = sipSession.sessionDescriptionHandler.peerConnection;
+      const localStream = pc.getSenders()[1];
+
+      this._associateStreamTo(localStream.track, this.localParticipant);
+    }
   }
 
   _bindEvents() {
@@ -573,7 +585,10 @@ class Room extends Emitter {
         if (!this.localParticipant && localParticipant) {
           this.localParticipant = localParticipant;
 
-          this._saveLocalVideoStream(this._getLocalVideoStream());
+          const localVideoStream = this._getLocalVideoStream();
+          if (localVideoStream) {
+            this._saveLocalVideoStream(localVideoStream);
+          }
 
           this.connected = true;
 
@@ -660,15 +675,19 @@ class Room extends Emitter {
 
     if (this._unassociatedVideoStreams[streamId]) {
       // Try to associate stream
-      const stream = new Wazo.Stream(this._unassociatedVideoStreams[streamId], participant);
-      participant.streams.push(stream);
-      participant.videoStreams.push(stream);
-
-      participant.onStreamSubscribed(stream);
+      this._associateStreamTo(this._unassociatedVideoStreams[streamId], participant);
 
       delete this._unassociatedVideoStreams[streamId];
       delete this._unassociatedParticipants[participant.callId];
     }
+  }
+
+  _associateStreamTo(rawStream: any, participant: Participant) {
+    const stream = new Wazo.Stream(rawStream, participant);
+    participant.streams.push(stream);
+    participant.videoStreams.push(stream);
+
+    participant.onStreamSubscribed(stream);
   }
 
   _getCallIdFromStreamId(streamId: string) {

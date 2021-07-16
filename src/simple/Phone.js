@@ -139,14 +139,15 @@ class Phone extends Emitter {
     this.phone = null;
   }
 
-  // If audioOnly is set to true, all video stream will be removed, even remotes ones.
-  async call(extension: string, withCamera: boolean = false, rawSipLine: ?SipLine = null, audioOnly: boolean = false) {
+  // If audioOnly is set to true, all video stream will be deactivated, even remotes ones.
+  async call(extension: string, withCamera: boolean = false, rawSipLine: ?SipLine = null, audioOnly: boolean = false,
+    conference: boolean = false) {
     if (!this.phone) {
       return;
     }
     const sipLine = rawSipLine || this.getPrimaryWebRtcLine();
 
-    return this.phone.makeCall(extension, sipLine, withCamera, audioOnly);
+    return this.phone.makeCall(extension, sipLine, withCamera, audioOnly, conference);
   }
 
   async hangup(callSession: CallSession) {
@@ -234,7 +235,8 @@ class Phone extends Emitter {
     }
 
     const hasRemoteVideo = !!this.phone.getRemoteVideoReceiver(callSession);
-    if (contraints && contraints.video && hasRemoteVideo) {
+    // Do not recreate a stream in 1:1 when a remote video stream is already present. Just replace the video track.
+    if (contraints && contraints.video && hasRemoteVideo && !conference) {
       // $FlowFixMe
       await this.phone.changeVideoInputDevice(typeof newConstraints.video === 'string' ? newConstraints.video : null);
       // $FlowFixMe

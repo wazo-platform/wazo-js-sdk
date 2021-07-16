@@ -430,7 +430,7 @@ export default class WebRTCClient extends Emitter {
     });
   }
 
-  call(number: string, enableVideo?: boolean, audioOnly: boolean = false): Session {
+  call(number: string, enableVideo?: boolean, audioOnly: boolean = false, conference: boolean = false): Session {
     logger.info('sdk webrtc creating call', { number, enableVideo, audioOnly });
     this.changeVideo(enableVideo || false);
 
@@ -453,7 +453,7 @@ export default class WebRTCClient extends Emitter {
           this.eventEmitter.emit(REJECTED, session, response);
         },
       },
-      sessionDescriptionHandlerOptions: this._getMediaConfiguration(enableVideo || false),
+      sessionDescriptionHandlerOptions: this._getMediaConfiguration(enableVideo || false, conference),
     };
 
     inviteOptions.sessionDescriptionHandlerModifiers = [replaceLocalIpModifier];
@@ -1321,13 +1321,14 @@ export default class WebRTCClient extends Emitter {
     };
   }
 
-  _getMediaConfiguration(enableVideo: boolean): Object {
+  _getMediaConfiguration(enableVideo: boolean, conference: boolean = false): Object {
     return {
       constraints: {
         audio: this._getAudioConstraints(),
-        video: this._getVideoConstraints(),
+        video: conference ? true : this._getVideoConstraints(),
       },
-      disableVideo: !enableVideo,
+      enableVideo,
+      conference,
       offerOptions: {
         OfferToReceiveAudio: this._hasAudio(),
         OfferToReceiveVideo: enableVideo,
