@@ -355,9 +355,11 @@ class Room extends Emitter {
 
     if (this.localParticipant && newConstraints && newConstraints.video) {
       const pc = sipSession.sessionDescriptionHandler.peerConnection;
-      const localStream = pc.getSenders()[1];
+      const localSender = pc.getSenders()[1];
+      mediaStream = new MediaStream();
+      mediaStream.addTrack(localSender.track);
 
-      this._associateStreamTo(localStream.track, this.localParticipant);
+      this._associateStreamTo(mediaStream, this.localParticipant);
     }
   }
 
