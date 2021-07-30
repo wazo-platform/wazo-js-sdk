@@ -351,15 +351,20 @@ class Room extends Emitter {
   }
 
   async sendReinvite(sipSession: Session, newConstraints: Object = null) {
+    logger.info('send room reinvite', { sipSession, newConstraints });
+
     await Wazo.Phone.phone.sendReinvite(sipSession, newConstraints, true);
 
     if (this.localParticipant && newConstraints && newConstraints.video) {
       const pc = sipSession.sessionDescriptionHandler.peerConnection;
-      const localSender = pc.getSenders()[1];
-      mediaStream = new MediaStream();
-      mediaStream.addTrack(localSender.track);
+      pc.getSenders()
+        .filter(localSender => localSender.track && localSender.track.kind === 'video')
+        .forEach(localVideoSender => {
+          mediaStream = new MediaStream();
+          mediaStream.addTrack(localVideoSender.track);
+          this._associateStreamTo(mediaStream, this.localParticipant);
+        });
 
-      this._associateStreamTo(mediaStream, this.localParticipant);
     }
   }
 
