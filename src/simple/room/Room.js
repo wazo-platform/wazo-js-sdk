@@ -360,7 +360,7 @@ class Room extends Emitter {
       pc.getSenders()
         .filter(localSender => localSender.track && localSender.track.kind === 'video')
         .forEach(localVideoSender => {
-          mediaStream = new MediaStream();
+          const mediaStream = new MediaStream();
           mediaStream.addTrack(localVideoSender.track);
           this._associateStreamTo(mediaStream, this.localParticipant);
         });
