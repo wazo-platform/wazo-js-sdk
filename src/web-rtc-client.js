@@ -1365,7 +1365,7 @@ export default class WebRTCClient extends Emitter {
       };
     };
 
-    session.delegate.onInvite = (inviteRequest: IncomingRequestMessage, modifiedSdp: String) => {
+    session.delegate.onInvite = (inviteRequest: IncomingRequestMessage) => {
       let updatedCalleeName = null;
       let updatedNumber = null;
       if (session.assertedIdentity) {
@@ -1377,9 +1377,9 @@ export default class WebRTCClient extends Emitter {
       // Update SDP
       // Remote video is handled by the `track` event. Here we're dealing with video stream removal.
       if (session.incomingInviteRequest) {
-        session.incomingInviteRequest.message.body = modifiedSdp || inviteRequest.body;
+        session.incomingInviteRequest.message.body = inviteRequest.body;
       } else {
-        session.outgoingInviteRequest.message.body.body = modifiedSdp || inviteRequest.body;
+        session.outgoingInviteRequest.message.body.body = inviteRequest.body;
       }
       if (!this.sessionWantsToDoVideo(session)) {
         this._setupRemoteMedia(session);
