@@ -228,33 +228,16 @@ class Phone extends Emitter {
     return this.phone && this.phone.atxfer(sipSession);
   }
 
-  async reinvite(callSession: CallSession, newConstraints: Object = null, conference: boolean = false) {
-    let contraints = newConstraints;
+  async reinvite(callSession: CallSession, constraints: Object = null, conference: boolean = false) {
     if (!this.phone) {
       return;
     }
 
-    const hasRemoteVideo = !!this.phone.getRemoteVideoReceiver(callSession);
-    // Do not recreate a stream in 1:1 when a remote video stream is already present. Just replace the video track.
-    if (contraints && contraints.video && hasRemoteVideo && !conference) {
-      // $FlowFixMe
-      await this.phone.changeVideoInputDevice(typeof newConstraints.video === 'string' ? newConstraints.video : null);
-      // $FlowFixMe
-      if (!this.phone.getRemoteStreamForCall(callSession)) {
-        // Fill remote stream that is not set when answering a video call in audio
-        // $FlowFixMe
-        this.phone.setRemoteStreamForCall(callSession);
-      }
-
-      // Removing constraints to send a reinvite without new streams
-      contraints = null;
-    }
-
     // $FlowFixMe
-    const result = await this.phone.sendReinvite(this.phone.findSipSession(callSession), contraints, conference);
+    const result = await this.phone.sendReinvite(this.phone.findSipSession(callSession), constraints, conference);
 
     // Release local video stream when downgrading to audio
-    if (contraints && !contraints.video) {
+    if (constraints && !constraints.video) {
       const localVideoStream = Wazo.Phone.getLocalVideoStream(callSession);
       if (localVideoStream) {
         Stream.detachStream(localVideoStream);

@@ -184,14 +184,32 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return true;
   }
 
-  sendReinvite(sipSession: Session, newConstraints: Object = null, conference: boolean = false) {
-    logger.info('WebRTC phone - send reinvite', { sessionId: sipSession ? sipSession.id : null, newConstraints });
+  async sendReinvite(sipSession: Session, newConstraints: Object = null, conference: boolean = false) {
+    let constraints = newConstraints;
+    logger.info('WebRTC phone - send reinvite', { sessionId: sipSession ? sipSession.id : null, constraints });
 
     if (!sipSession) {
       return;
     }
 
-    return this.client.reinvite(sipSession, newConstraints, conference);
+    const callSession = this.callSessions[this.getSipSessionId(sipSession)];
+    const hasRemoteVideo = !!callSession ? !!this.getRemoteVideoReceiver(callSession) : false;
+    // Do not recreate a stream in 1:1 when a remote video stream is already present. Just replace the video track.
+    if (callSession && constraints && constraints.video && hasRemoteVideo && !conference) {
+      // $FlowFixMe
+      await this.changeVideoInputDevice(typeof newConstraints.video === 'string' ? newConstraints.video : null);
+      // $FlowFixMe
+      if (!this.getRemoteStreamForCall(callSession)) {
+        // Fill remote stream that is not set when answering a video call in audio
+        // $FlowFixMe
+        this.setRemoteStreamForCall(callSession);
+      }
+
+      // Removing constraints to send a reinvite without new streams
+      constraints = null;
+    }
+
+    return this.client.reinvite(sipSession, constraints, conference);
   }
 
   getUserAgent() {
