@@ -2,6 +2,7 @@
 // @flow
 import type { Message } from 'sip.js/lib/api/message';
 import sdpParser from 'sdp-transform';
+import type { Session } from 'sip.js/lib/core/session';
 
 import type CallSession from '../../domain/CallSession';
 import getApiClient from '../../service/getApiClient';
@@ -10,7 +11,6 @@ import Wazo from '../index';
 import Participant from './Participant';
 import RemoteParticipant from './RemoteParticipant';
 import IssueReporter from '../../service/IssueReporter';
-import type {Session} from "sip.js/lib/core/session";
 
 export const SIGNAL_TYPE_PARTICIPANT_UPDATE = 'signal/PARTICIPANT_UPDATE';
 export const SIGNAL_TYPE_PARTICIPANT_REQUEST = 'signal/PARTICIPANT_REQUEST';
@@ -362,6 +362,7 @@ class Room extends Emitter {
         .forEach(localVideoSender => {
           const mediaStream = new MediaStream();
           mediaStream.addTrack(localVideoSender.track);
+          // $FlowFixMe
           this._associateStreamTo(mediaStream, this.localParticipant);
         });
 

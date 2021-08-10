@@ -835,58 +835,69 @@ export default class WebRTCClient extends Emitter {
   }
 
   changeVideoInputDevice(id: ?string, session: ?Inviter) {
+    this.setVideoInputDevice(id);
+
+    if (session) {
+      return this.changeSessionVideoInputDevice(id, session);
+    }
+  }
+
+  setVideoInputDevice(id: ?string) {
     const currentId = this.getVideoDeviceId();
     if (id === currentId) {
       return null;
     }
 
     // let's update the local value
-    if (this.video && this.video.deviceId) {
-      // $FlowFixMe
-      this.video.deviceId.exact = id;
-    }
-
-    if (session) {
-      if (!this.sessionWantsToDoVideo(session)) {
-        return;
-      }
-      const sdh = session.sessionDescriptionHandler;
-      const pc = sdh.peerConnection;
-      const localStream = this.getLocalStream(pc);
-
-      // Release old video stream
-      if (localStream) {
-        localStream.getVideoTracks().forEach(track => {
-          track.stop();
-        });
-      }
-
-      const constraints = {
-        video: id ? { deviceId: { exact: id } } : true,
+    if (this.video) {
+      this.video = {
+        deviceId: {
+          exact: id,
+        },
       };
-      // $FlowFixMe
-      return navigator.mediaDevices.getUserMedia(constraints).then(async stream => {
-        const videoTrack = stream.getVideoTracks()[0];
-        let sender = pc && pc.getSenders().find(s => videoTrack && s && s.track && s.track.kind === videoTrack.kind);
-        if (!sender) {
-          sender = pc && pc.getSenders().find(s => !s.track);
-        }
+    }
+  }
 
-        if (sender) {
-          sender.replaceTrack(videoTrack);
-        }
+  changeSessionVideoInputDevice(id: ?string, session: Inviter) {
+    if (!this.sessionWantsToDoVideo(session)) {
+      return;
+    }
+    const sdh = session.sessionDescriptionHandler;
+    const pc = sdh.peerConnection;
+    const localStream = this.getLocalStream(pc);
 
-        // let's update the local stream
-        this._addLocalToVideoSession(this.getSipSessionId(session), stream);
-        this.eventEmitter.emit('onVideoInputChange', stream);
-        try {
-          await sdh.setLocalMediaStream(stream);
-        } catch (_) {
-          // Nothing to do
-        }
-        return stream;
+    // Release old video stream
+    if (localStream) {
+      localStream.getVideoTracks().forEach(track => {
+        track.stop();
       });
     }
+
+    const constraints = {
+      video: id ? { deviceId: { exact: id } } : true,
+    };
+    // $FlowFixMe
+    return navigator.mediaDevices.getUserMedia(constraints).then(async stream => {
+      const videoTrack = stream.getVideoTracks()[0];
+      let sender = pc && pc.getSenders().find(s => videoTrack && s && s.track && s.track.kind === videoTrack.kind);
+      if (!sender) {
+        sender = pc && pc.getSenders().find(s => !s.track);
+      }
+
+      if (sender) {
+        sender.replaceTrack(videoTrack);
+      }
+
+      // let's update the local stream
+      this._addLocalToVideoSession(this.getSipSessionId(session), stream);
+      this.eventEmitter.emit('onVideoInputChange', stream);
+      try {
+        await sdh.setLocalMediaStream(stream);
+      } catch (_) {
+        // Nothing to do
+      }
+      return stream;
+    });
   }
 
   getAudioDeviceId(): ?string {
@@ -1143,8 +1154,8 @@ export default class WebRTCClient extends Emitter {
     return this.audio && this.audio.deviceId && this.audio.deviceId.exact ? this.audio : true;
   }
 
-  _getVideoConstraints() {
-    if (!this.videoEnabled) {
+  _getVideoConstraints(forceVideo: boolean = false) {
+    if (!forceVideo && !this.videoEnabled) {
       return false;
     }
     return this.video && this.video.deviceId && this.video.deviceId.exact ? this.video : true;
@@ -1325,7 +1336,7 @@ export default class WebRTCClient extends Emitter {
     return {
       constraints: {
         audio: this._getAudioConstraints(),
-        video: conference ? true : this._getVideoConstraints(),
+        video: conference ? this._getVideoConstraints(true) : this._getVideoConstraints(enableVideo),
       },
       enableVideo,
       conference,
