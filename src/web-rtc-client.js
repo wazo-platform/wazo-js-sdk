@@ -39,7 +39,7 @@ import Emitter from './utils/Emitter';
 import ApiClient from './api-client';
 import IssueReporter from './service/IssueReporter';
 import Heartbeat from './utils/Heartbeat';
-import { activateVideoModifier, deactivateVideoModifier, hasAnActiveVideo } from './utils/sdp';
+import { deactivateVideoModifier, hasAnActiveVideo } from './utils/sdp';
 
 // We need to replace 0.0.0.0 to 127.0.0.1 in the sdp to avoid MOH during a createOffer.
 export const replaceLocalIpModifier = (description: Object) => Promise.resolve({
@@ -926,7 +926,6 @@ export default class WebRTCClient extends Emitter {
       const modifiers = sipSession.sessionDescriptionHandlerModifiersReInvite;
       sipSession.sessionDescriptionHandlerModifiersReInvite = modifiers.filter(modifier =>
         modifier !== deactivateVideoModifier);
-      sipSession.sessionDescriptionHandlerModifiersReInvite.push(activateVideoModifier);
     }
 
     sipSession.sessionDescriptionHandlerOptionsReInvite = {

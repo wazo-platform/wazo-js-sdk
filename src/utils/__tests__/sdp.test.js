@@ -7,12 +7,7 @@ import {
   parseCandidate,
   areCandidateValid,
   fixSdp,
-  removeLocalVideo,
-  disableLocalVideo,
   fixBundle,
-  fixInactiveVideo,
-  isLocalVideoInactive,
-  randomMid,
   toggleVideoDirection,
   hasAnActiveVideo,
 } from '../sdp';
@@ -154,60 +149,12 @@ describe('SDP utils', () => {
     });
   });
 
-  describe('Disabling local video', () => {
-    it('should set port to 0 for local m=video', async () => {
-      const disabled = disableLocalVideo(videoReinvite);
-      const parsed = sdpParser.parse(disabled);
-
-      expect(parsed.media[1].port).toBe(0);
-    });
-  });
-
-  describe('Removing local video', () => {
-    it('should remove local m=video section', async () => {
-      const disabled = removeLocalVideo(videoReinvite);
-      const parsed = sdpParser.parse(disabled);
-
-      expect(parsed.media.length).toBe(2);
-      expect(parsed.groups[0].mids).toBe('0 1');
-      expect(parsed.media[0].type).toBe('audio');
-      expect(parsed.media[1].port).toBe(52964);
-    });
-  });
-
   describe('Fixing group bundle', () => {
     it('should set a bundle for each m section', async () => {
       const invalid = fixBundle(invalidBundle);
       const parsed = sdpParser.parse(invalid);
 
       expect(parsed.groups[0].mids).toBe('0 1');
-    });
-  });
-
-  describe('Checking inactive local video', () => {
-    it('should check if the a=inactive tag is present', async () => {
-      const inactive = isLocalVideoInactive(inactiveVideo);
-
-      expect(inactive).toBeTruthy();
-    });
-  });
-
-  describe('Fixing inactive video', () => {
-    it('should remove the a=inactive tag', async () => {
-      const inactive = fixInactiveVideo(inactiveVideo);
-      const parsed = sdpParser.parse(inactive);
-
-      expect(parsed.media[1].direction).toBe(undefined);
-    });
-  });
-
-  describe('Randomize mid', () => {
-    it('should set random mid', async () => {
-      const inactive = randomMid(inactiveVideo);
-      const parsed = sdpParser.parse(inactive);
-
-      expect(parsed.media[0].mid).not.toBe('0');
-      expect(parsed.media[1].mid).not.toBe('video-1');
     });
   });
 

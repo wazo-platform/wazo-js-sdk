@@ -48,22 +48,6 @@ export const fixBundle = (sdp: string): string => {
   return sdpParser.write(parsedSdp);
 };
 
-export const randomMid = (sdp: string): string => {
-  const parsedSdp = sdpParser.parse(sdp);
-  const bundleIndex = parsedSdp.groups.findIndex(group => group.type === 'BUNDLE');
-  parsedSdp.media = parsedSdp.media.map(media => ({
-    ...media,
-    mid: String(media.mid || '0').replace(/[0-9+]/, String(Math.floor(Math.random() * 1000000))),
-  }));
-
-  if (bundleIndex !== -1) {
-    parsedSdp.groups[bundleIndex].mids = parsedSdp.media
-      .map((media, index) => ('mid' in media ? media.mid : index)).join(' ');
-  }
-
-  return sdpParser.write(parsedSdp);
-};
-
 export const toggleVideoDirection = (sdp: string, direction: ?string): string => {
   const parsedSdp = sdpParser.parse(sdp);
   parsedSdp.media = parsedSdp.media.map(media => ({
@@ -97,40 +81,6 @@ export const hasAnActiveVideo = (sdp: ?string): boolean => {
 
   return !!parsedSdp.media.find(media =>
     media.type === 'video' && media.port > 10 && (!media.direction || media.direction !== 'inactive'));
-};
-
-export const fixInactiveVideo = (sdp: string): string => {
-  const parsedSdp = sdpParser.parse(sdp);
-  if (parsedSdp.media[1].type === 'video' && parsedSdp.media[1].direction === 'inactive') {
-    delete parsedSdp.media[1].direction;
-  }
-
-  return sdpParser.write(parsedSdp);
-};
-
-export const isLocalVideoInactive = (sdp: string): boolean => {
-  const parsedSdp = sdpParser.parse(sdp);
-
-  return parsedSdp.media[1].type === 'video' && parsedSdp.media[1].direction === 'inactive';
-};
-
-export const disableLocalVideo = (sdp: string): string => {
-  const parsedSdp = sdpParser.parse(sdp);
-  if (parsedSdp.media[1].type === 'video' && parsedSdp.media[1].port > 10) {
-    parsedSdp.media[1].port = 0;
-  }
-
-  return sdpParser.write(parsedSdp);
-};
-
-export const removeLocalVideo = (sdp: string): string => {
-  const parsedSdp = sdpParser.parse(sdp);
-  if (parsedSdp.media[1].type === 'video' && parsedSdp.media[1].port > 10) {
-    parsedSdp.media.splice(1, 1);
-    return fixBundle(sdpParser.write(parsedSdp));
-  }
-
-  return sdp;
 };
 
 export const fixSdp = (sdp: string, candidates: Object[]): string => {
