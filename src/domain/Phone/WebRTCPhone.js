@@ -184,14 +184,36 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return true;
   }
 
-  sendReinvite(sipSession: Session, newConstraints: Object = null) {
-    logger.info('WebRTC phone - send reinvite', { sessionId: sipSession ? sipSession.id : null, newConstraints });
+  async sendReinvite(sipSession: Session, newConstraints: Object = null, conference: boolean = false) {
+    let constraints = newConstraints;
+    logger.info('WebRTC phone - send reinvite', { sessionId: sipSession ? sipSession.id : null, constraints });
 
     if (!sipSession) {
       return;
     }
 
-    return this.client.reinvite(sipSession, newConstraints);
+    const callSession = this.callSessions[this.getSipSessionId(sipSession)];
+    const hasRemoteVideo = callSession ? !!this.getRemoteVideoReceiver(callSession) : false;
+    // Do not recreate a stream in 1:1 when a remote video stream is already present. Just replace the video track.
+    if (callSession && constraints && constraints.video && hasRemoteVideo && !conference) {
+      // Reset session video device id to create new stream
+      await this.changeSessionVideoInputDevice(null);
+      // $FlowFixMe
+      await this.client.setVideoInputDevice(typeof newConstraints.video === 'string' ? newConstraints.video
+        : this.client.getVideoDeviceId());
+      // $FlowFixMe
+      if (!this.getRemoteStreamForCall(callSession)) {
+        // Fill remote stream that is not set when answering a video call in audio
+        // $FlowFixMe
+        this.setRemoteStreamForCall(callSession);
+      }
+
+      // Removing constraints to send a reinvite without new streams
+      constraints = null;
+      // this.client.changeVideo(true);
+    }
+
+    return this.client.reinvite(sipSession, constraints, conference);
   }
 
   getUserAgent() {
@@ -464,10 +486,27 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return this.client.changeAudioInputDevice(id, this.currentSipSession);
   }
 
-  changeVideoInputDevice(id: string) {
+  changeVideoInputDevice(id: ?string) {
     logger.info('WebRTC phone - change video input device', { deviceId: id });
 
     return this.client.changeVideoInputDevice(id, this.currentSipSession);
+  }
+
+  changeSessionVideoInputDevice(id: ?string) {
+    logger.info('WebRTC phone - change session video input device', { deviceId: id });
+
+    return this.client.changeSessionVideoInputDevice(id, this.currentSipSession);
+  }
+
+  getPeerConnection(callSession: CallSession) {
+    const sipSession = this.sipSessions[callSession.getId()];
+
+    return sipSession ? sipSession.sessionDescriptionHandler.peerConnection : null;
+  }
+
+  getRemoteVideoReceiver(callSession: CallSession): boolean {
+    const pc = this.getPeerConnection(callSession);
+    return pc ? pc.getReceivers().find(receiver => receiver.track.kind === 'video') : false;
   }
 
   _onCallTerminated(sipSession: Session) {
@@ -611,6 +650,20 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     return remotes && remotes[remotes.length - 1];
+  }
+
+  setRemoteStreamForCall(callSession: CallSession): void {
+    const pc = this.getPeerConnection(callSession);
+    if (!pc) {
+      return;
+    }
+
+    const streams = pc.getRemoteStreams();
+    if (streams.length === 1) {
+      // Only audio stream
+      return;
+    }
+    this.client._addRemoteToVideoSession(callSession.sipCallId, streams[1]);
   }
 
   getRemoteStreamsForCall(callSession: CallSession): Object[] {
@@ -888,7 +941,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   // Should be async to match CTIPhone definition
   // @TODO: line is not used here
   async makeCall(number: string, line: any, cameraEnabled?: boolean,
-    audioOnly: boolean = false): Promise<?CallSession> {
+    audioOnly: boolean = false, conference: boolean = false): Promise<?CallSession> {
     logger.info('make WebRTC call', { number, lineId: line ? line.id : null, cameraEnabled });
     if (!number) {
       return Promise.resolve(null);
@@ -905,7 +958,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     let sipSession: Session;
     try {
-      sipSession = this.client.call(number, this.allowVideo ? cameraEnabled : false, audioOnly);
+      sipSession = this.client.call(number, this.allowVideo ? cameraEnabled : false, audioOnly, conference);
       this._bindEvents(sipSession);
     } catch (error) {
       console.warn(error);

@@ -2,6 +2,7 @@
 // @flow
 import type { Message } from 'sip.js/lib/api/message';
 import sdpParser from 'sdp-transform';
+import type { Session } from 'sip.js/lib/core/session';
 
 import type CallSession from '../../domain/CallSession';
 import getApiClient from '../../service/getApiClient';
@@ -35,6 +36,7 @@ class Room extends Emitter {
   _boundOnChat: Function;
   _boundOnSignal: Function;
   _boundSaveLocalVideoStream: Function;
+  _boundOnReinvite: Function;
   audioStream: ?any;
   audioElement: ?any;
   extra: Object;
@@ -114,6 +116,7 @@ class Room extends Emitter {
     this._boundOnSignal = this._onSignal.bind(this);
     this._boundOnScreenshareEnded = this._onScreenshareEnded.bind(this);
     this._boundSaveLocalVideoStream = this._saveLocalVideoStream.bind(this);
+    this._boundOnReinvite = this._onReinvite.bind(this);
 
     this.unbind();
 
@@ -151,7 +154,7 @@ class Room extends Emitter {
         }
       });
 
-      const callSession = await Wazo.Phone.call(extension, withCamera, null, audioOnly);
+      const callSession = await Wazo.Phone.call(extension, withCamera, null, audioOnly, true);
       // eslint-disable-next-line no-param-reassign
       room = new Room(callSession, extension, null, null, extra);
 
@@ -206,6 +209,7 @@ class Room extends Emitter {
     Wazo.Phone.off(this.ON_SIGNAL, this._boundOnSignal);
     Wazo.Phone.off(this.ON_SCREEN_SHARE_ENDED, this._boundOnScreenshareEnded);
     Wazo.Phone.off(this.ON_VIDEO_INPUT_CHANGE, this._boundSaveLocalVideoStream);
+    Wazo.Phone.phone.off(Wazo.Phone.phone.client.ON_REINVITE, this._boundOnReinvite);
     Wazo.Websocket.off(this.CONFERENCE_USER_PARTICIPANT_JOINED, this._boundOnParticipantJoined);
     Wazo.Websocket.off(this.CONFERENCE_USER_PARTICIPANT_LEFT, this._boundOnParticipantLeft);
 
@@ -346,6 +350,25 @@ class Room extends Emitter {
     Wazo.Phone.sendDTMF(tone, this.callSession);
   }
 
+  async sendReinvite(sipSession: Session, newConstraints: Object = null) {
+    logger.info('send room reinvite', { sipSession, newConstraints });
+
+    await Wazo.Phone.phone.sendReinvite(sipSession, newConstraints, true);
+
+    if (this.localParticipant && newConstraints && newConstraints.video) {
+      const pc = sipSession.sessionDescriptionHandler.peerConnection;
+      pc.getSenders()
+        .filter(localSender => localSender.track && localSender.track.kind === 'video')
+        .forEach(localVideoSender => {
+          const mediaStream = new MediaStream();
+          mediaStream.addTrack(localVideoSender.track);
+          // $FlowFixMe
+          this._associateStreamTo(mediaStream, this.localParticipant);
+        });
+
+    }
+  }
+
   _bindEvents() {
     if (!Wazo.Phone.phone || !Wazo.Phone.phone.currentSipSession) {
       return;
@@ -355,22 +378,13 @@ class Room extends Emitter {
       if (type !== 'offer') {
         return;
       }
-      const sdp = sdpParser.parse(rawSdp);
-      const labelMsidArray = sdp.media.filter(media => !!media.label).map(({ label, msid }) => ({
-        label: String(label),
-        msid: msid.split(' ')[1],
-      }));
 
-      labelMsidArray.forEach(({ label, msid }) => {
-
-        this._callIdStreamIdMap[String(label)] = msid;
-
-        const participant = this._unassociatedParticipants[String(label)];
-        if (participant) {
-          this.__associateStreams(participant);
-        }
-      });
+      this._mapMsid(rawSdp);
     });
+
+    // Listen to REINVITE to ba able to map msid after upgrading to video in a  audio only conference
+    // This allow to map msid with the non parsed (eg without the `stripVideo` modifier) SDP
+    Wazo.Phone.phone.on(Wazo.Phone.phone.client.ON_REINVITE, this._boundOnReinvite);
 
     this.on(this.ON_AUDIO_STREAM, stream => {
       logger.info('on room audio stream');
@@ -392,7 +406,7 @@ class Room extends Emitter {
     });
 
     this.on(this.ON_VIDEO_STREAM, (stream, streamId) => {
-      logger.info('on room video stream');
+      logger.info('on room video stream', { streamId });
 
       // ON_VIDEO_STREAM is called before PARTICIPANT_JOINED, so we have to keep stream in `_unassociatedVideoStreams`.
       this._unassociatedVideoStreams[streamId] = stream;
@@ -416,6 +430,35 @@ class Room extends Emitter {
       participant.videoStreams = participant.videoStreams.filter(someStream => someStream.id !== stream.id);
       participant.streams = participant.streams.filter(someStream => someStream.id !== stream.id);
       participant.onStreamUnSubscribed(stream);
+    });
+  }
+
+  _onReinvite(session: any, inviteRequest: any) {
+    const body = inviteRequest.body || inviteRequest.message.body;
+    if (body) {
+      this._mapMsid(body);
+
+      // Re-associate video streams
+      this.participants.forEach(participant => {
+        this.__associateStreams(participant);
+      });
+    }
+  }
+
+  _mapMsid(rawSdp: String) {
+    const sdp = sdpParser.parse(rawSdp);
+    const labelMsidArray = sdp.media.filter(media => !!media.label).map(({ label, msid }) => ({
+      label: String(label),
+      msid: msid.split(' ')[1],
+    }));
+
+    labelMsidArray.forEach(({ label, msid }) => {
+      this._callIdStreamIdMap[String(label)] = msid;
+
+      const participant = this._unassociatedParticipants[String(label)];
+      if (participant) {
+        this.__associateStreams(participant);
+      }
     });
   }
 
@@ -550,7 +593,10 @@ class Room extends Emitter {
         if (!this.localParticipant && localParticipant) {
           this.localParticipant = localParticipant;
 
-          this._saveLocalVideoStream(this._getLocalVideoStream());
+          const localVideoStream = this._getLocalVideoStream();
+          if (localVideoStream) {
+            this._saveLocalVideoStream(localVideoStream);
+          }
 
           this.connected = true;
 
@@ -637,15 +683,19 @@ class Room extends Emitter {
 
     if (this._unassociatedVideoStreams[streamId]) {
       // Try to associate stream
-      const stream = new Wazo.Stream(this._unassociatedVideoStreams[streamId], participant);
-      participant.streams.push(stream);
-      participant.videoStreams.push(stream);
-
-      participant.onStreamSubscribed(stream);
+      this._associateStreamTo(this._unassociatedVideoStreams[streamId], participant);
 
       delete this._unassociatedVideoStreams[streamId];
       delete this._unassociatedParticipants[participant.callId];
     }
+  }
+
+  _associateStreamTo(rawStream: any, participant: Participant) {
+    const stream = new Wazo.Stream(rawStream, participant);
+    participant.streams.push(stream);
+    participant.videoStreams.push(stream);
+
+    participant.onStreamSubscribed(stream);
   }
 
   _getCallIdFromStreamId(streamId: string) {

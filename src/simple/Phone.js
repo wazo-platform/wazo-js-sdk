@@ -139,14 +139,15 @@ class Phone extends Emitter {
     this.phone = null;
   }
 
-  // If audioOnly is set to true, all video stream will be removed, even remotes ones.
-  async call(extension: string, withCamera: boolean = false, rawSipLine: ?SipLine = null, audioOnly: boolean = false) {
+  // If audioOnly is set to true, all video stream will be deactivated, even remotes ones.
+  async call(extension: string, withCamera: boolean = false, rawSipLine: ?SipLine = null, audioOnly: boolean = false,
+    conference: boolean = false) {
     if (!this.phone) {
       return;
     }
     const sipLine = rawSipLine || this.getPrimaryWebRtcLine();
 
-    return this.phone.makeCall(extension, sipLine, withCamera, audioOnly);
+    return this.phone.makeCall(extension, sipLine, withCamera, audioOnly, conference);
   }
 
   async hangup(callSession: CallSession) {
@@ -227,14 +228,16 @@ class Phone extends Emitter {
     return this.phone && this.phone.atxfer(sipSession);
   }
 
-  async reinvite(callSession: CallSession, newConstraints: Object = null) {
+  async reinvite(callSession: CallSession, constraints: Object = null, conference: boolean = false) {
     if (!this.phone) {
       return;
     }
-    const result = await this.phone.sendReinvite(this.phone.findSipSession(callSession), newConstraints);
+
+    // $FlowFixMe
+    const result = await this.phone.sendReinvite(this.phone.findSipSession(callSession), constraints, conference);
 
     // Release local video stream when downgrading to audio
-    if (newConstraints && !newConstraints.video) {
+    if (constraints && !constraints.video) {
       const localVideoStream = Wazo.Phone.getLocalVideoStream(callSession);
       if (localVideoStream) {
         Stream.detachStream(localVideoStream);

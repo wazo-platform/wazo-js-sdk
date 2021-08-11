@@ -1,7 +1,16 @@
 /* eslint-disable max-len */
 import sdpParser from 'sdp-transform';
 
-import { getCandidates, isSdpValid, parseCandidate, areCandidateValid, fixSdp } from '../sdp';
+import {
+  getCandidates,
+  isSdpValid,
+  parseCandidate,
+  areCandidateValid,
+  fixSdp,
+  fixBundle,
+  toggleVideoDirection,
+  hasAnActiveVideo,
+} from '../sdp';
 
 const goodSdp = `
 c=IN IP4 203.0.113.1
@@ -43,9 +52,50 @@ a=candidate:0 1 UDP 2113667327 203.0.113.1 54400 typ host
 
 const candidate = 'candidate:3996450952 1 udp 41819903 14.72.2.1 57021 typ relay raddr 0.0.0.0 rport 0 generation 0 ufrag Ja/g network-id 3 network-cost 10';
 
+const videoReinvite = `
+INVITE sip:127.0.0.1:5039;transport=ws SIP/2.0
+
+v=0
+a=msid-semantic: WMS 11d5ae22-b66b-4837-aedb-b9f8bed3a80b
+a=group:BUNDLE 0 1 2
+m=audio 65050 UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126
+c=IN IP4 74.59.196.3
+m=video 65050 UDP/TLS/RTP/SAVPF 96 97 98 99 100 101 102 121 127 120 125 107 108 109 35 36 124 119 123 118 114 115 116
+c=IN IP4 74.59.196.3
+m=video 52964 UDP/TLS/RTP/SAVPF 96 97 98 99 100 101 102 121 127 120 125 107 108 109 35 36 124 119 123 118 114 115 116
+c=IN IP4 74.59.196.3
+`;
+
+const invalidBundle = `
+INVITE sip:127.0.0.1:5039;transport=ws SIP/2.0
+
+v=0
+a=msid-semantic: WMS 11d5ae22-b66b-4837-aedb-b9f8bed3a80b
+a=group:BUNDLE 0 
+m=audio 65050 UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126
+c=IN IP4 74.59.196.3
+a=mid:0
+m=video 65050 UDP/TLS/RTP/SAVPF 96 97 98 99 100 101 102 121 127 120 125 107 108 109 35 36 124 119 123 118 114 115 116
+a=mid:1
+`;
+
+const inactiveVideo = `
+INVITE sip:127.0.0.1:5039;transport=ws SIP/2.0
+
+v=0
+a=msid-semantic: WMS 11d5ae22-b66b-4837-aedb-b9f8bed3a80b
+a=group:BUNDLE 0 video-1
+m=audio 65050 UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126
+a=mid:0
+c=IN IP4 74.59.196.3
+m=video 65050 UDP/TLS/RTP/SAVPF 96 97 98 99 100 101 102 121 127 120 125 107 108 109 35 36 124 119 123 118 114 115 116
+a=inactive
+a=mid:video-1
+`;
+
 describe('SDP utils', () => {
   describe('Parsing candidates', () => {
-    it('should return all candidates', async () => {
+    it('should return all candidates', () => {
       const candidates = getCandidates(goodSdp);
 
       expect(candidates.length).toBe(2);
@@ -62,7 +112,7 @@ describe('SDP utils', () => {
   });
 
   describe('Parsing candidate', () => {
-    it('should parse a single candidate', async () => {
+    it('should parse a single candidate', () => {
       const parsed = parseCandidate(candidate);
 
       expect(parsed.type).toBe('relay');
@@ -71,14 +121,14 @@ describe('SDP utils', () => {
   });
 
   describe('Validating candidates', () => {
-    it('should parse a single candidate', async () => {
+    it('should parse a single candidate', () => {
       expect(areCandidateValid([null])).toBeFalsy();
       expect(areCandidateValid([parseCandidate(candidate)])).toBeTruthy();
     });
   });
 
   describe('Validating sdp', () => {
-    it('should tell if a sdp is valid', async () => {
+    it('should tell if a sdp is valid', () => {
       expect(isSdpValid(goodSdp)).toBeTruthy();
       expect(isSdpValid(badSdp)).toBeFalsy();
       expect(isSdpValid(badMobileSdp)).toBeFalsy();
@@ -86,7 +136,7 @@ describe('SDP utils', () => {
   });
 
   describe('Fixing sdp', () => {
-    it('should fix a SDP without candidate or IN ip', async () => {
+    it('should fix a SDP without candidate or IN ip', () => {
       const candidates = [parseCandidate(candidate)];
 
       const fixedSdp = fixSdp(badMobileSdp, candidates);
@@ -96,6 +146,32 @@ describe('SDP utils', () => {
       expect(parsed.media[0].port).toBe(57021);
       expect(parsed.origin.address).toBe('14.72.2.1');
       expect(fixedSdp.indexOf('IN 0.0.0.0')).toBe(-1);
+    });
+  });
+
+  describe('Fixing group bundle', () => {
+    it('should set a bundle for each m section', async () => {
+      const invalid = fixBundle(invalidBundle);
+      const parsed = sdpParser.parse(invalid);
+
+      expect(parsed.groups[0].mids).toBe('0 1');
+    });
+  });
+
+  describe('Deactivate video', () => {
+    it('should set inactive to each video sections', async () => {
+      const sdp = toggleVideoDirection(videoReinvite, 'inactive');
+      const parsed = sdpParser.parse(sdp);
+
+      expect(parsed.media[1].direction).toBe('inactive');
+      expect(parsed.media[2].direction).toBe('inactive');
+    });
+  });
+
+  describe('Checking if video is active ', () => {
+    it('should return true if a section video is active', async () => {
+      expect(hasAnActiveVideo(videoReinvite)).toBeTruthy();
+      expect(hasAnActiveVideo(inactiveVideo)).toBeFalsy();
     });
   });
 });

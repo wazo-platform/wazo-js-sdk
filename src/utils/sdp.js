@@ -37,6 +37,52 @@ export const isSdpValid = (sdp: ?string): boolean => {
   return areCandidateValid(candidates);
 };
 
+export const fixBundle = (sdp: string): string => {
+  const parsedSdp = sdpParser.parse(sdp);
+  const bundleIndex = parsedSdp.groups.findIndex(group => group.type === 'BUNDLE');
+  if (bundleIndex !== -1) {
+    parsedSdp.groups[bundleIndex].mids = parsedSdp.media
+      .map((media, index) => ('mid' in media ? media.mid : index)).join(' ');
+  }
+
+  return sdpParser.write(parsedSdp);
+};
+
+export const toggleVideoDirection = (sdp: string, direction: ?string): string => {
+  const parsedSdp = sdpParser.parse(sdp);
+  parsedSdp.media = parsedSdp.media.map(media => ({
+    ...media,
+    ...(media.type === 'video' ? { direction } : {}),
+  }));
+
+  return sdpParser.write(parsedSdp);
+};
+
+export const deactivateVideoModifier = (rawDescription: Object): Promise<Object> => {
+  const description = rawDescription;
+  description.sdp = toggleVideoDirection(description.sdp, 'inactive');
+
+  return Promise.resolve(description);
+};
+
+export const activateVideoModifier = (rawDescription: Object): Promise<Object> => {
+  const description = rawDescription;
+  description.sdp = toggleVideoDirection(description.sdp, 'sendrecv');
+
+  return Promise.resolve(description);
+};
+
+export const hasAnActiveVideo = (sdp: ?string): boolean => {
+  if (!sdp) {
+    return false;
+  }
+
+  const parsedSdp = sdpParser.parse(sdp);
+
+  return !!parsedSdp.media.find(media =>
+    media.type === 'video' && media.port > 10 && (!media.direction || media.direction !== 'inactive'));
+};
+
 export const fixSdp = (sdp: string, candidates: Object[]): string => {
   const parsedSdp = sdpParser.parse(sdp);
   const mainCandidate = getSrflxOrRelay(candidates)[0];
