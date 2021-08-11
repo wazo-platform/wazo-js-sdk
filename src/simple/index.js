@@ -16,6 +16,7 @@ import BadResponse from '../domain/BadResponse';
 import ServerError from '../domain/ServerError';
 import Call from '../domain/Call';
 import CallLog from '../domain/CallLog';
+import Recording from '../domain/Recording';
 import ChatMessage from '../domain/ChatMessage';
 import ChatRoom from '../domain/ChatRoom';
 import Contact from '../domain/Contact';
@@ -58,6 +59,7 @@ const Wazo = {
     ServerError,
     Call,
     CallLog,
+    Recording,
     ChatMessage,
     ChatRoom,
     Contact,

@@ -1,20 +1,24 @@
 // @flow
 import moment from 'moment';
 
-import Session from './Session';
 import newFrom from '../utils/new-from';
 
+import Session from './Session';
+import type { RecordingResponse } from './Recording';
+import Recording from './Recording';
+
 type CallLogResponse = {
-  answer: string,
+  answer: ?string,
   answered: boolean,
   call_direction: string,
   destination_extension: string,
   destination_name: ?string,
   duration: number,
-  end: string,
+  end: ?string,
   id: number,
   source_extension: string,
   source_name: string,
+  recordings: RecordingResponse[],
   requested_extension: string,
   requested_name: string,
   start: string,
@@ -27,7 +31,7 @@ type Response = {
 };
 
 type CallLogArguments = {
-  answer: Date,
+  answer: ?Date,
   answered: boolean,
   newMissedCall?: boolean,
   callDirection: string,
@@ -42,13 +46,14 @@ type CallLogArguments = {
   id: number,
   duration: number,
   start: Date,
-  end: Date,
+  end: ?Date,
+  recordings: Recording[],
 };
 
 export default class CallLog {
   type: string;
 
-  answer: Date;
+  answer: ?Date;
   answered: boolean;
   newMissedCall: boolean;
   callDirection: string;
@@ -65,7 +70,7 @@ export default class CallLog {
   id: number;
   duration: number;
   start: Date;
-  end: Date;
+  end: ?Date;
 
   static merge(current: Array<CallLog>, toMerge: Array<CallLog>): Array<?CallLog> {
     const onlyUnique = (value, index, self) => self.indexOf(value) === index;
@@ -82,7 +87,7 @@ export default class CallLog {
 
   static parse(plain: CallLogResponse): CallLog {
     return new CallLog({
-      answer: moment(plain.answer).toDate(),
+      answer: plain.answer ? moment(plain.answer).toDate() : null,
       answered: plain.answered,
       callDirection: plain.call_direction,
       destination: {
@@ -96,13 +101,14 @@ export default class CallLog {
       id: plain.id,
       duration: (plain.duration || 0) * 1000, // duration is in seconds
       start: moment(plain.start).toDate(),
-      end: moment(plain.end).toDate(),
+      end: plain.end ? moment(plain.end).toDate() : null,
+      recordings: Recording.parseMany(plain.recordings),
     });
   }
 
   static parseNew(plain: CallLogResponse, session: Session): CallLog {
     return new CallLog({
-      answer: moment(plain.answer).toDate(),
+      answer: plain.answer ? moment(plain.answer).toDate() : null,
       answered: plain.answered,
       callDirection: plain.call_direction,
       destination: {
@@ -116,7 +122,8 @@ export default class CallLog {
       id: plain.id,
       duration: (plain.duration || 0) * 1000, // duration is in seconds
       start: moment(plain.start).toDate(),
-      end: moment(plain.end).toDate(),
+      end: plain.end ? moment(plain.end).toDate() : null,
+      recordings: Recording.parseMany(plain.recordings),
       // @TODO: FIXME add verification declined vs missed call
       newMissedCall: session
         && session.hasExtension(plain.requested_extension || plain.destination_extension) && !plain.answered,
