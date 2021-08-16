@@ -76,8 +76,6 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       ? this.sessionDescriptionHandlerConfiguration.iceGatheringTimeout
       : options.iceGatheringTimeout;
 
-    const isOffer = this._peerConnection.signalingState === 'stable';
-
     wazoLogger.trace('getting SDP description', { iceRestart, shouldWaitForIce, iceTimeout });
 
     // Fetch ice ourselves for re-invite
@@ -98,15 +96,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       .then(() => this.createLocalOfferOrAnswer(options))
       .then((sessionDescription) => this.setLocalSessionDescription(sessionDescription))
       .then(() => this.waitForIceGatheringComplete(iceRestart, iceTimeout))
-      .then(shouldWaitForIce ? this._waitForValidGatheredIce.bind(this) : this.getLocalSessionDescription.bind(this))
-      .then((description: any) => {
-        if (!this._peerConnection) {
-          throw new Error('No peer connection to get sdh local description');
-        }
-
-        // Try to update sdp with a createOffer
-        return isOffer ? this._peerConnection.createOffer(options.offerOptions || {}) : description;
-      })
+      .then(() => this.getLocalSessionDescription())
       .then(description => {
         const { sdp } = description;
 
@@ -128,7 +118,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         return {
           type: description.type,
           // Fix sdp only when no candidates
-          sdp: fixSdp(sdp, this.gatheredCandidates),
+          sdp: fixSdp(sdp, this.gatheredCandidates, options && options.constraints ? options.constraints.video : false),
         };
       })
       .then((sessionDescription) => this.applyModifiers(sessionDescription, modifiers))

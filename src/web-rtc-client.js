@@ -110,13 +110,11 @@ export default class WebRTCClient extends Emitter {
   audio: Object | boolean;
   audioElements: { [string]: HTMLAudioElement };
   video: Object | boolean;
-  videoEnabled: boolean;
-  localVideo: ?Object & ?boolean;
+  localVideoElement: HTMLVideoElement;
   audioContext: ?AudioContext;
   audioStreams: Object;
   audioOutputDeviceId: ?string;
   audioOutputVolume: number;
-  videoSessions: Object;
   heldSessions: Object;
   connectionPromise: ?Promise<void>;
   _boundOnHeartbeat: Function;
@@ -124,6 +122,7 @@ export default class WebRTCClient extends Emitter {
   heartbeatTimeoutCb: ?Function;
   heartbeatCb: ?Function;
   statsIntervals: Object;
+  sipSessions: { [string]: Session };
 
   // sugar
   ON_USER_AGENT: string;
@@ -174,10 +173,10 @@ export default class WebRTCClient extends Emitter {
       this.setMediaConstraints({ audio: config.media.audio, video: config.media.video });
     }
 
-    this.videoSessions = {};
     this.heldSessions = {};
     this.statsIntervals = {};
     this.connectionPromise = null;
+    this.sipSessions = {};
 
     this._boundOnHeartbeat = this._onHeartbeat.bind(this);
     this.heartbeat = new Heartbeat(config.heartbeatDelay, config.heartbeatTimeout, config.maxHeartbeats);
@@ -202,7 +201,6 @@ export default class WebRTCClient extends Emitter {
 
   configureMedia(media: MediaConfig) {
     this.hasAudio = !!media.audio;
-    this.localVideo = media.localVideo;
     this.audioContext = this._isWeb() ? new (window.AudioContext || window.webkitAudioContext)() : null;
     this.audioStreams = {};
     this.audioElements = {};
@@ -432,14 +430,14 @@ export default class WebRTCClient extends Emitter {
 
   call(number: string, enableVideo?: boolean, audioOnly: boolean = false, conference: boolean = false): Session {
     logger.info('sdk webrtc creating call', { number, enableVideo, audioOnly });
-    this.changeVideo(enableVideo || false);
-
     const inviterOptions = {};
     if (audioOnly) {
       inviterOptions.sessionDescriptionHandlerModifiersReInvite = [deactivateVideoModifier];
     }
 
     const session = new Inviter(this.userAgent, this._makeURI(number), inviterOptions);
+
+    this.storeSipSession(session);
 
     this._setupSession(session);
 
@@ -475,7 +473,6 @@ export default class WebRTCClient extends Emitter {
       logger.warn(error);
       return Promise.reject(new Error(error));
     }
-    this.changeVideo(enableVideo || false);
     const options = {
       sessionDescriptionHandlerOptions: this._getMediaConfiguration(enableVideo || false),
     };
@@ -505,6 +502,8 @@ export default class WebRTCClient extends Emitter {
       this._stopSendingStats(session);
 
       this._cleanupMedia(session);
+
+      delete this.sipSessions[this.getSipSessionId(session)];
 
       // Check if Invitation or Inviter (Invitation = incoming call)
       const isInviter = session instanceof Inviter;
@@ -656,7 +655,6 @@ export default class WebRTCClient extends Emitter {
     this.heldSessions[sessionId] = true;
 
     const hasVideo = this.sessionWantsToDoVideo(session);
-    this.changeVideo(hasVideo);
 
     session.sessionDescriptionHandlerOptionsReInvite = {
       hold: true,
@@ -684,7 +682,6 @@ export default class WebRTCClient extends Emitter {
     }
 
     const hasVideo = this.sessionWantsToDoVideo(session);
-    this.changeVideo(hasVideo);
 
     delete this.heldSessions[this.getSipSessionId(session)];
     session.sessionDescriptionHandlerOptionsReInvite = {
@@ -750,6 +747,27 @@ export default class WebRTCClient extends Emitter {
     return result;
   }
 
+  sendMessage(sipSession: Session = null, body: string, contentType: string = 'text/plain') {
+    if (!sipSession) {
+      return;
+    }
+
+    logger.info('send WebRTC message', { sipId: sipSession.id, contentType });
+
+    try {
+      sipSession.message({
+        requestOptions: {
+          body: {
+            content: body,
+            contentType,
+          },
+        },
+      });
+    } catch (e) {
+      console.warn(e);
+    }
+  }
+
   pingServer() {
     if (!this.isConnected()) {
       return;
@@ -763,7 +781,7 @@ export default class WebRTCClient extends Emitter {
     return core.request(message);
   }
 
-  getLocalMediaStream(sipSession: Session) {
+  getLocalMediaStream(sipSession: Session): ?MediaStream {
     return sipSession && sipSession.sessionDescriptionHandler
       ? sipSession.sessionDescriptionHandler.localMediaStream : null;
   }
@@ -864,7 +882,7 @@ export default class WebRTCClient extends Emitter {
     }
     const sdh = session.sessionDescriptionHandler;
     const pc = sdh.peerConnection;
-    const localStream = this.getLocalStream(pc);
+    const localStream = this.getLocalStream(this.getSipSessionId(session));
 
     // Release old video stream
     if (localStream) {
@@ -889,7 +907,6 @@ export default class WebRTCClient extends Emitter {
       }
 
       // let's update the local stream
-      this._addLocalToVideoSession(this.getSipSessionId(session), stream);
       this.eventEmitter.emit('onVideoInputChange', stream);
       try {
         await sdh.setLocalMediaStream(stream);
@@ -912,15 +929,7 @@ export default class WebRTCClient extends Emitter {
       ? this.video.deviceId.exact : undefined;
   }
 
-  changeVideo(enabled: boolean) {
-    this.videoEnabled = enabled;
-  }
-
   reinvite(sipSession: Session, newConstraints: ?Object = null, conference: boolean = false) {
-    if (newConstraints) {
-      this.changeVideo(!!newConstraints.video);
-    }
-
     // When upgrading to video, remove the `deactivateVideoModifier` modifiers
     if (newConstraints && newConstraints.video) {
       const modifiers = sipSession.sessionDescriptionHandlerModifiersReInvite;
@@ -955,54 +964,79 @@ export default class WebRTCClient extends Emitter {
       sessionDescriptionHandlerOptions: {
         constraints,
         offerOptions: {
-          iceRestart: true,
+          iceRestart: false,
         },
       },
     });
   }
 
-  sessionHasLocalVideo(sessionId: string): boolean {
-    const streams = this.videoSessions[sessionId];
-    if (!streams || !streams.local) {
-      return false;
-    }
-    return !!streams.local.getVideoTracks().length;
-  }
+  async getUserMedia(constraints: Object) {
+    const newConstraints = {
+      audio: this._getAudioConstraints(),
+      video: this._getVideoConstraints(constraints.video),
+    };
 
-  sessionHasRemoteVideo(sessionId: string): boolean {
-    const streams = this.videoSessions[sessionId];
-    if (!streams || !streams.remotes) {
-      return false;
-    }
-    return streams.remotes.some(remote => remote && !!remote.getVideoTracks().length);
-  }
-
-  sessionHasVideo(sessionId: string) {
-    return this.sessionHasLocalVideo(sessionId) || this.sessionHasRemoteVideo(sessionId);
-  }
-
-  sessionHasAudio(session: Inviter) {
-    const pc = session.sessionDescriptionHandler.peerConnection;
-
-    if (pc.getSenders) {
-      const senders = pc.getSenders();
-
-      return senders.some(sender => sender.track && sender.track.kind === 'audio' && sender.track.enabled);
-    }
-
-    const localStream = this.getLocalStream(pc);
     // $FlowFixMe
-    const audioTracks = localStream.getAudioTracks();
-
-    return audioTracks.some(track => track && track.kind === 'audio' && track.enabled);
+    return navigator.mediaDevices.getUserMedia(newConstraints);
   }
 
-  getRemoteVideoStreamsForSession(sessionId: string) {
-    const streams = this.videoSessions[sessionId];
-    if (!streams || !streams.remotes) {
+  getPeerConnection(sessionId: string) {
+    const sipSession = this.sipSessions[sessionId];
+
+    return sipSession ? sipSession.sessionDescriptionHandler.peerConnection : null;
+  }
+
+  getLocalStream(sessionId: string): ?MediaStream {
+    const sipSession = this.sipSessions[sessionId];
+
+    return sipSession ? this.getLocalMediaStream(sipSession) : null;
+  }
+
+  getLocalVideoStream(sessionId: string): ?MediaStream {
+    const sipSession = this.sipSessions[sessionId];
+
+    return sipSession && this.hasLocalVideo(sessionId) ? this.getLocalStream(sessionId) : null;
+  }
+
+  hasLocalVideo(sessionId: string): boolean {
+    const stream = this.getLocalStream(sessionId);
+
+    return stream ? !!stream.getTracks().find(track => track.kind === 'video') : false;
+  }
+
+  getRemoteStreams(sessionId: string): MediaStream[] {
+    const pc = this.getPeerConnection(sessionId);
+    if (!pc) {
       return [];
     }
-    return streams.remotes;
+
+    return pc.getRemoteStreams();
+  }
+
+  getRemoteAudioStreams(sessionId: string): MediaStream[] {
+    return this.getRemoteStreams(sessionId).filter(remoteStream => {
+      const tracks = remoteStream.getTracks();
+      const videoTracks = tracks.filter(track => track.kind === 'audio' && !track.muted);
+      return videoTracks.length;
+    });
+  }
+
+  getRemoteVideoStreams(sessionId: string): MediaStream[] {
+    return this.getRemoteStreams(sessionId).filter(remoteStream => {
+      const tracks = remoteStream.getTracks();
+      const videoTracks = tracks.filter(track => track.kind === 'video' && !track.muted);
+      return videoTracks.length;
+    });
+  }
+
+  hasRemoteVideo(sessionId: string): boolean {
+    const streams = this.getRemoteVideoStreams(sessionId);
+
+    return !!streams.length;
+  }
+
+  hasVideo(sessionId: string): boolean {
+    return this.hasLocalVideo(sessionId) || this.hasRemoteVideo(sessionId);
   }
 
   getSipSessionId(sipSession: ?Inviter): string {
@@ -1026,31 +1060,11 @@ export default class WebRTCClient extends Emitter {
     return new Promise(resolve => this.on(REGISTERED, resolve));
   }
 
-  /**
-   * @param pc RTCPeerConnection
-   */
-  getLocalStream(pc: any) {
-    let localStream;
-
-    if (pc && pc.getSenders) {
-      localStream = typeof global !== 'undefined' && global.window && global.window.MediaStream
-        ? new global.window.MediaStream() : new window.MediaStream();
-
-      pc.getSenders().forEach(sender => {
-        const { track } = sender;
-        if (track) {
-          localStream.addTrack(track);
-        }
-      });
-    } else if (pc) {
-      [localStream] = pc.getLocalStreams();
-    }
-
-    return localStream;
-  }
-
   // eslint-disable-next-line no-unused-vars
   sessionWantsToDoVideo(session: Inviter) {
+    if (!session) {
+      return false;
+    }
     const { body } = session.request || session;
     // Sometimes with InviteClientContext the body is in the body attribute ...
     const sdp = typeof body === 'object' && body ? body.body : body;
@@ -1089,6 +1103,8 @@ export default class WebRTCClient extends Emitter {
   }
 
   onCallEnded(session: Session) {
+    delete this.sipSessions[this.getSipSessionId(session)];
+
     this._stopSendingStats(session);
   }
 
@@ -1098,6 +1114,39 @@ export default class WebRTCClient extends Emitter {
       return;
     }
     this.userAgent.attemptReconnection();
+  }
+
+  useLocalVideoElement(element: HTMLVideoElement) {
+    this.localVideoElement = element;
+  }
+
+  storeSipSession(session: Session) {
+    this.sipSessions[this.getSipSessionId(session)] = session;
+  }
+
+  getSipSession(id: string): ?Session {
+    return id in this.sipSessions ? this.sipSessions[id] : null;
+  }
+
+  getSipSessionIds(): string[] {
+    return Object.keys(this.sipSessions);
+  }
+
+  updateLocalStream(sipSessionId: string, newStream: MediaStream) {
+    const sipSession = this.sipSessions[sipSessionId];
+    if (!sipSession) {
+      return;
+    }
+    const oldStream = this.getLocalStream(sipSessionId);
+    if (oldStream) {
+      this._cleanupStream(oldStream);
+    }
+
+    // eslint-disable-next-line no-underscore-dangle
+    sipSession.sessionDescriptionHandler._localMediaStream = newStream;
+
+    // Update the local video element
+    this._setupLocalMedia(sipSessionId, newStream);
   }
 
   _onTransportError() {
@@ -1153,15 +1202,11 @@ export default class WebRTCClient extends Emitter {
     return this.audio && this.audio.deviceId && this.audio.deviceId.exact ? this.audio : true;
   }
 
-  _getVideoConstraints(forceVideo: boolean = false) {
-    if (!forceVideo && !this.videoEnabled) {
+  _getVideoConstraints(video: boolean = false) {
+    if (!video) {
       return false;
     }
     return this.video && this.video.deviceId && this.video.deviceId.exact ? this.video : true;
-  }
-
-  _hasVideo() {
-    return this.videoEnabled;
   }
 
   _connectIfNeeded(): Promise<void> {
@@ -1203,15 +1248,6 @@ export default class WebRTCClient extends Emitter {
     return this.connectionPromise;
   }
 
-  _initializeVideoSession(sessionId: string) {
-    if (!this.videoSessions[sessionId]) {
-      this.videoSessions[sessionId] = {
-        local: null,
-        remotes: [],
-      };
-    }
-  }
-
   _buildConfig(config: WebRtcConfig, session: ?Session): Promise<WebRtcConfig> {
     // If no session provided, return the configuration directly
     if (!session) {
@@ -1228,30 +1264,6 @@ export default class WebRTCClient extends Emitter {
       uri: `${sipLine.username}@${config.host}`,
       ...config,
     }));
-  }
-
-  _addLocalToVideoSession(sessionId: string, stream: any) {
-    this._initializeVideoSession(sessionId);
-
-    this.videoSessions[sessionId].local = stream;
-  }
-
-  _addRemoteToVideoSession(sessionId: string, stream: any) {
-    this._initializeVideoSession(sessionId);
-
-    this.videoSessions[sessionId].remotes.push(stream);
-  }
-
-  _removeLocalVideoSession(sessionId: string) {
-    this._initializeVideoSession(sessionId);
-
-    this.videoSessions[sessionId].local = null;
-  }
-
-  _removeRemoteVideoSession(sessionId: string) {
-    this._initializeVideoSession(sessionId);
-
-    this.videoSessions[sessionId].remotes = [];
   }
 
   _createWebRTCConfiguration(configOverrides: Object = {}) {
@@ -1305,7 +1317,7 @@ export default class WebRTCClient extends Emitter {
           rtcConfiguration: {
             rtcpMuxPolicy: 'require',
             iceServers: WebRTCClient.getIceServers(this.config.host),
-            ...this._getRtcOptions(this.videoEnabled),
+            ...this._getRtcOptions(),
             ...configOverrides.peerConnectionOptions || {},
           },
         },
@@ -1322,11 +1334,11 @@ export default class WebRTCClient extends Emitter {
   }
 
   // eslint-disable-next-line no-unused-vars
-  _getRtcOptions(enableVideo: boolean) {
+  _getRtcOptions() {
     return {
       mandatory: {
         OfferToReceiveAudio: this._hasAudio(),
-        OfferToReceiveVideo: enableVideo,
+        OfferToReceiveVideo: false,
       },
     };
   }
@@ -1391,9 +1403,6 @@ export default class WebRTCClient extends Emitter {
       } else {
         session.outgoingInviteRequest.message.body.body = inviteRequest.body;
       }
-      if (!this.sessionWantsToDoVideo(session)) {
-        this._setupRemoteMedia(session);
-      }
 
       return this.eventEmitter.emit(ON_REINVITE, session, inviteRequest, updatedCalleeName, updatedNumber);
     };
@@ -1402,8 +1411,9 @@ export default class WebRTCClient extends Emitter {
   _onAccepted(session: Session, sessionDialog?: SessionDialog, withEvent: boolean = true) {
     logger.info('on call accepted', { id: session.id, remoteTag: session.remoteTag });
 
+    this.storeSipSession(session);
+
     this._setupLocalMedia(session);
-    this._setupRemoteMedia(session);
 
     const onTrack = (event: any) => {
       // Stop video track in audio only mode
@@ -1411,7 +1421,6 @@ export default class WebRTCClient extends Emitter {
         event.track.stop();
       }
 
-      this._setupRemoteMedia(session, event);
       this.eventEmitter.emit(ON_TRACK, session, event);
     };
 
@@ -1432,38 +1441,12 @@ export default class WebRTCClient extends Emitter {
     return session.sessionDescriptionHandlerModifiersReInvite.find(modifier => modifier === deactivateVideoModifier);
   }
 
-  _setupRemoteMedia(session: Session, event: ?any) {
-    const sessionId = this.getSipSessionId(session);
-    // When calling _setupRemoteMedia from the 'track' event, the session SDP is not yet updated with m=video section
-    // So we have to check the king of stream in the event
-    // @TODO: find a better way to know if we want to do video by call.
-    const sessionHasVideo = event && event.track ? event.track.kind === 'video' : this._hasVideo();
-    const pc = session.sessionDescriptionHandler.peerConnection;
-    const remoteStream = this._getRemoteStream(pc);
-
-    // If there is a video track, it will attach the video and audio to the same element
-    if (sessionHasVideo) {
-      this._addRemoteToVideoSession(sessionId, remoteStream);
-    }
-
-    if (!this._isWeb() || !remoteStream) {
-      return;
-    }
-
-    const audio = this.audioElements[this.getSipSessionId(session)];
-    if (audio.currentTime > 0 && !audio.paused && !audio.ended && audio.readyState > 2) {
-      audio.pause();
-    }
-    audio.srcObject = remoteStream;
-    audio.volume = this.audioOutputVolume;
-    audio.play().catch(() => {});
-  }
-
-  _setupLocalMedia(session: Session) {
+  _setupLocalMedia(session: Session, newStream: ?MediaStream) {
     // Safari hack, because you cannot call .play() from a non user action
-    if (this._hasAudio() && this._isWeb()) {
+    const id = this.getSipSessionId(session);
+
+    if (!this.localVideoElement && this._hasAudio() && this._isWeb() && !(id in this.audioElements)) {
       const audio: any = document.createElement('audio');
-      const id = this.getSipSessionId(session);
       audio.setAttribute('id', `audio-${id}`);
 
       if (audio.setSinkId && this.audioOutputDeviceId) {
@@ -1474,31 +1457,39 @@ export default class WebRTCClient extends Emitter {
         document.body.appendChild(audio);
       }
       this.audioElements[id] = audio;
+    } else if (this.localVideoElement && this.audioOutputDeviceId) {
+      // $FlowFixMe
+      this.localVideoElement.setSinkId(this.audioOutputDeviceId);
     }
 
     const sessionId = this.getSipSessionId(session);
+    const localStream = newStream || this.getLocalStream(sessionId);
 
-    if (!this.sessionWantsToDoVideo(session)) {
-      this._removeLocalVideoSession(sessionId);
+    if (!this._isWeb() || !localStream) {
       return;
     }
 
-    const pc = session.sessionDescriptionHandler.peerConnection;
-    const localStream = this.getLocalStream(pc);
-
-    this._addLocalToVideoSession(sessionId, localStream);
+    const element = this.localVideoElement || this.audioElements[this.getSipSessionId(session)];
+    if (element.currentTime > 0 && !element.paused && !element.ended && element.readyState > 2) {
+      element.pause();
+    }
+    element.srcObject = localStream;
+    element.volume = this.audioOutputVolume;
+    element.play().catch(() => {});
   }
 
   _cleanupMedia(session: Session) {
     const sessionId = this.getSipSessionId(session);
-    if (session && sessionId in this.videoSessions) {
-      if (this.videoSessions[this.getSipSessionId(session)].local) {
-        this.videoSessions[this.getSipSessionId(session)].local.getTracks().forEach(track => track.stop());
-      }
-      delete this.videoSessions[this.getSipSessionId(session)];
+    const localStream = this.getLocalStream(sessionId);
+    if (localStream) {
+      this._cleanupStream(localStream);
     }
 
-    const cleanAudio = id => {
+    const cleanLocalElement = id => {
+      if (this.localVideoElement) {
+        this.localVideoElement.srcObject = null;
+      }
+
       const element = this.audioElements[id];
       if (!element) {
         return;
@@ -1515,11 +1506,15 @@ export default class WebRTCClient extends Emitter {
 
     if (this._hasAudio() && this._isWeb()) {
       if (session) {
-        cleanAudio(this.getSipSessionId(session));
+        cleanLocalElement(this.getSipSessionId(session));
       } else {
-        Object.keys(this.audioElements).forEach(id => cleanAudio(id));
+        Object.keys(this.audioElements).forEach(id => cleanLocalElement(id));
       }
     }
+  }
+
+  _cleanupStream(stream: MediaStream) {
+    stream.getTracks().forEach(track => track.stop());
   }
 
   _toggleAudio(session: Inviter, muteAudio: boolean) {

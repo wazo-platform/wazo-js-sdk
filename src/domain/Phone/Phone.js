@@ -54,11 +54,11 @@ export interface Phone {
 
   endCurrentCall(CallSession: CallSession): PhoneVoid;
 
-  getLocalStreamForCall(callSession: CallSession): boolean;
+  getLocalStreamForCall(callSession: CallSession): ?MediaStream;
 
   getOptions(): AvailablePhoneOptions;
 
-  getRemoteStreamForCall(callSession: CallSession): boolean;
+  getRemoteStreamForCall(callSession: CallSession): MediaStream[];
 
   ignore(callSession: CallSession): PhoneVoid;
 

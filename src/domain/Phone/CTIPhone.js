@@ -278,12 +278,12 @@ export default class CTIPhone extends Emitter implements Phone {
     return false;
   }
 
-  getLocalStreamForCall(): boolean {
-    return false;
+  getLocalStreamForCall(): ?MediaStream {
+    return null;
   }
 
-  getRemoteStreamForCall(): boolean {
-    return false;
+  getRemoteStreamForCall(): MediaStream[] {
+    return [];
   }
 
   setActiveSipSession() {}
