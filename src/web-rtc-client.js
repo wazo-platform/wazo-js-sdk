@@ -27,13 +27,11 @@ import { Messager } from 'sip.js/lib/api/messager';
 import { RegistererState } from 'sip.js/lib/api/registerer-state';
 import { SessionState } from 'sip.js/lib/api/session-state';
 import { TransportState } from 'sip.js/lib/api/transport-state';
-import { defaultMediaStreamFactory }
-  from 'sip.js/lib/platform/web/session-description-handler/media-stream-factory-default';
 import { defaultPeerConnectionConfiguration }
   from 'sip.js/lib/platform/web/session-description-handler/peer-connection-configuration-default';
 import getStats from 'getstats';
 
-import WazoSessionDescriptionHandler from './lib/WazoSessionDescriptionHandler';
+import WazoSessionDescriptionHandler, { wazoMediaStreamFactory } from './lib/WazoSessionDescriptionHandler';
 
 import Emitter from './utils/Emitter';
 import ApiClient from './api-client';
@@ -69,6 +67,7 @@ const REJECTED = 'rejected';
 const ON_TRACK = 'onTrack';
 const ON_REINVITE = 'reinvite';
 const ON_ERROR = 'onError';
+const ON_SCREEN_SHARING_REINVITE = 'onScreenSharingReinvite';
 
 export const events = [REGISTERED, UNREGISTERED, REGISTRATION_FAILED, INVITE];
 export const transportEvents = [CONNECTED, DISCONNECTED, TRANSPORT_ERROR, MESSAGE];
@@ -139,6 +138,7 @@ export default class WebRTCClient extends Emitter {
   ON_TRACK: string;
   ON_REINVITE: string;
   ON_ERROR: string;
+  ON_SCREEN_SHARING_REINVITE: string;
 
   static isAPrivateIp(ip: string): boolean {
     const regex = /^(?:10|127|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\..*/;
@@ -197,6 +197,7 @@ export default class WebRTCClient extends Emitter {
     this.ON_TRACK = ON_TRACK;
     this.ON_REINVITE = ON_REINVITE;
     this.ON_ERROR = ON_ERROR;
+    this.ON_SCREEN_SHARING_REINVITE = ON_SCREEN_SHARING_REINVITE;
   }
 
   configureMedia(media: MediaConfig) {
@@ -943,7 +944,10 @@ export default class WebRTCClient extends Emitter {
     };
 
     const shouldDoVideo = newConstraints ? newConstraints.video : this.sessionWantsToDoVideo(sipSession);
-    const { constraints } = this._getMediaConfiguration(shouldDoVideo);
+    const shouldDoScreenSharing = newConstraints && newConstraints.screen;
+    const isDesktop = newConstraints && newConstraints.desktop;
+    // $FlowFixMe
+    const { constraints } = this._getMediaConfiguration(shouldDoVideo, conference, shouldDoScreenSharing, isDesktop);
 
     return sipSession.invite({
       requestDelegate: {
@@ -957,10 +961,17 @@ export default class WebRTCClient extends Emitter {
           }
           this._onAccepted(sipSession, response.session, false);
 
+          if (shouldDoScreenSharing) {
+            this.eventEmitter.emit(ON_SCREEN_SHARING_REINVITE, sipSession, response);
+          }
+
           return this.eventEmitter.emit(ON_REINVITE, sipSession, response);
         },
       },
       sessionDescriptionHandlerModifiers: [replaceLocalIpModifier],
+      requestOptions: {
+        extraHeaders: [`Reason: SIP ;cause=0 ;text="${shouldDoScreenSharing ? 'screenshare' : 'upgrade-video'}"`],
+      },
       sessionDescriptionHandlerOptions: {
         constraints,
         offerOptions: {
@@ -982,8 +993,11 @@ export default class WebRTCClient extends Emitter {
 
   getPeerConnection(sessionId: string) {
     const sipSession = this.sipSessions[sessionId];
+    if (!sipSession) {
+      return null;
+    }
 
-    return sipSession ? sipSession.sessionDescriptionHandler.peerConnection : null;
+    return sipSession.sessionDescriptionHandler ? sipSession.sessionDescriptionHandler.peerConnection : null;
   }
 
   getLocalStream(sessionId: string): ?MediaStream {
@@ -1103,6 +1117,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   onCallEnded(session: Session) {
+    this._cleanupMedia(session);
     delete this.sipSessions[this.getSipSessionId(session)];
 
     this._stopSendingStats(session);
@@ -1298,7 +1313,7 @@ export default class WebRTCClient extends Emitter {
           },
         };
 
-        return new WazoSessionDescriptionHandler(uaLogger, defaultMediaStreamFactory(), sdhOptions, isWeb, session);
+        return new WazoSessionDescriptionHandler(uaLogger, wazoMediaStreamFactory, sdhOptions, isWeb, session);
       },
       transportOptions: {
         traceSip: configOverrides.traceSip || false,
@@ -1343,11 +1358,16 @@ export default class WebRTCClient extends Emitter {
     };
   }
 
-  _getMediaConfiguration(enableVideo: boolean, conference: boolean = false): Object {
+  _getMediaConfiguration(enableVideo: boolean, conference: boolean = false, screenSharing: boolean = false,
+    isDesktop: boolean = false): Object {
     return {
       constraints: {
-        audio: this._getAudioConstraints(),
-        video: conference ? this._getVideoConstraints(true) : this._getVideoConstraints(enableVideo),
+        // Exact constraint are not supported with `getDisplayMedia` and we must have a video=false in desktop screenshare
+        audio: screenSharing ? !isDesktop : this._getAudioConstraints(),
+        video: screenSharing ? (isDesktop ? ({ mandatory: { chromeMediaSource: 'desktop' } }) : { cursor: 'always' })
+          : (conference ? this._getVideoConstraints(true) : this._getVideoConstraints(enableVideo)),
+        screen: screenSharing,
+        desktop: isDesktop,
       },
       enableVideo,
       conference,

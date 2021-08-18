@@ -193,14 +193,17 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.useLocalVideoElement(element);
   }
 
-  async sendReinvite(sipSession: Session, constraints: Object = null, conference: boolean = false) {
+  async sendReinvite(sipSession: Session, constraints: Object | MediaStream = null, conference: boolean = false) {
     logger.info('WebRTC phone - send reinvite', { sessionId: sipSession ? sipSession.id : null, constraints });
 
     if (!sipSession) {
       return;
     }
 
-    const isUpgrade = constraints && constraints.video;
+    const sipSessionId = this.getSipSessionId(sipSession);
+    const shouldScreenShare = constraints && (constraints instanceof MediaStream || constraints.screen);
+    // $FlowFixMe
+    const isUpgrade = shouldScreenShare || (constraints && constraints.video);
 
     const sendReinviteMessage = () => {
       // Have to send the message after a delay due to latency to update the remote peer
@@ -217,7 +220,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     };
 
     // Release local video stream when downgrading to audio
-    if (constraints && !constraints.video) {
+    if (constraints && !isUpgrade) {
       const localVideoStream = sipSession.sessionDescriptionHandler.localMediaStream;
       const videoTrack = localVideoStream.getVideoTracks();
       const pc = sipSession.sessionDescriptionHandler.peerConnection;
@@ -238,21 +241,33 @@ export default class WebRTCPhone extends Emitter implements Phone {
       // No reinvite needed here
       return;
     }
-    if (constraints && constraints.video) {
+    if (isUpgrade) {
       // Check if a video sender already exists
       const pc = sipSession.sessionDescriptionHandler.peerConnection;
       const emptySender = pc.getSenders().find(sender => sender.track === null);
 
       // Reuse bidirectional video stream
       if (emptySender) {
-        const newStream = await this.client.getUserMedia(constraints);
+        const newStream = shouldScreenShare ? await this._getScreenSharingStream(constraints)
+          : await this.client.getUserMedia(constraints);
+
+        if (!newStream) {
+          throw new Error(`Can't create media stream for screensharing with: ${JSON.stringify(constraints)}`);
+        }
+
         const videoTracks = newStream.getVideoTracks();
         emptySender.replaceTrack(videoTracks[0]);
 
         this.client.updateLocalStream(this.getSipSessionId(sipSession), newStream);
         sendReinviteMessage();
+
+        if (shouldScreenShare) {
+          const callSession = this.callSessions[sipSessionId];
+          this._onScreenSharing(newStream, sipSession, callSession, null);
+        }
+
         // No reinvite needed here
-        return;
+        return newStream;
       }
     }
 
@@ -402,36 +417,18 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   async startScreenSharing(constraintsOrStream: ?Object | MediaStream, callSession?: CallSession) {
-    if (!navigator.mediaDevices) {
-      return null;
-    }
+    logger.info('WebRTC - start screen sharing', { constraintsOrStream, id: callSession ? callSession.getId() : null });
 
-    logger.info('WebRTC - stop screen sharing', { constraintsOrStream, id: callSession ? callSession.getId() : null });
-
-    let screenShareStream = constraintsOrStream;
-    let constraints = null;
-
-    if (!constraintsOrStream || !(constraintsOrStream instanceof MediaStream)) {
-      try {
-        constraints = constraintsOrStream || { video: { cursor: 'always' }, audio: false };
-        // $FlowFixMe
-        screenShareStream = await navigator.mediaDevices.getDisplayMedia(constraints);
-      } catch (e) {
-        logger.warn('WebRTC - stop screen sharing, error', e);
-        return null;
-      }
-    }
-
-    // $FlowFixMe
-    screenShareStream.local = true;
+    const screenShareStream = await this._getScreenSharingStream(constraintsOrStream);
 
     if (!screenShareStream) {
-      throw new Error(`Can't create media stream for screensharing with contraints ${JSON.stringify(constraints)}`);
+      // $FlowFixMe
+      throw new Error(`Can't create media stream for screensharing with: ${JSON.stringify(constraintsOrStream)}`);
     }
 
     const screenTrack = screenShareStream.getVideoTracks()[0];
     const sipSession = this.currentSipSession;
-    const pc = sipSession.sessionDescriptionHandler.peerConnection;
+    const pc = this.client.getPeerConnection(this.getSipSessionId(sipSession));
     const sender = pc && pc.getSenders().find(s => s && s.track && s.track.kind === 'video');
     const localStream = this.client.getLocalStream(this.getSipSessionId(sipSession));
 
@@ -439,16 +436,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       sender.replaceTrack(screenTrack);
     }
 
-    screenTrack.onended = () => this.eventEmitter.emit(
-      ON_SHARE_SCREEN_ENDING,
-      this._createCallSession(sipSession, callSession),
-    );
-    this.currentScreenShare = { stream: screenShareStream, sender, localStream };
-
-    this.eventEmitter.emit(
-      ON_SHARE_SCREEN_STARTED,
-      this._createCallSession(sipSession, callSession, { screensharing: true }),
-    );
+    this._onScreenSharing(screenShareStream, sipSession, callSession, localStream);
 
     return screenShareStream;
   }
@@ -466,8 +454,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
       }
 
       if (restoreLocalStream) {
-        if (this.currentScreenShare.sender) {
+        if (this.currentScreenShare.sender && this.currentScreenShare.localStream) {
           await this.currentScreenShare.sender.replaceTrack(this.currentScreenShare.localStream.getVideoTracks()[0]);
+        } else {
+          // When upgrading directly to screenshare (eg: we don't have a videoLocalStream to replace)
+          // We have to downgrade to audio.
+          return this.sendReinvite(this.currentSipSession, { audio: true, video: false });
         }
       } else if (this.currentScreenShare.localStream) {
         await this.currentScreenShare.localStream.getVideoTracks().forEach(track => track.stop());
@@ -484,6 +476,48 @@ export default class WebRTCPhone extends Emitter implements Phone {
     );
 
     this.currentScreenShare = null;
+  }
+
+  async _getScreenSharingStream(constraintsOrStream: ?Object | MediaStream) {
+    if (!navigator.mediaDevices) {
+      return null;
+    }
+
+    let screenShareStream = constraintsOrStream;
+    let constraints = null;
+
+    if (!constraintsOrStream || !(constraintsOrStream instanceof MediaStream)) {
+      try {
+        constraints = constraintsOrStream || { video: { cursor: 'always' }, audio: false };
+        // $FlowFixMe
+        screenShareStream = await navigator.mediaDevices.getDisplayMedia(constraints);
+      } catch (e) {
+        logger.warn('WebRTC - get screen sharing stream, error', e);
+        return null;
+      }
+    }
+
+    // $FlowFixMe
+    screenShareStream.local = true;
+
+    return screenShareStream;
+  }
+
+  _onScreenSharing(screenStream: Object, sipSession: Session, callSession: ?CallSession, localStream: ?Object) {
+    const screenTrack = screenStream.getVideoTracks()[0];
+    const pc = this.client.getPeerConnection(this.getSipSessionId(sipSession));
+    const sender = pc && pc.getSenders().find(s => s && s.track && s.track.kind === 'video');
+
+    screenTrack.onended = () => this.eventEmitter.emit(
+      ON_SHARE_SCREEN_ENDING,
+      this._createCallSession(sipSession, callSession),
+    );
+    this.currentScreenShare = { stream: screenStream, localStream, sender };
+
+    this.eventEmitter.emit(
+      ON_SHARE_SCREEN_STARTED,
+      this._createCallSession(sipSession, callSession, { screensharing: true }),
+    );
   }
 
   _onCallAccepted(sipSession: Session, cameraEnabled: boolean): CallSession {
@@ -1277,6 +1311,15 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.on(this.client.MESSAGE, (message: Message) => {
       this._onMessage(message);
       this.eventEmitter.emit(ON_MESSAGE, message);
+    });
+
+    // Used when upgrading directly in screenshare mode
+    this.client.on(this.client.ON_SCREEN_SHARING_REINVITE, (sipSession: Session) => {
+      const sipSessionId = this.getSipSessionId(sipSession);
+      const localStream = this.client.getLocalStream(sipSessionId);
+      const callSession = this.callSessions[sipSessionId];
+
+      this._onScreenSharing(localStream, sipSession, callSession, null);
     });
   }
 

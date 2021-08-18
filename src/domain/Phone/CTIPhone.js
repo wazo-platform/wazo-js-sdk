@@ -309,4 +309,26 @@ export default class CTIPhone extends Emitter implements Phone {
   sendMessage() {}
 
   disableRinging() {}
+
+  getLocalStream() {
+    return null;
+  }
+
+  getRemoteStreams() {
+    return [];
+  }
+
+  getRemoteVideoStreams() {
+    return [];
+  }
+
+  getRemoteAudioStreams() {
+    return [];
+  }
+
+  hasLocalVideo() {
+    return false;
+  }
+
+  useLocalVideoElement() {}
 }

@@ -1,4 +1,4 @@
-/* global RTCSessionDescriptionInit */
+/* global RTCSessionDescriptionInit, navigator */
 // @flow
 import EventEmitter from 'events';
 
@@ -17,6 +17,25 @@ import { areCandidateValid, fixSdp, parseCandidate } from '../utils/sdp';
 const wazoLogger = IssueReporter ? IssueReporter.loggerFor('webrtc-sdh') : console;
 const MAX_WAIT_FOR_ICE_TRIES = 20;
 const WAIT_FOR_ICE_TIMEOUT = 500;
+
+// Customized mediaStreamFactory allowing to send screensharing stream directory when upgrading
+export const wazoMediaStreamFactory = (constraints: Object): Promise<MediaStream> => {
+  // @see sip.js/lib/platform/web/session-description-handler/media-stream-factory-default
+  if (!constraints.audio && !constraints.video) {
+    return Promise.resolve(new MediaStream());
+  }
+
+  if (navigator.mediaDevices === undefined) {
+    return Promise.reject(new Error('Media devices not available in insecure contexts.'));
+  }
+
+  // We have to make a `getUserMedia` on desktop but a `getDisplayMedia` in browsers when screensharing
+  if (constraints.screen && !constraints.desktop) {
+    return navigator.mediaDevices.getDisplayMedia.call(navigator.mediaDevices, constraints);
+  }
+
+  return navigator.mediaDevices.getUserMedia.call(navigator.mediaDevices, constraints);
+};
 
 class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
   gatheredCandidates: Array<?string>;
