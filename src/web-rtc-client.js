@@ -452,7 +452,7 @@ export default class WebRTCClient extends Emitter {
           this.eventEmitter.emit(REJECTED, session, response);
         },
       },
-      sessionDescriptionHandlerOptions: this._getMediaConfiguration(enableVideo || false, conference),
+      sessionDescriptionHandlerOptions: this.getMediaConfiguration(enableVideo || false, conference),
     };
 
     inviteOptions.sessionDescriptionHandlerModifiers = [replaceLocalIpModifier];
@@ -475,7 +475,7 @@ export default class WebRTCClient extends Emitter {
       return Promise.reject(new Error(error));
     }
     const options = {
-      sessionDescriptionHandlerOptions: this._getMediaConfiguration(enableVideo || false),
+      sessionDescriptionHandlerOptions: this.getMediaConfiguration(enableVideo || false),
     };
 
     return session.accept(options).then(() => {
@@ -662,7 +662,7 @@ export default class WebRTCClient extends Emitter {
       conference: isConference,
     };
 
-    const options = this._getMediaConfiguration(hasVideo);
+    const options = this.getMediaConfiguration(hasVideo);
     if (!this._isWeb()) {
       options.sessionDescriptionHandlerModifiers = [holdModifier];
     }
@@ -690,7 +690,7 @@ export default class WebRTCClient extends Emitter {
       conference: isConference,
     };
 
-    const options = this._getMediaConfiguration(hasVideo);
+    const options = this.getMediaConfiguration(hasVideo);
     if (!this._isWeb()) {
       // We should sent an empty `sessionDescriptionHandlerModifiers` or sip.js will take the last sent modifiers
       // (eg: holdModifier)
@@ -947,7 +947,7 @@ export default class WebRTCClient extends Emitter {
     const shouldDoScreenSharing = newConstraints && newConstraints.screen;
     const isDesktop = newConstraints && newConstraints.desktop;
     // $FlowFixMe
-    const { constraints } = this._getMediaConfiguration(shouldDoVideo, conference, shouldDoScreenSharing, isDesktop);
+    const { constraints } = this.getMediaConfiguration(shouldDoVideo, conference, shouldDoScreenSharing, isDesktop);
 
     return sipSession.invite({
       requestDelegate: {
@@ -970,7 +970,7 @@ export default class WebRTCClient extends Emitter {
       },
       sessionDescriptionHandlerModifiers: [replaceLocalIpModifier],
       requestOptions: {
-        extraHeaders: [`Reason: SIP ;cause=0 ;text="${shouldDoScreenSharing ? 'screenshare' : 'upgrade-video'}"`],
+        extraHeaders: [`Subject: ${shouldDoScreenSharing ? 'screenshare' : 'upgrade-video'}`],
       },
       sessionDescriptionHandlerOptions: {
         constraints,
@@ -1164,6 +1164,30 @@ export default class WebRTCClient extends Emitter {
     this._setupLocalMedia(sipSessionId, newStream);
   }
 
+  getMediaConfiguration(enableVideo: boolean, conference: boolean = false, screenSharing: boolean = false,
+    isDesktop: boolean = false): Object {
+    return {
+      constraints: {
+        // Exact constraint are not supported with `getDisplayMedia` and we must have a video=false in desktop screenshare
+        audio: screenSharing ? !isDesktop : this._getAudioConstraints(),
+        video: screenSharing ? (isDesktop ? ({ mandatory: { chromeMediaSource: 'desktop' } }) : { cursor: 'always' })
+          : (conference ? this._getVideoConstraints(true) : this._getVideoConstraints(enableVideo)),
+        screen: screenSharing,
+        desktop: isDesktop,
+      },
+      enableVideo,
+      conference,
+      offerOptions: {
+        OfferToReceiveAudio: this._hasAudio(),
+        OfferToReceiveVideo: enableVideo,
+        mandatory: {
+          OfferToReceiveAudio: this._hasAudio(),
+          OfferToReceiveVideo: enableVideo,
+        },
+      },
+    };
+  }
+
   _onTransportError() {
     this.eventEmitter.emit(TRANSPORT_ERROR);
     this.attemptReconnection();
@@ -1354,30 +1378,6 @@ export default class WebRTCClient extends Emitter {
       mandatory: {
         OfferToReceiveAudio: this._hasAudio(),
         OfferToReceiveVideo: false,
-      },
-    };
-  }
-
-  _getMediaConfiguration(enableVideo: boolean, conference: boolean = false, screenSharing: boolean = false,
-    isDesktop: boolean = false): Object {
-    return {
-      constraints: {
-        // Exact constraint are not supported with `getDisplayMedia` and we must have a video=false in desktop screenshare
-        audio: screenSharing ? !isDesktop : this._getAudioConstraints(),
-        video: screenSharing ? (isDesktop ? ({ mandatory: { chromeMediaSource: 'desktop' } }) : { cursor: 'always' })
-          : (conference ? this._getVideoConstraints(true) : this._getVideoConstraints(enableVideo)),
-        screen: screenSharing,
-        desktop: isDesktop,
-      },
-      enableVideo,
-      conference,
-      offerOptions: {
-        OfferToReceiveAudio: this._hasAudio(),
-        OfferToReceiveVideo: enableVideo,
-        mandatory: {
-          OfferToReceiveAudio: this._hasAudio(),
-          OfferToReceiveVideo: enableVideo,
-        },
       },
     };
   }

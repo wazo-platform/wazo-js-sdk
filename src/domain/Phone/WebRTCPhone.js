@@ -1,4 +1,3 @@
-/* global navigator */
 /* eslint-disable no-param-reassign */
 /* eslint-disable no-underscore-dangle */
 // @flow
@@ -13,6 +12,7 @@ import type { Phone, AvailablePhoneOptions } from './Phone';
 import WazoWebRTCClient from '../../web-rtc-client';
 import Emitter from '../../utils/Emitter';
 import IssueReporter from '../../service/IssueReporter';
+import { wazoMediaStreamFactory } from '../../lib/WazoSessionDescriptionHandler';
 
 export const ON_USER_AGENT = 'onUserAgent';
 export const ON_REGISTERED = 'onRegistered';
@@ -193,7 +193,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.useLocalVideoElement(element);
   }
 
-  async sendReinvite(sipSession: Session, constraints: Object | MediaStream = null, conference: boolean = false) {
+  async sendReinvite(sipSession: Session, constraints: ?Object = null, conference: boolean = false) {
     logger.info('WebRTC phone - send reinvite', { sessionId: sipSession ? sipSession.id : null, constraints });
 
     if (!sipSession) {
@@ -201,7 +201,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     const sipSessionId = this.getSipSessionId(sipSession);
-    const shouldScreenShare = constraints && (constraints instanceof MediaStream || constraints.screen);
+    const shouldScreenShare = constraints && constraints.screen;
     // $FlowFixMe
     const isUpgrade = shouldScreenShare || (constraints && constraints.video);
 
@@ -248,11 +248,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
       // Reuse bidirectional video stream
       if (emptySender) {
-        const newStream = shouldScreenShare ? await this._getScreenSharingStream(constraints)
-          : await this.client.getUserMedia(constraints);
-
+        const newStream = await this._getStreamFromConstraints(constraints);
         if (!newStream) {
-          throw new Error(`Can't create media stream for screensharing with: ${JSON.stringify(constraints)}`);
+          throw new Error(`Can't create media stream with: ${JSON.stringify(constraints || {})}`);
         }
 
         const videoTracks = newStream.getVideoTracks();
@@ -416,14 +414,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
     };
   }
 
-  async startScreenSharing(constraintsOrStream: ?Object | MediaStream, callSession?: CallSession) {
-    logger.info('WebRTC - start screen sharing', { constraintsOrStream, id: callSession ? callSession.getId() : null });
+  async startScreenSharing(constraints: Object, callSession?: CallSession) {
+    logger.info('WebRTC - start screen sharing', { constraints, id: callSession ? callSession.getId() : null });
 
-    const screenShareStream = await this._getScreenSharingStream(constraintsOrStream);
-
+    const screenShareStream = await this._getStreamFromConstraints(constraints);
     if (!screenShareStream) {
-      // $FlowFixMe
-      throw new Error(`Can't create media stream for screensharing with: ${JSON.stringify(constraintsOrStream)}`);
+      throw new Error(`Can't create media stream for screensharing with: ${JSON.stringify(constraints)}`);
     }
 
     const screenTrack = screenShareStream.getVideoTracks()[0];
@@ -478,29 +474,21 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.currentScreenShare = null;
   }
 
-  async _getScreenSharingStream(constraintsOrStream: ?Object | MediaStream) {
-    if (!navigator.mediaDevices) {
+  async _getStreamFromConstraints(constraints: Object, conference: boolean = false): Promise<?MediaStream> {
+    const video = constraints && constraints.video;
+    const screen = constraints && constraints.screen;
+    const desktop = constraints && constraints.desktop;
+    // $FlowFixMe
+    const { constraints: newConstraints } = this.client.getMediaConfiguration(video, conference, screen, desktop);
+
+    const newStream = await wazoMediaStreamFactory(newConstraints);
+    if (!newStream) {
       return null;
     }
-
-    let screenShareStream = constraintsOrStream;
-    let constraints = null;
-
-    if (!constraintsOrStream || !(constraintsOrStream instanceof MediaStream)) {
-      try {
-        constraints = constraintsOrStream || { video: { cursor: 'always' }, audio: false };
-        // $FlowFixMe
-        screenShareStream = await navigator.mediaDevices.getDisplayMedia(constraints);
-      } catch (e) {
-        logger.warn('WebRTC - get screen sharing stream, error', e);
-        return null;
-      }
-    }
-
     // $FlowFixMe
-    screenShareStream.local = true;
+    newStream.local = true;
 
-    return screenShareStream;
+    return newStream;
   }
 
   _onScreenSharing(screenStream: Object, sipSession: Session, callSession: ?CallSession, localStream: ?Object) {
