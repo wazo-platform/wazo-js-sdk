@@ -223,7 +223,7 @@ class Phone extends Emitter {
   }
 
   async reinvite(callSession: CallSession, constraints: Object = null, conference: boolean = false) {
-    return this.phone ? this.phone.sendReinvite(this.phone.findSipSession(callSession), constraints, conference) : null;
+    return this.phone ? this.phone.sendReinvite(callSession, constraints, conference) : null;
   }
 
   useLocalVideoElement(element: HTMLVideoElement) {

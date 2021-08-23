@@ -1161,7 +1161,7 @@ export default class WebRTCClient extends Emitter {
     sipSession.sessionDescriptionHandler._localMediaStream = newStream;
 
     // Update the local video element
-    this._setupMedias(sipSessionId, newStream);
+    this._setupMedias(sipSession, newStream);
   }
 
   getMediaConfiguration(enableVideo: boolean, conference: boolean = false, screenSharing: boolean = false,
@@ -1483,7 +1483,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     const isVideo = this.getRemoteVideoStreams(sessionId).length;
-    const element = this.localVideoElement || this.audioElements[this.getSipSessionId(session)];
+    const localElement = this._getLocalHtmlElement(this.getSipSessionId(session));
     // in video call => send local stream in the local videoElement
     const stream = isVideo ? newStream || this.getLocalStream(sessionId) : this.getRemoteAudioStreams(sessionId)[0];
 
@@ -1491,12 +1491,17 @@ export default class WebRTCClient extends Emitter {
       return;
     }
 
-    if (element.currentTime > 0 && !element.paused && !element.ended && element.readyState > 2) {
-      element.pause();
+    if (localElement.currentTime > 0 && !localElement.paused && !localElement.ended && localElement.readyState > 2) {
+      localElement.pause();
     }
-    element.srcObject = stream;
-    element.volume = this.audioOutputVolume;
-    element.play().catch(() => {});
+    localElement.srcObject = stream;
+    localElement.style.display = isVideo ? 'block' : 'none';
+    localElement.volume = this.audioOutputVolume;
+    localElement.play().catch(() => {});
+  }
+
+  _getLocalHtmlElement(sessionId: string) {
+    return this.localVideoElement || this.audioElements[sessionId];
   }
 
   _cleanupMedia(session: Session) {
