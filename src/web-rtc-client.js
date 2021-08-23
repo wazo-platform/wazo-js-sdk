@@ -1161,7 +1161,7 @@ export default class WebRTCClient extends Emitter {
     sipSession.sessionDescriptionHandler._localMediaStream = newStream;
 
     // Update the local video element
-    this._setupLocalMedia(sipSessionId, newStream);
+    this._setupMedias(sipSessionId, newStream);
   }
 
   getMediaConfiguration(enableVideo: boolean, conference: boolean = false, screenSharing: boolean = false,
@@ -1433,7 +1433,7 @@ export default class WebRTCClient extends Emitter {
 
     this.storeSipSession(session);
 
-    this._setupLocalMedia(session);
+    this._setupMedias(session);
 
     const onTrack = (event: any) => {
       // Stop video track in audio only mode
@@ -1461,13 +1461,13 @@ export default class WebRTCClient extends Emitter {
     return session.sessionDescriptionHandlerModifiersReInvite.find(modifier => modifier === deactivateVideoModifier);
   }
 
-  _setupLocalMedia(session: Session, newStream: ?MediaStream) {
+  _setupMedias(session: Session, newStream: ?MediaStream) {
     // Safari hack, because you cannot call .play() from a non user action
-    const id = this.getSipSessionId(session);
+    const sessionId = this.getSipSessionId(session);
 
-    if (!this.localVideoElement && this._hasAudio() && this._isWeb() && !(id in this.audioElements)) {
+    if (!this.localVideoElement && this._hasAudio() && this._isWeb() && !(sessionId in this.audioElements)) {
       const audio: any = document.createElement('audio');
-      audio.setAttribute('id', `audio-${id}`);
+      audio.setAttribute('id', `audio-${sessionId}`);
 
       if (audio.setSinkId && this.audioOutputDeviceId) {
         audio.setSinkId(this.audioOutputDeviceId);
@@ -1476,24 +1476,25 @@ export default class WebRTCClient extends Emitter {
       if (document.body) {
         document.body.appendChild(audio);
       }
-      this.audioElements[id] = audio;
+      this.audioElements[sessionId] = audio;
     } else if (this.localVideoElement && this.audioOutputDeviceId) {
       // $FlowFixMe
       this.localVideoElement.setSinkId(this.audioOutputDeviceId);
     }
 
-    const sessionId = this.getSipSessionId(session);
-    const localStream = newStream || this.getLocalStream(sessionId);
+    const isVideo = this.getRemoteVideoStreams(sessionId).length;
+    const element = this.localVideoElement || this.audioElements[this.getSipSessionId(session)];
+    // in video call => send local stream in the local videoElement
+    const stream = isVideo ? newStream || this.getLocalStream(sessionId) : this.getRemoteAudioStreams(sessionId)[0];
 
-    if (!this._isWeb() || !localStream) {
+    if (!this._isWeb() || !stream) {
       return;
     }
 
-    const element = this.localVideoElement || this.audioElements[this.getSipSessionId(session)];
     if (element.currentTime > 0 && !element.paused && !element.ended && element.readyState > 2) {
       element.pause();
     }
-    element.srcObject = localStream;
+    element.srcObject = stream;
     element.volume = this.audioOutputVolume;
     element.play().catch(() => {});
   }

@@ -327,7 +327,7 @@ class Phone extends Emitter {
   getRemoteAudioStreamForCall(callSession: CallSession) {
     logger.warn('Phone.getRemoteAudioStreamForCall is deprecated, use Phone.getRemoteAudioStreams instead');
 
-    return this.getRemoteAudioStreamForCall(callSession);
+    return this.getRemoteAudioStreams(callSession);
   }
 
   getCurrentSipSession() {
