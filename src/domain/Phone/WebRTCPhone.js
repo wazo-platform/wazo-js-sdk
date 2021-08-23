@@ -267,11 +267,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
         // No reinvite needed here
         return newStream;
       }
-    } else if (conference) {
-      await this.client.reinvite(sipSession, { audio: true, video: false }, conference);
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      if (conference) {
+        // Workaround to be able to re-upgrade in conference
+        await this.client.reinvite(sipSession, { audio: true, video: false }, conference);
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
-      sendReinviteMessage();
+        sendReinviteMessage();
+      }
     }
 
     // Force reinvite in SDH
