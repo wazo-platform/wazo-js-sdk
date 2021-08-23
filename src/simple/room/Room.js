@@ -2,7 +2,6 @@
 // @flow
 import type { Message } from 'sip.js/lib/api/message';
 import sdpParser from 'sdp-transform';
-import type { Session } from 'sip.js/lib/core/session';
 
 import type CallSession from '../../domain/CallSession';
 import getApiClient from '../../service/getApiClient';
@@ -240,6 +239,7 @@ class Room extends Emitter {
     this.name = name;
   }
 
+  // @TODO: change sipSession to callSession
   sendMessage(body: string, sipSession: any = null) {
     return Wazo.Phone.sendMessage(body, sipSession);
   }
@@ -356,22 +356,16 @@ class Room extends Emitter {
     Wazo.Phone.sendDTMF(tone, this.callSession);
   }
 
-  async sendReinvite(sipSession: Session, newConstraints: Object = null) {
-    logger.info('send room reinvite', { sipSession, newConstraints });
+  async sendReinvite(newConstraints: Object = null) {
+    logger.info('send room reinvite', { callId: this.callSession ? this.callSession.getId() : null, newConstraints });
 
-    await Wazo.Phone.phone.sendReinvite(sipSession, newConstraints, true);
+    await Wazo.Phone.phone.sendReinvite(this.callSession, newConstraints, true);
 
     if (this.localParticipant && newConstraints && newConstraints.video) {
-      const pc = sipSession.sessionDescriptionHandler.peerConnection;
-      pc.getSenders()
-        .filter(localSender => localSender.track && localSender.track.kind === 'video')
-        .forEach(localVideoSender => {
-          const mediaStream = new MediaStream();
-          mediaStream.addTrack(localVideoSender.track);
-          // $FlowFixMe
-          this._associateStreamTo(mediaStream, this.localParticipant);
-        });
-
+      const localVideoStream = Wazo.Phone.phone.getLocalVideoStream(this.callSession);
+      if (localVideoStream && this.localParticipant) {
+        this._associateStreamTo(localVideoStream, this.localParticipant);
+      }
     }
   }
 
@@ -461,7 +455,8 @@ class Room extends Emitter {
     labelMsidArray.forEach(({ label, msid }) => {
       this._callIdStreamIdMap[String(label)] = msid;
 
-      const participant = this._unassociatedParticipants[String(label)];
+      const callId = String(label);
+      const participant = this._unassociatedParticipants[callId] || this._getParticipantFromCallId(callId);
       if (participant) {
         this.__associateStreams(participant);
       }
@@ -550,6 +545,16 @@ class Room extends Emitter {
           logger.info('trigger room requester status', { origin });
           requester.triggerUpdate('REQUESTER_UPDATE');
         }
+        break;
+      }
+
+      case Wazo.Phone.ON_MESSAGE_TRACK_UPDATED: {
+        const { callId, update } = content;
+        const participantIdx = this.participants.findIndex(p => p.callId === callId);
+        if (participantIdx !== -1) {
+          this.participants[participantIdx] = this._onParticipantTrackUpdate(this.participants[participantIdx], update);
+        }
+
         break;
       }
 
@@ -673,6 +678,29 @@ class Room extends Emitter {
     if (this.localParticipant) {
       this.localParticipant.onStopScreensharing();
     }
+  }
+
+  _onParticipantTrackUpdate(oldParticipant: Participant, update: string): Participant {
+    const newParticipant = oldParticipant;
+
+    const label = this._callIdStreamIdMap[newParticipant.callId];
+    const pc = Wazo.Phone.phone.currentSipSession.sessionDescriptionHandler.peerConnection;
+    const stream = pc.getRemoteStreams().find(otherStream => otherStream.getTracks().some(track => track.id === label));
+
+    if (update === 'downgrade') {
+      newParticipant.streams = [];
+      newParticipant.videoStreams = [];
+      newParticipant.onStreamUnSubscribed(stream);
+
+      return newParticipant;
+    }
+
+    // Upgrade
+    if (stream) {
+      this._associateStreamTo(stream, newParticipant);
+    }
+
+    return newParticipant;
   }
 
   // Associate audio/video streams to the participant and triggers events on it

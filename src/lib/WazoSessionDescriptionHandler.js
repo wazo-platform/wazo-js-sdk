@@ -119,11 +119,6 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       .then(description => {
         const { sdp } = description;
 
-        // Stop local video stream directly when entering a conference in audio mode
-        if (isConference && !options.enableVideo) {
-          this.peerConnection.getSenders()[1].track.stop();
-        }
-
         // Check if we got ICEs
         if (sdp.indexOf('a=candidate') !== -1) {
           return description;

@@ -193,14 +193,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.useLocalVideoElement(element);
   }
 
-  async sendReinvite(sipSession: Session, constraints: ?Object = null, conference: boolean = false) {
+  async sendReinvite(callSession: ?CallSession, constraints: ?Object = null, conference: boolean = false) {
+    const sipSession = this.findSipSession(callSession);
     logger.info('WebRTC phone - send reinvite', { sessionId: sipSession ? sipSession.id : null, constraints });
 
     if (!sipSession) {
       return;
     }
 
-    const sipSessionId = this.getSipSessionId(sipSession);
     const shouldScreenShare = constraints && constraints.screen;
     // $FlowFixMe
     const isUpgrade = shouldScreenShare || (constraints && constraints.video);
@@ -211,9 +211,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
         this.sendMessage(sipSession, JSON.stringify({
           type: MESSAGE_TYPE_SIGNAL,
           content: {
-            action: ON_MESSAGE_TRACK_UPDATED,
+            type: ON_MESSAGE_TRACK_UPDATED,
             update: isUpgrade ? 'update' : 'downgrade',
-            sipSessionId: this.getSipSessionId(sipSession),
+            sipCallId: this.getSipSessionId(sipSession),
+            callId: callSession ? callSession.callId : null,
           },
         }));
       }, 2500);
@@ -247,7 +248,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       const emptySender = pc.getSenders().find(sender => sender.track === null);
 
       // Reuse bidirectional video stream
-      if (emptySender) {
+      if (emptySender && !conference) {
         const newStream = await this._getStreamFromConstraints(constraints);
         if (!newStream) {
           throw new Error(`Can't create media stream with: ${JSON.stringify(constraints || {})}`);
@@ -260,13 +261,17 @@ export default class WebRTCPhone extends Emitter implements Phone {
         sendReinviteMessage();
 
         if (shouldScreenShare) {
-          const callSession = this.callSessions[sipSessionId];
           this._onScreenSharing(newStream, sipSession, callSession, null);
         }
 
         // No reinvite needed here
         return newStream;
       }
+    } else if (conference) {
+      await this.client.reinvite(sipSession, { audio: true, video: false }, conference);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      sendReinviteMessage();
     }
 
     // Force reinvite in SDH
@@ -455,7 +460,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         } else {
           // When upgrading directly to screenshare (eg: we don't have a videoLocalStream to replace)
           // We have to downgrade to audio.
-          return this.sendReinvite(this.currentSipSession, { audio: true, video: false });
+          return this.sendReinvite(this.currentCallSession, { audio: true, video: false });
         }
       } else if (this.currentScreenShare.localStream) {
         await this.currentScreenShare.localStream.getVideoTracks().forEach(track => track.stop());
@@ -1261,7 +1266,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         && this.currentSipSession.state === SessionState.Established) {
         this.shouldSendReinvite = false;
         try {
-          this.sendReinvite(this.currentSipSession);
+          this.sendReinvite(this.currentCallSession);
         } catch (e) {
           logger.error('WebRTC reinvite after register, error', { message: e.message, stack: e.stack });
         }

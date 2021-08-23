@@ -1171,7 +1171,7 @@ export default class WebRTCClient extends Emitter {
         // Exact constraint are not supported with `getDisplayMedia` and we must have a video=false in desktop screenshare
         audio: screenSharing ? !isDesktop : this._getAudioConstraints(),
         video: screenSharing ? (isDesktop ? ({ mandatory: { chromeMediaSource: 'desktop' } }) : { cursor: 'always' })
-          : (conference ? this._getVideoConstraints(true) : this._getVideoConstraints(enableVideo)),
+          : this._getVideoConstraints(enableVideo),
         screen: screenSharing,
         desktop: isDesktop,
       },
