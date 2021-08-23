@@ -200,7 +200,7 @@ export default class ApiRequester {
       return newParse(response, isJson);
     }).catch(error => {
       if (this.shouldLogErrors) {
-        logger.error('Fetch failed', {url, options, message: error.message, stack: error.stack});
+        logger.error('Fetch failed', { url, options, message: error.message, stack: error.stack });
       }
 
       throw error;
