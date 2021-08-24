@@ -931,6 +931,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   reinvite(sipSession: Session, newConstraints: ?Object = null, conference: boolean = false) {
+    const wasMuted = this.isAudioMuted(sipSession);
     // When upgrading to video, remove the `deactivateVideoModifier` modifiers
     if (newConstraints && newConstraints.video) {
       const modifiers = sipSession.sessionDescriptionHandlerModifiersReInvite;
@@ -959,6 +960,11 @@ export default class WebRTCClient extends Emitter {
           } else {
             sipSession.incomingInviteRequest.message.body = response.message.body;
           }
+
+          if (wasMuted) {
+            this.mute(sipSession);
+          }
+
           this._onAccepted(sipSession, response.session, false);
 
           if (shouldDoScreenSharing) {

@@ -261,13 +261,7 @@ class Room extends Emitter {
       return null;
     }
 
-    screensharingStream.getVideoTracks()[0].onended = () => {
-      this.eventEmitter.emit(this.SCREEN_SHARE_ENDED);
-    };
-
-    if (this.localParticipant) {
-      this.localParticipant.onScreensharing();
-    }
+    this._onScreenSharing(screensharingStream);
 
     return screensharingStream;
   }
@@ -358,14 +352,23 @@ class Room extends Emitter {
 
   async sendReinvite(newConstraints: Object = null) {
     logger.info('send room reinvite', { callId: this.callSession ? this.callSession.getId() : null, newConstraints });
+    const wasScreensharing = this.localParticipant && this.localParticipant.screensharing;
+
+    Wazo.Phone.on(Wazo.Phone.ON_SHARE_SCREEN_STARTED, () => {
+      this._onScreenSharing(Wazo.Phone.phone.currentScreenShare.stream);
+    });
 
     await Wazo.Phone.phone.sendReinvite(this.callSession, newConstraints, true);
 
     if (this.localParticipant && newConstraints && newConstraints.video) {
       const localVideoStream = Wazo.Phone.phone.getLocalVideoStream(this.callSession);
-      if (localVideoStream && this.localParticipant) {
+      if (localVideoStream) {
+        // $FlowFixMe
         this._associateStreamTo(localVideoStream, this.localParticipant);
       }
+    } else if (this.localParticipant && wasScreensharing && newConstraints && !newConstraints.video) {
+      // Downgrade from screenshare to audio
+      this.localParticipant.onStopScreensharing();
     }
   }
 
@@ -431,6 +434,17 @@ class Room extends Emitter {
       participant.streams = participant.streams.filter(someStream => someStream.id !== stream.id);
       participant.onStreamUnSubscribed(stream);
     });
+  }
+
+  _onScreenSharing(screensharingStream: MediaStream) {
+    // eslint-disable-next-line no-param-reassign
+    screensharingStream.getVideoTracks()[0].onended = () => {
+      this.eventEmitter.emit(this.SCREEN_SHARE_ENDED);
+    };
+
+    if (this.localParticipant) {
+      this.localParticipant.onScreensharing();
+    }
   }
 
   _onReinvite(session: any, inviteRequest: any) {

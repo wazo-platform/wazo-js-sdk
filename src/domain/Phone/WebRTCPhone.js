@@ -86,6 +86,7 @@ export const events = [
   ON_PLAY_HANGUP_SOUND,
   ON_PLAY_PROGRESS_SOUND,
   ON_VIDEO_INPUT_CHANGE,
+  ON_SHARE_SCREEN_STARTED,
   ON_CALL_ERROR,
   ON_CHAT,
   ON_SIGNAL,
@@ -228,6 +229,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
       // Remove video senders
       pc.getSenders().filter(sender => sender.track && sender.track.kind === 'video').forEach(videoSender => {
+        const videoTransceiver = pc.getTransceivers().find(transceiver =>
+          transceiver.sender.track && videoSender.track && transceiver.sender.track.id === videoSender.track.id);
+
+        videoTransceiver.direction = 'recvonly';
+
         videoSender.replaceTrack(null);
       });
 
@@ -239,8 +245,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
       }
 
       sendReinviteMessage();
-      // No reinvite needed here
-      return;
+      // No reinvite needed in 1:1
+      if (!conference) {
+        return;
+      }
     }
     if (isUpgrade) {
       // Check if a video sender already exists
@@ -268,9 +276,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
         return newStream;
       }
       if (conference) {
+        // Avoid to reuse old constraints in `sdh.getLocalMediaStream` when setting video to false.
+        sipSession.sessionDescriptionHandler.localMediaStreamConstraints = null;
         // Workaround to be able to re-upgrade in conference
         await this.client.reinvite(sipSession, { audio: true, video: false }, conference);
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Wait for reinvite to be finished
+        await new Promise(resolve => this.on(ON_REINVITE, resolve));
 
         sendReinviteMessage();
       }
@@ -453,7 +464,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     try {
       if (this.currentScreenShare.stream) {
-        await this.currentScreenShare.stream.getVideoTracks().forEach(track => track.stop());
+        this.currentScreenShare.stream.getVideoTracks().forEach(track => track.stop());
       }
 
       if (restoreLocalStream) {
@@ -462,7 +473,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         } else {
           // When upgrading directly to screenshare (eg: we don't have a videoLocalStream to replace)
           // We have to downgrade to audio.
-          return this.sendReinvite(this.currentCallSession, { audio: true, video: false });
+          await this.sendReinvite(this.currentCallSession, { audio: true, video: false });
         }
       } else if (this.currentScreenShare.localStream) {
         await this.currentScreenShare.localStream.getVideoTracks().forEach(track => track.stop());
@@ -1438,7 +1449,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       cameraEnabled: fromSession ? fromSession.isCameraEnabled() : this.client.sessionWantsToDoVideo(sipSession),
       number,
       ringing: false,
-      muted: fromSession ? fromSession.isMuted() : false,
+      muted: fromSession ? fromSession.isMuted() : this.client.isAudioMuted(sipSession),
       videoMuted: fromSession ? fromSession.isVideoMuted() : false,
       recording: fromSession ? fromSession.isRecording() : false,
       recordingPaused: false, // @TODO
