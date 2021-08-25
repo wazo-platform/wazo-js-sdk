@@ -353,7 +353,9 @@ class Room extends Emitter {
     const wasScreensharing = this.localParticipant && this.localParticipant.screensharing;
 
     Wazo.Phone.on(Wazo.Phone.ON_SHARE_SCREEN_STARTED, () => {
-      this._onScreenSharing(Wazo.Phone.phone.currentScreenShare.stream);
+      if (Wazo.Phone.phone && Wazo.Phone.phone.currentScreenShare) {
+        this._onScreenSharing(Wazo.Phone.phone.currentScreenShare.stream);
+      }
     });
 
     await Wazo.Phone.phone.sendReinvite(this.callSession, newConstraints, true);
