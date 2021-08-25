@@ -420,7 +420,7 @@ export default class Contact {
 
     return new Contact({
       sourceId: single.id || '',
-      name: single.displayName,
+      name: single.displayName || '',
       number: numbers.length ? numbers[0].number : '',
       numbers,
       emails,
@@ -451,7 +451,7 @@ export default class Contact {
 
     return new Contact({
       sourceId: single.id || '',
-      name: single.name,
+      name: single.name || '',
       number: numbers.length ? numbers[0].number : '',
       numbers,
       emails,
@@ -552,7 +552,7 @@ export default class Contact {
   }: ContactArguments = {}) {
     this.id = id;
     this.uuid = uuid;
-    this.name = name;
+    this.name = name || '';
     this.number = number;
     this.numbers = numbers;
     this.email = email;
