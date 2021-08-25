@@ -1021,7 +1021,7 @@ export default class WebRTCClient extends Emitter {
   hasLocalVideo(sessionId: string): boolean {
     const stream = this.getLocalStream(sessionId);
 
-    return stream ? !!stream.getTracks().find(track => track.kind === 'video') : false;
+    return stream ? !!stream.getTracks().find(track => track.kind === 'video' && track.readyState !== 'ended') : false;
   }
 
   getRemoteStreams(sessionId: string): MediaStream[] {

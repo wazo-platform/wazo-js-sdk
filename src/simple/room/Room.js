@@ -44,7 +44,7 @@ class Room extends Emitter {
 
   CONFERENCE_USER_PARTICIPANT_JOINED: string;
   CONFERENCE_USER_PARTICIPANT_LEFT: string;
-  ON_SCREEN_SHARE_ENDED: string;
+  ON_SHARE_SCREEN_ENDING: string;
   ON_MESSAGE: string;
   ON_CHAT: string;
   ON_SIGNAL: string;
@@ -54,7 +54,6 @@ class Room extends Emitter {
   ON_DISCONNECTED: string;
   ON_JOINED: string;
   ON_VIDEO_INPUT_CHANGE: string;
-  SCREEN_SHARE_ENDED: string;
 
   /**
    *
@@ -97,7 +96,7 @@ class Room extends Emitter {
     // Sugar syntax for `room.EVENT_NAME`
     this.CONFERENCE_USER_PARTICIPANT_JOINED = Wazo.Websocket.CONFERENCE_USER_PARTICIPANT_JOINED;
     this.CONFERENCE_USER_PARTICIPANT_LEFT = Wazo.Websocket.CONFERENCE_USER_PARTICIPANT_LEFT;
-    this.ON_SCREEN_SHARE_ENDED = Wazo.Phone.ON_SCREEN_SHARE_ENDED;
+    this.ON_SHARE_SCREEN_ENDING = Wazo.Phone.ON_SHARE_SCREEN_ENDING;
     this.ON_MESSAGE = Wazo.Phone.ON_MESSAGE;
     this.ON_CHAT = Wazo.Phone.ON_CHAT;
     this.ON_SIGNAL = Wazo.Phone.ON_SIGNAL;
@@ -108,7 +107,6 @@ class Room extends Emitter {
     this.ON_VIDEO_INPUT_CHANGE = Wazo.Phone.ON_VIDEO_INPUT_CHANGE;
     this.ON_DISCONNECTED = 'room/ON_DISCONNECTED';
     this.ON_JOINED = 'room/ON_JOINED';
-    this.SCREEN_SHARE_ENDED = 'room/SCREEN_SHARE_ENDED';
 
     this._boundOnParticipantJoined = this._onParticipantJoined.bind(this);
     this._boundOnParticipantLeft = this._onParticipantLeft.bind(this);
@@ -439,7 +437,7 @@ class Room extends Emitter {
   _onScreenSharing(screensharingStream: MediaStream) {
     // eslint-disable-next-line no-param-reassign
     screensharingStream.getVideoTracks()[0].onended = () => {
-      this.eventEmitter.emit(this.SCREEN_SHARE_ENDED);
+      this._onScreenshareEnded();
     };
 
     if (this.localParticipant) {
@@ -688,7 +686,10 @@ class Room extends Emitter {
   }
 
   _onScreenshareEnded() {
-    this.eventEmitter.emit(this.ON_SCREEN_SHARE_ENDED);
+    this.stopScreenSharing();
+
+    this.eventEmitter.emit(this.ON_SHARE_SCREEN_ENDING);
+
     if (this.localParticipant) {
       this.localParticipant.onStopScreensharing();
     }

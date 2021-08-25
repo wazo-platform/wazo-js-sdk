@@ -50,6 +50,14 @@ class Stream {
     Stream.detachStream(this.htmlStream);
   }
 
+  hasVideo() {
+    if (!this.htmlStream) {
+      return false;
+    }
+
+    return this.htmlStream.getTracks().find(track => track.kind === 'video' && track.readyState !== 'ended');
+  }
+
   get id() {
     return this.htmlStream ? this.htmlStream.id : null;
   }
