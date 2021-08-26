@@ -473,7 +473,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         } else {
           // When upgrading directly to screenshare (eg: we don't have a videoLocalStream to replace)
           // We have to downgrade to audio.
-          await this.sendReinvite(this.currentCallSession, { audio: true, video: false });
+          await this.sendReinvite(callSession || this.currentCallSession, { audio: true, video: false });
         }
       } else if (this.currentScreenShare.localStream) {
         await this.currentScreenShare.localStream.getVideoTracks().forEach(track => track.stop());

@@ -44,7 +44,7 @@ class Room extends Emitter {
 
   CONFERENCE_USER_PARTICIPANT_JOINED: string;
   CONFERENCE_USER_PARTICIPANT_LEFT: string;
-  ON_SHARE_SCREEN_ENDING: string;
+  ON_SHARE_SCREEN_ENDED: string;
   ON_MESSAGE: string;
   ON_CHAT: string;
   ON_SIGNAL: string;
@@ -96,7 +96,7 @@ class Room extends Emitter {
     // Sugar syntax for `room.EVENT_NAME`
     this.CONFERENCE_USER_PARTICIPANT_JOINED = Wazo.Websocket.CONFERENCE_USER_PARTICIPANT_JOINED;
     this.CONFERENCE_USER_PARTICIPANT_LEFT = Wazo.Websocket.CONFERENCE_USER_PARTICIPANT_LEFT;
-    this.ON_SHARE_SCREEN_ENDING = Wazo.Phone.ON_SHARE_SCREEN_ENDING;
+    this.ON_SHARE_SCREEN_ENDED = Wazo.Phone.ON_SHARE_SCREEN_ENDED;
     this.ON_MESSAGE = Wazo.Phone.ON_MESSAGE;
     this.ON_CHAT = Wazo.Phone.ON_CHAT;
     this.ON_SIGNAL = Wazo.Phone.ON_SIGNAL;
@@ -206,7 +206,7 @@ class Room extends Emitter {
     Wazo.Phone.off(this.ON_MESSAGE, this._boundOnMessage);
     Wazo.Phone.off(this.ON_CHAT, this._boundOnChat);
     Wazo.Phone.off(this.ON_SIGNAL, this._boundOnSignal);
-    Wazo.Phone.off(this.ON_SCREEN_SHARE_ENDED, this._boundOnScreenshareEnded);
+    Wazo.Phone.off(this.ON_SHARE_SCREEN_ENDED, this._boundOnScreenshareEnded);
     Wazo.Phone.off(this.ON_VIDEO_INPUT_CHANGE, this._boundSaveLocalVideoStream);
     Wazo.Phone.phone.off(Wazo.Phone.phone.client.ON_REINVITE, this._boundOnReinvite);
     Wazo.Websocket.off(this.CONFERENCE_USER_PARTICIPANT_JOINED, this._boundOnParticipantJoined);
@@ -485,7 +485,7 @@ class Room extends Emitter {
     Wazo.Phone.on(this.ON_MESSAGE, this._boundOnMessage);
     Wazo.Phone.on(this.ON_CHAT, this._boundOnChat);
     Wazo.Phone.on(this.ON_SIGNAL, this._boundOnSignal);
-    Wazo.Phone.on(this.ON_SCREEN_SHARE_ENDED, this._boundOnScreenshareEnded);
+    Wazo.Phone.on(this.ON_SHARE_SCREEN_ENDED, this._boundOnScreenshareEnded);
     Wazo.Phone.on(this.ON_VIDEO_INPUT_CHANGE, this._boundSaveLocalVideoStream);
 
     [this.ON_AUDIO_STREAM, this.ON_VIDEO_STREAM, this.ON_REMOVE_STREAM].forEach(event =>
@@ -690,7 +690,7 @@ class Room extends Emitter {
   _onScreenshareEnded() {
     this.stopScreenSharing();
 
-    this.eventEmitter.emit(this.ON_SHARE_SCREEN_ENDING);
+    this.eventEmitter.emit(this.ON_SHARE_SCREEN_ENDED);
 
     if (this.localParticipant) {
       this.localParticipant.onStopScreensharing();
