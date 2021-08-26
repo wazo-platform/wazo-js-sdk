@@ -50,11 +50,16 @@ describe('Retrieving headers', () => {
 });
 
 describe('Calling fetch', () => {
-  it('should call fetch without body but query string in get method', () => {
+  it('should call fetch without body but query string in get method', async () => {
     jest.mock('node-fetch/lib/index', () => {});
-    global.fetch = jest.fn(() => Promise.resolve({ json: () => Promise.resolve({}) }));
+    global.fetch = jest.fn(() => Promise.resolve({
+      json: () => Promise.resolve({}),
+      headers: {
+        get: () => '',
+      },
+    }));
 
-    new ApiRequester({ server }).call(path, method, body, {});
+    await new ApiRequester({ server }).call(path, method, body, {});
     expect(global.fetch).toBeCalledWith(url, { method: 'get', body: null, headers: {}, agent: null });
   });
 });
