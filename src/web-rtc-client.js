@@ -1,6 +1,6 @@
 // @flow
 /* eslint-disable class-methods-use-this, no-param-reassign, max-classes-per-file */
-/* global window, document, navigator */
+/* global window, document, navigator, CanvasCaptureMediaStreamTrack */
 import 'webrtc-adapter';
 import type InviterInviteOptions from 'sip.js/lib/api/inviter-invite-options';
 import type Invitation from 'sip.js/lib/api/invitation';
@@ -122,6 +122,7 @@ export default class WebRTCClient extends Emitter {
   heartbeatCb: ?Function;
   statsIntervals: Object;
   sipSessions: { [string]: Session };
+  conferences: { [string]: boolean };
 
   // sugar
   ON_USER_AGENT: string;
@@ -177,6 +178,7 @@ export default class WebRTCClient extends Emitter {
     this.statsIntervals = {};
     this.connectionPromise = null;
     this.sipSessions = {};
+    this.conferences = {};
 
     this._boundOnHeartbeat = this._onHeartbeat.bind(this);
     this.heartbeat = new Heartbeat(config.heartbeatDelay, config.heartbeatTimeout, config.maxHeartbeats);
@@ -442,9 +444,16 @@ export default class WebRTCClient extends Emitter {
 
     this._setupSession(session);
 
+    if (conference) {
+      this.conferences[this.getSipSessionId(session)] = true;
+    }
+
     const inviteOptions: InviterInviteOptions = {
       requestDelegate: {
-        onAccept: (response: IncomingResponse) => this._onAccepted(session, response.session, true),
+        onAccept: (response: IncomingResponse) => {
+          session.sessionDescriptionHandler.peerConnection.sfu = conference;
+          this._onAccepted(session, response.session, true);
+        },
         onReject: (response: IncomingResponse) => {
           logger.info('on call rejected', { id: session.id, fromTag: session.fromTag });
           this._stopSendingStats(session);
@@ -931,6 +940,14 @@ export default class WebRTCClient extends Emitter {
   }
 
   reinvite(sipSession: Session, newConstraints: ?Object = null, conference: boolean = false) {
+    if (!sipSession) {
+      return false;
+    }
+
+    if (sipSession.pendingReinvite) {
+      return false;
+    }
+
     const wasMuted = this.isAudioMuted(sipSession);
     // When upgrading to video, remove the `deactivateVideoModifier` modifiers
     if (newConstraints && newConstraints.video) {
@@ -946,9 +963,8 @@ export default class WebRTCClient extends Emitter {
 
     const shouldDoVideo = newConstraints ? newConstraints.video : this.sessionWantsToDoVideo(sipSession);
     const shouldDoScreenSharing = newConstraints && newConstraints.screen;
-    const isDesktop = newConstraints && newConstraints.desktop;
     // $FlowFixMe
-    const { constraints } = this.getMediaConfiguration(shouldDoVideo, conference, shouldDoScreenSharing, isDesktop);
+    const { constraints } = this.getMediaConfiguration(shouldDoVideo, conference, newConstraints);
 
     return sipSession.invite({
       requestDelegate: {
@@ -1020,8 +1036,13 @@ export default class WebRTCClient extends Emitter {
 
   hasLocalVideo(sessionId: string): boolean {
     const stream = this.getLocalStream(sessionId);
+    if (!stream) {
+      return false;
+    }
 
-    return stream ? !!stream.getTracks().find(track => track.kind === 'video' && track.readyState !== 'ended') : false;
+    return !!stream.getTracks().find(track => track.kind === 'video' && track.readyState !== 'ended'
+      // $FlowFixMe
+      && !(track instanceof CanvasCaptureMediaStreamTrack));
   }
 
   getRemoteStreams(sessionId: string): MediaStream[] {
@@ -1141,6 +1162,10 @@ export default class WebRTCClient extends Emitter {
     this.localVideoElement = element;
   }
 
+  getLocalVideoElement(): HTMLVideoElement {
+    return this.localVideoElement;
+  }
+
   storeSipSession(session: Session) {
     this.sipSessions[this.getSipSessionId(session)] = session;
   }
@@ -1153,6 +1178,16 @@ export default class WebRTCClient extends Emitter {
     return Object.keys(this.sipSessions);
   }
 
+  setLocalMediaStream(sipSessionId: string, newStream: MediaStream) {
+    const sipSession = this.sipSessions[sipSessionId];
+    if (!sipSession) {
+      return;
+    }
+
+    // eslint-disable-next-line no-underscore-dangle
+    sipSession.sessionDescriptionHandler._localMediaStream = newStream;
+  }
+
   updateLocalStream(sipSessionId: string, newStream: MediaStream) {
     const sipSession = this.sipSessions[sipSessionId];
     if (!sipSession) {
@@ -1163,23 +1198,26 @@ export default class WebRTCClient extends Emitter {
       this._cleanupStream(oldStream);
     }
 
-    // eslint-disable-next-line no-underscore-dangle
-    sipSession.sessionDescriptionHandler._localMediaStream = newStream;
+    this.setLocalMediaStream(sipSessionId, newStream);
 
     // Update the local video element
     this._setupMedias(sipSession, newStream);
   }
 
-  getMediaConfiguration(enableVideo: boolean, conference: boolean = false, screenSharing: boolean = false,
-    isDesktop: boolean = false): Object {
+  getMediaConfiguration(enableVideo: boolean, conference: boolean = false, constraints: ?Object = null): Object {
+    const screenSharing = constraints && 'screen' in constraints ? constraints.screen : false;
+    const isDesktop = constraints && 'desktop' in constraints ? constraints.desktop : false;
+    const withAudio = constraints && 'audio' in constraints ? constraints.audio : true;
+
     return {
       constraints: {
         // Exact constraint are not supported with `getDisplayMedia` and we must have a video=false in desktop screenshare
-        audio: screenSharing ? !isDesktop : this._getAudioConstraints(),
+        audio: screenSharing ? !isDesktop : (withAudio ? this._getAudioConstraints() : false),
         video: screenSharing ? (isDesktop ? ({ mandatory: { chromeMediaSource: 'desktop' } }) : { cursor: 'always' })
           : this._getVideoConstraints(enableVideo),
         screen: screenSharing,
         desktop: isDesktop,
+        conference,
       },
       enableVideo,
       conference,
@@ -1470,6 +1508,7 @@ export default class WebRTCClient extends Emitter {
   _setupMedias(session: Session, newStream: ?MediaStream) {
     // Safari hack, because you cannot call .play() from a non user action
     const sessionId = this.getSipSessionId(session);
+    const isConference = this._isConference(sessionId);
 
     if (!this.localVideoElement && this._hasAudio() && this._isWeb() && !(sessionId in this.audioElements)) {
       const audio: any = document.createElement('audio');
@@ -1494,6 +1533,11 @@ export default class WebRTCClient extends Emitter {
     const stream = isVideo ? newStream || this.getLocalStream(sessionId) : this.getRemoteAudioStreams(sessionId)[0];
 
     if (!this._isWeb() || !stream) {
+      return;
+    }
+
+    if (isConference) {
+      // Conference local stream is handled in Room
       return;
     }
 
@@ -1637,6 +1681,10 @@ export default class WebRTCClient extends Emitter {
         ...stats,
       });
     }, SEND_STATS_DELAY);
+  }
+
+  _isConference(sessionId: string) {
+    return sessionId in this.conferences;
   }
 
   _stopSendingStats(session: Session) {

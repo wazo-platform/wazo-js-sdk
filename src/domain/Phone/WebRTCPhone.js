@@ -1,5 +1,6 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable no-underscore-dangle */
+/* global document */
 // @flow
 import type { Message } from 'sip.js/lib/api/message';
 import type { Session } from 'sip.js/lib/core/session';
@@ -199,12 +200,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
     logger.info('WebRTC phone - send reinvite', { sessionId: sipSession ? sipSession.id : null, constraints });
 
     if (!sipSession) {
-      return;
+      return null;
     }
 
     const shouldScreenShare = constraints && constraints.screen;
     // $FlowFixMe
     const isUpgrade = shouldScreenShare || (constraints && constraints.video);
+    const pc = sipSession.sessionDescriptionHandler.peerConnection;
 
     const sendReinviteMessage = () => {
       // Have to send the message after a delay due to latency to update the remote peer
@@ -224,8 +226,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     // Release local video stream when downgrading to audio
     if (constraints && !isUpgrade) {
       const localVideoStream = sipSession.sessionDescriptionHandler.localMediaStream;
-      const videoTrack = localVideoStream.getVideoTracks();
-      const pc = sipSession.sessionDescriptionHandler.peerConnection;
+      const videoTracks = localVideoStream.getVideoTracks();
 
       // Remove video senders
       pc.getSenders().filter(sender => sender.track && sender.track.kind === 'video').forEach(videoSender => {
@@ -234,38 +235,52 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
         videoTransceiver.direction = 'recvonly';
 
-        videoSender.replaceTrack(null);
+        let emptyVideoTrack = null;
+        if (conference && document) {
+          // In conference mode, replace video track by an empty video track
+          const canvas = document.createElement('canvas');
+          [emptyVideoTrack] = canvas.captureStream().getTracks();
+        }
+
+        videoSender.replaceTrack(emptyVideoTrack);
       });
 
-      if (videoTrack.length > 0) {
-        const track = videoTrack[0];
-        track.enabled = false;
-        track.stop();
-        localVideoStream.removeTrack(track);
-      }
+      videoTracks.forEach(videoTrack => {
+        videoTrack.enabled = false;
+        videoTrack.stop();
+        localVideoStream.removeTrack(videoTrack);
+      });
 
       sendReinviteMessage();
-      // No reinvite needed in 1:1
-      if (!conference) {
-        return;
-      }
+
+      // No reinvite needed
+      return true;
     }
     if (isUpgrade) {
       // Check if a video sender already exists
-      const pc = sipSession.sessionDescriptionHandler.peerConnection;
-      const emptySender = pc.getSenders().find(sender => sender.track === null);
+      const videoSender = conference ? pc.getSenders().find(sender => sender.track && sender.track.kind === 'video')
+        : pc.getSenders().find(sender => sender.track === null);
 
       // Reuse bidirectional video stream
-      if (emptySender && !conference) {
+      if (videoSender) {
         const newStream = await this._getStreamFromConstraints(constraints);
         if (!newStream) {
           throw new Error(`Can't create media stream with: ${JSON.stringify(constraints || {})}`);
         }
 
-        const videoTracks = newStream.getVideoTracks();
-        emptySender.replaceTrack(videoTracks[0]);
+        // Add previous local audio track
+        if (constraints && !constraints.audio) {
+          const localVideoStream = sipSession.sessionDescriptionHandler.localMediaStream;
+          const localAudioTrack = localVideoStream.getTracks().find(track => track.kind === 'audio');
+          newStream.addTrack(localAudioTrack);
+        }
 
-        this.client.updateLocalStream(this.getSipSessionId(sipSession), newStream);
+        const videoTrack = newStream.getVideoTracks()[0];
+        if (videoTrack) {
+          videoSender.replaceTrack(videoTrack);
+        }
+
+        this.client.setLocalMediaStream(this.getSipSessionId(sipSession), newStream);
         sendReinviteMessage();
 
         if (shouldScreenShare) {
@@ -274,16 +289,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
         // No reinvite needed here
         return newStream;
-      }
-      if (conference) {
-        // Avoid to reuse old constraints in `sdh.getLocalMediaStream` when setting video to false.
-        sipSession.sessionDescriptionHandler.localMediaStreamConstraints = null;
-        // Workaround to be able to re-upgrade in conference
-        await this.client.reinvite(sipSession, { audio: true, video: false }, conference);
-        // Wait for reinvite to be finished
-        await new Promise(resolve => this.on(ON_REINVITE, resolve));
-
-        sendReinviteMessage();
       }
     }
 
@@ -473,7 +478,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         } else {
           // When upgrading directly to screenshare (eg: we don't have a videoLocalStream to replace)
           // We have to downgrade to audio.
-          await this.sendReinvite(callSession || this.currentCallSession, { audio: true, video: false });
+          await this.sendReinvite(callSession || this.currentCallSession, { audio: false, video: false });
         }
       } else if (this.currentScreenShare.localStream) {
         await this.currentScreenShare.localStream.getVideoTracks().forEach(track => track.stop());
@@ -494,10 +499,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   async _getStreamFromConstraints(constraints: Object, conference: boolean = false): Promise<?MediaStream> {
     const video = constraints && constraints.video;
-    const screen = constraints && constraints.screen;
-    const desktop = constraints && constraints.desktop;
     // $FlowFixMe
-    const { constraints: newConstraints } = this.client.getMediaConfiguration(video, conference, screen, desktop);
+    const { constraints: newConstraints } = this.client.getMediaConfiguration(video, conference, constraints);
 
     const newStream = await wazoMediaStreamFactory(newConstraints);
     if (!newStream) {

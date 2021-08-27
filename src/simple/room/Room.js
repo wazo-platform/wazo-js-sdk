@@ -358,7 +358,7 @@ class Room extends Emitter {
       }
     });
 
-    await Wazo.Phone.phone.sendReinvite(this.callSession, newConstraints, true);
+    const response = await Wazo.Phone.phone.sendReinvite(this.callSession, newConstraints, true);
 
     if (this.localParticipant && newConstraints && newConstraints.video) {
       const localVideoStream = Wazo.Phone.phone.getLocalVideoStream(this.callSession);
@@ -370,6 +370,8 @@ class Room extends Emitter {
       // Downgrade from screenshare to audio
       this.localParticipant.onStopScreensharing();
     }
+
+    return response;
   }
 
   _bindEvents() {
@@ -394,12 +396,21 @@ class Room extends Emitter {
 
       this.audioStream = stream;
       if (document.createElement) {
-        this.roomAudioElement = document.createElement('audio');
+        // $FlowFixMe
+        let roomAudioElement: HTMLAudioElement = document.getElementById('audio-room');
+        if (!this.roomAudioElement) {
+          roomAudioElement = document.createElement('audio');
+          // $FlowFixMe
+          document.body.appendChild(roomAudioElement);
+        }
+        if (!roomAudioElement) {
+          return;
+        }
+        this.roomAudioElement = roomAudioElement;
         this.roomAudioElement.srcObject = stream;
         this.roomAudioElement.autoplay = true;
-        if (document.body) {
-          document.body.appendChild(this.roomAudioElement);
-        }
+        this.roomAudioElement.id = 'audio-room';
+
         // $FlowFixMe
         if (this.roomAudioElement.setSinkId) {
           // $FlowFixMe

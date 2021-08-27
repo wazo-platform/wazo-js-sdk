@@ -1,4 +1,4 @@
-/* global RTCSessionDescriptionInit, navigator */
+/* global RTCSessionDescriptionInit, navigator, document */
 // @flow
 import EventEmitter from 'events';
 
@@ -34,7 +34,16 @@ export const wazoMediaStreamFactory = (constraints: Object): Promise<MediaStream
     return navigator.mediaDevices.getDisplayMedia.call(navigator.mediaDevices, constraints);
   }
 
-  return navigator.mediaDevices.getUserMedia.call(navigator.mediaDevices, constraints);
+  return navigator.mediaDevices.getUserMedia.call(navigator.mediaDevices, constraints).then(stream => {
+    if (constraints.conference && !constraints.video) {
+      // Add empty video track when entering a SFU call without video
+      const canvas = document.createElement('canvas');
+      const emptyVideoTrack = canvas.captureStream().getTracks()[0];
+      stream.addTrack(emptyVideoTrack);
+    }
+
+    return stream;
+  });
 };
 
 class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
@@ -148,62 +157,6 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         this.logger.error(`SessionDescriptionHandler.getDescription failed - ${error}`);
         throw error;
       });
-  }
-
-  // Overridden to avoid to use peerConnection.getReceivers and peerConnection.getSenders in react-native
-  setLocalMediaStream(stream: MediaStream): Promise<void> {
-    if (this.isWeb) {
-      return super.setLocalMediaStream(stream);
-    }
-    this.logger.debug('SessionDescriptionHandler.setLocalMediaStream');
-
-    if (!this._peerConnection) {
-      throw new Error('Peer connection undefined.');
-    }
-    const pc = this._peerConnection;
-    const localStream = this._localMediaStream;
-    const trackUpdates: Array<Promise<void>> = [];
-
-    const updateTrack = (newTrack: MediaStreamTrack): void => {
-      const { kind } = newTrack;
-      if (kind !== 'audio' && kind !== 'video') {
-        throw new Error(`Unknown new track kind ${kind}.`);
-      }
-
-      trackUpdates.push(
-        new Promise((resolve) => {
-          this.logger.debug(`SessionDescriptionHandler.setLocalMediaStream - adding sender ${kind} track`);
-          resolve();
-        }).then(() => {
-          // Review: could make streamless tracks a configurable option?
-          // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/addTrack#Usage_notes
-          try {
-            pc.addStream(localStream);
-          } catch (error) {
-            wazoLogger.error('set local stream error', error);
-
-            this.logger.error(`SessionDescriptionHandler.setLocalMediaStream - failed to add sender ${kind} track`);
-            throw error;
-          }
-          localStream.addTrack(newTrack);
-          SessionDescriptionHandler.dispatchAddTrackEvent(localStream, newTrack);
-        }),
-      );
-    };
-
-    // update peer connection audio tracks
-    const audioTracks = stream.getAudioTracks();
-    if (audioTracks.length) {
-      updateTrack(audioTracks[0]);
-    }
-
-    // update peer connection video tracks
-    const videoTracks = stream.getVideoTracks();
-    if (videoTracks.length) {
-      updateTrack(videoTracks[0]);
-    }
-
-    return trackUpdates.reduce((p, x) => p.then(() => x), Promise.resolve());
   }
 
   // Overridden to avoid to use peerConnection.getReceivers and peerConnection.getSenders in react-native
@@ -405,6 +358,88 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         return Promise.reject(new Error(`Invalid signaling state ${this._peerConnection.signalingState}`));
     }
     return Promise.resolve();
+  }
+
+  // Overridden to not reuse video track in SFU mode
+  setLocalMediaStream(stream: MediaStream) {
+    this.logger.debug('SessionDescriptionHandler.setLocalMediaStream');
+
+    if (!this._peerConnection) {
+      throw new Error('Peer connection undefined.');
+    }
+    const pc = this._peerConnection;
+    const { sfu } = pc;
+    const localStream = this._localMediaStream;
+
+    const trackUpdates: Array<Promise<void>> = [];
+
+    const updateTrack = (newTrack: MediaStreamTrack): void => {
+      const { kind } = newTrack;
+      if (kind !== 'audio' && kind !== 'video') {
+        throw new Error(`Unknown new track kind ${kind}.`);
+      }
+      const sender = pc.getSenders().find((otherSender) => otherSender.track && otherSender.track.kind === kind);
+
+      // Do not reuse sender tracks in SFU
+      if (sender && !sfu) {
+        trackUpdates.push(
+          new Promise((resolve) => {
+            this.logger.debug(`SessionDescriptionHandler.setLocalMediaStream - replacing sender ${kind} track`);
+            resolve();
+          }).then(() =>
+            sender
+              .replaceTrack(newTrack)
+              .then(() => {
+                const oldTrack = localStream.getTracks().find((localTrack) => localTrack.kind === kind);
+                if (oldTrack) {
+                  oldTrack.stop();
+                  localStream.removeTrack(oldTrack);
+                  SessionDescriptionHandler.dispatchRemoveTrackEvent(localStream, oldTrack);
+                }
+                localStream.addTrack(newTrack);
+                SessionDescriptionHandler.dispatchAddTrackEvent(localStream, newTrack);
+              })
+              .catch((error: Error) => {
+                this.logger.error(
+                  `SessionDescriptionHandler.setLocalMediaStream - failed to replace sender ${kind} track`,
+                );
+                throw error;
+              })),
+        );
+      } else {
+        trackUpdates.push(
+          new Promise((resolve) => {
+            this.logger.debug(`SessionDescriptionHandler.setLocalMediaStream - adding sender ${kind} track`);
+            resolve();
+          }).then(() => {
+            // Review: could make streamless tracks a configurable option?
+            // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/addTrack#Usage_notes
+            try {
+              pc.addTrack(newTrack, localStream);
+            } catch (error) {
+              this.logger.error(`SessionDescriptionHandler.setLocalMediaStream - failed to add sender ${kind} track`);
+              throw error;
+            }
+            localStream.addTrack(newTrack);
+            SessionDescriptionHandler.dispatchAddTrackEvent(localStream, newTrack);
+          }),
+        );
+      }
+    };
+
+    // update peer connection audio tracks
+    const audioTracks = stream.getAudioTracks();
+    if (audioTracks.length) {
+      updateTrack(audioTracks[0]);
+    }
+
+    // update peer connection video tracks
+    const videoTracks = stream.getVideoTracks();
+    if (videoTracks.length) {
+      updateTrack(videoTracks[0]);
+    }
+
+    return trackUpdates.reduce((p, x) => p.then(() => x), Promise.resolve());
   }
 }
 
