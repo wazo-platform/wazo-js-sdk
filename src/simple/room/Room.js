@@ -30,14 +30,12 @@ class Room extends Emitter {
   _unassociatedParticipants: Object;
   _boundOnParticipantJoined: Function;
   _boundOnParticipantLeft: Function;
-  _boundOnScreenshareEnded: Function;
   _boundOnMessage: Function;
   _boundOnChat: Function;
   _boundOnSignal: Function;
   _boundSaveLocalVideoStream: Function;
   _boundOnReinvite: Function;
   audioStream: ?any;
-  audioElement: ?any;
   extra: Object;
   // video tag representing the room audio stream
   roomAudioElement: any;
@@ -113,7 +111,6 @@ class Room extends Emitter {
     this._boundOnMessage = this._onMessage.bind(this);
     this._boundOnChat = this._onChat.bind(this);
     this._boundOnSignal = this._onSignal.bind(this);
-    this._boundOnScreenshareEnded = this._onScreenshareEnded.bind(this);
     this._boundSaveLocalVideoStream = this._saveLocalVideoStream.bind(this);
     this._boundOnReinvite = this._onReinvite.bind(this);
 
@@ -206,7 +203,6 @@ class Room extends Emitter {
     Wazo.Phone.off(this.ON_MESSAGE, this._boundOnMessage);
     Wazo.Phone.off(this.ON_CHAT, this._boundOnChat);
     Wazo.Phone.off(this.ON_SIGNAL, this._boundOnSignal);
-    Wazo.Phone.off(this.ON_SHARE_SCREEN_ENDED, this._boundOnScreenshareEnded);
     Wazo.Phone.off(this.ON_VIDEO_INPUT_CHANGE, this._boundSaveLocalVideoStream);
     Wazo.Phone.phone.off(Wazo.Phone.phone.client.ON_REINVITE, this._boundOnReinvite);
     Wazo.Websocket.off(this.CONFERENCE_USER_PARTICIPANT_JOINED, this._boundOnParticipantJoined);
@@ -259,7 +255,7 @@ class Room extends Emitter {
       return null;
     }
 
-    this._onScreenSharing(screensharingStream);
+    this._onScreenSharing();
 
     return screensharingStream;
   }
@@ -354,7 +350,7 @@ class Room extends Emitter {
 
     Wazo.Phone.on(Wazo.Phone.ON_SHARE_SCREEN_STARTED, () => {
       if (Wazo.Phone.phone && Wazo.Phone.phone.currentScreenShare) {
-        this._onScreenSharing(Wazo.Phone.phone.currentScreenShare.stream);
+        this._onScreenSharing();
       }
     });
 
@@ -447,12 +443,7 @@ class Room extends Emitter {
     });
   }
 
-  _onScreenSharing(screensharingStream: MediaStream) {
-    // eslint-disable-next-line no-param-reassign
-    screensharingStream.getVideoTracks()[0].onended = () => {
-      this._onScreenshareEnded();
-    };
-
+  _onScreenSharing() {
     if (this.localParticipant) {
       this.localParticipant.onScreensharing();
     }
@@ -496,7 +487,6 @@ class Room extends Emitter {
     Wazo.Phone.on(this.ON_MESSAGE, this._boundOnMessage);
     Wazo.Phone.on(this.ON_CHAT, this._boundOnChat);
     Wazo.Phone.on(this.ON_SIGNAL, this._boundOnSignal);
-    Wazo.Phone.on(this.ON_SHARE_SCREEN_ENDED, this._boundOnScreenshareEnded);
     Wazo.Phone.on(this.ON_VIDEO_INPUT_CHANGE, this._boundSaveLocalVideoStream);
 
     [this.ON_AUDIO_STREAM, this.ON_VIDEO_STREAM, this.ON_REMOVE_STREAM].forEach(event =>

@@ -478,7 +478,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
         } else {
           // When upgrading directly to screenshare (eg: we don't have a videoLocalStream to replace)
           // We have to downgrade to audio.
-          await this.sendReinvite(callSession || this.currentCallSession, { audio: false, video: false });
+          const targetCallSession = callSession || this.currentCallSession;
+          const conference = this.isConference(targetCallSession);
+          await this.sendReinvite(targetCallSession, { audio: false, video: false }, conference);
         }
       } else if (this.currentScreenShare.localStream) {
         await this.currentScreenShare.localStream.getVideoTracks().forEach(track => track.stop());
@@ -1106,6 +1108,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   onConnectionMade(): void {}
+
+  isConference(callSession: ?CallSession): boolean {
+    if (!callSession) {
+      return false;
+    }
+
+    return this.client && this.client.isConference(callSession.sipCallId);
+  }
 
   async close(): Promise<void> {
     logger.info('WebRTC close');
