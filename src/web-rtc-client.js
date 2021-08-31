@@ -109,7 +109,6 @@ export default class WebRTCClient extends Emitter {
   audio: Object | boolean;
   audioElements: { [string]: HTMLAudioElement };
   video: Object | boolean;
-  localVideoElement: HTMLVideoElement;
   audioContext: ?AudioContext;
   audioStreams: Object;
   audioOutputDeviceId: ?string;
@@ -1158,14 +1157,6 @@ export default class WebRTCClient extends Emitter {
     this.userAgent.attemptReconnection();
   }
 
-  useLocalVideoElement(element: HTMLVideoElement) {
-    this.localVideoElement = element;
-  }
-
-  getLocalVideoElement(): HTMLVideoElement {
-    return this.localVideoElement;
-  }
-
   storeSipSession(session: Session) {
     this.sipSessions[this.getSipSessionId(session)] = session;
   }
@@ -1230,6 +1221,10 @@ export default class WebRTCClient extends Emitter {
         },
       },
     };
+  }
+
+  isConference(sessionId: string) {
+    return sessionId in this.conferences;
   }
 
   _onTransportError() {
@@ -1468,6 +1463,8 @@ export default class WebRTCClient extends Emitter {
         session.outgoingInviteRequest.message.body.body = inviteRequest.body;
       }
 
+      this._setupMedias(session);
+
       return this.eventEmitter.emit(ON_REINVITE, session, inviteRequest, updatedCalleeName, updatedNumber);
     };
   }
@@ -1510,7 +1507,7 @@ export default class WebRTCClient extends Emitter {
     const sessionId = this.getSipSessionId(session);
     const isConference = this.isConference(sessionId);
 
-    if (!this.localVideoElement && this._hasAudio() && this._isWeb() && !(sessionId in this.audioElements)) {
+    if (this._hasAudio() && this._isWeb() && !(sessionId in this.audioElements)) {
       const audio: any = document.createElement('audio');
       audio.setAttribute('id', `audio-${sessionId}`);
 
@@ -1522,15 +1519,10 @@ export default class WebRTCClient extends Emitter {
         document.body.appendChild(audio);
       }
       this.audioElements[sessionId] = audio;
-    } else if (this.localVideoElement && this.audioOutputDeviceId) {
-      // $FlowFixMe
-      this.localVideoElement.setSinkId(this.audioOutputDeviceId);
     }
 
-    const isVideo = this.getRemoteVideoStreams(sessionId).length;
-    const localElement = this._getLocalHtmlElement(this.getSipSessionId(session));
-    // in video call => send local stream in the local videoElement
-    const stream = isVideo ? newStream || this.getLocalStream(sessionId) : this.getRemoteAudioStreams(sessionId)[0];
+    const audioElement = this.audioElements[this.getSipSessionId(session)];
+    const stream = newStream || this.getRemoteAudioStreams(sessionId)[0];
 
     if (!this._isWeb() || !stream) {
       return;
@@ -1541,17 +1533,12 @@ export default class WebRTCClient extends Emitter {
       return;
     }
 
-    if (localElement.currentTime > 0 && !localElement.paused && !localElement.ended && localElement.readyState > 2) {
-      localElement.pause();
+    if (audioElement.currentTime > 0 && !audioElement.paused && !audioElement.ended && audioElement.readyState > 2) {
+      audioElement.pause();
     }
-    localElement.srcObject = stream;
-    localElement.style.display = isVideo ? 'block' : 'none';
-    localElement.volume = this.audioOutputVolume;
-    localElement.play().catch(() => {});
-  }
-
-  _getLocalHtmlElement(sessionId: string) {
-    return this.localVideoElement || this.audioElements[sessionId];
+    audioElement.srcObject = stream;
+    audioElement.volume = this.audioOutputVolume;
+    audioElement.play().catch(() => {});
   }
 
   _cleanupMedia(session: Session) {
@@ -1562,10 +1549,6 @@ export default class WebRTCClient extends Emitter {
     }
 
     const cleanLocalElement = id => {
-      if (this.localVideoElement) {
-        this.localVideoElement.srcObject = null;
-      }
-
       const element = this.audioElements[id];
       if (!element) {
         return;
@@ -1681,10 +1664,6 @@ export default class WebRTCClient extends Emitter {
         ...stats,
       });
     }, SEND_STATS_DELAY);
-  }
-
-  isConference(sessionId: string) {
-    return sessionId in this.conferences;
   }
 
   _stopSendingStats(session: Session) {

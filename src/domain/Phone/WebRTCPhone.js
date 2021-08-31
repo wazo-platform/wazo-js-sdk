@@ -1,6 +1,5 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable no-underscore-dangle */
-/* global document */
 // @flow
 import type { Message } from 'sip.js/lib/api/message';
 import type { Session } from 'sip.js/lib/core/session';
@@ -191,10 +190,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return true;
   }
 
-  useLocalVideoElement(element: HTMLVideoElement) {
-    this.client.useLocalVideoElement(element);
-  }
-
   async sendReinvite(callSession: ?CallSession, constraints: ?Object = null, conference: boolean = false) {
     const sipSession = this.findSipSession(callSession);
     logger.info('WebRTC phone - send reinvite', { sessionId: sipSession ? sipSession.id : null, constraints });
@@ -203,92 +198,20 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return null;
     }
 
-    const shouldScreenShare = constraints && constraints.screen;
     // $FlowFixMe
+    const shouldScreenShare = constraints && constraints.screen;
     const isUpgrade = shouldScreenShare || (constraints && constraints.video);
-    const pc = sipSession.sessionDescriptionHandler.peerConnection;
 
-    const sendReinviteMessage = () => {
-      // Have to send the message after a delay due to latency to update the remote peer
-      setTimeout(() => {
-        this.sendMessage(sipSession, JSON.stringify({
-          type: MESSAGE_TYPE_SIGNAL,
-          content: {
-            type: ON_MESSAGE_TRACK_UPDATED,
-            update: isUpgrade ? 'update' : 'downgrade',
-            sipCallId: this.getSipSessionId(sipSession),
-            callId: callSession ? callSession.callId : null,
-          },
-        }));
-      }, 2500);
-    };
-
-    // Release local video stream when downgrading to audio
+    // Downgrade
     if (constraints && !isUpgrade) {
-      const localVideoStream = sipSession.sessionDescriptionHandler.localMediaStream;
-      const videoTracks = localVideoStream.getVideoTracks();
-
-      // Remove video senders
-      pc.getSenders().filter(sender => sender.track && sender.track.kind === 'video').forEach(videoSender => {
-        const videoTransceiver = pc.getTransceivers().find(transceiver =>
-          transceiver.sender.track && videoSender.track && transceiver.sender.track.id === videoSender.track.id);
-
-        videoTransceiver.direction = 'recvonly';
-
-        let emptyVideoTrack = null;
-        if (conference && document) {
-          // In conference mode, replace video track by an empty video track
-          const canvas = document.createElement('canvas');
-          [emptyVideoTrack] = canvas.captureStream().getTracks();
-        }
-
-        videoSender.replaceTrack(emptyVideoTrack);
-      });
-
-      videoTracks.forEach(videoTrack => {
-        videoTrack.enabled = false;
-        videoTrack.stop();
-        localVideoStream.removeTrack(videoTrack);
-      });
-
-      sendReinviteMessage();
-
       // No reinvite needed
-      return true;
+      return this._downgradeToAudio(callSession);
     }
+
     if (isUpgrade) {
-      // Check if a video sender already exists
-      const videoSender = conference ? pc.getSenders().find(sender => sender.track && sender.track.kind === 'video')
-        : pc.getSenders().find(sender => sender.track === null);
-
-      // Reuse bidirectional video stream
-      if (videoSender) {
-        const newStream = await this._getStreamFromConstraints(constraints);
-        if (!newStream) {
-          throw new Error(`Can't create media stream with: ${JSON.stringify(constraints || {})}`);
-        }
-
-        // Add previous local audio track
-        if (constraints && !constraints.audio) {
-          const localVideoStream = sipSession.sessionDescriptionHandler.localMediaStream;
-          const localAudioTrack = localVideoStream.getTracks().find(track => track.kind === 'audio');
-          newStream.addTrack(localAudioTrack);
-        }
-
-        const videoTrack = newStream.getVideoTracks()[0];
-        if (videoTrack) {
-          videoSender.replaceTrack(videoTrack);
-        }
-
-        this.client.setLocalMediaStream(this.getSipSessionId(sipSession), newStream);
-        sendReinviteMessage();
-
-        if (shouldScreenShare) {
-          this._onScreenSharing(newStream, sipSession, callSession, null);
-        }
-
-        // No reinvite needed here
-        return newStream;
+      const shouldReinvite = await this._upgradeToVideo(callSession, constraints, conference);
+      if (!shouldReinvite) {
+        return;
       }
     }
 
@@ -362,6 +285,109 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return Promise.reject(new Error('No webrtc client'));
     }
     return this.client.onDisconnect();
+  }
+
+  _downgradeToAudio(callSession: ?CallSession) {
+    const sipSession = this.findSipSession(callSession);
+    if (!sipSession) {
+      return;
+    }
+
+    // Release local video stream when downgrading to audio
+    const localVideoStream = sipSession.sessionDescriptionHandler.localMediaStream;
+    const pc = sipSession.sessionDescriptionHandler.peerConnection;
+    const videoTracks = localVideoStream.getVideoTracks();
+
+    // Remove video senders
+    pc.getSenders().filter(sender => sender.track && sender.track.kind === 'video').forEach(videoSender => {
+      const videoTransceiver = pc.getTransceivers().find(transceiver =>
+        transceiver.sender.track && videoSender.track && transceiver.sender.track.id === videoSender.track.id);
+
+      videoTransceiver.direction = 'recvonly';
+
+      videoSender.replaceTrack(null);
+    });
+
+    videoTracks.forEach(videoTrack => {
+      videoTrack.enabled = false;
+      videoTrack.stop();
+      localVideoStream.removeTrack(videoTrack);
+    });
+
+    this._sendReinviteMessage(callSession, false);
+
+    return true;
+  }
+
+  // Returns true if we need to send a re-INVITE request
+  async _upgradeToVideo(callSession: ?CallSession, constraints: ?Object, isConference: boolean): Promise<boolean> {
+    const sipSession = this.findSipSession(callSession);
+    if (!sipSession) {
+      return Promise.resolve(false);
+    }
+
+    const pc = sipSession.sessionDescriptionHandler.peerConnection;
+    const shouldScreenShare = constraints && constraints.screen;
+
+    // Check if a video sender already exists
+    let videoSender;
+    if (isConference) {
+      // const msid = pc.getLocalStreams()[0].id;
+      const trans = pc.getTransceivers().find(transceiver => transceiver.mid === '1');
+      videoSender = trans.sender;
+    } else {
+      videoSender = pc.getSenders().find(sender => sender.track === null);
+    }
+
+    if (!videoSender) {
+      // When no video sender found, it means that we're in the first video upgrade in 1:1
+      return true;
+    }
+
+    // Reuse bidirectional video stream
+    const newStream = await this._getStreamFromConstraints(constraints);
+    if (!newStream) {
+      throw new Error(`Can't create media stream with: ${JSON.stringify(constraints || {})}`);
+    }
+
+    // Add previous local audio track
+    if (constraints && !constraints.audio) {
+      const localVideoStream = sipSession.sessionDescriptionHandler.localMediaStream;
+      const localAudioTrack = localVideoStream.getTracks().find(track => track.kind === 'audio');
+      newStream.addTrack(localAudioTrack);
+    }
+
+    const videoTrack = newStream.getVideoTracks()[0];
+    if (videoTrack) {
+      videoSender.replaceTrack(videoTrack);
+    }
+
+    this.client.setLocalMediaStream(this.getSipSessionId(sipSession), newStream);
+    this._sendReinviteMessage(callSession, true);
+
+    if (shouldScreenShare) {
+      this._onScreenSharing(newStream, sipSession, callSession, null);
+    }
+
+    // No reinvite needed here
+    return false;
+  }
+
+  _sendReinviteMessage(callSession: ?CallSession, isUpgrade: boolean) {
+    const sipSession = this.findSipSession(callSession);
+
+    // Have to send the message after a delay due to latency to update the remote peer
+    setTimeout(() => {
+      this.sendMessage(sipSession, JSON.stringify({
+        type: MESSAGE_TYPE_SIGNAL,
+        content: {
+          type: ON_MESSAGE_TRACK_UPDATED,
+          update: isUpgrade ? 'update' : 'downgrade',
+          sipCallId: this.getSipSessionId(sipSession),
+          callId: callSession ? callSession.callId : null,
+        },
+      }));
+    }, 2500);
   }
 
   _bindEvents(sipSession: Session) {

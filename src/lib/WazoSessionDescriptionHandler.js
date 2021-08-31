@@ -1,4 +1,4 @@
-/* global RTCSessionDescriptionInit, navigator, document */
+/* global RTCSessionDescriptionInit, navigator */
 // @flow
 import EventEmitter from 'events';
 
@@ -34,16 +34,7 @@ export const wazoMediaStreamFactory = (constraints: Object): Promise<MediaStream
     return navigator.mediaDevices.getDisplayMedia.call(navigator.mediaDevices, constraints);
   }
 
-  return navigator.mediaDevices.getUserMedia.call(navigator.mediaDevices, constraints).then(stream => {
-    if (constraints.conference && !constraints.video) {
-      // Add empty video track when entering a SFU call without video
-      const canvas = document.createElement('canvas');
-      const emptyVideoTrack = canvas.captureStream().getTracks()[0];
-      stream.addTrack(emptyVideoTrack);
-    }
-
-    return stream;
-  });
+  return navigator.mediaDevices.getUserMedia.call(navigator.mediaDevices, constraints);
 };
 
 class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
@@ -121,6 +112,12 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     return this.getLocalMediaStream(options)
       .then(() => this.updateDirection(options, isConference))
       .then(() => this.createDataChannel(options))
+      .then(() => {
+        if (isConference && !options.constraints.video) {
+          // Add a video an empty bundle to be able to replaceTrack when joining a conference without video
+          this.peerConnection.addTransceiver('video', { streams: [this._localMediaStream], direction: 'sendrecv' });
+        }
+      })
       .then(() => this.createLocalOfferOrAnswer(options))
       .then((sessionDescription) => this.setLocalSessionDescription(sessionDescription))
       .then(() => this.waitForIceGatheringComplete(iceRestart, iceTimeout))

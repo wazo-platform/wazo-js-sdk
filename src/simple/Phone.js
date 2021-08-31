@@ -226,10 +226,6 @@ class Phone extends Emitter {
     return this.phone ? this.phone.sendReinvite(callSession, constraints, conference) : null;
   }
 
-  useLocalVideoElement(element: HTMLVideoElement) {
-    return this.phone ? this.phone.useLocalVideoElement(element) : null;
-  }
-
   getSipSessionId(sipSession: Session): ?string {
     return this.phone ? this.phone.getSipSessionId(sipSession) : null;
   }
