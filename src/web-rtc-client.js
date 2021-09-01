@@ -1,6 +1,6 @@
 // @flow
 /* eslint-disable class-methods-use-this, no-param-reassign, max-classes-per-file */
-/* global window, document, navigator, CanvasCaptureMediaStreamTrack */
+/* global window, document, navigator */
 import 'webrtc-adapter';
 import type InviterInviteOptions from 'sip.js/lib/api/inviter-invite-options';
 import type Invitation from 'sip.js/lib/api/invitation';
@@ -649,7 +649,6 @@ export default class WebRTCClient extends Emitter {
   hold(session: Inviter, isConference: boolean = false) {
     const sessionId = this.getSipSessionId(session);
     logger.info('sdk webrtc hold', {
-      id: session.id,
       sessionId,
       keys: Object.keys(this.heldSessions),
       pendingReinvite: !!session.pendingReinvite,
@@ -663,14 +662,14 @@ export default class WebRTCClient extends Emitter {
     }
     this.heldSessions[sessionId] = true;
 
-    const hasVideo = this.sessionWantsToDoVideo(session);
+    const hasVideo = this.hasLocalVideo(sessionId);
 
     session.sessionDescriptionHandlerOptionsReInvite = {
       hold: true,
       conference: isConference,
     };
 
-    const options = this.getMediaConfiguration(hasVideo);
+    const options = this.getMediaConfiguration(hasVideo, isConference);
     if (!this._isWeb()) {
       options.sessionDescriptionHandlerModifiers = [holdModifier];
     }
@@ -680,8 +679,10 @@ export default class WebRTCClient extends Emitter {
   }
 
   unhold(session: Inviter, isConference: boolean = false) {
+    const sessionId = this.getSipSessionId(session);
+
     logger.info('sdk webrtc unhold', {
-      id: session.id,
+      sessionId,
       keys: Object.keys(this.heldSessions),
       pendingReinvite: !!session.pendingReinvite,
     });
@@ -690,7 +691,7 @@ export default class WebRTCClient extends Emitter {
       return Promise.resolve();
     }
 
-    const hasVideo = this.sessionWantsToDoVideo(session);
+    const hasVideo = this.hasVideo(sessionId);
 
     delete this.heldSessions[this.getSipSessionId(session)];
     session.sessionDescriptionHandlerOptionsReInvite = {
@@ -698,7 +699,7 @@ export default class WebRTCClient extends Emitter {
       conference: isConference,
     };
 
-    const options = this.getMediaConfiguration(hasVideo);
+    const options = this.getMediaConfiguration(hasVideo, isConference);
     if (!this._isWeb()) {
       // We should sent an empty `sessionDescriptionHandlerModifiers` or sip.js will take the last sent modifiers
       // (eg: holdModifier)
@@ -1039,9 +1040,7 @@ export default class WebRTCClient extends Emitter {
       return false;
     }
 
-    return !!stream.getTracks().find(track => track.kind === 'video' && track.readyState !== 'ended'
-      // $FlowFixMe
-      && !(track instanceof CanvasCaptureMediaStreamTrack));
+    return !!stream.getTracks().find(this._isVideoTrack);
   }
 
   getRemoteStreams(sessionId: string): MediaStream[] {
@@ -1064,7 +1063,7 @@ export default class WebRTCClient extends Emitter {
   getRemoteVideoStreams(sessionId: string): MediaStream[] {
     return this.getRemoteStreams(sessionId).filter(remoteStream => {
       const tracks = remoteStream.getTracks();
-      const videoTracks = tracks.filter(track => track.kind === 'video' && !track.muted);
+      const videoTracks = tracks.filter(this._isVideoTrack);
       return videoTracks.length;
     });
   }
@@ -1270,6 +1269,10 @@ export default class WebRTCClient extends Emitter {
 
   _isWeb() {
     return typeof window === 'object' && typeof document === 'object';
+  }
+
+  _isVideoTrack(track: MediaStreamTrack) {
+    return track.kind === 'video' && !track.muted && track.readyState === 'live' && 'width' in track.getSettings();
   }
 
   _hasAudio() {

@@ -1475,17 +1475,18 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const identity = sipSession ? sipSession.remoteIdentity || sipSession.assertedIdentity : null;
     const number = identity ? identity.uri._normal.user : null;
     const { state } = sipSession || {};
+    const sessionId = this.getSipSessionId(sipSession);
 
     const callSession = new CallSession({
       callId: fromSession && fromSession.callId,
-      sipCallId: this.getSipSessionId(sipSession),
+      sipCallId: sessionId,
       sipStatus: state,
       displayName: identity ? identity.displayName || number : number,
       startTime: fromSession ? fromSession.startTime : new Date(),
       answered: state === SessionState.Established,
       paused: this.client.isCallHeld(sipSession),
       isCaller: 'incoming' in extra ? !extra.incoming : false,
-      cameraEnabled: fromSession ? fromSession.isCameraEnabled() : this.client.sessionWantsToDoVideo(sipSession),
+      cameraEnabled: fromSession ? fromSession.isCameraEnabled() : this.client.hasVideo(sessionId),
       number,
       ringing: false,
       muted: fromSession ? fromSession.isMuted() : this.client.isAudioMuted(sipSession),

@@ -113,7 +113,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       .then(() => this.updateDirection(options, isConference))
       .then(() => this.createDataChannel(options))
       .then(() => {
-        if (isConference && !options.constraints.video) {
+        if (isConference && (options.constraints && !options.constraints.video) && !('hold' in options)) {
           // Add a video an empty bundle to be able to replaceTrack when joining a conference without video
           this.peerConnection.addTransceiver('video', { streams: [this._localMediaStream], direction: 'sendrecv' });
         }
