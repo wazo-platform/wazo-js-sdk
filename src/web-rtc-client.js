@@ -15,7 +15,6 @@ import type SessionDescriptionHandlerConfiguration
 import type SessionDescriptionHandler
   from 'sip.js/lib/platform/web/session-description-handler/session-description-handler';
 import { UserAgentState } from 'sip.js/lib/api/user-agent-state';
-import { Message } from 'sip.js/lib/api/message';
 import { Parser } from 'sip.js/lib/core/messages/parser';
 import { C } from 'sip.js/lib/core/messages/methods/constants';
 import { URI } from 'sip.js/lib/grammar/uri';
