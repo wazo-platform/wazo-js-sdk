@@ -274,7 +274,7 @@ export default class CTIPhone extends Emitter implements Phone {
 
   changeRingVolume() {}
 
-  isCallUsingVideo(): boolean {
+  hasVideo(): boolean {
     return false;
   }
 
@@ -282,8 +282,8 @@ export default class CTIPhone extends Emitter implements Phone {
     return null;
   }
 
-  getRemoteStreamForCall(): MediaStream[] {
-    return [];
+  getRemoteStreamForCall(): ?MediaStream {
+    return null;
   }
 
   setActiveSipSession() {}
@@ -314,16 +314,16 @@ export default class CTIPhone extends Emitter implements Phone {
     return null;
   }
 
-  getRemoteStreams() {
-    return [];
+  getRemoteStream() {
+    return null;
   }
 
-  getRemoteVideoStreams() {
-    return [];
+  getRemoteVideoStream() {
+    return null;
   }
 
-  getRemoteAudioStreams() {
-    return [];
+  getRemoteAudioStream() {
+    return null;
   }
 
   hasLocalVideo() {

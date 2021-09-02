@@ -58,7 +58,7 @@ export interface Phone {
 
   getOptions(): AvailablePhoneOptions;
 
-  getRemoteStreamForCall(callSession: CallSession): MediaStream[];
+  getRemoteStreamForCall(callSession: CallSession): ?MediaStream;
 
   ignore(callSession: CallSession): PhoneVoid;
 
@@ -76,7 +76,7 @@ export interface Phone {
 
   confirmCTIIndirectTransfer(transferId: string): PhoneVoid;
 
-  isCallUsingVideo(callSession: CallSession): boolean;
+  hasVideo(callSession: CallSession): boolean;
 
   isWebRTC(): boolean;
 

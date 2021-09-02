@@ -382,7 +382,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         type: MESSAGE_TYPE_SIGNAL,
         content: {
           type: ON_MESSAGE_TRACK_UPDATED,
-          update: isUpgrade ? 'update' : 'downgrade',
+          update: isUpgrade ? 'upgrade' : 'downgrade',
           sipCallId: this.getSipSessionId(sipSession),
           callId: callSession ? callSession.callId : null,
         },
@@ -617,7 +617,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
   _onCallTerminated(sipSession: Session) {
     logger.info('WebRTC phone - on call terminated', { sipId: sipSession.id });
 
-    this.client.onCallEnded(sipSession);
 
     const callSession = this._createCallSession(sipSession);
     const isCurrentSession = this.isCurrentCallSipSession(callSession);
@@ -656,6 +655,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
       shouldRetrigger,
       hasIncomingCallSession,
     });
+
+    this.client.onCallEnded(sipSession);
 
     if (hasIncomingCallSession && shouldRetrigger) {
       const nextCallSession = this.getIncomingCallSession();
@@ -728,8 +729,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return this.currentSipSession && this.getSipSessionId(this.currentSipSession) === callSession.getId();
   }
 
-  isCallUsingVideo(callSession: CallSession): boolean {
+  hasVideo(callSession: CallSession): boolean {
     return this.client.hasVideo(callSession.getId());
+  }
+
+  hasAVideoTrack(callSession: CallSession): boolean {
+    return this.client.hasAVideoTrack(callSession.getId());
   }
 
   // Deprecated
@@ -740,16 +745,16 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   // Deprecated
-  getRemoteStreamForCall(callSession: CallSession): MediaStream[] {
-    logger.warn('WebRTCPhone.getRemoteStreamForCall is deprecated, use WebRTCPhone.getRemoteVideoStreams instead');
+  getRemoteStreamForCall(callSession: CallSession): ?MediaStream {
+    logger.warn('WebRTCPhone.getRemoteStreamForCall is deprecated, use WebRTCPhone.getRemoteStream instead');
 
-    return this.getRemoteVideoStreams(callSession);
+    return this.getRemoteVideoStream(callSession);
   }
 
-  getRemoteStreamsForCall(callSession: CallSession): Object[] {
+  getRemoteStreamsForCall(callSession: CallSession): ?MediaStream {
     logger.warn('WebRTCPhone.getRemoteStreamsForCall is deprecated, use WebRTCPhone.getRemoteStreams instead');
 
-    return this.getRemoteStreams(callSession);
+    return this.getRemoteStream(callSession);
   }
 
   accept(callSession: CallSession, cameraEnabled?: boolean): Promise<string | null> {
@@ -1223,16 +1228,16 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return callSession ? this.client.hasLocalVideo(callSession.sipCallId) : null;
   }
 
-  getRemoteStreams(callSession: CallSession): MediaStream[] {
-    return callSession ? this.client.getRemoteStreams(callSession.sipCallId) : [];
+  getRemoteStream(callSession: CallSession): ?MediaStream {
+    return callSession ? this.client.getRemoteStream(callSession.sipCallId) : null;
   }
 
-  getRemoteAudioStreams(callSession: CallSession): MediaStream[] {
-    return callSession ? this.client.getRemoteAudioStreams(callSession.sipCallId) : [];
+  getRemoteVideoStream(callSession: CallSession): ?MediaStream {
+    return callSession ? this.client.getRemoteVideoStream(callSession.sipCallId) : null;
   }
 
-  getRemoteVideoStreams(callSession: CallSession): MediaStream[] {
-    return callSession ? this.client.getRemoteVideoStreams(callSession.sipCallId) : [];
+  hasRemoteVideo(callSession: CallSession): boolean {
+    return callSession ? this.client.hasRemoteVideo(callSession.sipCallId) : false;
   }
 
   setMediaConstraints(media: MediaStreamConstraints) {
@@ -1268,7 +1273,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     });
 
     this.client.on(this.client.ON_REINVITE, (...args) => {
-      logger.info('WebRTC reinvite', {
+      logger.info('WebRTC on reinvite', {
         sessionId: args[0].id,
         inviteId: args[1].id,
         updatedCalleeName: args[2],
@@ -1276,10 +1281,15 @@ export default class WebRTCPhone extends Emitter implements Phone {
       });
 
       const sipSession = args[0];
-      // Update callSession
-      this._createCallSession(sipSession);
 
-      this.eventEmitter.emit.apply(this.eventEmitter, [this.client.ON_REINVITE, ...args]);
+      // Give some time for the stream to be mounted.
+      // if `_createCallSession` is called too quickly `hasVideo` will return false because the stream doesn't exists yet
+      setTimeout(() => {
+        // Update callSession
+        this._createCallSession(sipSession, this.callSessions[this.getSipSessionId(sipSession)]);
+
+        this.eventEmitter.emit.apply(this.eventEmitter, [this.client.ON_REINVITE, ...args]);
+      }, 2000);
     });
 
     this.client.on(this.client.ACCEPTED, (sipSession: Session) => {
@@ -1353,9 +1363,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.eventEmitter.emit(ON_VIDEO_INPUT_CHANGE, stream);
     });
 
-    this.client.on(this.client.MESSAGE, (message: Message) => {
-      this._onMessage(message);
-      this.eventEmitter.emit(ON_MESSAGE, message);
+    this.client.on(this.client.MESSAGE, (message: Message, session: Session) => {
+      this._onMessage(message, session);
+      this.eventEmitter.emit(ON_MESSAGE, message, session);
     });
 
     // Used when upgrading directly in screenshare mode
@@ -1383,11 +1393,15 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return this.client.getSipSession(keys[keyIndex]);
   }
 
+  getCallSession(sipSessionId: string): ?CallSession {
+    return this.callSessions[sipSessionId];
+  }
+
   getSipSessionId(sipSession: Session) {
     return this.client.getSipSessionId(sipSession);
   }
 
-  _onMessage(message: Message) {
+  _onMessage(message: Message, session: Session) {
     if (!message || message.method !== 'MESSAGE') {
       return;
     }
@@ -1400,13 +1414,25 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return;
     }
 
-    switch (body.type) {
+    const { type, content } = body;
+
+    switch (type) {
       case MESSAGE_TYPE_CHAT:
-        this.eventEmitter.emit(ON_CHAT, body.content);
+        this.eventEmitter.emit(ON_CHAT, content);
         break;
 
       case MESSAGE_TYPE_SIGNAL: {
-        this.eventEmitter.emit(ON_SIGNAL, body.content);
+        if (content.type === ON_MESSAGE_TRACK_UPDATED) {
+          const sessionId = this.getSipSessionId(session);
+          this.client.updateRemoteStream(sessionId);
+
+          // Update callSession
+          if (session) {
+            this._createCallSession(session, this.callSessions[sessionId]);
+          }
+        }
+
+        this.eventEmitter.emit(ON_SIGNAL, content);
         break;
       }
 

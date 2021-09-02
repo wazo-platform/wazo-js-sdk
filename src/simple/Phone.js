@@ -284,28 +284,26 @@ class Phone extends Emitter {
   }
 
   getLocalMediaStream(callSession: CallSession) {
-    return this.phone && this.phone.getLocalMediaStream(callSession);
+    logger.warn('Phone.getLocalMediaStream is deprecated, use Phone.getLocalStream instead');
+
+    return this.phone && this.phone.getLocalStream(callSession);
   }
 
   getLocalVideoStream(callSession: CallSession) {
     return this.phone && this.phone.getLocalVideoStream(callSession);
   }
 
-  getRemoteStreams(callSession: CallSession) {
-    return this.phone ? this.phone.getRemoteStreams(callSession) : [];
+  getRemoteStream(callSession: CallSession) {
+    return this.phone ? this.phone.getRemoteStream(callSession) : null;
   }
 
-  getRemoteVideoStreams(callSession: CallSession) {
-    return this.phone ? this.phone.getRemoteVideoStreams(callSession) : [];
-  }
-
-  getRemoteAudioStreams(callSession: CallSession) {
-    return this.phone ? this.phone.getRemoteAudioStreams(callSession) : [];
+  getRemoteVideoStream(callSession: CallSession) {
+    return this.phone ? this.phone.getRemoteVideoStream(callSession) : null;
   }
 
   getRemoteStreamForCall(callSession: CallSession) {
-    logger.warn('Phone.getRemoteStreamForCall is deprecated, use Phone.getRemoteStreams instead');
-    return this.getRemoteStreams(callSession);
+    logger.warn('Phone.getRemoteStreamForCall is deprecated, use Phone.getRemoteStream instead');
+    return this.getRemoteStream(callSession);
   }
 
   // Returns remote streams directly from the peerConnection
@@ -315,15 +313,17 @@ class Phone extends Emitter {
   }
 
   getRemoteVideoStreamForCall(callSession: CallSession) {
-    logger.warn('Phone.getRemoteVideoStreamForCall is deprecated, use Phone.getRemoteVideoStreams instead');
+    logger.warn('Phone.getRemoteVideoStreamForCall is deprecated, use Phone.getRemoteVideoStream instead');
 
-    return this.getRemoteVideoStreams(callSession);
+    return this.getRemoteVideoStream(callSession);
   }
 
-  getRemoteAudioStreamForCall(callSession: CallSession) {
-    logger.warn('Phone.getRemoteAudioStreamForCall is deprecated, use Phone.getRemoteAudioStreams instead');
+  hasVideo(callSession: CallSession): boolean {
+    return this.phone ? this.phone.hasVideo(callSession) : false;
+  }
 
-    return this.getRemoteAudioStreams(callSession);
+  hasAVideoTrack(callSession: CallSession): boolean {
+    return this.phone ? this.phone.hasAVideoTrack(callSession) : false;
   }
 
   getCurrentSipSession() {
@@ -357,6 +357,16 @@ class Phone extends Emitter {
     return session.profile ? session.profile.sipLines : [];
   }
 
+  hasSfu() {
+    return this.sipLine && this.sipLine.hasVideoConference();
+  }
+
+  checkSfu() {
+    if (!this.hasSfu()) {
+      throw new Error('Sorry your user is not configured to support video conference');
+    }
+  }
+
   _transferEvents() {
     this.unbind();
     [...clientEvents, ...transportEvents].forEach(event => {
@@ -370,16 +380,6 @@ class Phone extends Emitter {
       }
       this.phone.on(event, (...args) => this.eventEmitter.emit.apply(this.eventEmitter, [event, ...args]));
     });
-  }
-
-  hasSfu() {
-    return this.sipLine && this.sipLine.hasVideoConference();
-  }
-
-  checkSfu() {
-    if (!this.hasSfu()) {
-      throw new Error('Sorry your user is not configured to support video conference');
-    }
   }
 }
 
