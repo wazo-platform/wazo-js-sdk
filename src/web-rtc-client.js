@@ -16,7 +16,8 @@ import type SessionDescriptionHandler
   from 'sip.js/lib/platform/web/session-description-handler/session-description-handler';
 import { UserAgentState } from 'sip.js/lib/api/user-agent-state';
 import { Message } from 'sip.js/lib/api/message';
-
+import { Parser } from 'sip.js/lib/core/messages/parser';
+import { C } from 'sip.js/lib/core/messages/methods/constants';
 import { URI } from 'sip.js/lib/grammar/uri';
 import { UserAgent } from 'sip.js/lib/api/user-agent';
 import { holdModifier } from 'sip.js/lib/platform/web/modifiers/modifiers';
@@ -232,7 +233,22 @@ export default class WebRTCClient extends Emitter {
       },
     };
 
-    return new UserAgent(webRTCConfiguration);
+    const ua = new UserAgent(webRTCConfiguration);
+    ua.transport.onMessage = (rawMessage: string) => {
+      const message = Parser.parseMessage(rawMessage, ua.transport.logger);
+
+      // We have to re-sent the message to the UA ...
+      ua.onTransportMessage(rawMessage);
+      // And now do what we want with the message
+      this.eventEmitter.emit(MESSAGE, message);
+
+      if (message && message.method === C.MESSAGE) {
+        // We have to manually reply to MESSAGE with a 200 OK or Asterisk will hangup.
+        ua.userAgentCore.replyStateless(message, { statusCode: 200 });
+      }
+    };
+
+    return ua;
   }
 
   isConnected(): boolean {
@@ -1473,7 +1489,8 @@ export default class WebRTCClient extends Emitter {
       };
     };
 
-    session.delegate.onInvite = (inviteRequest: IncomingRequestMessage) => {
+    session.delegate.onInvite = (request: IncomingRequestMessage) => {
+      const sipSessionId = this.getSipSessionId(session);
       let updatedCalleeName = null;
       let updatedNumber = null;
       if (session.assertedIdentity) {
@@ -1482,29 +1499,23 @@ export default class WebRTCClient extends Emitter {
       }
       logger.info('re-invite received', { updatedCalleeName, updatedNumber });
 
+      // Useful to know if it's a video upgrade or an unhold from a remote peer with a video stream
+      const hadRemoteVideo = this.hasARemoteVideoTrack(sipSessionId);
+
       // Update SDP
       // Remote video is handled by the `track` event. Here we're dealing with video stream removal.
       if (session.incomingInviteRequest) {
-        session.incomingInviteRequest.message.body = inviteRequest.body;
+        session.incomingInviteRequest.message.body = request.body;
       } else {
-        session.outgoingInviteRequest.message.body.body = inviteRequest.body;
+        session.outgoingInviteRequest.message.body.body = request.body;
       }
 
-      this.updateRemoteStream(this.getSipSessionId(session));
+      this.updateRemoteStream(sipSessionId);
 
       this._setupMedias(session);
 
-      return this.eventEmitter.emit(ON_REINVITE, session, inviteRequest, updatedCalleeName, updatedNumber);
+      return this.eventEmitter.emit(ON_REINVITE, session, request, updatedCalleeName, updatedNumber, hadRemoteVideo);
     };
-
-    session.delegate.onMessage = (message: Message) => {
-      this._onMessage(session, message);
-      message.incomingMessageRequest.accept();
-    };
-  }
-
-  _onMessage(session: Session, message: Message) {
-    this.eventEmitter.emit(MESSAGE, message.incomingMessageRequest.message, session);
   }
 
   _onAccepted(session: Session, sessionDialog?: SessionDialog, withEvent: boolean = true) {
