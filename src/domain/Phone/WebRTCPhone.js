@@ -617,7 +617,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
   _onCallTerminated(sipSession: Session) {
     logger.info('WebRTC phone - on call terminated', { sipId: sipSession.id });
 
-
     const callSession = this._createCallSession(sipSession);
     const isCurrentSession = this.isCurrentCallSipSession(callSession);
     const isCurrentIncomingCall = callSession.is(this.getIncomingCallSession());
