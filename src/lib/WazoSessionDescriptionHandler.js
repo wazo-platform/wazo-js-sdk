@@ -377,8 +377,8 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       }
       const sender = pc.getSenders().find((otherSender) => otherSender.track && otherSender.track.kind === kind);
 
-      // Do not reuse sender tracks in SFU
-      if (sender && !sfu) {
+      // Do not reuse sender video tracks in SFU
+      if (sender && (!sfu || newTrack.kind === 'audio')) {
         trackUpdates.push(
           new Promise((resolve) => {
             this.logger.debug(`SessionDescriptionHandler.setLocalMediaStream - replacing sender ${kind} track`);
