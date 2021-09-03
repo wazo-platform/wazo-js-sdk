@@ -456,7 +456,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         event.track.enabled = false;
       }
 
-      return this.eventEmitter.emit(ON_VIDEO_STREAM, stream, event.track.id, event);
+      return this.eventEmitter.emit(ON_VIDEO_STREAM, stream, event.track.id, event, sipSession);
     };
 
     peerConnection.onremovestream = event => {

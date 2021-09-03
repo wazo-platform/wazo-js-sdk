@@ -415,8 +415,10 @@ class Room extends Emitter {
       }
     });
 
-    this.on(this.ON_VIDEO_STREAM, (stream, streamId) => {
+    this.on(this.ON_VIDEO_STREAM, (stream, streamId, event, sipSession) => {
       logger.info('on room video stream', { streamId });
+
+      this._mapMsid(sipSession.body.body);
 
       // ON_VIDEO_STREAM is called before PARTICIPANT_JOINED, so we have to keep stream in `_unassociatedVideoStreams`.
       this._unassociatedVideoStreams[streamId] = stream;

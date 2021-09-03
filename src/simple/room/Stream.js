@@ -34,10 +34,7 @@ class Stream {
     element.onloadedmetadata = () => {
       const tracks = this.htmlStream ? this.htmlStream.getVideoTracks() : [];
       tracks.forEach(track => {
-        // Do not re-enable the track if already mounted.
-        if (!track.loaded) {
-          track.enabled = true;
-        }
+        track.enabled = true;
         // $FlowFixMe
         track.loaded = true;
       });
