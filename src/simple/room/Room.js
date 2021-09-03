@@ -423,7 +423,7 @@ class Room extends Emitter {
       // ON_VIDEO_STREAM is called before PARTICIPANT_JOINED, so we have to keep stream in `_unassociatedVideoStreams`.
       this._unassociatedVideoStreams[streamId] = stream;
 
-      const callId = this._getCallIdFromStreamId(streamId);
+      const callId = this._getCallIdFromTrackId(streamId);
       const participant = callId ? this._getParticipantFromCallId(callId) : null;
       if (participant) {
         this.__associateStreams(participant);
@@ -467,11 +467,12 @@ class Room extends Emitter {
     const sdp = sdpParser.parse(rawSdp);
     const labelMsidArray = sdp.media.filter(media => !!media.label).map(({ label, msid }) => ({
       label: String(label),
-      msid: msid.split(' ')[1],
+      streamId: msid.split(' ')[0],
+      trackId: msid.split(' ')[1],
     }));
 
-    labelMsidArray.forEach(({ label, msid }) => {
-      this._callIdStreamIdMap[String(label)] = msid;
+    labelMsidArray.forEach(({ label, streamId, trackId }) => {
+      this._callIdStreamIdMap[String(label)] = { streamId, trackId };
 
       const callId = String(label);
       const participant = this._unassociatedParticipants[callId] || this._getParticipantFromCallId(callId);
@@ -703,9 +704,9 @@ class Room extends Emitter {
   _onParticipantTrackUpdate(oldParticipant: Participant, update: string): Participant {
     const newParticipant = oldParticipant;
 
-    const label = this._callIdStreamIdMap[newParticipant.callId];
+    const { trackId } = this._callIdStreamIdMap[newParticipant.callId] || {};
     const pc = Wazo.Phone.phone.currentSipSession.sessionDescriptionHandler.peerConnection;
-    const stream = pc.getRemoteStreams().find(otherStream => otherStream.getTracks().some(track => track.id === label));
+    const stream = pc.getRemoteStreams().find(someStream => someStream.getTracks().some(track => track.id === trackId));
 
     if (update === 'downgrade') {
       newParticipant.streams = [];
@@ -725,21 +726,21 @@ class Room extends Emitter {
 
   // Associate audio/video streams to the participant and triggers events on it
   __associateStreams(participant: Participant) {
-    const streamId = this._callIdStreamIdMap[participant.callId];
-    if (!streamId) {
+    const { trackId } = this._callIdStreamIdMap[participant.callId] || {};
+    if (!trackId) {
       this._unassociatedParticipants[participant.callId] = participant;
 
       return;
     }
-    if (!streamId || !participant || !this.localParticipant || participant.callId === this.localParticipant.callId) {
+    if (!trackId || !participant || !this.localParticipant || participant.callId === this.localParticipant.callId) {
       return;
     }
 
-    if (this._unassociatedVideoStreams[streamId]) {
+    if (this._unassociatedVideoStreams[trackId]) {
       // Try to associate stream
-      this._associateStreamTo(this._unassociatedVideoStreams[streamId], participant);
+      this._associateStreamTo(this._unassociatedVideoStreams[trackId], participant);
 
-      delete this._unassociatedVideoStreams[streamId];
+      delete this._unassociatedVideoStreams[trackId];
       delete this._unassociatedParticipants[participant.callId];
     }
   }
@@ -752,8 +753,8 @@ class Room extends Emitter {
     participant.onStreamSubscribed(stream);
   }
 
-  _getCallIdFromStreamId(streamId: string) {
-    return Object.keys(this._callIdStreamIdMap).find(key => this._callIdStreamIdMap[key] === streamId);
+  _getCallIdFromTrackId(trackId: string) {
+    return Object.keys(this._callIdStreamIdMap).find(key => this._callIdStreamIdMap[key].trackId === trackId);
   }
 
   _getParticipantFromCallId(callId: string) {
