@@ -2,6 +2,7 @@
 import moment from 'moment';
 
 import CallLog from '../CallLog';
+import Recording from '../Recording';
 
 describe('CallLog domain', () => {
   it('can parse a plain call log to domain', () => {
@@ -22,6 +23,15 @@ describe('CallLog domain', () => {
           requested_extension: '',
           requested_name: '',
           id: 215,
+          recordings: [
+            {
+              deleted: false,
+              end_time: '2021-08-11T13:22:50.519733+00:00',
+              filename: '2021-08-11T13_22_45UTC-61886-xxxx-5c72-4072-8503-e3ad9a41c0a0.wav',
+              start_time: '2021-08-11T13:22:45.161954+00:00',
+              uuid: '0394ad6f-5c72-4072-8503-e3ad9a41c0a0',
+            },
+          ],
         },
       ],
       total: 233,
@@ -46,6 +56,15 @@ describe('CallLog domain', () => {
         duration: 4000,
         start: moment('2017-08-06T13:50:55.819057+00:00').toDate(),
         end: moment('2017-08-08T13:51:23.822529+00:00').toDate(),
+        recordings: [
+          new Recording({
+            deleted: false,
+            end: moment('2021-08-11T13:22:50.519733+00:00').toDate(),
+            fileName: '2021-08-11T13_22_45UTC-61886-xxxx-5c72-4072-8503-e3ad9a41c0a0.wav',
+            start: moment('2021-08-11T13:22:45.161954+00:00').toDate(),
+            uuid: '0394ad6f-5c72-4072-8503-e3ad9a41c0a0',
+          }),
+        ],
       }),
     ]);
   });
