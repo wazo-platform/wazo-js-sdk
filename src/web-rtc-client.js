@@ -19,7 +19,7 @@ import { Parser } from 'sip.js/lib/core/messages/parser';
 import { C } from 'sip.js/lib/core/messages/methods/constants';
 import { URI } from 'sip.js/lib/grammar/uri';
 import { UserAgent } from 'sip.js/lib/api/user-agent';
-import { holdModifier } from 'sip.js/lib/platform/web/modifiers/modifiers';
+import { holdModifier, stripVideo } from 'sip.js/lib/platform/web/modifiers/modifiers';
 import { Registerer } from 'sip.js/lib/api/registerer';
 import { Inviter } from 'sip.js/lib/api/inviter';
 import { Messager } from 'sip.js/lib/api/messager';
@@ -36,7 +36,7 @@ import Emitter from './utils/Emitter';
 import ApiClient from './api-client';
 import IssueReporter from './service/IssueReporter';
 import Heartbeat from './utils/Heartbeat';
-import { deactivateVideoModifier, hasAnActiveVideo } from './utils/sdp';
+import { hasAnActiveVideo } from './utils/sdp';
 
 // We need to replace 0.0.0.0 to 127.0.0.1 in the sdp to avoid MOH during a createOffer.
 export const replaceLocalIpModifier = (description: Object) => Promise.resolve({
@@ -431,9 +431,15 @@ export default class WebRTCClient extends Emitter {
 
   call(number: string, enableVideo?: boolean, audioOnly: boolean = false, conference: boolean = false): Session {
     logger.info('sdk webrtc creating call', { number, enableVideo, audioOnly });
-    const inviterOptions = {};
+    const inviterOptions: Object = {
+      sessionDescriptionHandlerOptionsReInvite: {
+        conference,
+        audioOnly,
+      },
+    };
+
     if (audioOnly) {
-      inviterOptions.sessionDescriptionHandlerModifiersReInvite = [deactivateVideoModifier];
+      inviterOptions.sessionDescriptionHandlerModifiersReInvite = [stripVideo];
     }
 
     const session = new Inviter(this.userAgent, this._makeURI(number), inviterOptions);
@@ -462,10 +468,11 @@ export default class WebRTCClient extends Emitter {
       sessionDescriptionHandlerOptions: this.getMediaConfiguration(enableVideo || false, conference),
     };
 
-    inviteOptions.sessionDescriptionHandlerModifiers = [replaceLocalIpModifier];
+    inviteOptions.sessionDescriptionHandlerOptions.audioOnly = audioOnly;
 
+    inviteOptions.sessionDescriptionHandlerModifiers = [replaceLocalIpModifier];
     if (audioOnly) {
-      inviteOptions.sessionDescriptionHandlerModifiers.push(deactivateVideoModifier);
+      inviteOptions.sessionDescriptionHandlerModifiers.push(stripVideo);
     }
 
     // Do not await invite here or we'll miss the Establishing state transition
@@ -947,7 +954,8 @@ export default class WebRTCClient extends Emitter {
       ? this.video.deviceId.exact : undefined;
   }
 
-  reinvite(sipSession: Session, newConstraints: ?Object = null, conference: boolean = false) {
+  reinvite(sipSession: Session, newConstraints: ?Object = null, conference: boolean = false,
+    audioOnly: boolean = false) {
     if (!sipSession) {
       return false;
     }
@@ -957,16 +965,17 @@ export default class WebRTCClient extends Emitter {
     }
 
     const wasMuted = this.isAudioMuted(sipSession);
-    // When upgrading to video, remove the `deactivateVideoModifier` modifiers
+    // When upgrading to video, remove the `stripVideo` modifiers
     if (newConstraints && newConstraints.video) {
       const modifiers = sipSession.sessionDescriptionHandlerModifiersReInvite;
       sipSession.sessionDescriptionHandlerModifiersReInvite = modifiers.filter(modifier =>
-        modifier !== deactivateVideoModifier);
+        modifier !== stripVideo);
     }
 
     sipSession.sessionDescriptionHandlerOptionsReInvite = {
       ...sipSession.sessionDescriptionHandlerOptionsReInvite,
       conference,
+      audioOnly,
     };
 
     const shouldDoVideo = newConstraints ? newConstraints.video : this.sessionWantsToDoVideo(sipSession);
@@ -1006,6 +1015,8 @@ export default class WebRTCClient extends Emitter {
       },
       sessionDescriptionHandlerOptions: {
         constraints,
+        conference,
+        audioOnly,
         offerOptions: {
           iceRestart: false,
         },
@@ -1549,7 +1560,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   _isAudioOnly(session: Session): boolean {
-    return session.sessionDescriptionHandlerModifiersReInvite.find(modifier => modifier === deactivateVideoModifier);
+    return session.sessionDescriptionHandlerModifiersReInvite.find(modifier => modifier === stripVideo);
   }
 
   _setupMedias(session: Session, newStream: ?MediaStream) {

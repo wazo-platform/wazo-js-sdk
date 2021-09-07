@@ -84,6 +84,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     const iceRestart = options.offerOptions ? options.offerOptions.iceRestart : false;
 
     const isConference = options ? !!options.conference : false;
+    const audioOnly = options ? !!options.audioOnly : false;
 
     // We should wait for ice when iceRestart (reinvite) or for the first invite
     // We shouldn't wait for ice when holding or resuming the call
@@ -110,10 +111,10 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     };
 
     return this.getLocalMediaStream(options)
-      .then(() => this.updateDirection(options, isConference))
+      .then(() => this.updateDirection(options, isConference, audioOnly))
       .then(() => this.createDataChannel(options))
       .then(() => {
-        if (isConference && (options.constraints && !options.constraints.video) && !('hold' in options)) {
+        if (isConference && (options.constraints && !options.constraints.video) && !('hold' in options) && !audioOnly) {
           // Add a video an empty bundle to be able to replaceTrack when joining a conference without video
           this.peerConnection.addTransceiver('video', { streams: [this._localMediaStream], direction: 'sendrecv' });
         }
@@ -242,7 +243,8 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
   }
 
   // Overridden to send `inactive` in conference
-  updateDirection(options?: SessionDescriptionHandlerOptions, isConference: boolean = false): Promise<void> {
+  updateDirection(options?: SessionDescriptionHandlerOptions, isConference: boolean = false,
+    audioOnly: boolean = false): Promise<void> {
     if (this._peerConnection === undefined) {
       return Promise.reject(new Error('Peer connection closed.'));
     }
@@ -257,14 +259,17 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         // if we are stable, assume we are creating a local offer
         this.logger.debug('SessionDescriptionHandler.updateDirection - setting offer direction');
         // determine the direction to offer given the current direction and hold state
-        const directionToOffer = (currentDirection: Object): Object => {
+        const directionToOffer = (currentDirection: string, transceiver: Object /* RTCRtpTransceiver */): Object => {
           if (isConference) {
+            if (audioOnly && transceiver.receiver.track && transceiver.receiver.track.kind === 'video') {
+              return 'sendonly';
+            }
             return options && options.hold ? 'sendonly' : 'sendrecv';
           }
 
           switch (currentDirection) {
             case 'inactive':
-              return options && options.hold ? 'inactive' : 'recvonly';
+              return options && options.hold ? 'inactive' : (isConference && !audioOnly ? 'sendrecv' : 'recvonly');
             case 'recvonly':
               return options && options.hold ? 'inactive' : 'recvonly';
             case 'sendonly':
@@ -280,7 +285,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         // set the transceiver direction to the offer direction
         this._peerConnection.getTransceivers().forEach((transceiver) => {
           if (transceiver.direction /* guarding, but should always be true */) {
-            const offerDirection = directionToOffer(transceiver.direction);
+            const offerDirection = directionToOffer(transceiver.direction, transceiver);
             if (transceiver.direction !== offerDirection) {
               // eslint-disable-next-line no-param-reassign
               transceiver.direction = offerDirection;
@@ -339,6 +344,13 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         // set the transceiver direction to the answer direction
         this._peerConnection.getTransceivers().forEach((transceiver) => {
           if (transceiver.direction /* guarding, but should always be true */) {
+            const { receiver } = transceiver;
+            if (isConference && audioOnly && receiver.track && receiver.track.kind === 'video') {
+              // eslint-disable-next-line no-param-reassign
+              transceiver.direction = 'inactive';
+              return;
+            }
+
             if (transceiver.direction !== 'stopped' && transceiver.direction !== answerDirection) {
               // eslint-disable-next-line no-param-reassign
               transceiver.direction = answerDirection;

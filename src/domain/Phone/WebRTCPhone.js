@@ -190,9 +190,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return true;
   }
 
-  async sendReinvite(callSession: ?CallSession, constraints: ?Object = null, conference: boolean = false) {
+  async sendReinvite(callSession: ?CallSession, constraints: ?Object = null, conference: boolean = false,
+    audioOnly: boolean = false) {
     const sipSession = this.findSipSession(callSession);
-    logger.info('WebRTC phone - send reinvite', { sessionId: sipSession ? sipSession.id : null, constraints });
+    logger.info('WebRTC phone - send reinvite', {
+      sessionId: sipSession ? sipSession.id : null,
+      constraints,
+      audioOnly,
+    });
 
     if (!sipSession) {
       return null;
@@ -218,7 +223,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     // Force reinvite in SDH
     sipSession.sessionDescriptionHandler.localMediaStreamConstraints = null;
 
-    return this.client.reinvite(sipSession, constraints, conference);
+    return this.client.reinvite(sipSession, constraints, conference, audioOnly);
   }
 
   getUserAgent() {
@@ -328,12 +333,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     const pc = sipSession.sessionDescriptionHandler.peerConnection;
     const shouldScreenShare = constraints && constraints.screen;
+    const options = sipSession.sessionDescriptionHandlerOptionsReInvite;
+    const wasAudioOnly = options && options.audioOnly;
 
     // Check if a video sender already exists
     let videoSender;
     if (isConference) {
       const trans = pc.getTransceivers().find(transceiver => transceiver.mid === '1');
-      videoSender = trans.sender;
+      videoSender = trans ? trans.sender : null;
     } else {
       videoSender = pc.getSenders().find(sender => sender.track === null);
     }
@@ -368,6 +375,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     if (shouldScreenShare) {
       this._onScreenSharing(newStream, sipSession, callSession, false);
+    }
+
+    // We have to reinvite to change the direction on the bundle when upgrading from an audioOnly conference
+    if (isConference && wasAudioOnly) {
+      return true;
     }
 
     // No reinvite needed here
