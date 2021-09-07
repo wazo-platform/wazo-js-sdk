@@ -599,7 +599,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   isAudioMuted(session: Inviter): boolean {
-    if (!session.sessionDescriptionHandler) {
+    if (!session || !session.sessionDescriptionHandler) {
       return false;
     }
 

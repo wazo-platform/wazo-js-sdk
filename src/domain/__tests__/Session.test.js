@@ -394,7 +394,14 @@ describe('Session domain', () => {
     const acl = ['calld.lines.*.presences.read'];
     const session = new Session({ acl, expiresAt: new Date(), token: 'abc' });
 
+    const oldWarn = console.warn;
+    // $FlowFixMe
+    console.warn = () => {};
+
     expect(session.acls).toEqual(acl);
     expect(session.acl).toEqual(acl);
+
+    // $FlowFixMe
+    console.warn = oldWarn;
   });
 });

@@ -1,21 +1,38 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable no-useless-escape */
+/* eslint-disable no-console */
 import IssueReporter from '../IssueReporter';
 import { realFetch } from '../../utils/api-requester';
 
 jest.mock('../../utils/api-requester');
 
-IssueReporter.enable();
+let oldLog;
+let oldError;
 
 class MyError extends Error {}
 
 describe('IssueReporter', () => {
+  beforeAll(() => {
+    oldLog = console.log;
+    oldError = console.error;
+
+    console.log = () => {};
+    console.error = () => {};
+
+    IssueReporter.enable();
+  });
+
   beforeEach(() => {
     jest.resetAllMocks();
 
     realFetch.mockImplementation(() => () => ({
       catch: () => {},
     }));
+  });
+
+  afterAll(() => {
+    console.log = oldLog;
+    console.error = oldError;
   });
 
   it('should compute level order', () => {
