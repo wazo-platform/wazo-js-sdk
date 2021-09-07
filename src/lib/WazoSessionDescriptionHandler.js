@@ -120,7 +120,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         }
       })
       .then(() => this.createLocalOfferOrAnswer(options))
-      .then((sessionDescription) => this.setLocalSessionDescription(sessionDescription))
+      .then(sessionDescription => this.setLocalSessionDescription(sessionDescription))
       .then(() => this.waitForIceGatheringComplete(iceRestart, iceTimeout))
       .then(() => this.getLocalSessionDescription())
       .then(description => {

@@ -299,9 +299,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     // Release local video stream when downgrading to audio
-    const localVideoStream = sipSession.sessionDescriptionHandler.localMediaStream;
+    const localStream = sipSession.sessionDescriptionHandler.localMediaStream;
     const pc = sipSession.sessionDescriptionHandler.peerConnection;
-    const videoTracks = localVideoStream.getVideoTracks();
+    const videoTracks = localStream.getVideoTracks();
 
     // Remove video senders
     pc.getSenders().filter(sender => sender.track && sender.track.kind === 'video').forEach(videoSender => {
@@ -316,7 +316,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     videoTracks.forEach(videoTrack => {
       videoTrack.enabled = false;
       videoTrack.stop();
-      localVideoStream.removeTrack(videoTrack);
+      localStream.removeTrack(videoTrack);
     });
 
     this._sendReinviteMessage(callSession, false);
@@ -524,14 +524,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
         const targetCallSession = callSession || this.currentCallSession;
         const conference = this.isConference(targetCallSession);
 
-        if (this.currentScreenShare.sender && this.currentScreenShare.hadVideo) {
-          // When stopping screenshare and we had video before that, we have to re-upgrade
-          await this.sendReinvite(targetCallSession, { audio: false, video: true }, conference);
-        } else {
-          // When upgrading directly to screenshare (eg: we don't have a videoLocalStream to replace)
-          // We have to downgrade to audio.
-          await this.sendReinvite(targetCallSession, { audio: false, video: false }, conference);
-        }
+        // When stopping screenshare and we had video before that, we have to re-upgrade
+        // When upgrading directly to screenshare (eg: we don't have a videoLocalStream to replace)
+        // We have to downgrade to audio.
+        const screenshareStopped = this.currentScreenShare.sender && this.currentScreenShare.hadVideo;
+        await this.sendReinvite(targetCallSession, { audio: false, video: screenshareStopped }, conference);
       }
     } catch (e) {
       console.warn(e);
@@ -868,6 +865,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
   }
 
+  // @Deprecated
   unhold(callSession: CallSession, withEvent: boolean = true, isConference: boolean = false): void {
     logger.info('WebRTC unhold', { id: callSession ? callSession.getId() : null });
 

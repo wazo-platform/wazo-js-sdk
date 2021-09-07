@@ -283,6 +283,7 @@ class Phone extends Emitter {
     return this.phone && this.phone.hasLocalVideo(callSession);
   }
 
+  // @Deprecated
   getLocalMediaStream(callSession: CallSession) {
     logger.warn('Phone.getLocalMediaStream is deprecated, use Phone.getLocalStream instead');
 
@@ -301,17 +302,20 @@ class Phone extends Emitter {
     return this.phone ? this.phone.getRemoteVideoStream(callSession) : null;
   }
 
+  // @Deprecated
   getRemoteStreamForCall(callSession: CallSession) {
     logger.warn('Phone.getRemoteStreamForCall is deprecated, use Phone.getRemoteStream instead');
     return this.getRemoteStream(callSession);
   }
 
   // Returns remote streams directly from the peerConnection
+  // @Deprecated
   getRemoteStreamsForCall(callSession: CallSession) {
-    logger.warn('Phone.getRe is deprecated, use Phone.getLocalStream instead');
+    logger.warn('Phone.getRemoteStreamsForCall is deprecated, use Phone.getLocalStream instead');
     return this.getLocalStream(callSession);
   }
 
+  // @Deprecated
   getRemoteVideoStreamForCall(callSession: CallSession) {
     logger.warn('Phone.getRemoteVideoStreamForCall is deprecated, use Phone.getRemoteVideoStream instead');
 
