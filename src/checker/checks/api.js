@@ -6,6 +6,7 @@ export default {
   check: async (server, session) => {
     const client = new WazoApiClient({ server });
     client.setToken(session.token);
+    client.disableErrorLogging();
 
     const handleApiError = (apiName, error) => {
       const statusText = error instanceof ServerError ? 'server error' : 'api error';

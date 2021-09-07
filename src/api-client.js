@@ -157,4 +157,8 @@ export default class ApiClient {
     this.fetchOptions = fetchOptions;
     this.client.setFetchOptions(fetchOptions);
   }
+
+  disableErrorLogging() {
+    this.client.disableErrorLogging();
+  }
 }
