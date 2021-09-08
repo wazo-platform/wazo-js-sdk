@@ -1476,6 +1476,8 @@ export default class WebRTCClient extends Emitter {
 
   // Invitation and Inviter extends Session
   _setupSession(session: Session) {
+    const sipSessionId = this.getSipSessionId(session);
+
     // When receiving an Invitation, the delegate is not defined.
     if (!session.delegate) {
       session.delegate = {};
@@ -1499,8 +1501,18 @@ export default class WebRTCClient extends Emitter {
       };
     };
 
+    const oldInviteRequest = session.onInviteRequest.bind(session);
+    let hadRemoteVideo = false;
+
+    // Monkey patch `onInviteRequest` to be able to know if there was a remote video stream before `onInvite` is called
+    // Becase when `onInvite` is called we already got the video track
+    session.onInviteRequest = (request) => {
+      hadRemoteVideo = this.hasARemoteVideoTrack(sipSessionId);
+
+      oldInviteRequest(request);
+    };
+
     session.delegate.onInvite = (request: IncomingRequestMessage) => {
-      const sipSessionId = this.getSipSessionId(session);
       let updatedCalleeName = null;
       let updatedNumber = null;
       if (session.assertedIdentity) {
@@ -1510,7 +1522,6 @@ export default class WebRTCClient extends Emitter {
       logger.info('re-invite received', { updatedCalleeName, updatedNumber });
 
       // Useful to know if it's a video upgrade or an unhold from a remote peer with a video stream
-      const hadRemoteVideo = this.hasARemoteVideoTrack(sipSessionId);
 
       // Update SDP
       // Remote video is handled by the `track` event. Here we're dealing with video stream removal.
