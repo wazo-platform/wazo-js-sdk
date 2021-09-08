@@ -2,7 +2,6 @@
 // @flow
 import type { Message } from 'sip.js/lib/api/message';
 import sdpParser from 'sdp-transform';
-import type { Session } from 'sip.js/lib/core/session';
 
 import type CallSession from '../../domain/CallSession';
 import getApiClient from '../../service/getApiClient';
@@ -31,21 +30,19 @@ class Room extends Emitter {
   _unassociatedParticipants: Object;
   _boundOnParticipantJoined: Function;
   _boundOnParticipantLeft: Function;
-  _boundOnScreenshareEnded: Function;
   _boundOnMessage: Function;
   _boundOnChat: Function;
   _boundOnSignal: Function;
   _boundSaveLocalVideoStream: Function;
   _boundOnReinvite: Function;
   audioStream: ?any;
-  audioElement: ?any;
   extra: Object;
   // video tag representing the room audio stream
   roomAudioElement: any;
 
   CONFERENCE_USER_PARTICIPANT_JOINED: string;
   CONFERENCE_USER_PARTICIPANT_LEFT: string;
-  ON_SCREEN_SHARE_ENDED: string;
+  ON_SHARE_SCREEN_ENDED: string;
   ON_MESSAGE: string;
   ON_CHAT: string;
   ON_SIGNAL: string;
@@ -97,7 +94,7 @@ class Room extends Emitter {
     // Sugar syntax for `room.EVENT_NAME`
     this.CONFERENCE_USER_PARTICIPANT_JOINED = Wazo.Websocket.CONFERENCE_USER_PARTICIPANT_JOINED;
     this.CONFERENCE_USER_PARTICIPANT_LEFT = Wazo.Websocket.CONFERENCE_USER_PARTICIPANT_LEFT;
-    this.ON_SCREEN_SHARE_ENDED = Wazo.Phone.ON_SCREEN_SHARE_ENDED;
+    this.ON_SHARE_SCREEN_ENDED = Wazo.Phone.ON_SHARE_SCREEN_ENDED;
     this.ON_MESSAGE = Wazo.Phone.ON_MESSAGE;
     this.ON_CHAT = Wazo.Phone.ON_CHAT;
     this.ON_SIGNAL = Wazo.Phone.ON_SIGNAL;
@@ -114,7 +111,6 @@ class Room extends Emitter {
     this._boundOnMessage = this._onMessage.bind(this);
     this._boundOnChat = this._onChat.bind(this);
     this._boundOnSignal = this._onSignal.bind(this);
-    this._boundOnScreenshareEnded = this._onScreenshareEnded.bind(this);
     this._boundSaveLocalVideoStream = this._saveLocalVideoStream.bind(this);
     this._boundOnReinvite = this._onReinvite.bind(this);
 
@@ -138,7 +134,7 @@ class Room extends Emitter {
     logger.info('connecting to room', { extension, audioOnly, room: !!room });
 
     if (!room) {
-      await Wazo.Phone.connect({ media: constraints });
+      await Wazo.Phone.connect();
 
       const withCamera = constraints && !!constraints.video;
 
@@ -207,7 +203,6 @@ class Room extends Emitter {
     Wazo.Phone.off(this.ON_MESSAGE, this._boundOnMessage);
     Wazo.Phone.off(this.ON_CHAT, this._boundOnChat);
     Wazo.Phone.off(this.ON_SIGNAL, this._boundOnSignal);
-    Wazo.Phone.off(this.ON_SCREEN_SHARE_ENDED, this._boundOnScreenshareEnded);
     Wazo.Phone.off(this.ON_VIDEO_INPUT_CHANGE, this._boundSaveLocalVideoStream);
     Wazo.Phone.phone.off(Wazo.Phone.phone.client.ON_REINVITE, this._boundOnReinvite);
     Wazo.Websocket.off(this.CONFERENCE_USER_PARTICIPANT_JOINED, this._boundOnParticipantJoined);
@@ -238,6 +233,7 @@ class Room extends Emitter {
     this.name = name;
   }
 
+  // @TODO: change sipSession to callSession
   sendMessage(body: string, sipSession: any = null) {
     return Wazo.Phone.sendMessage(body, sipSession);
   }
@@ -259,9 +255,7 @@ class Room extends Emitter {
       return null;
     }
 
-    if (this.localParticipant) {
-      this.localParticipant.onScreensharing();
-    }
+    this._onScreenSharing();
 
     return screensharingStream;
   }
@@ -350,23 +344,30 @@ class Room extends Emitter {
     Wazo.Phone.sendDTMF(tone, this.callSession);
   }
 
-  async sendReinvite(sipSession: Session, newConstraints: Object = null) {
-    logger.info('send room reinvite', { sipSession, newConstraints });
+  async sendReinvite(newConstraints: Object = null) {
+    logger.info('send room reinvite', { callId: this.callSession ? this.callSession.getId() : null, newConstraints });
+    const wasScreensharing = this.localParticipant && this.localParticipant.screensharing;
 
-    await Wazo.Phone.phone.sendReinvite(sipSession, newConstraints, true);
+    Wazo.Phone.on(Wazo.Phone.ON_SHARE_SCREEN_STARTED, () => {
+      if (Wazo.Phone.phone && Wazo.Phone.phone.currentScreenShare) {
+        this._onScreenSharing();
+      }
+    });
+
+    const response = await Wazo.Phone.phone.sendReinvite(this.callSession, newConstraints, true);
 
     if (this.localParticipant && newConstraints && newConstraints.video) {
-      const pc = sipSession.sessionDescriptionHandler.peerConnection;
-      pc.getSenders()
-        .filter(localSender => localSender.track && localSender.track.kind === 'video')
-        .forEach(localVideoSender => {
-          const mediaStream = new MediaStream();
-          mediaStream.addTrack(localVideoSender.track);
-          // $FlowFixMe
-          this._associateStreamTo(mediaStream, this.localParticipant);
-        });
-
+      const localVideoStream = Wazo.Phone.phone.getLocalVideoStream(this.callSession);
+      if (localVideoStream) {
+        // $FlowFixMe
+        this._associateStreamTo(localVideoStream, this.localParticipant);
+      }
+    } else if (this.localParticipant && wasScreensharing && newConstraints && !newConstraints.video) {
+      // Downgrade from screenshare to audio
+      this.localParticipant.onStopScreensharing();
     }
+
+    return response;
   }
 
   _bindEvents() {
@@ -391,12 +392,21 @@ class Room extends Emitter {
 
       this.audioStream = stream;
       if (document.createElement) {
-        this.roomAudioElement = document.createElement('audio');
+        // $FlowFixMe
+        let roomAudioElement: HTMLAudioElement = document.getElementById('audio-room');
+        if (!this.roomAudioElement) {
+          roomAudioElement = document.createElement('audio');
+          // $FlowFixMe
+          document.body.appendChild(roomAudioElement);
+        }
+        if (!roomAudioElement) {
+          return;
+        }
+        this.roomAudioElement = roomAudioElement;
         this.roomAudioElement.srcObject = stream;
         this.roomAudioElement.autoplay = true;
-        if (document.body) {
-          document.body.appendChild(this.roomAudioElement);
-        }
+        this.roomAudioElement.id = 'audio-room';
+
         // $FlowFixMe
         if (this.roomAudioElement.setSinkId) {
           // $FlowFixMe
@@ -405,13 +415,15 @@ class Room extends Emitter {
       }
     });
 
-    this.on(this.ON_VIDEO_STREAM, (stream, streamId) => {
+    this.on(this.ON_VIDEO_STREAM, (stream, streamId, event, sipSession) => {
       logger.info('on room video stream', { streamId });
+
+      this._mapMsid(sipSession.body.body);
 
       // ON_VIDEO_STREAM is called before PARTICIPANT_JOINED, so we have to keep stream in `_unassociatedVideoStreams`.
       this._unassociatedVideoStreams[streamId] = stream;
 
-      const callId = this._getCallIdFromStreamId(streamId);
+      const callId = this._getCallIdFromTrackId(streamId);
       const participant = callId ? this._getParticipantFromCallId(callId) : null;
       if (participant) {
         this.__associateStreams(participant);
@@ -433,6 +445,12 @@ class Room extends Emitter {
     });
   }
 
+  _onScreenSharing() {
+    if (this.localParticipant) {
+      this.localParticipant.onScreensharing();
+    }
+  }
+
   _onReinvite(session: any, inviteRequest: any) {
     const body = inviteRequest.body || inviteRequest.message.body;
     if (body) {
@@ -449,13 +467,15 @@ class Room extends Emitter {
     const sdp = sdpParser.parse(rawSdp);
     const labelMsidArray = sdp.media.filter(media => !!media.label).map(({ label, msid }) => ({
       label: String(label),
-      msid: msid.split(' ')[1],
+      streamId: msid.split(' ')[0],
+      trackId: msid.split(' ')[1],
     }));
 
-    labelMsidArray.forEach(({ label, msid }) => {
-      this._callIdStreamIdMap[String(label)] = msid;
+    labelMsidArray.forEach(({ label, streamId, trackId }) => {
+      this._callIdStreamIdMap[String(label)] = { streamId, trackId };
 
-      const participant = this._unassociatedParticipants[String(label)];
+      const callId = String(label);
+      const participant = this._unassociatedParticipants[callId] || this._getParticipantFromCallId(callId);
       if (participant) {
         this.__associateStreams(participant);
       }
@@ -470,7 +490,6 @@ class Room extends Emitter {
     Wazo.Phone.on(this.ON_MESSAGE, this._boundOnMessage);
     Wazo.Phone.on(this.ON_CHAT, this._boundOnChat);
     Wazo.Phone.on(this.ON_SIGNAL, this._boundOnSignal);
-    Wazo.Phone.on(this.ON_SCREEN_SHARE_ENDED, this._boundOnScreenshareEnded);
     Wazo.Phone.on(this.ON_VIDEO_INPUT_CHANGE, this._boundSaveLocalVideoStream);
 
     [this.ON_AUDIO_STREAM, this.ON_VIDEO_STREAM, this.ON_REMOVE_STREAM].forEach(event =>
@@ -544,6 +563,16 @@ class Room extends Emitter {
           logger.info('trigger room requester status', { origin });
           requester.triggerUpdate('REQUESTER_UPDATE');
         }
+        break;
+      }
+
+      case Wazo.Phone.ON_MESSAGE_TRACK_UPDATED: {
+        const { callId, update } = content;
+        const participantIdx = this.participants.findIndex(p => p.callId === callId);
+        if (participantIdx !== -1) {
+          this.participants[participantIdx] = this._onParticipantTrackUpdate(this.participants[participantIdx], update);
+        }
+
         break;
       }
 
@@ -663,29 +692,55 @@ class Room extends Emitter {
   }
 
   _onScreenshareEnded() {
-    this.eventEmitter.emit(this.ON_SCREEN_SHARE_ENDED);
+    this.stopScreenSharing();
+
+    this.eventEmitter.emit(this.ON_SHARE_SCREEN_ENDED);
+
     if (this.localParticipant) {
       this.localParticipant.onStopScreensharing();
     }
   }
 
+  _onParticipantTrackUpdate(oldParticipant: Participant, update: string): Participant {
+    const newParticipant = oldParticipant;
+
+    const { trackId } = this._callIdStreamIdMap[newParticipant.callId] || {};
+    const pc = Wazo.Phone.phone.currentSipSession.sessionDescriptionHandler.peerConnection;
+    const stream = pc.getRemoteStreams().find(someStream => someStream.getTracks().some(track => track.id === trackId));
+
+    if (update === 'downgrade') {
+      newParticipant.streams = [];
+      newParticipant.videoStreams = [];
+      newParticipant.onStreamUnSubscribed(stream);
+
+      return newParticipant;
+    }
+
+    // Upgrade
+    if (stream) {
+      this._associateStreamTo(stream, newParticipant);
+    }
+
+    return newParticipant;
+  }
+
   // Associate audio/video streams to the participant and triggers events on it
   __associateStreams(participant: Participant) {
-    const streamId = this._callIdStreamIdMap[participant.callId];
-    if (!streamId) {
+    const { trackId } = this._callIdStreamIdMap[participant.callId] || {};
+    if (!trackId) {
       this._unassociatedParticipants[participant.callId] = participant;
 
       return;
     }
-    if (!streamId || !participant || !this.localParticipant || participant.callId === this.localParticipant.callId) {
+    if (!trackId || !participant || !this.localParticipant || participant.callId === this.localParticipant.callId) {
       return;
     }
 
-    if (this._unassociatedVideoStreams[streamId]) {
+    if (this._unassociatedVideoStreams[trackId]) {
       // Try to associate stream
-      this._associateStreamTo(this._unassociatedVideoStreams[streamId], participant);
+      this._associateStreamTo(this._unassociatedVideoStreams[trackId], participant);
 
-      delete this._unassociatedVideoStreams[streamId];
+      delete this._unassociatedVideoStreams[trackId];
       delete this._unassociatedParticipants[participant.callId];
     }
   }
@@ -698,8 +753,8 @@ class Room extends Emitter {
     participant.onStreamSubscribed(stream);
   }
 
-  _getCallIdFromStreamId(streamId: string) {
-    return Object.keys(this._callIdStreamIdMap).find(key => this._callIdStreamIdMap[key] === streamId);
+  _getCallIdFromTrackId(trackId: string) {
+    return Object.keys(this._callIdStreamIdMap).find(key => this._callIdStreamIdMap[key].trackId === trackId);
   }
 
   _getParticipantFromCallId(callId: string) {

@@ -1,7 +1,6 @@
 // @flow
 import type Inviter from 'sip.js/lib/api/inviter';
 import type Invitation from 'sip.js/lib/api/invitation';
-import type { Message } from 'sip.js/lib/api/message';
 import { SessionState } from 'sip.js/lib/api/session-state';
 
 import type SipLine from '../domain/SipLine';
@@ -9,15 +8,12 @@ import type Session from '../domain/Session';
 import type CallSession from '../domain/CallSession';
 import AdHocAPIConference from '../domain/AdHocAPIConference';
 import WebRTCPhone, * as PHONE_EVENTS from '../domain/Phone/WebRTCPhone';
+import { MESSAGE_TYPE_CHAT, MESSAGE_TYPE_SIGNAL } from '../domain/Phone/WebRTCPhone';
 import WazoWebRTCClient, { events as clientEvents, transportEvents } from '../web-rtc-client';
 import IssueReporter from '../service/IssueReporter';
 import Emitter from '../utils/Emitter';
 
-import Stream from './room/Stream';
 import Wazo from './index';
-
-const MESSAGE_TYPE_CHAT = 'message/TYPE_CHAT';
-const MESSAGE_TYPE_SIGNAL = 'message/TYPE_SIGNAL';
 
 const logger = IssueReporter.loggerFor('simple-phone');
 const sipLogger = IssueReporter.loggerFor('sip.js');
@@ -44,8 +40,6 @@ class Phone extends Emitter {
       this[key] = PHONE_EVENTS[key];
     });
 
-    this.ON_CHAT = 'phone/ON_CHAT';
-    this.ON_SIGNAL = 'phone/ON_SIGNAL';
     this.SessionState = SessionState;
   }
 
@@ -229,22 +223,7 @@ class Phone extends Emitter {
   }
 
   async reinvite(callSession: CallSession, constraints: Object = null, conference: boolean = false) {
-    if (!this.phone) {
-      return;
-    }
-
-    // $FlowFixMe
-    const result = await this.phone.sendReinvite(this.phone.findSipSession(callSession), constraints, conference);
-
-    // Release local video stream when downgrading to audio
-    if (constraints && !constraints.video) {
-      const localVideoStream = Wazo.Phone.getLocalVideoStream(callSession);
-      if (localVideoStream) {
-        Stream.detachStream(localVideoStream);
-      }
-    }
-
-    return result;
+    return this.phone ? this.phone.sendReinvite(callSession, constraints, conference) : null;
   }
 
   getSipSessionId(sipSession: Session): ?string {
@@ -296,34 +275,59 @@ class Phone extends Emitter {
     return this.phone && this.phone.sendKey(callSession, tone);
   }
 
-  getLocalVideoStream(callSession: CallSession) {
-    if (!this.phone || !this.phone.client) {
-      return;
-    }
-    const stream = this.phone.client.videoSessions[callSession.getId()];
-
-    return stream ? stream.local : null;
+  getLocalStream(callSession: CallSession) {
+    return this.phone && this.phone.getLocalStream(callSession);
   }
 
+  hasLocalVideo(callSession: CallSession) {
+    return this.phone && this.phone.hasLocalVideo(callSession);
+  }
+
+  // @Deprecated
   getLocalMediaStream(callSession: CallSession) {
-    return this.phone && this.phone.getLocalMediaStream(callSession);
+    logger.warn('Phone.getLocalMediaStream is deprecated, use Phone.getLocalStream instead');
+
+    return this.phone && this.phone.getLocalStream(callSession);
   }
 
+  getLocalVideoStream(callSession: CallSession) {
+    return this.phone && this.phone.getLocalVideoStream(callSession);
+  }
+
+  getRemoteStream(callSession: CallSession) {
+    return this.phone ? this.phone.getRemoteStream(callSession) : null;
+  }
+
+  getRemoteVideoStream(callSession: CallSession) {
+    return this.phone ? this.phone.getRemoteVideoStream(callSession) : null;
+  }
+
+  // @Deprecated
   getRemoteStreamForCall(callSession: CallSession) {
-    return this.phone && this.phone.getRemoteStreamForCall(callSession);
+    logger.warn('Phone.getRemoteStreamForCall is deprecated, use Phone.getRemoteStream instead');
+    return this.getRemoteStream(callSession);
   }
 
   // Returns remote streams directly from the peerConnection
+  // @Deprecated
   getRemoteStreamsForCall(callSession: CallSession) {
-    return this.phone ? this.phone.getRemoteStreamsForCall(callSession) : [];
+    logger.warn('Phone.getRemoteStreamsForCall is deprecated, use Phone.getLocalStream instead');
+    return this.getLocalStream(callSession);
   }
 
+  // @Deprecated
   getRemoteVideoStreamForCall(callSession: CallSession) {
-    return this.getRemoteStreamsForCall(callSession).find(stream => !!stream.getVideoTracks().length);
+    logger.warn('Phone.getRemoteVideoStreamForCall is deprecated, use Phone.getRemoteVideoStream instead');
+
+    return this.getRemoteVideoStream(callSession);
   }
 
-  getRemoteAudioStreamForCall(callSession: CallSession) {
-    return this.getRemoteStreamsForCall(callSession).find(stream => !!stream.getAudioTracks().length);
+  hasVideo(callSession: CallSession): boolean {
+    return this.phone ? this.phone.hasVideo(callSession) : false;
+  }
+
+  hasAVideoTrack(callSession: CallSession): boolean {
+    return this.phone ? this.phone.hasAVideoTrack(callSession) : false;
   }
 
   getCurrentSipSession() {
@@ -357,30 +361,6 @@ class Phone extends Emitter {
     return session.profile ? session.profile.sipLines : [];
   }
 
-  _transferEvents() {
-    this.unbind();
-    [...clientEvents, ...transportEvents].forEach(event => {
-      this.client.on(event, (...args) =>
-        this.eventEmitter.emit.apply(this.eventEmitter.emit, [`client-${event}`, ...args]));
-    });
-
-    Object.values(PHONE_EVENTS).forEach(event => {
-      if (typeof event !== 'string' || !this.phone || event === PHONE_EVENTS.ON_MESSAGE) {
-        return;
-      }
-      this.phone.on(event, (...args) => this.eventEmitter.emit.apply(this.eventEmitter, [event, ...args]));
-    });
-
-    if (!this.phone) {
-      return;
-    }
-
-    this.phone.on(PHONE_EVENTS.ON_MESSAGE, args => {
-      this._onMessage(args);
-      this.eventEmitter.emit(PHONE_EVENTS.ON_MESSAGE, args);
-    });
-  }
-
   hasSfu() {
     return this.sipLine && this.sipLine.hasVideoConference();
   }
@@ -391,33 +371,19 @@ class Phone extends Emitter {
     }
   }
 
-  _onMessage(message: Message) {
-    if (!message || message.method !== 'MESSAGE') {
-      return;
-    }
+  _transferEvents() {
+    this.unbind();
+    [...clientEvents, ...transportEvents].forEach(event => {
+      this.client.on(event, (...args) =>
+        this.eventEmitter.emit.apply(this.eventEmitter.emit, [`client-${event}`, ...args]));
+    });
 
-    let body;
-
-    try {
-      body = JSON.parse(message.body);
-    } catch (e) {
-      return;
-    }
-
-    switch (body.type) {
-      case MESSAGE_TYPE_CHAT:
-        this.eventEmitter.emit(this.ON_CHAT, body.content);
-        break;
-
-      case MESSAGE_TYPE_SIGNAL: {
-        this.eventEmitter.emit(this.ON_SIGNAL, body.content);
-        break;
+    Object.values(PHONE_EVENTS).forEach(event => {
+      if (typeof event !== 'string' || !this.phone) {
+        return;
       }
-
-      default:
-    }
-
-    this.eventEmitter.emit(PHONE_EVENTS.ON_MESSAGE, message);
+      this.phone.on(event, (...args) => this.eventEmitter.emit.apply(this.eventEmitter, [event, ...args]));
+    });
   }
 }
 

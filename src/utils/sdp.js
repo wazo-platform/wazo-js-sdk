@@ -83,7 +83,7 @@ export const hasAnActiveVideo = (sdp: ?string): boolean => {
     media.type === 'video' && media.port > 10 && (!media.direction || media.direction !== 'inactive'));
 };
 
-export const fixSdp = (sdp: string, candidates: Object[]): string => {
+export const fixSdp = (sdp: string, candidates: Object[], forcePort: boolean = true): string => {
   const parsedSdp = sdpParser.parse(sdp);
   const mainCandidate = getSrflxOrRelay(candidates)[0];
   const ip = mainCandidate ? mainCandidate.ip : null;
@@ -92,11 +92,15 @@ export const fixSdp = (sdp: string, candidates: Object[]): string => {
     parsedSdp.origin.address = ip;
   }
 
-  parsedSdp.media = parsedSdp.media.map(media => ({
-    ...media,
-    port: mainCandidate ? mainCandidate.port : media.port,
-    candidates: (media.candidates || []).concat(candidates),
-  }));
+  parsedSdp.media = parsedSdp.media.map(media => {
+    const port = forcePort ? (mainCandidate ? mainCandidate.port : media.port) : media.port;
+    return {
+      ...media,
+      port,
+      candidates: (media.candidates || []).concat(candidates),
+      direction: port < 10 ? 'inactive' : media.direction,
+    };
+  });
 
   let fixed = sdpParser.write(parsedSdp);
 

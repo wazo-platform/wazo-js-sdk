@@ -1,4 +1,4 @@
-/* global RTCSessionDescriptionInit */
+/* global RTCSessionDescriptionInit, navigator */
 // @flow
 import EventEmitter from 'events';
 
@@ -17,6 +17,25 @@ import { areCandidateValid, fixSdp, parseCandidate } from '../utils/sdp';
 const wazoLogger = IssueReporter ? IssueReporter.loggerFor('webrtc-sdh') : console;
 const MAX_WAIT_FOR_ICE_TRIES = 20;
 const WAIT_FOR_ICE_TIMEOUT = 500;
+
+// Customized mediaStreamFactory allowing to send screensharing stream directory when upgrading
+export const wazoMediaStreamFactory = (constraints: Object): Promise<MediaStream> => {
+  // @see sip.js/lib/platform/web/session-description-handler/media-stream-factory-default
+  if (!constraints.audio && !constraints.video) {
+    return Promise.resolve(new MediaStream());
+  }
+
+  if (navigator.mediaDevices === undefined) {
+    return Promise.reject(new Error('Media devices not available in insecure contexts.'));
+  }
+
+  // We have to make a `getUserMedia` on desktop but a `getDisplayMedia` in browsers when screensharing
+  if (constraints.screen && !constraints.desktop) {
+    return navigator.mediaDevices.getDisplayMedia.call(navigator.mediaDevices, constraints);
+  }
+
+  return navigator.mediaDevices.getUserMedia.call(navigator.mediaDevices, constraints);
+};
 
 class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
   gatheredCandidates: Array<?string>;
@@ -65,6 +84,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     const iceRestart = options.offerOptions ? options.offerOptions.iceRestart : false;
 
     const isConference = options ? !!options.conference : false;
+    const audioOnly = options ? !!options.audioOnly : false;
 
     // We should wait for ice when iceRestart (reinvite) or for the first invite
     // We shouldn't wait for ice when holding or resuming the call
@@ -75,8 +95,6 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     const iceTimeout = options.iceGatheringTimeout === undefined
       ? this.sessionDescriptionHandlerConfiguration.iceGatheringTimeout
       : options.iceGatheringTimeout;
-
-    const isOffer = this._peerConnection.signalingState === 'stable';
 
     wazoLogger.trace('getting SDP description', { iceRestart, shouldWaitForIce, iceTimeout });
 
@@ -93,27 +111,20 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     };
 
     return this.getLocalMediaStream(options)
-      .then(() => this.updateDirection(options, isConference))
+      .then(() => this.updateDirection(options, isConference, audioOnly))
       .then(() => this.createDataChannel(options))
-      .then(() => this.createLocalOfferOrAnswer(options))
-      .then((sessionDescription) => this.setLocalSessionDescription(sessionDescription))
-      .then(() => this.waitForIceGatheringComplete(iceRestart, iceTimeout))
-      .then(shouldWaitForIce ? this._waitForValidGatheredIce.bind(this) : this.getLocalSessionDescription.bind(this))
-      .then((description: any) => {
-        if (!this._peerConnection) {
-          throw new Error('No peer connection to get sdh local description');
+      .then(() => {
+        if (isConference && (options.constraints && !options.constraints.video) && !('hold' in options) && !audioOnly) {
+          // Add a video an empty bundle to be able to replaceTrack when joining a conference without video
+          this.peerConnection.addTransceiver('video', { streams: [this._localMediaStream], direction: 'sendrecv' });
         }
-
-        // Try to update sdp with a createOffer
-        return isOffer ? this._peerConnection.createOffer(options.offerOptions || {}) : description;
       })
+      .then(() => this.createLocalOfferOrAnswer(options))
+      .then(sessionDescription => this.setLocalSessionDescription(sessionDescription))
+      .then(() => this.waitForIceGatheringComplete(iceRestart, iceTimeout))
+      .then(() => this.getLocalSessionDescription())
       .then(description => {
         const { sdp } = description;
-
-        // Stop local video stream directly when entering a conference in audio mode
-        if (isConference && !options.enableVideo) {
-          this.peerConnection.getSenders()[1].track.stop();
-        }
 
         // Check if we got ICEs
         if (sdp.indexOf('a=candidate') !== -1) {
@@ -128,7 +139,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         return {
           type: description.type,
           // Fix sdp only when no candidates
-          sdp: fixSdp(sdp, this.gatheredCandidates),
+          sdp: fixSdp(sdp, this.gatheredCandidates, options && options.constraints ? options.constraints.video : false),
         };
       })
       .then((sessionDescription) => this.applyModifiers(sessionDescription, modifiers))
@@ -144,62 +155,6 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         this.logger.error(`SessionDescriptionHandler.getDescription failed - ${error}`);
         throw error;
       });
-  }
-
-  // Overridden to avoid to use peerConnection.getReceivers and peerConnection.getSenders in react-native
-  setLocalMediaStream(stream: MediaStream): Promise<void> {
-    if (this.isWeb) {
-      return super.setLocalMediaStream(stream);
-    }
-    this.logger.debug('SessionDescriptionHandler.setLocalMediaStream');
-
-    if (!this._peerConnection) {
-      throw new Error('Peer connection undefined.');
-    }
-    const pc = this._peerConnection;
-    const localStream = this._localMediaStream;
-    const trackUpdates: Array<Promise<void>> = [];
-
-    const updateTrack = (newTrack: MediaStreamTrack): void => {
-      const { kind } = newTrack;
-      if (kind !== 'audio' && kind !== 'video') {
-        throw new Error(`Unknown new track kind ${kind}.`);
-      }
-
-      trackUpdates.push(
-        new Promise((resolve) => {
-          this.logger.debug(`SessionDescriptionHandler.setLocalMediaStream - adding sender ${kind} track`);
-          resolve();
-        }).then(() => {
-          // Review: could make streamless tracks a configurable option?
-          // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/addTrack#Usage_notes
-          try {
-            pc.addStream(localStream);
-          } catch (error) {
-            wazoLogger.error('set local stream error', error);
-
-            this.logger.error(`SessionDescriptionHandler.setLocalMediaStream - failed to add sender ${kind} track`);
-            throw error;
-          }
-          localStream.addTrack(newTrack);
-          SessionDescriptionHandler.dispatchAddTrackEvent(localStream, newTrack);
-        }),
-      );
-    };
-
-    // update peer connection audio tracks
-    const audioTracks = stream.getAudioTracks();
-    if (audioTracks.length) {
-      updateTrack(audioTracks[0]);
-    }
-
-    // update peer connection video tracks
-    const videoTracks = stream.getVideoTracks();
-    if (videoTracks.length) {
-      updateTrack(videoTracks[0]);
-    }
-
-    return trackUpdates.reduce((p, x) => p.then(() => x), Promise.resolve());
   }
 
   // Overridden to avoid to use peerConnection.getReceivers and peerConnection.getSenders in react-native
@@ -288,7 +243,8 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
   }
 
   // Overridden to send `inactive` in conference
-  updateDirection(options?: SessionDescriptionHandlerOptions, isConference: boolean = false): Promise<void> {
+  updateDirection(options?: SessionDescriptionHandlerOptions, isConference: boolean = false,
+    audioOnly: boolean = false): Promise<void> {
     if (this._peerConnection === undefined) {
       return Promise.reject(new Error('Peer connection closed.'));
     }
@@ -303,14 +259,17 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         // if we are stable, assume we are creating a local offer
         this.logger.debug('SessionDescriptionHandler.updateDirection - setting offer direction');
         // determine the direction to offer given the current direction and hold state
-        const directionToOffer = (currentDirection: Object): Object => {
+        const directionToOffer = (currentDirection: string, transceiver: Object /* RTCRtpTransceiver */): Object => {
           if (isConference) {
-            return options && options.hold ? 'inactive' : 'sendrecv';
+            if (audioOnly && transceiver.receiver.track && transceiver.receiver.track.kind === 'video') {
+              return 'sendonly';
+            }
+            return options && options.hold ? 'sendonly' : 'sendrecv';
           }
 
           switch (currentDirection) {
             case 'inactive':
-              return options && options.hold ? 'inactive' : 'recvonly';
+              return options && options.hold ? 'inactive' : (isConference && !audioOnly ? 'sendrecv' : 'recvonly');
             case 'recvonly':
               return options && options.hold ? 'inactive' : 'recvonly';
             case 'sendonly':
@@ -326,7 +285,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         // set the transceiver direction to the offer direction
         this._peerConnection.getTransceivers().forEach((transceiver) => {
           if (transceiver.direction /* guarding, but should always be true */) {
-            const offerDirection = directionToOffer(transceiver.direction);
+            const offerDirection = directionToOffer(transceiver.direction, transceiver);
             if (transceiver.direction !== offerDirection) {
               // eslint-disable-next-line no-param-reassign
               transceiver.direction = offerDirection;
@@ -385,6 +344,13 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         // set the transceiver direction to the answer direction
         this._peerConnection.getTransceivers().forEach((transceiver) => {
           if (transceiver.direction /* guarding, but should always be true */) {
+            const { receiver } = transceiver;
+            if (isConference && audioOnly && receiver.track && receiver.track.kind === 'video') {
+              // eslint-disable-next-line no-param-reassign
+              transceiver.direction = 'inactive';
+              return;
+            }
+
             if (transceiver.direction !== 'stopped' && transceiver.direction !== answerDirection) {
               // eslint-disable-next-line no-param-reassign
               transceiver.direction = answerDirection;
@@ -401,6 +367,88 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         return Promise.reject(new Error(`Invalid signaling state ${this._peerConnection.signalingState}`));
     }
     return Promise.resolve();
+  }
+
+  // Overridden to not reuse video track in SFU mode
+  setLocalMediaStream(stream: MediaStream) {
+    this.logger.debug('SessionDescriptionHandler.setLocalMediaStream');
+
+    if (!this._peerConnection) {
+      throw new Error('Peer connection undefined.');
+    }
+    const pc = this._peerConnection;
+    const { sfu } = pc;
+    const localStream = this._localMediaStream;
+
+    const trackUpdates: Array<Promise<void>> = [];
+
+    const updateTrack = (newTrack: MediaStreamTrack): void => {
+      const { kind } = newTrack;
+      if (kind !== 'audio' && kind !== 'video') {
+        throw new Error(`Unknown new track kind ${kind}.`);
+      }
+      const sender = pc.getSenders().find((otherSender) => otherSender.track && otherSender.track.kind === kind);
+
+      // Do not reuse sender video tracks in SFU
+      if (sender && (!sfu || newTrack.kind === 'audio')) {
+        trackUpdates.push(
+          new Promise((resolve) => {
+            this.logger.debug(`SessionDescriptionHandler.setLocalMediaStream - replacing sender ${kind} track`);
+            resolve();
+          }).then(() =>
+            sender
+              .replaceTrack(newTrack)
+              .then(() => {
+                const oldTrack = localStream.getTracks().find((localTrack) => localTrack.kind === kind);
+                if (oldTrack) {
+                  oldTrack.stop();
+                  localStream.removeTrack(oldTrack);
+                  SessionDescriptionHandler.dispatchRemoveTrackEvent(localStream, oldTrack);
+                }
+                localStream.addTrack(newTrack);
+                SessionDescriptionHandler.dispatchAddTrackEvent(localStream, newTrack);
+              })
+              .catch((error: Error) => {
+                this.logger.error(
+                  `SessionDescriptionHandler.setLocalMediaStream - failed to replace sender ${kind} track`,
+                );
+                throw error;
+              })),
+        );
+      } else {
+        trackUpdates.push(
+          new Promise((resolve) => {
+            this.logger.debug(`SessionDescriptionHandler.setLocalMediaStream - adding sender ${kind} track`);
+            resolve();
+          }).then(() => {
+            // Review: could make streamless tracks a configurable option?
+            // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/addTrack#Usage_notes
+            try {
+              pc.addTrack(newTrack, localStream);
+            } catch (error) {
+              this.logger.error(`SessionDescriptionHandler.setLocalMediaStream - failed to add sender ${kind} track`);
+              throw error;
+            }
+            localStream.addTrack(newTrack);
+            SessionDescriptionHandler.dispatchAddTrackEvent(localStream, newTrack);
+          }),
+        );
+      }
+    };
+
+    // update peer connection audio tracks
+    const audioTracks = stream.getAudioTracks();
+    if (audioTracks.length) {
+      updateTrack(audioTracks[0]);
+    }
+
+    // update peer connection video tracks
+    const videoTracks = stream.getVideoTracks();
+    if (videoTracks.length) {
+      updateTrack(videoTracks[0]);
+    }
+
+    return trackUpdates.reduce((p, x) => p.then(() => x), Promise.resolve());
   }
 }
 
