@@ -311,7 +311,7 @@ export default class CallSession {
     return newFrom(callSession, CallSession);
   }
 
-  static parseCall(session: Session, call: Call): CallSession {
+  static parseCall(call: Call): CallSession {
     return new CallSession({
       callId: call.id,
       sipCallId: call.sipCallId,

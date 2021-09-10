@@ -102,7 +102,7 @@ export default class CTIPhone extends Emitter implements Phone {
     if (!this.currentCall) {
       return null;
     }
-    const callSession = CallSession.parseCall(this.session, this.currentCall);
+    const callSession = CallSession.parseCall(this.currentCall);
     this.eventEmitter.emit('onCallOutgoing', callSession);
 
     return callSession;
@@ -301,7 +301,7 @@ export default class CTIPhone extends Emitter implements Phone {
   }
 
   getCurrentCallSession(): ?CallSession {
-    return this.currentCall ? CallSession.parseCall(this.session, this.currentCall) : null;
+    return this.currentCall ? CallSession.parseCall(this.currentCall) : null;
   }
 
   enableRinging() {}
