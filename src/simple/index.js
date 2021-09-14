@@ -29,6 +29,8 @@ import Voicemail from '../domain/Voicemail';
 import Relocation from '../domain/Relocation';
 import ConferenceRoom from '../domain/Room';
 import CallSession from '../domain/CallSession';
+import WebRTCPhone from '../domain/Phone/WebRTCPhone';
+import CTIPhone from '../domain/Phone/CTIPhone';
 import IndirectTransfer from '../domain/IndirectTransfer';
 import SwitchboardCall from '../domain/SwitchboardCall';
 import IssueReporter from '../service/IssueReporter';
@@ -59,6 +61,7 @@ const Wazo = {
     ServerError,
     Call,
     CallLog,
+    CTIPhone,
     Recording,
     ChatMessage,
     ChatRoom,
@@ -74,6 +77,7 @@ const Wazo = {
     CallSession,
     IndirectTransfer,
     SwitchboardCall,
+    WebRTCPhone,
   },
 
   // Api
