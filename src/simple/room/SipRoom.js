@@ -17,10 +17,6 @@ class SipRoom extends Room {
 
       const withCamera = constraints && !!constraints.video;
 
-      if (withCamera) {
-        Wazo.Phone.checkSfu();
-      }
-
       const callSession = await Wazo.Phone.call(extension, withCamera, null, audioOnly, true);
       // eslint-disable-next-line no-param-reassign
       room = new SipRoom(callSession, extension, null, null, extra);
@@ -85,7 +81,7 @@ class SipRoom extends Room {
   }
 
   async _onParticipantJoined(channel: Object) {
-    const isLocal = channel.name.split('/')[1].indexOf(this._getLocalSipUsername()) === 0;
+    const isLocal = channel.channelvars.WAZO_SIP_CALL_ID === this._getCurrentSipCallIs();
     const callId = channel.id;
     const ParticipantClass = isLocal ? Wazo.LocalParticipant : Wazo.RemoteParticipant;
     const name = channel.caller ? channel.caller.name : null;
@@ -102,6 +98,11 @@ class SipRoom extends Room {
 
     if (isLocal) {
       this._onLocalParticipantJoined(participant);
+
+      // Give some time for the stream to be updated
+      setTimeout(() => {
+        this.eventEmitter.emit(this.ON_JOINED, participant, this.participants);
+      }, 1000);
     }
 
     this.participants.push(participant);
@@ -111,8 +112,8 @@ class SipRoom extends Room {
     return participant;
   }
 
-  _getLocalSipUsername() {
-    return Wazo.Phone.phone.client.userAgent.options.authorizationUsername;
+  _getCurrentSipCallIs() {
+    return Wazo.Phone.getSipSessionId(Wazo.Phone.phone.currentSipSession);
   }
 
 }
