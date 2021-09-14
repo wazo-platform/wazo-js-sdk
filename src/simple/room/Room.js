@@ -496,15 +496,15 @@ class Room extends Emitter {
       Wazo.Phone.on(event, (...args) => this.eventEmitter.emit.apply(this.eventEmitter, [event, ...args])));
   }
 
-  _onMessage(message: Message) {
+  _onMessage(message: Message): ?Object {
     if (message.method !== 'MESSAGE') {
-      return;
+      return null;
     }
     let body;
     try {
       body = JSON.parse(message.body);
     } catch (e) {
-      return;
+      return null;
     }
 
     switch (body.type) {
@@ -525,6 +525,8 @@ class Room extends Emitter {
     }
 
     this.eventEmitter.emit(this.ON_MESSAGE, body);
+
+    return body;
   }
 
   _onChat(content: Object) {
@@ -589,15 +591,6 @@ class Room extends Emitter {
     const session = Wazo.Auth.getSession();
     let participants = [];
 
-    // @TODO: we could use a better function name here
-    const isJoining = part => {
-      this.__associateStreams(part);
-      // @VALIDATE: no need to publicize ourselves, no?
-      if (part instanceof RemoteParticipant) {
-        this.eventEmitter.emit(this.CONFERENCE_USER_PARTICIPANT_JOINED, part);
-      }
-    };
-
     // When we join the room, we can call `getConferenceParticipantsAsUser`, not before.
     if (participant.user_uuid === session.uuid) {
       logger.info('room current user joined');
@@ -638,7 +631,7 @@ class Room extends Emitter {
           }
         }
 
-        participants.forEach(someParticipant => isJoining(someParticipant));
+        participants.forEach(someParticipant => this._isParticipantJoining(someParticipant));
         this.eventEmitter.emit(this.ON_JOINED, localParticipant, participants);
       }
 
@@ -653,10 +646,18 @@ class Room extends Emitter {
 
     if (remoteParticipant) {
       this.participants.push(remoteParticipant);
-      isJoining(remoteParticipant);
+      this._isParticipantJoining(remoteParticipant);
     }
 
     return remoteParticipant;
+  }
+
+  _isParticipantJoining(participant: Participant) {
+    this.__associateStreams(participant);
+    // @VALIDATE: no need to publicize ourselves, no?
+    if (participant instanceof RemoteParticipant) {
+      this.eventEmitter.emit(this.CONFERENCE_USER_PARTICIPANT_JOINED, participant);
+    }
   }
 
   _saveLocalVideoStream(stream: MediaStream) {

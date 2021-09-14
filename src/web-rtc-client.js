@@ -1505,7 +1505,7 @@ export default class WebRTCClient extends Emitter {
     let hadRemoteVideo = false;
 
     // Monkey patch `onInviteRequest` to be able to know if there was a remote video stream before `onInvite` is called
-    // Becase when `onInvite` is called we already got the video track
+    // Because when `onInvite` is called we already got the video track
     session.onInviteRequest = (request) => {
       hadRemoteVideo = this.hasARemoteVideoTrack(sipSessionId);
 
