@@ -10,6 +10,7 @@ import Wazo from '../index';
 import Participant from './Participant';
 import RemoteParticipant from './RemoteParticipant';
 import IssueReporter from '../../service/IssueReporter';
+import LocalParticipant from './LocalParticipant';
 
 export const SIGNAL_TYPE_PARTICIPANT_UPDATE = 'signal/PARTICIPANT_UPDATE';
 export const SIGNAL_TYPE_PARTICIPANT_REQUEST = 'signal/PARTICIPANT_REQUEST';
@@ -613,22 +614,7 @@ class Room extends Emitter {
 
         const localParticipant = participants.find(someParticipant => someParticipant instanceof Wazo.LocalParticipant);
         if (!this.localParticipant && localParticipant) {
-          this.localParticipant = localParticipant;
-
-          const localVideoStream = this._getLocalVideoStream();
-          if (localVideoStream) {
-            this._saveLocalVideoStream(localVideoStream);
-          }
-
-          this.connected = true;
-
-          // we're in the room, now let's request everyone's status
-          if (this.localParticipant) {
-            this.sendSignal({
-              type: SIGNAL_TYPE_PARTICIPANT_REQUEST,
-              origin: this.localParticipant.getStatus(),
-            });
-          }
+          this._onLocalParticipantJoined(localParticipant);
         }
 
         participants.forEach(someParticipant => this._isParticipantJoining(someParticipant));
@@ -650,6 +636,25 @@ class Room extends Emitter {
     }
 
     return remoteParticipant;
+  }
+
+  _onLocalParticipantJoined(localParticipant: LocalParticipant) {
+    this.localParticipant = localParticipant;
+
+    const localVideoStream = this._getLocalVideoStream();
+    if (localVideoStream) {
+      this._saveLocalVideoStream(localVideoStream);
+    }
+
+    this.connected = true;
+
+    // we're in the room, now let's request everyone's status
+    if (this.localParticipant) {
+      this.sendSignal({
+        type: SIGNAL_TYPE_PARTICIPANT_REQUEST,
+        origin: this.localParticipant.getStatus(),
+      });
+    }
   }
 
   _isParticipantJoining(participant: Participant) {

@@ -38,6 +38,7 @@ class Participant extends Emitter {
   ON_RESUME: string;
 
   /**
+   * @param room Room The room where the participant is
    * @param rawParticipant string Participant sent via the Wazo WS
    * @param extra Object extra status of the participant
    */

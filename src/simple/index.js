@@ -3,6 +3,7 @@ import Auth, { InvalidSubscription, InvalidAuthorization } from './Auth';
 import Phone from './Phone';
 import Websocket from './Websocket';
 import Room from './room/Room';
+import SipRoom from './room/SipRoom';
 import RemoteParticipant from './room/RemoteParticipant';
 import LocalParticipant from './room/LocalParticipant';
 import Stream from './room/Stream';
@@ -42,6 +43,7 @@ const Wazo = {
   Phone,
   Websocket,
   Room,
+  SipRoom,
   RemoteParticipant,
   LocalParticipant,
   Stream,
