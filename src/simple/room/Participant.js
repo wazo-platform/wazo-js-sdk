@@ -3,7 +3,7 @@ import Emitter from '../../utils/Emitter';
 import IssueReporter from '../../service/IssueReporter';
 
 import Room, { SIGNAL_TYPE_PARTICIPANT_UPDATE } from './Room';
-import Contact from "../../domain/Contact";
+import Contact from '../../domain/Contact';
 
 const logger = IssueReporter.loggerFor('room');
 
