@@ -3,6 +3,7 @@ import Emitter from '../../utils/Emitter';
 import IssueReporter from '../../service/IssueReporter';
 
 import Room, { SIGNAL_TYPE_PARTICIPANT_UPDATE } from './Room';
+import Contact from "../../domain/Contact";
 
 const logger = IssueReporter.loggerFor('room');
 
@@ -268,6 +269,11 @@ class Participant extends Emitter {
     // Poor man's object comparison
     if (typeof status.extra !== 'undefined' && JSON.stringify(this.extra) !== JSON.stringify(status.extra)) {
       this.extra = { ...this.extra, ...status.extra };
+
+      if (this.extra.contact && !(this.extra.contact instanceof Contact)) {
+        this.extra.contact = new Contact(this.extra.contact);
+      }
+
       this.triggerUpdate(this.ON_EXTRA_CHANGE, broadcast);
     }
   }
