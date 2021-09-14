@@ -95,7 +95,7 @@ class SipRoom extends Room {
     });
 
     const participantIdx = this.participants.findIndex(other => other.callId === participant.callId);
-    if (participantIdx !== -1) {
+    if (participantIdx !== -1 && name) {
       this.participants[participantIdx].name = name;
       return;
     }
