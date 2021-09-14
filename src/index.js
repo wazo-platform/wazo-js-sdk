@@ -28,6 +28,8 @@ import Room from './domain/Room';
 import CallSession from './domain/CallSession';
 import IndirectTransfer from './domain/IndirectTransfer';
 import SwitchboardCall from './domain/SwitchboardCall';
+import WebRTCPhone from './domain/Phone/WebRTCPhone';
+import CTIPhone from './domain/Phone/CTIPhone';
 import type {
   NewContact as NewContactType,
   ContactResponse as ContactResponseType,
@@ -94,6 +96,7 @@ export default {
   ServerError,
   Call,
   CallSession,
+  CTIPhone,
   Features,
   IndirectTransfer,
   SwitchboardCall,
@@ -118,4 +121,5 @@ export default {
   LINE_STATE,
   SOCKET_EVENTS,
   Wazo,
+  WebRTCPhone,
 };
