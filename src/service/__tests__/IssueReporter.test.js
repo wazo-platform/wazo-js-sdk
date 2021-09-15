@@ -41,6 +41,8 @@ describe('IssueReporter', () => {
     expect(IssueReporter._isLevelAbove('error', 'warn')).toBeTruthy();
     expect(IssueReporter._isLevelAbove('info', 'warn')).toBeFalsy();
     expect(IssueReporter._isLevelAbove('trace', 'trace')).toBeFalsy();
+    expect(IssueReporter._isLevelAbove('trace', 'something')).toBeFalsy();
+    expect(IssueReporter._isLevelAbove('something', 'trace')).toBeFalsy();
   });
 
   it('should send if verbosity is higher than required', () => {
