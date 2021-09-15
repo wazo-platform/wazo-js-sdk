@@ -10,7 +10,7 @@ const logger = IssueReporter.loggerFor('sdk-sip-room');
 class SipRoom extends Room {
 
   static async connect({ extension, constraints, audioOnly = false, extra, room }: Object) {
-    logger.info('connecting to room', { extension, audioOnly, room: !!room });
+    logger.info('connecting to sip room', { extension, audioOnly, room: !!room });
 
     if (!room) {
       await Wazo.Phone.connect();
@@ -98,6 +98,11 @@ class SipRoom extends Room {
     }
 
     if (isLocal) {
+      // Should be updated by the Wazo WS but we don't have it for now
+      if (this.callSession) {
+        this.callSession.ringing = false;
+      }
+
       this._onLocalParticipantJoined(participant);
 
       // Give some time for the stream to be updated

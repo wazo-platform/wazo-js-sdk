@@ -617,19 +617,25 @@ export default class WebRTCClient extends Emitter {
       return false;
     }
 
-    let muted = false;
+    let muted = true;
     const pc = session.sessionDescriptionHandler.peerConnection;
     if (!pc) {
       return false;
     }
 
     if (pc.getSenders) {
+      if (!pc.getSenders().length) {
+        return false;
+      }
       pc.getSenders().forEach(sender => {
         if (sender && sender.track && sender.track.kind === 'audio') {
           muted = muted && !sender.track.enabled;
         }
       });
     } else {
+      if (!pc.getLocalStreams().length) {
+        return false;
+      }
       pc.getLocalStreams().forEach(stream => {
         stream.getAudioTracks().forEach(track => {
           muted = muted && !track.enabled;
