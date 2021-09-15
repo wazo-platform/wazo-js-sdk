@@ -913,7 +913,8 @@ export default class WebRTCClient extends Emitter {
     }
     const sdh = session.sessionDescriptionHandler;
     const pc = sdh.peerConnection;
-    const localStream = this.getLocalStream(this.getSipSessionId(session));
+    const sessionId = this.getSipSessionId(session);
+    const localStream = this.getLocalStream(sessionId);
 
     // Release old video stream
     if (localStream) {
@@ -939,11 +940,8 @@ export default class WebRTCClient extends Emitter {
 
       // let's update the local stream
       this.eventEmitter.emit('onVideoInputChange', stream);
-      try {
-        await sdh.setLocalMediaStream(stream);
-      } catch (_) {
-        // Nothing to do
-      }
+      this.setLocalMediaStream(sessionId, stream);
+
       return stream;
     });
   }
