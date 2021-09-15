@@ -33,6 +33,22 @@ class SipRoom extends Room {
     return room;
   }
 
+  mute() {
+    logger.info('mute sip room');
+
+    Wazo.Phone.mute(this.callSession, false);
+
+    this.sendMuteStatus();
+  }
+
+  unmute() {
+    logger.info('unmute sip room');
+
+    Wazo.Phone.unmute(this.callSession, false);
+
+    this.sendUnMuteStatus();
+  }
+
   // Overridden to not listen to websocket messages
   _transferEvents() {
     // Phone events

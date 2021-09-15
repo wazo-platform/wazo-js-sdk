@@ -171,13 +171,18 @@ class Phone extends Emitter {
     return adHocConference.start();
   }
 
-  mute(callSession: CallSession) {
-    this.muteViaAPI(callSession);
+  mute(callSession: CallSession, withApi: boolean = true) {
+    if (withApi) {
+      this.muteViaAPI(callSession);
+    }
+
     return this.phone && this.phone.mute(callSession);
   }
 
-  unmute(callSession: CallSession) {
-    this.unmuteViaAPI(callSession);
+  unmute(callSession: CallSession, withApi: boolean = true) {
+    if (withApi) {
+      this.unmuteViaAPI(callSession);
+    }
 
     return this.phone && this.phone.unmute(callSession);
   }
@@ -281,6 +286,10 @@ class Phone extends Emitter {
 
   hasLocalVideo(callSession: CallSession) {
     return this.phone && this.phone.hasLocalVideo(callSession);
+  }
+
+  hasALocalVideoTrack(callSession: CallSession) {
+    return this.phone && this.phone.hasALocalVideoTrack(callSession);
   }
 
   // @Deprecated

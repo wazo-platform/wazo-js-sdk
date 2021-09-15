@@ -371,6 +371,22 @@ class Room extends Emitter {
     return response;
   }
 
+  hasALocalVideoTrack() {
+    return Wazo.Phone.hasALocalVideoTrack(this.callSession);
+  }
+
+  getLocalStream() {
+    return Wazo.Phone.getLocalStream(this.callSession);
+  }
+
+  getRemoteStream() {
+    return Wazo.Phone.getRemoteStream(this.callSession);
+  }
+
+  getRemoteVideoStream() {
+    return Wazo.Phone.getRemoteVideoStream(this.callSession);
+  }
+
   _bindEvents() {
     if (!Wazo.Phone.phone || !Wazo.Phone.phone.currentSipSession) {
       return;
