@@ -617,7 +617,7 @@ export default class WebRTCClient extends Emitter {
       return false;
     }
 
-    let muted = true;
+    let muted = false;
     const pc = session.sessionDescriptionHandler.peerConnection;
     if (!pc) {
       return false;
