@@ -4,6 +4,7 @@ import type { UUID, ListConfdUsersResponse, ListApplicationsResponse } from '../
 import Profile from '../domain/Profile';
 import SipLine from '../domain/SipLine';
 import ExternalApp from '../domain/ExternalApp';
+import Meeting from '../domain/Meeting';
 
 export default (client: ApiRequester, baseUrl: string) => ({
   listUsers: (): Promise<ListConfdUsersResponse> => client.get(`${baseUrl}/users`, null),
@@ -67,4 +68,13 @@ export default (client: ApiRequester, baseUrl: string) => ({
       return null;
     }
   },
+
+  createMyMeeting: (name: string): Promise<Meeting> =>
+    client.post(`${baseUrl}/users/me/meetings`, { name }).then(Meeting.parse),
+
+  deleteMyMeeting: (meetingUuid: string): Promise<Meeting> =>
+    client.delete(`${baseUrl}/users/me/meetings/${meetingUuid}`, null),
+
+  getMeeting: (meetingUuid: string): Promise<Meeting> =>
+    client.get(`${baseUrl}/meetings/${meetingUuid}`, null).then(Meeting.parse),
 });

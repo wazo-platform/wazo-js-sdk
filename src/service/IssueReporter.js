@@ -243,7 +243,13 @@ class IssueReporter {
   }
 
   _isLevelAbove(level1: string, level2: string) {
-    return LOG_LEVELS.indexOf(level1) > LOG_LEVELS.indexOf(level2);
+    const index1 = LOG_LEVELS.indexOf(level1);
+    const index2 = LOG_LEVELS.indexOf(level2);
+    if (index1 === -1 || index2 === -1) {
+      return false;
+    }
+
+    return index1 > index2;
   }
 
   _makeCategory(category: string) {
