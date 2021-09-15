@@ -1249,6 +1249,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return callSession ? this.client.hasLocalVideo(callSession.sipCallId) : null;
   }
 
+  hasALocalVideoTrack(callSession: CallSession) {
+    return callSession ? this.client.hasALocalVideoTrack(callSession.sipCallId) : null;
+  }
+
   getRemoteStream(callSession: CallSession): ?MediaStream {
     return callSession ? this.client.getRemoteStream(callSession.sipCallId) : null;
   }
