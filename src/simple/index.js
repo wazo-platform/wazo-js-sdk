@@ -36,6 +36,7 @@ import IndirectTransfer from '../domain/IndirectTransfer';
 import SwitchboardCall from '../domain/SwitchboardCall';
 import IssueReporter from '../service/IssueReporter';
 import Features from '../domain/Features';
+import Meeting from '../domain/Meeting';
 import Checker from '../checker/Checker';
 
 const Wazo = {
@@ -80,6 +81,7 @@ const Wazo = {
     IndirectTransfer,
     SwitchboardCall,
     WebRTCPhone,
+    Meeting,
   },
 
   // Api
