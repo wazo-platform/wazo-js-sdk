@@ -648,6 +648,8 @@ class Room extends Emitter {
 
     this.connected = true;
 
+    localParticipant.broadcastStatus();
+
     // we're in the room, now let's request everyone's status
     if (this.localParticipant) {
       this.sendSignal({

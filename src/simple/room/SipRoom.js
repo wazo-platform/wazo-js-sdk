@@ -85,10 +85,11 @@ class SipRoom extends Room {
     const callId = channel.id;
     const ParticipantClass = isLocal ? Wazo.LocalParticipant : Wazo.RemoteParticipant;
     const name = channel.caller ? channel.caller.name : null;
+    const extra = isLocal ? { guestName: this._getLocalGuestName() } : {};
     const participant = new ParticipantClass(this, {
       caller_id_name: name,
       call_id: callId,
-    });
+    }, extra);
 
     const participantIdx = this.participants.findIndex(other => other.callId === participant.callId);
     if (participantIdx !== -1 && name) {
@@ -114,6 +115,10 @@ class SipRoom extends Room {
 
   _getCurrentSipCallIs() {
     return Wazo.Phone.getSipSessionId(Wazo.Phone.phone.currentSipSession);
+  }
+
+  _getLocalGuestName() {
+    return Wazo.Phone.phone.client.userAgent.options.displayName;
   }
 
 }
