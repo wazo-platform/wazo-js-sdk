@@ -30,6 +30,7 @@ import IndirectTransfer from './domain/IndirectTransfer';
 import SwitchboardCall from './domain/SwitchboardCall';
 import WebRTCPhone from './domain/Phone/WebRTCPhone';
 import CTIPhone from './domain/Phone/CTIPhone';
+import Meeting from './domain/Meeting';
 import type {
   NewContact as NewContactType,
   ContactResponse as ContactResponseType,
@@ -122,4 +123,5 @@ export default {
   SOCKET_EVENTS,
   Wazo,
   WebRTCPhone,
+  Meeting,
 };
