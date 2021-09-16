@@ -7,7 +7,8 @@ export type MeetingCreationResponse = {
   name: string,
   owner_uuids: Array<string>,
   port: string,
-  uuid: string
+  uuid: string,
+  number: string
 }
 
 export default class Meeting {
@@ -18,6 +19,7 @@ export default class Meeting {
   uuid: string;
   name: string;
   port: string;
+  number: string;
   ownerUuids: Array<string>;
 
   static parse(plain: MeetingCreationResponse): Meeting {
@@ -28,6 +30,7 @@ export default class Meeting {
       ownerUuids: plain.owner_uuids,
       port: plain.port,
       uuid: plain.uuid,
+      number: plain.number,
     });
   }
 
@@ -35,13 +38,14 @@ export default class Meeting {
     return newFrom(meeting, Meeting);
   }
 
-  constructor({ uuid, name, guestSipAuthorization, ownerUuids, port, hostname }: Object = {}) {
+  constructor({ uuid, name, guestSipAuthorization, ownerUuids, port, hostname, number }: Object = {}) {
     this.guestSipAuthorization = guestSipAuthorization;
     this.hostname = hostname;
     this.name = name;
     this.ownerUuids = ownerUuids;
     this.port = port;
     this.uuid = uuid;
+    this.number = number;
 
     // Useful to compare instead of instanceof with minified code
     this.type = 'Meeting';
@@ -49,7 +53,7 @@ export default class Meeting {
 
   getGuestSipCredentials() {
     // eslint-disable-next-line no-undef
-    const [number, secret] = atob(this.guestSipAuthorization).split(':');
-    return { number, secret };
+    const [username, secret] = atob(this.guestSipAuthorization).split(':');
+    return { username, secret };
   }
 }
