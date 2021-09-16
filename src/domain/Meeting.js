@@ -47,7 +47,7 @@ export default class Meeting {
     this.type = 'Meeting';
   }
 
-  getRoomCredentials() {
+  getGuestSipCredentials() {
     // eslint-disable-next-line no-undef
     const [number, secret] = atob(this.guestSipAuthorization).split(':');
     return { number, secret };
