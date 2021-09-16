@@ -1280,6 +1280,25 @@ export default class WebRTCClient extends Emitter {
     return sessionId in this.conferences;
   }
 
+  createAudioElementFor(sessionId: string) {
+    const audio: any = document.createElement('audio');
+    audio.setAttribute('id', `audio-${sessionId}`);
+
+    if (audio.setSinkId && this.audioOutputDeviceId) {
+      audio.setSinkId(this.audioOutputDeviceId);
+    }
+
+    if (document.body) {
+      document.body.appendChild(audio);
+    }
+    this.audioElements[sessionId] = audio;
+
+    audio.volume = this.audioOutputVolume;
+    audio.autoplay = true;
+
+    return audio;
+  }
+
   _onTransportError() {
     this.eventEmitter.emit(TRANSPORT_ERROR);
     this.attemptReconnection();
@@ -1584,20 +1603,10 @@ export default class WebRTCClient extends Emitter {
     const isConference = this.isConference(sessionId);
 
     if (this._hasAudio() && this._isWeb() && !(sessionId in this.audioElements)) {
-      const audio: any = document.createElement('audio');
-      audio.setAttribute('id', `audio-${sessionId}`);
-
-      if (audio.setSinkId && this.audioOutputDeviceId) {
-        audio.setSinkId(this.audioOutputDeviceId);
-      }
-
-      if (document.body) {
-        document.body.appendChild(audio);
-      }
-      this.audioElements[sessionId] = audio;
+      this.createAudioElementFor(sessionId);
     }
 
-    const audioElement = this.audioElements[this.getSipSessionId(session)];
+    const audioElement = this.audioElements[sessionId];
     const stream = newStream || this.getRemoteStream(sessionId);
 
     if (!this._isWeb() || !stream) {

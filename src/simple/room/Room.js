@@ -261,13 +261,21 @@ class Room extends Emitter {
     return screensharingStream;
   }
 
-  stopScreenSharing(restoreLocalStream: boolean = true) {
+  async stopScreenSharing(restoreLocalStream: boolean = true) {
     logger.info('stop room screen sharing');
 
-    Wazo.Phone.stopScreenSharing(this.callSession, restoreLocalStream);
+    const reinvited = await Wazo.Phone.stopScreenSharing(this.callSession, restoreLocalStream);
 
     if (this.localParticipant) {
       this.localParticipant.onStopScreensharing();
+    }
+
+    if (!reinvited && this.localParticipant) {
+      // When we had video and we made a screenshare we don't reinvite when stopping the screensahre
+      // So not REINVITE even is fired, we have to restore the video stream manually
+      const localVideoStream = Wazo.Phone.getLocalVideoStream(this.callSession);
+      // $FlowFixMe
+      this._associateStreamTo(localVideoStream, this.localParticipant);
     }
   }
 
@@ -408,27 +416,10 @@ class Room extends Emitter {
       logger.info('on room audio stream');
 
       this.audioStream = stream;
-      if (document.createElement) {
-        // $FlowFixMe
-        let roomAudioElement: HTMLAudioElement = document.getElementById('audio-room');
-        if (!this.roomAudioElement) {
-          roomAudioElement = document.createElement('audio');
-          // $FlowFixMe
-          document.body.appendChild(roomAudioElement);
-        }
-        if (!roomAudioElement) {
-          return;
-        }
-        this.roomAudioElement = roomAudioElement;
+      if (!this.roomAudioElement) {
+        const sessionId = Wazo.Phone.phone.getSipSessionId(Wazo.Phone.phone.currentSipSession);
+        this.roomAudioElement = Wazo.Phone.phone.createAudioElementFor(sessionId);
         this.roomAudioElement.srcObject = stream;
-        this.roomAudioElement.autoplay = true;
-        this.roomAudioElement.id = 'audio-room';
-
-        // $FlowFixMe
-        if (this.roomAudioElement.setSinkId) {
-          // $FlowFixMe
-          this.roomAudioElement.setSinkId(Wazo.Phone.getOutputDevice());
-        }
       }
     });
 

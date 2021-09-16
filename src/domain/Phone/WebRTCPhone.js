@@ -200,7 +200,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     });
 
     if (!sipSession) {
-      return null;
+      return false;
     }
 
     // $FlowFixMe
@@ -210,13 +210,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
     // Downgrade
     if (constraints && !isUpgrade) {
       // No reinvite needed
-      return this._downgradeToAudio(callSession);
+      this._downgradeToAudio(callSession);
+      return false;
     }
 
     if (isUpgrade) {
       const shouldReinvite = await this._upgradeToVideo(callSession, constraints, conference);
       if (!shouldReinvite) {
-        return;
+        return false;
       }
     }
 
@@ -295,7 +296,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   _downgradeToAudio(callSession: ?CallSession) {
     const sipSession = this.findSipSession(callSession);
     if (!sipSession) {
-      return;
+      return false;
     }
 
     // Release local video stream when downgrading to audio
@@ -499,6 +500,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
       localStream.removeTrack(videoTrack);
     }
 
+    if (localStream) {
+      localStream.addTrack(screenTrack);
+    }
+
     if (sender) {
       sender.replaceTrack(screenTrack);
     }
@@ -514,6 +519,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     logger.info('WebRTC phone - stop screen sharing');
+    let reinvited = false;
 
     try {
       if (this.currentScreenShare.stream) {
@@ -528,7 +534,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
         // When upgrading directly to screenshare (eg: we don't have a videoLocalStream to replace)
         // We have to downgrade to audio.
         const screenshareStopped = this.currentScreenShare.sender && this.currentScreenShare.hadVideo;
-        await this.sendReinvite(targetCallSession, { audio: false, video: screenshareStopped }, conference);
+        const constraints = { audio: false, video: screenshareStopped };
+        reinvited = await this.sendReinvite(targetCallSession, constraints, conference);
       }
     } catch (e) {
       console.warn(e);
@@ -542,6 +549,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
     );
 
     this.currentScreenShare = null;
+
+    return reinvited;
   }
 
   async _getStreamFromConstraints(constraints: Object, conference: boolean = false): Promise<?MediaStream> {
@@ -600,6 +609,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
     logger.info('WebRTC phone - change audio device', { deviceId: id });
     this.audioOutputDeviceId = id;
     this.client.changeAudioOutputDevice(id);
+  }
+
+  createAudioElementFor(sessionId: string) {
+    return this.client.createAudioElementFor(sessionId);
   }
 
   changeRingDevice(id: string) {
