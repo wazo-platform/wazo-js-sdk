@@ -1,4 +1,3 @@
-/* global document */
 // @flow
 import type { Message } from 'sip.js/lib/api/message';
 import sdpParser from 'sdp-transform';
@@ -22,6 +21,7 @@ class Room extends Emitter {
   name: string;
   extension: string;
   sourceId: ?number;
+  meetingUuid: ?string;
   participants: Participant[];
   callId: ?string;
   connected: boolean;
@@ -43,6 +43,8 @@ class Room extends Emitter {
 
   CONFERENCE_USER_PARTICIPANT_JOINED: string;
   CONFERENCE_USER_PARTICIPANT_LEFT: string;
+  MEETING_USER_PARTICIPANT_JOINED: string;
+  MEETING_USER_PARTICIPANT_LEFT: string;
   ON_SHARE_SCREEN_ENDED: string;
   ON_MESSAGE: string;
   ON_CHAT: string;
@@ -60,6 +62,7 @@ class Room extends Emitter {
    * @param extension string
    * @param sourceId number
    * @param callId string
+   * @param meetingUuid string
    * @param extra Object
    */
   constructor(
@@ -67,15 +70,17 @@ class Room extends Emitter {
     extension: string,
     sourceId: ?number,
     callId: ?string,
+    meetingUuid: ?string,
     extra: Object = {},
   ) {
     super();
-    logger.info('room initialized', { callId, extension, sourceId });
+    logger.info('room initialized', { callId, extension, sourceId, meetingUuid });
 
     // Represents the room callSession
     this.callSession = callSession;
     this.extension = extension;
     this.sourceId = sourceId;
+    this.meetingUuid = meetingUuid;
     this.callId = callId;
     this.participants = [];
     this.connected = false;
@@ -95,6 +100,8 @@ class Room extends Emitter {
     // Sugar syntax for `room.EVENT_NAME`
     this.CONFERENCE_USER_PARTICIPANT_JOINED = Wazo.Websocket.CONFERENCE_USER_PARTICIPANT_JOINED;
     this.CONFERENCE_USER_PARTICIPANT_LEFT = Wazo.Websocket.CONFERENCE_USER_PARTICIPANT_LEFT;
+    this.MEETING_USER_PARTICIPANT_JOINED = Wazo.Websocket.MEETING_USER_PARTICIPANT_JOINED;
+    this.MEETING_USER_PARTICIPANT_LEFT = Wazo.Websocket.MEETING_USER_PARTICIPANT_LEFT;
     this.ON_SHARE_SCREEN_ENDED = Wazo.Phone.ON_SHARE_SCREEN_ENDED;
     this.ON_MESSAGE = Wazo.Phone.ON_MESSAGE;
     this.ON_CHAT = Wazo.Phone.ON_CHAT;
@@ -129,9 +136,10 @@ class Room extends Emitter {
    * @param audioOnly boolean
    * @param extra Object
    * @param room ?Room
+   * @param meeting ?Meeting
    * @returns {Promise<Room>}
    */
-  static async connect({ extension, constraints, audioOnly = false, extra, room }: Object) {
+  static async connect({ extension, constraints, audioOnly = false, extra, room, meeting }: Object) {
     logger.info('connecting to room', { extension, audioOnly, room: !!room });
 
     if (!room) {
@@ -166,21 +174,31 @@ class Room extends Emitter {
       room.setCallId(room.callSession.call.id);
     }
 
-    // Fetch conference source
-    const sources = await getApiClient().dird.fetchConferenceSource('default');
-    // Retrieve conference sources
-    const contacts = await getApiClient().dird.fetchConferenceContacts(sources.items[0]);
-    // Retrieve conference
-    const conference = contacts.find(contact => contact.numbers.find(number => number.number === extension));
+    if (!meeting) {
+      // Fetch conference source
+      const sources = await getApiClient().dird.fetchConferenceSource('default');
+      // Retrieve conference sources
+      const contacts = await getApiClient().dird.fetchConferenceContacts(sources.items[0]);
+      // Retrieve conference
+      const conference = contacts.find(contact => contact.numbers.find(number => number.number === extension));
 
-    logger.info('connected to room', {
-      sourceId: conference ? conference.sourceId : null,
-      name: conference ? conference.name : null,
-    });
+      logger.info('connected to room', {
+        sourceId: conference ? conference.sourceId : null,
+        name: conference ? conference.name : null,
+      });
 
-    if (conference) {
-      room.setSourceId(conference.sourceId);
-      room.setName(conference.name);
+      if (conference) {
+        room.setSourceId(conference.sourceId);
+        room.setName(conference.name);
+      }
+    } else if (meeting) {
+      logger.info('Already connected to meeting', {
+        uuid: meeting.uuid,
+        name: meeting.name,
+      });
+
+      room.setMeetingUuid(meeting.uuid);
+      room.setName(meeting.name);
     }
 
     return room;
@@ -208,16 +226,20 @@ class Room extends Emitter {
     Wazo.Phone.phone.off(Wazo.Phone.phone.client.ON_REINVITE, this._boundOnReinvite);
     Wazo.Websocket.off(this.CONFERENCE_USER_PARTICIPANT_JOINED, this._boundOnParticipantJoined);
     Wazo.Websocket.off(this.CONFERENCE_USER_PARTICIPANT_LEFT, this._boundOnParticipantLeft);
-
-    if (this.roomAudioElement && document.body) {
-      document.body.removeChild(this.roomAudioElement);
-    }
+    Wazo.Websocket.off(this.MEETING_USER_PARTICIPANT_JOINED, this._boundOnParticipantJoined);
+    Wazo.Websocket.off(this.MEETING_USER_PARTICIPANT_LEFT, this._boundOnParticipantLeft);
   }
 
   setSourceId(sourceId: number) {
     logger.info('set room source id', { sourceId });
 
     this.sourceId = sourceId;
+  }
+
+  setMeetingUuid(meetingUuid: string) {
+    logger.info('set meeting uuid', { meetingUuid });
+
+    this.meetingUuid = meetingUuid;
   }
 
   setCallId(callId: string) {
@@ -494,6 +516,9 @@ class Room extends Emitter {
     Wazo.Websocket.on(this.CONFERENCE_USER_PARTICIPANT_JOINED, this._boundOnParticipantJoined);
     Wazo.Websocket.on(this.CONFERENCE_USER_PARTICIPANT_LEFT, this._boundOnParticipantLeft);
 
+    Wazo.Websocket.on(this.MEETING_USER_PARTICIPANT_JOINED, this._boundOnParticipantJoined);
+    Wazo.Websocket.on(this.MEETING_USER_PARTICIPANT_LEFT, this._boundOnParticipantLeft);
+
     // Phone events
     Wazo.Phone.on(this.ON_MESSAGE, this._boundOnMessage);
     Wazo.Phone.on(this.ON_CHAT, this._boundOnChat);
@@ -605,8 +630,13 @@ class Room extends Emitter {
 
       // Retrieve participants via an API calls
       const conferenceId = this.sourceId || payload.data.conference_id;
-      const response = await getApiClient().calld.getConferenceParticipantsAsUser(conferenceId);
-      logger.info('fetching conference participants', { conferenceId });
+      let response;
+      try {
+        logger.info('fetching conference participants', { conferenceId });
+        response = await getApiClient().calld.getConferenceParticipantsAsUser(conferenceId);
+      } catch (e) {
+        logger.error('room participants fetching, error', e);
+      }
       if (response) {
         logger.info('conference participants fetched', { nb: response.items.length });
         participants = response.items.map(item => {
@@ -626,6 +656,13 @@ class Room extends Emitter {
 
         participants.forEach(someParticipant => this._isParticipantJoining(someParticipant));
         this.eventEmitter.emit(this.ON_JOINED, localParticipant, participants);
+      } else {
+        // TMP
+        const localParticipant = new Wazo.LocalParticipant(this, participant, this.extra);
+        this._onLocalParticipantJoined(localParticipant);
+
+        this.participants = [localParticipant];
+        this.eventEmitter.emit(this.ON_JOINED, localParticipant, this.participants);
       }
 
       return this.participants;

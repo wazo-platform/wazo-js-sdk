@@ -91,6 +91,17 @@ export type RoomParticipantUpdate = {
   muted: boolean,
   user_uuid: string,
 };
+export type MeetingParticipantUpdate = {
+  admin: boolean,
+  call_id: string,
+  caller_id_name: string,
+  caller_id_number: string,
+  room_uuid: string,
+  id: string,
+  language: string,
+  muted: boolean,
+  user_uuid: string,
+};
 
 export type FaxOutboundFailedEvent = {
   call_id: string,
@@ -145,6 +156,14 @@ type ParticipantLeftRoom = WebSocketBaseMessage & {
   data: RoomParticipantUpdate,
   name: 'conference_user_participant_left',
 };
+type ParticipantJoinedMeeting = WebSocketBaseMessage & {
+  data: MeetingParticipantUpdate,
+  name: 'meeting_user_participant_joined',
+};
+type ParticipantLeftMeeting = WebSocketBaseMessage & {
+  data: MeetingParticipantUpdate,
+  name: 'meeting_user_participant_left',
+};
 type SwitchboardQueuedCallsUpdated = WebSocketBaseMessage & {
   data: SwitchboardCallItems,
   name: 'switchboard_queued_calls_updated',
@@ -194,6 +213,8 @@ export type WebSocketMessage =
   | SwitchboardHeldCallAnswered
   | ParticipantJoinedRoom
   | ParticipantLeftRoom
+  | ParticipantJoinedMeeting
+  | ParticipantLeftMeeting
   | FaxOutboundFailed
   | FaxOutboundSucceeded
   | AgentStatusUpdate

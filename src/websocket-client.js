@@ -59,6 +59,8 @@ export const CONFERENCE_USER_PARTICIPANT_JOINED = 'conference_user_participant_j
 export const CONFERENCE_USER_PARTICIPANT_LEFT = 'conference_user_participant_left';
 export const CONFERENCE_USER_PARTICIPANT_TALK_STARTED = 'conference_user_participant_talk_started';
 export const CONFERENCE_USER_PARTICIPANT_TALK_STOPPED = 'conference_user_participant_talk_stopped';
+export const MEETING_USER_PARTICIPANT_JOINED = 'meeting_user_participant_joined';
+export const MEETING_USER_PARTICIPANT_LEFT = 'meeting_user_participant_left';
 export const SWITCHBOARD_QUEUED_CALLS_UPDATED = 'switchboard_queued_calls_updated';
 export const SWITCHBOARD_QUEUED_CALL_ANSWERED = 'switchboard_queued_call_answered';
 export const SWITCHBOARD_HELD_CALLS_UPDATED = 'switchboard_held_calls_updated';
@@ -408,6 +410,8 @@ WebSocketClient.eventLists = [
   CHATD_USER_ROOM_CREATED,
   CONFERENCE_USER_PARTICIPANT_JOINED,
   CONFERENCE_USER_PARTICIPANT_LEFT,
+  MEETING_USER_PARTICIPANT_JOINED,
+  MEETING_USER_PARTICIPANT_LEFT,
   CONFERENCE_USER_PARTICIPANT_TALK_STARTED,
   CONFERENCE_USER_PARTICIPANT_TALK_STOPPED,
   SWITCHBOARD_QUEUED_CALLS_UPDATED,
