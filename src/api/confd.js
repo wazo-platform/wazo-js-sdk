@@ -77,4 +77,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   getMeeting: (meetingUuid: string): Promise<Meeting> =>
     client.get(`${baseUrl}/meetings/${meetingUuid}`, null).then(Meeting.parse),
+
+  guestGetMeeting: (meetingUuid: string): Promise<Meeting> =>
+    client.get(`${baseUrl}/guests/me/meetings/${meetingUuid}`, null).then(Meeting.parse),
 });
