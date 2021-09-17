@@ -343,6 +343,9 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
 
         // set the transceiver direction to the answer direction
         this._peerConnection.getTransceivers().forEach((transceiver) => {
+          if (transceiver.stopped) {
+            return;
+          }
           if (transceiver.direction /* guarding, but should always be true */) {
             const { receiver } = transceiver;
             if (isConference && audioOnly && receiver.track && receiver.track.kind === 'video') {
@@ -391,6 +394,9 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
 
       // Do not reuse sender video tracks in SFU
       if (sender && (!sfu || newTrack.kind === 'audio')) {
+        if (sender.track) {
+          newTrack.enabled = sender.track.enabled;
+        }
         trackUpdates.push(
           new Promise((resolve) => {
             this.logger.debug(`SessionDescriptionHandler.setLocalMediaStream - replacing sender ${kind} track`);
