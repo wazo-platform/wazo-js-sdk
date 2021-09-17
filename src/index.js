@@ -5,6 +5,7 @@ import WebRTCClient from './web-rtc-client';
 import WebSocketClient, { SOCKET_EVENTS } from './websocket-client';
 import Emitter from './utils/Emitter';
 import IssueReporter from './service/IssueReporter';
+import WebRTCPhone from './domain/Phone/WebRTCPhone';
 
 // Domain
 import BadResponse from './domain/BadResponse';
@@ -90,6 +91,7 @@ export default {
   WazoApiClient: ApiClient,
   WazoWebRTCClient: WebRTCClient,
   WazoWebSocketClient: WebSocketClient,
+  WazoWebRTCPhone: WebRTCPhone,
   BadResponse,
   ServerError,
   Call,
