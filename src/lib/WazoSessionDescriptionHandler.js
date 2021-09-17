@@ -395,6 +395,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       // Do not reuse sender video tracks in SFU
       if (sender && (!sfu || newTrack.kind === 'audio')) {
         if (sender.track) {
+          // eslint-disable-next-line no-param-reassign
           newTrack.enabled = sender.track.enabled;
         }
         trackUpdates.push(
