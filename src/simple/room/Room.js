@@ -632,8 +632,13 @@ class Room extends Emitter {
       const conferenceId = this.sourceId || payload.data.conference_id;
       let response;
       try {
-        logger.info('fetching conference participants', { conferenceId });
-        response = await getApiClient().calld.getConferenceParticipantsAsUser(conferenceId);
+        if (this.meetingUuid) {
+          logger.info('fetching meeting participants', { meetingUuid: this.meetingUuid });
+          response = await getApiClient().calld.getMeetingParticipantsAsUser(this.meetingUuid);
+        } else {
+          logger.info('fetching conference participants', { conferenceId });
+          response = await getApiClient().calld.getConferenceParticipantsAsUser(conferenceId);
+        }
       } catch (e) {
         logger.error('room participants fetching, error', e);
       }
