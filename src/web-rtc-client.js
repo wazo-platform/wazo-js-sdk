@@ -96,6 +96,7 @@ type WebRtcConfig = {
   heartbeatDelay: number,
   heartbeatTimeout: number,
   maxHeartbeats: number,
+  skipRegister: boolean,
 };
 
 // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
@@ -121,6 +122,7 @@ export default class WebRTCClient extends Emitter {
   statsIntervals: Object;
   sipSessions: { [string]: Session };
   conferences: { [string]: boolean };
+  skipRegister: boolean;
 
   // sugar
   ON_USER_AGENT: string;
@@ -159,6 +161,8 @@ export default class WebRTCClient extends Emitter {
     super();
     this.uaConfigOverrides = uaConfigOverrides;
     this.config = config;
+    this.skipRegister = config.skipRegister;
+
     this._buildConfig(config, session).then((newConfig: WebRtcConfig) => {
       this.config = newConfig;
       this.userAgent = this.createUserAgent(uaConfigOverrides);
@@ -286,14 +290,22 @@ export default class WebRTCClient extends Emitter {
   }
 
   register(tries: number = 0): Promise<any> {
-    logger.info('sdk webrtc registering...', {
+    const logInfo = {
       userAgent: !!this.userAgent,
       registered: this.isRegistered(),
       connectionPromise: !!this.connectionPromise,
       registerer: !!this.registerer,
       waiting: this.registerer && this.registerer.waiting,
       tries,
-    });
+      skipRegister: this.skipRegister,
+    };
+
+    if (this.skipRegister) {
+      logger.info('sdk webrtc skip register...', logInfo);
+      return Promise.resolve();
+    }
+
+    logger.info('sdk webrtc registering...', logInfo);
 
     if (!this.userAgent) {
       logger.info('sdk webrtc recreating User Agent');
