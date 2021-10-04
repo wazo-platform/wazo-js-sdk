@@ -91,7 +91,11 @@ export default class CallLog {
       answered: plain.answered,
       callDirection: plain.call_direction,
       destination: {
-        extension: plain.requested_extension || plain.destination_extension,
+        // @TEMP: Temporarily assuming empty numbers are meetings
+        // which is admittedly a very dangerous assumption. Did i mention it was temporary?
+        extension: plain.requested_extension
+          || plain.destination_extension
+          || `meeting-${plain.requested_name || plain.destination_name || ''}`,
         name: plain.requested_name || plain.destination_name || '',
       },
       source: {
@@ -107,27 +111,10 @@ export default class CallLog {
   }
 
   static parseNew(plain: CallLogResponse, session: Session): CallLog {
-    return new CallLog({
-      answer: plain.answer ? moment(plain.answer).toDate() : null,
-      answered: plain.answered,
-      callDirection: plain.call_direction,
-      destination: {
-        extension: plain.requested_extension || plain.destination_extension,
-        name: plain.requested_name || plain.destination_name || '',
-      },
-      source: {
-        extension: plain.source_extension,
-        name: plain.source_name,
-      },
-      id: plain.id,
-      duration: (plain.duration || 0) * 1000, // duration is in seconds
-      start: moment(plain.start).toDate(),
-      end: plain.end ? moment(plain.end).toDate() : null,
-      recordings: Recording.parseMany(plain.recordings),
-      // @TODO: FIXME add verification declined vs missed call
-      newMissedCall: session
-        && session.hasExtension(plain.requested_extension || plain.destination_extension) && !plain.answered,
-    });
+    const callLog: CallLog = CallLog.parse(plain);
+    callLog.newMissedCall = session
+      && session.hasExtension(plain.requested_extension || plain.destination_extension) && !plain.answered;
+    return callLog;
   }
 
   static newFrom(profile: CallLog) {
