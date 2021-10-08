@@ -686,6 +686,9 @@ export default class WebRTCClient extends Emitter {
     if (!this._isWeb()) {
       options.sessionDescriptionHandlerModifiers = [holdModifier];
     }
+    options.sessionDescriptionHandlerOptions = {
+      constraints: options.constraints,
+    };
 
     // Send re-INVITE
     return session.invite(options);
@@ -725,6 +728,9 @@ export default class WebRTCClient extends Emitter {
       // (eg: holdModifier)
       options.sessionDescriptionHandlerModifiers = [];
     }
+    options.sessionDescriptionHandlerOptions = {
+      constraints: options.constraints,
+    };
 
     // Send re-INVITE
     return session.invite(options);
