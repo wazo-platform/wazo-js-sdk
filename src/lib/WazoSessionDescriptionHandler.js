@@ -145,12 +145,6 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         };
       })
       .then((sessionDescription) => this.applyModifiers(sessionDescription, modifiers))
-      .then((sessionDescription) => {
-        // Set new constraints to avoid the constraints check issue in `sdh.getLocalMediaStream` later.
-        this.localMediaStreamConstraints = options.constraints;
-
-        return sessionDescription;
-      })
       .then((sessionDescription) => ({ body: sessionDescription.sdp, contentType: 'application/sdp' }))
       .catch((error) => {
         wazoLogger.error('error when creating media', error);

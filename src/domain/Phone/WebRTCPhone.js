@@ -221,9 +221,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
       }
     }
 
-    // Force reinvite in SDH
-    sipSession.sessionDescriptionHandler.localMediaStreamConstraints = null;
-
     return this.client.reinvite(sipSession, constraints, conference, audioOnly);
   }
 
