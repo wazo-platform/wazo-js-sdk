@@ -116,7 +116,9 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       .then(() => {
         if (isConference && (options.constraints && !options.constraints.video) && !('hold' in options) && !audioOnly) {
           // Add a video an empty bundle to be able to replaceTrack when joining a conference without video
-          this.peerConnection.addTransceiver('video', { streams: [this._localMediaStream], direction: 'sendrecv' });
+          if (this.peerConnection.addTransceiver) {
+            this.peerConnection.addTransceiver('video', { streams: [this._localMediaStream], direction: 'sendrecv' });
+          }
         }
       })
       .then(() => this.createLocalOfferOrAnswer(options))
@@ -390,7 +392,8 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       if (kind !== 'audio' && kind !== 'video') {
         throw new Error(`Unknown new track kind ${kind}.`);
       }
-      const sender = pc.getSenders().find((otherSender) => otherSender.track && otherSender.track.kind === kind);
+      const sender = pc.getSenders && pc.getSenders().find((otherSender) =>
+        otherSender.track && otherSender.track.kind === kind);
 
       // Do not reuse sender video tracks in SFU
       if (sender && (!sfu || newTrack.kind === 'audio')) {
@@ -431,7 +434,11 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
             // Review: could make streamless tracks a configurable option?
             // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/addTrack#Usage_notes
             try {
-              pc.addTrack(newTrack, localStream);
+              if (pc.addTrack) {
+                pc.addTrack(newTrack, localStream);
+              } else {
+                pc.addStream(localStream);
+              }
             } catch (error) {
               this.logger.error(`SessionDescriptionHandler.setLocalMediaStream - failed to add sender ${kind} track`);
               throw error;

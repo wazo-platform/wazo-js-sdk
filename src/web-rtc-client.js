@@ -1255,9 +1255,11 @@ export default class WebRTCClient extends Emitter {
       remoteStream.removeTrack(track);
     });
 
-    pc.getReceivers().forEach(receiver => {
-      remoteStream.addTrack(receiver.track);
-    });
+    if (pc.getReceivers) {
+      pc.getReceivers().forEach(receiver => {
+        remoteStream.addTrack(receiver.track);
+      });
+    }
   }
 
   getMediaConfiguration(enableVideo: boolean, conference: boolean = false, constraints: ?Object = null): Object {
