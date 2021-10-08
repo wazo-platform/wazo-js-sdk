@@ -56,6 +56,8 @@ export interface Phone {
 
   getLocalStreamForCall(callSession: CallSession): ?MediaStream;
 
+  getLocalVideoStream(callSession: CallSession): ?MediaStream;
+
   getOptions(): AvailablePhoneOptions;
 
   getRemoteStreamForCall(callSession: CallSession): ?MediaStream;

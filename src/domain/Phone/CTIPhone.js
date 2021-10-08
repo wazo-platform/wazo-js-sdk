@@ -286,6 +286,10 @@ export default class CTIPhone extends Emitter implements Phone {
     return null;
   }
 
+  getLocalVideoStream(): ?MediaStream {
+    return null;
+  }
+
   setActiveSipSession() {}
 
   isRegistered(): boolean {
