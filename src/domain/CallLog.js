@@ -112,6 +112,7 @@ export default class CallLog {
 
   static parseNew(plain: CallLogResponse, session: Session): CallLog {
     const callLog: CallLog = CallLog.parse(plain);
+    // @TODO: FIXME add verification declined vs missed call
     callLog.newMissedCall = session
       && session.hasExtension(plain.requested_extension || plain.destination_extension) && !plain.answered;
     return callLog;
