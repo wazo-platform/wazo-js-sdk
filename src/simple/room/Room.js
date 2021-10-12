@@ -661,13 +661,6 @@ class Room extends Emitter {
 
         participants.forEach(someParticipant => this._isParticipantJoining(someParticipant));
         this.eventEmitter.emit(this.ON_JOINED, localParticipant, participants);
-      } else {
-        // TMP
-        const localParticipant = new Wazo.LocalParticipant(this, participant, this.extra);
-        this._onLocalParticipantJoined(localParticipant);
-
-        this.participants = [localParticipant];
-        this.eventEmitter.emit(this.ON_JOINED, localParticipant, this.participants);
       }
 
       return this.participants;
