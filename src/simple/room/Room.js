@@ -754,9 +754,11 @@ class Room extends Emitter {
   _onParticipantTrackUpdate(oldParticipant: Participant, update: string): Participant {
     const newParticipant = oldParticipant;
 
-    const { trackId } = this._callIdStreamIdMap[newParticipant.callId] || {};
+    const { trackId, streamId } = this._callIdStreamIdMap[newParticipant.callId] || {};
     const pc = Wazo.Phone.phone.currentSipSession.sessionDescriptionHandler.peerConnection;
-    const stream = pc.getRemoteStreams().find(someStream => someStream.getTracks().some(track => track.id === trackId));
+    // Can't use `getReceivers` here because on FF we make the mapping based on the streamId
+    const stream = pc.getRemoteStreams().find(someStream =>
+      someStream.id === streamId || someStream.getTracks().some(track => track.id === trackId));
 
     if (update === 'downgrade') {
       newParticipant.streams = [];
@@ -810,8 +812,8 @@ class Room extends Emitter {
       return streamId;
     }
 
-    // Find in all the streams by streamId
-    const idx = Object.values(this._unassociatedVideoStreams).findIndex(stream => stream.id === streamId);
+    // Find in all the streams by streamId (used on FF where we can't map by trackId)
+    const idx = Object.values(this._unassociatedVideoStreams).findIndex((stream: Object) => stream.id === streamId);
     return idx === -1 ? null : Object.keys(this._unassociatedVideoStreams)[idx];
   }
 
