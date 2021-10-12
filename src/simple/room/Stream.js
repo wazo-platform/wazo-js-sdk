@@ -52,9 +52,7 @@ class Stream {
       return false;
     }
 
-    // With canvas track (used to fake upgrade in conference), we don't have a width
-    return this.htmlStream.getTracks().find(track => track.kind === 'video'
-      && track.readyState !== 'ended' && 'width' in track.getSettings());
+    return this.htmlStream.getTracks().some(track => track.kind === 'video' && track.readyState !== 'ended');
   }
 
   get id() {

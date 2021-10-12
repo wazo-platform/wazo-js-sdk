@@ -133,6 +133,9 @@ export default (client: ApiRequester, baseUrl: string) => ({
   getConferenceParticipantsAsUser: async (conferenceId: string): Promise<Object> =>
     client.get(`${baseUrl}/users/me/conferences/${conferenceId}/participants`),
 
+  getMeetingParticipantsAsUser: async (meetingUuid: string): Promise<Object> =>
+    client.get(`${baseUrl}/users/me/meetings/${meetingUuid}/participants`),
+
   listTrunks: () => client.get(`${baseUrl}/trunks`),
 
   mute: (callId: string) =>

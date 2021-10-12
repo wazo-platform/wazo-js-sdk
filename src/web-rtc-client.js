@@ -96,6 +96,7 @@ type WebRtcConfig = {
   heartbeatDelay: number,
   heartbeatTimeout: number,
   maxHeartbeats: number,
+  skipRegister: boolean,
 };
 
 // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
@@ -121,6 +122,7 @@ export default class WebRTCClient extends Emitter {
   statsIntervals: Object;
   sipSessions: { [string]: Session };
   conferences: { [string]: boolean };
+  skipRegister: boolean;
 
   // sugar
   ON_USER_AGENT: string;
@@ -159,6 +161,8 @@ export default class WebRTCClient extends Emitter {
     super();
     this.uaConfigOverrides = uaConfigOverrides;
     this.config = config;
+    this.skipRegister = config.skipRegister;
+
     this._buildConfig(config, session).then((newConfig: WebRtcConfig) => {
       this.config = newConfig;
       this.userAgent = this.createUserAgent(uaConfigOverrides);
@@ -286,14 +290,22 @@ export default class WebRTCClient extends Emitter {
   }
 
   register(tries: number = 0): Promise<any> {
-    logger.info('sdk webrtc registering...', {
+    const logInfo = {
       userAgent: !!this.userAgent,
       registered: this.isRegistered(),
       connectionPromise: !!this.connectionPromise,
       registerer: !!this.registerer,
       waiting: this.registerer && this.registerer.waiting,
       tries,
-    });
+      skipRegister: this.skipRegister,
+    };
+
+    if (this.skipRegister) {
+      logger.info('sdk webrtc skip register...', logInfo);
+      return Promise.resolve();
+    }
+
+    logger.info('sdk webrtc registering...', logInfo);
 
     if (!this.userAgent) {
       logger.info('sdk webrtc recreating User Agent');
@@ -624,12 +636,18 @@ export default class WebRTCClient extends Emitter {
     }
 
     if (pc.getSenders) {
+      if (!pc.getSenders().length) {
+        return false;
+      }
       pc.getSenders().forEach(sender => {
         if (sender && sender.track && sender.track.kind === 'audio') {
           muted = muted && !sender.track.enabled;
         }
       });
     } else {
+      if (!pc.getLocalStreams().length) {
+        return false;
+      }
       pc.getLocalStreams().forEach(stream => {
         stream.getAudioTracks().forEach(track => {
           muted = muted && !track.enabled;
@@ -913,7 +931,8 @@ export default class WebRTCClient extends Emitter {
     }
     const sdh = session.sessionDescriptionHandler;
     const pc = sdh.peerConnection;
-    const localStream = this.getLocalStream(this.getSipSessionId(session));
+    const sessionId = this.getSipSessionId(session);
+    const localStream = this.getLocalStream(sessionId);
 
     // Release old video stream
     if (localStream) {
@@ -939,11 +958,8 @@ export default class WebRTCClient extends Emitter {
 
       // let's update the local stream
       this.eventEmitter.emit('onVideoInputChange', stream);
-      try {
-        await sdh.setLocalMediaStream(stream);
-      } catch (_) {
-        // Nothing to do
-      }
+      this.setLocalMediaStream(sessionId, stream);
+
       return stream;
     });
   }
@@ -1245,9 +1261,11 @@ export default class WebRTCClient extends Emitter {
       remoteStream.removeTrack(track);
     });
 
-    pc.getReceivers().forEach(receiver => {
-      remoteStream.addTrack(receiver.track);
-    });
+    if (pc.getReceivers) {
+      pc.getReceivers().forEach(receiver => {
+        remoteStream.addTrack(receiver.track);
+      });
+    }
   }
 
   getMediaConfiguration(enableVideo: boolean, conference: boolean = false, constraints: ?Object = null): Object {
@@ -1280,6 +1298,25 @@ export default class WebRTCClient extends Emitter {
 
   isConference(sessionId: string) {
     return sessionId in this.conferences;
+  }
+
+  createAudioElementFor(sessionId: string) {
+    const audio: any = document.createElement('audio');
+    audio.setAttribute('id', `audio-${sessionId}`);
+
+    if (audio.setSinkId && this.audioOutputDeviceId) {
+      audio.setSinkId(this.audioOutputDeviceId);
+    }
+
+    if (document.body) {
+      document.body.appendChild(audio);
+    }
+    this.audioElements[sessionId] = audio;
+
+    audio.volume = this.audioOutputVolume;
+    audio.autoplay = true;
+
+    return audio;
   }
 
   _onTransportError() {
@@ -1511,7 +1548,7 @@ export default class WebRTCClient extends Emitter {
     let hadRemoteVideo = false;
 
     // Monkey patch `onInviteRequest` to be able to know if there was a remote video stream before `onInvite` is called
-    // Becase when `onInvite` is called we already got the video track
+    // Because when `onInvite` is called we already got the video track
     session.onInviteRequest = (request) => {
       hadRemoteVideo = this.hasARemoteVideoTrack(sipSessionId);
 
@@ -1586,20 +1623,10 @@ export default class WebRTCClient extends Emitter {
     const isConference = this.isConference(sessionId);
 
     if (this._hasAudio() && this._isWeb() && !(sessionId in this.audioElements)) {
-      const audio: any = document.createElement('audio');
-      audio.setAttribute('id', `audio-${sessionId}`);
-
-      if (audio.setSinkId && this.audioOutputDeviceId) {
-        audio.setSinkId(this.audioOutputDeviceId);
-      }
-
-      if (document.body) {
-        document.body.appendChild(audio);
-      }
-      this.audioElements[sessionId] = audio;
+      this.createAudioElementFor(sessionId);
     }
 
-    const audioElement = this.audioElements[this.getSipSessionId(session)];
+    const audioElement = this.audioElements[sessionId];
     const stream = newStream || this.getRemoteStream(sessionId);
 
     if (!this._isWeb() || !stream) {

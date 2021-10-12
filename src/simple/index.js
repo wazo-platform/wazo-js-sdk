@@ -3,6 +3,7 @@ import Auth, { InvalidSubscription, InvalidAuthorization } from './Auth';
 import Phone from './Phone';
 import Websocket from './Websocket';
 import Room from './room/Room';
+import SipRoom from './room/SipRoom';
 import RemoteParticipant from './room/RemoteParticipant';
 import LocalParticipant from './room/LocalParticipant';
 import Stream from './room/Stream';
@@ -35,6 +36,7 @@ import IndirectTransfer from '../domain/IndirectTransfer';
 import SwitchboardCall from '../domain/SwitchboardCall';
 import IssueReporter from '../service/IssueReporter';
 import Features from '../domain/Features';
+import Meeting from '../domain/Meeting';
 import Checker from '../checker/Checker';
 
 const Wazo = {
@@ -42,6 +44,7 @@ const Wazo = {
   Phone,
   Websocket,
   Room,
+  SipRoom,
   RemoteParticipant,
   LocalParticipant,
   Stream,
@@ -78,6 +81,7 @@ const Wazo = {
     IndirectTransfer,
     SwitchboardCall,
     WebRTCPhone,
+    Meeting,
   },
 
   // Api
