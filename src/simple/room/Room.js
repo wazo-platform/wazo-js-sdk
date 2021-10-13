@@ -788,8 +788,8 @@ class Room extends Emitter {
       return;
     }
 
-    const streamId = this._getStreamIdForTrackId(trackId);
-    const key = this._getUnassociatedMapIdForTrackIdOrStreamId(trackId, streamId);
+    const streamId = this._getStreamIdFrTrackId(trackId);
+    const key = this._getUnassociatedMapIdFromTrackIdOrStreamId(trackId, streamId);
     const stream = this._unassociatedVideoStreams[key];
 
     if (stream) {
@@ -801,7 +801,7 @@ class Room extends Emitter {
     }
   }
 
-  _getUnassociatedMapIdForTrackIdOrStreamId(trackId: string, streamId: ?string) {
+  _getUnassociatedMapIdFromTrackIdOrStreamId(trackId: string, streamId: ?string) {
     // Find by trackId
     if (trackId in this._unassociatedVideoStreams) {
       return trackId;
@@ -817,7 +817,7 @@ class Room extends Emitter {
     return idx === -1 ? null : Object.keys(this._unassociatedVideoStreams)[idx];
   }
 
-  _getStreamIdForTrackId(trackId: string) {
+  _getStreamIdFrTrackId(trackId: string) {
     const mapping: Object = Object.values(this._callIdStreamIdMap).find((map: Object) => map.trackId === trackId);
 
     return mapping ? mapping.streamId : null;
