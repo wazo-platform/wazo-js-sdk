@@ -813,7 +813,8 @@ class Room extends Emitter {
     }
 
     // Find in all the streams by streamId (used on FF where we can't map by trackId)
-    const idx = Object.values(this._unassociatedVideoStreams).findIndex((stream: Object) => stream.id === streamId);
+    const idx = Object.values(this._unassociatedVideoStreams).findIndex((stream: Object) =>
+      stream && stream.id === streamId);
     return idx === -1 ? null : Object.keys(this._unassociatedVideoStreams)[idx];
   }
 
