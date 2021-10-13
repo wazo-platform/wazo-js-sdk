@@ -754,9 +754,11 @@ class Room extends Emitter {
   _onParticipantTrackUpdate(oldParticipant: Participant, update: string): Participant {
     const newParticipant = oldParticipant;
 
-    const { trackId } = this._callIdStreamIdMap[newParticipant.callId] || {};
+    const { trackId, streamId } = this._callIdStreamIdMap[newParticipant.callId] || {};
     const pc = Wazo.Phone.phone.currentSipSession.sessionDescriptionHandler.peerConnection;
-    const stream = pc.getRemoteStreams().find(someStream => someStream.getTracks().some(track => track.id === trackId));
+    // Can't use `getReceivers` here because on FF we make the mapping based on the streamId
+    const stream = pc.getRemoteStreams().find(someStream =>
+      someStream.id === streamId || someStream.getTracks().some(track => track.id === trackId));
 
     if (update === 'downgrade') {
       newParticipant.streams = [];
@@ -786,13 +788,39 @@ class Room extends Emitter {
       return;
     }
 
-    if (this._unassociatedVideoStreams[trackId]) {
-      // Try to associate stream
-      this._associateStreamTo(this._unassociatedVideoStreams[trackId], participant);
+    const streamId = this._getStreamIdFrTrackId(trackId);
+    const key = this._getUnassociatedMapIdFromTrackIdOrStreamId(trackId, streamId);
+    const stream = this._unassociatedVideoStreams[key];
 
-      delete this._unassociatedVideoStreams[trackId];
+    if (stream) {
+      // Try to associate stream
+      this._associateStreamTo(stream, participant);
+
+      delete this._unassociatedVideoStreams[key];
       delete this._unassociatedParticipants[participant.callId];
     }
+  }
+
+  _getUnassociatedMapIdFromTrackIdOrStreamId(trackId: string, streamId: ?string) {
+    // Find by trackId
+    if (trackId in this._unassociatedVideoStreams) {
+      return trackId;
+    }
+
+    // Find by streamId
+    if (streamId && streamId in this._unassociatedVideoStreams) {
+      return streamId;
+    }
+
+    // Find in all the streams by streamId (used on FF where we can't map by trackId)
+    const idx = Object.values(this._unassociatedVideoStreams).findIndex((stream: Object) => stream.id === streamId);
+    return idx === -1 ? null : Object.keys(this._unassociatedVideoStreams)[idx];
+  }
+
+  _getStreamIdFrTrackId(trackId: string) {
+    const mapping: Object = Object.values(this._callIdStreamIdMap).find((map: Object) => map.trackId === trackId);
+
+    return mapping ? mapping.streamId : null;
   }
 
   _associateStreamTo(rawStream: any, participant: Participant) {
