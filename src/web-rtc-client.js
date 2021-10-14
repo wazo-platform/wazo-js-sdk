@@ -706,6 +706,8 @@ export default class WebRTCClient extends Emitter {
     }
     options.sessionDescriptionHandlerOptions = {
       constraints: options.constraints,
+      hold: true,
+      conference: isConference,
     };
 
     // Send re-INVITE
@@ -748,6 +750,8 @@ export default class WebRTCClient extends Emitter {
     }
     options.sessionDescriptionHandlerOptions = {
       constraints: options.constraints,
+      hold: false,
+      conference: isConference,
     };
 
     // Send re-INVITE
