@@ -290,7 +290,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return this.client.onDisconnect();
   }
 
-  _downgradeToAudio(callSession: ?CallSession) {
+  _downgradeToAudio(callSession: ?CallSession, withMessage: boolean = true) {
     const sipSession = this.findSipSession(callSession);
     if (!sipSession) {
       return false;
@@ -317,7 +317,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
       localStream.removeTrack(videoTrack);
     });
 
-    this._sendReinviteMessage(callSession, false);
+    if (withMessage) {
+      this._sendReinviteMessage(callSession, false);
+    }
 
     return true;
   }
@@ -336,9 +338,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     // Check if a video sender already exists
     let videoSender;
+    const videoTransceiver = pc.getTransceivers().find(transceiver => transceiver.mid === '1');
     if (isConference) {
-      const trans = pc.getTransceivers().find(transceiver => transceiver.mid === '1');
-      videoSender = trans ? trans.sender : null;
+      videoSender = videoTransceiver ? videoTransceiver.sender : null;
     } else {
       videoSender = pc.getSenders().find(sender => sender.track === null);
     }
@@ -366,6 +368,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const videoTrack = newStream.getVideoTracks()[0];
     if (videoTrack) {
       videoSender.replaceTrack(videoTrack);
+    }
+
+    // Put back last direction (was set to `recvonly` when downgrading)
+    if (videoTransceiver.currentDirection !== videoTransceiver.direction) {
+      videoTransceiver.direction = videoTransceiver.currentDirection;
     }
 
     this.client.setLocalMediaStream(this.getSipSessionId(sipSession), newStream);
@@ -532,6 +539,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
         // We have to downgrade to audio.
         const screenshareStopped = this.currentScreenShare.sender && this.currentScreenShare.hadVideo;
         const constraints = { audio: false, video: screenshareStopped };
+        if (!conference) {
+          // We have to remove the video sender to be able to re-upgrade to video in `sendReinvite` below
+          this._downgradeToAudio(targetCallSession, false);
+          // Wait for the track to be removed, unless the video sender won't have a null track in `_upgradeToVideo`.
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
         reinvited = await this.sendReinvite(targetCallSession, constraints, conference);
       }
     } catch (e) {
