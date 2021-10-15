@@ -371,7 +371,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     // Put back last direction (was set to `recvonly` when downgrading)
-    if (videoTransceiver.currentDirection !== videoTransceiver.direction) {
+    if (videoTransceiver && videoTransceiver.currentDirection !== videoTransceiver.direction) {
       videoTransceiver.direction = videoTransceiver.currentDirection;
     }
 
