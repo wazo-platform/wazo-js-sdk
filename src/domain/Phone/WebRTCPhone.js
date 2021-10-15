@@ -317,7 +317,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       localStream.removeTrack(videoTrack);
     });
 
-    if (!withMessage) {
+    if (withMessage) {
       this._sendReinviteMessage(callSession, false);
     }
 
