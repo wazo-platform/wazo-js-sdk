@@ -197,6 +197,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       sessionId: sipSession ? sipSession.id : null,
       constraints,
       audioOnly,
+      conference,
     });
 
     if (!sipSession) {
@@ -296,6 +297,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return false;
     }
 
+    logger.info('Downgrade to video', { id: callSession ? callSession.getId() : null, withMessage });
+
     // Release local video stream when downgrading to audio
     const localStream = sipSession.sessionDescriptionHandler.localMediaStream;
     const pc = sipSession.sessionDescriptionHandler.peerConnection;
@@ -330,6 +333,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
     if (!sipSession) {
       return Promise.resolve(false);
     }
+
+    logger.info('Upgrade to video', {
+      id: callSession ? callSession.getId() : null,
+      constraints,
+      isConference,
+    });
 
     const pc = sipSession.sessionDescriptionHandler.peerConnection;
     const shouldScreenShare = constraints && constraints.screen;
@@ -393,6 +402,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   _sendReinviteMessage(callSession: ?CallSession, isUpgrade: boolean) {
     const sipSession = this.findSipSession(callSession);
+    logger.info('Sending reinvite message', {
+      id: callSession ? callSession.getId() : null,
+      isUpgrade,
+    });
 
     // Have to send the message after a delay due to latency to update the remote peer
     setTimeout(() => {
@@ -477,6 +490,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
     };
 
     peerConnection.onremovestream = event => {
+      logger.info('on remove stream called on the peer connection', {
+        id: event.stream.id,
+        tracks: event.stream.getTracks(),
+      });
+
       this.eventEmitter.emit(ON_REMOVE_STREAM, event.stream);
     };
   }
@@ -522,7 +540,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return;
     }
 
-    logger.info('WebRTC phone - stop screen sharing');
+    logger.info('WebRTC phone - stop screen sharing', {
+      restoreLocalStream,
+    });
+
     let reinvited = false;
 
     try {
@@ -583,10 +604,25 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const pc = this.client.getPeerConnection(this.getSipSessionId(sipSession));
     const sender = pc && pc.getSenders().find(s => s && s.track && s.track.kind === 'video');
 
-    screenTrack.onended = () => this.eventEmitter.emit(
-      ON_SHARE_SCREEN_ENDING,
-      this._createCallSession(sipSession, callSession),
-    );
+    logger.info('WebRTC phone - on screensharing', {
+      hadVideo,
+      id: this.getSipSessionId(sipSession),
+      screenTrack,
+    });
+
+    screenTrack.onended = () => {
+      logger.info('WebRTC phone - on screenshare ended', {
+        hadVideo,
+        id: this.getSipSessionId(sipSession),
+        screenTrack,
+      });
+
+      this.eventEmitter.emit(
+        ON_SHARE_SCREEN_ENDING,
+        this._createCallSession(sipSession, callSession),
+      );
+    };
+
     this.currentScreenShare = { stream: screenStream, hadVideo, sender };
 
     this.client.setLocalMediaStream(this.getSipSessionId(sipSession), screenStream);
@@ -626,17 +662,23 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   changeRingDevice(id: string) {
+    logger.info('WebRTC phone - changing ring device', { id });
+
     this.audioRingDeviceId = id;
   }
 
   // volume is a value between 0 and 1
   changeAudioVolume(volume: number) {
+    logger.info('WebRTC phone - changing audio volume', { volume });
+
     this.audioOutputVolume = volume;
     this.client.changeAudioOutputVolume(volume);
   }
 
   // volume is a value between 0 and 1
   changeRingVolume(volume: number) {
+    logger.info('WebRTC phone - changing ring volume', { volume });
+
     this.audioRingVolume = volume;
   }
 
@@ -1174,7 +1216,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   endCurrentCall(callSession: CallSession): void {
-    if (this.isCurrentCallSipSession(callSession)) {
+    const isCurrent = this.isCurrentCallSipSession(callSession);
+
+    logger.info('Ending current call', {
+      id: callSession ? callSession.getId() : null,
+      isCurrent,
+    });
+
+    if (isCurrent) {
       this.currentSipSession = undefined;
       this.currentCallSession = null;
     }
@@ -1421,6 +1470,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
       const sipSessionId = this.getSipSessionId(sipSession);
       const localStream = this.client.getLocalStream(sipSessionId);
       const callSession = this.callSessions[sipSessionId];
+
+      logger.info('Updrading directly in screensharing mode', {
+        sipSessionId,
+        tracks: localStream ? localStream.getTracks() : null,
+      });
 
       this._onScreenSharing(localStream, sipSession, callSession, false);
     });
