@@ -311,6 +311,10 @@ class Phone extends Emitter {
     return this.phone ? this.phone.getRemoteVideoStream(callSession) : null;
   }
 
+  isVideoRemotelyHeld(callSession: CallSession) {
+    return this.phone ? this.phone.isVideoRemotelyHeld(callSession) : null;
+  }
+
   // @Deprecated
   getRemoteStreamForCall(callSession: CallSession) {
     logger.warn('Phone.getRemoteStreamForCall is deprecated, use Phone.getRemoteStream instead');

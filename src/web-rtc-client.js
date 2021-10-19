@@ -36,7 +36,7 @@ import Emitter from './utils/Emitter';
 import ApiClient from './api-client';
 import IssueReporter from './service/IssueReporter';
 import Heartbeat from './utils/Heartbeat';
-import { hasAnActiveVideo } from './utils/sdp';
+import { getVideoDirection, hasAnActiveVideo } from './utils/sdp';
 
 // We need to replace 0.0.0.0 to 127.0.0.1 in the sdp to avoid MOH during a createOffer.
 export const replaceLocalIpModifier = (description: Object) => Promise.resolve({
@@ -765,6 +765,18 @@ export default class WebRTCClient extends Emitter {
     return this.getSipSessionId(session) in this.heldSessions;
   }
 
+  isVideoRemotelyHeld(sessionId: string) {
+    const pc = this.getPeerConnection(sessionId);
+    const sdp = pc && pc.remoteDescription ? pc.remoteDescription.sdp : null;
+    if (!sdp) {
+      return false;
+    }
+
+    const videoDirection = getVideoDirection(sdp);
+
+    return videoDirection === 'sendonly';
+  }
+
   sendDTMF(session: Inviter, tone: string) {
     if (!session.sessionDescriptionHandler) {
       return;
@@ -1174,6 +1186,10 @@ export default class WebRTCClient extends Emitter {
   }
 
   getRemoteVideoStream(sessionId: string): ?MediaStream {
+    if (this.isVideoRemotelyHeld(sessionId)) {
+      return null;
+    }
+
     return this.hasRemoteVideo(sessionId) ? this.getRemoteStream(sessionId) : null;
   }
 
@@ -1439,7 +1455,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   _isVideoTrack(track: MediaStreamTrack) {
-    return track.kind === 'video' && !track.muted && track.readyState === 'live';
+    return track.kind === 'video' && track.readyState === 'live';
   }
 
   _hasAudio() {

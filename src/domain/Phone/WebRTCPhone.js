@@ -476,13 +476,21 @@ export default class WebRTCPhone extends Emitter implements Phone {
     peerConnection.ontrack = rawEvent => {
       const event = rawEvent;
       const [stream] = event.streams;
+      const kind = event && event.track && event.track.kind;
 
-      if (event && event.track && event.track.kind === 'audio') {
+      logger.info('on track stream called on the peer connection', {
+        callId: this.getSipSessionId(sipSession),
+        streamId: stream ? stream.id : null,
+        tracks: stream ? stream.getTracks() : null,
+        kind,
+      });
+
+      if (kind === 'audio') {
         return this.eventEmitter.emit(ON_AUDIO_STREAM, stream);
       }
 
       // not sure this does anything
-      if (event && event.track && event.track.kind === 'video') {
+      if (kind === 'video') {
         event.track.enabled = false;
       }
 
@@ -1341,6 +1349,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.setMediaConstraints(media);
   }
 
+  isVideoRemotelyHeld(callSession: CallSession) {
+    return callSession ? this.client.isVideoRemotelyHeld(callSession.sipCallId) : null;
+  }
+
   bindClientEvents() {
     this.client.unbind();
 
@@ -1617,15 +1629,5 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.callSessions[callSession.getId()] = callSession;
 
     return callSession;
-  }
-
-  _parseSDP(sdp: string) {
-    const labelMatches = sdp.match(/a=label:(.*)/m);
-    const msidMatches = sdp.match(/a=msid:(.*)/gm);
-
-    const label = labelMatches && labelMatches.length && labelMatches[1];
-    const msid = msidMatches && msidMatches.length && msidMatches[msidMatches.length - 1].split(' ')[1];
-
-    return { label, msid };
   }
 }

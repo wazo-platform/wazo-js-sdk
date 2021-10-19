@@ -53,8 +53,8 @@ export default class Line {
     return newFrom(profile, Line);
   }
 
-  is(line: Line) {
-    return this.id === line.id;
+  is(line: ?Line) {
+    return line ? this.id === line.id : false;
   }
 
   hasExtension(extension: string) {
