@@ -718,7 +718,7 @@ export default class WebRTCClient extends Emitter {
 
   unhold(session: Inviter, isConference: boolean = false) {
     const sessionId = this.getSipSessionId(session);
-    const hasVideo = this.hasVideo(sessionId);
+    const hasVideo = this.hasLocalVideo(sessionId);
 
     logger.info('sdk webrtc unhold', {
       sessionId,
@@ -1062,11 +1062,6 @@ export default class WebRTCClient extends Emitter {
 
     // $FlowFixMe
     const { constraints } = this.getMediaConfiguration(shouldDoVideo, conference, newConstraints);
-
-    // Avoid sip.js `getLocalMediaStream` to override audio constraints when doing screenshare
-    if (!constraints.audio && sipSession.sessionDescriptionHandler.localMediaStreamConstraints) {
-      sipSession.sessionDescriptionHandler.localMediaStreamConstraints.audio = false;
-    }
 
     return sipSession.invite({
       requestDelegate: {
