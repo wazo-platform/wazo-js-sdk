@@ -469,8 +469,8 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     // if we already have a local media stream...
     if (this.localMediaStreamConstraints) {
       // if constraints have not changed, do not get a new media stream
-      if (JSON.stringify(this.localMediaStreamConstraints.audio) === JSON.stringify(constraints.audio) &&
-        JSON.stringify(this.localMediaStreamConstraints.video) === JSON.stringify(constraints.video)) {
+      if (JSON.stringify(this.localMediaStreamConstraints.audio) === JSON.stringify(constraints.audio)
+        && JSON.stringify(this.localMediaStreamConstraints.video) === JSON.stringify(constraints.video)) {
         return Promise.resolve();
       }
     } else if (constraints.audio === undefined && constraints.video === undefined) {
