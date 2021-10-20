@@ -306,11 +306,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     // Remove video senders
     pc.getSenders().filter(sender => sender.track && sender.track.kind === 'video').forEach(videoSender => {
-      const videoTransceiver = pc.getTransceivers().find(transceiver =>
-        transceiver.sender.track && videoSender.track && transceiver.sender.track.id === videoSender.track.id);
-
-      videoTransceiver.direction = 'recvonly';
-
       videoSender.replaceTrack(null);
     });
 
@@ -377,11 +372,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const videoTrack = newStream.getVideoTracks()[0];
     if (videoTrack) {
       videoSender.replaceTrack(videoTrack);
-    }
-
-    // Put back last direction (was set to `recvonly` when downgrading)
-    if (videoTransceiver && videoTransceiver.currentDirection !== videoTransceiver.direction) {
-      videoTransceiver.direction = videoTransceiver.currentDirection;
     }
 
     this.client.setLocalMediaStream(this.getSipSessionId(sipSession), newStream);
@@ -459,7 +449,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
           break;
         case SessionState.Terminated: {
-          logger.info('WebRTC phone - call terminated', {sipId: sipSession.id});
+          logger.info('WebRTC phone - call terminated', { sipId: sipSession.id });
 
           const wasCurrentSession = this._onCallTerminated(sipSession);
 
