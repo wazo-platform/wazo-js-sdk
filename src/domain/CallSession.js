@@ -17,6 +17,7 @@ type CallSessionArguments = {
   isCaller: boolean,
   muted: boolean,
   videoMuted: boolean,
+  videoRemotelyDowngraded?: boolean,
   number: string,
   paused: boolean,
   ringing: boolean,
@@ -72,6 +73,8 @@ export default class CallSession {
 
   videoMuted: boolean;
 
+  videoRemotelyDowngraded: ?boolean;
+
   cameraEnabled: boolean;
 
   autoAnswer: boolean;
@@ -109,6 +112,7 @@ export default class CallSession {
     screensharing,
     recording,
     recordingPaused,
+    videoRemotelyDowngraded,
   }: CallSessionArguments) {
     this.callId = callId;
     this.sipCallId = sipCallId;
@@ -132,6 +136,7 @@ export default class CallSession {
     this.screensharing = screensharing || false;
     this.recording = recording || false;
     this.recordingPaused = recordingPaused || false;
+    this.videoRemotelyDowngraded = videoRemotelyDowngraded;
 
     // Useful to compare instead of instanceof with minified code
     this.type = 'CallSession';
@@ -304,6 +309,14 @@ export default class CallSession {
 
   getTalkingToIds() {
     return this.call ? this.call.talkingToIds : [];
+  }
+
+  setVideoRemotelyDowngraded(value: boolean) {
+    this.videoRemotelyDowngraded = value;
+  }
+
+  isVideoRemotelyDowngraded() {
+    return this.videoRemotelyDowngraded;
   }
 
   static newFrom(callSession: CallSession) {

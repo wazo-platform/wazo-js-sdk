@@ -416,6 +416,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
           update: isUpgrade ? 'upgrade' : 'downgrade',
           sipCallId: this.getSipSessionId(sipSession),
           callId: callSession ? callSession.callId : null,
+          number: callSession ? callSession.number : null,
+          callerNumber: callSession ? callSession.callerNumber : null,
         },
       }));
     }, 2500);
