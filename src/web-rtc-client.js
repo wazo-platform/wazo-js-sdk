@@ -713,6 +713,9 @@ export default class WebRTCClient extends Emitter {
       conference: isConference,
     };
 
+    // Avoid sdh to created a new stream
+    session.sessionDescriptionHandler.localMediaStreamConstraints = options.constraints;
+
     // Send re-INVITE
     return session.invite(options);
   }
@@ -788,7 +791,8 @@ export default class WebRTCClient extends Emitter {
     // Reuse bidirectional video stream
     const newStream = await this.getStreamFromConstraints(constraints);
     if (!newStream) {
-      throw new Error(`Can't create media stream with: ${JSON.stringify(constraints || {})}`);
+      console.warn(`Can't create media stream with: ${JSON.stringify(constraints || {})}`);
+      return false;
     }
 
     // Add previous local audio track
@@ -833,7 +837,12 @@ export default class WebRTCClient extends Emitter {
     // $FlowFixMe
     const { constraints: newConstraints } = this.getMediaConfiguration(video, conference, constraints);
 
-    const newStream = await wazoMediaStreamFactory(newConstraints);
+    let newStream;
+    try {
+      newStream = await wazoMediaStreamFactory(newConstraints);
+    } catch (e) {
+      // Nothing to do when the user cancel the screensharing prompt
+    }
     if (!newStream) {
       return null;
     }
@@ -1122,6 +1131,7 @@ export default class WebRTCClient extends Emitter {
     const wasMuted = this.isAudioMuted(sipSession);
     const shouldDoVideo = newConstraints ? newConstraints.video : this.sessionWantsToDoVideo(sipSession);
     const shouldDoScreenSharing = newConstraints && newConstraints.screen;
+    const desktop = newConstraints && newConstraints.desktop;
 
     logger.info('Sending reinvite', {
       id: this.getSipSessionId(sipSession),
@@ -1131,6 +1141,7 @@ export default class WebRTCClient extends Emitter {
       wasMuted,
       shouldDoVideo,
       shouldDoScreenSharing,
+      desktop,
     });
 
     // When upgrading to video, remove the `stripVideo` modifiers
@@ -1175,7 +1186,7 @@ export default class WebRTCClient extends Emitter {
           this._onAccepted(sipSession, response.session, false);
 
           if (shouldDoScreenSharing) {
-            this.eventEmitter.emit(ON_SCREEN_SHARING_REINVITE, sipSession, response);
+            this.eventEmitter.emit(ON_SCREEN_SHARING_REINVITE, sipSession, response, desktop);
           }
 
           return this.eventEmitter.emit(ON_REINVITE, sipSession, response);

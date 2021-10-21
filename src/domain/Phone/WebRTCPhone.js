@@ -124,6 +124,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   currentScreenShare: Object;
 
+  lastScreenShare: Object;
+
   shouldSendReinvite: boolean;
 
   constructor(
@@ -320,7 +322,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
       isConference,
     });
 
-    const shouldScreenShare = constraints && constraints.screen;
+    const shouldScreenShare = constraints && !!constraints.screen;
+    const desktop = constraints && constraints.desktop;
     const options = sipSession.sessionDescriptionHandlerOptionsReInvite;
     const wasAudioOnly = options && options.audioOnly;
 
@@ -334,7 +337,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this._sendReinviteMessage(callSession, true);
 
     if (shouldScreenShare) {
-      this._onScreenSharing(newStream, sipSession, callSession, false);
+      this._onScreenSharing(newStream, sipSession, callSession, false, desktop);
     }
 
     // We have to reinvite to change the direction on the bundle when upgrading from an audioOnly conference
@@ -487,12 +490,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
       sender.replaceTrack(screenTrack);
     }
 
-    this._onScreenSharing(screenShareStream, sipSession, callSession, hadVideo);
+    this._onScreenSharing(screenShareStream, sipSession, callSession, hadVideo, constraints.desktop);
 
     return screenShareStream;
   }
 
-  async stopScreenSharing(restoreLocalStream: boolean = true, callSession?: CallSession) {
+  async stopScreenSharing(restoreLocalStream: boolean = true, callSession?: ?CallSession) {
     if (!this.currentScreenShare) {
       return;
     }
@@ -541,9 +544,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return reinvited;
   }
 
-  _onScreenSharing(screenStream: Object, sipSession: Session, callSession: ?CallSession, hadVideo: boolean) {
+  _onScreenSharing(screenStream: Object,
+    sipSession: Session,
+    callSession: ?CallSession,
+    hadVideo: boolean,
+    desktop: boolean = false) {
     const screenTrack = screenStream.getVideoTracks()[0];
-    const pc = this.client.getPeerConnection(this.getSipSessionId(sipSession));
+    const sipSessionId = this.getSipSessionId(sipSession);
+    const pc = this.client.getPeerConnection(sipSessionId);
     const sender = pc && pc.getSenders().find(s => s && s.track && s.track.kind === 'video');
 
     logger.info('WebRTC phone - on screensharing', {
@@ -565,13 +573,20 @@ export default class WebRTCPhone extends Emitter implements Phone {
       );
     };
 
-    this.currentScreenShare = { stream: screenStream, hadVideo, sender };
+    this.currentScreenShare = {
+      stream: screenStream,
+      hadVideo,
+      sender,
+      sipSessionId,
+      desktop,
+    };
 
     this.client.setLocalMediaStream(this.getSipSessionId(sipSession), screenStream);
 
     this.eventEmitter.emit(
       ON_SHARE_SCREEN_STARTED,
       this._createCallSession(sipSession, callSession, { screensharing: true }),
+      screenStream,
     );
   }
 
@@ -923,9 +938,16 @@ export default class WebRTCPhone extends Emitter implements Phone {
     if (!sipSession) {
       return new Promise((resolve, reject) => reject(new Error('No session to hold')));
     }
-    const hasVideo = this.client.hasLocalVideo(this.getSipSessionId(sipSession));
+    const sessionId = this.getSipSessionId(sipSession);
+    const hasVideo = this.client.hasLocalVideo(sessionId);
 
     logger.info('WebRTC hold sip session', { sipId: sipSession.id, hasVideo });
+
+    // Stop screenshre if needed
+    if (this.currentScreenShare && this.currentScreenShare.sipSessionId === sessionId) {
+      this.lastScreenShare = this.currentScreenShare;
+      await this.stopScreenSharing(false, callSession);
+    }
 
     // Downgrade to audio if needed
     if (hasVideo) {
@@ -950,21 +972,33 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return new Promise((resolve, reject) => reject(new Error('No session to unhold')));
     }
     const sessionId = this.getSipSessionId(sipSession);
-    logger.info('WebRTC unhold', { sessionId });
+    logger.info('WebRTC unhold sip session', { sessionId, isConference });
 
     const { hasVideo } = this.client.getHeldSession(sessionId) || {};
 
     const promise = this.client.unhold(sipSession, isConference);
 
     if (hasVideo && !isConference) {
+      const wasScreensharing = this.lastScreenShare && this.lastScreenShare.sipSessionId === sessionId;
+      const wasDesktop = this.lastScreenShare && this.lastScreenShare.desktop;
       // Re-upgrade to video when the call was held with video only in 1:1 calls
       // It will be done via the unhold constraints in SFU
       const constraints = {
         audio: false,
         video: true,
-        // @TODO: missing desktop and screen here
+        screen: wasScreensharing,
+        desktop: wasDesktop,
       };
-      await this.client.upgradeToVideo(sipSession, constraints, isConference);
+
+      // Upgrade to video
+      const newStream = await this.client.upgradeToVideo(sipSession, constraints, isConference);
+
+      // Trigger screenshare events
+      if (wasScreensharing && newStream) {
+        const hadVideo = this.lastScreenShare && this.lastScreenShare.hadVideo;
+        this._onScreenSharing(newStream, sipSession, callSession, hadVideo);
+      }
+      this.lastScreenShare = null;
     }
 
     if (withEvent) {
@@ -1430,7 +1464,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     });
 
     // Used when upgrading directly in screenshare mode
-    this.client.on(this.client.ON_SCREEN_SHARING_REINVITE, (sipSession: Session) => {
+    this.client.on(this.client.ON_SCREEN_SHARING_REINVITE, (sipSession: Session, response: any, desktop: boolean) => {
       const sipSessionId = this.getSipSessionId(sipSession);
       const localStream = this.client.getLocalStream(sipSessionId);
       const callSession = this.callSessions[sipSessionId];
@@ -1440,7 +1474,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         tracks: localStream ? localStream.getTracks() : null,
       });
 
-      this._onScreenSharing(localStream, sipSession, callSession, false);
+      this._onScreenSharing(localStream, sipSession, callSession, false, desktop);
     });
   }
 
