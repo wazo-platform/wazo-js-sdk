@@ -12,7 +12,6 @@ import type { Phone, AvailablePhoneOptions } from './Phone';
 import WazoWebRTCClient from '../../web-rtc-client';
 import Emitter from '../../utils/Emitter';
 import IssueReporter from '../../service/IssueReporter';
-import { wazoMediaStreamFactory } from '../../lib/WazoSessionDescriptionHandler';
 
 export const ON_USER_AGENT = 'onUserAgent';
 export const ON_REGISTERED = 'onRegistered';
@@ -299,21 +298,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     logger.info('Downgrade to video', { id: callSession ? callSession.getId() : null, withMessage });
 
-    // Release local video stream when downgrading to audio
-    const localStream = sipSession.sessionDescriptionHandler.localMediaStream;
-    const pc = sipSession.sessionDescriptionHandler.peerConnection;
-    const videoTracks = localStream.getVideoTracks();
-
-    // Remove video senders
-    pc.getSenders().filter(sender => sender.track && sender.track.kind === 'video').forEach(videoSender => {
-      videoSender.replaceTrack(null);
-    });
-
-    videoTracks.forEach(videoTrack => {
-      videoTrack.enabled = false;
-      videoTrack.stop();
-      localStream.removeTrack(videoTrack);
-    });
+    this.client.downgradeToAudio(sipSession);
 
     if (withMessage) {
       this._sendReinviteMessage(callSession, false);
@@ -335,46 +320,17 @@ export default class WebRTCPhone extends Emitter implements Phone {
       isConference,
     });
 
-    const pc = sipSession.sessionDescriptionHandler.peerConnection;
     const shouldScreenShare = constraints && constraints.screen;
     const options = sipSession.sessionDescriptionHandlerOptionsReInvite;
     const wasAudioOnly = options && options.audioOnly;
 
-    // Check if a video sender already exists
-    let videoSender;
-    const videoTransceiver = pc.getTransceivers().find(transceiver => transceiver.mid === '1');
-    if (isConference) {
-      videoSender = videoTransceiver ? videoTransceiver.sender : null;
-    } else {
-      videoSender = pc.getSenders().find(sender => sender.track === null);
-    }
+    const newStream = await this.client.upgradeToVideo(sipSession, constraints, isConference);
 
-    if (!videoSender) {
-      // When no video sender found, it means that we're in the first video upgrade in 1:1
+    // If no stream is returned, it means we have to reinvite
+    if (!newStream) {
       return true;
     }
 
-    // Reuse bidirectional video stream
-    const newStream = await this._getStreamFromConstraints(constraints);
-    if (!newStream) {
-      throw new Error(`Can't create media stream with: ${JSON.stringify(constraints || {})}`);
-    }
-
-    // Add previous local audio track
-    if (constraints && !constraints.audio) {
-      const localVideoStream = sipSession.sessionDescriptionHandler.localMediaStream;
-      const localAudioTrack = localVideoStream.getTracks().find(track => track.kind === 'audio');
-      if (localAudioTrack) {
-        newStream.addTrack(localAudioTrack);
-      }
-    }
-
-    const videoTrack = newStream.getVideoTracks()[0];
-    if (videoTrack) {
-      videoSender.replaceTrack(videoTrack);
-    }
-
-    this.client.setLocalMediaStream(this.getSipSessionId(sipSession), newStream);
     this._sendReinviteMessage(callSession, true);
 
     if (shouldScreenShare) {
@@ -503,7 +459,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   async startScreenSharing(constraints: Object, callSession?: CallSession) {
     logger.info('WebRTC - start screen sharing', { constraints, id: callSession ? callSession.getId() : null });
 
-    const screenShareStream = await this._getStreamFromConstraints(constraints);
+    const screenShareStream = await this.client.getStreamFromConstraints(constraints);
     if (!screenShareStream) {
       throw new Error(`Can't create media stream for screensharing with: ${JSON.stringify(constraints)}`);
     }
@@ -583,21 +539,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.currentScreenShare = null;
 
     return reinvited;
-  }
-
-  async _getStreamFromConstraints(constraints: Object, conference: boolean = false): Promise<?MediaStream> {
-    const video = constraints && constraints.video;
-    // $FlowFixMe
-    const { constraints: newConstraints } = this.client.getMediaConfiguration(video, conference, constraints);
-
-    const newStream = await wazoMediaStreamFactory(newConstraints);
-    if (!newStream) {
-      return null;
-    }
-    // $FlowFixMe
-    newStream.local = true;
-
-    return newStream;
   }
 
   _onScreenSharing(screenStream: Object, sipSession: Session, callSession: ?CallSession, hadVideo: boolean) {
@@ -923,29 +864,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
     callSession.ignore();
   }
 
-  hold(callSession: CallSession, withEvent: boolean = true, isConference: boolean = false): void {
-    logger.info('WebRTC hold', { id: callSession.getId() });
-
-    const sipSession = this.findSipSession(callSession);
-
-    if (sipSession) {
-      this.holdSipSession(sipSession, callSession, withEvent, isConference);
-    }
-  }
-
-  // @Deprecated
-  unhold(callSession: CallSession, withEvent: boolean = true, isConference: boolean = false): void {
-    logger.info('WebRTC unhold', { id: callSession ? callSession.getId() : null });
-
-    console.warn('Please note that `phone.unhold()` is being deprecated; `phone.resume()` is the preferred method');
-
-    const sipSession = this.findSipSession(callSession);
-
-    if (sipSession) {
-      this.unholdSipSession(sipSession, callSession, withEvent, isConference);
-    }
-  }
-
   atxfer(callSession: CallSession): ?Object {
     const sipSession = this.findSipSession(callSession);
 
@@ -956,45 +874,22 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
   }
 
-  holdSipSession(
-    sipSession: Session,
-    callSession: ?CallSession,
-    withEvent: boolean = true,
-    isConference: boolean = false,
-  ): Promise<any> {
-    if (!sipSession) {
-      return new Promise((resolve, reject) => reject(new Error('No session to hold')));
-    }
-    logger.info('WebRTC hold sip session', { sipId: sipSession.id });
+  hold(callSession: CallSession, withEvent: boolean = true, isConference: boolean = false): ?Promise<any> {
+    logger.info('WebRTC hold', { id: callSession.getId() });
 
-    const promise = this.client.hold(sipSession, isConference);
-    if (withEvent) {
-      this.eventEmitter.emit(ON_CALL_HELD, this._createCallSession(sipSession, callSession));
-    }
+    const sipSession = this.findSipSession(callSession);
 
-    return promise;
+    return sipSession ? this.holdSipSession(sipSession, callSession, withEvent, isConference) : null;
   }
 
-  unholdSipSession(
-    sipSession: Session,
-    callSession: ?CallSession,
-    withEvent: boolean = true,
-    isConference: boolean = false,
-  ): Promise<any> {
-    if (!sipSession) {
-      return new Promise((resolve, reject) => reject(new Error('No session to unhold')));
-    }
-    logger.info('WebRTC unhold', { sipId: sipSession.id });
+  // @Deprecated
+  unhold(callSession: CallSession, withEvent: boolean = true, isConference: boolean = false): ?Promise<any> {
+    console.warn('Please note that `phone.unhold()` is being deprecated; `phone.resume()` is the preferred method');
 
-    const promise = this.client.unhold(sipSession, isConference);
-    if (withEvent) {
-      this.eventEmitter.emit(ON_CALL_UNHELD, this._createCallSession(sipSession, callSession));
-    }
-
-    return promise;
+    return this.resume(callSession, isConference, withEvent);
   }
 
-  resume(callSession?: CallSession, isConference: boolean = false): Promise<any> {
+  resume(callSession?: CallSession, isConference: boolean = false, withEvent: boolean = true,): Promise<any> {
     logger.info('WebRTC resume called', { id: callSession ? callSession.getId() : null });
 
     const sipSession = this.findSipSession(callSession);
@@ -1010,11 +905,61 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.holdSipSession(this.currentSipSession, callSession);
     }
 
-    const promise = this.client.unhold(sipSession, isConference);
-    this.eventEmitter.emit(ON_CALL_RESUMED, this._createCallSession(sipSession, callSession));
+    const promise = this.unholdSipSession(sipSession, callSession, withEvent, isConference);
     this.currentSipSession = sipSession;
     if (callSession) {
       this.currentCallSession = callSession;
+    }
+
+    return promise;
+  }
+
+  async holdSipSession(
+    sipSession: Session,
+    callSession: ?CallSession,
+    withEvent: boolean = true,
+    isConference: boolean = false,
+  ): Promise<any> {
+    if (!sipSession) {
+      return new Promise((resolve, reject) => reject(new Error('No session to hold')));
+    }
+    const hasVideo = this.client.hasLocalVideo(this.getSipSessionId(sipSession));
+
+    logger.info('WebRTC hold sip session', { sipId: sipSession.id, hasVideo });
+
+    // Downgrade to audio if needed
+    if (hasVideo) {
+      await this.client.downgradeToAudio(sipSession);
+    }
+
+    const promise = this.client.hold(sipSession, isConference, hasVideo);
+    if (withEvent) {
+      this.eventEmitter.emit(ON_CALL_HELD, this._createCallSession(sipSession, callSession));
+    }
+
+    return promise;
+  }
+
+  async unholdSipSession(
+    sipSession: Session,
+    callSession: ?CallSession,
+    withEvent: boolean = true,
+    isConference: boolean = false,
+  ): Promise<any> {
+    if (!sipSession) {
+      return new Promise((resolve, reject) => reject(new Error('No session to unhold')));
+    }
+    const sessionId = this.getSipSessionId(sipSession);
+    logger.info('WebRTC unhold', { sessionId });
+
+    // No need to upgrade here, will be done in the reinvite process of the `unhold` method of webrtc-client
+
+    const promise = this.client.unhold(sipSession, isConference);
+    if (withEvent) {
+      const updatedCallSession = this._createCallSession(sipSession, callSession);
+      // Deprecated event
+      this.eventEmitter.emit(ON_CALL_UNHELD, updatedCallSession);
+      this.eventEmitter.emit(ON_CALL_RESUMED, updatedCallSession);
     }
 
     return promise;

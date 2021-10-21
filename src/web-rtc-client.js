@@ -37,6 +37,7 @@ import ApiClient from './api-client';
 import IssueReporter from './service/IssueReporter';
 import Heartbeat from './utils/Heartbeat';
 import { getVideoDirection, hasAnActiveVideo } from './utils/sdp';
+import { lastIndexOf } from './utils/array';
 
 // We need to replace 0.0.0.0 to 127.0.0.1 in the sdp to avoid MOH during a createOffer.
 export const replaceLocalIpModifier = (description: Object) => Promise.resolve({
@@ -670,9 +671,9 @@ export default class WebRTCClient extends Emitter {
     this._toggleVideo(session, true);
   }
 
-  hold(session: Inviter, isConference: boolean = false) {
+  hold(session: Inviter, isConference: boolean = false, hadVideo: boolean = false) {
     const sessionId = this.getSipSessionId(session);
-    const hasVideo = this.hasLocalVideo(sessionId);
+    const hasVideo = hadVideo || this.hasLocalVideo(sessionId);
 
     logger.info('sdk webrtc hold', {
       sessionId,
@@ -688,13 +689,13 @@ export default class WebRTCClient extends Emitter {
     if (session.pendingReinvite) {
       return Promise.resolve();
     }
-    this.heldSessions[sessionId] = true;
+    this.heldSessions[sessionId] = {
+      hasVideo,
+      isConference,
+    };
 
     if (isConference) {
       this.mute(session);
-      if (hasVideo) {
-        this.toggleCameraOff(session);
-      }
     }
 
     session.sessionDescriptionHandlerOptionsReInvite = {
@@ -702,7 +703,7 @@ export default class WebRTCClient extends Emitter {
       conference: isConference,
     };
 
-    const options = this.getMediaConfiguration(hasVideo, isConference);
+    const options = this.getMediaConfiguration(false, isConference);
     if (!this._isWeb()) {
       options.sessionDescriptionHandlerModifiers = [holdModifier];
     }
@@ -718,7 +719,7 @@ export default class WebRTCClient extends Emitter {
 
   unhold(session: Inviter, isConference: boolean = false) {
     const sessionId = this.getSipSessionId(session);
-    const hasVideo = this.hasLocalVideo(sessionId);
+    const hasVideo = sessionId in this.heldSessions && this.heldSessions[sessionId].hasVideo;
 
     logger.info('sdk webrtc unhold', {
       sessionId,
@@ -734,9 +735,6 @@ export default class WebRTCClient extends Emitter {
 
     if (isConference) {
       this.unmute(session);
-      if (hasVideo) {
-        this.toggleCameraOn(session);
-      }
     }
 
     delete this.heldSessions[this.getSipSessionId(session)];
@@ -759,6 +757,90 @@ export default class WebRTCClient extends Emitter {
 
     // Send re-INVITE
     return session.invite(options);
+  }
+
+  // Returns true if a re-INVITE is required
+  async upgradeToVideo(session: Session, constraints: ?Object, isConference: boolean): Promise<?Object> {
+    const pc = session.sessionDescriptionHandler.peerConnection;
+
+    // Check if a video sender already exists
+    let videoSender;
+    if (isConference) {
+      // We search for the last transceiver without `video-` in the mid (video- means remote transceiver)
+      const transceivers = pc.getTransceivers();
+      const transceiverIdx = lastIndexOf(transceivers, transceiver =>
+        transceiver.sender.track === null && transceiver.mid.indexOf('video') === -1);
+
+      videoSender = transceiverIdx !== -1 ? transceivers[transceiverIdx].sender : null;
+    } else {
+      videoSender = pc.getSenders().find(sender => sender.track === null);
+    }
+
+    if (!videoSender) {
+      // When no video sender found, it means that we're in the first video upgrade in 1:1
+      return null;
+    }
+
+    // Reuse bidirectional video stream
+    const newStream = await this.getStreamFromConstraints(constraints);
+    if (!newStream) {
+      throw new Error(`Can't create media stream with: ${JSON.stringify(constraints || {})}`);
+    }
+
+    // Add previous local audio track
+    if (constraints && !constraints.audio) {
+      const localVideoStream = session.sessionDescriptionHandler.localMediaStream;
+      const localAudioTrack = localVideoStream.getTracks().find(track => track.kind === 'audio');
+      if (localAudioTrack) {
+        newStream.addTrack(localAudioTrack);
+      }
+    }
+
+    const videoTrack = newStream.getVideoTracks()[0];
+    if (videoTrack) {
+      videoSender.replaceTrack(videoTrack);
+    }
+
+    this.setLocalMediaStream(this.getSipSessionId(session), newStream);
+
+    return newStream;
+  }
+
+  downgradeToAudio(session: Session) {
+    // Release local video stream when downgrading to audio
+    const localStream = session.sessionDescriptionHandler.localMediaStream;
+    const pc = session.sessionDescriptionHandler.peerConnection;
+    const videoTracks = localStream.getVideoTracks();
+
+    // Remove video senders
+    pc.getSenders().filter(sender => sender.track && sender.track.kind === 'video').forEach(videoSender => {
+      videoSender.replaceTrack(null);
+    });
+
+    videoTracks.forEach(videoTrack => {
+      videoTrack.enabled = false;
+      videoTrack.stop();
+      localStream.removeTrack(videoTrack);
+    });
+  }
+
+  async getStreamFromConstraints(constraints: Object, conference: boolean = false): Promise<?MediaStream> {
+    const video = constraints && constraints.video;
+    // $FlowFixMe
+    const { constraints: newConstraints } = this.getMediaConfiguration(video, conference, constraints);
+
+    const newStream = await wazoMediaStreamFactory(newConstraints);
+    if (!newStream) {
+      return null;
+    }
+    // $FlowFixMe
+    newStream.local = true;
+
+    return newStream;
+  }
+
+  getHeldSession(sessionId: string) {
+    return this.heldSessions[sessionId];
   }
 
   isCallHeld(session: Inviter) {
