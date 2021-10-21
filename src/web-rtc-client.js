@@ -744,6 +744,10 @@ export default class WebRTCClient extends Emitter {
     };
 
     const options = this.getMediaConfiguration(hasVideo, isConference);
+    if (!isConference) {
+      // Sending video after a resume should be done via upgradeToVideo in 1:! calls
+      options.constraints.video = false;
+    }
     if (!this._isWeb()) {
       // We should sent an empty `sessionDescriptionHandlerModifiers` or sip.js will take the last sent modifiers
       // (eg: holdModifier)

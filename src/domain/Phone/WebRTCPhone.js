@@ -889,7 +889,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return this.resume(callSession, isConference, withEvent);
   }
 
-  resume(callSession?: CallSession, isConference: boolean = false, withEvent: boolean = true,): Promise<any> {
+  resume(callSession?: CallSession, isConference: boolean = false, withEvent: boolean = true): Promise<any> {
     logger.info('WebRTC resume called', { id: callSession ? callSession.getId() : null });
 
     const sipSession = this.findSipSession(callSession);
@@ -952,9 +952,21 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const sessionId = this.getSipSessionId(sipSession);
     logger.info('WebRTC unhold', { sessionId });
 
-    // No need to upgrade here, will be done in the reinvite process of the `unhold` method of webrtc-client
+    const { hasVideo } = this.client.getHeldSession(sessionId) || {};
 
     const promise = this.client.unhold(sipSession, isConference);
+
+    if (hasVideo && !isConference) {
+      // Re-upgrade to video when the call was held with video only in 1:1 calls
+      // It will be done via the unhold constraints in SFU
+      const constraints = {
+        audio: false,
+        video: true,
+        // @TODO: missing desktop and screen here
+      };
+      await this.client.upgradeToVideo(sipSession, constraints, isConference);
+    }
+
     if (withEvent) {
       const updatedCallSession = this._createCallSession(sipSession, callSession);
       // Deprecated event
