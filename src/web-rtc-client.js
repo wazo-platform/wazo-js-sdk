@@ -720,7 +720,10 @@ export default class WebRTCClient extends Emitter {
     return session.invite(options);
   }
 
-  unhold(session: Inviter, isConference: boolean = false) {
+  unhold(session: Inviter,
+    isConference: boolean = false,
+    wasScreensharing: boolean = false,
+    wasDesktop: boolean = false) {
     const sessionId = this.getSipSessionId(session);
     const hasVideo = sessionId in this.heldSessions && this.heldSessions[sessionId].hasVideo;
 
@@ -746,7 +749,13 @@ export default class WebRTCClient extends Emitter {
       conference: isConference,
     };
 
-    const options = this.getMediaConfiguration(hasVideo, isConference);
+    const constraints = {
+      audio: true,
+      video: hasVideo,
+      screen: wasScreensharing,
+      desktop: wasDesktop,
+    };
+    const options = this.getMediaConfiguration(hasVideo, isConference, constraints);
     if (!isConference) {
       // Sending video after a resume should be done via upgradeToVideo in 1:! calls
       options.constraints.video = false;

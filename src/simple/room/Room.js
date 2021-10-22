@@ -286,18 +286,12 @@ class Room extends Emitter {
   async stopScreenSharing(restoreLocalStream: boolean = true) {
     logger.info('stop room screen sharing');
 
-    const reinvited = await Wazo.Phone.stopScreenSharing(this.callSession, restoreLocalStream);
+    await Wazo.Phone.stopScreenSharing(this.callSession, restoreLocalStream);
 
     if (this.localParticipant) {
-      this.localParticipant.onStopScreensharing();
-    }
+      this._updateLocalParticipantStream();
 
-    if (!reinvited && this.localParticipant) {
-      // When we had video and we made a screenshare we don't reinvite when stopping the screensahre
-      // So not REINVITE even is fired, we have to restore the video stream manually
-      const localVideoStream = Wazo.Phone.getLocalVideoStream(this.callSession);
-      // $FlowFixMe
-      this._associateStreamTo(localVideoStream, this.localParticipant);
+      this.localParticipant.onStopScreensharing();
     }
   }
 
@@ -359,13 +353,25 @@ class Room extends Emitter {
     }
   }
 
-  resume() {
+  async resume() {
     logger.info('resume room');
 
-    Wazo.Phone.resume(this.callSession, true);
+    await Wazo.Phone.resume(this.callSession, true);
 
     if (this.localParticipant) {
+      // Update local participant stream (useful when resuming a shreenshared conference)
+      this._updateLocalParticipantStream();
+
       this.localParticipant.onResume();
+    }
+  }
+
+  _updateLocalParticipantStream() {
+    const localStream = Wazo.Phone.getLocalStream(this.callSession);
+    if (localStream) {
+      const localWazoStream = new Wazo.Stream(localStream);
+      this.localParticipant.streams = [localWazoStream];
+      this.localParticipant.videoStreams = [localWazoStream];
     }
   }
 
@@ -739,16 +745,6 @@ class Room extends Emitter {
     this.participants = this.participants.filter(participant =>
       participant && participant.callId !== payload.data.call_id);
     this.eventEmitter.emit(this.CONFERENCE_USER_PARTICIPANT_LEFT, leftParticipant);
-  }
-
-  _onScreenshareEnded() {
-    this.stopScreenSharing();
-
-    this.eventEmitter.emit(this.ON_SHARE_SCREEN_ENDED);
-
-    if (this.localParticipant) {
-      this.localParticipant.onStopScreensharing();
-    }
   }
 
   _onParticipantTrackUpdate(oldParticipant: Participant, update: string): Participant {

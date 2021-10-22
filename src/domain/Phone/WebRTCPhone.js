@@ -520,12 +520,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
         // We have to downgrade to audio.
         const screenshareStopped = this.currentScreenShare.sender && this.currentScreenShare.hadVideo;
         const constraints = { audio: false, video: screenshareStopped };
-        if (!conference) {
-          // We have to remove the video sender to be able to re-upgrade to video in `sendReinvite` below
-          this._downgradeToAudio(targetCallSession, false);
-          // Wait for the track to be removed, unless the video sender won't have a null track in `_upgradeToVideo`.
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
+
+        // We have to remove the video sender to be able to re-upgrade to video in `sendReinvite` below
+        this._downgradeToAudio(targetCallSession, false);
+        // Wait for the track to be removed, unless the video sender won't have a null track in `_upgradeToVideo`.
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         reinvited = await this.sendReinvite(targetCallSession, constraints, conference);
       }
     } catch (e) {
@@ -975,12 +975,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
     logger.info('WebRTC unhold sip session', { sessionId, isConference });
 
     const { hasVideo } = this.client.getHeldSession(sessionId) || {};
-
-    const promise = this.client.unhold(sipSession, isConference);
+    const wasScreensharing = this.lastScreenShare && this.lastScreenShare.sipSessionId === sessionId;
+    const wasDesktop = this.lastScreenShare && this.lastScreenShare.desktop;
+    let newStream;
+    const promise = this.client.unhold(sipSession, isConference, wasScreensharing, wasDesktop);
 
     if (hasVideo && !isConference) {
-      const wasScreensharing = this.lastScreenShare && this.lastScreenShare.sipSessionId === sessionId;
-      const wasDesktop = this.lastScreenShare && this.lastScreenShare.desktop;
       // Re-upgrade to video when the call was held with video only in 1:1 calls
       // It will be done via the unhold constraints in SFU
       const constraints = {
@@ -991,14 +991,20 @@ export default class WebRTCPhone extends Emitter implements Phone {
       };
 
       // Upgrade to video
-      const newStream = await this.client.upgradeToVideo(sipSession, constraints, isConference);
+      newStream = await this.client.upgradeToVideo(sipSession, constraints, isConference);
+    }
 
-      // Trigger screenshare events
-      if (wasScreensharing && newStream) {
-        const hadVideo = this.lastScreenShare && this.lastScreenShare.hadVideo;
-        this._onScreenSharing(newStream, sipSession, callSession, hadVideo);
+    const onScreenSharing = stream => {
+      const hadVideo = this.lastScreenShare && this.lastScreenShare.hadVideo;
+      if (stream) {
+        this._onScreenSharing(stream, sipSession, callSession, hadVideo);
       }
       this.lastScreenShare = null;
+    };
+
+    // Trigger screenshare events
+    if (wasScreensharing && newStream) {
+      onScreenSharing(newStream);
     }
 
     if (withEvent) {
@@ -1008,7 +1014,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.eventEmitter.emit(ON_CALL_RESUMED, updatedCallSession);
     }
 
-    return promise;
+    return promise.then(() => {
+      if (wasScreensharing && isConference) {
+        onScreenSharing(callSession ? this.getLocalVideoStream(callSession) : null);
+      }
+    });
   }
 
   mute(callSession: ?CallSession, withEvent: boolean = true): void {
