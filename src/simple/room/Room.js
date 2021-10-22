@@ -452,6 +452,8 @@ class Room extends Emitter {
         const sessionId = Wazo.Phone.phone.getSipSessionId(Wazo.Phone.phone.currentSipSession);
         this.roomAudioElement = Wazo.Phone.phone.createAudioElementFor(sessionId);
         this.roomAudioElement.srcObject = stream;
+      } else {
+        this.roomAudioElement.srcObject = stream;
       }
     });
 
