@@ -356,13 +356,17 @@ class Room extends Emitter {
   async resume() {
     logger.info('resume room');
 
-    await Wazo.Phone.resume(this.callSession, true);
+    const newStream = await Wazo.Phone.resume(this.callSession, true);
 
     if (this.localParticipant) {
       // Update local participant stream (useful when resuming a shreenshared conference)
       this._updateLocalParticipantStream();
 
       this.localParticipant.onResume();
+
+      if (!newStream && this.localParticipant.screensharing) {
+        this.localParticipant.onStopScreensharing();
+      }
     }
   }
 

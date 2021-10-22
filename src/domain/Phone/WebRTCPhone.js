@@ -977,12 +977,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const { hasVideo } = this.client.getHeldSession(sessionId) || {};
     const wasScreensharing = this.lastScreenShare && this.lastScreenShare.sipSessionId === sessionId;
     const wasDesktop = this.lastScreenShare && this.lastScreenShare.desktop;
-    let newStream;
-    const promise = this.client.unhold(sipSession, isConference, wasScreensharing, wasDesktop);
+    const promise = this.client.unhold(sipSession, isConference);
 
-    if (hasVideo && !isConference) {
-      // Re-upgrade to video when the call was held with video only in 1:1 calls
-      // It will be done via the unhold constraints in SFU
+    if (hasVideo) {
       const constraints = {
         audio: false,
         video: true,
@@ -990,8 +987,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         desktop: wasDesktop,
       };
 
-      // Upgrade to video
-      newStream = await this.client.upgradeToVideo(sipSession, constraints, isConference);
+      await this.client.upgradeToVideo(sipSession, constraints, isConference);
     }
 
     const onScreenSharing = stream => {
@@ -1002,11 +998,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.lastScreenShare = null;
     };
 
-    // Trigger screenshare events
-    if (wasScreensharing && newStream) {
-      onScreenSharing(newStream);
-    }
-
     if (withEvent) {
       const updatedCallSession = this._createCallSession(sipSession, callSession);
       // Deprecated event
@@ -1015,9 +1006,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     return promise.then(() => {
-      if (wasScreensharing && isConference) {
-        onScreenSharing(callSession ? this.getLocalVideoStream(callSession) : null);
+      const stream = callSession ? this.getLocalVideoStream(callSession) : null;
+      if (wasScreensharing) {
+        onScreenSharing(stream);
       }
+
+      return stream;
     });
   }
 
