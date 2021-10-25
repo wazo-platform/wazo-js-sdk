@@ -12,7 +12,6 @@ import type { Phone, AvailablePhoneOptions } from './Phone';
 import WazoWebRTCClient from '../../web-rtc-client';
 import Emitter from '../../utils/Emitter';
 import IssueReporter from '../../service/IssueReporter';
-import { wazoMediaStreamFactory } from '../../lib/WazoSessionDescriptionHandler';
 
 export const ON_USER_AGENT = 'onUserAgent';
 export const ON_REGISTERED = 'onRegistered';
@@ -124,6 +123,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
   ignoredSessions: Object;
 
   currentScreenShare: Object;
+
+  lastScreenShare: Object;
 
   shouldSendReinvite: boolean;
 
@@ -299,26 +300,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     logger.info('Downgrade to video', { id: callSession ? callSession.getId() : null, withMessage });
 
-    // Release local video stream when downgrading to audio
-    const localStream = sipSession.sessionDescriptionHandler.localMediaStream;
-    const pc = sipSession.sessionDescriptionHandler.peerConnection;
-    const videoTracks = localStream.getVideoTracks();
-
-    // Remove video senders
-    pc.getSenders().filter(sender => sender.track && sender.track.kind === 'video').forEach(videoSender => {
-      const videoTransceiver = pc.getTransceivers().find(transceiver =>
-        transceiver.sender.track && videoSender.track && transceiver.sender.track.id === videoSender.track.id);
-
-      videoTransceiver.direction = 'recvonly';
-
-      videoSender.replaceTrack(null);
-    });
-
-    videoTracks.forEach(videoTrack => {
-      videoTrack.enabled = false;
-      videoTrack.stop();
-      localStream.removeTrack(videoTrack);
-    });
+    this.client.downgradeToAudio(sipSession);
 
     if (withMessage) {
       this._sendReinviteMessage(callSession, false);
@@ -340,55 +322,22 @@ export default class WebRTCPhone extends Emitter implements Phone {
       isConference,
     });
 
-    const pc = sipSession.sessionDescriptionHandler.peerConnection;
-    const shouldScreenShare = constraints && constraints.screen;
+    const shouldScreenShare = constraints && !!constraints.screen;
+    const desktop = constraints && constraints.desktop;
     const options = sipSession.sessionDescriptionHandlerOptionsReInvite;
     const wasAudioOnly = options && options.audioOnly;
 
-    // Check if a video sender already exists
-    let videoSender;
-    const videoTransceiver = pc.getTransceivers().find(transceiver => transceiver.mid === '1');
-    if (isConference) {
-      videoSender = videoTransceiver ? videoTransceiver.sender : null;
-    } else {
-      videoSender = pc.getSenders().find(sender => sender.track === null);
-    }
+    const newStream = await this.client.upgradeToVideo(sipSession, constraints, isConference);
 
-    if (!videoSender) {
-      // When no video sender found, it means that we're in the first video upgrade in 1:1
+    // If no stream is returned, it means we have to reinvite
+    if (!newStream) {
       return true;
     }
 
-    // Reuse bidirectional video stream
-    const newStream = await this._getStreamFromConstraints(constraints);
-    if (!newStream) {
-      throw new Error(`Can't create media stream with: ${JSON.stringify(constraints || {})}`);
-    }
-
-    // Add previous local audio track
-    if (constraints && !constraints.audio) {
-      const localVideoStream = sipSession.sessionDescriptionHandler.localMediaStream;
-      const localAudioTrack = localVideoStream.getTracks().find(track => track.kind === 'audio');
-      if (localAudioTrack) {
-        newStream.addTrack(localAudioTrack);
-      }
-    }
-
-    const videoTrack = newStream.getVideoTracks()[0];
-    if (videoTrack) {
-      videoSender.replaceTrack(videoTrack);
-    }
-
-    // Put back last direction (was set to `recvonly` when downgrading)
-    if (videoTransceiver && videoTransceiver.currentDirection !== videoTransceiver.direction) {
-      videoTransceiver.direction = videoTransceiver.currentDirection;
-    }
-
-    this.client.setLocalMediaStream(this.getSipSessionId(sipSession), newStream);
     this._sendReinviteMessage(callSession, true);
 
     if (shouldScreenShare) {
-      this._onScreenSharing(newStream, sipSession, callSession, false);
+      this._onScreenSharing(newStream, sipSession, callSession, false, desktop);
     }
 
     // We have to reinvite to change the direction on the bundle when upgrading from an audioOnly conference
@@ -416,6 +365,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
           update: isUpgrade ? 'upgrade' : 'downgrade',
           sipCallId: this.getSipSessionId(sipSession),
           callId: callSession ? callSession.callId : null,
+          number: callSession ? callSession.number : null,
+          callerNumber: callSession ? callSession.callerNumber : null,
         },
       }));
     }, 2500);
@@ -456,12 +407,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
           this.eventEmitter.emit(ON_CALL_ENDING, this._createCallSession(sipSession));
 
           break;
-        case SessionState.Terminated:
+        case SessionState.Terminated: {
           logger.info('WebRTC phone - call terminated', { sipId: sipSession.id });
 
-          this._onCallTerminated(sipSession);
+          const wasCurrentSession = this._onCallTerminated(sipSession);
 
-          return this.eventEmitter.emit(ON_CALL_ENDED, this._createCallSession(sipSession));
+          return this.eventEmitter.emit(ON_CALL_ENDED, this._createCallSession(sipSession), wasCurrentSession);
+        }
         default:
           break;
       }
@@ -476,13 +428,21 @@ export default class WebRTCPhone extends Emitter implements Phone {
     peerConnection.ontrack = rawEvent => {
       const event = rawEvent;
       const [stream] = event.streams;
+      const kind = event && event.track && event.track.kind;
 
-      if (event && event.track && event.track.kind === 'audio') {
+      logger.info('on track stream called on the peer connection', {
+        callId: this.getSipSessionId(sipSession),
+        streamId: stream ? stream.id : null,
+        tracks: stream ? stream.getTracks() : null,
+        kind,
+      });
+
+      if (kind === 'audio') {
         return this.eventEmitter.emit(ON_AUDIO_STREAM, stream);
       }
 
       // not sure this does anything
-      if (event && event.track && event.track.kind === 'video') {
+      if (kind === 'video') {
         event.track.enabled = false;
       }
 
@@ -502,7 +462,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   async startScreenSharing(constraints: Object, callSession?: CallSession) {
     logger.info('WebRTC - start screen sharing', { constraints, id: callSession ? callSession.getId() : null });
 
-    const screenShareStream = await this._getStreamFromConstraints(constraints);
+    const screenShareStream = await this.client.getStreamFromConstraints(constraints);
     if (!screenShareStream) {
       throw new Error(`Can't create media stream for screensharing with: ${JSON.stringify(constraints)}`);
     }
@@ -530,12 +490,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
       sender.replaceTrack(screenTrack);
     }
 
-    this._onScreenSharing(screenShareStream, sipSession, callSession, hadVideo);
+    this._onScreenSharing(screenShareStream, sipSession, callSession, hadVideo, constraints.desktop);
 
     return screenShareStream;
   }
 
-  async stopScreenSharing(restoreLocalStream: boolean = true, callSession?: CallSession) {
+  async stopScreenSharing(restoreLocalStream: boolean = true, callSession?: ?CallSession) {
     if (!this.currentScreenShare) {
       return;
     }
@@ -548,7 +508,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     try {
       if (this.currentScreenShare.stream) {
-        this.currentScreenShare.stream.getTracks().forEach(track => track.stop());
+        this.currentScreenShare.stream.getTracks()
+          .filter(track => track.kind === 'video')
+          .forEach(track => track.stop());
       }
 
       if (restoreLocalStream) {
@@ -560,12 +522,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
         // We have to downgrade to audio.
         const screenshareStopped = this.currentScreenShare.sender && this.currentScreenShare.hadVideo;
         const constraints = { audio: false, video: screenshareStopped };
-        if (!conference) {
-          // We have to remove the video sender to be able to re-upgrade to video in `sendReinvite` below
-          this._downgradeToAudio(targetCallSession, false);
-          // Wait for the track to be removed, unless the video sender won't have a null track in `_upgradeToVideo`.
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
+
+        // We have to remove the video sender to be able to re-upgrade to video in `sendReinvite` below
+        this._downgradeToAudio(targetCallSession, false);
+        // Wait for the track to be removed, unless the video sender won't have a null track in `_upgradeToVideo`.
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         reinvited = await this.sendReinvite(targetCallSession, constraints, conference);
       }
     } catch (e) {
@@ -584,24 +546,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return reinvited;
   }
 
-  async _getStreamFromConstraints(constraints: Object, conference: boolean = false): Promise<?MediaStream> {
-    const video = constraints && constraints.video;
-    // $FlowFixMe
-    const { constraints: newConstraints } = this.client.getMediaConfiguration(video, conference, constraints);
-
-    const newStream = await wazoMediaStreamFactory(newConstraints);
-    if (!newStream) {
-      return null;
-    }
-    // $FlowFixMe
-    newStream.local = true;
-
-    return newStream;
-  }
-
-  _onScreenSharing(screenStream: Object, sipSession: Session, callSession: ?CallSession, hadVideo: boolean) {
+  _onScreenSharing(screenStream: Object,
+    sipSession: Session,
+    callSession: ?CallSession,
+    hadVideo: boolean,
+    desktop?: ?boolean = false) {
     const screenTrack = screenStream.getVideoTracks()[0];
-    const pc = this.client.getPeerConnection(this.getSipSessionId(sipSession));
+    const sipSessionId = this.getSipSessionId(sipSession);
+    const pc = this.client.getPeerConnection(sipSessionId);
     const sender = pc && pc.getSenders().find(s => s && s.track && s.track.kind === 'video');
 
     logger.info('WebRTC phone - on screensharing', {
@@ -623,13 +575,20 @@ export default class WebRTCPhone extends Emitter implements Phone {
       );
     };
 
-    this.currentScreenShare = { stream: screenStream, hadVideo, sender };
+    this.currentScreenShare = {
+      stream: screenStream,
+      hadVideo,
+      sender,
+      sipSessionId,
+      desktop,
+    };
 
     this.client.setLocalMediaStream(this.getSipSessionId(sipSession), screenStream);
 
     this.eventEmitter.emit(
       ON_SHARE_SCREEN_STARTED,
       this._createCallSession(sipSession, callSession, { screensharing: true }),
+      screenStream,
     );
   }
 
@@ -772,6 +731,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
         this.eventEmitter.emit(ON_PLAY_HANGUP_SOUND, this.audioOutputDeviceId, this.audioOutputVolume, callSession);
       }, 10);
     }
+
+    return isCurrentSession;
   }
 
   setActiveSipSession(callSession: CallSession) {
@@ -920,29 +881,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
     callSession.ignore();
   }
 
-  hold(callSession: CallSession, withEvent: boolean = true, isConference: boolean = false): void {
-    logger.info('WebRTC hold', { id: callSession.getId() });
-
-    const sipSession = this.findSipSession(callSession);
-
-    if (sipSession) {
-      this.holdSipSession(sipSession, callSession, withEvent, isConference);
-    }
-  }
-
-  // @Deprecated
-  unhold(callSession: CallSession, withEvent: boolean = true, isConference: boolean = false): void {
-    logger.info('WebRTC unhold', { id: callSession ? callSession.getId() : null });
-
-    console.warn('Please note that `phone.unhold()` is being deprecated; `phone.resume()` is the preferred method');
-
-    const sipSession = this.findSipSession(callSession);
-
-    if (sipSession) {
-      this.unholdSipSession(sipSession, callSession, withEvent, isConference);
-    }
-  }
-
   atxfer(callSession: CallSession): ?Object {
     const sipSession = this.findSipSession(callSession);
 
@@ -953,45 +891,22 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
   }
 
-  holdSipSession(
-    sipSession: Session,
-    callSession: ?CallSession,
-    withEvent: boolean = true,
-    isConference: boolean = false,
-  ): Promise<any> {
-    if (!sipSession) {
-      return new Promise((resolve, reject) => reject(new Error('No session to hold')));
-    }
-    logger.info('WebRTC hold sip session', { sipId: sipSession.id });
+  hold(callSession: CallSession, withEvent: boolean = true, isConference: boolean = false): ?Promise<any> {
+    logger.info('WebRTC hold', { id: callSession.getId() });
 
-    const promise = this.client.hold(sipSession, isConference);
-    if (withEvent) {
-      this.eventEmitter.emit(ON_CALL_HELD, this._createCallSession(sipSession, callSession));
-    }
+    const sipSession = this.findSipSession(callSession);
 
-    return promise;
+    return sipSession ? this.holdSipSession(sipSession, callSession, withEvent, isConference) : null;
   }
 
-  unholdSipSession(
-    sipSession: Session,
-    callSession: ?CallSession,
-    withEvent: boolean = true,
-    isConference: boolean = false,
-  ): Promise<any> {
-    if (!sipSession) {
-      return new Promise((resolve, reject) => reject(new Error('No session to unhold')));
-    }
-    logger.info('WebRTC unhold', { sipId: sipSession.id });
+  // @Deprecated
+  unhold(callSession: CallSession, withEvent: boolean = true, isConference: boolean = false): ?Promise<any> {
+    console.warn('Please note that `phone.unhold()` is being deprecated; `phone.resume()` is the preferred method');
 
-    const promise = this.client.unhold(sipSession, isConference);
-    if (withEvent) {
-      this.eventEmitter.emit(ON_CALL_UNHELD, this._createCallSession(sipSession, callSession));
-    }
-
-    return promise;
+    return this.resume(callSession, isConference, withEvent);
   }
 
-  resume(callSession?: CallSession, isConference: boolean = false): Promise<any> {
+  resume(callSession?: CallSession, isConference: boolean = false, withEvent: boolean = true): Promise<any> {
     logger.info('WebRTC resume called', { id: callSession ? callSession.getId() : null });
 
     const sipSession = this.findSipSession(callSession);
@@ -1007,14 +922,99 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.holdSipSession(this.currentSipSession, callSession);
     }
 
-    const promise = this.client.unhold(sipSession, isConference);
-    this.eventEmitter.emit(ON_CALL_RESUMED, this._createCallSession(sipSession, callSession));
+    const promise = this.unholdSipSession(sipSession, callSession, withEvent, isConference);
     this.currentSipSession = sipSession;
     if (callSession) {
       this.currentCallSession = callSession;
     }
 
     return promise;
+  }
+
+  async holdSipSession(
+    sipSession: Session,
+    callSession: ?CallSession,
+    withEvent: boolean = true,
+    isConference: boolean = false,
+  ): Promise<any> {
+    if (!sipSession) {
+      return new Promise((resolve, reject) => reject(new Error('No session to hold')));
+    }
+    const sessionId = this.getSipSessionId(sipSession);
+    const hasVideo = this.client.hasLocalVideo(sessionId);
+
+    logger.info('WebRTC hold sip session', { sipId: sipSession.id, hasVideo });
+
+    // Stop screenshre if needed
+    if (this.currentScreenShare && this.currentScreenShare.sipSessionId === sessionId) {
+      this.lastScreenShare = this.currentScreenShare;
+      await this.stopScreenSharing(false, callSession);
+    }
+
+    // Downgrade to audio if needed
+    if (hasVideo) {
+      await this.client.downgradeToAudio(sipSession);
+    }
+
+    const promise = this.client.hold(sipSession, isConference, hasVideo);
+    if (withEvent) {
+      this.eventEmitter.emit(ON_CALL_HELD, this._createCallSession(sipSession, callSession));
+    }
+
+    return promise;
+  }
+
+  async unholdSipSession(
+    sipSession: Session,
+    callSession: ?CallSession,
+    withEvent: boolean = true,
+    isConference: boolean = false,
+  ): Promise<any> {
+    if (!sipSession) {
+      return new Promise((resolve, reject) => reject(new Error('No session to unhold')));
+    }
+    const sessionId = this.getSipSessionId(sipSession);
+    logger.info('WebRTC unhold sip session', { sessionId, isConference });
+
+    const { hasVideo } = this.client.getHeldSession(sessionId) || {};
+    const wasScreensharing = this.lastScreenShare && this.lastScreenShare.sipSessionId === sessionId;
+    const wasDesktop = this.lastScreenShare && this.lastScreenShare.desktop;
+    const promise = this.client.unhold(sipSession, isConference);
+
+    if (hasVideo) {
+      const constraints = {
+        audio: false,
+        video: true,
+        screen: wasScreensharing,
+        desktop: wasDesktop,
+      };
+
+      await this.client.upgradeToVideo(sipSession, constraints, isConference);
+    }
+
+    const onScreenSharing = stream => {
+      const hadVideo = this.lastScreenShare && this.lastScreenShare.hadVideo;
+      if (stream) {
+        this._onScreenSharing(stream, sipSession, callSession, hadVideo);
+      }
+      this.lastScreenShare = null;
+    };
+
+    if (withEvent) {
+      const updatedCallSession = this._createCallSession(sipSession, callSession);
+      // Deprecated event
+      this.eventEmitter.emit(ON_CALL_UNHELD, updatedCallSession);
+      this.eventEmitter.emit(ON_CALL_RESUMED, updatedCallSession);
+    }
+
+    return promise.then(() => {
+      const stream = callSession ? this.getLocalVideoStream(callSession) : null;
+      if (wasScreensharing) {
+        onScreenSharing(stream);
+      }
+
+      return stream;
+    });
   }
 
   mute(callSession: ?CallSession, withEvent: boolean = true): void {
@@ -1341,6 +1341,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.setMediaConstraints(media);
   }
 
+  isVideoRemotelyHeld(callSession: CallSession) {
+    return callSession ? this.client.isVideoRemotelyHeld(callSession.sipCallId) : null;
+  }
+
   bindClientEvents() {
     this.client.unbind();
 
@@ -1466,7 +1470,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     });
 
     // Used when upgrading directly in screenshare mode
-    this.client.on(this.client.ON_SCREEN_SHARING_REINVITE, (sipSession: Session) => {
+    this.client.on(this.client.ON_SCREEN_SHARING_REINVITE, (sipSession: Session, response: any, desktop: boolean) => {
       const sipSessionId = this.getSipSessionId(sipSession);
       const localStream = this.client.getLocalStream(sipSessionId);
       const callSession = this.callSessions[sipSessionId];
@@ -1476,7 +1480,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         tracks: localStream ? localStream.getTracks() : null,
       });
 
-      this._onScreenSharing(localStream, sipSession, callSession, false);
+      this._onScreenSharing(localStream, sipSession, callSession, false, desktop);
     });
   }
 
@@ -1617,15 +1621,5 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.callSessions[callSession.getId()] = callSession;
 
     return callSession;
-  }
-
-  _parseSDP(sdp: string) {
-    const labelMatches = sdp.match(/a=label:(.*)/m);
-    const msidMatches = sdp.match(/a=msid:(.*)/gm);
-
-    const label = labelMatches && labelMatches.length && labelMatches[1];
-    const msid = msidMatches && msidMatches.length && msidMatches[msidMatches.length - 1].split(' ')[1];
-
-    return { label, msid };
   }
 }

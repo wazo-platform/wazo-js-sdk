@@ -458,6 +458,28 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
 
     return trackUpdates.reduce((p, x) => p.then(() => x), Promise.resolve());
   }
+
+  // Overridden to avoid replacing constraints with `localMediaStreamConstraints`
+  getLocalMediaStream(options: Object) {
+    this.logger.debug('WazoSessionDescriptionHandler.getLocalMediaStream');
+    if (this._peerConnection === undefined) {
+      return Promise.reject(new Error('Peer connection closed.'));
+    }
+    let constraints = options.constraints ? { ...options.constraints } : {};
+    // if we already have a local media stream...
+    if (this.localMediaStreamConstraints) {
+      // if constraints have not changed, do not get a new media stream
+      if (JSON.stringify(this.localMediaStreamConstraints.audio) === JSON.stringify(constraints.audio)
+        && JSON.stringify(this.localMediaStreamConstraints.video) === JSON.stringify(constraints.video)) {
+        return Promise.resolve();
+      }
+    } else if (constraints.audio === undefined && constraints.video === undefined) {
+      // if no constraints have been specified, default to audio for initial media stream
+      constraints = { audio: true };
+    }
+    this.localMediaStreamConstraints = constraints;
+    return this.mediaStreamFactory(constraints, this).then((mediaStream) => this.setLocalMediaStream(mediaStream));
+  }
 }
 
 export default WazoSessionDescriptionHandler;

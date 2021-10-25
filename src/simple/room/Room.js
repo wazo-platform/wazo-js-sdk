@@ -286,18 +286,12 @@ class Room extends Emitter {
   async stopScreenSharing(restoreLocalStream: boolean = true) {
     logger.info('stop room screen sharing');
 
-    const reinvited = await Wazo.Phone.stopScreenSharing(this.callSession, restoreLocalStream);
+    await Wazo.Phone.stopScreenSharing(this.callSession, restoreLocalStream);
 
     if (this.localParticipant) {
-      this.localParticipant.onStopScreensharing();
-    }
-
-    if (!reinvited && this.localParticipant) {
-      // When we had video and we made a screenshare we don't reinvite when stopping the screensahre
-      // So not REINVITE even is fired, we have to restore the video stream manually
-      const localVideoStream = Wazo.Phone.getLocalVideoStream(this.callSession);
+      this._updateLocalParticipantStream();
       // $FlowFixMe
-      this._associateStreamTo(localVideoStream, this.localParticipant);
+      this.localParticipant.onStopScreensharing();
     }
   }
 
@@ -359,13 +353,31 @@ class Room extends Emitter {
     }
   }
 
-  resume() {
+  async resume() {
     logger.info('resume room');
 
-    Wazo.Phone.resume(this.callSession, true);
+    const newStream = await Wazo.Phone.resume(this.callSession, true);
 
     if (this.localParticipant) {
+      // Update local participant stream (useful when resuming a shreenshared conference)
+      this._updateLocalParticipantStream();
+
+      // $FlowFixMe
       this.localParticipant.onResume();
+
+      // $FlowFixMe
+      if (!newStream && this.localParticipant.screensharing) {
+        // $FlowFixMe
+        this.localParticipant.onStopScreensharing();
+      }
+    }
+  }
+
+  _updateLocalParticipantStream() {
+    const localStream = Wazo.Phone.getLocalStream(this.callSession);
+    if (this.localParticipant && localStream) {
+      const localWazoStream = new Wazo.Stream(localStream);
+      this.localParticipant.resetStreams([localWazoStream]);
     }
   }
 
@@ -441,6 +453,8 @@ class Room extends Emitter {
       if (!this.roomAudioElement) {
         const sessionId = Wazo.Phone.phone.getSipSessionId(Wazo.Phone.phone.currentSipSession);
         this.roomAudioElement = Wazo.Phone.phone.createAudioElementFor(sessionId);
+        this.roomAudioElement.srcObject = stream;
+      } else {
         this.roomAudioElement.srcObject = stream;
       }
     });
@@ -719,8 +733,7 @@ class Room extends Emitter {
     const videoStream = new Wazo.Stream(stream, localParticipant);
 
     if (videoStream) {
-      localParticipant.streams = [videoStream];
-      localParticipant.videoStreams = [videoStream];
+      localParticipant.resetStreams([videoStream]);
       localParticipant.onStreamSubscribed(videoStream);
     }
 
@@ -741,16 +754,6 @@ class Room extends Emitter {
     this.eventEmitter.emit(this.CONFERENCE_USER_PARTICIPANT_LEFT, leftParticipant);
   }
 
-  _onScreenshareEnded() {
-    this.stopScreenSharing();
-
-    this.eventEmitter.emit(this.ON_SHARE_SCREEN_ENDED);
-
-    if (this.localParticipant) {
-      this.localParticipant.onStopScreensharing();
-    }
-  }
-
   _onParticipantTrackUpdate(oldParticipant: Participant, update: string): Participant {
     const newParticipant = oldParticipant;
 
@@ -761,8 +764,7 @@ class Room extends Emitter {
       someStream.id === streamId || someStream.getTracks().some(track => track.id === trackId));
 
     if (update === 'downgrade') {
-      newParticipant.streams = [];
-      newParticipant.videoStreams = [];
+      newParticipant.resetStreams([]);
       newParticipant.onStreamUnSubscribed(stream);
 
       return newParticipant;

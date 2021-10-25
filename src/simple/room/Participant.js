@@ -288,6 +288,11 @@ class Participant extends Emitter {
       status,
     });
   }
+
+  resetStreams(streams: any[]) {
+    this.streams = streams;
+    this.videoStreams = streams;
+  }
 }
 
 export default Participant;

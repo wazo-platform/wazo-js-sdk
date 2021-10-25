@@ -58,6 +58,16 @@ export const toggleVideoDirection = (sdp: string, direction: ?string): string =>
   return sdpParser.write(parsedSdp);
 };
 
+export const getVideoDirection = (sdp: string): ?string => {
+  const parsedSdp = sdpParser.parse(sdp);
+  const videoMedia = parsedSdp.media.find(media => media.type === 'video');
+  if (!videoMedia) {
+    return null;
+  }
+
+  return videoMedia.direction;
+};
+
 export const deactivateVideoModifier = (rawDescription: Object): Promise<Object> => {
   const description = rawDescription;
   description.sdp = toggleVideoDirection(description.sdp, 'inactive');

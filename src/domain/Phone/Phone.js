@@ -68,7 +68,7 @@ export interface Phone {
 
   hasAnActiveCall(): boolean;
 
-  hold(callSession: CallSession): PhoneVoid;
+  hold(callSession: CallSession): ?Promise<any>;
 
   indirectTransfer(source: CallSession, destination: CallSession): PhoneVoid;
 
@@ -91,7 +91,7 @@ export interface Phone {
 
   reject(callSession: CallSession): PhoneVoid;
 
-  resume(callSession: CallSession): PhoneVoid;
+  resume(callSession: CallSession): ?Promise<any>;
 
   sendKey(callSession: CallSession, tone: string): PhoneVoid;
 
