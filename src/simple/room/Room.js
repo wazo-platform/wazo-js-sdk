@@ -377,8 +377,7 @@ class Room extends Emitter {
     const localStream = Wazo.Phone.getLocalStream(this.callSession);
     if (this.localParticipant && localStream) {
       const localWazoStream = new Wazo.Stream(localStream);
-      this.localParticipant.streams = [localWazoStream];
-      this.localParticipant.videoStreams = [localWazoStream];
+      this.localParticipant.resetStreams([localWazoStream]);
     }
   }
 
@@ -454,8 +453,6 @@ class Room extends Emitter {
       if (!this.roomAudioElement) {
         const sessionId = Wazo.Phone.phone.getSipSessionId(Wazo.Phone.phone.currentSipSession);
         this.roomAudioElement = Wazo.Phone.phone.createAudioElementFor(sessionId);
-        this.roomAudioElement.srcObject = stream;
-      } else {
         this.roomAudioElement.srcObject = stream;
       }
     });
@@ -734,8 +731,7 @@ class Room extends Emitter {
     const videoStream = new Wazo.Stream(stream, localParticipant);
 
     if (videoStream) {
-      localParticipant.streams = [videoStream];
-      localParticipant.videoStreams = [videoStream];
+      localParticipant.resetStreams([videoStream]);
       localParticipant.onStreamSubscribed(videoStream);
     }
 
@@ -766,8 +762,7 @@ class Room extends Emitter {
       someStream.id === streamId || someStream.getTracks().some(track => track.id === trackId));
 
     if (update === 'downgrade') {
-      newParticipant.streams = [];
-      newParticipant.videoStreams = [];
+      newParticipant.resetStreams([]);
       newParticipant.onStreamUnSubscribed(stream);
 
       return newParticipant;
