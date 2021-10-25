@@ -62,6 +62,8 @@ export default class CallLog {
     name: string,
   };
 
+  recordings: Recording[];
+
   source: {
     extension: string,
     name: string,
@@ -132,6 +134,7 @@ export default class CallLog {
     duration,
     start,
     end,
+    recordings,
   }: CallLogArguments = {}) {
     this.answer = answer;
     this.answered = answered;
@@ -142,6 +145,7 @@ export default class CallLog {
     this.duration = duration;
     this.start = start;
     this.end = end;
+    this.recordings = recordings || [];
 
     // Useful to compare instead of instanceof with minified code
     this.type = 'CallLog';
@@ -221,5 +225,9 @@ export default class CallLog {
 
   isADeclinedCall(session: Session): boolean {
     return !this.answered && session.hasExtension(this.destination.extension);
+  }
+
+  getRecordings() {
+    return this.recordings;
   }
 }
