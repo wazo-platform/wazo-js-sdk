@@ -506,7 +506,15 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   getRemoteVideoReceiver(callSession: CallSession): boolean {
     const pc = this.getPeerConnection(callSession);
-    return pc ? pc.getReceivers().find(receiver => receiver.track.kind === 'video') : false;
+    if (!pc) {
+      return false;
+
+    }
+    if (pc.getReceivers) {
+      return pc.getReceivers().find(receiver => receiver.track.kind === 'video')
+    }
+
+    return pc.getLocalStreams().find(stream => stream.getVideoTracks().length);
   }
 
   _onCallTerminated(sipSession: Session) {
