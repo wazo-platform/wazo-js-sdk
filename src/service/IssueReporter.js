@@ -1,5 +1,5 @@
 /* global window */
-/* eslint-disable prefer-destructuring, no-param-reassign */
+/* eslint-disable prefer-destructuring, no-param-reassign, no-underscore-dangle */
 // @flow
 import moment from 'moment';
 
@@ -60,12 +60,21 @@ class IssueReporter {
   enabled: boolean;
   remoteClientConfiguration: ?Object;
 
+  buffer: Object[];
+  bufferTimeout: ?TimeoutID;
+  _boundProcessBuffer: Function;
+  _boundParseLoggerBody: Function;
+
   constructor() {
     addLevelsTo(this);
 
     this.oldConsoleMethods = null;
     this.enabled = false;
     this.remoteClientConfiguration = null;
+    this.buffer = [];
+    this.bufferTimeout = null;
+    this._boundProcessBuffer = this._processBuffer.bind(this);
+    this._boundParseLoggerBody = this._parseLoggerBody.bind(this);
   }
 
   init() {
@@ -209,18 +218,83 @@ class IssueReporter {
     });
   }
 
-  _sendToRemoteLogger(level: string, payload: Object, retry: number = 0) {
-    if (!this.remoteClientConfiguration || retry >= MAX_REMOTE_RETRY) {
+  _sendToRemoteLogger(level: string, payload: Object = {}) {
+    if (!this.remoteClientConfiguration) {
       return;
     }
 
-    const { tag, host, port, extra, level: minLevel } = this.remoteClientConfiguration;
+    const { level: minLevel, bufferSize } = this.remoteClientConfiguration;
     if (!minLevel || this._isLevelAbove(minLevel, level)) {
       return;
     }
 
+    payload.level = level;
+
+    if (bufferSize > 0) {
+      return this._addToBuffer(payload);
+    }
+
+    this._sendDebugToGrafana(payload);
+  }
+
+  _parseLoggerBody(payload: Object) {
+    const { level } = payload;
+    const { maxMessageSize, extra } = this.remoteClientConfiguration || {};
+
+    delete payload.level;
+
+    if (maxMessageSize && typeof payload.message === 'string' && payload.message.length > maxMessageSize) {
+      payload.message = `${payload.message.substr(0, maxMessageSize)}...`;
+    }
+
+    return safeStringify({
+      level,
+      ...payload,
+      ...extra,
+    });
+  }
+
+  _addToBuffer(payload: Object) {
+    // Reset buffer timer
+    if (this.bufferTimeout) {
+      clearTimeout(this.bufferTimeout);
+      this.bufferTimeout = null;
+    }
+
+    this.buffer.push(payload);
+
+    // $FlowFixMe
+    const { bufferSize, bufferTimeout } = this.remoteClientConfiguration;
+
+    if (this.buffer.length > bufferSize) {
+      return this._processBuffer();
+    }
+
+    if (bufferTimeout > 0) {
+      this.bufferTimeout = setTimeout(this._boundProcessBuffer, bufferTimeout);
+    }
+  }
+
+  _processBuffer() {
+    this._sendDebugToGrafana(this.buffer);
+
+    this.buffer = [];
+    if (this.bufferTimeout) {
+      clearTimeout(this.bufferTimeout);
+      this.bufferTimeout = null;
+    }
+  }
+
+  _sendDebugToGrafana(payload: Object | Object[], retry: number = 0) {
+    if (!this.remoteClientConfiguration || retry >= MAX_REMOTE_RETRY) {
+      return;
+    }
+
+    const { tag, host, port } = this.remoteClientConfiguration;
+    const isArray = Array.isArray(payload);
     const isSecure = +port === 443;
     const url = `http${isSecure ? 's' : ''}://${host}${isSecure ? '' : `:${port}`}/${tag}`;
+    const body = isArray ? `[${payload.map(this._boundParseLoggerBody).join(',')}]` : this._parseLoggerBody(payload);
 
     realFetch()(url, {
       method: 'POST',
@@ -228,16 +302,21 @@ class IssueReporter {
         Accept: 'application/json',
         'Content-Type': 'application/json',
       },
-      body: safeStringify({
-        level,
-        ...payload,
-        ...extra,
-      }),
+      // $FlowFixMe
+      body,
     }).catch(() => {
       setTimeout(() => {
-        // eslint-disable-next-line no-underscore-dangle
-        payload._retry = retry + 1;
-        this._sendToRemoteLogger(level, payload, retry + 1);
+        if (isArray) {
+          payload = payload.map(message => {
+            message._retry = retry + 1;
+            return message;
+          });
+        } else {
+          // $FlowFixMe
+          payload._retry = retry + 1;
+        }
+
+        this._sendDebugToGrafana(body, retry + 1);
       }, 5000 + retry * 1000);
     });
   }
