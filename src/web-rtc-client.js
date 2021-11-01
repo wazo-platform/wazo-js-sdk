@@ -68,6 +68,7 @@ const ON_TRACK = 'onTrack';
 const ON_REINVITE = 'reinvite';
 const ON_ERROR = 'onError';
 const ON_SCREEN_SHARING_REINVITE = 'onScreenSharingReinvite';
+const ON_NETWORK_STATS = 'onNetworkStats';
 
 export const events = [REGISTERED, UNREGISTERED, REGISTRATION_FAILED, INVITE];
 export const transportEvents = [CONNECTED, DISCONNECTED, TRANSPORT_ERROR, MESSAGE];
@@ -124,6 +125,8 @@ export default class WebRTCClient extends Emitter {
   sipSessions: { [string]: Session };
   conferences: { [string]: boolean };
   skipRegister: boolean;
+  networkMonitoringInterval: { [string]: IntervalID };
+  sessionNetworkStats: { [string]: Object };
 
   // sugar
   ON_USER_AGENT: string;
@@ -141,6 +144,7 @@ export default class WebRTCClient extends Emitter {
   ON_REINVITE: string;
   ON_ERROR: string;
   ON_SCREEN_SHARING_REINVITE: string;
+  ON_NETWORK_STATS: string;
 
   static isAPrivateIp(ip: string): boolean {
     const regex = /^(?:10|127|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\..*/;
@@ -182,6 +186,8 @@ export default class WebRTCClient extends Emitter {
     this.connectionPromise = null;
     this.sipSessions = {};
     this.conferences = {};
+    this.networkMonitoringInterval = {};
+    this.sessionNetworkStats = {};
 
     this._boundOnHeartbeat = this._onHeartbeat.bind(this);
     this.heartbeat = new Heartbeat(config.heartbeatDelay, config.heartbeatTimeout, config.maxHeartbeats);
@@ -203,6 +209,7 @@ export default class WebRTCClient extends Emitter {
     this.ON_REINVITE = ON_REINVITE;
     this.ON_ERROR = ON_ERROR;
     this.ON_SCREEN_SHARING_REINVITE = ON_SCREEN_SHARING_REINVITE;
+    this.ON_NETWORK_STATS = ON_NETWORK_STATS;
   }
 
   configureMedia(media: MediaConfig) {
@@ -474,6 +481,7 @@ export default class WebRTCClient extends Emitter {
         onReject: (response: IncomingResponse) => {
           logger.info('on call rejected', { id: session.id, fromTag: session.fromTag });
           this._stopSendingStats(session);
+          this.stopNetworkMonitoring(session);
 
           this.eventEmitter.emit(REJECTED, session, response);
         },
@@ -557,6 +565,37 @@ export default class WebRTCClient extends Emitter {
     }
 
     return null;
+  }
+
+  async getStats(session: Session): ?Object {
+    const pc = session.sessionDescriptionHandler.peerConnection;
+    if (!pc) {
+      return null;
+    }
+
+    return pc.getStats(null);
+  }
+
+  // Fetch and emit an event at `interval` with session network stats
+  startNetworkMonitoring(session: Session, interval: number = 1000): ?Object {
+    const sessionId = this.getSipSessionId(session);
+    logger.info('starting network inspection', { id: sessionId });
+
+    this.sessionNetworkStats[sessionId] = [];
+
+    this.networkMonitoringInterval[sessionId] = setInterval(() => this._fetchNetworkStats(sessionId), interval);
+  }
+
+  stopNetworkMonitoring(session: Session): ?Object {
+    const sessionId = this.getSipSessionId(session);
+    const exists = sessionId in this.networkMonitoringInterval;
+    logger.info('stopping network inspection', { id: sessionId, exists });
+
+    if (exists) {
+      clearInterval(this.networkMonitoringInterval[sessionId]);
+      delete this.networkMonitoringInterval[sessionId];
+      delete this.sessionNetworkStats[sessionId];
+    }
   }
 
   reject(session: Inviter) {
@@ -1362,6 +1401,7 @@ export default class WebRTCClient extends Emitter {
     delete this.sipSessions[this.getSipSessionId(session)];
 
     this._stopSendingStats(session);
+    this.stopNetworkMonitoring(session);
   }
 
   attemptReconnection(): void {
@@ -1982,6 +2022,29 @@ export default class WebRTCClient extends Emitter {
         logger.error('WebRTC transport disconnect, error', e);
       }
     }
+  }
+
+  async _fetchNetworkStats(sessionId: string) {
+    const session = this.getSipSession(sessionId);
+
+    const stats = session ? await this.getStats(session) : null;
+    if (!stats) {
+      return;
+    }
+
+    stats.forEach(report => {
+      if (report.type === 'inbound-rtp') {
+        if (report.kind === 'audio') {
+          const networkStats = {
+            packetsLost: report.packetsLost,
+            jitter: report.jitter,
+          };
+
+          this.eventEmitter.emit(ON_NETWORK_STATS, session, networkStats, this.sessionNetworkStats[sessionId]);
+          this.sessionNetworkStats[sessionId].push(networkStats);
+        }
+      }
+    });
   }
 
 }

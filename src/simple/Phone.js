@@ -231,6 +231,18 @@ class Phone extends Emitter {
     return this.phone ? this.phone.sendReinvite(callSession, constraints, conference) : null;
   }
 
+  async getStats(callSession: CallSession) {
+    return this.phone ? this.phone.getStats(callSession) : null;
+  }
+
+  startNetworkMonitoring(callSession: CallSession, interval: number = 1000) {
+    return this.phone ? this.phone.startNetworkMonitoring(callSession, interval) : null;
+  }
+
+  stopNetworkMonitoring(callSession: CallSession) {
+    return this.phone ? this.phone.stopNetworkMonitoring(callSession) : null;
+  }
+
   getSipSessionId(sipSession: Session): ?string {
     return this.phone ? this.phone.getSipSessionId(sipSession) : null;
   }
