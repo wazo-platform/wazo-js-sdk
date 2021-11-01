@@ -49,6 +49,7 @@ export const ON_PLAY_PROGRESS_SOUND = 'playProgressSound';
 export const ON_VIDEO_INPUT_CHANGE = 'videoInputChange';
 export const ON_CALL_ERROR = 'onCallError';
 export const ON_MESSAGE_TRACK_UPDATED = 'onTrackUpdated';
+export const ON_NETWORK_STATS = 'onNetworkStats';
 export const ON_CHAT = 'phone/ON_CHAT';
 export const ON_SIGNAL = 'phone/ON_SIGNAL';
 
@@ -89,6 +90,7 @@ export const events = [
   ON_CALL_ERROR,
   ON_CHAT,
   ON_SIGNAL,
+  ON_NETWORK_STATS,
 ];
 
 const logger = IssueReporter.loggerFor('webrtc-phone');
@@ -1208,6 +1210,24 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return true;
   }
 
+  async getStats(callSession: ?CallSession): Promise<?Object> {
+    const sipSession = this.findSipSession(callSession);
+
+    return sipSession ? this.client.getStats(sipSession) : null;
+  }
+
+  startNetworkMonitoring(callSession: ?CallSession, interval: number = 1000) {
+    const sipSession = this.findSipSession(callSession);
+
+    return sipSession ? this.client.startNetworkMonitoring(sipSession, interval) : null;
+  }
+
+  stopNetworkMonitoring(callSession: ?CallSession) {
+    const sipSession = this.findSipSession(callSession);
+
+    return sipSession ? this.client.stopNetworkMonitoring(sipSession) : null;
+  }
+
   forceCancel(sipSession: Session): void {
     if (!sipSession || !sipSession.outgoingInviteRequest) {
       return;
@@ -1467,6 +1487,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.on(this.client.MESSAGE, (message: Message) => {
       this._onMessage(message);
       this.eventEmitter.emit(ON_MESSAGE, message);
+    });
+
+    this.client.on(this.client.ON_NETWORK_STATS, (session, stats, previousStats) => {
+      const callSession = this.getCallSession(this.getSipSessionId(session));
+
+      this.eventEmitter.emit(ON_NETWORK_STATS, callSession, stats, previousStats);
     });
 
     // Used when upgrading directly in screenshare mode
