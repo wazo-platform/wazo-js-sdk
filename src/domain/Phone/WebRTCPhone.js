@@ -194,7 +194,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   async sendReinvite(callSession: ?CallSession, constraints: ?Object = null, conference: boolean = false,
-    audioOnly: boolean = false) {
+    audioOnly: boolean = false, iceRestart: boolean = false) {
     const sipSession = this.findSipSession(callSession);
     logger.info('WebRTC phone - send reinvite', {
       sessionId: sipSession ? sipSession.id : null,
@@ -225,7 +225,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       }
     }
 
-    return this.client.reinvite(sipSession, constraints, conference, audioOnly);
+    return this.client.reinvite(sipSession, constraints, conference, audioOnly, iceRestart);
   }
 
   getUserAgent() {
@@ -1449,7 +1449,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
         && this.currentSipSession.state === SessionState.Established) {
         this.shouldSendReinvite = false;
         try {
-          this.sendReinvite(this.currentCallSession);
+          // Send reinvite with iceRestart
+          this.sendReinvite(this.currentCallSession, null, false, false, true);
         } catch (e) {
           logger.error('WebRTC reinvite after register, error', { message: e.message, stack: e.stack });
         }

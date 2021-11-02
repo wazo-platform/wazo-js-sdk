@@ -1154,7 +1154,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   reinvite(sipSession: Session, newConstraints: ?Object = null, conference: boolean = false,
-    audioOnly: boolean = false) {
+    audioOnly: boolean = false, iceRestart: boolean = false) {
     if (!sipSession) {
       return false;
     }
@@ -1236,7 +1236,7 @@ export default class WebRTCClient extends Emitter {
         conference,
         audioOnly,
         offerOptions: {
-          iceRestart: false,
+          iceRestart,
         },
       },
     });
