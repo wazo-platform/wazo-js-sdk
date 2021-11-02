@@ -659,7 +659,8 @@ export default class Contact {
   }
 
   isIntern(): boolean {
-    return !!this.uuid;
+    // Static conferences don't have uuid but sourceId
+    return !!this.uuid || !!this.sourceId;
   }
 
   isCallable(session: Session): boolean {
