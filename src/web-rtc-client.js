@@ -2028,24 +2028,41 @@ export default class WebRTCClient extends Emitter {
     const session = this.getSipSession(sessionId);
 
     const stats = session ? await this.getStats(session) : null;
-    if (!stats) {
+    if (!stats || !(sessionId in this.sessionNetworkStats)) {
       return;
     }
 
-    stats.forEach(report => {
-      if (report.type === 'inbound-rtp') {
-        if (report.kind === 'audio') {
-          const networkStats = {
-            packetsLost: report.packetsLost,
-            packetsReceived: report.packetsReceived,
-            jitter: report.jitter,
-          };
+    const networkStats: Object = {};
+    const nbStats = this.sessionNetworkStats[sessionId].length;
+    const lastNetworkStats = this.sessionNetworkStats[sessionId][nbStats - 1];
+    const lastAudioSent = lastNetworkStats ? lastNetworkStats.audioBytesSent : 0;
+    const lastVideoSent = lastNetworkStats ? lastNetworkStats.videoBytesSent : 0;
 
-          this.eventEmitter.emit(ON_NETWORK_STATS, session, networkStats, this.sessionNetworkStats[sessionId]);
-          this.sessionNetworkStats[sessionId].push(networkStats);
-        }
+    stats.forEach(report => {
+      if (report.type === 'outbound-rtp' && report.kind === 'audio') {
+        networkStats.audioBytesSent = report.bytesSent;
+      }
+      if (report.type === 'outbound-rtp' && report.kind === 'video') {
+        networkStats.videoBytesSent = report.bytesSent;
+      }
+      if (report.type === 'inbound-rtp' && report.kind === 'audio') {
+        networkStats.packetsLost = report.packetsLost;
+        networkStats.packetsReceived = report.packetsReceived;
+      }
+      if (report.type === 'inbound-rtp' && report.kind === 'video' && 'framesPerSecond' in report) {
+        networkStats.framesPerSecond = report.framesPerSecond;
+      }
+      if (report.type === 'remote-inbound-rtp' && report.kind === 'audio') {
+        networkStats.roundTripTime = report.roundTripTime;
+        networkStats.jitter = report.jitter;
       }
     });
+
+    networkStats.bandwidth = (networkStats.audioBytesSent - lastAudioSent)
+      + (networkStats.videoBytesSent - lastVideoSent);
+
+    this.eventEmitter.emit(ON_NETWORK_STATS, session, networkStats, this.sessionNetworkStats[sessionId]);
+    this.sessionNetworkStats[sessionId].push(networkStats);
   }
 
 }
