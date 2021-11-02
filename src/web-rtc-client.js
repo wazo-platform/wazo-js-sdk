@@ -2037,6 +2037,7 @@ export default class WebRTCClient extends Emitter {
         if (report.kind === 'audio') {
           const networkStats = {
             packetsLost: report.packetsLost,
+            packetsReceived: report.packetsReceived,
             jitter: report.jitter,
           };
 
