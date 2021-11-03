@@ -98,6 +98,8 @@ class Auth {
       const rawSession = await getApiClient().auth.authenticate(token);
       return this._onAuthenticated(rawSession);
     } catch (e) {
+      logger.error('on validate token error', e);
+      console.warn(e);
       return false;
     }
   }
