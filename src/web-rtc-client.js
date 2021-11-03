@@ -2037,17 +2037,23 @@ export default class WebRTCClient extends Emitter {
     const lastNetworkStats = this.sessionNetworkStats[sessionId][nbStats - 1];
     const lastAudioSent = lastNetworkStats ? lastNetworkStats.audioBytesSent : 0;
     const lastVideoSent = lastNetworkStats ? lastNetworkStats.videoBytesSent : 0;
+    const lastAudioReceived = lastNetworkStats ? lastNetworkStats.audioBytesReceived : 0;
+    const lastVideoReceived = lastNetworkStats ? lastNetworkStats.videoBytesReceived : 0;
 
     stats.forEach(report => {
       if (report.type === 'outbound-rtp' && report.kind === 'audio') {
         networkStats.audioBytesSent = report.bytesSent;
       }
-      if (report.type === 'outbound-rtp' && report.kind === 'video') {
+      if (report.type === 'outbound-rtp' && report.kind === 'video' && report.bytesSent > 0) {
         networkStats.videoBytesSent = report.bytesSent;
       }
       if (report.type === 'inbound-rtp' && report.kind === 'audio') {
         networkStats.packetsLost = report.packetsLost;
         networkStats.packetsReceived = report.packetsReceived;
+        networkStats.audioBytesReceived = report.bytesReceived;
+      }
+      if (report.type === 'inbound-rtp' && report.kind === 'video' && report.bytesReceived) {
+        networkStats.videoBytesReceived = report.bytesReceived;
       }
       if (report.type === 'inbound-rtp' && report.kind === 'video' && 'framesPerSecond' in report) {
         networkStats.framesPerSecond = report.framesPerSecond;
@@ -2059,7 +2065,8 @@ export default class WebRTCClient extends Emitter {
     });
 
     networkStats.bandwidth = (networkStats.audioBytesSent - lastAudioSent)
-      + (networkStats.videoBytesSent - lastVideoSent);
+      + (networkStats.videoBytesSent - lastVideoSent) + (networkStats.audioBytesReceived - lastAudioReceived)
+      + (networkStats.videoBytesReceived - lastVideoReceived);
 
     this.eventEmitter.emit(ON_NETWORK_STATS, session, networkStats, this.sessionNetworkStats[sessionId]);
     this.sessionNetworkStats[sessionId].push(networkStats);
