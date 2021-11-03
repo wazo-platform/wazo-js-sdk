@@ -2032,7 +2032,12 @@ export default class WebRTCClient extends Emitter {
       return;
     }
 
-    const networkStats: Object = {};
+    const networkStats: Object = {
+      audioBytesSent: 0,
+      videoBytesSent: 0,
+      videoBytesReceived: 0,
+      audioBytesReceived: 0,
+    };
     const nbStats = this.sessionNetworkStats[sessionId].length;
     const lastNetworkStats = this.sessionNetworkStats[sessionId][nbStats - 1];
     const lastAudioSent = lastNetworkStats ? lastNetworkStats.audioBytesSent : 0;
