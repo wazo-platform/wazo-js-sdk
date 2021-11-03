@@ -932,9 +932,16 @@ export default class WebRTCClient extends Emitter {
       target,
     });
 
+    const options = {
+      requestDelegate: {
+        onAccept: () => {
+          this.hangup(session);
+        },
+      },
+    };
+
     setTimeout(() => {
-      session.refer(this._makeURI(target));
-      this.hangup(session);
+      session.refer(this._makeURI(target), options);
     }, 50);
   }
 

@@ -70,7 +70,7 @@ export interface Phone {
 
   hold(callSession: CallSession): ?Promise<any>;
 
-  indirectTransfer(source: CallSession, destination: CallSession): PhoneVoid;
+  indirectTransfer(source: CallSession, destination: CallSession): Promise<boolean>;
 
   initiateCTIIndirectTransfer(callSession: CallSession, number: string): PhoneVoid;
 

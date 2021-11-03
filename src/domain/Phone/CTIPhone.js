@@ -174,7 +174,9 @@ export default class CTIPhone extends Emitter implements Phone {
     await CallApi.transferCall(callSession.callId, number, TRANSFER_FLOW_BLIND);
   }
 
-  indirectTransfer() {}
+  indirectTransfer() {
+    return Promise.resolve(false);
+  }
 
   async initiateCTIIndirectTransfer(callSession: CallSession, number: string): Promise<any> {
     if (!callSession) {

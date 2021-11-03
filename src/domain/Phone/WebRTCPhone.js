@@ -1160,7 +1160,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.transfer(sipSession, target);
   }
 
-  async indirectTransfer(source: CallSession, destination: CallSession): Promise<void> {
+  async indirectTransfer(source: CallSession, destination: CallSession): Promise<boolean> {
     const sipSession = this.client.getSipSession(source.sipCallId);
     const sipSessionTarget = this.client.getSipSession(destination.sipCallId);
 
@@ -1170,11 +1170,22 @@ export default class WebRTCPhone extends Emitter implements Phone {
     });
 
     if (!sipSessionTarget) {
-      return;
+      return Promise.reject();
     }
 
-    return sipSessionTarget.refer(sipSession).then(() => {
-      return this.hangup(destination);
+    return new Promise(resolve => {
+      const options = {
+        requestDelegate: {
+          onAccept: () => {
+            // Wait a little so the REFER will take effect
+            setTimeout(() => {
+              this.hangup(destination).then(resolve);
+            }, 200);
+          },
+        },
+      };
+
+      return sipSessionTarget.refer(sipSession, options);
     });
   }
 
@@ -1196,7 +1207,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     const sipSessionId = this.getSipSessionId(sipSession);
 
-    this.client.hangup(sipSession);
+    await this.client.hangup(sipSession);
     if (callSession) {
       // Removal of `this.callSessions` will be done in `_onCallTerminated`.
       this.endCurrentCall(callSession);
