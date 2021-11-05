@@ -2035,24 +2035,68 @@ export default class WebRTCClient extends Emitter {
     const session = this.getSipSession(sessionId);
 
     const stats = session ? await this.getStats(session) : null;
-    if (!stats) {
+    if (!stats || !(sessionId in this.sessionNetworkStats)) {
       return;
     }
 
-    stats.forEach(report => {
-      if (report.type === 'inbound-rtp') {
-        if (report.kind === 'audio') {
-          const networkStats = {
-            packetsLost: report.packetsLost,
-            packetsReceived: report.packetsReceived,
-            jitter: report.jitter,
-          };
+    const networkStats: Object = {
+      audioBytesSent: 0,
+      videoBytesSent: 0,
+      videoBytesReceived: 0,
+      audioBytesReceived: 0,
+    };
+    const nbStats = this.sessionNetworkStats[sessionId].length;
+    const lastNetworkStats = this.sessionNetworkStats[sessionId][nbStats - 1];
+    const lastAudioSent = lastNetworkStats ? lastNetworkStats.audioBytesSent : 0;
+    const lastVideoSent = lastNetworkStats ? lastNetworkStats.videoBytesSent : 0;
+    const lastAudioReceived = lastNetworkStats ? lastNetworkStats.audioBytesReceived : 0;
+    const lastVideoReceived = lastNetworkStats ? lastNetworkStats.videoBytesReceived : 0;
+    let audioBytesSent = 0;
+    let audioBytesReceived = 0;
+    let videoBytesSent = 0;
+    let videoBytesReceived = 0;
 
-          this.eventEmitter.emit(ON_NETWORK_STATS, session, networkStats, this.sessionNetworkStats[sessionId]);
-          this.sessionNetworkStats[sessionId].push(networkStats);
+    stats.forEach(report => {
+      if (report.type === 'outbound-rtp' && report.kind === 'audio') {
+        audioBytesSent += report.bytesSent;
+      }
+      if (report.type === 'outbound-rtp' && report.kind === 'video') {
+        videoBytesSent += report.bytesSent;
+      }
+      if (report.type === 'inbound-rtp' && report.kind === 'audio') {
+        networkStats.packetsLost = report.packetsLost;
+        networkStats.packetsReceived = report.packetsReceived;
+        audioBytesReceived += report.bytesReceived;
+      }
+      if (report.type === 'inbound-rtp' && report.kind === 'video') {
+        videoBytesReceived += report.bytesReceived;
+      }
+      if (report.type === 'outbound-rtp' && report.kind === 'video') {
+        if ('framesPerSecond' in report) {
+          networkStats.framesPerSecond = report.framesPerSecond;
+        }
+        if ('framerateMean' in report) {
+          // framerateMean is only available in FF
+          networkStats.framesPerSecond = Math.round(report.framerateMean);
         }
       }
+      if (report.type === 'remote-inbound-rtp' && report.kind === 'audio') {
+        networkStats.roundTripTime = report.roundTripTime;
+        networkStats.jitter = report.jitter;
+      }
     });
+
+    networkStats.audioBytesSent = audioBytesSent;
+    networkStats.audioBytesReceived = audioBytesReceived;
+    networkStats.videoBytesSent = videoBytesSent;
+    networkStats.videoBytesReceived = videoBytesReceived;
+
+    networkStats.bandwidth = (networkStats.audioBytesSent - lastAudioSent)
+      + (networkStats.videoBytesSent - lastVideoSent) + (networkStats.audioBytesReceived - lastAudioReceived)
+      + (networkStats.videoBytesReceived - lastVideoReceived);
+
+    this.eventEmitter.emit(ON_NETWORK_STATS, session, networkStats, this.sessionNetworkStats[sessionId]);
+    this.sessionNetworkStats[sessionId].push(networkStats);
   }
 
 }
