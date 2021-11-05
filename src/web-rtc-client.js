@@ -38,6 +38,7 @@ import IssueReporter from './service/IssueReporter';
 import Heartbeat from './utils/Heartbeat';
 import { getVideoDirection, hasAnActiveVideo } from './utils/sdp';
 import { lastIndexOf } from './utils/array';
+import * as net from "net";
 
 // We need to replace 0.0.0.0 to 127.0.0.1 in the sdp to avoid MOH during a createOffer.
 export const replaceLocalIpModifier = (description: Object) => Promise.resolve({
@@ -2044,30 +2045,41 @@ export default class WebRTCClient extends Emitter {
     const lastVideoSent = lastNetworkStats ? lastNetworkStats.videoBytesSent : 0;
     const lastAudioReceived = lastNetworkStats ? lastNetworkStats.audioBytesReceived : 0;
     const lastVideoReceived = lastNetworkStats ? lastNetworkStats.videoBytesReceived : 0;
+    let audioBytesSent = 0;
+    let audioBytesReceived = 0;
+    let videoBytesSent = 0;
+    let videoBytesReceived = 0;
 
     stats.forEach(report => {
       if (report.type === 'outbound-rtp' && report.kind === 'audio') {
-        networkStats.audioBytesSent = report.bytesSent;
+        audioBytesSent += report.bytesSent;
       }
-      if (report.type === 'outbound-rtp' && report.kind === 'video' && report.bytesSent > 0) {
-        networkStats.videoBytesSent = report.bytesSent;
+      if (report.type === 'outbound-rtp' && report.kind === 'video') {
+        videoBytesSent += report.bytesSent;
       }
       if (report.type === 'inbound-rtp' && report.kind === 'audio') {
         networkStats.packetsLost = report.packetsLost;
         networkStats.packetsReceived = report.packetsReceived;
-        networkStats.audioBytesReceived = report.bytesReceived;
+        audioBytesReceived += report.bytesReceived;
       }
-      if (report.type === 'inbound-rtp' && report.kind === 'video' && report.bytesReceived) {
-        networkStats.videoBytesReceived = report.bytesReceived;
+      if (report.type === 'inbound-rtp' && report.kind === 'video') {
+        videoBytesReceived += report.bytesReceived;
       }
-      if (report.type === 'inbound-rtp' && report.kind === 'video' && 'framesPerSecond' in report) {
-        networkStats.framesPerSecond = report.framesPerSecond;
+      if (report.type === 'outbound-rtp' && report.kind === 'video') {
+        // framerateMean is only available in FF
+        networkStats.framesPerSecond = 'framesPerSecond' in report
+          ? report.framesPerSecond : Math.round(report.framerateMean);
       }
       if (report.type === 'remote-inbound-rtp' && report.kind === 'audio') {
         networkStats.roundTripTime = report.roundTripTime;
         networkStats.jitter = report.jitter;
       }
     });
+
+    networkStats.audioBytesSent = audioBytesSent;
+    networkStats.audioBytesReceived = audioBytesReceived;
+    networkStats.videoBytesSent = videoBytesSent;
+    networkStats.videoBytesReceived = videoBytesReceived;
 
     networkStats.bandwidth = (networkStats.audioBytesSent - lastAudioSent)
       + (networkStats.videoBytesSent - lastVideoSent) + (networkStats.audioBytesReceived - lastAudioReceived)
