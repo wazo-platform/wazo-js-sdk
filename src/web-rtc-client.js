@@ -38,7 +38,6 @@ import IssueReporter from './service/IssueReporter';
 import Heartbeat from './utils/Heartbeat';
 import { getVideoDirection, hasAnActiveVideo } from './utils/sdp';
 import { lastIndexOf } from './utils/array';
-import * as net from "net";
 
 // We need to replace 0.0.0.0 to 127.0.0.1 in the sdp to avoid MOH during a createOffer.
 export const replaceLocalIpModifier = (description: Object) => Promise.resolve({
@@ -2056,6 +2055,9 @@ export default class WebRTCClient extends Emitter {
       }
       if (report.type === 'outbound-rtp' && report.kind === 'video') {
         videoBytesSent += report.bytesSent;
+        // framerateMean is only available in FF
+        networkStats.framesPerSecond = 'framesPerSecond' in report
+          ? report.framesPerSecond : Math.round(report.framerateMean);
       }
       if (report.type === 'inbound-rtp' && report.kind === 'audio') {
         networkStats.packetsLost = report.packetsLost;
@@ -2064,11 +2066,6 @@ export default class WebRTCClient extends Emitter {
       }
       if (report.type === 'inbound-rtp' && report.kind === 'video') {
         videoBytesReceived += report.bytesReceived;
-      }
-      if (report.type === 'outbound-rtp' && report.kind === 'video') {
-        // framerateMean is only available in FF
-        networkStats.framesPerSecond = 'framesPerSecond' in report
-          ? report.framesPerSecond : Math.round(report.framerateMean);
       }
       if (report.type === 'remote-inbound-rtp' && report.kind === 'audio') {
         networkStats.roundTripTime = report.roundTripTime;
