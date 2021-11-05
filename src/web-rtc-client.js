@@ -2055,9 +2055,6 @@ export default class WebRTCClient extends Emitter {
       }
       if (report.type === 'outbound-rtp' && report.kind === 'video') {
         videoBytesSent += report.bytesSent;
-        // framerateMean is only available in FF
-        networkStats.framesPerSecond = 'framesPerSecond' in report
-          ? report.framesPerSecond : Math.round(report.framerateMean);
       }
       if (report.type === 'inbound-rtp' && report.kind === 'audio') {
         networkStats.packetsLost = report.packetsLost;
@@ -2066,6 +2063,15 @@ export default class WebRTCClient extends Emitter {
       }
       if (report.type === 'inbound-rtp' && report.kind === 'video') {
         videoBytesReceived += report.bytesReceived;
+      }
+      if (report.type === 'outbound-rtp' && report.kind === 'video') {
+        if ('framesPerSecond' in report) {
+          networkStats.framesPerSecond = report.framesPerSecond
+        }
+        if ('framerateMean' in report) {
+          // framerateMean is only available in FF
+          networkStats.framesPerSecond = Math.round(report.framerateMean);
+        }
       }
       if (report.type === 'remote-inbound-rtp' && report.kind === 'audio') {
         networkStats.roundTripTime = report.roundTripTime;
