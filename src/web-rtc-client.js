@@ -2066,7 +2066,7 @@ export default class WebRTCClient extends Emitter {
       }
       if (report.type === 'outbound-rtp' && report.kind === 'video') {
         if ('framesPerSecond' in report) {
-          networkStats.framesPerSecond = report.framesPerSecond
+          networkStats.framesPerSecond = report.framesPerSecond;
         }
         if ('framerateMean' in report) {
           // framerateMean is only available in FF
