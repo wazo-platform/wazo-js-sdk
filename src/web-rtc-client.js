@@ -1057,10 +1057,13 @@ export default class WebRTCClient extends Emitter {
       return null;
     }
 
-    // let's update the local value
-    if (this.audio && this.audio.deviceId) {
-      // $FlowFixMe
-      this.audio.deviceId.exact = id;
+    // let's update the local audio value
+    if (this.audio) {
+      this.audio = {
+        deviceId: {
+          exact: id,
+        },
+      };
     }
 
     if (session) {
@@ -1073,6 +1076,7 @@ export default class WebRTCClient extends Emitter {
         const sender = pc && pc.getSenders().find(s => audioTrack && s && s.track && s.track.kind === audioTrack.kind);
 
         if (sender) {
+          audioTrack.enabled = sender.track.enabled;
           sender.replaceTrack(audioTrack);
         }
 
@@ -1097,7 +1101,7 @@ export default class WebRTCClient extends Emitter {
       return null;
     }
 
-    // let's update the local value
+    // let's update the local video value
     if (this.video) {
       this.video = {
         deviceId: {
