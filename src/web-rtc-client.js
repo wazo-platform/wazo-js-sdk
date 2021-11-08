@@ -1076,7 +1076,9 @@ export default class WebRTCClient extends Emitter {
         const sender = pc && pc.getSenders().find(s => audioTrack && s && s.track && s.track.kind === audioTrack.kind);
 
         if (sender) {
-          audioTrack.enabled = sender.track.enabled;
+          if (sender.track) {
+            audioTrack.enabled = sender.track.enabled;
+          }
           sender.replaceTrack(audioTrack);
         }
 
@@ -1141,6 +1143,9 @@ export default class WebRTCClient extends Emitter {
       }
 
       if (sender) {
+        if (sender.track) {
+          videoTrack.enabled = sender.track.enabled;
+        }
         sender.replaceTrack(videoTrack);
       }
 
