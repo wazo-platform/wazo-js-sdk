@@ -1138,15 +1138,21 @@ export default class WebRTCClient extends Emitter {
     return navigator.mediaDevices.getUserMedia(constraints).then(async stream => {
       const videoTrack = stream.getVideoTracks()[0];
       let sender = pc && pc.getSenders().find(s => videoTrack && s && s.track && s.track.kind === videoTrack.kind);
+      let wasTrackEnabled = false;
       if (!sender) {
         sender = pc && pc.getSenders().find(s => !s.track);
       }
 
       if (sender) {
-        if (sender.track) {
-          videoTrack.enabled = sender.track.enabled;
+        // No video track means video not enabled
+        wasTrackEnabled = sender.track ? sender.track.enabled : false;
+        videoTrack.enabled = wasTrackEnabled;
+
+        if (!wasTrackEnabled) {
+          videoTrack.stop();
         }
-        sender.replaceTrack(videoTrack);
+
+        sender.replaceTrack(wasTrackEnabled ? videoTrack : null);
       }
 
       // let's update the local stream
