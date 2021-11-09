@@ -1057,10 +1057,13 @@ export default class WebRTCClient extends Emitter {
       return null;
     }
 
-    // let's update the local value
-    if (this.audio && this.audio.deviceId) {
-      // $FlowFixMe
-      this.audio.deviceId.exact = id;
+    // let's update the local audio value
+    if (this.audio) {
+      this.audio = {
+        deviceId: {
+          exact: id,
+        },
+      };
     }
 
     if (session) {
@@ -1073,6 +1076,9 @@ export default class WebRTCClient extends Emitter {
         const sender = pc && pc.getSenders().find(s => audioTrack && s && s.track && s.track.kind === audioTrack.kind);
 
         if (sender) {
+          if (sender.track) {
+            audioTrack.enabled = sender.track.enabled;
+          }
           sender.replaceTrack(audioTrack);
         }
 
@@ -1097,7 +1103,7 @@ export default class WebRTCClient extends Emitter {
       return null;
     }
 
-    // let's update the local value
+    // let's update the local video value
     if (this.video) {
       this.video = {
         deviceId: {
@@ -1132,12 +1138,21 @@ export default class WebRTCClient extends Emitter {
     return navigator.mediaDevices.getUserMedia(constraints).then(async stream => {
       const videoTrack = stream.getVideoTracks()[0];
       let sender = pc && pc.getSenders().find(s => videoTrack && s && s.track && s.track.kind === videoTrack.kind);
+      let wasTrackEnabled = false;
       if (!sender) {
         sender = pc && pc.getSenders().find(s => !s.track);
       }
 
       if (sender) {
-        sender.replaceTrack(videoTrack);
+        // No video track means video not enabled
+        wasTrackEnabled = sender.track ? sender.track.enabled : false;
+        videoTrack.enabled = wasTrackEnabled;
+
+        if (!wasTrackEnabled) {
+          videoTrack.stop();
+        }
+
+        sender.replaceTrack(wasTrackEnabled ? videoTrack : null);
       }
 
       // let's update the local stream
