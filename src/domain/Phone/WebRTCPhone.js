@@ -52,6 +52,7 @@ export const ON_MESSAGE_TRACK_UPDATED = 'onTrackUpdated';
 export const ON_NETWORK_STATS = 'onNetworkStats';
 export const ON_CHAT = 'phone/ON_CHAT';
 export const ON_SIGNAL = 'phone/ON_SIGNAL';
+export const ON_DISCONNECTED = 'onDisconnected';
 
 export const MESSAGE_TYPE_CHAT = 'message/TYPE_CHAT';
 export const MESSAGE_TYPE_SIGNAL = 'message/TYPE_SIGNAL';
@@ -91,6 +92,7 @@ export const events = [
   ON_CHAT,
   ON_SIGNAL,
   ON_NETWORK_STATS,
+  ON_DISCONNECTED,
 ];
 
 const logger = IssueReporter.loggerFor('webrtc-phone');
@@ -1443,6 +1445,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.on(this.client.UNREGISTERED, () => {
       logger.info('WebRTC unregistered');
       this.eventEmitter.emit(ON_UNREGISTERED);
+    });
+
+    this.client.on(this.client.ON_DISCONNECTED, () => {
+      logger.info('WebRTC disconnected');
+      this.eventEmitter.emit(ON_DISCONNECTED);
     });
 
     this.client.on(this.client.REGISTERED, () => {
