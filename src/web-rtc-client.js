@@ -69,6 +69,7 @@ const ON_REINVITE = 'reinvite';
 const ON_ERROR = 'onError';
 const ON_SCREEN_SHARING_REINVITE = 'onScreenSharingReinvite';
 const ON_NETWORK_STATS = 'onNetworkStats';
+const ON_DISCONNECTED = 'onDisconnected';
 
 export const events = [REGISTERED, UNREGISTERED, REGISTRATION_FAILED, INVITE];
 export const transportEvents = [CONNECTED, DISCONNECTED, TRANSPORT_ERROR, MESSAGE];
@@ -145,6 +146,7 @@ export default class WebRTCClient extends Emitter {
   ON_ERROR: string;
   ON_SCREEN_SHARING_REINVITE: string;
   ON_NETWORK_STATS: string;
+  ON_DISCONNECTED: string;
 
   static isAPrivateIp(ip: string): boolean {
     const regex = /^(?:10|127|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\..*/;
@@ -210,6 +212,7 @@ export default class WebRTCClient extends Emitter {
     this.ON_ERROR = ON_ERROR;
     this.ON_SCREEN_SHARING_REINVITE = ON_SCREEN_SHARING_REINVITE;
     this.ON_NETWORK_STATS = ON_NETWORK_STATS;
+    this.ON_DISCONNECTED = ON_DISCONNECTED;
   }
 
   configureMedia(media: MediaConfig) {
@@ -1836,6 +1839,7 @@ export default class WebRTCClient extends Emitter {
 
     this.updateRemoteStream(this.getSipSessionId(session));
 
+    const pc = session.sessionDescriptionHandler.peerConnection;
     const onTrack = (event: any) => {
       const isAudioOnly = this._isAudioOnly(session);
       const { kind, label, readyState, id, muted } = event.track;
@@ -1854,6 +1858,12 @@ export default class WebRTCClient extends Emitter {
     }
 
     session.sessionDescriptionHandler.remoteMediaStream.onaddtrack = onTrack;
+
+    pc.oniceconnectionstatechange = () => {
+      if (pc.iceConnectionState === 'disconnected') {
+        this.eventEmitter.emit(ON_DISCONNECTED);
+      }
+    };
 
     if (withEvent) {
       this.eventEmitter.emit(ACCEPTED, session, sessionDialog);
@@ -2074,6 +2084,7 @@ export default class WebRTCClient extends Emitter {
     let videoBytesReceived = 0;
     let transportSent = 0;
     let transportReceived = 0;
+    let packetsLost = 0;
 
     stats.forEach(report => {
       if (report.type === 'outbound-rtp' && report.kind === 'audio') {
@@ -2086,7 +2097,7 @@ export default class WebRTCClient extends Emitter {
         videoBytesSent += report.bytesSent + report.headerBytesSent;
       }
       if (report.type === 'inbound-rtp' && report.kind === 'audio') {
-        networkStats.packetsLost = report.packetsLost;
+        packetsLost += report.packetsLost;
         networkStats.packetsReceived = report.packetsReceived;
         audioBytesReceived += report.bytesReceived + report.headerBytesReceived;
       }
@@ -2103,8 +2114,12 @@ export default class WebRTCClient extends Emitter {
         }
       }
       if (report.type === 'remote-inbound-rtp' && report.kind === 'audio') {
+        packetsLost += report.packetsLost;
         networkStats.roundTripTime = report.roundTripTime;
         networkStats.jitter = report.jitter;
+      }
+      if (report.type === 'remote-inbound-rtp' && report.kind === 'video') {
+        packetsLost += report.packetsLost;
       }
       if (report.type === 'transport') {
         transportSent += report.bytesSent;
@@ -2112,6 +2127,7 @@ export default class WebRTCClient extends Emitter {
       }
     });
 
+    networkStats.packetsLost = packetsLost;
     networkStats.audioBytesSent = audioBytesSent;
     networkStats.audioBytesReceived = audioBytesReceived;
     networkStats.videoBytesSent = videoBytesSent;
