@@ -814,7 +814,7 @@ export default class WebRTCClient extends Emitter {
       // We search for the last transceiver without `video-` in the mid (video- means remote transceiver)
       const transceivers = pc.getTransceivers();
       const transceiverIdx = lastIndexOf(transceivers, transceiver =>
-        transceiver.sender.track === null && transceiver.mid.indexOf('video') === -1);
+        transceiver.sender.track === null && transceiver.mid?.indexOf('video') === -1);
 
       videoSender = transceiverIdx !== -1 ? transceivers[transceiverIdx].sender : null;
     } else {
