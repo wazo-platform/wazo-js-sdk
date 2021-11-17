@@ -108,7 +108,7 @@ export default class CallLog {
       duration: (plain.duration || 0) * 1000, // duration is in seconds
       start: moment(plain.start).toDate(),
       end: plain.end ? moment(plain.end).toDate() : null,
-      recordings: Recording.parseMany(plain.recordings),
+      recordings: Recording.parseMany(plain.recordings || []),
     });
   }
 

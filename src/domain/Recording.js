@@ -24,7 +24,7 @@ export default class Recording {
   start: Date;
   uuid: string;
 
-  static parseMany(recordings: RecordingResponse[]): Recording[] {
+  static parseMany(recordings: RecordingResponse[] = []): Recording[] {
     return recordings.map(item => Recording.parse(item));
   }
 

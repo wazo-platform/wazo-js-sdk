@@ -316,7 +316,7 @@ class IssueReporter {
           payload._retry = retry + 1;
         }
 
-        this._sendDebugToGrafana(body, retry + 1);
+        this._sendDebugToGrafana(payload, retry + 1);
       }, 5000 + retry * 1000);
     });
   }
