@@ -347,6 +347,11 @@ class Phone extends Emitter {
     return this.getRemoteVideoStream(callSession);
   }
 
+  //  Useful in a react-native environment when remoteMediaStream is not updated
+  getRemoteVideoStreamFromPc(callSession: CallSession) {
+    return this.phone ? this.phone.getRemoteVideoStreamFromPc(callSession) : false;
+  }
+
   hasVideo(callSession: CallSession): boolean {
     return this.phone ? this.phone.hasVideo(callSession) : false;
   }
