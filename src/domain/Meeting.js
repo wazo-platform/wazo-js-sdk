@@ -8,7 +8,8 @@ export type MeetingCreationResponse = {
   owner_uuids: Array<string>,
   port: string,
   uuid: string,
-  number: string
+  number: string,
+  persistent: boolean,
 }
 
 export default class Meeting {
@@ -20,6 +21,7 @@ export default class Meeting {
   name: string;
   port: string;
   number: string;
+  persistent: boolean;
   ownerUuids: Array<string>;
 
   static parse(plain: MeetingCreationResponse): Meeting {
@@ -31,6 +33,7 @@ export default class Meeting {
       port: plain.port,
       uuid: plain.uuid,
       number: plain.number,
+      persistent: plain.persistent,
     });
   }
 
@@ -38,7 +41,7 @@ export default class Meeting {
     return newFrom(meeting, Meeting);
   }
 
-  constructor({ uuid, name, guestSipAuthorization, ownerUuids, port, uri, number }: Object = {}) {
+  constructor({ uuid, name, guestSipAuthorization, ownerUuids, port, uri, number, persistent }: Object = {}) {
     this.guestSipAuthorization = guestSipAuthorization;
     this.uri = uri;
     this.name = name;
@@ -46,6 +49,7 @@ export default class Meeting {
     this.port = port;
     this.uuid = uuid;
     this.number = number;
+    this.persistent = persistent;
 
     // Useful to compare instead of instanceof with minified code
     this.type = 'Meeting';
