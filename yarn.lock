@@ -4157,9 +4157,9 @@ getpass@^0.1.1:
   dependencies:
     assert-plus "^1.0.0"
 
-getstats@manuquentin/getStats#fix_undefined_results:
+getstats@manuquentin/getStats#fix_stats_mobile:
   version "1.2.0"
-  resolved "https://codeload.github.com/manuquentin/getStats/tar.gz/7574aacfb12bf567c9350b04ef4fa5484d5557da"
+  resolved "https://codeload.github.com/manuquentin/getStats/tar.gz/664ad959bad42ca794b12dcee3f936e9eac0d88d"
 
 glob-parent@^5.0.0, glob-parent@^5.1.0:
   version "5.1.2"
