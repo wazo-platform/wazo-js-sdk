@@ -7,6 +7,7 @@ import type {
 } from '../domain/SwitchboardCall';
 import type { ChatMessageResponse } from '../domain/ChatMessage';
 import ChatRoom from '../domain/ChatRoom';
+import Meeting from '../domain/Meeting';
 
 type WebSocketBaseMessage = {
   op: string,
@@ -187,6 +188,8 @@ type AgentStatusUpdate = WebSocketBaseMessage & { data: AgentStatusUpdateEvent, 
 type AgentPaused = WebSocketBaseMessage & { data: any, name: 'agent_paused' };
 type AgentUnpaused = WebSocketBaseMessage & { data: any, name: 'agent_unpaused' };
 
+type MeetingUserProgress = WebSocketBaseMessage & { data: Meeting, name: 'meeting_user_progress' };
+
 export type WebSocketMessage =
   | CallCreated
   | CallUpdated
@@ -219,4 +222,5 @@ export type WebSocketMessage =
   | FaxOutboundSucceeded
   | AgentStatusUpdate
   | AgentPaused
-  | AgentUnpaused;
+  | AgentUnpaused
+  | MeetingUserProgress;
