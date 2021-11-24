@@ -37,11 +37,24 @@ export default class Meeting {
     });
   }
 
+  static parseMany(items: MeetingCreationResponse[]): Array<Meeting> {
+    return items.map(plain => Meeting.parse(plain));
+  }
+
   static newFrom(meeting: Meeting) {
     return newFrom(meeting, Meeting);
   }
 
-  constructor({ uuid, name, guestSipAuthorization, ownerUuids, port, uri, number, persistent }: Object = {}) {
+  constructor({
+    uuid,
+    name,
+    guestSipAuthorization,
+    ownerUuids,
+    port,
+    uri,
+    number,
+    persistent,
+  }: Object = {}) {
     this.guestSipAuthorization = guestSipAuthorization;
     this.uri = uri;
     this.name = name;
