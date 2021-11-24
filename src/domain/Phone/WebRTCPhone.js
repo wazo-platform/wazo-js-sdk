@@ -414,9 +414,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
         case SessionState.Terminated: {
           logger.info('WebRTC phone - call terminated', { sipId: sipSession.id });
 
+          // Should be called before `_onCallTerminated` or the callCount will not decrement...
+          const callSession = this._createCallSession(sipSession);
           const wasCurrentSession = this._onCallTerminated(sipSession);
 
-          return this.eventEmitter.emit(ON_CALL_ENDED, this._createCallSession(sipSession), wasCurrentSession);
+          return this.eventEmitter.emit(ON_CALL_ENDED, callSession, wasCurrentSession);
         }
         default:
           break;
