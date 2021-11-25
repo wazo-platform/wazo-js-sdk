@@ -122,6 +122,7 @@ class IssueReporter {
 
     // Handle category label
     let category = null;
+    let skipSendToRemote = false;
     let extra = {};
     if (args[0].indexOf(CATEGORY_PREFIX) === 0) {
       category = args[0].split('=')[1];
@@ -137,12 +138,18 @@ class IssueReporter {
           errorMessage: lastArg.message,
           errorStack: lastArg.stack,
           errorType: lastArg.constructor.name,
+          skipSendToRemote: lastArg.skipSendToRemote,
         };
       } else {
         extra = lastArg;
       }
       // eslint-disable-next-line no-param-reassign
       args.splice(1, 1);
+    }
+
+    if (extra.skipSendToRemote) {
+      skipSendToRemote = true;
+      delete extra.skipSendToRemote;
     }
 
     const date = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
@@ -169,7 +176,9 @@ class IssueReporter {
       this._callback(level, consoleMessage);
     }
 
-    this._sendToRemoteLogger(level, { date, message, category, ...extra });
+    if (!skipSendToRemote) {
+      this._sendToRemoteLogger(level, { date, message, category, ...extra });
+    }
   }
 
   logRequest(url: string, options: Object, response: Object, start: Date) {
@@ -314,7 +323,11 @@ class IssueReporter {
       },
       // $FlowFixMe
       body,
-    }).catch(() => {
+    }).catch((e: Error) => {
+      // $FlowFixMe
+      e.skipSendToRemote = true;
+      this.log('error', this._makeCategory('grafana'), 'Sending log to grafana, error', e);
+
       setTimeout(() => {
         if (isArray) {
           payload = payload.map(message => {
