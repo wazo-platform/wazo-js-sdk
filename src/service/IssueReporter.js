@@ -64,6 +64,7 @@ class IssueReporter {
   bufferTimeout: ?TimeoutID;
   _boundProcessBuffer: Function;
   _boundParseLoggerBody: Function;
+  _callback: ?Function;
 
   constructor() {
     addLevelsTo(this);
@@ -75,10 +76,15 @@ class IssueReporter {
     this.bufferTimeout = null;
     this._boundProcessBuffer = this._processBuffer.bind(this);
     this._boundParseLoggerBody = this._parseLoggerBody.bind(this);
+    this._callback = null;
   }
 
   init() {
     this._catchConsole();
+  }
+
+  setCallback(cb: Function) {
+    this._callback = cb;
   }
 
   configureRemoteClient(configuration: Object = { tag: 'wazo-sdk', host: null, port: null, level: null, extra: {} }) {
@@ -158,6 +164,10 @@ class IssueReporter {
     // eslint-disable-next-line
     const oldMethod = this.oldConsoleMethods[consoleLevel] || this.oldConsoleMethods.log;
     oldMethod.apply(oldMethod, [date, consoleMessage]);
+
+    if (this._callback) {
+      this._callback(level, consoleMessage);
+    }
 
     this._sendToRemoteLogger(level, { date, message, category, ...extra });
   }
