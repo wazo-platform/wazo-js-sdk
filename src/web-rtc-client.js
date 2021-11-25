@@ -478,7 +478,9 @@ export default class WebRTCClient extends Emitter {
     const inviteOptions: InviterInviteOptions = {
       requestDelegate: {
         onAccept: (response: IncomingResponse) => {
-          session.sessionDescriptionHandler.peerConnection.sfu = conference;
+          if (session.sessionDescriptionHandler.peerConnection) {
+            session.sessionDescriptionHandler.peerConnection.sfu = conference;
+          }
           this._onAccepted(session, response.session, true);
         },
         onReject: (response: IncomingResponse) => {
@@ -1350,6 +1352,16 @@ export default class WebRTCClient extends Emitter {
     return this.hasRemoteVideo(sessionId) ? this.getRemoteStream(sessionId) : null;
   }
 
+  //  Useful in a react-native environment when remoteMediaStream is not updated
+  getRemoteVideoStreamFromPc(sessionId: string): ?MediaStream {
+    const pc = this.getPeerConnection(sessionId);
+    if (!pc) {
+      return null;
+    }
+
+    return pc.getRemoteStreams().find(stream => !!stream.getVideoTracks().length);
+  }
+
   hasVideo(sessionId: string): boolean {
     return this.hasLocalVideo(sessionId) || this.hasRemoteVideo(sessionId);
   }
@@ -2128,18 +2140,22 @@ export default class WebRTCClient extends Emitter {
     });
 
     networkStats.packetsLost = packetsLost;
-    networkStats.audioBytesSent = audioBytesSent;
+    networkStats.totalAudioBytesSent = audioBytesSent;
+    networkStats.audioBytesSent = audioBytesSent - lastAudioSent;
+    networkStats.totalAudioBytesReceived = audioBytesReceived - lastAudioReceived;
     networkStats.audioBytesReceived = audioBytesReceived;
-    networkStats.videoBytesSent = videoBytesSent;
-    networkStats.videoBytesReceived = videoBytesReceived;
+    networkStats.totalVideoBytesSent = videoBytesSent;
+    networkStats.videoBytesSent = videoBytesSent - lastVideoSent;
+    networkStats.totalVideoBytesReceived = videoBytesReceived;
+    networkStats.videoBytesReceived = videoBytesReceived - lastVideoReceived;
+    networkStats.totalTransportSent = transportSent - lastTransportSent;
     networkStats.transportSent = transportSent;
-    networkStats.transportReceived = transportReceived;
+    networkStats.totalTransportReceived = transportReceived;
+    networkStats.transportReceived = transportReceived - lastTransportReceived;
 
-    const bandwidth = (networkStats.audioBytesSent - lastAudioSent) + (networkStats.videoBytesSent - lastVideoSent)
-      + (networkStats.audioBytesReceived - lastAudioReceived) + (networkStats.videoBytesReceived - lastVideoReceived)
-      + (networkStats.transportReceived - lastTransportReceived) + (networkStats.transportSent - lastTransportSent);
-
-    networkStats.bandwidth = bandwidth;
+    networkStats.bandwidth = networkStats.audioBytesSent + networkStats.audioBytesReceived
+      + networkStats.videoBytesSent + networkStats.videoBytesReceived + networkStats.transportReceived
+      + networkStats.transportSent;
 
     this.eventEmitter.emit(ON_NETWORK_STATS, session, networkStats, this.sessionNetworkStats[sessionId]);
     this.sessionNetworkStats[sessionId].push(networkStats);

@@ -64,6 +64,7 @@ class IssueReporter {
   bufferTimeout: ?TimeoutID;
   _boundProcessBuffer: Function;
   _boundParseLoggerBody: Function;
+  _callback: ?Function;
 
   constructor() {
     addLevelsTo(this);
@@ -75,10 +76,15 @@ class IssueReporter {
     this.bufferTimeout = null;
     this._boundProcessBuffer = this._processBuffer.bind(this);
     this._boundParseLoggerBody = this._parseLoggerBody.bind(this);
+    this._callback = null;
   }
 
   init() {
     this._catchConsole();
+  }
+
+  setCallback(cb: Function) {
+    this._callback = cb;
   }
 
   configureRemoteClient(configuration: Object = { tag: 'wazo-sdk', host: null, port: null, level: null, extra: {} }) {
@@ -116,6 +122,7 @@ class IssueReporter {
 
     // Handle category label
     let category = null;
+    let skipSendToRemote = false;
     let extra = {};
     if (args[0].indexOf(CATEGORY_PREFIX) === 0) {
       category = args[0].split('=')[1];
@@ -131,12 +138,18 @@ class IssueReporter {
           errorMessage: lastArg.message,
           errorStack: lastArg.stack,
           errorType: lastArg.constructor.name,
+          skipSendToRemote: lastArg.skipSendToRemote,
         };
       } else {
         extra = lastArg;
       }
       // eslint-disable-next-line no-param-reassign
       args.splice(1, 1);
+    }
+
+    if (extra.skipSendToRemote) {
+      skipSendToRemote = true;
+      delete extra.skipSendToRemote;
     }
 
     const date = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
@@ -159,7 +172,13 @@ class IssueReporter {
     const oldMethod = this.oldConsoleMethods[consoleLevel] || this.oldConsoleMethods.log;
     oldMethod.apply(oldMethod, [date, consoleMessage]);
 
-    this._sendToRemoteLogger(level, { date, message, category, ...extra });
+    if (this._callback) {
+      this._callback(level, consoleMessage);
+    }
+
+    if (!skipSendToRemote) {
+      this._sendToRemoteLogger(level, { date, message, category, ...extra });
+    }
   }
 
   logRequest(url: string, options: Object, response: Object, start: Date) {
@@ -304,7 +323,11 @@ class IssueReporter {
       },
       // $FlowFixMe
       body,
-    }).catch(() => {
+    }).catch((e: Error) => {
+      // $FlowFixMe
+      e.skipSendToRemote = true;
+      this.log('error', this._makeCategory('grafana'), 'Sending log to grafana, error', e);
+
       setTimeout(() => {
         if (isArray) {
           payload = payload.map(message => {
