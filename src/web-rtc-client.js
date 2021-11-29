@@ -1872,6 +1872,7 @@ export default class WebRTCClient extends Emitter {
     session.sessionDescriptionHandler.remoteMediaStream.onaddtrack = onTrack;
 
     pc.oniceconnectionstatechange = () => {
+      logger.info('on ice connection state changed', { state: pc.iceConnectionState });
       if (pc.iceConnectionState === 'disconnected') {
         this.eventEmitter.emit(ON_DISCONNECTED);
       }
