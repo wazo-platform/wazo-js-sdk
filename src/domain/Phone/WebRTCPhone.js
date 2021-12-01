@@ -385,7 +385,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
         onCancel(message);
         const elsewhere = message.data.indexOf('cause=26') !== -1 && message.data.indexOf('completed elsewhere') !== -1;
-        this.eventEmitter.emit(ON_CALL_CANCELED, this._createCallSession(sipSession), elsewhere);
+        const callSession = this._createCallSession(sipSession);
+        delete this.callSessions[callSession.getId()];
+
+        this.eventEmitter.emit(ON_CALL_CANCELED, callSession, elsewhere);
       };
     } else if (sipSession instanceof Invitation) {
       console.warn('sipSession._onCancel not found, please update the wazo SDK accordingly');
