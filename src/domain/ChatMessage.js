@@ -42,6 +42,10 @@ export default class ChatMessage {
   read: boolean;
 
   static parseMany(plain: ChatMessageListResponse): Array<ChatMessage> {
+    if (!plain || !plain.items) {
+      return [];
+    }
+
     return plain.items.map(item => ChatMessage.parse(item));
   }
 

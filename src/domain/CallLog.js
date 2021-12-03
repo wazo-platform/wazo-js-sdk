@@ -84,6 +84,10 @@ export default class CallLog {
   }
 
   static parseMany(plain: Response): Array<CallLog> {
+    if (!plain || !plain.items) {
+      return [];
+    }
+
     return plain.items.map(item => CallLog.parse(item));
   }
 

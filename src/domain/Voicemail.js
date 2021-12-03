@@ -61,6 +61,9 @@ export default class Voicemail {
   }
 
   static parseMany(plain: Response): Array<Voicemail> {
+    if (!plain) {
+      return [];
+    }
     const plainUnread = plain.folders.filter(folder => folder.type === 'new')[0].messages;
     const plainRead = plain.folders.filter(folder => folder.type === 'old')[0].messages;
 

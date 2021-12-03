@@ -281,6 +281,9 @@ export default class Contact {
   }
 
   static parseMany(response: ContactsResponse): Array<Contact> {
+    if (!response || !response.results) {
+      return [];
+    }
     return response.results.map(r => Contact.parse(r, response.column_types));
   }
 

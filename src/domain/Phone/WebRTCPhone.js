@@ -571,18 +571,20 @@ export default class WebRTCPhone extends Emitter implements Phone {
       screenTrack,
     });
 
-    screenTrack.onended = () => {
-      logger.info('WebRTC phone - on screenshare ended', {
-        hadVideo,
-        id: this.getSipSessionId(sipSession),
-        screenTrack,
-      });
+    if (screenTrack) {
+      screenTrack.onended = () => {
+        logger.info('WebRTC phone - on screenshare ended', {
+          hadVideo,
+          id: this.getSipSessionId(sipSession),
+          screenTrack,
+        });
 
-      this.eventEmitter.emit(
-        ON_SHARE_SCREEN_ENDING,
-        this._createCallSession(sipSession, callSession),
-      );
-    };
+        this.eventEmitter.emit(
+          ON_SHARE_SCREEN_ENDING,
+          this._createCallSession(sipSession, callSession),
+        );
+      };
+    }
 
     this.currentScreenShare = {
       stream: screenStream,
