@@ -2101,25 +2101,25 @@ export default class WebRTCClient extends Emitter {
 
     stats.forEach(report => {
       if (report.type === 'outbound-rtp' && report.kind === 'audio') {
-        audioBytesSent += report.bytesSent + report.headerBytesSent;
+        audioBytesSent += Number(report.bytesSent) + Number(report.headerBytesSent);
       }
       if (report.type === 'remote-outbound-rtp' && report.kind === 'audio') {
-        audioBytesSent += report.bytesSent;
+        audioBytesSent += Number(report.bytesSent);
       }
       if (report.type === 'outbound-rtp' && report.kind === 'video') {
-        videoBytesSent += report.bytesSent + report.headerBytesSent;
+        videoBytesSent += Number(report.bytesSent) + Number(report.headerBytesSent);
       }
       if (report.type === 'inbound-rtp' && report.kind === 'audio') {
-        packetsLost += report.packetsLost;
-        networkStats.packetsReceived = report.packetsReceived;
-        audioBytesReceived += report.bytesReceived + report.headerBytesReceived;
+        packetsLost += Number(report.packetsLost);
+        networkStats.packetsReceived = Number(report.packetsReceived);
+        audioBytesReceived += Number(report.bytesReceived) + Number(report.headerBytesReceived);
       }
       if (report.type === 'inbound-rtp' && report.kind === 'video') {
-        videoBytesReceived += report.bytesReceived + report.headerBytesReceived;
+        videoBytesReceived += Number(report.bytesReceived) + Number(report.headerBytesReceived);
       }
       if (report.type === 'outbound-rtp' && report.kind === 'video') {
         if ('framesPerSecond' in report) {
-          networkStats.framesPerSecond = report.framesPerSecond;
+          networkStats.framesPerSecond = Number(report.framesPerSecond);
         }
         if ('framerateMean' in report) {
           // framerateMean is only available in FF
@@ -2127,16 +2127,16 @@ export default class WebRTCClient extends Emitter {
         }
       }
       if (report.type === 'remote-inbound-rtp' && report.kind === 'audio') {
-        packetsLost += report.packetsLost;
-        networkStats.roundTripTime = report.roundTripTime;
-        networkStats.jitter = report.jitter;
+        packetsLost += Number(report.packetsLost);
+        networkStats.roundTripTime = Number(report.roundTripTime);
+        networkStats.jitter = Number(report.jitter);
       }
       if (report.type === 'remote-inbound-rtp' && report.kind === 'video') {
-        packetsLost += report.packetsLost;
+        packetsLost += Number(report.packetsLost);
       }
       if (report.type === 'transport') {
-        transportSent += report.bytesSent;
-        transportReceived += report.bytesReceived;
+        transportSent += Number(report.bytesSent);
+        transportReceived += Number(report.bytesReceived);
       }
     });
 
