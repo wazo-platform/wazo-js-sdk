@@ -80,6 +80,8 @@ export interface Phone {
 
   hasVideo(callSession: CallSession): boolean;
 
+  hasAVideoTrack(callSession: CallSession): boolean;
+
   isWebRTC(): boolean;
 
   getUserAgent(): string;

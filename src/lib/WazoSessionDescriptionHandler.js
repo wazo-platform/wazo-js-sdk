@@ -12,11 +12,9 @@ import { SessionDescriptionHandler }
 import { SessionDescriptionHandlerOptions }
   from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-options';
 import IssueReporter from '../service/IssueReporter';
-import { areCandidateValid, fixSdp, parseCandidate } from '../utils/sdp';
+import { fixSdp, parseCandidate } from '../utils/sdp';
 
 const wazoLogger = IssueReporter ? IssueReporter.loggerFor('webrtc-sdh') : console;
-const MAX_WAIT_FOR_ICE_TRIES = 20;
-const WAIT_FOR_ICE_TIMEOUT = 500;
 
 // Customized mediaStreamFactory allowing to send screensharing stream directory when upgrading
 export const wazoMediaStreamFactory = (constraints: Object): Promise<MediaStream> => {
@@ -204,38 +202,6 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     }
     this._peerConnection.close();
     this._peerConnection = undefined;
-  }
-
-  async _waitForValidGatheredIce(): Object {
-    let tries = 0;
-
-    while (!areCandidateValid(this.gatheredCandidates) && tries < MAX_WAIT_FOR_ICE_TRIES) {
-      wazoLogger.trace('SessionDescriptionHandler._waitForValidGatheredIce, waiting for ice', {
-        tries,
-        max: MAX_WAIT_FOR_ICE_TRIES,
-      });
-
-      tries++;
-
-      // eslint-disable-next-line no-await-in-loop
-      await new Promise(resolve => setTimeout(resolve, WAIT_FOR_ICE_TIMEOUT));
-    }
-
-    if (tries >= MAX_WAIT_FOR_ICE_TRIES) {
-      const errorMsg = 'No valid candidates found, can\'t answer the call';
-      const error = new Error(errorMsg);
-      wazoLogger.error(errorMsg, { tries, max: MAX_WAIT_FOR_ICE_TRIES });
-
-      // Emit an error, because sip.js catches the exception and switch to status Terminated.
-      this.eventEmitter.emit('error', error);
-
-      wazoLogger.error('No valid candidates found', { tries, candidates: JSON.stringify(this.gatheredCandidates) });
-    }
-
-    // eslint-disable-next-line
-    wazoLogger.trace('Found valid candidates', { tries, candidates: JSON.stringify(this.gatheredCandidates) });
-
-    return this.getLocalSessionDescription();
   }
 
   // Overridden to send `inactive` in conference

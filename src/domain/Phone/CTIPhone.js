@@ -280,6 +280,10 @@ export default class CTIPhone extends Emitter implements Phone {
     return false;
   }
 
+  hasAVideoTrack(): boolean {
+    return false;
+  }
+
   getLocalStreamForCall(): ?MediaStream {
     return null;
   }

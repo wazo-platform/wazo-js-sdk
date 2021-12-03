@@ -22,6 +22,9 @@ export default class ChatRoom {
   users: Array<ChatUser>;
 
   static parseMany(plain: RootListResponse): Array<ChatRoom> {
+    if (!plain || !plain.items) {
+      return [];
+    }
     return plain.items.map(item => ChatRoom.parse(item));
   }
 

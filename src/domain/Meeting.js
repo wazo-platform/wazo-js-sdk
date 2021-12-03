@@ -38,6 +38,9 @@ export default class Meeting {
   }
 
   static parseMany(items: MeetingCreationResponse[]): Array<Meeting> {
+    if (!items) {
+      return [];
+    }
     return items.map(plain => Meeting.parse(plain));
   }
 

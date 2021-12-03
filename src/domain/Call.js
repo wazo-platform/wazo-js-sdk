@@ -61,6 +61,9 @@ export default class Call {
   recording: boolean;
 
   static parseMany(plain: Array<CallResponse>): Array<Call> {
+    if (!plain) {
+      return [];
+    }
     return plain.map((plainCall: CallResponse) => Call.parse(plainCall));
   }
 
