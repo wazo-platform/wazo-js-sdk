@@ -1477,9 +1477,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
       if (this.shouldSendReinvite && this.currentSipSession
         && this.currentSipSession.state === SessionState.Established) {
         this.shouldSendReinvite = false;
+        const pc = this.currentSipSession.sessionDescriptionHandler.peerConnection;
+        const isConference = pc ? pc.sfu : false;
+        const hasVideo = this.currentCallSession && this.currentCallSession.cameraEnabled;
+
         try {
           // Send reinvite with iceRestart
-          this.sendReinvite(this.currentCallSession, null, false, false, true);
+          this.sendReinvite(this.currentCallSession, null, isConference, !hasVideo, true);
         } catch (e) {
           logger.error('WebRTC reinvite after register, error', { message: e.message, stack: e.stack });
         }
