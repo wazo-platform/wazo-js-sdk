@@ -306,8 +306,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     this.client.downgradeToAudio(sipSession);
 
-    callSession.cameraEnabled = false;
-    this._updateCallSession(callSession);
+    if (callSession) {
+      callSession.cameraEnabled = false;
+      this._updateCallSession(callSession);
+    }
 
     if (withMessage) {
       this._sendReinviteMessage(callSession, false);
@@ -336,8 +338,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     const newStream = await this.client.upgradeToVideo(sipSession, constraints, isConference);
 
-    callSession.cameraEnabled = true;
-    this._updateCallSession(callSession);
+    if (callSession) {
+      callSession.cameraEnabled = true;
+      this._updateCallSession(callSession);
+    }
 
     // If no stream is returned, it means we have to reinvite
     if (!newStream) {
