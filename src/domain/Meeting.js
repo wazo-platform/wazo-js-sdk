@@ -3,6 +3,8 @@ import moment from 'moment';
 
 import newFrom from '../utils/new-from';
 
+import MeetingAuthorization from './MeetingAuthorization';
+
 export type MeetingCreationResponse = {
   guest_sip_authorization: string,
   ingress_http_uri: string,
@@ -13,13 +15,6 @@ export type MeetingCreationResponse = {
   exten: string,
   persistent: boolean,
   creation_time: string,
-}
-
-export type MeetingAccessAutorization = {
-  meeting_uuid: string,
-  authorization_uuid: string,
-  coline_uuid: string,
-  coline_name: string,
 }
 
 export default class Meeting {
@@ -34,6 +29,7 @@ export default class Meeting {
   persistent: boolean;
   ownerUuids: Array<string>;
   creationTime: Date;
+  pendingAuthorizations: Array<MeetingAuthorization>
 
   static parse(plain: MeetingCreationResponse): Meeting {
     return new Meeting({
