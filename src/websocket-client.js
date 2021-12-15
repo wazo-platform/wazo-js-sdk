@@ -94,6 +94,7 @@ export const AGENT_UNPAUSED = 'agent_unpaused';
 export const CONFERENCE_ADHOC_PARTICIPANT_LEFT = 'conference_adhoc_participant_left';
 export const CONFERENCE_ADHOC_DELETED = 'conference_adhoc_deleted';
 export const MEETING_USER_PROGRESS = 'meeting_user_progress';
+export const MEETING_AUTHORIZATION_PENDING = 'meeting_authorization_pending';
 
 const BLACKLIST_EVENTS = [
   CHAT_MESSAGE_SENT,
@@ -448,6 +449,7 @@ WebSocketClient.eventLists = [
   CONFERENCE_ADHOC_PARTICIPANT_LEFT,
   CONFERENCE_ADHOC_DELETED,
   MEETING_USER_PROGRESS,
+  MEETING_AUTHORIZATION_PENDING,
 ];
 
 export default WebSocketClient;

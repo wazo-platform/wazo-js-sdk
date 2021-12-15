@@ -15,6 +15,13 @@ export type MeetingCreationResponse = {
   creation_time: string,
 }
 
+export type MeetingAccessAutorization = {
+  meeting_uuid: string,
+  authorization_uuid: string,
+  coline_uuid: string,
+  coline_name: string,
+}
+
 export default class Meeting {
   type: string;
 

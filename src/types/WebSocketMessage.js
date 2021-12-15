@@ -8,6 +8,7 @@ import type {
 import type { ChatMessageResponse } from '../domain/ChatMessage';
 import ChatRoom from '../domain/ChatRoom';
 import Meeting from '../domain/Meeting';
+import type { MeetingAccessAutorization } from '../domain/Meeting';
 
 type WebSocketBaseMessage = {
   op: string,
@@ -189,6 +190,10 @@ type AgentPaused = WebSocketBaseMessage & { data: any, name: 'agent_paused' };
 type AgentUnpaused = WebSocketBaseMessage & { data: any, name: 'agent_unpaused' };
 
 type MeetingUserProgress = WebSocketBaseMessage & { data: Meeting, name: 'meeting_user_progress' };
+type MeetingAuthorizationPending = WebSocketBaseMessage & {
+  data: MeetingAccessAutorization,
+  name: 'meeting_authorization_pending'
+};
 
 export type WebSocketMessage =
   | CallCreated
@@ -223,4 +228,5 @@ export type WebSocketMessage =
   | AgentStatusUpdate
   | AgentPaused
   | AgentUnpaused
-  | MeetingUserProgress;
+  | MeetingUserProgress
+  | MeetingAuthorizationPending;
