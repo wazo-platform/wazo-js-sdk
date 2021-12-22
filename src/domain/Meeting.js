@@ -1,4 +1,6 @@
 // @flow
+import moment from 'moment';
+
 import newFrom from '../utils/new-from';
 
 export type MeetingCreationResponse = {
@@ -8,8 +10,9 @@ export type MeetingCreationResponse = {
   owner_uuids: Array<string>,
   port: string,
   uuid: string,
-  number: string,
+  exten: string,
   persistent: boolean,
+  creation_time: string,
 }
 
 export default class Meeting {
@@ -20,9 +23,10 @@ export default class Meeting {
   uuid: string;
   name: string;
   port: string;
-  number: string;
+  extension: string;
   persistent: boolean;
   ownerUuids: Array<string>;
+  creationTime: Date;
 
   static parse(plain: MeetingCreationResponse): Meeting {
     return new Meeting({
@@ -32,8 +36,9 @@ export default class Meeting {
       ownerUuids: plain.owner_uuids,
       port: plain.port,
       uuid: plain.uuid,
-      number: plain.number,
+      extension: plain.exten,
       persistent: plain.persistent,
+      creationTime: moment(plain.creation_time).toDate(),
     });
   }
 
@@ -55,8 +60,9 @@ export default class Meeting {
     ownerUuids,
     port,
     uri,
-    number,
+    extension,
     persistent,
+    creationTime,
   }: Object = {}) {
     this.guestSipAuthorization = guestSipAuthorization;
     this.uri = uri;
@@ -64,8 +70,9 @@ export default class Meeting {
     this.ownerUuids = ownerUuids;
     this.port = port;
     this.uuid = uuid;
-    this.number = number;
+    this.extension = extension;
     this.persistent = persistent;
+    this.creationTime = creationTime;
 
     // Useful to compare instead of instanceof with minified code
     this.type = 'Meeting';
