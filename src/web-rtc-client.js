@@ -1529,6 +1529,7 @@ export default class WebRTCClient extends Emitter {
     const screenSharing = constraints && 'screen' in constraints ? constraints.screen : false;
     const isDesktop = constraints && 'desktop' in constraints ? constraints.desktop : false;
     const withAudio = constraints && 'audio' in constraints ? constraints.audio : true;
+    const mandatoryVideo = constraints && typeof constraints.video === 'object' ? constraints.video.mandatory : {};
 
     logger.info('Retrieving media a configuration', { enableVideo, screenSharing, isDesktop, withAudio, constraints });
 
@@ -1536,7 +1537,8 @@ export default class WebRTCClient extends Emitter {
       constraints: {
         // Exact constraint are not supported with `getDisplayMedia` and we must have a video=false in desktop screenshare
         audio: screenSharing ? !isDesktop : (withAudio ? this._getAudioConstraints() : false),
-        video: screenSharing ? (isDesktop ? ({ mandatory: { chromeMediaSource: 'desktop' } }) : { cursor: 'always' })
+        video: screenSharing ? (isDesktop
+          ? ({ mandatory: { chromeMediaSource: 'desktop', ...(mandatoryVideo || {}) } }) : { cursor: 'always' })
           : this._getVideoConstraints(enableVideo),
         screen: screenSharing,
         desktop: isDesktop,
