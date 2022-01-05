@@ -2086,13 +2086,17 @@ export default class WebRTCClient extends Emitter {
     const nbStats = this.sessionNetworkStats[sessionId].length;
     const lastNetworkStats = this.sessionNetworkStats[sessionId][nbStats - 1];
     const lastAudioSent = lastNetworkStats ? lastNetworkStats.audioBytesSent : 0;
+    const lastAudioContentSent = lastNetworkStats ? lastNetworkStats.audioContentSent : 0;
     const lastVideoSent = lastNetworkStats ? lastNetworkStats.videoBytesSent : 0;
     const lastAudioReceived = lastNetworkStats ? lastNetworkStats.audioBytesReceived : 0;
+    const lastAudioContentReceived = lastNetworkStats ? lastNetworkStats.audioContentReceived : 0;
     const lastVideoReceived = lastNetworkStats ? lastNetworkStats.videoBytesReceived : 0;
     const lastTransportSent = lastNetworkStats ? lastNetworkStats.transportSent : 0;
     const lastTransportReceived = lastNetworkStats ? lastNetworkStats.transportReceived : 0;
-    let audioBytesSent = 0;
-    let audioBytesReceived = 0;
+    let audioBytesSent = 0; // content + header
+    let audioBytesReceived = 0; // content + header
+    let audioContentSent = 0; // useful to detect blank call
+    let audioContentReceived = 0;
     let videoBytesSent = 0;
     let videoBytesReceived = 0;
     let transportSent = 0;
@@ -2102,6 +2106,7 @@ export default class WebRTCClient extends Emitter {
     stats.forEach(report => {
       if (report.type === 'outbound-rtp' && report.kind === 'audio') {
         audioBytesSent += Number(report.bytesSent) + Number(report.headerBytesSent);
+        audioContentSent += Number(report.bytesSent);
       }
       if (report.type === 'remote-outbound-rtp' && report.kind === 'audio') {
         audioBytesSent += Number(report.bytesSent);
@@ -2113,6 +2118,7 @@ export default class WebRTCClient extends Emitter {
         packetsLost += Number(report.packetsLost);
         networkStats.packetsReceived = Number(report.packetsReceived);
         audioBytesReceived += Number(report.bytesReceived) + Number(report.headerBytesReceived);
+        audioContentReceived += Number(report.bytesReceived);
       }
       if (report.type === 'inbound-rtp' && report.kind === 'video') {
         videoBytesReceived += Number(report.bytesReceived) + Number(report.headerBytesReceived);
@@ -2141,10 +2147,17 @@ export default class WebRTCClient extends Emitter {
     });
 
     networkStats.packetsLost = packetsLost;
+
     networkStats.totalAudioBytesSent = audioBytesSent;
     networkStats.audioBytesSent = audioBytesSent - lastAudioSent;
     networkStats.totalAudioBytesReceived = audioBytesReceived - lastAudioReceived;
     networkStats.audioBytesReceived = audioBytesReceived;
+
+    networkStats.totalAudioContentSent = audioContentSent;
+    networkStats.audioContentSent = audioContentSent - lastAudioContentSent;
+    networkStats.totalAudioBytesReceived = audioContentReceived - lastAudioContentReceived;
+    networkStats.audioContentReceived = audioContentReceived;
+
     networkStats.totalVideoBytesSent = videoBytesSent;
     networkStats.videoBytesSent = videoBytesSent - lastVideoSent;
     networkStats.totalVideoBytesReceived = videoBytesReceived;
