@@ -614,7 +614,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   _onCallAccepted(sipSession: Session, cameraEnabled: boolean): CallSession {
-    logger.info('WebRTC phone -  on call accepted', { sipId: sipSession.id, cameraEnabled });
+    logger.info('WebRTC phone - on call accepted', { sipId: sipSession.id, cameraEnabled });
 
     const callSession = this._createAcceptedCallSession(sipSession, cameraEnabled);
     this.currentSipSession = sipSession;
