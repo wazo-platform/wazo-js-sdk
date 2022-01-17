@@ -453,7 +453,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   call(number: string, enableVideo?: boolean, audioOnly: boolean = false, conference: boolean = false): Session {
-    logger.info('sdk webrtc creating call', { number, enableVideo, audioOnly });
+    logger.info('sdk webrtc creating call', { number, enableVideo, audioOnly, conference });
     const inviterOptions: Object = {
       sessionDescriptionHandlerOptionsReInvite: {
         conference,
@@ -1873,12 +1873,14 @@ export default class WebRTCClient extends Emitter {
 
     session.sessionDescriptionHandler.remoteMediaStream.onaddtrack = onTrack;
 
-    pc.oniceconnectionstatechange = () => {
-      logger.info('on ice connection state changed', { state: pc.iceConnectionState });
-      if (pc.iceConnectionState === 'disconnected') {
-        this.eventEmitter.emit(ON_DISCONNECTED);
-      }
-    };
+    if (pc) {
+      pc.oniceconnectionstatechange = () => {
+        logger.info('on ice connection state changed', { state: pc.iceConnectionState });
+        if (pc.iceConnectionState === 'disconnected') {
+          this.eventEmitter.emit(ON_DISCONNECTED);
+        }
+      };
+    }
 
     if (withEvent) {
       this.eventEmitter.emit(ACCEPTED, session, sessionDialog);

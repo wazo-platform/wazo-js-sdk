@@ -203,6 +203,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       constraints,
       audioOnly,
       conference,
+      iceRestart,
     });
 
     if (!sipSession) {
@@ -1126,7 +1127,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   // @TODO: line is not used here
   async makeCall(number: string, line: any, cameraEnabled?: boolean,
     audioOnly: boolean = false, conference: boolean = false): Promise<?CallSession> {
-    logger.info('make WebRTC call', { number, lineId: line ? line.id : null, cameraEnabled });
+    logger.info('make WebRTC call', { number, lineId: line ? line.id : null, cameraEnabled, audioOnly, conference });
     if (!number) {
       return Promise.resolve(null);
     }
