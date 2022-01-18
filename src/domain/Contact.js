@@ -654,7 +654,7 @@ export default class Contact {
       this[key] = old[key] || this[key];
     });
 
-    if (old.lineState && !this.lineState) {
+    if (old.lineState) {
       this.lineState = old.lineState;
     }
 
