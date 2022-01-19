@@ -35,23 +35,28 @@ Wazo's Javascript SDK allows you to use these features :
       - [Setting a callback when a new token is refreshed](#setting-a-callback-when-a-new-token-is-refreshed)
       - [Loggin out](#loggin-out)
     + [Conference](#conference)
-      -  [Joining a room](#joining-a-room)
-      -  [Sending a chat message in the room](#sending-a-chat-message-in-the-room)
-      -  [Sending a custom message to all participants](#sending-a-custom-message-to-all-participants)
-      -  [Sharing the user screen](#sharing-the-user-screen)
-      -  [Stopping the screen share](#stopping-the-screen-share)
-      -  [Disabling the camera](#disabling-the-camera)
-      -  [Enabling the camera](#enabling-the-camera)
-      -  [Disabling the microphone](#disabling-the-microphone)
-      -  [Enabling the microphone](#enabling-the-microphone)
-      -  [Accessing room participants](#accessing-room-participants)
-      -  [Disconnect from the room](#disconnect-from-the-room)
+      - [Joining a room](#joining-a-room)
+      - [Sending a chat message in the room](#sending-a-chat-message-in-the-room)
+      - [Sending a custom message to all participants](#sending-a-custom-message-to-all-participants)
+      - [Sharing the user screen](#sharing-the-user-screen)
+      - [Stopping the screen share](#stopping-the-screen-share)
+      - [Disabling the camera](#disabling-the-camera)
+      - [Enabling the camera](#enabling-the-camera)
+      - [Disabling the microphone](#disabling-the-microphone)
+      - [Enabling the microphone](#enabling-the-microphone)
+      - [Accessing room participants](#accessing-room-participants)
+      - [Disconnect from the room](#disconnect-from-the-room)
     + [Conference events](#conference-events)
+    + [Conference features](#ad-hoc-conference-features)
+      - [Merging sessions in one conference](#merging-sessions-in-one-conference)
+      - [Add a session to a conference](#add-a-call-to-a-conference)
+      - [Remove a session from a conference](#remove-a-call-from-a-conference)
+      - [Unmerge a sessions from a conference](#terminating-a-conference)
     + [Accessing the current WebRtc phone](#accessing-the-current-webrtc-phone)
     + [Domains](#domains)
-       - [Participant](#participant)
-       - [Participant events](#participant-events)
-       - [Stream](#stream)
+      - [Participant](#participant)
+      - [Participant events](#participant-events)
+      - [Stream](#stream)
   * [Advanced API](#advanced-api)
     + [Libraries](#libraries)
       - [Require / Import](#require--import)
@@ -94,11 +99,6 @@ Wazo's Javascript SDK allows you to use these features :
         - [Sending a DTMF tone](#sending-a-dtmf-tone)
         - [Sending a message](#sending-a-message)
         - [Closing the RTC connection](#closing-the-rtc-connection)
-      - [Conference features](#conference-features)
-        - [Merging sessions in one conference](#merging-sessions-in-one-conference)
-        - [Add a session to a conference](#add-a-session-to-a-conference)
-        - [Remove a session from a conference](#remove-a-session-from-a-conference)
-        - [Unmerge a sessions from a conference](#unmerge-a-sessions-from-a-conference)
     + [WebRTCPhone](#webrtcphone)
       - [Basic phone features](#basic-phone-features)
         - [Calling a number](#calling-a-number)
@@ -427,29 +427,29 @@ Triggered when a participant is talking, or stops talking.
 - `participant`: `Wazo.RemoteParticipant` or `Wazo.LocalParticipant`.
   The participant instance, your can access the `participant.isTalking` attribute to know the status.
   
-#### Ad hoc Conference features
+### Ad hoc Conference features
 **`Voice`**   **`Video`** 
 
-##### Merging sessions in one conference
+#### Merging sessions in one conference
 Use this method to merge multiple calls in a new ad hoc conference.
 ```js
 const adHocConference = Wazo.Phone.startConference(host: CallSession, otherCalls: CallSession[]): Promise<AdHocAPIConference>;
 ```
 
-##### Add a call to a conference
+#### Add a call to a conference
 Use this method to add a single call to an existing conference room.
 ```js
 adHocConference.addParticipant(participant: CallSession);
 ```
 
-##### Remove a call from a conference
+#### Remove a call from a conference
 Use this method to remove a participant from a conference.
 ```js
 adHocConference.removeParticipant(callSession: CallSession);
 // shouldHold indicate if the session should be held after removed from session
 ```
 
-##### Terminating a conference
+#### Terminating a conference
 Use this method to remove a single participant from a conference.
 ```js
 adHocConference.hangup();
