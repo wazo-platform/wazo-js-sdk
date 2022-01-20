@@ -684,6 +684,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   _onCallTerminated(sipSession: Session) {
     logger.info('WebRTC phone - on call terminated', { sipId: sipSession.id });
 
+    const sipSessionId = this.getSipSessionId(sipSession);
     const callSession = this._createCallSession(sipSession);
     const isCurrentSession = this.isCurrentCallSipSession(callSession);
     const isCurrentIncomingCall = callSession.is(this.getIncomingCallSession());
@@ -701,7 +702,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
       }, 5);
     }
 
-    const sipSessionId = this.getSipSessionId(sipSession);
     if (sipSessionId) {
       this.removeIncomingSessions(sipSessionId);
     }
@@ -1346,8 +1346,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     const sessionId = this.incomingSessions[0];
+    const sipSession = this.client.getSipSession(sessionId);
+    if (!sipSession) {
+      return null;
+    }
 
-    return this._createCallSession(this.client.getSipSession(sessionId));
+    return this._createCallSession(sipSession);
   }
 
   sendMessage(sipSession: Session = null, body: string, contentType: string = 'text/plain') {
