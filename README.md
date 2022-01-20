@@ -21,7 +21,7 @@ Wazo's Javascript SDK allows you to use these features :
 ## Table of contents
 
   * [Install](#install)
-    + [Install / Add](#install---add)
+    + [Install / Add](#install--add)
     + [Content Delivery Networks](#content-delivery-networks)
       - [UNPKG](#unpkg)
       - [jsDelivr](#jsdelivr)
@@ -35,26 +35,31 @@ Wazo's Javascript SDK allows you to use these features :
       - [Setting a callback when a new token is refreshed](#setting-a-callback-when-a-new-token-is-refreshed)
       - [Loggin out](#loggin-out)
     + [Conference](#conference)
-      -  [Joining a room](#joining-a-room)
-      -  [Sending a chat message in the room](#sending-a-chat-message-in-the-room)
-      -  [Sending a custom message to all participants](#sending-a-custom-message-to-all-participants)
-      -  [Sharing the user screen](#sharing-the-user-screen)
-      -  [Stopping the screen share](#stopping-the-screen-share)
-      -  [Disabling the camera](#disabling-the-camera)
-      -  [Enabling the camera](#enabling-the-camera)
-      -  [Disabling the microphone](#disabling-the-microphone)
-      -  [Enabling the microphone](#enabling-the-microphone)
-      -  [Accessing room participants](#accessing-room-participants)
-      -  [Disconnect from the room](#disconnect-from-the-room)
+      - [Joining a room](#joining-a-room)
+      - [Sending a chat message in the room](#sending-a-chat-message-in-the-room)
+      - [Sending a custom message to all participants](#sending-a-custom-message-to-all-participants)
+      - [Sharing the user screen](#sharing-the-user-screen)
+      - [Stopping the screen share](#stopping-the-screen-share)
+      - [Disabling the camera](#disabling-the-camera)
+      - [Enabling the camera](#enabling-the-camera)
+      - [Disabling the microphone](#disabling-the-microphone)
+      - [Enabling the microphone](#enabling-the-microphone)
+      - [Accessing room participants](#accessing-room-participants)
+      - [Disconnect from the room](#disconnect-from-the-room)
     + [Conference events](#conference-events)
+    + [Conference features](#ad-hoc-conference-features)
+      - [Merging sessions in one conference](#merging-sessions-in-one-conference)
+      - [Add a session to a conference](#add-a-call-to-a-conference)
+      - [Remove a session from a conference](#remove-a-call-from-a-conference)
+      - [Unmerge a sessions from a conference](#terminating-a-conference)
     + [Accessing the current WebRtc phone](#accessing-the-current-webrtc-phone)
     + [Domains](#domains)
-       - [Participant](#participant)
-       - [Participant events](#participant-events)
-       - [Stream](#stream)
+      - [Participant](#participant)
+      - [Participant events](#participant-events)
+      - [Stream](#stream)
   * [Advanced API](#advanced-api)
     + [Libraries](#libraries)
-      - [Require / Import](#require---import)
+      - [Require / Import](#require--import)
         - [API Client Library](#api-client-library)
         - [WebRTC Library](#webrtc-library)
         - [WebSocket Library](#websocket-library)
@@ -62,11 +67,8 @@ Wazo's Javascript SDK allows you to use these features :
       - [Initialization](#initialization)
         - [When using API Client](#when-using-api-client)
         - [When using WebRTC](#when-using-webrtc)
-        - [When using WebSocket](#when-using-websocket)
-          * [Opening the socket](#opening-the-socket)
-          * [Closing the socket](#closing-the-socket)
       - [Log In](#log-in)
-      - [Set token (and refresh token)](#set-token--and-refresh-token-)
+      - [Set token (and refresh token)](#set-token-and-refresh-token)
       - [Add an event when the token is refreshed](#add-an-event-when-the-token-is-refreshed)
       - [Log Out](#log-out)
       - [Check token](#check-token)
@@ -82,7 +84,7 @@ Wazo's Javascript SDK allows you to use these features :
       - [Chatd](#chatd)
       - [Calling an API endpoint without WazoApiClient](#calling-an-api-endpoint-without-wazoapiclient)
     + [WebRTCClient](#webrtcclient)
-      - [WebRTCClient Configuration](#webrtccient-configuration)
+      - [WebRTCClient Configuration](#webrtcclient-configuration)
       - [Basic client features](#basic-client-features)
         - [Calling a number](#calling-a-number)
         - [Be notified to a phone call](#be-notified-to-a-phone-call)
@@ -97,11 +99,6 @@ Wazo's Javascript SDK allows you to use these features :
         - [Sending a DTMF tone](#sending-a-dtmf-tone)
         - [Sending a message](#sending-a-message)
         - [Closing the RTC connection](#closing-the-rtc-connection)
-      - [Conference features](#conference-features)
-        - [Merging sessions in one conference](#merging-sessions-in-one-conference)
-        - [Add a session to a conference](#add-a-session-to-a-conference)
-        - [Remove a session from a conference](#remove-a-session-from-a-conference)
-        - [Unmerge a sessions from a conference](#unmerge-a-sessions-from-a-conference)
     + [WebRTCPhone](#webrtcphone)
       - [Basic phone features](#basic-phone-features)
         - [Calling a number](#calling-a-number)
@@ -121,8 +118,8 @@ Wazo's Javascript SDK allows you to use these features :
         - [Stop screen sharing](#stop-screen-sharing)
       - [Conference phone features](#conference-phone-features)
         - [Starting a conference](#starting-a-conference)
-        - [Adding a participant to the conference](#Adding-a-participant-to-the-conference)
-        - [Holding a conference](#Hhlding-a-conference)
+        - [Adding a participant to the conference](#adding-a-participant-to-the-conference)
+        - [Holding a conference](#holding-a-conference)
         - [Resuming a conference](#resuming-a-conference)
         - [Muting a conference](#muting-a-conference)
         - [Unmuting a conference](#unmuting-a-conference)
@@ -151,12 +148,16 @@ Wazo's Javascript SDK allows you to use these features :
       
 ## Install 
  
-### Install / Add      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
+### Install / Add
+**`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
+
 You may install the Wazo JavaScript Software Development Kit to your project one of the following ways:
 * `npm install @wazo/sdk`
 * `yarn add @wazo/sdk`
 
-### Content Delivery Networks      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
+### Content Delivery Networks
+**`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
+
 Alternatively, you may load the Wazo SDK from a CDN. Use one of the following Content Delivery Networks:
 
 #### UNPKG
@@ -426,27 +427,29 @@ Triggered when a participant is talking, or stops talking.
 - `participant`: `Wazo.RemoteParticipant` or `Wazo.LocalParticipant`.
   The participant instance, your can access the `participant.isTalking` attribute to know the status.
   
-#### Ad hoc Conference features      **`Voice`**   **`Video`** 
-##### Merging sessions in one conference
+### Ad hoc Conference features
+**`Voice`**   **`Video`** 
+
+#### Merging sessions in one conference
 Use this method to merge multiple calls in a new ad hoc conference.
 ```js
 const adHocConference = Wazo.Phone.startConference(host: CallSession, otherCalls: CallSession[]): Promise<AdHocAPIConference>;
 ```
 
-##### Add a call to a conference
+#### Add a call to a conference
 Use this method to add a single call to an existing conference room.
 ```js
 adHocConference.addParticipant(participant: CallSession);
 ```
 
-##### Remove a call from a conference
+#### Remove a call from a conference
 Use this method to remove a participant from a conference.
 ```js
 adHocConference.removeParticipant(callSession: CallSession);
 // shouldHold indicate if the session should be held after removed from session
 ```
 
-##### Terminating a conference
+#### Terminating a conference
 Use this method to remove a single participant from a conference.
 ```js
 adHocConference.hangup();
@@ -593,7 +596,9 @@ Detaches a stream from an existing htmlElement.
 ## Advanced API
 
 ### Libraries
-#### Require / Import      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
+#### Require / Import
+**`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
+
 Depending on your preference, you may require or add the Wazo SDK to your own client application one of the following ways using:
 
 ##### API Client Library
@@ -617,7 +622,8 @@ import { WazoWebSocketClient } from '@wazo/sdk';
 ```
 
 ### Authentication 
-#### Initialization      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
+#### Initialization
+**`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
 
 ##### When using API Client
 
@@ -635,7 +641,9 @@ const client = new WazoApiClient({
 const session = await client.auth.logIn({ ... });
 ```
 
-#### Log In      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
+#### Log In
+**`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
+
 ```js
 client.auth.logIn({
   expiration, // optional integer. Session life in number of seconds. If omitted, defaults to 3600 (an hour).
@@ -669,7 +677,9 @@ const { refreshToken, ...result } = await client.auth.login(/* ... */);
 
 Note: you need to set `clientId` in your WazoAPIClient in order to get a refresh token.
 
-#### Set token (and refresh token)      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
+#### Set token (and refresh token)
+**`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
+
 ```js
 client.setToken(token);
 client.setRefreshToken(refreshToken);
@@ -678,7 +688,8 @@ client.setRefreshTokenExpiration(tokenExpirationInSeconds);
 
 Note: you need to set `clientId` in your WazoAPIClient in order to get a refresh token.
 
-#### Add an event when the token is refreshed      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
+#### Add an event when the token is refreshed
+**`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
 
 ```js
 client.setOnRefreshToken((newToken, newSession) => {
@@ -688,21 +699,27 @@ client.setOnRefreshToken((newToken, newSession) => {
 
 Note: you need to set `clientId` in your WazoAPIClient in order to refresh token.
 
-#### Log Out      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
+#### Log Out
+**`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
+
 ```js
 client.auth.logOut(token).then(/* ... */);
 // or
 await client.auth.logOut(token);
 ```
 
-#### Check token      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
+#### Check token
+**`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
+
 ```
 client.auth.checkToken(token).then(valid);
 // or
 const valid = await client.auth.checkToken(token);
 ```
 
-#### Other auth methods      **`Config`** 
+#### Other auth methods
+**`Config`**
+
 ```js
 client.auth.listTenants();
 client.auth.createTenant(name);
@@ -719,7 +736,8 @@ client.auth.listPolicies();
 
 ### Sending logs to fluentd via a http endpoint
 
-#### Logger       **`Log`**
+#### Logger
+**`Log`**
 
 ```
 import Wazo from '@wazo/sdk/lib/simple';
@@ -748,7 +766,9 @@ Wazo.IssueReporter.log(Wazo.IssueReporter.INFO, 'my log');
 ```
 
 ### Interact with the engine 
-#### Applicationd       **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**
+#### Applicationd
+**`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**
+
 Use Applicationd to construct your own communication features.
 
 ```js
@@ -762,7 +782,9 @@ client.application.addCallNodes(applicationUuid, nodeUuid, callId); // add call 
 client.application.playCall(applicationUuid, callId, language, uri); // play a sound into a call
 ```
 
-#### Calld       **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**
+#### Calld
+**`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**
+
 Use Calld to directly control interactions.
 (Please note, ctidNg endpoint is deprecated but continue to work with old version. **Please update your code**.)
 
@@ -788,7 +810,9 @@ client.calld.relocateCall(callId, destination, lineId);
 client.calld.updatePresence(presence);
 ```
 
-#### Confd      **`Config`**
+#### Confd
+**`Config`**
+
 Use Confd to interact with configurations.
 ```js
 client.confd.listUsers();
@@ -797,7 +821,9 @@ client.confd.getUserLineSip(userUuid, lineId);
 client.confd.listApplications();
 ```
 
-#### Dird      **`Misc`**
+#### Dird
+**`Misc`**
+
 Use Dird to interact with directories.
 ```js
 client.dird.search(context, term);
@@ -810,7 +836,9 @@ client.dird.markAsFavorite(source, sourceId);
 client.dird.removeFavorite(source, sourceId);
 ```
 
-#### Agentd      **`Misc`**
+#### Agentd
+**`Misc`**
+
 Use Agentd to handle agent states
 
 Legacy (all versions)
@@ -833,7 +861,9 @@ client.agentd.staticPause();
 client.agentd.staticResume();
 ```
 
-#### callLogd      **`Voice`**  **`Misc`**
+#### callLogd
+**`Voice`**  **`Misc`**
+
 Use callLogd to interact with call logs.
 ```js
 client.callLogd.search(search, limit);
@@ -841,7 +871,9 @@ client.callLogd.listCallLogs(offset, limit);
 client.callLogd.listCallLogsFromDate(from, number);
 ```
 
-#### Chatd      **`Chat`** **`Status`**
+#### Chatd
+**`Chat`** **`Status`**
+
 Use chatd to send and retrieve chat messages and user statuses.
 ```js
 client.chatd.getContactStatusInfo(contactUuid: UUID);
@@ -857,7 +889,8 @@ client.chatd.sendRoomMessage(roomUuid: string, message: ChatMessage);
 client.chatd.getMessages(options: GetMessagesOptions);
 ```
 
-#### Calling an API endpoint without WazoApiClient      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
+#### Calling an API endpoint without WazoApiClient
+**`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
 
 Use this generic method to request endpoints directly.
 
@@ -946,7 +979,8 @@ const uaConfigOverrides = {
 const client = new WazoWebRTCClient(config, session, /* optional */ uaConfigOverrides);
 ```
 
-#### Basic client features      **`Voice`**   **`Video`**  **`Chat`**
+#### Basic client features
+**`Voice`**   **`Video`**  **`Chat`**
 
 ##### Calling a number
 Use this method to dial a number.
@@ -1080,7 +1114,8 @@ const phone = new WebRTCPhone(
 );
 ```
 
-#### Basic phone features      **`Voice`**   **`Video`**  **`Chat`**
+#### Basic phone features
+**`Voice`**   **`Video`**  **`Chat`**
 
 ##### Calling a number
 Use this method to dial a number.
@@ -1212,7 +1247,8 @@ const screenShareStream: MediaStream = await phone.startScreenSharing({
 phone.stopScreenSharing();
 ```
 
-#### Conference phone features      **`Voice`**   **`Video`**  **`Chat`** 
+#### Conference phone features
+**`Voice`**   **`Video`**  **`Chat`** 
 
 ##### Starting a conference
 Use this method to start an ad-hoc conference.
@@ -1263,7 +1299,8 @@ phone.removeFromConference(participants: CallSession[]);
 phone.hangupConference(participants: CallSession[]);
 ```
 
-#### Advanced phone features      **`Voice`**   **`Video`**  **`Chat`**
+#### Advanced phone features
+**`Voice`**   **`Video`**  **`Chat`**
 
 ##### Registering the phone
 Sends a SIP `REGISTER` payload
@@ -1354,7 +1391,8 @@ phone.stopHeartbeat();
 ### Wazo WebSocket
 You can use the Wazo WebSocket to listen for real time events (eg: receiving a chat message, a presential update ...)
 
-#### Web Socket features      **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**
+#### Web Socket features
+**`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**
 
 ##### Opening the socket
 ```js
