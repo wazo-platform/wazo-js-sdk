@@ -62,11 +62,16 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
 
   // $FlowFixMe
   setRemoteSessionDescription(sessionDescription: RTCSessionDescriptionInit): Promise<void> {
-    const result = super.setRemoteSessionDescription(sessionDescription);
+    try {
+      const result = super.setRemoteSessionDescription(sessionDescription);
 
-    this.eventEmitter.emit('setDescription', sessionDescription);
+      this.eventEmitter.emit('setDescription', sessionDescription);
 
-    return result;
+      return result;
+    } catch (error) {
+      this.logger.error('SessionDescriptionHandler.setRemoteSessionDescription error', error);
+      throw error;
+    }
   }
 
   // Overridden to avoid to fix ice-candidates missing in the SDP in react-native and chrome canary.

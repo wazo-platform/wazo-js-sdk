@@ -25,7 +25,7 @@ const logger = IssueReporter ? IssueReporter.loggerFor('api') : console;
 
 // Use a function here to be able to mock it in tests
 export const realFetch = () => {
-  if (typeof document !== 'undefined') {
+  if (typeof document !== 'undefined' && window.fetch) {
     // Browser
     return window.fetch;
   }
