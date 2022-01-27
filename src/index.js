@@ -9,6 +9,7 @@ import IssueReporter from './service/IssueReporter';
 // Domain
 import BadResponse from './domain/BadResponse';
 import ServerError from './domain/ServerError';
+import SFUNotAvailableError from './domain/SFUNotAvailableError';
 import Call from './domain/Call';
 import CallLog from './domain/CallLog';
 import Recording from './domain/Recording';
@@ -95,6 +96,7 @@ export default {
   WazoWebSocketClient: WebSocketClient,
   BadResponse,
   ServerError,
+  SFUNotAvailableError,
   Call,
   CallSession,
   CTIPhone,
