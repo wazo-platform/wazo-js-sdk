@@ -14,6 +14,7 @@ import IssueReporter from '../service/IssueReporter';
 import Emitter from '../utils/Emitter';
 
 import Wazo from './index';
+import SFUError from '../domain/SFUError';
 
 const logger = IssueReporter.loggerFor('simple-phone');
 const sipLogger = IssueReporter.loggerFor('sip.js');
@@ -397,7 +398,7 @@ class Phone extends Emitter {
 
   checkSfu() {
     if (!this.hasSfu()) {
-      throw new Error('Sorry your user is not configured to support video conference');
+      throw new SFUError();
     }
   }
 
