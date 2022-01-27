@@ -15,7 +15,7 @@ import { CanceledCallError } from '../web-rtc-client';
 
 import BadResponse from '../domain/BadResponse';
 import ServerError from '../domain/ServerError';
-import SFUError from '../domain/SFUError';
+import SFUNotAvailableError from '../domain/SFUNotAvailableError';
 import Call from '../domain/Call';
 import CallLog from '../domain/CallLog';
 import Recording from '../domain/Recording';
@@ -102,7 +102,7 @@ const Wazo = {
   InvalidSubscription,
   InvalidAuthorization,
   CanceledCallError,
-  SFUError,
+  SFUNotAvailableError,
 };
 
 if (window) {

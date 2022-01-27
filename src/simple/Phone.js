@@ -14,7 +14,7 @@ import IssueReporter from '../service/IssueReporter';
 import Emitter from '../utils/Emitter';
 
 import Wazo from './index';
-import SFUError from '../domain/SFUError';
+import SFUNotAvailableError from '../domain/SFUNotAvailableError';
 
 const logger = IssueReporter.loggerFor('simple-phone');
 const sipLogger = IssueReporter.loggerFor('sip.js');
@@ -398,7 +398,7 @@ class Phone extends Emitter {
 
   checkSfu() {
     if (!this.hasSfu()) {
-      throw new SFUError();
+      throw new SFUNotAvailableError();
     }
   }
 
