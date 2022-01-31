@@ -672,7 +672,7 @@ client.auth.logIn({
   xivo_user_uuid
 });
 // or
-const { refreshToken, ...result } = await client.auth.login(/* ... */);
+const { refreshToken, ...result } = await client.auth.logIn(/* ... */);
 ```
 
 Note: you need to set `clientId` in your WazoAPIClient in order to get a refresh token.
