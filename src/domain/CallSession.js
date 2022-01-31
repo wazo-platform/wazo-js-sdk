@@ -1,5 +1,6 @@
 // @flow
 import { SessionState } from 'sip.js/lib/api/session-state';
+import type { Session } from 'sip.js/lib/api/session';
 
 import Call from './Call';
 import newFrom from '../utils/new-from';
@@ -12,8 +13,10 @@ type CallSessionArguments = {
   callId: string,
   callerNumber: string,
   cameraEnabled: boolean,
+  creationTime?: ?Date,
   dialedExtension?: string | null,
   displayName: string,
+  endTime?: ?Date,
   isCaller: boolean,
   muted: boolean,
   videoMuted: boolean,
@@ -30,6 +33,7 @@ type CallSessionArguments = {
   screensharing: boolean,
   recording: boolean,
   recordingPaused: boolean,
+  sipSession?: Session,
 };
 
 export default class CallSession {
@@ -49,7 +53,11 @@ export default class CallSession {
 
   callerNumber: string;
 
+  creationTime: ?Date;
+
   startTime: number;
+
+  endTime: ?Date;
 
   isCaller: boolean;
 
@@ -89,6 +97,8 @@ export default class CallSession {
 
   recordingPaused: boolean;
 
+  sipSession: Session;
+
   constructor({
     answered,
     answeredBySystem,
@@ -101,6 +111,8 @@ export default class CallSession {
     paused,
     ringing,
     startTime,
+    creationTime,
+    endTime,
     cameraEnabled,
     dialedExtension,
     sipCallId,
@@ -113,12 +125,15 @@ export default class CallSession {
     recording,
     recordingPaused,
     videoRemotelyDowngraded,
+    sipSession,
   }: CallSessionArguments) {
     this.callId = callId;
     this.sipCallId = sipCallId;
     this.displayName = displayName;
     this.number = number;
+    this.creationTime = creationTime;
     this.startTime = startTime;
+    this.endTime = endTime;
     this.isCaller = isCaller;
     this.answered = answered;
     this.answeredBySystem = answeredBySystem;
@@ -137,6 +152,7 @@ export default class CallSession {
     this.recording = recording || false;
     this.recordingPaused = recordingPaused || false;
     this.videoRemotelyDowngraded = videoRemotelyDowngraded;
+    this.sipSession = sipSession;
 
     // Useful to compare instead of instanceof with minified code
     this.type = 'CallSession';
