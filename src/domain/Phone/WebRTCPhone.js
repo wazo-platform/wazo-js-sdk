@@ -30,6 +30,7 @@ export const ON_CAMERA_DISABLED = 'onCameraDisabled';
 export const ON_CAMERA_RESUMED = 'onCameraResumed';
 export const ON_CALL_CANCELED = 'onCallCanceled';
 export const ON_CALL_FAILED = 'onCallFailed';
+export const ON_CALL_REJECTED = 'onCallRejected';
 export const ON_CALL_ENDED = 'onCallEnded';
 export const ON_CALL_ENDING = 'onCallEnding';
 export const ON_MESSAGE = 'onMessage';
@@ -74,6 +75,7 @@ export const events = [
   ON_CAMERA_DISABLED,
   ON_CALL_FAILED,
   ON_CALL_ENDED,
+  ON_CALL_REJECTED,
   ON_MESSAGE,
   ON_REINVITE,
   ON_TRACK,
@@ -430,6 +432,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
           // Should be called before `_onCallTerminated` or the callCount will not decrement...
           const callSession = this._createCallSession(sipSession);
+          callSession.endTime = new Date();
           const wasCurrentSession = this._onCallTerminated(sipSession);
 
           return this.eventEmitter.emit(ON_CALL_ENDED, callSession, wasCurrentSession);
@@ -1151,6 +1154,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return Promise.resolve(null);
     }
     const callSession = this._createOutgoingCallSession(sipSession, cameraEnabled || false);
+    callSession.creationTime = new Date();
 
     this.eventEmitter.emit(ON_PLAY_PROGRESS_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
 
@@ -1429,6 +1433,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
           callSession);
       }
 
+      callSession.creationTime = new Date();
       this.eventEmitter.emit(ON_CALL_INCOMING, callSession, wantsToDoVideo);
     });
 
@@ -1466,6 +1471,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.on(this.client.ON_ERROR, e => {
       logger.error('WebRTC error', e);
       this.eventEmitter.emit(ON_CALL_ERROR, e);
+    });
+
+    this.client.on(this.client.REJECTED, session => {
+      logger.info('WebRTC call rejected', session.id);
+      const callSession = this._createCallSession(session);
+      callSession.endTime = new Date();
+      this.eventEmitter.emit(ON_CALL_REJECTED, callSession);
     });
 
     this.client.on(this.client.UNREGISTERED, () => {
@@ -1682,6 +1694,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const number = identity ? identity.uri._normal.user : null;
     const { state } = sipSession || {};
     const sessionId = this.getSipSessionId(sipSession);
+    fromSession = fromSession || this.callSessions[sessionId];
 
     const callSession = new CallSession({
       callId: fromSession && fromSession.callId,
@@ -1689,6 +1702,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
       sipStatus: state,
       displayName: identity ? identity.displayName || number : number,
       startTime: fromSession ? fromSession.startTime : new Date(),
+      creationTime: fromSession ? fromSession.creationTime : null,
+      endTime: fromSession ? fromSession.endTime : null,
       answered: state === SessionState.Established,
       paused: this.client.isCallHeld(sipSession),
       isCaller: 'incoming' in extra ? !extra.incoming : false,
@@ -1699,6 +1714,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       videoMuted: fromSession ? fromSession.isVideoMuted() : false,
       recording: fromSession ? fromSession.isRecording() : false,
       recordingPaused: false, // @TODO
+      sipSession,
       ...extra,
     });
 
