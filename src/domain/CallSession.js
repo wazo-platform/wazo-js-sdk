@@ -8,6 +8,7 @@ import updateFrom from '../utils/update-from';
 
 type CallSessionArguments = {
   answered: boolean,
+  answerTime?: ?Date,
   answeredBySystem: boolean,
   call: ?Call,
   callId: string,
@@ -55,13 +56,13 @@ export default class CallSession {
 
   creationTime: ?Date;
 
-  startTime: number;
+  startTime: number; // = creationTime
+
+  answerTime: ?Date;
 
   endTime: ?Date;
 
   isCaller: boolean;
-
-  answered: boolean;
 
   answeredBySystem: boolean;
 
@@ -126,6 +127,7 @@ export default class CallSession {
     recordingPaused,
     videoRemotelyDowngraded,
     sipSession,
+    answerTime,
   }: CallSessionArguments) {
     this.callId = callId;
     this.sipCallId = sipCallId;
@@ -153,6 +155,7 @@ export default class CallSession {
     this.recordingPaused = recordingPaused || false;
     this.videoRemotelyDowngraded = videoRemotelyDowngraded;
     this.sipSession = sipSession;
+    this.answerTime = answerTime || this.answerTime;
 
     // Useful to compare instead of instanceof with minified code
     this.type = 'CallSession';
@@ -183,7 +186,7 @@ export default class CallSession {
   }
 
   answer() {
-    this.answered = true;
+    this.answerTime = new Date();
   }
 
   systemAnswer() {
@@ -337,6 +340,15 @@ export default class CallSession {
 
   static newFrom(callSession: CallSession) {
     return newFrom(callSession, CallSession);
+  }
+
+  // Retro-compatibility: `answered` was a boolean before. We can reproduce the behaviour with a getter/setter
+  set answered(value: boolean) {
+    this.answerTime = value ? new Date() : null;
+  }
+
+  get answered(): boolean {
+    return !!this.answerTime;
   }
 
   static parseCall(call: Call): CallSession {

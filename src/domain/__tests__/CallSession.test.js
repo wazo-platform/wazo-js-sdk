@@ -37,4 +37,21 @@ describe('CallSession domain', () => {
     expect(cs1.is(cs2)).toBeTruthy();
     expect(cs2.is(cs1)).toBeTruthy();
   });
+
+  it('should set answerTime when setting answered', () => {
+    const cs1 = new CallSession({});
+    cs1.answered = true;
+
+    const cs2 = new CallSession({});
+    cs2.answer();
+
+    const cs3 = new CallSession({ answered: true });
+
+    expect(cs1.answered).toBeTruthy();
+    expect(cs1.answerTime).not.toBeNull();
+    expect(cs2.answered).toBeTruthy();
+    expect(cs2.answerTime).not.toBeNull();
+    expect(cs3.answered).toBeTruthy();
+    expect(cs3.answerTime).not.toBeNull();
+  });
 });
