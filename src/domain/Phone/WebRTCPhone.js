@@ -630,7 +630,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.removeIncomingSessions(sipSessionId);
     }
 
-    callSession.answered = true;
+    callSession.answerTime = new Date();
     this.eventEmitter.emit(ON_CALL_ACCEPTED, callSession, cameraEnabled);
 
     return callSession;
@@ -846,7 +846,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     this.shouldSendReinvite = false;
-    callSession.answered = true;
+    callSession.answerTime = new Date();
     this.acceptedSessions[callSession.getId()] = true;
 
     this.eventEmitter.emit(ON_CALL_ANSWERED, callSession);
