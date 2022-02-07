@@ -88,6 +88,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   meetingAuthorizationReject: (meetingUuid: string, authorizationUuid: string): Promise<Boolean> =>
     client.put(
       `${baseUrl}/users/me/meetings/${meetingUuid}/authorizations/${authorizationUuid}/reject`,
+      {},
       null,
       ApiRequester.successResponseParser,
     ),
@@ -95,6 +96,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
   meetingAuthorizationAccept: (meetingUuid: string, authorizationUuid: string): Promise<Boolean> =>
     client.put(
       `${baseUrl}/users/me/meetings/${meetingUuid}/authorizations/${authorizationUuid}/accept`,
+      {},
       null,
       ApiRequester.successResponseParser,
     ),
