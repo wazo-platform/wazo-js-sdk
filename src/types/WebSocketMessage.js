@@ -8,7 +8,7 @@ import type {
 import type { ChatMessageResponse } from '../domain/ChatMessage';
 import ChatRoom from '../domain/ChatRoom';
 import Meeting from '../domain/Meeting';
-import type MeetingAutorization from '../domain/MeetingAuthorization';
+import type MeetingAuthorization from '../domain/MeetingAuthorization';
 
 type WebSocketBaseMessage = {
   op: string,
@@ -191,7 +191,7 @@ type AgentUnpaused = WebSocketBaseMessage & { data: any, name: 'agent_unpaused' 
 
 type MeetingUserProgress = WebSocketBaseMessage & { data: Meeting, name: 'meeting_user_progress' };
 type MeetingAuthorizationPending = WebSocketBaseMessage & {
-  data: MeetingAutorization,
+  data: MeetingAuthorization,
   name: 'meeting_authorization_pending'
 };
 

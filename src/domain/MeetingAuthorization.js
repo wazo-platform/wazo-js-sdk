@@ -1,50 +1,55 @@
 // @flow
 
-export type RawMeetingAutorization = {
+export type RawMeetingAuthorization = {
+  created_at: string,
   meeting_uuid: string,
-  authorization_uuid: string,
-  coline_uuid: string,
-  coline_name: string,
+  uuid: string,
+  guest_uuid: string,
+  guest_name: string,
 }
 
-export default class MeetingAutorization {
+export const PENDING = 'pending';
+export const ACCEPTED = 'accepted';
+export const REJECTED = 'rejected';
+
+export default class MeetingAuthorization {
   meetingUuid: string;
-  authorizationUuid: string;
+  uuid: string;
   userUuid: string;
   userName: string;
 
   constructor({
     meetingUuid,
-    authorizationUuid,
+    uuid,
     userUuid,
     userName,
   }: Object = {}) {
     this.meetingUuid = meetingUuid;
-    this.authorizationUuid = authorizationUuid;
+    this.uuid = uuid;
     this.userUuid = userUuid;
     this.userName = userName;
   }
 
-  static parse(plain: RawMeetingAutorization) {
+  static parse(plain: RawMeetingAuthorization) {
     const {
       meeting_uuid: meetingUuid,
-      authorization_uuid: authorizationUuid,
-      coline_uuid: userUuid,
-      coline_name: userName,
+      uuid,
+      guest_uuid: userUuid,
+      guest_name: userName,
     } = plain;
 
-    return new MeetingAutorization({
+    return new MeetingAuthorization({
       meetingUuid,
-      authorizationUuid,
+      uuid,
       userUuid,
       userName,
     });
   }
 
-  static parseMany(items: RawMeetingAutorization[]): Array<MeetingAutorization> {
+  static parseMany(items: RawMeetingAuthorization[]): Array<MeetingAuthorization> {
     if (!items) {
       return [];
     }
-    return items.map(plain => MeetingAutorization.parse(plain));
+    return items.map(plain => MeetingAuthorization.parse(plain));
   }
 }

@@ -5,7 +5,7 @@ import Profile from '../domain/Profile';
 import SipLine from '../domain/SipLine';
 import ExternalApp from '../domain/ExternalApp';
 import Meeting from '../domain/Meeting';
-import MeetingAutorization from '../domain/MeetingAuthorization';
+import MeetingAuthorization from '../domain/MeetingAuthorization';
 
 export default (client: ApiRequester, baseUrl: string) => ({
   listUsers: (): Promise<ListConfdUsersResponse> => client.get(`${baseUrl}/users`, null),
@@ -82,8 +82,8 @@ export default (client: ApiRequester, baseUrl: string) => ({
   getMeeting: (meetingUuid: string): Promise<Meeting> =>
     client.get(`${baseUrl}/meetings/${meetingUuid}`, null).then(Meeting.parse),
 
-  meetingAuthorizations: (meetingUuid: string): Promise<Array<MeetingAutorization>> =>
-    client.get(`${baseUrl}/users/me/meetings/${meetingUuid}/authorizations`, null).then(MeetingAutorization.parseMany),
+  meetingAuthorizations: (meetingUuid: string): Promise<Array<MeetingAuthorization>> =>
+    client.get(`${baseUrl}/users/me/meetings/${meetingUuid}/authorizations`, null).then(MeetingAuthorization.parseMany),
 
   meetingAuthorizationReject: (meetingUuid: string, authorizationUuid: string): Promise<Boolean> =>
     client.put(
@@ -104,10 +104,10 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   guestAuthorizationRequest: (userUuid: string, meetingUuid: string, username: string): Promise<> =>
     client
-      .post(`${baseUrl}/guests/${userUuid}/meetings/${meetingUuid}/authorization`, { coline_name: username })
-      .then(MeetingAutorization.parse),
+      .post(`${baseUrl}/guests/${userUuid}/meetings/${meetingUuid}/authorizations`, { guest_name: username })
+      .then(MeetingAuthorization.parse),
 
   guestAuthorizationCheck: (userUuid: string, meetingUuid: string, authorizationUuid: string): Promise<> =>
-    client.get(`${baseUrl}/guests/${userUuid}/meetings/${meetingUuid}/authorization/${authorizationUuid}`, null),
+    client.get(`${baseUrl}/guests/${userUuid}/meetings/${meetingUuid}/authorizations/${authorizationUuid}`, null),
 
 });
