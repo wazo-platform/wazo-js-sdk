@@ -87,6 +87,7 @@ type WebRtcConfig = {
   displayName: string,
   host: string,
   port?: number,
+  websocketSip?: ?string,
   authorizationUser: ?string,
   password: ?string,
   uri: string,
@@ -1703,6 +1704,13 @@ export default class WebRTCClient extends Emitter {
   }
 
   _createWebRTCConfiguration(configOverrides: Object = {}) {
+    let { host } = this.config;
+    let port = this.config.port || 443;
+
+    if (this.config.websocketSip) {
+      [host, port = 443] = this.config.websocketSip.split(':');
+    }
+
     const config: Object = {
       authorizationUsername: this.config.authorizationUser,
       authorizationPassword: this.config.password,
@@ -1738,7 +1746,7 @@ export default class WebRTCClient extends Emitter {
       },
       transportOptions: {
         traceSip: configOverrides.traceSip || false,
-        wsServers: `wss://${this.config.host}:${this.config.port || 443}/api/asterisk/ws`,
+        wsServers: `wss://${host}:${port}/api/asterisk/ws`,
       },
       sessionDescriptionHandlerFactoryOptions: {
         modifiers: [replaceLocalIpModifier],
