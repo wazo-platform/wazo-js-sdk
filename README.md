@@ -909,7 +909,7 @@ const results = await requester.call('dird/0.1/personal');
 ```
 
 ### WebRTCClient
-This sample decribes the very first steps to place a call using WebRTC.
+This sample describes the very first steps to place a call using WebRTC.
 
 ```js
 import { WazoWebRTCClient } from '@wazo/sdk'; // import the library
@@ -919,6 +919,7 @@ const session = await client.auth.logIn({ ... }); // log in
 const client = new WazoWebRTCClient({
   displayName: 'From WEB',
   host: 'stack.dev.wazo.io',
+  websocketSip: 'other.url.com', // Allows to connect throught another URL than host (default to `host` is not set).
   media: {
     audio: boolean,
     video: boolean | document.getElementById('video'), // pointing to a `<video id="video" />` element
