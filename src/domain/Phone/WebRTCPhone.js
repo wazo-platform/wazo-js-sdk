@@ -948,7 +948,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     // Hold current session if different from the current one (we don't want 2 sessions active at the same time).
     if (this.currentSipSession && this.currentSipSession.id !== sipSession.id) {
       logger.info('WebRTC hold call after resume', { id: this.currentSipSession.id });
-      this.holdSipSession(this.currentSipSession, callSession);
+      this.holdSipSession(this.currentSipSession, this.currentCallSession);
     }
 
     const promise = this.unholdSipSession(sipSession, callSession, withEvent, isConference);
