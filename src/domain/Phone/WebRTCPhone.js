@@ -631,6 +631,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     callSession.answerTime = new Date();
+    this._updateCallSession(callSession);
     this.eventEmitter.emit(ON_CALL_ACCEPTED, callSession, cameraEnabled);
 
     return callSession;
@@ -847,6 +848,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     this.shouldSendReinvite = false;
     callSession.answerTime = new Date();
+    this._updateCallSession(callSession);
     this.acceptedSessions[callSession.getId()] = true;
 
     this.eventEmitter.emit(ON_CALL_ANSWERED, callSession);
@@ -1157,6 +1159,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
     const callSession = this._createOutgoingCallSession(sipSession, cameraEnabled || false);
     callSession.creationTime = new Date();
+    this._updateCallSession(callSession);
 
     this.eventEmitter.emit(ON_PLAY_PROGRESS_SOUND, this.audioOutputDeviceId, this.audioOutputVolume);
 
@@ -1436,6 +1439,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
       }
 
       callSession.creationTime = new Date();
+      this._updateCallSession(callSession);
+
       this.eventEmitter.emit(ON_CALL_INCOMING, callSession, wantsToDoVideo);
     });
 
@@ -1479,6 +1484,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
       logger.info('WebRTC call rejected', session.id);
       const callSession = this._createCallSession(session);
       callSession.endTime = new Date();
+      this._updateCallSession(callSession);
+
       this.eventEmitter.emit(ON_CALL_REJECTED, callSession);
     });
 
@@ -1705,6 +1712,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       displayName: identity ? identity.displayName || number : number,
       startTime: fromSession ? fromSession.startTime : new Date(),
       creationTime: fromSession ? fromSession.creationTime : null,
+      answerTime: fromSession ? fromSession.answerTime : null,
       endTime: fromSession ? fromSession.endTime : null,
       answered: state === SessionState.Established,
       paused: this.client.isCallHeld(sipSession),

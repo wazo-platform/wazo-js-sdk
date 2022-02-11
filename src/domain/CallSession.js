@@ -344,7 +344,7 @@ export default class CallSession {
 
   // Retro-compatibility: `answered` was a boolean before. We can reproduce the behaviour with a getter/setter
   set answered(value: boolean) {
-    this.answerTime = value ? new Date() : null;
+    this.answerTime = value ? this.answerTime || new Date() : null;
   }
 
   get answered(): boolean {
