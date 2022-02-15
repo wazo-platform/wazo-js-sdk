@@ -1301,7 +1301,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return this.client && this.client.isConference(callSession.sipCallId);
   }
 
-  async close(): Promise<void> {
+  async close(force: boolean = false): Promise<void> {
     logger.info('WebRTC close');
 
     try {
@@ -1313,7 +1313,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       logger.error('WebRTC close, unregister error', e);
     }
 
-    this.client.close();
+    this.client.close(force);
     this.unbind();
 
     this.incomingSessions = [];
