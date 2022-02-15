@@ -7,7 +7,7 @@ import ChatMessage from '../domain/ChatMessage';
 import Voicemail from '../domain/Voicemail';
 import Call from '../domain/Call';
 import IndirectTransfer from '../domain/IndirectTransfer';
-import type { MeetingStatus } from '../domain/Meeting';
+import MeetingStatus from '../domain/MeetingStatus';
 
 type CallQuery = {
   from_mobile: boolean,
@@ -202,5 +202,5 @@ export default (client: ApiRequester, baseUrl: string) => ({
       ApiRequester.successResponseParser),
 
   guestGetMeetingStatus: (meetingUuid: string): Promise<MeetingStatus> =>
-    client.get(`${baseUrl}/guests/me/meetings/${meetingUuid}/status`),
+    client.get(`${baseUrl}/guests/me/meetings/${meetingUuid}/status`).then(MeetingStatus.parse),
 });
