@@ -15,6 +15,11 @@ export type MeetingCreationResponse = {
   creation_time: string,
 }
 
+export type MeetingStatus = {
+  full: boolean,
+  error?: Error,
+}
+
 export default class Meeting {
   type: string;
 
