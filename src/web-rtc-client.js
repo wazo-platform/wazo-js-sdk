@@ -129,6 +129,7 @@ export default class WebRTCClient extends Emitter {
   skipRegister: boolean;
   networkMonitoringInterval: { [string]: IntervalID };
   sessionNetworkStats: { [string]: Object };
+  forceClosed: boolean;
 
   // sugar
   ON_USER_AGENT: string;
@@ -191,6 +192,7 @@ export default class WebRTCClient extends Emitter {
     this.conferences = {};
     this.networkMonitoringInterval = {};
     this.sessionNetworkStats = {};
+    this.forceClosed = false;
 
     this._boundOnHeartbeat = this._onHeartbeat.bind(this);
     this.heartbeat = new Heartbeat(config.heartbeatDelay, config.heartbeatTimeout, config.maxHeartbeats);
@@ -312,6 +314,8 @@ export default class WebRTCClient extends Emitter {
       skipRegister: this.skipRegister,
     };
 
+    this.forceClosed = false;
+
     if (this.skipRegister) {
       logger.info('sdk webrtc skip register...', logInfo);
       return Promise.resolve();
@@ -336,7 +340,15 @@ export default class WebRTCClient extends Emitter {
     const registerOptions = this._isWeb() ? {} : { extraContactHeaderParams: ['mobility=mobile'] };
 
     const onRegisterFailed = () => {
-      logger.info('sdk webrtc registering failed', { tries, registerer: !!this.registerer });
+      logger.info('sdk webrtc registering failed', {
+        tries,
+        registerer: !!this.registerer,
+        forceClosed: this.forceClosed,
+      });
+      if (this.forceClosed) {
+        return;
+      }
+
       this.connectionPromise = null;
       if (this.registerer && this.registerer.waiting) {
         this.registerer.waitingToggle(false);
@@ -614,8 +626,9 @@ export default class WebRTCClient extends Emitter {
     }
   }
 
-  async close() {
-    logger.info('sdk webrtc closing client', { userAgent: !!this.userAgent });
+  async close(force: boolean = false) {
+    logger.info('sdk webrtc closing client', { userAgent: !!this.userAgent, force });
+    this.forceClosed = force;
     this._cleanupMedia();
     this.connectionPromise = null;
 
@@ -634,7 +647,7 @@ export default class WebRTCClient extends Emitter {
     this.userAgent.delegate = null;
     this.userAgent.stateChange.removeAllListeners();
 
-    await this._disconnectTransport();
+    await this._disconnectTransport(force);
 
     this._cleanupRegister();
 
@@ -2070,7 +2083,15 @@ export default class WebRTCClient extends Emitter {
     return UserAgent.makeURI(`sip:${target}@${this.config.host}`);
   }
 
-  async _disconnectTransport() {
+  async _disconnectTransport(force: boolean = false) {
+    if (force) {
+      // Bypass sip.js state machine that prevent to close WS with the state `Connecting`
+      this.userAgent.transport.disconnectResolve = () => {};
+      // eslint-disable-next-line
+      this.userAgent.transport._ws.close(1000);
+      return;
+    }
+
     // Check if `disconnectPromise` is not present to avoid `Disconnect promise must not be defined` errors.
     if (this.userAgent && this.userAgent.transport && !this.userAgent.transport.disconnectPromise) {
       try {
