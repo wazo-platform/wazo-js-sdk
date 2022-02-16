@@ -351,6 +351,14 @@ export default class CallSession {
     return !!this.answerTime;
   }
 
+  toJSON() {
+    const jsonObj = { ...this };
+    // $FlowFixMe
+    jsonObj.answered = this.answered;
+
+    return jsonObj;
+  }
+
   static parseCall(call: Call): CallSession {
     return new CallSession({
       callId: call.id,
