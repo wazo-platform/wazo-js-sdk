@@ -843,7 +843,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     const sipSessionId = this.getSipSessionIdFromCallSession(callSession);
     if (sipSessionId && !(sipSessionId in this.callSessions)) {
-      logger.warn('Call session already ended can\'t accept it.', { sipSessionId });
+      logger.warn('Call session already ended or not found, can\'t accept it.', { sipSessionId });
       return Promise.resolve(null);
     }
 
@@ -1477,7 +1477,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       logger.info('WebRTC call accepted', { sipId: sessionId, hasSession });
 
       if (!hasSession) {
-        logger.warn('Call accepted ignored, session is no more present in the WebRtcPhone', { sessionId });
+        logger.warn('Call accepted ignored, session is no longer present in the WebRtcPhone', { sessionId });
         return;
       }
 
