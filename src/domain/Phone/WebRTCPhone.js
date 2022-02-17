@@ -841,6 +841,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return Promise.resolve(null);
     }
 
+    const sipSessionId = this.getSipSessionIdFromCallSession(callSession);
+    if (sipSessionId && !(sipSessionId in this.callSessions)) {
+      logger.warn('Call session already ended or not found, can\'t accept it.', { sipSessionId });
+      return Promise.resolve(null);
+    }
+
     if (callSession.getId() in this.acceptedSessions) {
       logger.warn('CallSession already accepted.', { id: callSession ? callSession.getId() : 'n/a' });
       return Promise.resolve(callSession.sipCallId);
@@ -1465,9 +1471,17 @@ export default class WebRTCPhone extends Emitter implements Phone {
     });
 
     this.client.on(this.client.ACCEPTED, (sipSession: Session) => {
-      logger.info('WebRTC call accepted', { sipId: sipSession.id });
+      const sessionId = this.getSipSessionId(sipSession);
+      const hasSession = sessionId in this.callSessions;
 
-      this._onCallAccepted(sipSession, this.client.hasVideo(this.getSipSessionId(sipSession)));
+      logger.info('WebRTC call accepted', { sipId: sessionId, hasSession });
+
+      if (!hasSession) {
+        logger.warn('Call accepted ignored, session is no longer present in the WebRtcPhone', { sessionId });
+        return;
+      }
+
+      this._onCallAccepted(sipSession, this.client.hasVideo(sessionId));
 
       if (this.audioOutputDeviceId) {
         this.client.changeAudioOutputDevice(this.audioOutputDeviceId);
@@ -1603,9 +1617,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return this.client.getSipSessionId(sipSession);
   }
 
-  _updateCallSession(callSession: CallSession) {
+  getSipSessionIdFromCallSession(callSession: CallSession) {
     const sipSession = this.findSipSession(callSession);
-    const sipSessionId = sipSession ? this.getSipSessionId(sipSession) : null;
+
+    return sipSession ? this.getSipSessionId(sipSession) : null;
+  }
+
+  _updateCallSession(callSession: CallSession) {
+    const sipSessionId = this.getSipSessionIdFromCallSession(callSession);
 
     if (sipSessionId) {
       this.callSessions[sipSessionId] = callSession;
