@@ -75,7 +75,7 @@ export const events = [REGISTERED, UNREGISTERED, REGISTRATION_FAILED, INVITE];
 export const transportEvents = [CONNECTED, DISCONNECTED, TRANSPORT_ERROR, MESSAGE];
 export class CanceledCallError extends Error {}
 
-const MAX_REGISTER_TRIES = 10;
+const MAX_REGISTER_TRIES = 5;
 
 type MediaConfig = {
   audio: Object & boolean,
