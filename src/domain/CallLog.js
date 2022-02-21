@@ -19,7 +19,7 @@ type CallLogResponse = {
   id: number,
   source_extension: string,
   source_name: string,
-  source_user_uuid: string,
+  source_user_uuid: ?string,
   recordings: RecordingResponse[],
   requested_extension: string,
   requested_name: string,
