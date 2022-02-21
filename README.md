@@ -651,6 +651,7 @@ client.auth.logIn({
   password, // required string
   backend, // optional string. If omitted, defaults to wazo_user
   mobile, // optional boolean. If omitted, defaults to false: tells if the current user uses a mobile application
+  tenantId, // optional string. The tenant identifier (uuid or slug). Needed when backend is external (not wazo_user)
 }).then(/* undefined if login failed, or : */{
   metadata: {
     username,
