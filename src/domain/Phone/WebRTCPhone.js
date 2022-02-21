@@ -837,7 +837,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
         this.currentSipSession,
         this.currentCallSession,
         true,
-        !!this.currentCallSession && this.currentCallSession.isConference(),
       );
     }
 
@@ -931,22 +930,22 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
   }
 
-  hold(callSession: CallSession, withEvent: boolean = true, isConference: boolean = false): ?Promise<any> {
+  hold(callSession: CallSession, withEvent: boolean = true): ?Promise<any> {
     logger.info('WebRTC hold', { id: callSession.getId() });
 
     const sipSession = this.findSipSession(callSession);
 
-    return sipSession ? this.holdSipSession(sipSession, callSession, withEvent, isConference) : null;
+    return sipSession ? this.holdSipSession(sipSession, callSession, withEvent) : null;
   }
 
   // @Deprecated
-  unhold(callSession: CallSession, withEvent: boolean = true, isConference: boolean = false): ?Promise<any> {
+  unhold(callSession: CallSession, withEvent: boolean = true): ?Promise<any> {
     console.warn('Please note that `phone.unhold()` is being deprecated; `phone.resume()` is the preferred method');
 
-    return this.resume(callSession, isConference, withEvent);
+    return this.resume(callSession, withEvent);
   }
 
-  resume(callSession?: CallSession, isConference: boolean = false, withEvent: boolean = true): Promise<any> {
+  resume(callSession?: CallSession, withEvent: boolean = true): Promise<any> {
     logger.info('WebRTC resume called', { id: callSession ? callSession.getId() : null });
 
     const sipSession = this.findSipSession(callSession);
@@ -963,11 +962,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
         this.currentSipSession,
         this.currentCallSession,
         withEvent,
-        !!this.currentCallSession && this.currentCallSession.isConference(),
       );
     }
 
-    const promise = this.unholdSipSession(sipSession, callSession, withEvent, isConference);
+    const promise = this.unholdSipSession(sipSession, callSession, withEvent);
     this.currentSipSession = sipSession;
     if (callSession) {
       this.currentCallSession = callSession;
@@ -980,7 +978,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
     sipSession: Session,
     callSession: ?CallSession,
     withEvent: boolean = true,
-    isConference: boolean = false,
   ): Promise<any> {
     if (!sipSession) {
       return new Promise((resolve, reject) => reject(new Error('No session to hold')));
@@ -1001,6 +998,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
       await this.client.downgradeToAudio(sipSession);
     }
 
+    const isConference = !!callSession && callSession.isConference();
+
     const promise = this.client.hold(sipSession, isConference, hasVideo);
     if (withEvent) {
       this.eventEmitter.emit(ON_CALL_HELD, this._createCallSession(sipSession, callSession));
@@ -1013,11 +1012,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
     sipSession: Session,
     callSession: ?CallSession,
     withEvent: boolean = true,
-    isConference: boolean = false,
   ): Promise<any> {
     if (!sipSession) {
       return new Promise((resolve, reject) => reject(new Error('No session to unhold')));
     }
+
+    const isConference = !!callSession && callSession.isConference();
+
     const sessionId = this.getSipSessionId(sipSession);
     logger.info('WebRTC unhold sip session', { sessionId, isConference });
 
@@ -1163,7 +1164,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
         this.currentSipSession,
         this.currentCallSession,
         true,
-        !!this.currentCallSession && this.currentCallSession.isConference(),
       ).catch(e => {
         logger.warn('Unable to hold current session when making another call', e);
       });

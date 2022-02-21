@@ -136,7 +136,7 @@ export default class AdHocAPIConference {
 
   hold(): AdHocAPIConference {
     this.paused = true;
-    this.phone.hold(this.host, false, true);
+    this.phone.hold(this.host);
     return new AdHocAPIConference({
       ...this,
     });
@@ -144,7 +144,7 @@ export default class AdHocAPIConference {
 
   resume(): AdHocAPIConference {
     this.paused = false;
-    this.phone.resume(this.host, true);
+    this.phone.resume(this.host);
     return new AdHocAPIConference({
       ...this,
     });
