@@ -13,11 +13,13 @@ type CallLogResponse = {
   call_direction: string,
   destination_extension: string,
   destination_name: ?string,
+  destination_user_uuid: ?string,
   duration: number,
   end: ?string,
   id: number,
   source_extension: string,
   source_name: string,
+  source_user_uuid: string,
   recordings: RecordingResponse[],
   requested_extension: string,
   requested_name: string,
@@ -38,10 +40,12 @@ type CallLogArguments = {
   destination: {
     extension: string,
     name: string,
+    uuid: ?string,
   },
   source: {
     extension: string,
     name: string,
+    uuid: ?string,
   },
   id: number,
   duration: number,
@@ -103,10 +107,12 @@ export default class CallLog {
           || plain.destination_extension
           || `meeting-${plain.requested_name || plain.destination_name || ''}`,
         name: plain.requested_name || plain.destination_name || '',
+        uuid: plain.destination_user_uuid,
       },
       source: {
         extension: plain.source_extension,
         name: plain.source_name,
+        uuid: plain.source_user_uuid,
       },
       id: plain.id,
       duration: (plain.duration || 0) * 1000, // duration is in seconds
