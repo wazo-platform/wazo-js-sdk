@@ -31,6 +31,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     backend: string,
     expiration: number,
     mobile?: boolean,
+    tenantId?: string,
   }): Promise<?Session> {
     const body: Object = {
       backend: params.backend || DEFAULT_BACKEND_USER,
@@ -48,6 +49,10 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
     if (params.mobile) {
       headers['Wazo-Session-Type'] = 'mobile';
+    }
+
+    if (params.tenantId) {
+      body.tenant_id = params.tenantId;
     }
 
     return client.post(`${baseUrl}/token`, body, headers).then(response => Session.parse(response));
