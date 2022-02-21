@@ -35,6 +35,7 @@ type CallSessionArguments = {
   recording: boolean,
   recordingPaused: boolean,
   sipSession?: Session,
+  conference: boolean,
 };
 
 export default class CallSession {
@@ -100,6 +101,8 @@ export default class CallSession {
 
   sipSession: Session;
 
+  conference: boolean;
+
   constructor({
     answered,
     answeredBySystem,
@@ -128,6 +131,7 @@ export default class CallSession {
     videoRemotelyDowngraded,
     sipSession,
     answerTime,
+    conference,
   }: CallSessionArguments) {
     this.callId = callId;
     this.sipCallId = sipCallId;
@@ -156,6 +160,7 @@ export default class CallSession {
     this.videoRemotelyDowngraded = videoRemotelyDowngraded;
     this.sipSession = sipSession;
     this.answerTime = answerTime || this.answerTime;
+    this.conference = conference;
 
     // Useful to compare instead of instanceof with minified code
     this.type = 'CallSession';
@@ -211,6 +216,10 @@ export default class CallSession {
 
   stopScreenSharing() {
     this.screensharing = false;
+  }
+
+  setIsConference(conference: boolean) {
+    this.conference = conference;
   }
 
   isIncoming(): boolean {
@@ -287,6 +296,10 @@ export default class CallSession {
 
   isTerminated(): boolean {
     return this.sipStatus === SessionState.Terminated;
+  }
+
+  isConference(): boolean {
+    return this.conference;
   }
 
   getElapsedTimeInSeconds() {
@@ -380,6 +393,7 @@ export default class CallSession {
       cameraEnabled: false,
       dialedExtension: call.dialedExtension,
       call,
+      conference: false, // @FIXME?
     });
   }
 }

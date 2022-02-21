@@ -833,7 +833,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
   accept(callSession: CallSession, cameraEnabled?: boolean): Promise<string | null> {
     logger.info('WebRTC phone - accept call', { id: callSession ? callSession.getId() : 'n/a', cameraEnabled });
     if (this.currentSipSession) {
-      this.holdSipSession(this.currentSipSession, this.currentCallSession, true);
+      this.holdSipSession(
+        this.currentSipSession,
+        this.currentCallSession,
+        true,
+        !!this.currentCallSession && this.currentCallSession.isConference(),
+      );
     }
 
     if (!callSession) {
@@ -954,7 +959,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
     // Hold current session if different from the current one (we don't want 2 sessions active at the same time).
     if (this.currentSipSession && this.currentSipSession.id !== sipSession.id) {
       logger.info('WebRTC hold call after resume', { id: this.currentSipSession.id });
-      this.holdSipSession(this.currentSipSession, this.currentCallSession);
+      this.holdSipSession(
+        this.currentSipSession,
+        this.currentCallSession,
+        withEvent,
+        !!this.currentCallSession && this.currentCallSession.isConference(),
+      );
     }
 
     const promise = this.unholdSipSession(sipSession, callSession, withEvent, isConference);
@@ -1149,7 +1159,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
       await this.client.register();
     }
     if (this.currentSipSession) {
-      this.holdSipSession(this.currentSipSession, this.currentCallSession, true).catch(e => {
+      this.holdSipSession(
+        this.currentSipSession,
+        this.currentCallSession,
+        true,
+        !!this.currentCallSession && this.currentCallSession.isConference(),
+      ).catch(e => {
         logger.warn('Unable to hold current session when making another call', e);
       });
     }
@@ -1164,6 +1179,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return Promise.resolve(null);
     }
     const callSession = this._createOutgoingCallSession(sipSession, cameraEnabled || false);
+    callSession.setIsConference(conference);
     callSession.creationTime = new Date();
     this._updateCallSession(callSession);
 
@@ -1744,6 +1760,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       recording: fromSession ? fromSession.isRecording() : false,
       recordingPaused: false, // @TODO
       sipSession,
+      conference: !!fromSession && fromSession.conference,
       ...extra,
     });
 

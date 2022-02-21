@@ -73,6 +73,10 @@ export default class AdHocAPIConference {
     this.conferenceId = conferenceId || '';
     this.muted = muted || false;
     this.paused = paused || false;
+
+    if (this.host) {
+      this.host.setIsConference(true);
+    }
   }
 
   async start() {
@@ -132,7 +136,7 @@ export default class AdHocAPIConference {
 
   hold(): AdHocAPIConference {
     this.paused = true;
-    this.phone.hold(this.host);
+    this.phone.hold(this.host, false, true);
     return new AdHocAPIConference({
       ...this,
     });
@@ -140,7 +144,7 @@ export default class AdHocAPIConference {
 
   resume(): AdHocAPIConference {
     this.paused = false;
-    this.phone.resume(this.host);
+    this.phone.resume(this.host, true);
     return new AdHocAPIConference({
       ...this,
     });
