@@ -57,6 +57,7 @@ type ProfileResponse = {
     },
   },
   mobile_phone_number: ?string,
+  ring_seconds?: number,
   subscription_type: ?number,
   services: {
     dnd: {
@@ -93,6 +94,7 @@ type ProfileArguments = {
   mobileNumber: string,
   forwards: Array<ForwardOption>,
   doNotDisturb?: boolean,
+  ringSeconds?: number,
   state?: string,
   status: string,
   subscriptionType: ?number,
@@ -124,6 +126,7 @@ export default class Profile {
   doNotDisturb: ?boolean;
   onlineCallRecordEnabled: ?boolean;
   state: ?string;
+  ringSeconds: ?number;
   voicemail: ?{ id: number, name: string };
   status: string;
   subscriptionType: ?number;
@@ -140,6 +143,7 @@ export default class Profile {
       lines: plain.lines.map(line => Line.parse(line)),
       username: plain.username,
       mobileNumber: plain.mobile_phone_number || '',
+      ringSeconds: plain.ring_seconds,
       forwards: [
         ForwardOption.parse(plain.forwards.unconditional, FORWARD_KEYS.UNCONDITIONAL),
         ForwardOption.parse(plain.forwards.noanswer, FORWARD_KEYS.NO_ANSWER),
@@ -176,6 +180,7 @@ export default class Profile {
     switchboards,
     agent,
     status,
+    ringSeconds,
     sipLines,
     callPickupTargetUsers,
     onlineCallRecordEnabled,
@@ -197,6 +202,7 @@ export default class Profile {
     this.status = status;
     this.callPickupTargetUsers = callPickupTargetUsers;
     this.onlineCallRecordEnabled = onlineCallRecordEnabled;
+    this.ringSeconds = ringSeconds;
 
     this.sipLines = sipLines || [];
   }
