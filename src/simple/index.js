@@ -1,5 +1,5 @@
 /* global window */
-import Auth, { InvalidSubscription, InvalidAuthorization } from './Auth';
+import Auth, { InvalidSubscription, InvalidAuthorization, NoTenantIdError } from './Auth';
 import Phone from './Phone';
 import Websocket from './Websocket';
 import Room from './room/Room';
@@ -103,6 +103,7 @@ const Wazo = {
   InvalidAuthorization,
   CanceledCallError,
   SFUNotAvailableError,
+  NoTenantIdError,
 };
 
 if (window) {

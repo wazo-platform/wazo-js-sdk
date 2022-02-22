@@ -1,7 +1,7 @@
 // @flow
 /* eslint-disable max-classes-per-file */
 import Session from '../domain/Session';
-import { DETAULT_EXPIRATION } from '../api/auth';
+import { BACKEND_LDAP_USER, DEFAULT_BACKEND_USER, DETAULT_EXPIRATION } from '../api/auth';
 import getApiClient, {
   setCurrentServer,
   setApiToken,
@@ -17,6 +17,7 @@ import Wazo from './index';
 
 export class InvalidSubscription extends Error {}
 export class InvalidAuthorization extends Error {}
+export class NoTenantIdError extends Error {}
 
 const logger = IssueReporter.loggerFor('simple-auth');
 
@@ -30,11 +31,15 @@ class Auth {
   onRefreshTokenCallback: ?Function;
   authenticated: boolean;
   mobile: boolean;
+  BACKEND_WAZO: string;
+  BACKEND_LDAP: string;
 
   constructor() {
     this.expiration = DETAULT_EXPIRATION;
     this.authenticated = false;
     this.minSubscriptionType = null;
+    this.BACKEND_WAZO = DEFAULT_BACKEND_USER;
+    this.BACKEND_LDAP = BACKEND_LDAP_USER;
   }
 
   init(clientId: string,
@@ -67,12 +72,18 @@ class Auth {
     setFetchOptions(options);
   }
 
-  async logIn(username: string, password: string) {
+  async logIn(username: string, password: string, backend?: string, tenantId?: string) {
+    if (backend && backend !== this.BACKEND_WAZO && !tenantId) {
+      throw new NoTenantIdError('No tenant id');
+    }
+
     this.authenticated = false;
     this.session = null;
     const rawSession = await getApiClient().auth.logIn({
       username,
       password,
+      backend,
+      tenantId,
       expiration: this.expiration,
       mobile: this.mobile,
     });
