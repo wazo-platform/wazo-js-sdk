@@ -73,6 +73,10 @@ export default class AdHocAPIConference {
     this.conferenceId = conferenceId || '';
     this.muted = muted || false;
     this.paused = paused || false;
+
+    if (this.host) {
+      this.host.setIsConference(true);
+    }
   }
 
   async start() {
