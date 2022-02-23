@@ -27,7 +27,7 @@ export type ConferenceArguments = {
   finished?: boolean,
   participants: {[string]: CallSession};
   started?: boolean,
-  startTime?: ?number,
+  answerTime?: ?number,
   conferenceId?: ?string,
   muted?: boolean,
   paused?: boolean,
@@ -47,7 +47,7 @@ export default class AdHocAPIConference {
 
   conferenceId: string;
 
-  startTime: ?number;
+  answerTime: ?number;
 
   muted: boolean;
 
@@ -59,7 +59,7 @@ export default class AdHocAPIConference {
     participants,
     started,
     finished,
-    startTime,
+    answerTime,
     conferenceId,
     muted,
     paused,
@@ -69,7 +69,7 @@ export default class AdHocAPIConference {
     this.participants = participants || {};
     this.started = started || false;
     this.finished = finished || false;
-    this.startTime = startTime;
+    this.answerTime = answerTime;
     this.conferenceId = conferenceId || '';
     this.muted = muted || false;
     this.paused = paused || false;
@@ -82,7 +82,7 @@ export default class AdHocAPIConference {
   async start() {
     this.started = true;
     // $FlowFixMe
-    this.startTime = Object.values(this.participants).length ? Object.values(this.participants)[0].startTime : null;
+    this.answerTime = Object.values(this.participants).length ? Object.values(this.participants)[0].answerTime : null;
 
     const participantIds = Object.keys(this.participants);
     const conference = await getApiClient().calld.createAdHocConference(this.host.callId, participantIds);

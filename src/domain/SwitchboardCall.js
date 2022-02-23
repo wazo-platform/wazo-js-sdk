@@ -28,7 +28,7 @@ type SwitchboardCallArguments = {
   callSession: ?CallSession,
   callerIdName: ?string,
   callerIdNumber: ?string,
-  startTime: ?Date,
+  answerTime: ?Date,
   participantId: ?string,
   state: string,
   switchboardName: string,
@@ -54,7 +54,7 @@ class SwitchboardCall {
   callSession: ?CallSession;
   callerIdName: ?string;
   callerIdNumber: ?string;
-  startTime: ?Date;
+  answerTime: ?Date;
   participantId: ?string;
   state: string;
   switchboardName: string;
@@ -68,7 +68,7 @@ class SwitchboardCall {
       callerIdName: plain.caller_id_name || null,
       callerIdNumber: plain.caller_id_number || null,
       participantId: plain.participantId || null,
-      startTime: plain.startTime,
+      answerTime: plain.startTime,
       state: plain.state,
       switchboardName: plain.switchboardName,
       switchboardUuid: plain.switchboardUuid,
@@ -81,7 +81,7 @@ class SwitchboardCall {
     callerIdName,
     callerIdNumber,
     participantId,
-    startTime,
+    answerTime,
     state,
     switchboardName,
     switchboardUuid,
@@ -91,7 +91,7 @@ class SwitchboardCall {
     this.callerIdName = callerIdName;
     this.callerIdNumber = callerIdNumber;
     this.participantId = participantId;
-    this.startTime = startTime;
+    this.answerTime = answerTime;
     this.state = state;
     this.switchboardName = switchboardName;
     this.switchboardUuid = switchboardUuid;
