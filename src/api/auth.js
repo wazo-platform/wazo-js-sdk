@@ -16,7 +16,8 @@ import type {
 } from '../domain/types';
 import Session from '../domain/Session';
 
-const DEFAULT_BACKEND_USER = 'wazo_user';
+export const DEFAULT_BACKEND_USER = 'wazo_user';
+export const BACKEND_LDAP_USER = 'ldap_user';
 export const DETAULT_EXPIRATION = 3600;
 
 export default (client: ApiRequester, baseUrl: string) => ({
