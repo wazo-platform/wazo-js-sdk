@@ -55,6 +55,7 @@ export default class ApiClient {
   onRefreshToken: ?Function;
   refreshExpiration: ?number;
   refreshBackend: ?string;
+  refreshTenantId: ?string;
   isMobile: boolean;
   fetchOptions: Object;
 
@@ -95,6 +96,7 @@ export default class ApiClient {
     logger.info('refresh token callback called', {
       refreshToken: this.refreshToken,
       refreshBackend: this.refreshBackend,
+      refreshTenantId: this.refreshTenantId,
       refreshExpiration: this.refreshExpiration,
       isMobile: this.isMobile,
     });
@@ -108,6 +110,7 @@ export default class ApiClient {
       this.refreshBackend,
       this.refreshExpiration,
       this.isMobile,
+      this.refreshTenantId,
     );
 
     logger.info('token refreshed', { token: session.token });
@@ -147,6 +150,10 @@ export default class ApiClient {
 
   setRefreshBackend(refreshBackend: string) {
     this.refreshBackend = refreshBackend;
+  }
+
+  setRefreshTenantId(tenantId: ?string) {
+    this.refreshTenantId = tenantId;
   }
 
   setIsMobile(isMobile: boolean) {
