@@ -67,12 +67,14 @@ export default (client: ApiRequester, baseUrl: string) => ({
     backend: string,
     expiration: number,
     isMobile: boolean = false,
+    tenantId: ?string,
   ): Promise<?Session> => {
     const body: Object = {
       backend: backend || DEFAULT_BACKEND_USER,
       expiration: expiration || DETAULT_EXPIRATION,
       refresh_token: refreshToken,
       client_id: client.clientId,
+      tenant_id: tenantId,
     };
 
     const headers: Object = {

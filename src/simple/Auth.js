@@ -87,6 +87,13 @@ class Auth {
       expiration: this.expiration,
       mobile: this.mobile,
     });
+
+    if (backend) {
+      getApiClient().setRefreshBackend(backend);
+    }
+
+    getApiClient().setRefreshTenantId(tenantId);
+
     return this._onAuthenticated(rawSession);
   }
 
