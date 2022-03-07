@@ -225,7 +225,7 @@ Wazo.Auth.fetchOptions({
 
 ### Authenticating an user
 ```js
-const session = await Wazo.Auth.logIn(username, password);
+const session = await Wazo.Auth.logIn(username, password, backend, tenantId);
 ```
 
 - `username`: string
@@ -239,6 +239,7 @@ const session = await Wazo.Auth.logIn(username, password);
 
 - `tenantId`: string
   - Optional string. The tenant identifier (uuid or slug). Needed when backend is external (not wazo_user)
+
 Returns as `Wazo.domain.Session`. This object contains, among other information, the user's token.
 
 Note: you need to set `clientId` in your WazoAPIClient in order to get a refresh token in the returned `Session`.
