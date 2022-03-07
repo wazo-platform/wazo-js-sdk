@@ -1,5 +1,5 @@
 // @flow
-/* eslint-disable class-methods-use-this, no-param-reassign, max-classes-per-file */
+/* eslint-disable class-methods-use-this, no-param-reassign, max-classes-per-file, no-underscore-dangle */
 /* global window, document, navigator */
 import 'webrtc-adapter';
 import type InviterInviteOptions from 'sip.js/lib/api/inviter-invite-options';
@@ -2084,11 +2084,14 @@ export default class WebRTCClient extends Emitter {
   }
 
   async _disconnectTransport(force: boolean = false) {
-    if (force) {
+    if (force && this.userAgent && this.userAgent.transport) {
       // Bypass sip.js state machine that prevent to close WS with the state `Connecting`
       this.userAgent.transport.disconnectResolve = () => {};
-      // eslint-disable-next-line
-      this.userAgent.transport._ws.close(1000);
+
+      if (this.userAgent.transport._ws) {
+        this.userAgent.transport._ws.close(1000);
+      }
+
       return;
     }
 

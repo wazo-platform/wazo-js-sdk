@@ -1563,7 +1563,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     });
 
     this.client.on(this.client.DISCONNECTED, () => {
-      logger.info('WebRTC client disconnected');
+      logger.warn('WebRTC client disconnected');
 
       this.eventEmitter.emit(ON_UNREGISTERED);
 
