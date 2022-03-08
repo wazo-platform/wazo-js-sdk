@@ -15,6 +15,7 @@ type CallResponse = {
   dialed_extension: string,
   status: string,
   is_caller: boolean,
+  is_video?: boolean,
   line_id: ?number,
   creation_time: string,
   on_hold: boolean,
@@ -27,6 +28,7 @@ type CallArguments = {
   id: string,
   sipCallId: string,
   isCaller: boolean,
+  isVideo?: boolean,
   callerName: string,
   callerNumber: string,
   calleeName: string,
@@ -53,6 +55,7 @@ export default class Call {
   dialedExtension: string;
   lineId: ?number;
   isCaller: boolean;
+  isVideo: boolean;
   onHold: boolean;
   muted: boolean;
   status: string;
@@ -77,6 +80,7 @@ export default class Call {
       calleeNumber: plain.peer_caller_id_number,
       dialedExtension: plain.dialed_extension,
       isCaller: plain.is_caller,
+      isVideo: plain.is_video,
       muted: plain.muted,
       onHold: plain.on_hold,
       status: plain.status,
@@ -100,6 +104,7 @@ export default class Call {
     calleeNumber,
     dialedExtension,
     isCaller,
+    isVideo,
     lineId,
     muted,
     onHold,
@@ -123,6 +128,7 @@ export default class Call {
     this.startingTime = startingTime;
     this.talkingToIds = talkingToIds || [];
     this.recording = recording;
+    this.isVideo = !!isVideo;
 
     // Useful to compare instead of instanceof with minified code
     this.type = 'Call';
