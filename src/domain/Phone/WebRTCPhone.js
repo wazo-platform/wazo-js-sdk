@@ -543,7 +543,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         // When stopping screenshare and we had video before that, we have to re-upgrade
         // When upgrading directly to screenshare (eg: we don't have a videoLocalStream to replace)
         // We have to downgrade to audio.
-        const screenshareStopped = this.currentScreenShare.sender && this.currentScreenShare.hadVideo;
+        const screenshareStopped = this.currentScreenShare.hadVideo;
         const constraints = { audio: false, video: screenshareStopped };
 
         // We have to remove the video sender to be able to re-upgrade to video in `sendReinvite` below
@@ -987,7 +987,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     logger.info('WebRTC hold sip session', { sipId: sipSession.id, hasVideo });
 
-    // Stop screenshre if needed
+    // Stop screenshare if needed
     if (this.currentScreenShare && this.currentScreenShare.sipSessionId === sessionId) {
       this.lastScreenShare = this.currentScreenShare;
       await this.stopScreenSharing(false, callSession);
@@ -1563,7 +1563,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     });
 
     this.client.on(this.client.DISCONNECTED, () => {
-      logger.warn('WebRTC client disconnected');
+      logger.info('WebRTC client disconnected');
 
       this.eventEmitter.emit(ON_UNREGISTERED);
 
