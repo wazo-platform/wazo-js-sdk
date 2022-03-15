@@ -1751,7 +1751,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       endTime: fromSession ? fromSession.endTime : null,
       answered: state === SessionState.Established,
       paused: this.client.isCallHeld(sipSession),
-      isCaller: 'incoming' in extra ? !extra.incoming : false,
+      isCaller: fromSession ? fromSession.isCaller : ('incoming' in extra ? !extra.incoming : false),
       cameraEnabled: fromSession ? fromSession.isCameraEnabled() : this.client.hasVideo(sessionId),
       number,
       ringing: false,
