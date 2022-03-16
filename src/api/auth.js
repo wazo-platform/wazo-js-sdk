@@ -74,8 +74,11 @@ export default (client: ApiRequester, baseUrl: string) => ({
       expiration: expiration || DETAULT_EXPIRATION,
       refresh_token: refreshToken,
       client_id: client.clientId,
-      tenant_id: tenantId,
     };
+
+    if (tenantId) {
+      body.tenant_id = tenantId;
+    }
 
     const headers: Object = {
       'Content-Type': 'application/json',

@@ -10,7 +10,9 @@ global.wazoClients = global.wazoClients || {};
 global.wazoClientId = global.wazoClientId || {};
 global.wazoClientToken = global.wazoClientToken || {};
 global.wazoRefreshToken = global.wazoRefreshToken || {};
+global.wazoRefreshTenantId = global.wazoRefreshTenantId || {};
 global.wazoOnRefreshToken = global.wazoOnRefreshToken || {};
+global.wazoOnRefreshTokenError = global.wazoOnRefreshTokenError || {};
 global.wazoRefreshExpiration = global.wazoRefreshExpiration || {};
 global.wazoRefreshBackend = global.wazoRefreshBackend || {};
 global.wazoIsMobile = global.wazoIsMobile || {};
@@ -32,8 +34,16 @@ export const setRefreshToken = (newRefreshToken: ?string, forServer: ?string = n
   global.wazoRefreshToken[forServer] = newRefreshToken;
 };
 
+export const setRefreshTenantId = (refreshTenantId: ?string, forServer: ?string = null) => {
+  global.wazoRefreshTenantId[forServer] = refreshTenantId;
+};
+
 export const setOnRefreshToken = (onRefreshToken: Function, forServer: ?string = null) => {
   global.wazoOnRefreshToken[forServer] = onRefreshToken;
+};
+
+export const setOnRefreshTokenError = (callback: Function, forServer: ?string = null) => {
+  global.wazoOnRefreshTokenError[forServer] = callback;
 };
 
 export const setRefreshExpiration = (refreshExpiration: number, forServer: ?string = null) => {
@@ -62,10 +72,18 @@ const fillClient = (apiClient: WazoApiClient) => {
 
   apiClient.setRefreshToken(global.wazoRefreshToken[server] || global.wazoRefreshToken[null] || apiClient.refreshToken);
 
+  apiClient.setRefreshTenantId(
+    global.wazoRefreshTenantId[server] || global.wazoRefreshTenantId[null] || apiClient.refreshTenantId,
+  );
+
   apiClient.setFetchOptions(global.wazoFetchOptions[server] || global.wazoFetchOptions[null] || apiClient.fetchOptions);
 
   apiClient.setOnRefreshToken(
     global.wazoOnRefreshToken[server] || global.wazoOnRefreshToken[null] || apiClient.onRefreshToken,
+  );
+
+  apiClient.setOnRefreshTokenError(
+    global.wazoOnRefreshTokenError[server] || global.wazoOnRefreshTokenError[null] || apiClient.onRefreshTokenError,
   );
 
   apiClient.setRefreshExpiration(
@@ -81,7 +99,7 @@ const fillClient = (apiClient: WazoApiClient) => {
   return apiClient;
 };
 
-export default (forServer: ?string): WazoApiClient => {
+export default (forServer: ?string = null): WazoApiClient => {
   const server: string = forServer || global.wazoCurrentServer || '';
   if (server in global.wazoClients) {
     return fillClient(global.wazoClients[server]);

@@ -53,6 +53,7 @@ export default class ApiClient {
 
   refreshToken: ?string;
   onRefreshToken: ?Function;
+  onRefreshTokenError: ?Function;
   refreshExpiration: ?number;
   refreshBackend: ?string;
   refreshTenantId: ?string;
@@ -105,23 +106,31 @@ export default class ApiClient {
       return null;
     }
 
-    const session = await this.auth.refreshToken(
-      this.refreshToken,
-      this.refreshBackend,
-      this.refreshExpiration,
-      this.isMobile,
-      this.refreshTenantId,
-    );
+    try {
+      const session = await this.auth.refreshToken(
+        this.refreshToken,
+        this.refreshBackend,
+        this.refreshExpiration,
+        this.isMobile,
+        this.refreshTenantId,
+      );
 
-    logger.info('token refreshed', { token: session.token });
+      logger.info('token refreshed', { token: session.token });
 
-    if (this.onRefreshToken) {
-      this.onRefreshToken(session.token, session);
+      if (this.onRefreshToken) {
+        this.onRefreshToken(session.token, session);
+      }
+
+      this.setToken(session.token);
+
+      return session.token;
+    } catch (error) {
+      logger.error('token refresh, error', error);
+
+      if (this.onRefreshTokenError) {
+        this.onRefreshTokenError(error);
+      }
     }
-
-    this.setToken(session.token);
-
-    return session.token;
   }
 
   setToken(token: string) {
@@ -142,6 +151,10 @@ export default class ApiClient {
 
   setOnRefreshToken(onRefreshToken: Function) {
     this.onRefreshToken = onRefreshToken;
+  }
+
+  setOnRefreshTokenError(callback: Function) {
+    this.onRefreshTokenError = callback;
   }
 
   setRefreshExpiration(refreshExpiration: number) {

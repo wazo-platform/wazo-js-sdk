@@ -10,6 +10,8 @@ import getApiClient, {
   setRefreshExpiration,
   setOnRefreshToken,
   setFetchOptions,
+  setRefreshTenantId,
+  setOnRefreshTokenError,
 } from '../service/getApiClient';
 import IssueReporter from '../service/IssueReporter';
 
@@ -29,6 +31,7 @@ class Auth {
   host: ?string;
   session: ?Session;
   onRefreshTokenCallback: ?Function;
+  onRefreshTokenCallbackError: ?Function;
   authenticated: boolean;
   mobile: boolean;
   BACKEND_WAZO: string;
@@ -64,6 +67,14 @@ class Auth {
 
       if (this.onRefreshTokenCallback) {
         this.onRefreshTokenCallback(token, session);
+      }
+    });
+
+    setOnRefreshTokenError(error => {
+      logger.error('on refresh token error', error);
+
+      if (this.onRefreshTokenCallbackError) {
+        this.onRefreshTokenCallbackError(error);
       }
     });
   }
@@ -154,6 +165,10 @@ class Auth {
     this.onRefreshTokenCallback = callback;
   }
 
+  setOnRefreshTokenError(callback: Function) {
+    this.onRefreshTokenCallbackError = callback;
+  }
+
   checkAuthorizations(session: Session, authorizationName: ?string) {
     if (!authorizationName) {
       return;
@@ -184,6 +199,12 @@ class Auth {
 
   setRefreshToken(refreshToken: string) {
     setRefreshToken(refreshToken);
+  }
+
+  setRefreshTenantId(refreshTenantId: string) {
+    setRefreshTenantId(refreshTenantId);
+
+    getApiClient().setRefreshTenantId(refreshTenantId);
   }
 
   forceRefreshToken() {
