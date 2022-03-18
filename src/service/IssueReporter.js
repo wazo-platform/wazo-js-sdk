@@ -330,18 +330,23 @@ class IssueReporter {
 
       setTimeout(() => {
         if (isArray) {
-          payload = payload.map(message => {
-            message._retry = retry + 1;
-            return message;
-          });
-        } else {
-          // $FlowFixMe
-          payload._retry = retry + 1;
+          payload = payload.map(message => this._writeRetryCount(message, retry + 1));
+        } else if (payload && typeof payload === 'object') {
+          payload = this._writeRetryCount(payload, retry + 1);
         }
 
         this._sendDebugToGrafana(payload, retry + 1);
       }, 5000 + retry * 1000);
     });
+  }
+
+  _writeRetryCount = (message: string | Object, count: number): string | Object => {
+    if (message && typeof message === 'object') {
+      // $FlowFixMe
+      message._retry = count;
+    }
+
+    return message;
   }
 
   _isLevelAbove(level1: string, level2: string) {

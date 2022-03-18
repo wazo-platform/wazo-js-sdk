@@ -100,4 +100,10 @@ describe('IssueReporter', () => {
     expect(IssueReporter.removeSlashes('\"')).toBe("'");
     expect(IssueReporter.removeSlashes('\\\"')).toBe("'");
   });
+
+  it('Add retry count', () => {
+    expect(IssueReporter._writeRetryCount('', 1)).toBe('');
+    expect(IssueReporter._writeRetryCount('{}', 1)).toBe('{}');
+    expect(IssueReporter._writeRetryCount({}, 1)).toEqual({ _retry: 1 });
+  });
 });
