@@ -771,8 +771,10 @@ export default class WebRTCClient extends Emitter {
       conference: isConference,
     };
 
-    // Avoid sdh to created a new stream
-    session.sessionDescriptionHandler.localMediaStreamConstraints = options.constraints;
+    // Avoid sdh to create a new stream
+    if (session.sessionDescriptionHandler) {
+      session.sessionDescriptionHandler.localMediaStreamConstraints = options.constraints;
+    }
 
     // Send re-INVITE
     return session.invite(options);
