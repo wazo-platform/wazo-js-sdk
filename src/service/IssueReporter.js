@@ -340,7 +340,7 @@ class IssueReporter {
     });
   }
 
-  _writeRetryCount = (message: string | Object, count: number): string | Object => {
+  _writeRetryCount(message: string | Object, count: number): string | Object {
     if (message && typeof message === 'object') {
       // $FlowFixMe
       message._retry = count;

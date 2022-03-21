@@ -356,7 +356,7 @@ class WebSocketClient extends Emitter {
       this.close();
     }
     const url = `wss://${this.host || ''}/api/websocketd/?token=${this.token || ''}&version=${this.version}`;
-    logger.log('Wazo WS url computed to reconnect', { url });
+    logger.info('Wazo WS url computed to reconnect', { url });
 
     return url;
   }
