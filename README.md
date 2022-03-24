@@ -57,6 +57,7 @@ Wazo's Javascript SDK allows you to use these features :
       - [Participant](#participant)
       - [Participant events](#participant-events)
       - [Stream](#stream)
+    + [Softphone integration](#softphone-integration)
   * [Advanced API](#advanced-api)
     + [Libraries](#libraries)
       - [Require / Import](#require--import)
@@ -598,6 +599,71 @@ Returns a `htmlElement` (audio or video) attached to the stream.
 Detaches a stream from an existing htmlElement.
 
 - `htmlElement`: htmlElement.
+
+### Softphone integration
+
+To be able to integrate Wazo softphone in any web page, you can add :
+
+```js
+Wazo.Softphone.init([url], [width], [height]);
+  - `url`: Url of the softphone to be loaded in the iframe (optional).
+  - `width`: Width (in px) of the softphone (optional).
+  - `height`: Height (in px) of the softphone (optional).
+```
+
+#### Methods
+
+##### Making a call
+```js
+Wazo.Softphone.makeCall(number);
+```
+- `number`: Number to call through the softphone
+
+##### Showing / hidding the softphone
+```js
+Wazo.Softphone.toggleSoftphoneDisplay();
+Wazo.Softphone.displaySoftphone();
+Wazo.Softphone.hideSoftphone();
+```
+
+##### Parsing links on the page
+```js
+Wazo.Softphone.parseLinks();
+```
+
+Each link with a `href="tel:"` or  `href="callto:"` will make a call through the softphone.
+
+#### Callbacks
+
+You can listen to softphone callback, with :
+
+```js
+Wazo.Softphone.onLinkEnabled = link => {
+  // link is `<a>` html tag in the page with a href="tel:xx" (or callto:xxx) beeing processed
+  // You can make change here, like addind className, etc ...
+};
+
+Softphone.onCallIncoming = call => {
+  // Invocked when a call is incoming in the softphone
+  // You can make action here like redirecting to the contact page (by using `call.number).
+};
+
+Softphone.onCallEnded = call => {
+  // Invocked when the call is ended
+};
+
+Softphone.onCallMade = call => {
+  // Invocked when an outgoing call is made
+};
+
+Softphone.onAuthenticated = session => {
+  // Invocked when the user is authenticated in the softphone
+};
+
+Softphone.onLoggedOut = session => {
+  // Invocked when the user is is logged out in the softphone
+};
+```
 
 ## Advanced API
 

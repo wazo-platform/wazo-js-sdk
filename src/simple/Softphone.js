@@ -6,6 +6,7 @@ const SDK_ON_CALL_MADE = 'sdk/SDK_ON_CALL_MADE';
 const SDK_CALL_ENDED = 'sdk/ON_CALL_ENDED';
 const SDK_CALL_INCOMING = 'sdk/SDK_CALL_INCOMING';
 const SDK_AUTHENTICATED = 'sdk/SDK_AUTHENTICATED';
+const SDK_LOGGED_OUT = 'sdk/SDK_LOGGED_OUT';
 
 class Softphone {
   url: string = 'https://softphone.wazo.io';
@@ -20,6 +21,7 @@ class Softphone {
   onCallIncoming(call: Object) {}
   onCallEnded(call: Object, card: Object, direction: string, fromExtension: string) {}
   onAuthenticated(session: Object) {}
+  onLoggedOut() {}
 
   init(url: string, width: number, height: number) {
     if (url) {
@@ -61,8 +63,6 @@ class Softphone {
     } else {
       this.displaySoftphone();
     }
-
-    this.displayed = !this.displayed;
   }
 
   displaySoftphone() {
@@ -73,12 +73,15 @@ class Softphone {
     if (this.iframe) {
       this.iframe.style.display = 'block';
     }
+
+    this.displayed = true;
   }
 
   hideSoftphone() {
     if (this.iframe) {
       this.iframe.style.display = 'none';
     }
+    this.displayed = false;
   }
 
   _createIframe() {
@@ -138,6 +141,9 @@ class Softphone {
         // $FlowFixMe
         this._onAuthenticated(event.data.session);
         this.onAuthenticated(event.data.session);
+        break;
+      case SDK_LOGGED_OUT:
+        this.onLoggedOut();
         break;
       default:
         break;
