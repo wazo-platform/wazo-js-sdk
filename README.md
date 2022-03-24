@@ -605,10 +605,16 @@ Detaches a stream from an existing htmlElement.
 To be able to integrate Wazo softphone in any web page, you can add :
 
 ```js
-Wazo.Softphone.init([url], [width], [height]);
-  - `url`: Url of the softphone to be loaded in the iframe (optional).
-  - `width`: Width (in px) of the softphone (optional).
-  - `height`: Height (in px) of the softphone (optional).
+Wazo.Softphone.init({ 
+  url, //  Url of the softphone to be loaded in the iframe (optional).
+  width, // Width (in px) of the softphone (optional).
+  height, // Height (in px) of the softphone (optional).
+  server, // Stack host where the softphone should connect user  (optional).
+  port, // Stack port where the softphone should connect user  (optional).
+  language, // Softphone language (optional).
+  wrapUpDuration, // How long (in seconds) should the softphone display the card after the call (optional).
+  // When the user changes anything on the card, this timeout is canceled
+});
 ```
 
 #### Methods

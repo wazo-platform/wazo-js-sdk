@@ -1,6 +1,7 @@
 // @flow
 /* eslint-disable no-unused-vars */
 /* global window, document */
+const BRIDGE_CONFIG_RETRIEVED = 'bridge/CONFIG_RETRIEVED';
 const SDK_CLICK_TO_CALL = 'sdk/CLICK_TO_CALL';
 const SDK_ON_CALL_MADE = 'sdk/SDK_ON_CALL_MADE';
 const SDK_CALL_ENDED = 'sdk/ON_CALL_ENDED';
@@ -23,7 +24,8 @@ class Softphone {
   onAuthenticated(session: Object) {}
   onLoggedOut() {}
 
-  init(url: string, width: number, height: number) {
+  init({ url, width, height, server, port, language, wrapUpDuration, shouldDisplayLinkedEntities,
+    allowContactCreation }: Object = {}) {
     if (url) {
       this.url = url;
     }
@@ -36,7 +38,23 @@ class Softphone {
 
     window.addEventListener('message', this._onMessage.bind(this), false);
 
-    this._createIframe();
+    if (!server) {
+      // eslint-disable-next-line no-param-reassign
+      server = 'stack.dev.wazo.io';
+    }
+
+    this._createIframe(() => {
+      this._sendMessage(BRIDGE_CONFIG_RETRIEVED, {
+        config: {
+          server,
+          port,
+          language,
+          wrapUpDuration,
+          shouldDisplayLinkedEntities,
+          allowContactCreation,
+        },
+      });
+    });
   }
 
   parseLinks() {
@@ -52,9 +70,7 @@ class Softphone {
   makeCall(number: string) {
     this.displaySoftphone();
 
-    if (this.iframe) {
-      this.iframe.contentWindow.postMessage({ type: SDK_CLICK_TO_CALL, number }, '*');
-    }
+    this._sendMessage(SDK_CLICK_TO_CALL, { number });
   }
 
   toggleSoftphoneDisplay() {
@@ -84,7 +100,7 @@ class Softphone {
     this.displayed = false;
   }
 
-  _createIframe() {
+  _createIframe(cb: Function = () => {}) {
     this.iframe = document.createElement('iframe');
     // $FlowFixMe
     this.iframe.width = this.width;
@@ -96,9 +112,12 @@ class Softphone {
     this.iframe.style.left = '0';
     this.iframe.style.bottom = '0';
     this.iframe.style.border = '1px solid #aaa';
+    this.iframe.style.backgroundColor = 'white';
     this.iframe.src = this.url;
     this.iframe.style.display = 'none';
     this.iframe.id = 'wazo-softphone';
+
+    this.iframe.onload = cb;
 
     // $FlowFixMe
     document.body.appendChild(this.iframe);
@@ -147,6 +166,12 @@ class Softphone {
         break;
       default:
         break;
+    }
+  }
+
+  _sendMessage(type: string, payload: Object = {}) {
+    if (this.iframe) {
+      this.iframe.contentWindow.postMessage({ type, ...payload }, '*');
     }
   }
 }
