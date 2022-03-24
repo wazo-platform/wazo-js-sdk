@@ -614,6 +614,7 @@ Wazo.Softphone.init({
   language, // Softphone language (optional).
   wrapUpDuration, // How long (in seconds) should the softphone display the card after the call (optional).
   // When the user changes anything on the card, this timeout is canceled
+  withCard, // boolean: ask the softphone to display a form during and after the call to log infornation (optional).
 });
 ```
 
@@ -654,8 +655,12 @@ Softphone.onCallIncoming = call => {
   // You can make action here like redirecting to the contact page (by using `call.number).
 };
 
-Softphone.onCallEnded = call => {
+Softphone.onCallEnded = (call, card, direction) => {
   // Invocked when the call is ended
+};
+
+Softphone.onCardSaved = card => {
+  // Invocked when the user save the card at the end of the call
 };
 
 Softphone.onCallMade = call => {

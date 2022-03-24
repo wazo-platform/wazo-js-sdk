@@ -2,6 +2,9 @@
 /* eslint-disable no-unused-vars */
 /* global window, document */
 const BRIDGE_CONFIG_RETRIEVED = 'bridge/CONFIG_RETRIEVED';
+const BRIDGE_ENABLE_CARD = 'bridge/ENABLE_CARD';
+const BRIDGE_CHANGE_REQUIRED_SUBSCRIPTION_TYPE = 'bridge/CHANGE_REQUIRED_SUBSCRIPTION_TYPE';
+const BRIDGE_CREATE_OR_UPDATE_CARD = 'bridge/BRIDGE_CREATE_OR_UPDATE_CARD';
 const SDK_CLICK_TO_CALL = 'sdk/CLICK_TO_CALL';
 const SDK_ON_CALL_MADE = 'sdk/SDK_ON_CALL_MADE';
 const SDK_CALL_ENDED = 'sdk/ON_CALL_ENDED';
@@ -21,11 +24,12 @@ class Softphone {
   onCallMade(call: Object) {}
   onCallIncoming(call: Object) {}
   onCallEnded(call: Object, card: Object, direction: string, fromExtension: string) {}
+  onCardSaved(card: Object) {}
   onAuthenticated(session: Object) {}
   onLoggedOut() {}
 
   init({ url, width, height, server, port, language, wrapUpDuration, shouldDisplayLinkedEntities,
-    allowContactCreation }: Object = {}) {
+    allowContactCreation, withCard, subscriptionType }: Object = {}) {
     if (url) {
       this.url = url;
     }
@@ -54,6 +58,14 @@ class Softphone {
           allowContactCreation,
         },
       });
+
+      if (withCard) {
+        this._sendMessage(BRIDGE_ENABLE_CARD);
+      }
+
+      if (subscriptionType) {
+        this._sendMessage(BRIDGE_CHANGE_REQUIRED_SUBSCRIPTION_TYPE, { subscriptionType });
+      }
     });
   }
 
@@ -164,6 +176,11 @@ class Softphone {
       case SDK_LOGGED_OUT:
         this.onLoggedOut();
         break;
+      case BRIDGE_CREATE_OR_UPDATE_CARD: {
+        const { content } = event.data;
+        this.onCardSaved(content);
+        break;
+      }
       default:
         break;
     }
