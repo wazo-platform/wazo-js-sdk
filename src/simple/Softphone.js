@@ -5,6 +5,11 @@ const BRIDGE_CONFIG_RETRIEVED = 'bridge/CONFIG_RETRIEVED';
 const BRIDGE_ENABLE_CARD = 'bridge/ENABLE_CARD';
 const BRIDGE_CHANGE_REQUIRED_SUBSCRIPTION_TYPE = 'bridge/CHANGE_REQUIRED_SUBSCRIPTION_TYPE';
 const BRIDGE_CREATE_OR_UPDATE_CARD = 'bridge/BRIDGE_CREATE_OR_UPDATE_CARD';
+const BRIDGE_OPTIONS_FETCHED = 'bridge/BRIDGE_OPTIONS_FETCHED';
+const BRIDGE_OPTIONS_FOUND = 'bridge/BRIDGE_OPTIONS_FOUND';
+const BRIDGE_SEARCH_OPTIONS = 'bridge/BRIDGE_SEARCH_OPTIONS';
+const BRIDGE_DISPLAY_LINKED_OPTION = 'bridge/DISPLAY_LINKED_OPTION';
+const BRIDGE_UPDATE_FORM_SCHEMA = 'bridge/BRIDGE_UPDATE_FORM_SCHEMA';
 const SDK_CLICK_TO_CALL = 'sdk/CLICK_TO_CALL';
 const SDK_ON_CALL_MADE = 'sdk/SDK_ON_CALL_MADE';
 const SDK_CALL_ENDED = 'sdk/ON_CALL_ENDED';
@@ -20,12 +25,15 @@ class Softphone {
   iframe: ?Object = null;
 
   onLinkEnabled(link: Object) {}
+  onIFrameLoaded() {}
 
   onCallMade(call: Object) {}
   onCallIncoming(call: Object) {}
   onCallEnded(call: Object, card: Object, direction: string, fromExtension: string) {}
   onCardSaved(card: Object) {}
   onAuthenticated(session: Object) {}
+  onSearchOptions(fieldId: string, query: string) {}
+  onDisplayLinkedOption(optionId: string) {}
   onLoggedOut() {}
 
   init({ url, width, height, server, port, language, wrapUpDuration, shouldDisplayLinkedEntities,
@@ -66,6 +74,8 @@ class Softphone {
       if (subscriptionType) {
         this._sendMessage(BRIDGE_CHANGE_REQUIRED_SUBSCRIPTION_TYPE, { subscriptionType });
       }
+
+      this.onIFrameLoaded();
     });
   }
 
@@ -110,6 +120,18 @@ class Softphone {
       this.iframe.style.display = 'none';
     }
     this.displayed = false;
+  }
+
+  optionsFetched(fieldId: string, options: any[]) {
+    this._sendMessage(BRIDGE_OPTIONS_FETCHED, { fieldId, options });
+  }
+
+  onOptionsResults(fieldId: string, options: any[]) {
+    this._sendMessage(BRIDGE_OPTIONS_FOUND, { fieldId, options });
+  }
+
+  setFormSchema(schema: Object, uiSchema: Object) {
+    this._sendMessage(BRIDGE_UPDATE_FORM_SCHEMA, { schema, uiSchema });
   }
 
   _createIframe(cb: Function = () => {}) {
@@ -181,15 +203,26 @@ class Softphone {
         this.onCardSaved(content);
         break;
       }
+      case BRIDGE_SEARCH_OPTIONS: {
+        const { fieldId, query } = event.data;
+        this.onSearchOptions(fieldId, query);
+        break;
+      }
+      case BRIDGE_DISPLAY_LINKED_OPTION:
+        this.onDisplayLinkedOption(event.data.linkedOptionId);
+        break;
       default:
         break;
     }
   }
 
   _sendMessage(type: string, payload: Object = {}) {
-    if (this.iframe) {
-      this.iframe.contentWindow.postMessage({ type, ...payload }, '*');
+    if (!this.iframe) {
+      console.warn(`Could not send message of type ${type} to the Wazo Softphone, iframe not created yet`);
+      return;
     }
+
+    this.iframe.contentWindow.postMessage({ type, ...payload }, '*');
   }
 }
 

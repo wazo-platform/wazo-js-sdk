@@ -640,6 +640,65 @@ Wazo.Softphone.parseLinks();
 
 Each link with a `href="tel:"` or  `href="callto:"` will make a call through the softphone.
 
+#### Sending search results to the softphone:
+```js
+Wazo.Softphone.onOptionsResults(fieldId, results);
+```
+
+`onOptionsResults` is used to populate Autocomplete fields
+
+#### Customizing card form
+
+You can use [JSON schema](http://json-schema.org/) to customize the card form with `Softphone.setFormSchema(schema, uiSchema)` :
+
+```js
+Softphone.setFormSchema({
+  type: 'object',
+  required: ['title', 'phone'],
+  properties: {
+    title: { type: 'string', title: 'Title' },
+    phone: { type: 'string', title: 'Phone' },
+    note: { type: 'string', title: 'Note' },
+  },
+}, {
+  note: { 'ui:widget': 'textarea' },
+});
+```
+
+##### Auto complete
+We can use an `autocomplete` widget to be able to search on fields in the `uiSchema`:
+
+```js
+{
+  note :{ 'ui:widget': 'textarea'},
+  clientId :{ 'ui:field': 'autocomplete'},
+};
+```
+
+In the `schema` field, we cam customize if we want to display a `+` button :
+```js
+clientId: {
+  type: 'object',
+  title: 'Client id',
+  // triggers the `onDisplayLinkedOption` event when changing the value
+  triggerDisplay: true,
+  // createForm is another JSON schema the description the add option form.
+  createForm: {
+    optionLabel: '%firstname% %lastname%',
+    schema: {
+      type: 'object',
+      required: ['phone'],
+      properties: {
+        firstname: { type: 'string', title: 'Firstname' },
+        lastname: { type: 'string', title: 'Lastname' },
+        phone: { type: 'string', title: 'Phone' },
+      }
+    },
+    uiSchema: {}
+  },
+}
+```
+
 #### Callbacks
 
 You can listen to softphone callback, with :
@@ -665,6 +724,16 @@ Softphone.onCardSaved = card => {
 
 Softphone.onCallMade = call => {
   // Invocked when an outgoing call is made
+};
+
+Softphone.onSearchOptions = (fieldId: string, query: string) => {
+  // Invocked when the user is making a search from an Autocomplete field in the card form
+  // We need to call `onOptionsResults` here to send results to the softphone
+};
+
+Softphone.onDisplayLinkedOption = (optionId: string) => {
+  // Invocked when the user is selecting a value in a Autocomplete widget
+  // useful to display this entity in your application
 };
 
 Softphone.onAuthenticated = session => {
