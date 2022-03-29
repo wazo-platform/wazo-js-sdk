@@ -736,6 +736,82 @@ Softphone.onDisplayLinkedOption = (optionId: string) => {
   // useful to display this entity in your application
 };
 
+Softphone.onWazoContactSearch = (query: string) => {
+  // Invocked when the user is making a search in the contact page
+};
+
+Softphone.onAgentLoggedIn = () => {
+  // Invocked when the agent logs in
+};
+
+Softphone.onAgentLoggedOut = ) => {
+  // Invocked when the agent logs out
+};
+
+Softphone.onAgentPaused = () => {
+  // Invocked when the user is making a search in the contact page
+};
+
+Softphone.onLanguageChanged = (language: string) => {
+  // Invocked when the user changed the softphone language
+};
+
+Softphone.onCallHeld = () => {
+  // Invocked when the current call is held
+};
+
+Softphone.onCallResumed = () => {
+  // Invocked when the current call is resumed
+};
+
+Softphone.onCallMuted = () => {
+  // Invocked when the current call is muted
+};
+
+Softphone.onCallUnMuted = () => {
+  // Invocked when the current call is un muted
+};
+
+Softphone.onDtmfSent = (tone: string) => {
+  // Invocked when the user is sending a DTMF in the current call
+};
+
+Softphone.onDirectTransfer = (number: string) => {
+  // Invocked when the user is transfers the current call directly
+};
+
+Softphone.onCreateIndirectTransfer = (number: string) => {
+  // Invocked when the user initiates an indirect transfer for the current call
+};
+
+Softphone.onCancelIndirectTransfer = () => {
+  // Invocked when the user cancels the current indirect transfer
+};
+
+Softphone.onConfirmIndirectTransfer = () => {
+  // Invocked when the user confirms the current indirect transfer
+};
+
+Softphone.onIndirectCallMade = (call: Object) => {
+  // Invocked when the current indirect transfer is made
+};
+
+Softphone.onIndirectTransferDone = (call: Object) => {
+  // Invocked when the current indirect transfer is over
+};
+
+Softphone.onStartRecording = () => {
+  // Invocked when the user records the current call
+};
+
+Softphone.onStopRecording = () => {
+  // Invocked when the user stops the record of the current call
+};
+
+Softphone.onWazoContactSearch = (query: string) => {
+  // Invocked when the user is making a search in the contact page
+};
+
 Softphone.onAuthenticated = session => {
   // Invocked when the user is authenticated in the softphone
 };
