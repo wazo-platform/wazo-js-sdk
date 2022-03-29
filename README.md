@@ -666,7 +666,7 @@ Softphone.setFormSchema({
 ```
 
 ##### Auto complete
-We can use an `autocomplete` widget to be able to search on fields in the `uiSchema`:
+We can use an `autocomplete` widget to search on fields in the `uiSchema`:
 
 ```js
 {
@@ -675,7 +675,7 @@ We can use an `autocomplete` widget to be able to search on fields in the `uiSch
 };
 ```
 
-In the `schema` field, we cam customize if we want to display a `+` button :
+In the `schema` field, we can customize if we want to display a `+` button :
 ```js
 clientId: {
   type: 'object',
@@ -710,114 +710,110 @@ Wazo.Softphone.onLinkEnabled = link => {
 };
 
 Softphone.onCallIncoming = call => {
-  // Invocked when a call is incoming in the softphone
+  // Invoked when a call is incoming in the softphone
   // You can make action here like redirecting to the contact page (by using `call.number).
 };
 
 Softphone.onCallEnded = (call, card, direction) => {
-  // Invocked when the call is ended
+  // Invoked when the call is ended
 };
 
 Softphone.onCardSaved = card => {
-  // Invocked when the user save the card at the end of the call
+  // Invoked when the user save the card at the end of the call
 };
 
 Softphone.onCallMade = call => {
-  // Invocked when an outgoing call is made
+  // Invoked when an outgoing call is made
 };
 
 Softphone.onSearchOptions = (fieldId: string, query: string) => {
-  // Invocked when the user is making a search from an Autocomplete field in the card form
+  // Invoked when the user is making a search from an Autocomplete field in the card form
   // We need to call `onOptionsResults` here to send results to the softphone
 };
 
 Softphone.onDisplayLinkedOption = (optionId: string) => {
-  // Invocked when the user is selecting a value in a Autocomplete widget
+  // Invoked when the user is selecting a value in a Autocomplete widget
   // useful to display this entity in your application
 };
 
 Softphone.onWazoContactSearch = (query: string) => {
-  // Invocked when the user is making a search in the contact page
+  // Invoked when the user is searching from contact page
 };
 
 Softphone.onAgentLoggedIn = () => {
-  // Invocked when the agent logs in
+  // Invoked when the agent logs in
 };
 
 Softphone.onAgentLoggedOut = ) => {
-  // Invocked when the agent logs out
+  // Invoked when the agent logs out
 };
 
 Softphone.onAgentPaused = () => {
-  // Invocked when the user is making a search in the contact page
+  // Invoked when the agent is paused
 };
 
 Softphone.onLanguageChanged = (language: string) => {
-  // Invocked when the user changed the softphone language
+  // Invoked when the user changed the softphone language
 };
 
 Softphone.onCallHeld = () => {
-  // Invocked when the current call is held
+  // Invoked when the current call is held
 };
 
 Softphone.onCallResumed = () => {
-  // Invocked when the current call is resumed
+  // Invoked when the current call is resumed
 };
 
 Softphone.onCallMuted = () => {
-  // Invocked when the current call is muted
+  // Invoked when the current call is muted
 };
 
 Softphone.onCallUnMuted = () => {
-  // Invocked when the current call is un muted
+  // Invoked when the current call is un muted
 };
 
 Softphone.onDtmfSent = (tone: string) => {
-  // Invocked when the user is sending a DTMF in the current call
+  // Invoked when the user is sending a DTMF in the current call
 };
 
 Softphone.onDirectTransfer = (number: string) => {
-  // Invocked when the user is transfers the current call directly
+  // Invoked when the user is transfers the current call directly
 };
 
 Softphone.onCreateIndirectTransfer = (number: string) => {
-  // Invocked when the user initiates an indirect transfer for the current call
+  // Invoked when the user initiates an indirect transfer for the current call
 };
 
 Softphone.onCancelIndirectTransfer = () => {
-  // Invocked when the user cancels the current indirect transfer
+  // Invoked when the user cancels the current indirect transfer
 };
 
 Softphone.onConfirmIndirectTransfer = () => {
-  // Invocked when the user confirms the current indirect transfer
+  // Invoked when the user confirms the current indirect transfer
 };
 
 Softphone.onIndirectCallMade = (call: Object) => {
-  // Invocked when the current indirect transfer is made
+  // Invoked when the current indirect transfer is made
 };
 
 Softphone.onIndirectTransferDone = (call: Object) => {
-  // Invocked when the current indirect transfer is over
+  // Invoked when the current indirect transfer is over
 };
 
 Softphone.onStartRecording = () => {
-  // Invocked when the user records the current call
+  // Invoked when the user records the current call
 };
 
 Softphone.onStopRecording = () => {
-  // Invocked when the user stops the record of the current call
-};
-
-Softphone.onWazoContactSearch = (query: string) => {
-  // Invocked when the user is making a search in the contact page
+  // Invoked when the user stops recording the current call
 };
 
 Softphone.onAuthenticated = session => {
-  // Invocked when the user is authenticated in the softphone
+  // Invoked when the user is authenticated in the softphone
 };
 
 Softphone.onLoggedOut = session => {
-  // Invocked when the user is is logged out in the softphone
+  // Invoked when the user is is logged out in the softphone
 };
 ```
 
