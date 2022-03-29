@@ -1617,7 +1617,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   async _onHeartbeatTimeout() {
-    logger.info('sdk webrtc heartbeat timed out', { userAgent: !!this.userAgent, cb: !!this.heartbeatTimeoutCb });
+    logger.warn('sdk webrtc heartbeat timed out', { userAgent: !!this.userAgent, cb: !!this.heartbeatTimeoutCb });
 
     if (this.heartbeatTimeoutCb) {
       this.heartbeatTimeoutCb();

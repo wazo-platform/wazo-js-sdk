@@ -605,10 +605,17 @@ Detaches a stream from an existing htmlElement.
 To be able to integrate Wazo softphone in any web page, you can add :
 
 ```js
-Wazo.Softphone.init([url], [width], [height]);
-  - `url`: Url of the softphone to be loaded in the iframe (optional).
-  - `width`: Width (in px) of the softphone (optional).
-  - `height`: Height (in px) of the softphone (optional).
+Wazo.Softphone.init({ 
+  url, //  Url of the softphone to be loaded in the iframe (optional).
+  width, // Width (in px) of the softphone (optional).
+  height, // Height (in px) of the softphone (optional).
+  server, // Stack host where the softphone should connect user  (optional).
+  port, // Stack port where the softphone should connect user  (optional).
+  language, // Softphone language (optional).
+  wrapUpDuration, // How long (in seconds) should the softphone display the card after the call (optional).
+  // When the user changes anything on the card, this timeout is canceled
+  withCard, // boolean: ask the softphone to display a form during and after the call to log infornation (optional).
+});
 ```
 
 #### Methods
@@ -633,6 +640,65 @@ Wazo.Softphone.parseLinks();
 
 Each link with a `href="tel:"` or  `href="callto:"` will make a call through the softphone.
 
+#### Sending search results to the softphone:
+```js
+Wazo.Softphone.onOptionsResults(fieldId, results);
+```
+
+`onOptionsResults` is used to populate Autocomplete fields
+
+#### Customizing card form
+
+You can use [JSON schema](http://json-schema.org/) to customize the card form with `Softphone.setFormSchema(schema, uiSchema)` :
+
+```js
+Softphone.setFormSchema({
+  type: 'object',
+  required: ['title', 'phone'],
+  properties: {
+    title: { type: 'string', title: 'Title' },
+    phone: { type: 'string', title: 'Phone' },
+    note: { type: 'string', title: 'Note' },
+  },
+}, {
+  note: { 'ui:widget': 'textarea' },
+});
+```
+
+##### Auto complete
+We can use an `autocomplete` widget to search on fields in the `uiSchema`:
+
+```js
+{
+  note :{ 'ui:widget': 'textarea'},
+  clientId :{ 'ui:field': 'autocomplete'},
+};
+```
+
+In the `schema` field, we can customize if we want to display a `+` button :
+```js
+clientId: {
+  type: 'object',
+  title: 'Client id',
+  // triggers the `onDisplayLinkedOption` event when changing the value
+  triggerDisplay: true,
+  // createForm is another JSON schema the description the add option form.
+  createForm: {
+    optionLabel: '%firstname% %lastname%',
+    schema: {
+      type: 'object',
+      required: ['phone'],
+      properties: {
+        firstname: { type: 'string', title: 'Firstname' },
+        lastname: { type: 'string', title: 'Lastname' },
+        phone: { type: 'string', title: 'Phone' },
+      }
+    },
+    uiSchema: {}
+  },
+}
+```
+
 #### Callbacks
 
 You can listen to softphone callback, with :
@@ -644,24 +710,110 @@ Wazo.Softphone.onLinkEnabled = link => {
 };
 
 Softphone.onCallIncoming = call => {
-  // Invocked when a call is incoming in the softphone
+  // Invoked when a call is incoming in the softphone
   // You can make action here like redirecting to the contact page (by using `call.number).
 };
 
-Softphone.onCallEnded = call => {
-  // Invocked when the call is ended
+Softphone.onCallEnded = (call, card, direction) => {
+  // Invoked when the call is ended
+};
+
+Softphone.onCardSaved = card => {
+  // Invoked when the user save the card at the end of the call
 };
 
 Softphone.onCallMade = call => {
-  // Invocked when an outgoing call is made
+  // Invoked when an outgoing call is made
+};
+
+Softphone.onSearchOptions = (fieldId: string, query: string) => {
+  // Invoked when the user is making a search from an Autocomplete field in the card form
+  // We need to call `onOptionsResults` here to send results to the softphone
+};
+
+Softphone.onDisplayLinkedOption = (optionId: string) => {
+  // Invoked when the user is selecting a value in a Autocomplete widget
+  // useful to display this entity in your application
+};
+
+Softphone.onWazoContactSearch = (query: string) => {
+  // Invoked when the user is searching from contact page
+};
+
+Softphone.onAgentLoggedIn = () => {
+  // Invoked when the agent logs in
+};
+
+Softphone.onAgentLoggedOut = ) => {
+  // Invoked when the agent logs out
+};
+
+Softphone.onAgentPaused = () => {
+  // Invoked when the agent is paused
+};
+
+Softphone.onLanguageChanged = (language: string) => {
+  // Invoked when the user changed the softphone language
+};
+
+Softphone.onCallHeld = () => {
+  // Invoked when the current call is held
+};
+
+Softphone.onCallResumed = () => {
+  // Invoked when the current call is resumed
+};
+
+Softphone.onCallMuted = () => {
+  // Invoked when the current call is muted
+};
+
+Softphone.onCallUnMuted = () => {
+  // Invoked when the current call is un muted
+};
+
+Softphone.onDtmfSent = (tone: string) => {
+  // Invoked when the user is sending a DTMF in the current call
+};
+
+Softphone.onDirectTransfer = (number: string) => {
+  // Invoked when the user is transfers the current call directly
+};
+
+Softphone.onCreateIndirectTransfer = (number: string) => {
+  // Invoked when the user initiates an indirect transfer for the current call
+};
+
+Softphone.onCancelIndirectTransfer = () => {
+  // Invoked when the user cancels the current indirect transfer
+};
+
+Softphone.onConfirmIndirectTransfer = () => {
+  // Invoked when the user confirms the current indirect transfer
+};
+
+Softphone.onIndirectCallMade = (call: Object) => {
+  // Invoked when the current indirect transfer is made
+};
+
+Softphone.onIndirectTransferDone = (call: Object) => {
+  // Invoked when the current indirect transfer is over
+};
+
+Softphone.onStartRecording = () => {
+  // Invoked when the user records the current call
+};
+
+Softphone.onStopRecording = () => {
+  // Invoked when the user stops recording the current call
 };
 
 Softphone.onAuthenticated = session => {
-  // Invocked when the user is authenticated in the softphone
+  // Invoked when the user is authenticated in the softphone
 };
 
 Softphone.onLoggedOut = session => {
-  // Invocked when the user is is logged out in the softphone
+  // Invoked when the user is is logged out in the softphone
 };
 ```
 
