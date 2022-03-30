@@ -661,6 +661,17 @@ Wazo.Softphone.injectCss(`
 `);
 ```
 
+#### Override whitelabel
+```js
+Softphone.customizeWhiteLabel({
+  // Theme
+}, {
+  // Translation
+}, {
+  // Assets
+});
+```
+
 `onOptionsResults` is used to populate Autocomplete fields
 
 #### Customizing card form
