@@ -614,7 +614,7 @@ Wazo.Softphone.init({
   language, // Softphone language (optional).
   wrapUpDuration, // How long (in seconds) should the softphone display the card after the call (optional).
   // When the user changes anything on the card, this timeout is canceled
-  withCard, // boolean: ask the softphone to display a form during and after the call to log infornation (optional).
+  enableAgent, // display the agent tab in the tab bar (defaults to true).
 });
 ```
 
@@ -647,9 +647,17 @@ Wazo.Softphone.onOptionsResults(fieldId, results);
 
 `onOptionsResults` is used to populate Autocomplete fields
 
+#### Updating card value:
+```js
+Wazo.Softphone.setCardValue(field, value);
+```
+
+`onOptionsResults` is used to populate Autocomplete fields
+
 #### Customizing card form
 
-You can use [JSON schema](http://json-schema.org/) to customize the card form with `Softphone.setFormSchema(schema, uiSchema)` :
+You can use [JSON schema](http://json-schema.org/) to customize the card form with `Softphone.setFormSchema(schema, uiSchema)`,
+the Softphone uses [React Json schema form](https://react-jsonschema-form.readthedocs.io) internally to display card form :
 
 ```js
 Softphone.setFormSchema({
@@ -744,7 +752,7 @@ Softphone.onAgentLoggedIn = () => {
   // Invoked when the agent logs in
 };
 
-Softphone.onAgentLoggedOut = ) => {
+Softphone.onAgentLoggedOut = () => {
   // Invoked when the agent logs out
 };
 
