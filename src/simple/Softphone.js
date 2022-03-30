@@ -31,6 +31,7 @@ const BRIDGE_ON_STOP_RECORDING = 'bridge/BRIDGE_ON_STOP_RECORDING';
 const BRIDGE_ON_CARD_CANCELED = 'bridge/BRIDGE_ON_CARD_CANCELED';
 const BRIDGE_ENABLE_AGENT = 'bridge/BRIDGE_ENABLE_AGENT';
 const BRIDGE_SET_CARD_CONTENT = 'bridge/BRIDGE_SET_CARD_CONTENT';
+const BRIDGE_INJECT_CSS = 'bridge/BRIDGE_INJECT_CSS';
 
 const SDK_CLICK_TO_CALL = 'sdk/CLICK_TO_CALL';
 const SDK_ON_CALL_MADE = 'sdk/SDK_ON_CALL_MADE';
@@ -186,6 +187,10 @@ class Softphone {
 
   setCardValue(field: string, value: any) {
     this._sendMessage(BRIDGE_SET_CARD_CONTENT, { field, value });
+  }
+
+  injectCss(css: string) {
+    this._sendMessage(BRIDGE_INJECT_CSS, { css });
   }
 
   _createIframe(cb: Function = () => {}) {
