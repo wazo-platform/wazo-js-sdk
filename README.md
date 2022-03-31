@@ -661,9 +661,9 @@ Wazo.Softphone.injectCss(`
 `);
 ```
 
-#### Override whitelabel
+#### Override appearance
 ```js
-Softphone.customizeWhiteLabel({
+Softphone.customizeAppearance({
   // Theme
 }, {
   // Translation
