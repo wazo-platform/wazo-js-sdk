@@ -2,8 +2,6 @@
 /* eslint-disable no-unused-vars */
 /* global window, document */
 const BRIDGE_CONFIG_RETRIEVED = 'bridge/CONFIG_RETRIEVED';
-const BRIDGE_ENABLE_CARD = 'bridge/ENABLE_CARD';
-const BRIDGE_CHANGE_REQUIRED_SUBSCRIPTION_TYPE = 'bridge/CHANGE_REQUIRED_SUBSCRIPTION_TYPE';
 const BRIDGE_CREATE_OR_UPDATE_CARD = 'bridge/BRIDGE_CREATE_OR_UPDATE_CARD';
 const BRIDGE_OPTIONS_FETCHED = 'bridge/BRIDGE_OPTIONS_FETCHED';
 const BRIDGE_OPTIONS_FOUND = 'bridge/BRIDGE_OPTIONS_FOUND';
@@ -16,6 +14,7 @@ const BRIDGE_ON_AGENT_LOGGED_OUT = 'bridge/BRIDGE_ON_AGENT_LOGGED_OUT';
 const BRIDGE_ON_AGENT_PAUSED = 'bridge/BRIDGE_ON_AGENT_PAUSED';
 const BRIDGE_ON_AGENT_RESUMED = 'bridge/BRIDGE_ON_AGENT_RESUMED';
 const BRIDGE_ON_LANGUAGE_CHANGED = 'bridge/BRIDGE_ON_LANGUAGE_CHANGED';
+const BRIDGE_ON_CALL_ANSWERED = 'bridge/BRIDGE_ON_CALL_ANSWERED';
 const BRIDGE_ON_CALL_HELD = 'bridge/BRIDGE_ON_CALL_HELD';
 const BRIDGE_ON_CALL_RESUMED = 'bridge/BRIDGE_ON_CALL_RESUMED';
 const BRIDGE_ON_CALL_MUTED = 'bridge/BRIDGE_ON_CALL_MUTED';
@@ -29,6 +28,11 @@ const BRIDGE_ON_INDIRECT_TRANSFER_CALL_MADE = 'bridge/BRIDGE_ON_INDIRECT_TRANSFE
 const BRIDGE_ON_INDIRECT_TRANSFER_DONE = 'bridge/BRIDGE_ON_INDIRECT_TRANSFER_DONE';
 const BRIDGE_ON_START_RECORDING = 'bridge/BRIDGE_ON_START_RECORDING';
 const BRIDGE_ON_STOP_RECORDING = 'bridge/BRIDGE_ON_STOP_RECORDING';
+const BRIDGE_ON_CARD_CANCELED = 'bridge/BRIDGE_ON_CARD_CANCELED';
+const BRIDGE_ENABLE_AGENT = 'bridge/BRIDGE_ENABLE_AGENT';
+const BRIDGE_SET_CARD_CONTENT = 'bridge/BRIDGE_SET_CARD_CONTENT';
+const BRIDGE_INJECT_CSS = 'bridge/BRIDGE_INJECT_CSS';
+const BRIDGE_CUSTOMIZE_APPEARANCE = 'bridge/BRIDGE_CUSTOMIZE_APPEARANCE';
 
 const SDK_CLICK_TO_CALL = 'sdk/CLICK_TO_CALL';
 const SDK_ON_CALL_MADE = 'sdk/SDK_ON_CALL_MADE';
@@ -38,22 +42,32 @@ const SDK_AUTHENTICATED = 'sdk/SDK_AUTHENTICATED';
 const SDK_LOGGED_OUT = 'sdk/SDK_LOGGED_OUT';
 
 class Softphone {
-  url: string = 'https://softphone.wazo.io';
-  width: number = 500;
-  height: number = 600;
-  displayed: boolean = false;
-  iframe: ?Object = null;
+  url: string;
+  width: number;
+  height: number;
+  displayed: boolean;
+  iframe: ?Object;
+  iframeLoaded: boolean;
+
+  // Message waiting for the iframe to be loaded
+  _pendingMessages: Object[];
 
   onLinkEnabled(link: Object) {}
   onIFrameLoaded() {}
 
+  onCallAnswered() {}
   onCallMade(call: Object) {}
   onCallIncoming(call: Object) {}
   onCallEnded(call: Object, card: Object, direction: string, fromExtension: string) {}
   onCardSaved(card: Object) {}
+  onCardCanceled() {}
   onAuthenticated(session: Object) {}
   onLoggedOut() {}
-  onSearchOptions(fieldId: string, query: string) {}
+
+  onSearchOptions(fieldId: string, query: string) {
+    this.onOptionsResults(fieldId, []);
+  }
+
   onDisplayLinkedOption(optionId: string) {}
   onWazoContactSearch(query: string) {}
   onAgentLoggedIn() {}
@@ -76,18 +90,15 @@ class Softphone {
   onStopRecording() {}
   onUnHandledEvent(event: Object) {}
 
-  init({ url, width, height, server, port, language, wrapUpDuration, shouldDisplayLinkedEntities,
-    allowContactCreation, withCard, subscriptionType, enableAgent }: Object = {}) {
-    if (url) {
-      this.url = url;
-    }
-    if (width) {
-      this.width = width;
-    }
-    if (height) {
-      this.height = height;
-    }
+  init({ url, width, height, server, port, language, wrapUpDuration, enableAgent = true }: Object = {}) {
+    this.url = url || 'https://softphone.wazo.io';
+    this.width = width || 500;
+    this.height = height || 600;
+    this.displayed = false;
+    this.iframeLoaded = false;
 
+    this.iframeLoaded = false;
+    this._pendingMessages = [];
     window.addEventListener('message', this._onMessage.bind(this), false);
 
     if (!server) {
@@ -95,25 +106,26 @@ class Softphone {
       server = 'stack.dev.wazo.io';
     }
 
+    const config: Object = { server };
+    if (language) {
+      config.language = language;
+    }
+    if (port) {
+      config.port = port;
+    }
+    if (wrapUpDuration) {
+      config.wrapUpDuration = wrapUpDuration;
+    }
+
+    this._sendMessage(BRIDGE_CONFIG_RETRIEVED, { config });
+
+    if (enableAgent) {
+      this._sendMessage(BRIDGE_ENABLE_AGENT);
+    }
+
     this._createIframe(() => {
-      this._sendMessage(BRIDGE_CONFIG_RETRIEVED, {
-        config: {
-          server,
-          port,
-          language,
-          wrapUpDuration,
-          shouldDisplayLinkedEntities,
-          allowContactCreation,
-        },
-      });
-
-      if (withCard) {
-        this._sendMessage(BRIDGE_ENABLE_CARD);
-      }
-
-      if (subscriptionType) {
-        this._sendMessage(BRIDGE_CHANGE_REQUIRED_SUBSCRIPTION_TYPE, { subscriptionType });
-      }
+      this.iframeLoaded = true;
+      this._pendingMessages.forEach(([type, payload]) => this._sendMessage(type, payload));
 
       this.onIFrameLoaded();
     });
@@ -172,6 +184,18 @@ class Softphone {
 
   setFormSchema(schema: Object, uiSchema: Object) {
     this._sendMessage(BRIDGE_UPDATE_FORM_SCHEMA, { schema, uiSchema });
+  }
+
+  setCardValue(field: string, value: any) {
+    this._sendMessage(BRIDGE_SET_CARD_CONTENT, { field, value });
+  }
+
+  injectCss(css: string) {
+    this._sendMessage(BRIDGE_INJECT_CSS, { css });
+  }
+
+  customizeAppearance(themes: Object, translations: Object, assets: Object) {
+    this._sendMessage(BRIDGE_CUSTOMIZE_APPEARANCE, { themes, translations, assets });
   }
 
   _createIframe(cb: Function = () => {}) {
@@ -308,6 +332,12 @@ class Softphone {
       case BRIDGE_ON_STOP_RECORDING:
         this.onStopRecording();
         break;
+      case BRIDGE_ON_CARD_CANCELED:
+        this.onCardCanceled();
+        break;
+      case BRIDGE_ON_CALL_ANSWERED:
+        this.onCallAnswered();
+        break;
       default:
         this.onUnHandledEvent(event);
         break;
@@ -315,8 +345,8 @@ class Softphone {
   }
 
   _sendMessage(type: string, payload: Object = {}) {
-    if (!this.iframe) {
-      console.warn(`Could not send message of type ${type} to the Wazo Softphone, iframe not created yet`);
+    if (!this.iframe || !this.iframeLoaded) {
+      this._pendingMessages.push([type, payload]);
       return;
     }
 
