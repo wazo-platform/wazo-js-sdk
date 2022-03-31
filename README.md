@@ -652,6 +652,26 @@ Wazo.Softphone.onOptionsResults(fieldId, results);
 Wazo.Softphone.setCardValue(field, value);
 ```
 
+#### Customizing page style
+```js
+Wazo.Softphone.injectCss(`
+  body {
+    background-color: #eee;
+  }
+`);
+```
+
+#### Override appearance
+```js
+Softphone.customizeAppearance({
+  // Theme
+}, {
+  // Translation
+}, {
+  // Assets
+});
+```
+
 `onOptionsResults` is used to populate Autocomplete fields
 
 #### Customizing card form
