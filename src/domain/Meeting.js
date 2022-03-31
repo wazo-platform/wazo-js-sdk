@@ -15,6 +15,8 @@ export type MeetingCreationResponse = {
   exten: string,
   persistent: boolean,
   creation_time: string,
+  require_authorization: boolean,
+  locked: boolean,
 }
 
 export default class Meeting {
@@ -30,6 +32,8 @@ export default class Meeting {
   ownerUuids: Array<string>;
   creationTime: Date;
   pendingAuthorizations: Array<MeetingAuthorization>
+  requireAuthorization: boolean;
+  locked: boolean;
 
   static parse(plain: MeetingCreationResponse): Meeting {
     return new Meeting({
@@ -42,6 +46,8 @@ export default class Meeting {
       extension: plain.exten,
       persistent: plain.persistent,
       creationTime: moment(plain.creation_time).toDate(),
+      requireAuthorization: plain.require_authorization,
+      locked: plain.locked,
     });
   }
 
@@ -66,6 +72,8 @@ export default class Meeting {
     extension,
     persistent,
     creationTime,
+    requireAuthorization,
+    locked,
   }: Object = {}) {
     this.guestSipAuthorization = guestSipAuthorization;
     this.uri = uri;
@@ -76,6 +84,8 @@ export default class Meeting {
     this.extension = extension;
     this.persistent = persistent;
     this.creationTime = creationTime;
+    this.requireAuthorization = requireAuthorization;
+    this.locked = locked;
 
     // Useful to compare instead of instanceof with minified code
     this.type = 'Meeting';
