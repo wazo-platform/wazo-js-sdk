@@ -14,7 +14,9 @@ const BRIDGE_ON_AGENT_LOGGED_OUT = 'bridge/BRIDGE_ON_AGENT_LOGGED_OUT';
 const BRIDGE_ON_AGENT_PAUSED = 'bridge/BRIDGE_ON_AGENT_PAUSED';
 const BRIDGE_ON_AGENT_RESUMED = 'bridge/BRIDGE_ON_AGENT_RESUMED';
 const BRIDGE_ON_LANGUAGE_CHANGED = 'bridge/BRIDGE_ON_LANGUAGE_CHANGED';
-const BRIDGE_ON_CALL_ANSWERED = 'bridge/BRIDGE_ON_CALL_ANSWERED';
+const BRIDGE_ON_CALL_LOCALLY_ACCEPTED = 'bridge/BRIDGE_ON_CALL_LOCALLY_ACCEPTED';
+const BRIDGE_ON_CALL_REJECTED = 'bridge/BRIDGE_ON_CALL_REJECTED';
+const BRIDGE_ON_CALL_REMOTELY_ACCEPTED = 'bridge/BRIDGE_ON_CALL_REMOTELY_ACCEPTED';
 const BRIDGE_ON_CALL_HELD = 'bridge/BRIDGE_ON_CALL_HELD';
 const BRIDGE_ON_CALL_RESUMED = 'bridge/BRIDGE_ON_CALL_RESUMED';
 const BRIDGE_ON_CALL_MUTED = 'bridge/BRIDGE_ON_CALL_MUTED';
@@ -31,12 +33,13 @@ const BRIDGE_ON_STOP_RECORDING = 'bridge/BRIDGE_ON_STOP_RECORDING';
 const BRIDGE_ON_CARD_CANCELED = 'bridge/BRIDGE_ON_CARD_CANCELED';
 const BRIDGE_ENABLE_AGENT = 'bridge/BRIDGE_ENABLE_AGENT';
 const BRIDGE_SET_CARD_CONTENT = 'bridge/BRIDGE_SET_CARD_CONTENT';
+const BRIDGE_ENABLE_DEBUG = 'bridge/BRIDGE_ENABLE_DEBUG';
 
 const BRIDGE_INJECT_CSS = 'bridge/BRIDGE_INJECT_CSS';
 const BRIDGE_CUSTOMIZE_APPEARANCE = 'bridge/BRIDGE_CUSTOMIZE_APPEARANCE';
 
 const SDK_CLICK_TO_CALL = 'sdk/CLICK_TO_CALL';
-const SDK_ON_CALL_MADE = 'sdk/SDK_ON_CALL_MADE';
+const SDK_ON_OUTGOING_CALL_MADE = 'sdk/SDK_ON_OUTGOING_CALL_MADE';
 const SDK_CALL_ENDED = 'sdk/ON_CALL_ENDED';
 const SDK_CALL_INCOMING = 'sdk/SDK_CALL_INCOMING';
 const SDK_AUTHENTICATED = 'sdk/SDK_AUTHENTICATED';
@@ -56,10 +59,13 @@ class Softphone {
   onLinkEnabled(link: Object) {}
   onIFrameLoaded() {}
 
-  onCallAnswered() {}
-  onCallMade(call: Object) {}
+  onCallLocallyAnswered(call: Object) {}
+  onCallRemotelyAnswered(call: Object) {}
+  onOutgoingCallMade(call: Object) {}
   onCallIncoming(call: Object) {}
+  onCallRejected(call: Object) {}
   onCallEnded(call: Object, card: Object, direction: string, fromExtension: string) {}
+
   onCardSaved(card: Object) {}
   onCardCanceled() {}
   onAuthenticated(session: Object) {}
@@ -91,7 +97,18 @@ class Softphone {
   onStopRecording() {}
   onUnHandledEvent(event: Object) {}
 
-  init({ url, width, height, server, port, language, wrapUpDuration, enableAgent = true }: Object = {}) {
+  init({
+    url,
+    width,
+    height,
+    server,
+    port,
+    language,
+    wrapUpDuration,
+    enableAgent = true,
+    tenantId,
+    debug = false,
+  }: Object = {}) {
     this.url = url || 'https://softphone.wazo.io';
     this.width = width || 500;
     this.height = height || 600;
@@ -114,6 +131,9 @@ class Softphone {
     if (port) {
       config.port = port;
     }
+    if (tenantId) {
+      config.tenantId = tenantId;
+    }
     if (wrapUpDuration) {
       config.wrapUpDuration = wrapUpDuration;
     }
@@ -122,6 +142,10 @@ class Softphone {
 
     if (enableAgent) {
       this._sendMessage(BRIDGE_ENABLE_AGENT);
+    }
+
+    if (debug) {
+      this._sendMessage(BRIDGE_ENABLE_DEBUG);
     }
 
     this._createIframe(() => {
@@ -244,8 +268,8 @@ class Softphone {
     }
 
     switch (event.data.type) {
-      case SDK_ON_CALL_MADE:
-        this.onCallMade(event.data.callSession);
+      case SDK_ON_OUTGOING_CALL_MADE:
+        this.onOutgoingCallMade(event.data.callSession);
         break;
       case SDK_CALL_ENDED: {
         const { callSession, content, direction, userExtension } = event.data;
@@ -336,8 +360,14 @@ class Softphone {
       case BRIDGE_ON_CARD_CANCELED:
         this.onCardCanceled();
         break;
-      case BRIDGE_ON_CALL_ANSWERED:
-        this.onCallAnswered();
+      case BRIDGE_ON_CALL_LOCALLY_ACCEPTED:
+        this.onCallLocallyAnswered(event.data.call);
+        break;
+      case BRIDGE_ON_CALL_REJECTED:
+        this.onCallRejected(event.data.call);
+        break;
+      case BRIDGE_ON_CALL_REMOTELY_ACCEPTED:
+        this.onCallRemotelyAnswered(event.data.call);
         break;
       default:
         this.onUnHandledEvent(event);
