@@ -656,7 +656,7 @@ Wazo.Softphone.setCardValue(field, value);
 
 #### Customizing page style
 
-You can inspect the iframe with your dev tool console to know how to override styles.
+You can inspect the iframe with your dev tool console to figure out how to override styles.
 
 ```js
 Wazo.Softphone.injectCss(`
@@ -774,11 +774,11 @@ Softphone.onCallIncoming = call => {
 };
 
 Softphone.onCallLocallyAnswered = call => {
-  // Invoked when the user accept the call locally
+  // Invoked when the user accepts the call locally
 };
 
 Softphone.onCallRemotelyAnswered = call => {
-  // Invoked when the other party accept the call
+  // Invoked when the other party accepts the call
 };
 
 Softphone.onOutgoingCallMade = call => {
