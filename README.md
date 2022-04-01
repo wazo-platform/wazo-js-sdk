@@ -615,6 +615,8 @@ Wazo.Softphone.init({
   wrapUpDuration, // How long (in seconds) should the softphone display the card after the call (optional).
   // When the user changes anything on the card, this timeout is canceled
   enableAgent, // display the agent tab in the tab bar (defaults to true).
+  tenantId, // Tenant id used for LDAP connection
+  debug, // Set to `true` to display wording customization labels
 });
 ```
 
@@ -653,10 +655,14 @@ Wazo.Softphone.setCardValue(field, value);
 ```
 
 #### Customizing page style
+
+You can inspect the iframe with your dev tool console to know how to override styles.
+
 ```js
 Wazo.Softphone.injectCss(`
-  body {
-    background-color: #eee;
+  # Reduce dialer number font size
+  .keypad-number, .keypad-number::placeholder {
+    font-size: 20px;
   }
 `);
 ```
@@ -664,11 +670,36 @@ Wazo.Softphone.injectCss(`
 #### Override appearance
 ```js
 Softphone.customizeAppearance({
-  // Theme
+  // Theme, default values :
+  primary: '#203890',
+  button: '#292C87',
+  black: '#000',
+  white: '#fff',
+  greenButton: '#7ed865',
+  greenButtonHover: '#6ebf5a',
+  redButton: '#FA5846',
+  redButtonHover: '#FF604F',
+  buttonText: '#fff',
+  error: '#E80539',
+  secondary: '#203890',
+  grey: '#8A95A0',
+  secondGrey: '#eee',
+  headerColor: '#888',
+  avatar: '#bdbdbd',
+  divider: 'rgba(0, 0, 0, 0.12)',
+  placeholder: 'rgba(22, 44, 66, 0.5)',
+  hovered: '#6181F4',
 }, {
   // Translation
+  // Set `debug: true` to know where to change translations, eg:
+  en: {
+    user: {
+      login: 'My login button', // will be displayed as `user:login` in the button when settings `debug: true` in the init() method
+    },
+  },
 }, {
   // Assets
+  // logo: [url to your logo],
 });
 ```
 
@@ -740,6 +771,22 @@ Wazo.Softphone.onLinkEnabled = link => {
 Softphone.onCallIncoming = call => {
   // Invoked when a call is incoming in the softphone
   // You can make action here like redirecting to the contact page (by using `call.number).
+};
+
+Softphone.onCallLocallyAnswered = call => {
+  // Invoked when the user accept the call locally
+};
+
+Softphone.onCallRemotelyAnswered = call => {
+  // Invoked when the other party accept the call
+};
+
+Softphone.onOutgoingCallMade = call => {
+  // Invoked when the user makes a call
+};
+
+Softphone.onCallRejected = call => {
+  // Invoked when the user rejects an incoming call
 };
 
 Softphone.onCallEnded = (call, card, direction) => {
