@@ -777,8 +777,8 @@ Softphone.onCallLocallyAnswered = call => {
   // Invoked when the user accepts the call locally
 };
 
-Softphone.onCallRemotelyAnswered = call => {
-  // Invoked when the other party accepts the call
+Softphone.onCallEstablished = call => {
+  // Invoked when the call is up
 };
 
 Softphone.onOutgoingCallMade = call => {
@@ -795,10 +795,6 @@ Softphone.onCallEnded = (call, card, direction) => {
 
 Softphone.onCardSaved = card => {
   // Invoked when the user save the card at the end of the call
-};
-
-Softphone.onCallMade = call => {
-  // Invoked when an outgoing call is made
 };
 
 Softphone.onSearchOptions = (fieldId: string, query: string) => {
@@ -889,6 +885,10 @@ Softphone.onAuthenticated = session => {
 
 Softphone.onLoggedOut = session => {
   // Invoked when the user is is logged out in the softphone
+};
+
+Softphone.onIFrameLoaded = session => {
+  // Invoked when the iframe is loaded
 };
 ```
 

@@ -16,7 +16,7 @@ const BRIDGE_ON_AGENT_RESUMED = 'bridge/BRIDGE_ON_AGENT_RESUMED';
 const BRIDGE_ON_LANGUAGE_CHANGED = 'bridge/BRIDGE_ON_LANGUAGE_CHANGED';
 const BRIDGE_ON_CALL_LOCALLY_ACCEPTED = 'bridge/BRIDGE_ON_CALL_LOCALLY_ACCEPTED';
 const BRIDGE_ON_CALL_REJECTED = 'bridge/BRIDGE_ON_CALL_REJECTED';
-const BRIDGE_ON_CALL_REMOTELY_ACCEPTED = 'bridge/BRIDGE_ON_CALL_REMOTELY_ACCEPTED';
+const BRIDGE_ON_CALL_ESTABLISHED = 'bridge/BRIDGE_ON_CALL_ESTABLISHED';
 const BRIDGE_ON_CALL_HELD = 'bridge/BRIDGE_ON_CALL_HELD';
 const BRIDGE_ON_CALL_RESUMED = 'bridge/BRIDGE_ON_CALL_RESUMED';
 const BRIDGE_ON_CALL_MUTED = 'bridge/BRIDGE_ON_CALL_MUTED';
@@ -60,7 +60,7 @@ class Softphone {
   onIFrameLoaded() {}
 
   onCallLocallyAnswered(call: Object) {}
-  onCallRemotelyAnswered(call: Object) {}
+  onCallEstablished(call: Object) {}
   onOutgoingCallMade(call: Object) {}
   onCallIncoming(call: Object) {}
   onCallRejected(call: Object) {}
@@ -366,8 +366,8 @@ class Softphone {
       case BRIDGE_ON_CALL_REJECTED:
         this.onCallRejected(event.data.call);
         break;
-      case BRIDGE_ON_CALL_REMOTELY_ACCEPTED:
-        this.onCallRemotelyAnswered(event.data.call);
+      case BRIDGE_ON_CALL_ESTABLISHED:
+        this.onCallEstablished(event.data.call);
         break;
       default:
         this.onUnHandledEvent(event);
