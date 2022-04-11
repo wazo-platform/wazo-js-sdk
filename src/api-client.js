@@ -89,7 +89,7 @@ export default class ApiClient {
   }
 
   async forceRefreshToken() {
-    logger.info('forcing refresh token, calling callback');
+    logger.info('forcing refresh token, calling callback', { code: 'force-token-refresh-callback' });
     return this.refreshTokenCallback();
   }
 
@@ -100,6 +100,7 @@ export default class ApiClient {
       refreshTenantId: this.refreshTenantId,
       refreshExpiration: this.refreshExpiration,
       isMobile: this.isMobile,
+      code: 'refresh-token-callback-called',
     });
 
     if (!this.refreshToken) {
@@ -115,7 +116,7 @@ export default class ApiClient {
         this.refreshTenantId,
       );
 
-      logger.info('token refreshed', { token: session.token });
+      logger.info('token refreshed', { token: session.token, code: 'token-refreshed' });
 
       if (this.onRefreshToken) {
         this.onRefreshToken(session.token, session);
@@ -125,6 +126,7 @@ export default class ApiClient {
 
       return session.token;
     } catch (error) {
+      error.code = 'refresh-token-error';
       logger.error('token refresh, error', error);
 
       if (this.onRefreshTokenError) {

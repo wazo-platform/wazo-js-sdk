@@ -232,7 +232,7 @@ export default class WebRTCClient extends Emitter {
 
   createUserAgent(configOverrides: ?Object): UserAgent {
     const webRTCConfiguration = this._createWebRTCConfiguration(configOverrides);
-    logger.info('sdk webrtc, creating UA', { webRTCConfiguration });
+    logger.info('sdk webrtc, creating UA', { webRTCConfiguration, code: 'creating-user-agent' });
 
     webRTCConfiguration.delegate = {
       onConnect: this.onConnect.bind(this),
@@ -242,6 +242,7 @@ export default class WebRTCClient extends Emitter {
           method: 'delegate.onInvite',
           id: invitation.id,
           remoteURI: invitation.remoteURI,
+          code: 'on-received-invite',
         });
         this._setupSession(invitation);
         const shouldAutoAnswer = !!invitation.request.getHeader('alert-info');
@@ -281,7 +282,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   onConnect() {
-    logger.info('sdk webrtc connected', { method: 'delegate.onConnect' });
+    logger.info('sdk webrtc connected', { method: 'delegate.onConnect', code: 'on-webrtc-connected' });
     this.eventEmitter.emit(CONNECTED);
     if (!this.isRegistered() && this.registerer && this.registerer.waiting) {
       this.registerer.waitingToggle(false);
@@ -290,7 +291,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   async onDisconnect(error?: Error) {
-    logger.info('sdk webrtc disconnected', { method: 'delegate.onConnect', error });
+    logger.info('sdk webrtc disconnected', { method: 'delegate.onConnect', error, code: 'on-webrtc-disconnected' });
     this.connectionPromise = null;
     // The UA will attempt to reconnect automatically when an error occurred
     this.eventEmitter.emit(DISCONNECTED, error);
@@ -317,23 +318,25 @@ export default class WebRTCClient extends Emitter {
     this.forceClosed = false;
 
     if (this.skipRegister) {
-      logger.info('sdk webrtc skip register...', logInfo);
+      logger.info('sdk webrtc skip register...', { ...logInfo, code: 'skip-register' });
       return Promise.resolve();
     }
 
-    logger.info('sdk webrtc registering...', logInfo);
+    logger.info('sdk webrtc registering...', { ...logInfo, code: 'registering' });
 
     if (!this.userAgent) {
-      logger.info('sdk webrtc recreating User Agent');
+      logger.info('sdk webrtc recreating User Agent', { code: 'recreating-user-agent' });
       this.userAgent = this.createUserAgent(this.uaConfigOverrides);
     }
     if (!this.userAgent || this.isRegistered()) {
-      logger.info('sdk webrtc registering aborted, already registered or no UA can be created');
+      logger.info('sdk webrtc registering aborted, already registered or no UA can be created', {
+        code: 'no-ua-or-registered',
+      });
       return Promise.resolve();
     }
 
     if (this.connectionPromise || (this.registerer && this.registerer.waiting)) {
-      logger.info('sdk webrtc registering aborted due to a registration in progress.');
+      logger.info('sdk webrtc registering aborted due to a registration in progress.', { code: 'already-registering' });
       return Promise.resolve();
     }
 
@@ -344,6 +347,7 @@ export default class WebRTCClient extends Emitter {
         tries,
         registerer: !!this.registerer,
         forceClosed: this.forceClosed,
+        code: 'register-failed',
       });
       if (this.forceClosed) {
         return;
@@ -355,27 +359,31 @@ export default class WebRTCClient extends Emitter {
       }
 
       if (tries <= MAX_REGISTER_TRIES) {
-        logger.info('sdk webrtc registering, retrying...', { tries });
+        logger.info('sdk webrtc registering, retrying...', { tries, code: 'retrying-register' });
         setTimeout(() => this.register(tries + 1), 300);
       }
     };
 
     return this._connectIfNeeded().then(() => {
       // Avoid race condition with the close method called just before register and setting userAgent to null
-      // during the resolution of the primise.
+      // during the resolution of the promise.
       if (!this.userAgent) {
-        logger.info('sdk webrtc recreating User Agent after connection');
+        logger.info('sdk webrtc recreating User Agent after connection', { code: 'recreate-ua-after-connection' });
         this.userAgent = this.createUserAgent(this.uaConfigOverrides);
       }
 
-      logger.info('sdk webrtc registering, transport connected', { registerOptions, ua: !!this.userAgent });
+      logger.info('sdk webrtc registering, transport connected', {
+        registerOptions,
+        ua: !!this.userAgent,
+        code: 'transport-connected',
+      });
       this.registerer = new Registerer(this.userAgent, registerOptions);
       this.connectionPromise = null;
       this._monkeyPatchRegisterer(this.registerer);
 
       // Bind registerer events
       this.registerer.stateChange.addListener(newState => {
-        logger.info('sdk webrtc registering, state changed', { newState });
+        logger.info('sdk webrtc registering, state changed', { newState, code: 'register-change-state' });
 
         if (newState === RegistererState.Registered && this.registerer
           && this.registerer.state === RegistererState.Registered) {
@@ -388,7 +396,7 @@ export default class WebRTCClient extends Emitter {
       const options = {
         requestDelegate: {
           onReject: response => {
-            logger.error('sdk webrtc registering, rejected', { response });
+            logger.error('sdk webrtc registering, rejected', { response, code: 'register-rejected' });
 
             onRegisterFailed();
           },
@@ -396,12 +404,14 @@ export default class WebRTCClient extends Emitter {
       };
 
       return this.registerer.register(options).catch((e) => {
+        e.code = 'register-error';
         logger.error('sdk webrtc registering, error', e);
 
         this.eventEmitter.emit(REGISTRATION_FAILED);
         return e;
       });
     }).catch(error => {
+      error.code = 'register-transport-error';
       logger.error('sdk webrtc registering, transport error', error);
       onRegisterFailed();
     });
@@ -431,20 +441,26 @@ export default class WebRTCClient extends Emitter {
   }
 
   unregister() {
-    logger.info('sdk webrtc unregistering..', { userAgent: !!this.userAgent, registerer: !!this.registerer });
+    logger.info('sdk webrtc unregistering..', {
+      userAgent: !!this.userAgent,
+      registerer: !!this.registerer,
+      code: 'unregister',
+    });
     if (!this.registerer) {
       return Promise.resolve();
     }
 
     try {
       return this.registerer.unregister().then(() => {
-        logger.info('sdk webrtc unregistered');
+        logger.info('sdk webrtc unregistered', { code: 'unregistered' });
         this._cleanupRegister();
       }).catch(e => {
+        e.code = 'unregistering-error';
         logger.error('sdk webrtc unregistering, promise error', e);
         this._cleanupRegister();
       });
     } catch (e) {
+      e.code = 'unregistering-error';
       logger.error('sdk webrtc unregistering, error', e);
       // Avoid issue with `undefined is not an object (evaluating 'new.target.prototype')` when triggering a new
       // error when the registerer is in a bad state
@@ -453,7 +469,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   stop(): Promise<any> {
-    logger.info('sdk webrtc stop', { userAgent: !!this.userAgent });
+    logger.info('sdk webrtc stop', { userAgent: !!this.userAgent, code: 'stop' });
     if (!this.userAgent) {
       return Promise.resolve();
     }
@@ -461,12 +477,12 @@ export default class WebRTCClient extends Emitter {
     return this.userAgent.stop().then(() => {
       return this._cleanupRegister();
     }).catch(e => {
-      logger.warn('sdk webrtc stop, error', { message: e.message, stack: e.stack });
+      logger.warn('sdk webrtc stop, error', { message: e.message, stack: e.stack, code: 'stop-error' });
     });
   }
 
   call(number: string, enableVideo?: boolean, audioOnly: boolean = false, conference: boolean = false): Session {
-    logger.info('sdk webrtc creating call', { number, enableVideo, audioOnly, conference });
+    logger.info('sdk webrtc creating call', { number, enableVideo, audioOnly, conference, code: 'call' });
     const inviterOptions: Object = {
       sessionDescriptionHandlerOptionsReInvite: {
         conference,
@@ -497,7 +513,7 @@ export default class WebRTCClient extends Emitter {
           this._onAccepted(session, response.session, true);
         },
         onReject: (response: IncomingResponse) => {
-          logger.info('on call rejected', { id: session.id, fromTag: session.fromTag });
+          logger.info('on call rejected', { id: session.id, fromTag: session.fromTag, code: 'call-rejected' });
           this._stopSendingStats(session);
           this.stopNetworkMonitoring(session);
 
@@ -520,11 +536,11 @@ export default class WebRTCClient extends Emitter {
   }
 
   answer(session: Invitation, enableVideo?: boolean) {
-    logger.info('sdk webrtc answer call', { id: session.id, enableVideo });
+    logger.info('sdk webrtc answer call', { id: session.id, enableVideo, code: 'answer' });
 
     if (!session || !session.accept) {
       const error = 'No session to answer, or not an invitation';
-      logger.warn(error);
+      logger.warn(error, { code: 'answer-no-session' });
       return Promise.reject(new Error(error));
     }
     const options = {
@@ -534,14 +550,15 @@ export default class WebRTCClient extends Emitter {
     return session.accept(options).then(() => {
       if (session.isCanceled) {
         const message = 'accepted a canceled session (or was canceled during the accept phase).';
-        logger.error(message, { id: session.id });
+        logger.error(message, { id: session.id, code: 'answer-canceled-session' });
         this.onCallEnded(session);
 
         throw new CanceledCallError(message);
       }
-      logger.info('sdk webrtc answer, accepted.');
+      logger.info('sdk webrtc answer, accepted.', { code: 'answer-accepted' });
       this._onAccepted(session);
     }).catch(e => {
+      e.code = 'webrtc-answer-error';
       logger.error(`answer call error for ${session ? session.id : 'n/a'}`, e);
 
       throw e;
@@ -550,7 +567,7 @@ export default class WebRTCClient extends Emitter {
 
   hangup(session: Session) {
     const { state, id } = session;
-    logger.info('sdk webrtc hangup call', { id, state });
+    logger.info('sdk webrtc hangup call', { id, state, code: 'hangup' });
 
     try {
       this._stopSendingStats(session);
@@ -579,6 +596,7 @@ export default class WebRTCClient extends Emitter {
 
       return bye();
     } catch (error) {
+      error.code = 'webrtc-hangup-error';
       logger.warn('sdk webrtc hangup, error', error);
     }
 
@@ -597,7 +615,7 @@ export default class WebRTCClient extends Emitter {
   // Fetch and emit an event at `interval` with session network stats
   startNetworkMonitoring(session: Session, interval: number = 1000): ?Object {
     const sessionId = this.getSipSessionId(session);
-    logger.info('starting network inspection', { id: sessionId });
+    logger.info('starting network inspection', { id: sessionId, code: 'start-network-monitoring' });
 
     this.sessionNetworkStats[sessionId] = [];
 
@@ -607,7 +625,7 @@ export default class WebRTCClient extends Emitter {
   stopNetworkMonitoring(session: Session): ?Object {
     const sessionId = this.getSipSessionId(session);
     const exists = sessionId in this.networkMonitoringInterval;
-    logger.info('stopping network inspection', { id: sessionId, exists });
+    logger.info('stopping network inspection', { id: sessionId, exists, code: 'stop-network-monitoring' });
 
     if (exists) {
       clearInterval(this.networkMonitoringInterval[sessionId]);
@@ -617,17 +635,18 @@ export default class WebRTCClient extends Emitter {
   }
 
   reject(session: Inviter) {
-    logger.info('sdk webrtc reject call', { id: session.id });
+    logger.info('sdk webrtc reject call', { id: session.id, code: 'reject' });
 
     try {
       return session.reject ? session.reject() : session.cancel();
     } catch (e) {
-      logger.warn('Error when rejecting call', e.message, e.stack);
+      e.code = 'webrtc-reject-error';
+      logger.warn('Error when rejecting call', e);
     }
   }
 
   async close(force: boolean = false) {
-    logger.info('sdk webrtc closing client', { userAgent: !!this.userAgent, force });
+    logger.info('sdk webrtc closing client', { userAgent: !!this.userAgent, force, code: 'close' });
     this.forceClosed = force;
     this._cleanupMedia();
     this.connectionPromise = null;
@@ -655,11 +674,11 @@ export default class WebRTCClient extends Emitter {
       // Don't wait here, It can take ~30s to stop ...
       this.userAgent.stop().catch(console.error);
     } catch (_) {
-      // Avoid to raise exception when trying to close with hanged-up sessions remaining
+      // Avoid raising exception when trying to close with hanged-up sessions remaining
       // eg: "INVITE not rejectable in state Completed"
     }
     this.userAgent = null;
-    logger.info('sdk webrtc client closed');
+    logger.info('sdk webrtc client closed', { code: 'closed' });
   }
 
   getNumber(session: Inviter): ?String {
@@ -672,13 +691,13 @@ export default class WebRTCClient extends Emitter {
   }
 
   mute(session: Inviter) {
-    logger.info('sdk webrtc mute', { id: session.id });
+    logger.info('sdk webrtc mute', { id: session.id, code: 'mute' });
 
     this._toggleAudio(session, true);
   }
 
   unmute(session: Inviter) {
-    logger.info('sdk webrtc unmute', { id: session.id });
+    logger.info('sdk webrtc unmute', { id: session.id, code: 'unmute' });
 
     this._toggleAudio(session, false);
   }
@@ -718,13 +737,13 @@ export default class WebRTCClient extends Emitter {
   }
 
   toggleCameraOn(session: Inviter) {
-    logger.info('sdk webrtc toggle camera on', { id: session.id });
+    logger.info('sdk webrtc toggle camera on', { id: session.id, code: 'camera-on' });
 
     this._toggleVideo(session, false);
   }
 
   toggleCameraOff(session: Inviter) {
-    logger.info('sdk webrtc toggle camera off', { id: session.id });
+    logger.info('sdk webrtc toggle camera off', { id: session.id, code: 'camera-off' });
 
     this._toggleVideo(session, true);
   }
@@ -739,6 +758,7 @@ export default class WebRTCClient extends Emitter {
       pendingReinvite: !!session.pendingReinvite,
       isConference,
       hasVideo,
+      code: 'hold',
     });
 
     if (sessionId in this.heldSessions) {
@@ -790,6 +810,7 @@ export default class WebRTCClient extends Emitter {
       pendingReinvite: !!session.pendingReinvite,
       isConference,
       hasVideo,
+      code: 'unhold',
     });
 
     if (session.pendingReinvite) {
@@ -825,6 +846,14 @@ export default class WebRTCClient extends Emitter {
   // Returns true if a re-INVITE is required
   async upgradeToVideo(session: Session, constraints: ?Object, isConference: boolean): Promise<?Object> {
     const pc = session.sessionDescriptionHandler.peerConnection;
+    const sessionId = this.getSipSessionId(session);
+
+    logger.info('sdk webrtc upgrading to video', {
+      sessionId,
+      isConference,
+      constraints,
+      code: 'upgrade-video',
+    });
 
     // Check if a video sender already exists
     let videoSender;
@@ -847,7 +876,9 @@ export default class WebRTCClient extends Emitter {
     // Reuse bidirectional video stream
     const newStream = await this.getStreamFromConstraints(constraints);
     if (!newStream) {
-      console.warn(`Can't create media stream with: ${JSON.stringify(constraints || {})}`);
+      console.warn(`Can't create media stream with: ${JSON.stringify(constraints || {})}`, {
+        code: 'update-stream-failed',
+      });
       return false;
     }
 
@@ -875,6 +906,12 @@ export default class WebRTCClient extends Emitter {
     const localStream = session.sessionDescriptionHandler.localMediaStream;
     const pc = session.sessionDescriptionHandler.peerConnection;
     const videoTracks = localStream.getVideoTracks();
+    const sessionId = this.getSipSessionId(session);
+
+    logger.info('sdk webrtc upgrading to video', {
+      sessionId,
+      code: 'downgrade-audio',
+    });
 
     // Remove video senders
     pc.getSenders().filter(sender => sender.track && sender.track.kind === 'video').forEach(videoSender => {
@@ -935,6 +972,7 @@ export default class WebRTCClient extends Emitter {
     logger.info('Sending DTMF', {
       id: this.getSipSessionId(session),
       tone,
+      code: 'send-dtmf',
     });
     return session.sessionDescriptionHandler.sendDtmf(tone);
   }
@@ -948,9 +986,10 @@ export default class WebRTCClient extends Emitter {
   transfer(session: Inviter, target: string) {
     this.hold(session);
 
-    logger.info('Transfering a session', {
+    logger.info('Transferring a session', {
       id: this.getSipSessionId(session),
       target,
+      code: 'transfer-session',
     });
 
     const options = {
@@ -970,12 +1009,12 @@ export default class WebRTCClient extends Emitter {
   atxfer(session: Inviter) {
     this.hold(session);
 
-    logger.info('webrtc transfer started', { id: this.getSipSessionId(session) });
+    logger.info('webrtc transfer started', { id: this.getSipSessionId(session), code: 'atxfer-started' });
 
     const result: Object = {
       newSession: null,
       init: async (target: string) => {
-        logger.info('webrtc transfer initialized', { id: this.getSipSessionId(session), target });
+        logger.info('webrtc transfer initialized', { id: this.getSipSessionId(session), target, code: 'atxfer-init' });
 
         result.newSession = await this.call(target);
       },
@@ -983,11 +1022,18 @@ export default class WebRTCClient extends Emitter {
         logger.info('webrtc transfer completed', {
           id: this.getSipSessionId(session),
           referId: this.getSipSessionId(result.newSession),
+          code: 'atxfer-complete',
         });
 
         session.refer(result.newSession);
       },
       cancel: () => {
+        logger.info('webrtc transfer canceled', {
+          id: this.getSipSessionId(session),
+          referId: this.getSipSessionId(result.newSession),
+          code: 'atxfer-cancel',
+        });
+
         this.hangup(result.newSession);
         this.unhold(session);
       },
@@ -1001,7 +1047,7 @@ export default class WebRTCClient extends Emitter {
       return;
     }
 
-    logger.info('send WebRTC message', { sipId: sipSession.id, contentType });
+    logger.info('send WebRTC message', { sipId: sipSession.id, contentType, code: 'send-message' });
 
     try {
       sipSession.message({
@@ -1043,7 +1089,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   changeAudioOutputVolume(volume: number) {
-    logger.info('Changing audio output volume', { volume });
+    logger.info('Changing audio output volume', { volume, code: 'change-volume' });
 
     Object.values(this.audioElements).forEach(audioElement => {
       if (audioElement instanceof HTMLAudioElement) {
@@ -1055,7 +1101,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   changeAudioOutputDevice(id: string) {
-    logger.info('Changing audio output device', { id });
+    logger.info('Changing audio output device', { id, code: 'change-audio-output' });
 
     Object.values(this.audioElements).forEach(audioElement => {
       // `setSinkId` method is not included in any flow type definitions for HTMLAudioElements but is a valid method
@@ -1072,7 +1118,7 @@ export default class WebRTCClient extends Emitter {
 
   changeAudioInputDevice(id: string, session: ?Inviter) {
     const currentId = this.getAudioDeviceId();
-    logger.info('setting audio input device', { id, currentId, session: !!session });
+    logger.info('setting audio input device', { id, currentId, session: !!session, code: 'change-audio-input' });
 
     if (id === currentId) {
       return null;
@@ -1118,7 +1164,7 @@ export default class WebRTCClient extends Emitter {
 
   setVideoInputDevice(id: ?string) {
     const currentId = this.getVideoDeviceId();
-    logger.info('setting video input device', { id, currentId });
+    logger.info('setting video input device', { id, currentId, code: 'change-video-input' });
 
     if (id === currentId) {
       return null;
@@ -1143,7 +1189,7 @@ export default class WebRTCClient extends Emitter {
     const sessionId = this.getSipSessionId(session);
     const localStream = this.getLocalStream(sessionId);
 
-    logger.info('changing video input device', { id, sessionId });
+    logger.info('changing video input device', { id, sessionId, code: 'change-session-video-input' });
 
     // Release old video stream
     if (localStream) {
@@ -1220,6 +1266,7 @@ export default class WebRTCClient extends Emitter {
       shouldDoVideo,
       shouldDoScreenSharing,
       desktop,
+      code: 'send-reinvite',
     });
 
     // When upgrading to video, remove the `stripVideo` modifiers
@@ -1253,6 +1300,7 @@ export default class WebRTCClient extends Emitter {
             id: this.getSipSessionId(sipSession),
             wasMuted,
             shouldDoScreenSharing,
+            code: 'reinvite-accepted',
           });
 
           this.updateRemoteStream(this.getSipSessionId(sipSession));
@@ -1424,7 +1472,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   startHeartbeat() {
-    logger.info('sdk webrtc start heartbeat', { userAgent: !!this.userAgent });
+    logger.info('sdk webrtc start heartbeat', { userAgent: !!this.userAgent, code: 'start-heartbeat' });
     if (!this.userAgent) {
       this.heartbeat.stop();
       return;
@@ -1437,7 +1485,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   stopHeartbeat() {
-    logger.info('sdk webrtc stop heartbeat');
+    logger.info('sdk webrtc stop heartbeat', { code: 'stop-heartbeat' });
     this.heartbeat.stop();
   }
 
@@ -1458,7 +1506,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   attemptReconnection(): void {
-    logger.info('attempt reconnection', { userAgent: !!this.userAgent });
+    logger.info('attempt reconnection', { userAgent: !!this.userAgent, code: 'attempt-reconnection' });
     if (!this.userAgent) {
       return;
     }
@@ -1486,6 +1534,7 @@ export default class WebRTCClient extends Emitter {
     logger.info('setting local media stream', {
       sipSessionId,
       tracks: newStream ? newStream.getTracks() : null,
+      code: 'set-local-stream',
     });
 
     // eslint-disable-next-line no-underscore-dangle
@@ -1504,6 +1553,7 @@ export default class WebRTCClient extends Emitter {
       sipSessionId,
       oldStream: !!oldStream,
       tracks: newStream.getTracks(),
+      code: 'update-local-stream',
     });
 
     if (oldStream) {
@@ -1524,6 +1574,7 @@ export default class WebRTCClient extends Emitter {
       sessionId,
       tracks: remoteStream ? remoteStream.getTracks() : null,
       receiverTracks: pc && pc.getReceivers ? pc.getReceivers().map(receiver => receiver.track) : null,
+      code: 'update-remote-stream',
     });
 
     if (!pc || !remoteStream) {
@@ -1547,7 +1598,14 @@ export default class WebRTCClient extends Emitter {
     const withAudio = constraints && 'audio' in constraints ? constraints.audio : true;
     const mandatoryVideo = constraints && typeof constraints.video === 'object' ? constraints.video.mandatory : {};
 
-    logger.info('Retrieving media a configuration', { enableVideo, screenSharing, isDesktop, withAudio, constraints });
+    logger.info('Retrieving media a configuration', {
+      enableVideo,
+      screenSharing,
+      isDesktop,
+      withAudio,
+      constraints,
+      code: 'get-media-configuration',
+    });
 
     return {
       constraints: {
@@ -1597,7 +1655,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   _onTransportError() {
-    logger.error('on transport error');
+    logger.error('on transport error due to ping timeout', { code: 'transport-error' });
     this.eventEmitter.emit(TRANSPORT_ERROR);
     this.attemptReconnection();
   }
@@ -1606,7 +1664,7 @@ export default class WebRTCClient extends Emitter {
     const body = message && typeof message === 'object' ? message.data : message;
     if (body && body.indexOf('200 OK') !== -1) {
       if (this.hasHeartbeat()) {
-        logger.info('on heartbeat received from Asterisk', { hasHeartbeat: this.hasHeartbeat() });
+        logger.info('on heartbeat received from Asterisk', { hasHeartbeat: this.hasHeartbeat(), code: 'on-heartbeat' });
 
         this.heartbeat.onHeartbeat();
         if (this.heartbeatCb) {
@@ -1617,7 +1675,11 @@ export default class WebRTCClient extends Emitter {
   }
 
   async _onHeartbeatTimeout() {
-    logger.warn('sdk webrtc heartbeat timed out', { userAgent: !!this.userAgent, cb: !!this.heartbeatTimeoutCb });
+    logger.warn('sdk webrtc heartbeat timed out', {
+      userAgent: !!this.userAgent,
+      cb: !!this.heartbeatTimeoutCb,
+      code: 'on-heartbeat-timeout',
+    });
 
     if (this.heartbeatTimeoutCb) {
       this.heartbeatTimeoutCb();
@@ -1629,6 +1691,7 @@ export default class WebRTCClient extends Emitter {
         try {
           await this.userAgent.transport.disconnect();
         } catch (e) {
+          e.code = 'transport-disconnected-heartbeat';
           logger.error('Transport disconnection after heartbeat timeout, error', e);
         }
       }
@@ -1662,31 +1725,31 @@ export default class WebRTCClient extends Emitter {
   }
 
   _connectIfNeeded(): Promise<void> {
-    logger.info('connect if needed, checking', { connected: this.isConnected() });
+    logger.info('connect if needed, checking', { connected: this.isConnected(), code: 'connect-if-needed' });
     if (!this.userAgent) {
-      logger.info('need to recreate User Agent');
+      logger.info('need to recreate User Agent', { code: 'connect-create-ua' });
       this.userAgent = this.createUserAgent(this.uaConfigOverrides);
     }
 
     if (this.isConnected()) {
-      logger.info('webrtc sdk, already connected');
+      logger.info('webrtc sdk, already connected', { code: 'connect-if-needed-connected' });
       return Promise.resolve();
     }
 
     if (this.isConnecting()) {
-      logger.info('webrtc sdk, already connecting...');
+      logger.info('webrtc sdk, already connecting...', { code: 'connect-if-needed-connecting' });
 
       this.connectionPromise = this.userAgent.transport.connectPromise;
       return this.connectionPromise;
     }
 
     if (this.connectionPromise) {
-      logger.info('webrtc sdk, connection promise connecting...');
+      logger.info('webrtc sdk, connection promise connecting...', { code: 'connect-if-needed-connect-promise' });
       // $FlowFixMe
       return this.connectionPromise;
     }
 
-    logger.info('WebRTC UA needs to connect');
+    logger.info('WebRTC UA needs to connect', { code: 'connecting-user-agent' });
 
     // Force UA to reconnect
     if (this.userAgent && this.userAgent.state !== UserAgentState.Stopped) {
@@ -1813,6 +1876,8 @@ export default class WebRTCClient extends Emitter {
 
     session.delegate.onSessionDescriptionHandler = (sdh: SessionDescriptionHandler) => {
       sdh.on('error', e => {
+        e.code = 'sdh-error';
+        logger.error('on sdh error', e);
         this.eventEmitter.emit(ON_ERROR, e);
       });
 
@@ -1824,6 +1889,7 @@ export default class WebRTCClient extends Emitter {
             errorCode: error.errorCode,
             errorText: error.errorText,
             url: error.url,
+            code: 'ice-candidate-error',
           });
         },
       };
@@ -1847,7 +1913,12 @@ export default class WebRTCClient extends Emitter {
         updatedNumber = session.assertedIdentity.uri.normal.user;
         updatedCalleeName = session.assertedIdentity.displayName || updatedNumber;
       }
-      logger.info('re-invite received', { updatedCalleeName, updatedNumber, hadRemoteVideo });
+      logger.info('re-invite received', {
+        updatedCalleeName,
+        updatedNumber,
+        hadRemoteVideo,
+        code: 'reinvite-received',
+      });
 
       // Useful to know if it's a video upgrade or an unhold from a remote peer with a video stream
 
@@ -1868,7 +1939,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   _onAccepted(session: Session, sessionDialog?: SessionDialog, withEvent: boolean = true) {
-    logger.info('on call accepted', { id: session.id, remoteTag: session.remoteTag });
+    logger.info('on call accepted', { id: session.id, remoteTag: session.remoteTag, code: 'on-call-accepted' });
 
     this.storeSipSession(session);
 
@@ -1880,7 +1951,7 @@ export default class WebRTCClient extends Emitter {
     const onTrack = (event: any) => {
       const isAudioOnly = this._isAudioOnly(session);
       const { kind, label, readyState, id, muted } = event.track;
-      logger.info('on track event', { isAudioOnly, kind, label, readyState, id, muted });
+      logger.info('on track event', { isAudioOnly, kind, label, readyState, id, muted, code: 'pc-on-track' });
 
       // Stop video track in audio only mode
       if (isAudioOnly && kind === 'video') {
@@ -1898,8 +1969,9 @@ export default class WebRTCClient extends Emitter {
 
     if (pc) {
       pc.oniceconnectionstatechange = () => {
-        logger.info('on ice connection state changed', { state: pc.iceConnectionState });
-        if (pc.iceConnectionState === 'disconnected') {
+        const state = pc.iceConnectionState;
+        logger.info('on ice connection state changed', { state, code: 'ice-connection-changed' });
+        if (state === 'disconnected') {
           this.eventEmitter.emit(ON_DISCONNECTED);
         }
       };
@@ -2066,16 +2138,21 @@ export default class WebRTCClient extends Emitter {
       statsLogger.trace('stats', {
         sessionId,
         ...stats,
+        code: 'stats',
       });
     }, SEND_STATS_DELAY);
   }
 
   _stopSendingStats(session: Session) {
     const sessionId = this.getSipSessionId(session);
-    logger.trace('Check for stopping stats', { sessionId, ids: Object.keys(this.statsIntervals) });
+    logger.trace('Check for stopping stats', {
+      sessionId,
+      ds: Object.keys(this.statsIntervals),
+      code: 'stopping-stats',
+    });
 
     if (sessionId in this.statsIntervals) {
-      logger.trace('Stop sending stats for call', { sessionId });
+      logger.trace('Stop sending stats for call', { sessionId, code: 'stop-stats' });
       this.statsIntervals[sessionId]();
       delete this.statsIntervals[sessionId];
     }
@@ -2102,6 +2179,7 @@ export default class WebRTCClient extends Emitter {
       try {
         await this.userAgent.transport.disconnect();
       } catch (e) {
+        e.code = 'transport-disconnect-error';
         logger.error('WebRTC transport disconnect, error', e);
       }
     }

@@ -24,28 +24,29 @@ class Checker {
   async check(onCheckBegin: Function = () => {}, onCheckResult: Function = () => {}) {
     await this._addEngineVersion();
 
-    logger.info('Engine check starting');
+    logger.info('Engine check starting', { code: 'start-engine-check' });
 
     for (let i = 0; i < this.checks.length; i++) {
       const { name, check } = this.checks[i];
 
-      logger.info(`Checking ${name} ...`);
+      logger.info(`Checking ${name} ...`, { code: `checking-${name}` });
 
       onCheckBegin(name);
       try {
         // eslint-disable-next-line no-await-in-loop
         const result = await check(this.server, this.session, this.externalAppConfig);
-        logger.info(`Checking ${name} success.`, { result });
+        logger.info(`Checking ${name} success.`, { result, code: `check-${name}-success` });
 
         onCheckResult(name, result);
       } catch (e) {
+        e.code = `check-${name}-failed`;
         logger.info(`Checking ${name} failure`, { message: e.message });
 
         onCheckResult(name, e);
       }
     }
 
-    logger.info('Engine check done.');
+    logger.info('Engine check done.', { code: 'check-engine-done' });
   }
 
   addCheck(check: Object) {

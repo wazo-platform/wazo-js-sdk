@@ -170,7 +170,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }).catch(error => {
       // Avoid exception on `t.server.scheme` in sip transport when losing the webrtc socket connection
       console.error('register error', error, error.message, error.stack);
-      logger.error('WebRTC register error', { message: error.message, stack: error.stack });
+      logger.error('WebRTC register error', { message: error.message, stack: error.stack, code: 'register-error' });
     });
   }
 
@@ -185,7 +185,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     if (!this.client) {
       return;
     }
-    logger.info('WebRTC phone stop');
+    logger.info('WebRTC phone stop', { code: 'stop' });
     this.client.stop();
   }
 
@@ -206,6 +206,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       audioOnly,
       conference,
       iceRestart,
+      code: 'send-reinvite',
     });
 
     if (!sipSession) {
@@ -238,7 +239,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   startHeartbeat() {
-    logger.info('WebRTC phone - start heartbeat', { client: !!this.client, hasHeartbeat: this.client.hasHeartbeat() });
+    logger.info('WebRTC phone - start heartbeat', {
+      client: !!this.client,
+      hasHeartbeat: this.client.hasHeartbeat(),
+      code: 'start-heartbeat',
+    });
     if (!this.client || this.client.hasHeartbeat()) {
       return;
     }
@@ -247,7 +252,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   stopHeartbeat() {
-    logger.info('WebRTC phone - stopHeartbeat', { client: !!this.client });
+    logger.info('WebRTC phone - stopHeartbeat', { client: !!this.client, code: 'stop-heartbeat' });
     if (!this.client) {
       return;
     }
@@ -264,7 +269,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   reconnect() {
-    logger.info('WebRTC phone - reconnect', { client: !!this.client });
+    logger.info('WebRTC phone - reconnect', { client: !!this.client, code: 'reconnect' });
     if (!this.client) {
       return;
     }
@@ -305,7 +310,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return false;
     }
 
-    logger.info('Downgrade to video', { id: callSession ? callSession.getId() : null, withMessage });
+    logger.info('Downgrade to video', {
+      id: callSession ? callSession.getId() : null,
+      withMessage,
+      code: 'downgrade-video',
+    });
 
     this.client.downgradeToAudio(sipSession);
 
@@ -332,6 +341,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       id: callSession ? callSession.getId() : null,
       constraints,
       isConference,
+      code: 'update-video',
     });
 
     const shouldScreenShare = constraints && !!constraints.screen;
@@ -371,6 +381,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     logger.info('Sending reinvite message', {
       id: callSession ? callSession.getId() : null,
       isUpgrade,
+      code: 'send-reinvite-message',
     });
 
     // Have to send the message after a delay due to latency to update the remote peer
@@ -394,7 +405,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       // Monkey patch to know when canceled with the CANCEL message
       const onCancel = sipSession._onCancel.bind(sipSession);
       sipSession._onCancel = (message: IncomingRequestMessage) => {
-        logger.trace('on sip session canceled', { callId: message.callId });
+        logger.trace('on sip session canceled', { callId: message.callId, code: 'on-cancel' });
 
         onCancel(message);
         const elsewhere = message.data.indexOf('cause=26') !== -1 && message.data.indexOf('completed elsewhere') !== -1;
@@ -404,7 +415,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
         this.eventEmitter.emit(ON_CALL_CANCELED, callSession, elsewhere);
       };
     } else if (sipSession instanceof Invitation) {
-      console.warn('sipSession._onCancel not found, please update the wazo SDK accordingly');
+      console.warn('sipSession._onCancel not found, please update the wazo SDK accordingly', {
+        code: 'on-cancel-not-found',
+      });
     }
 
     sipSession.stateChange.addListener((newState: SessionState) => {
@@ -422,13 +435,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
             this.audioOutputVolume,
           );
         case SessionState.Terminating:
-          logger.info('WebRTC phone - call terminating', { sipId: sipSession.id });
+          logger.info('WebRTC phone - call terminating', { sipId: sipSession.id, code: 'call-terminating' });
 
           this.eventEmitter.emit(ON_CALL_ENDING, this._createCallSession(sipSession));
 
           break;
         case SessionState.Terminated: {
-          logger.info('WebRTC phone - call terminated', { sipId: sipSession.id });
+          logger.info('WebRTC phone - call terminated', { sipId: sipSession.id, code: 'call-terminated' });
 
           // Should be called before `_onCallTerminated` or the callCount will not decrement...
           const callSession = this._createCallSession(sipSession);
@@ -458,6 +471,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         streamId: stream ? stream.id : null,
         tracks: stream ? stream.getTracks() : null,
         kind,
+        code: 'pc-on-track',
       });
 
       if (kind === 'audio') {
@@ -476,6 +490,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       logger.info('on remove stream called on the peer connection', {
         id: event.stream.id,
         tracks: event.stream.getTracks(),
+        code: 'pc-on-remove-stream',
       });
 
       this.eventEmitter.emit(ON_REMOVE_STREAM, event.stream);
@@ -483,7 +498,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   async startScreenSharing(constraints: Object, callSession?: CallSession) {
-    logger.info('WebRTC - start screen sharing', { constraints, id: callSession ? callSession.getId() : null });
+    logger.info('WebRTC - start screen sharing', {
+      constraints,
+      id: callSession ? callSession.getId() : null,
+      code: 'start-screansharing',
+    });
 
     const screenShareStream = await this.client.getStreamFromConstraints(constraints);
     if (!screenShareStream) {
@@ -525,6 +544,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     logger.info('WebRTC phone - stop screen sharing', {
       restoreLocalStream,
+      code: 'stop-screensharing',
     });
 
     let reinvited = false;
@@ -583,6 +603,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       hadVideo,
       id: this.getSipSessionId(sipSession),
       screenTrack,
+      code: 'on-screensharing',
     });
 
     if (screenTrack) {
@@ -591,6 +612,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
           hadVideo,
           id: this.getSipSessionId(sipSession),
           screenTrack,
+          code: 'screenshare-ended',
         });
 
         this.eventEmitter.emit(
@@ -618,7 +640,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   _onCallAccepted(sipSession: Session, cameraEnabled: boolean): CallSession {
-    logger.info('WebRTC phone - on call accepted', { sipId: sipSession.id, cameraEnabled });
+    logger.info('WebRTC phone - on call accepted', { sipId: sipSession.id, cameraEnabled, code: 'call-accepted' });
 
     const callSession = this._createAcceptedCallSession(sipSession, cameraEnabled);
     this.currentSipSession = sipSession;
@@ -638,7 +660,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   changeAudioDevice(id: string) {
-    logger.info('WebRTC phone - change audio device', { deviceId: id });
+    logger.info('WebRTC phone - change audio device', { deviceId: id, code: 'change-audio-device' });
     this.audioOutputDeviceId = id;
     this.client.changeAudioOutputDevice(id);
   }
@@ -648,14 +670,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   changeRingDevice(id: string) {
-    logger.info('WebRTC phone - changing ring device', { id });
+    logger.info('WebRTC phone - changing ring device', { id, code: 'change-ring-device' });
 
     this.audioRingDeviceId = id;
   }
 
   // volume is a value between 0 and 1
   changeAudioVolume(volume: number) {
-    logger.info('WebRTC phone - changing audio volume', { volume });
+    logger.info('WebRTC phone - changing audio volume', { volume, code: 'change-volume' });
 
     this.audioOutputVolume = volume;
     this.client.changeAudioOutputVolume(volume);
@@ -663,31 +685,34 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   // volume is a value between 0 and 1
   changeRingVolume(volume: number) {
-    logger.info('WebRTC phone - changing ring volume', { volume });
+    logger.info('WebRTC phone - changing ring volume', { volume, code: 'change-ring-volume' });
 
     this.audioRingVolume = volume;
   }
 
   changeAudioInputDevice(id: string) {
-    logger.info('WebRTC phone - changeAudio input device', { deviceId: id });
+    logger.info('WebRTC phone - changeAudio input device', { deviceId: id, code: 'change-audio-input' });
 
     return this.client.changeAudioInputDevice(id, this.currentSipSession);
   }
 
   changeVideoInputDevice(id: ?string) {
-    logger.info('WebRTC phone - change video input device', { deviceId: id });
+    logger.info('WebRTC phone - change video input device', { deviceId: id, code: 'change-video-input' });
 
     return this.client.changeVideoInputDevice(id, this.currentSipSession);
   }
 
   changeSessionVideoInputDevice(id: ?string) {
-    logger.info('WebRTC phone - change session video input device', { deviceId: id });
+    logger.info('WebRTC phone - change session video input device', {
+      deviceId: id,
+      code: 'change-session-video-input',
+    });
 
     return this.client.changeSessionVideoInputDevice(id, this.currentSipSession);
   }
 
   _onCallTerminated(sipSession: Session) {
-    logger.info('WebRTC phone - on call terminated', { sipId: sipSession.id });
+    logger.info('WebRTC phone - on call terminated', { sipId: sipSession.id, code: 'on-call-terimated' });
 
     const sipSessionId = this.getSipSessionId(sipSession);
     const callSession = this._createCallSession(sipSession);
@@ -725,6 +750,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       sipId: sipSession.id,
       shouldRetrigger,
       hasIncomingCallSession,
+      code: 'check-retrigger-incoming-call',
     });
 
     this.client.onCallEnded(sipSession);
@@ -812,26 +838,36 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   // Deprecated
   getLocalStreamForCall(callSession: CallSession): ?MediaStream {
-    logger.warn('WebRTCPhone.getLocalStreamForCall is deprecated, use WebRTCPhone.getLocalStream instead');
+    logger.warn('WebRTCPhone.getLocalStreamForCall is deprecated, use WebRTCPhone.getLocalStream instead', {
+      code: 'get-local-stream-deprecated',
+    });
 
     return this.getLocalStream(callSession);
   }
 
   // Deprecated
   getRemoteStreamForCall(callSession: CallSession): ?MediaStream {
-    logger.warn('WebRTCPhone.getRemoteStreamForCall is deprecated, use WebRTCPhone.getRemoteStream instead');
+    logger.warn('WebRTCPhone.getRemoteStreamForCall is deprecated, use WebRTCPhone.getRemoteStream instead', {
+      code: 'get-remote-stream-deprecated',
+    });
 
     return this.getRemoteVideoStream(callSession);
   }
 
   getRemoteStreamsForCall(callSession: CallSession): ?MediaStream {
-    logger.warn('WebRTCPhone.getRemoteStreamsForCall is deprecated, use WebRTCPhone.getRemoteStreams instead');
+    logger.warn('WebRTCPhone.getRemoteStreamsForCall is deprecated, use WebRTCPhone.getRemoteStreams instead', {
+      code: 'get-remote-streams-deprecated',
+    });
 
     return this.getRemoteStream(callSession);
   }
 
   accept(callSession: CallSession, cameraEnabled?: boolean): Promise<string | null> {
-    logger.info('WebRTC phone - accept call', { id: callSession ? callSession.getId() : 'n/a', cameraEnabled });
+    logger.info('WebRTC phone - accept call', {
+      id: callSession ? callSession.getId() : 'n/a',
+      cameraEnabled,
+      code: 'accept',
+    });
     if (this.currentSipSession) {
       this.holdSipSession(
         this.currentSipSession,
@@ -841,18 +877,24 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     if (!callSession) {
-      logger.warn('no CallSession to accept.');
+      logger.warn('no CallSession to accept.', { code: 'no-session-accept' });
       return Promise.resolve(null);
     }
 
     const sipSessionId = this.getSipSessionIdFromCallSession(callSession);
     if (sipSessionId && !(sipSessionId in this.callSessions)) {
-      logger.warn('Call session already ended or not found, can\'t accept it.', { sipSessionId });
+      logger.warn('Call session already ended or not found, can\'t accept it.', {
+        sipSessionId,
+        code: 'accept-ended-not-found',
+      });
       return Promise.resolve(null);
     }
 
     if (callSession.getId() in this.acceptedSessions) {
-      logger.warn('CallSession already accepted.', { id: callSession ? callSession.getId() : 'n/a' });
+      logger.warn('CallSession already accepted.', {
+        id: callSession ? callSession.getId() : 'n/a',
+        code: 'already-accepted',
+      });
       return Promise.resolve(callSession.sipCallId);
     }
 
@@ -866,12 +908,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const sipSession = this.client.getSipSession(callSession.getId());
     if (sipSession) {
       if (sipSession.state === SessionState.Terminated || sipSession.state === SessionState.Terminating) {
-        logger.warn('Trying to answer a terminated sipSession.');
+        logger.warn('Trying to answer a terminated sipSession.', { code: 'answer-terminated' });
 
         return Promise.resolve(null);
       }
 
-      logger.info('accept call, session found', { sipId: sipSession.id });
+      logger.info('accept call, session found', { sipId: sipSession.id, code: 'accept-found-session' });
 
       // $FlowFixMe
       return this.client.answer(sipSession, this.allowVideo ? cameraEnabled : false).then(() => {
@@ -883,7 +925,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
       });
     }
 
-    logger.warn('no CallSession found to accept.', { id: callSession ? callSession.getId() : 'n/a' });
+    logger.warn('no CallSession found to accept.', {
+      id: callSession ? callSession.getId() : 'n/a',
+      code: 'no-callsession-accept',
+    });
 
     return Promise.resolve(null);
   }
@@ -893,7 +938,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   async reject(callSession: CallSession): Promise<void> {
-    logger.info('reject WebRTC called', { id: callSession.getId() });
+    logger.info('reject WebRTC called', { id: callSession.getId(), code: 'reject' });
 
     this.eventEmitter.emit(ON_TERMINATE_SOUND, callSession, 'call rejected locally');
     if (!callSession || callSession.getId() in this.rejectedSessions) {
@@ -905,14 +950,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     const sipSession = this.findSipSession(callSession);
     if (sipSession) {
-      logger.info('WebRTC rejecting', { sipId: sipSession.id });
+      logger.info('WebRTC rejecting', { sipId: sipSession.id, code: 'rejecting' });
 
       this.client.hangup(sipSession);
     }
   }
 
   async ignore(callSession: CallSession): Promise<void> {
-    logger.info('WebRTC ignore', { id: callSession.getId() });
+    logger.info('WebRTC ignore', { id: callSession.getId(), code: 'ignore' });
 
     // kill the ring
     this.eventEmitter.emit(ON_TERMINATE_SOUND, callSession, 'ignoring call');
@@ -924,14 +969,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const sipSession = this.findSipSession(callSession);
 
     if (sipSession) {
-      logger.info('WebRTC atxfer', { sipId: sipSession.id });
+      logger.info('WebRTC atxfer', { sipId: sipSession.id, code: 'atxfer' });
 
       return this.client.atxfer(sipSession);
     }
   }
 
   hold(callSession: CallSession, withEvent: boolean = true): ?Promise<any> {
-    logger.info('WebRTC hold', { id: callSession.getId() });
+    logger.info('WebRTC hold', { id: callSession.getId(), code: 'hold' });
 
     const sipSession = this.findSipSession(callSession);
 
@@ -940,24 +985,26 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   // @Deprecated
   unhold(callSession: CallSession, withEvent: boolean = true): ?Promise<any> {
-    console.warn('Please note that `phone.unhold()` is being deprecated; `phone.resume()` is the preferred method');
+    console.warn('Please note that `phone.unhold()` is being deprecated; `phone.resume()` is the preferred method', {
+      code: 'unhold-deprecated',
+    });
 
     return this.resume(callSession, withEvent);
   }
 
   resume(callSession?: CallSession, withEvent: boolean = true): Promise<any> {
-    logger.info('WebRTC resume called', { id: callSession ? callSession.getId() : null });
+    logger.info('WebRTC resume called', { id: callSession ? callSession.getId() : null, code: 'resume' });
 
     const sipSession = this.findSipSession(callSession);
     if (!sipSession) {
       return new Promise((resolve, reject) => reject(new Error('No session to resume')));
     }
 
-    logger.info('WebRTC resuming', { sipId: sipSession.id });
+    logger.info('WebRTC resuming', { sipId: sipSession.id, code: 'resuming' });
 
     // Hold current session if different from the current one (we don't want 2 sessions active at the same time).
     if (this.currentSipSession && this.currentSipSession.id !== sipSession.id) {
-      logger.info('WebRTC hold call after resume', { id: this.currentSipSession.id });
+      logger.info('WebRTC hold call after resume', { id: this.currentSipSession.id, code: 'hold-other-session' });
       this.holdSipSession(
         this.currentSipSession,
         this.currentCallSession,
@@ -985,7 +1032,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const sessionId = this.getSipSessionId(sipSession);
     const hasVideo = this.client.hasLocalVideo(sessionId);
 
-    logger.info('WebRTC hold sip session', { sipId: sipSession.id, hasVideo });
+    logger.info('WebRTC hold sip session', { sipId: sipSession.id, hasVideo, code: 'hold-session' });
 
     // Stop screenshare if needed
     if (this.currentScreenShare && this.currentScreenShare.sipSessionId === sessionId) {
@@ -1020,7 +1067,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const isConference = !!callSession && callSession.isConference();
 
     const sessionId = this.getSipSessionId(sipSession);
-    logger.info('WebRTC unhold sip session', { sessionId, isConference });
+    logger.info('WebRTC unhold sip session', { sessionId, isConference, code: 'unhold-session' });
 
     const { hasVideo } = this.client.getHeldSession(sessionId) || {};
     const wasScreensharing = this.lastScreenShare && this.lastScreenShare.sipSessionId === sessionId;
@@ -1064,14 +1111,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   mute(callSession: ?CallSession, withEvent: boolean = true): void {
-    logger.info('WebRTC mute called', { id: callSession ? callSession.getId() : null });
+    logger.info('WebRTC mute called', { id: callSession ? callSession.getId() : null, code: 'mute' });
 
     const sipSession = this.findSipSession(callSession);
     if (!sipSession) {
       return;
     }
 
-    logger.info('WebRTC muting', { sipId: sipSession.id });
+    logger.info('WebRTC muting', { sipId: sipSession.id, code: 'muting' });
     this.client.mute(sipSession);
     const newCallSession = this._createCallSession(sipSession, callSession, { muted: true });
 
@@ -1085,14 +1132,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   unmute(callSession: ?CallSession, withEvent: boolean = true): void {
-    logger.info('WebRTC unmute called', { id: callSession ? callSession.getId() : null });
+    logger.info('WebRTC unmute called', { id: callSession ? callSession.getId() : null, code: 'unmute' });
 
     const sipSession = this.findSipSession(callSession);
     if (!sipSession) {
       return;
     }
 
-    logger.info('WebRTC unmuting', { sipId: sipSession.id });
+    logger.info('WebRTC unmuting', { sipId: sipSession.id, code: 'unmuting' });
     this.client.unmute(sipSession);
     const newCallSession = this._createCallSession(sipSession, callSession, { muted: false });
 
@@ -1119,7 +1166,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     if (!sipSession) {
       return;
     }
-    logger.info('WebRTC turn camera on', { sipId: sipSession.id });
+    logger.info('WebRTC turn camera on', { sipId: sipSession.id, code: 'turn-camera-on' });
 
     this.client.toggleCameraOn(sipSession);
 
@@ -1131,7 +1178,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     if (!sipSession) {
       return;
     }
-    logger.info('WebRTC turn camera off', { sipId: sipSession.id });
+    logger.info('WebRTC turn camera off', { sipId: sipSession.id, code: 'turn-camera-off' });
 
     this.client.toggleCameraOff(sipSession);
     this.eventEmitter.emit(ON_CAMERA_DISABLED, this._createCameraDisabledCallSession(sipSession, callSession));
@@ -1143,7 +1190,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return;
     }
 
-    logger.info('WebRTC send key', { sipId: sipSession.id, tone });
+    logger.info('WebRTC send key', { sipId: sipSession.id, tone, code: 'send-dtmf' });
     this.client.sendDTMF(sipSession, tone);
   }
 
@@ -1151,7 +1198,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
   // @TODO: line is not used here
   async makeCall(number: string, line: any, cameraEnabled?: boolean,
     audioOnly: boolean = false, conference: boolean = false): Promise<?CallSession> {
-    logger.info('make WebRTC call', { number, lineId: line ? line.id : null, cameraEnabled, audioOnly, conference });
+    logger.info('make WebRTC call', {
+      number,
+      lineId: line ? line.id : null,
+      cameraEnabled,
+      audioOnly,
+      conference,
+      code: 'make-call',
+    });
     if (!number) {
       return Promise.resolve(null);
     }
@@ -1165,6 +1219,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         this.currentCallSession,
         true,
       ).catch(e => {
+        e.code = 'hold-current-session-error';
         logger.warn('Unable to hold current session when making another call', e);
       });
     }
