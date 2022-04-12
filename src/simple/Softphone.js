@@ -120,8 +120,7 @@ class Softphone {
     window.addEventListener('message', this._onMessage.bind(this), false);
 
     if (!server) {
-      // eslint-disable-next-line no-param-reassign
-      server = 'stack.dev.wazo.io';
+      throw new Error('`server` is not set');
     }
 
     const config: Object = { server };
