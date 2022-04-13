@@ -5,6 +5,15 @@ import newFrom from '../utils/new-from';
 
 import MeetingAuthorization from './MeetingAuthorization';
 
+export const ACCESS_CONTROL_OPEN = 'open';
+export const ACCESS_CONTROL_CONTROLLED = 'controlled';
+export const ACCESS_CONTROL_LOCKED = 'locked';
+export const ACCESS_CONTROL_OPTIONS = [
+  ACCESS_CONTROL_OPEN,
+  ACCESS_CONTROL_CONTROLLED,
+  ACCESS_CONTROL_LOCKED,
+];
+
 export type MeetingCreationResponse = {
   guest_sip_authorization: string,
   ingress_http_uri: string,
@@ -95,5 +104,20 @@ export default class Meeting {
     // eslint-disable-next-line no-undef
     const [username, secret] = atob(this.guestSipAuthorization).split(':');
     return { username, secret };
+  }
+
+  getAccessControl() {
+    return this.locked
+      ? ACCESS_CONTROL_LOCKED
+      : this.requireAuthorization ? ACCESS_CONTROL_CONTROLLED : ACCESS_CONTROL_OPEN;
+  }
+
+  static deriveValuesFromAccessControl(accessControl: string) {
+    if (!ACCESS_CONTROL_OPTIONS.includes(accessControl)) {
+      throw new Error('Not a valid access control type');
+    }
+    const requireAuthorization = accessControl === ACCESS_CONTROL_CONTROLLED;
+    const locked = accessControl === ACCESS_CONTROL_LOCKED;
+    return { requireAuthorization, locked };
   }
 }

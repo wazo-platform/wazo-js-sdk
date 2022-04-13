@@ -73,8 +73,12 @@ export default (client: ApiRequester, baseUrl: string) => ({
   getMyMeetings: (): Promise<Meeting> =>
     client.get(`${baseUrl}/users/me/meetings`).then(response => Meeting.parseMany(response.items)),
 
-  createMyMeeting: (name: string, persistent: boolean): Promise<Meeting> =>
-    client.post(`${baseUrl}/users/me/meetings`, { name, persistent }).then(Meeting.parse),
+  createMyMeeting: (name: string, persistent: boolean, accessControl: string): Promise<Meeting> => {
+    const { requireAuthorization, locked } = Meeting.deriveValuesFromAccessControl(accessControl);
+    return client
+      .post(`${baseUrl}/users/me/meetings`, { name, persistent, requireAuthorization, locked })
+      .then(Meeting.parse);
+  },
 
   deleteMyMeeting: (meetingUuid: string): Promise<Meeting> =>
     client.delete(`${baseUrl}/users/me/meetings/${meetingUuid}`, null),
