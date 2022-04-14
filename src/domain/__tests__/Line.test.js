@@ -11,7 +11,7 @@ describe('Line domain', () => {
         username: 'ipcor1pj',
         links: [
           {
-            href: 'https://stack.dev.wazo.io/api/confd/1.1/endpoints/sip/19',
+            href: 'https://stack.example.com/api/confd/1.1/endpoints/sip/19',
             rel: 'endpoint_sip',
           },
         ],
@@ -25,7 +25,7 @@ describe('Line domain', () => {
           context: 'default',
           links: [
             {
-              href: 'https://stack.dev.wazo.io/api/confd/1.1/extensions/59',
+              href: 'https://stack.example.com/api/confd/1.1/extensions/59',
               rel: 'extensions',
             },
           ],
@@ -33,7 +33,7 @@ describe('Line domain', () => {
       ],
       links: [
         {
-          href: 'https://stack.dev.wazo.io/api/confd/1.1/lines/8',
+          href: 'https://stack.example.com/api/confd/1.1/lines/8',
           rel: 'lines',
         },
       ],
@@ -51,7 +51,7 @@ describe('Line domain', () => {
             context: 'default',
             links: [
               {
-                href: 'https://stack.dev.wazo.io/api/confd/1.1/extensions/59',
+                href: 'https://stack.example.com/api/confd/1.1/extensions/59',
                 rel: 'extensions',
               },
             ],
@@ -61,7 +61,7 @@ describe('Line domain', () => {
           id: 19,
           links: [
             {
-              href: 'https://stack.dev.wazo.io/api/confd/1.1/endpoints/sip/19',
+              href: 'https://stack.example.com/api/confd/1.1/endpoints/sip/19',
               rel: 'endpoint_sip',
             },
           ],
