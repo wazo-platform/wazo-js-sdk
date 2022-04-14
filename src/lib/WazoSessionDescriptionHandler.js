@@ -110,6 +110,14 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       wazoLogger.trace('onicecandidate', event.candidate ? event.candidate.candidate : { done: true });
       if (event.candidate) {
         this.gatheredCandidates.push(parseCandidate(event.candidate.candidate));
+
+        // When receiving a `srflx` or a `relay` candidate, consider the negotiation done.
+        if (event.candidate.candidate.indexOf('srflx') !== -1 || event.candidate.candidate.indexOf('relay') !== -1) {
+          wazoLogger.info('A valid ice was found, triggering ice gathering complete callback.', {
+            ice: event.candidate.candidate,
+          });
+          this.iceGatheringComplete();
+        }
       }
     };
 
