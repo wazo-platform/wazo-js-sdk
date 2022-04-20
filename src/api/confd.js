@@ -1,11 +1,13 @@
 /* @flow */
 import ApiRequester from '../utils/api-requester';
 import type { UUID, ListConfdUsersResponse, ListApplicationsResponse } from '../domain/types';
+import type { MeetingCreateArguments, MeetingUpdateArguments } from '../domain/Meeting';
 import Profile from '../domain/Profile';
 import SipLine from '../domain/SipLine';
 import ExternalApp from '../domain/ExternalApp';
 import Meeting from '../domain/Meeting';
 import MeetingAuthorization from '../domain/MeetingAuthorization';
+import { convertKeysFromCamelToUnderscore } from '../utils/object';
 
 export default (client: ApiRequester, baseUrl: string) => ({
   listUsers: (): Promise<ListConfdUsersResponse> => client.get(`${baseUrl}/users`, null),
@@ -73,12 +75,18 @@ export default (client: ApiRequester, baseUrl: string) => ({
   getMyMeetings: (): Promise<Meeting> =>
     client.get(`${baseUrl}/users/me/meetings`).then(response => Meeting.parseMany(response.items)),
 
-  createMyMeeting: (name: string, persistent: boolean, accessControl: string): Promise<Meeting> => {
-    const { requireAuthorization, locked } = Meeting.deriveValuesFromAccessControl(accessControl);
-    return client
-      .post(`${baseUrl}/users/me/meetings`, { name, persistent, requireAuthorization, locked })
-      .then(Meeting.parse);
-  },
+  createMyMeeting: (args: MeetingCreateArguments): Promise<Meeting> =>
+    client
+      .post(`${baseUrl}/users/me/meetings`, convertKeysFromCamelToUnderscore(args))
+      .then(Meeting.parse),
+
+  updateMyMeeting: (meetingUuid: string, data: MeetingUpdateArguments): Promise<Boolean> =>
+    client.put(
+      `${baseUrl}/users/me/meetings/${meetingUuid}`,
+      convertKeysFromCamelToUnderscore(data),
+      null,
+      ApiRequester.successResponseParser,
+    ),
 
   deleteMyMeeting: (meetingUuid: string): Promise<Meeting> =>
     client.delete(`${baseUrl}/users/me/meetings/${meetingUuid}`, null),
