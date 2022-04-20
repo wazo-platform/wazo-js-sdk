@@ -5,14 +5,16 @@ import newFrom from '../utils/new-from';
 
 import MeetingAuthorization from './MeetingAuthorization';
 
-export const ACCESS_CONTROL_OPEN = 'open';
-export const ACCESS_CONTROL_CONTROLLED = 'controlled';
-export const ACCESS_CONTROL_LOCKED = 'locked';
-export const ACCESS_CONTROL_OPTIONS = [
-  ACCESS_CONTROL_OPEN,
-  ACCESS_CONTROL_CONTROLLED,
-  ACCESS_CONTROL_LOCKED,
-];
+export type MeetingCreateArguments = {
+  name: string,
+  requireAuthorization: boolean,
+  persistent: boolean,
+}
+
+export type MeetingUpdateArguments = {
+  name?: string,
+  requireAuthorization?: boolean,
+}
 
 export type MeetingCreationResponse = {
   guest_sip_authorization: string,
@@ -25,7 +27,6 @@ export type MeetingCreationResponse = {
   persistent: boolean,
   creation_time: string,
   require_authorization: boolean,
-  locked: boolean,
 }
 
 export default class Meeting {
@@ -42,7 +43,6 @@ export default class Meeting {
   creationTime: Date;
   pendingAuthorizations: Array<MeetingAuthorization>
   requireAuthorization: boolean;
-  locked: boolean;
 
   static parse(plain: MeetingCreationResponse): Meeting {
     return new Meeting({
@@ -56,7 +56,6 @@ export default class Meeting {
       persistent: plain.persistent,
       creationTime: moment(plain.creation_time).toDate(),
       requireAuthorization: plain.require_authorization,
-      locked: plain.locked,
     });
   }
 
@@ -82,7 +81,6 @@ export default class Meeting {
     persistent,
     creationTime,
     requireAuthorization,
-    locked,
   }: Object = {}) {
     this.guestSipAuthorization = guestSipAuthorization;
     this.uri = uri;
@@ -94,7 +92,6 @@ export default class Meeting {
     this.persistent = persistent;
     this.creationTime = creationTime;
     this.requireAuthorization = requireAuthorization;
-    this.locked = locked;
 
     // Useful to compare instead of instanceof with minified code
     this.type = 'Meeting';
@@ -106,18 +103,4 @@ export default class Meeting {
     return { username, secret };
   }
 
-  getAccessControl() {
-    return this.locked
-      ? ACCESS_CONTROL_LOCKED
-      : this.requireAuthorization ? ACCESS_CONTROL_CONTROLLED : ACCESS_CONTROL_OPEN;
-  }
-
-  static deriveValuesFromAccessControl(accessControl: string) {
-    if (!ACCESS_CONTROL_OPTIONS.includes(accessControl)) {
-      throw new Error('Not a valid access control type');
-    }
-    const requireAuthorization = accessControl === ACCESS_CONTROL_CONTROLLED;
-    const locked = accessControl === ACCESS_CONTROL_LOCKED;
-    return { requireAuthorization, locked };
-  }
 }
