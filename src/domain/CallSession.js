@@ -390,7 +390,7 @@ export default class CallSession {
       ringing: call.isRinging(),
       answered: call.isUp(),
       answeredBySystem: call.isUp() && call.talkingToIds.length === 0,
-      cameraEnabled: false,
+      cameraEnabled: call.isVideo,
       dialedExtension: call.dialedExtension,
       call,
       conference: false, // @FIXME?
