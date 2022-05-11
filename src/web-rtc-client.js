@@ -1070,11 +1070,11 @@ export default class WebRTCClient extends Emitter {
     });
   }
 
-  changeAudioInputDevice(id: string, session: ?Inviter) {
+  changeAudioInputDevice(id: string, session: ?Inviter, force: ?boolean) {
     const currentId = this.getAudioDeviceId();
     logger.info('setting audio input device', { id, currentId, session: !!session });
 
-    if (id === currentId) {
+    if (!force && id === currentId) {
       return null;
     }
 
