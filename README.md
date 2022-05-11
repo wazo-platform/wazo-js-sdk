@@ -1636,7 +1636,7 @@ phone.changeRingDevice(someDevice: string);
 ##### Updating audio input device
 
 ```js
-phone.changeAudioInputDevice(someDevice: string);
+phone.changeAudioInputDevice(someDevice: string, session: ?Inviter, force: ?boolean);
 ```
 
 ##### Updating video input device
