@@ -11,6 +11,8 @@ export type RawMeetingAuthorization = {
 export const PENDING = 'pending';
 export const ACCEPTED = 'accepted';
 export const REJECTED = 'rejected';
+export const PROCESSED_SUCCESS = 'process_success';
+export const PROCESSED_ERROR = 'process_error';
 
 export default class MeetingAuthorization {
   meetingUuid: string;
