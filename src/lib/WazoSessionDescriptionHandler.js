@@ -12,7 +12,7 @@ import { SessionDescriptionHandler }
 import { SessionDescriptionHandlerOptions }
   from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-options';
 import IssueReporter from '../service/IssueReporter';
-import { fixSdp, parseCandidate } from '../utils/sdp';
+import { addIcesInAllBundles, fixSdp, parseCandidate } from '../utils/sdp';
 
 const wazoLogger = IssueReporter ? IssueReporter.loggerFor('webrtc-sdh') : console;
 
@@ -141,7 +141,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
 
         // Check if we got ICEs
         if (sdp.indexOf('a=candidate') !== -1) {
-          return description;
+          return addIcesInAllBundles(description);
         }
 
         wazoLogger.info('No ICE candidates found in SDP, fixing it with gathered ices', this.gatheredCandidates);

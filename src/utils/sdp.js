@@ -120,3 +120,21 @@ export const fixSdp = (sdp: string, candidates: Object[], forcePort: boolean = t
 
   return fixed;
 };
+
+export const addIcesInAllBundles = (sdp: string) => {
+  const parsedSdp = sdpParser.parse(sdp);
+
+  const mediaWithCandidate = parsedSdp.media.find(media => !!media.candidates);
+  if (!mediaWithCandidate) {
+    return sdp;
+  }
+
+  const { candidates } = mediaWithCandidate;
+
+  parsedSdp.media = parsedSdp.media.map(media => ({
+    ...media,
+    candidates: media.candidates || candidates,
+  }));
+
+  return sdpParser.write(parsedSdp);
+};
