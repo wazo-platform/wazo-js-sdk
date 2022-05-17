@@ -69,27 +69,41 @@ describe('changeAudioInputDevice', () => {
     });
   });
 
+  const devices = [
+    { deviceId: 'default', kind: 'audioinput', label: 'Default - Fake Microphone', groupId: 'fak3Gr0up3' },
+    { deviceId: 'fak3d3v1c3', kind: 'audioinput', label: 'Fake Microphone', groupId: 'fak3Gr0up3' },
+  ];
+  const enumerateDevicesMock = jest.fn(async () => {
+    return new Promise(resolve => {
+      resolve(devices);
+    });
+  });
+
   Object.defineProperty(global.navigator, 'mediaDevices', {
     value: {
       getUserMedia: getUserMediaMock,
+      enumerateDevices: enumerateDevicesMock,
     },
   });
 
   it('should change the audio input track if the provided id is different', async () => {
     client.setMediaConstraints(constraints);
     expect(client.getAudioDeviceId()).toBe(defaultId);
-    expect(client.changeAudioInputDevice(deviceId, session)).toBeTruthy();
+    const result = await client.changeAudioInputDevice(deviceId, session);
+    expect(result).toBeTruthy();
   });
 
   it('should NOT change the audio input track if the provided id is the same', async () => {
     client.setMediaConstraints(constraints);
     expect(client.getAudioDeviceId()).toBe(defaultId);
-    expect(client.changeAudioInputDevice(defaultId, session)).toBeFalsy();
+    const result = await client.changeAudioInputDevice(defaultId, session);
+    expect(result).toBeFalsy();
   });
 
   it('should change the audio input track if the provided id is the same and force param is TRUE', async () => {
     client.setMediaConstraints(constraints);
     expect(client.getAudioDeviceId()).toBe(defaultId);
-    expect(client.changeAudioInputDevice(defaultId, session, true)).toBeTruthy();
+    const result = await client.changeAudioInputDevice(defaultId, session, true);
+    expect(result).toBeTruthy();
   });
 });
