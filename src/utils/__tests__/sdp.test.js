@@ -9,7 +9,7 @@ import {
   fixSdp,
   fixBundle,
   toggleVideoDirection,
-  hasAnActiveVideo,
+  hasAnActiveVideo, addIcesInAllBundles,
 } from '../sdp';
 
 const goodSdp = `
@@ -172,6 +172,38 @@ describe('SDP utils', () => {
     it('should return true if a section video is active', async () => {
       expect(hasAnActiveVideo(videoReinvite)).toBeTruthy();
       expect(hasAnActiveVideo(inactiveVideo)).toBeFalsy();
+    });
+  });
+
+  describe('Adding candidate in all bundles ', () => {
+    it('should add candidate everywhere', async () => {
+      const audioWithoutCandidate = `
+c=IN IP4 203.0.113.1
+m=audio 54400 RTP/SAVPF 0 96
+m=video 54400 RTP/SAVPF 0 96
+a=candidate:0 1 UDP 2113667327 203.0.113.1 54400 typ host
+a=candidate:3996450952 1 udp 41819903 14.72.21.2 65092 typ relay raddr 0.0.0.0 rport 0 generation 0 network-id 3 network-cost 10
+`;
+      const fixedAudioWithoutCandidate = sdpParser.parse(addIcesInAllBundles(audioWithoutCandidate));
+
+      expect(fixedAudioWithoutCandidate.media[0].candidates[0].type).toBe('host');
+      expect(fixedAudioWithoutCandidate.media[0].candidates[1].type).toBe('relay');
+      expect(fixedAudioWithoutCandidate.media[1].candidates[0].type).toBe('host');
+      expect(fixedAudioWithoutCandidate.media[1].candidates[1].type).toBe('relay');
+
+      // It should not add candidate if already present
+      const audioWithCandidate = `
+c=IN IP4 203.0.113.1
+m=audio 54400 RTP/SAVPF 0 96
+a=candidate:0 1 UDP 2113667327 203.0.113.1 54400 typ srflx
+
+m=video 54400 RTP/SAVPF 0 96
+a=candidate:0 1 UDP 2113667327 203.0.113.1 54400 typ host
+`;
+      const fixedAudioWithCandidate = sdpParser.parse(addIcesInAllBundles(audioWithCandidate));
+
+      expect(fixedAudioWithCandidate.media[0].candidates[0].type).toBe('srflx');
+      expect(fixedAudioWithCandidate.media[1].candidates[0].type).toBe('host');
     });
   });
 });
