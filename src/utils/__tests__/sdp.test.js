@@ -94,86 +94,86 @@ a=mid:video-1
 `;
 
 describe('SDP utils', () => {
-  // describe('Parsing candidates', () => {
-  //   it('should return all candidates', () => {
-  //     const candidates = getCandidates(goodSdp);
-  //
-  //     expect(candidates.length).toBe(2);
-  //     expect(candidates[0].type).toBe('host');
-  //     expect(candidates[1].type).toBe('relay');
-  //
-  //     expect(isSdpValid(goodSdp)).toBeTruthy();
-  //
-  //     expect(getCandidates(badMobileSdp).length).toBe(0);
-  //     expect(getCandidates(null).length).toBe(0);
-  //     expect(getCandidates('').length).toBe(0);
-  //     expect(getCandidates('nothing!').length).toBe(0);
-  //   });
-  // });
-  //
-  // describe('Parsing candidate', () => {
-  //   it('should parse a single candidate', () => {
-  //     const parsed = parseCandidate(candidate);
-  //
-  //     expect(parsed.type).toBe('relay');
-  //     expect(parsed.ip).toBe('14.72.2.1');
-  //   });
-  // });
-  //
-  // describe('Validating candidates', () => {
-  //   it('should parse a single candidate', () => {
-  //     expect(areCandidateValid([null])).toBeFalsy();
-  //     expect(areCandidateValid([parseCandidate(candidate)])).toBeTruthy();
-  //   });
-  // });
-  //
-  // describe('Validating sdp', () => {
-  //   it('should tell if a sdp is valid', () => {
-  //     expect(isSdpValid(goodSdp)).toBeTruthy();
-  //     expect(isSdpValid(badSdp)).toBeFalsy();
-  //     expect(isSdpValid(badMobileSdp)).toBeFalsy();
-  //   });
-  // });
-  //
-  // describe('Fixing sdp', () => {
-  //   it('should fix a SDP without candidate or IN ip', () => {
-  //     const candidates = [parseCandidate(candidate)];
-  //
-  //     const fixedSdp = fixSdp(badMobileSdp, candidates);
-  //     const parsed = sdpParser.parse(fixedSdp);
-  //
-  //     expect(parsed.media[0].candidates.length).toBe(1);
-  //     expect(parsed.media[0].port).toBe(57021);
-  //     expect(parsed.origin.address).toBe('14.72.2.1');
-  //     expect(fixedSdp.indexOf('IN 0.0.0.0')).toBe(-1);
-  //   });
-  // });
-  //
-  // describe('Fixing group bundle', () => {
-  //   it('should set a bundle for each m section', async () => {
-  //     const invalid = fixBundle(invalidBundle);
-  //     const parsed = sdpParser.parse(invalid);
-  //
-  //     expect(parsed.groups[0].mids).toBe('0 1');
-  //   });
-  // });
-  //
-  // describe('Deactivate video', () => {
-  //   it('should set inactive to each video sections', async () => {
-  //     const sdp = toggleVideoDirection(videoReinvite, 'inactive');
-  //     const parsed = sdpParser.parse(sdp);
-  //
-  //     expect(parsed.media[1].direction).toBe('inactive');
-  //     expect(parsed.media[2].direction).toBe('inactive');
-  //   });
-  // });
-  //
-  // describe('Checking if video is active ', () => {
-  //   it('should return true if a section video is active', async () => {
-  //     expect(hasAnActiveVideo(videoReinvite)).toBeTruthy();
-  //     expect(hasAnActiveVideo(inactiveVideo)).toBeFalsy();
-  //   });
-  // });
+  describe('Parsing candidates', () => {
+    it('should return all candidates', () => {
+      const candidates = getCandidates(goodSdp);
+
+      expect(candidates.length).toBe(2);
+      expect(candidates[0].type).toBe('host');
+      expect(candidates[1].type).toBe('relay');
+
+      expect(isSdpValid(goodSdp)).toBeTruthy();
+
+      expect(getCandidates(badMobileSdp).length).toBe(0);
+      expect(getCandidates(null).length).toBe(0);
+      expect(getCandidates('').length).toBe(0);
+      expect(getCandidates('nothing!').length).toBe(0);
+    });
+  });
+
+  describe('Parsing candidate', () => {
+    it('should parse a single candidate', () => {
+      const parsed = parseCandidate(candidate);
+
+      expect(parsed.type).toBe('relay');
+      expect(parsed.ip).toBe('14.72.2.1');
+    });
+  });
+
+  describe('Validating candidates', () => {
+    it('should parse a single candidate', () => {
+      expect(areCandidateValid([null])).toBeFalsy();
+      expect(areCandidateValid([parseCandidate(candidate)])).toBeTruthy();
+    });
+  });
+
+  describe('Validating sdp', () => {
+    it('should tell if a sdp is valid', () => {
+      expect(isSdpValid(goodSdp)).toBeTruthy();
+      expect(isSdpValid(badSdp)).toBeFalsy();
+      expect(isSdpValid(badMobileSdp)).toBeFalsy();
+    });
+  });
+
+  describe('Fixing sdp', () => {
+    it('should fix a SDP without candidate or IN ip', () => {
+      const candidates = [parseCandidate(candidate)];
+
+      const fixedSdp = fixSdp(badMobileSdp, candidates);
+      const parsed = sdpParser.parse(fixedSdp);
+
+      expect(parsed.media[0].candidates.length).toBe(1);
+      expect(parsed.media[0].port).toBe(57021);
+      expect(parsed.origin.address).toBe('14.72.2.1');
+      expect(fixedSdp.indexOf('IN 0.0.0.0')).toBe(-1);
+    });
+  });
+
+  describe('Fixing group bundle', () => {
+    it('should set a bundle for each m section', async () => {
+      const invalid = fixBundle(invalidBundle);
+      const parsed = sdpParser.parse(invalid);
+
+      expect(parsed.groups[0].mids).toBe('0 1');
+    });
+  });
+
+  describe('Deactivate video', () => {
+    it('should set inactive to each video sections', async () => {
+      const sdp = toggleVideoDirection(videoReinvite, 'inactive');
+      const parsed = sdpParser.parse(sdp);
+
+      expect(parsed.media[1].direction).toBe('inactive');
+      expect(parsed.media[2].direction).toBe('inactive');
+    });
+  });
+
+  describe('Checking if video is active ', () => {
+    it('should return true if a section video is active', async () => {
+      expect(hasAnActiveVideo(videoReinvite)).toBeTruthy();
+      expect(hasAnActiveVideo(inactiveVideo)).toBeFalsy();
+    });
+  });
 
   describe('Adding candidate in all bundles ', () => {
     it('should add candidate everywhere', async () => {

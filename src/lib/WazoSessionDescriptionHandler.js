@@ -141,7 +141,10 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
 
         // Check if we got ICEs
         if (sdp.indexOf('a=candidate') !== -1) {
-          return addIcesInAllBundles(description);
+          return {
+            type: description.type,
+            sdp: addIcesInAllBundles(sdp),
+          };
         }
 
         wazoLogger.info('No ICE candidates found in SDP, fixing it with gathered ices', this.gatheredCandidates);
