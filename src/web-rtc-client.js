@@ -1143,7 +1143,10 @@ export default class WebRTCClient extends Emitter {
 
     // let's update the local video value
     if (this.video) {
+      // let's make sure we don't lose other video constraints settings -- width, height, frameRate...
+      const videoObject = typeof this.video === 'object' ? this.video : {};
       this.video = {
+        ...videoObject,
         deviceId: {
           exact: id,
         },
