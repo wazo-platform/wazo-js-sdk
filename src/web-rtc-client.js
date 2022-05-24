@@ -1070,7 +1070,7 @@ export default class WebRTCClient extends Emitter {
     });
   }
 
-  changeAudioInputDevice(id: string, session: ?Inviter, force: ?boolean) {
+  async changeAudioInputDevice(id: string, session: ?Inviter, force: ?boolean) {
     const currentId = this.getAudioDeviceId();
     logger.info('setting audio input device', { id, currentId, session: !!session });
 
@@ -1078,33 +1078,50 @@ export default class WebRTCClient extends Emitter {
       return null;
     }
 
+    // in order to handle an audio track change for default devices
+    // we need the actual id of the device (not 'default')
+    let deviceId = id;
+    if (id === 'default' && navigator.mediaDevices) {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const defaultDevice = devices.find(device => device.deviceId === 'default');
+      if (defaultDevice) {
+        const deviceLabel = defaultDevice.label.replace('Default - ', '');
+        const targetDevice = devices.find(device => device.label === deviceLabel);
+        if (targetDevice) {
+          deviceId = targetDevice.deviceId;
+          if (!force && deviceId === currentId) {
+            return null;
+          }
+        }
+      }
+    }
+
     // let's update the local audio value
     if (this.audio) {
       this.audio = {
         deviceId: {
-          exact: id,
+          exact: deviceId,
         },
       };
     }
 
-    if (session) {
+    if (session && navigator.mediaDevices) {
       const sdh = session.sessionDescriptionHandler;
       const pc = sdh.peerConnection;
 
-      // $FlowFixMe
-      return navigator.mediaDevices.getUserMedia({ audio: { deviceId: { exact: id } } }).then(async stream => {
-        const audioTrack = stream.getAudioTracks()[0];
-        const sender = pc && pc.getSenders().find(s => audioTrack && s && s.track && s.track.kind === audioTrack.kind);
+      const constraints = { audio: { deviceId: { exact: deviceId } } };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      const audioTrack = stream.getAudioTracks()[0];
+      const sender = pc && pc.getSenders().find(s => audioTrack && s && s.track && s.track.kind === audioTrack.kind);
 
-        if (sender) {
-          if (sender.track) {
-            audioTrack.enabled = sender.track.enabled;
-          }
-          sender.replaceTrack(audioTrack);
+      if (sender) {
+        if (sender.track) {
+          audioTrack.enabled = sender.track.enabled;
         }
+        sender.replaceTrack(audioTrack);
+      }
 
-        return stream;
-      });
+      return stream;
     }
   }
 
