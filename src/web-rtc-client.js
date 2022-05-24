@@ -1089,6 +1089,9 @@ export default class WebRTCClient extends Emitter {
         const targetDevice = devices.find(device => device.label === deviceLabel);
         if (targetDevice) {
           deviceId = targetDevice.deviceId;
+          if (!force && deviceId === currentId) {
+            return null;
+          }
         }
       }
     }
