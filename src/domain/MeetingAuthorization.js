@@ -11,14 +11,16 @@ export type RawMeetingAuthorization = {
 export const PENDING = 'pending';
 export const ACCEPTED = 'accepted';
 export const REJECTED = 'rejected';
-export const PROCESSED_SUCCESS = 'process_success';
-export const PROCESSED_ERROR = 'process_error';
+export const POST_PROCESSING = 'post_processing';
+export const POST_PROCESSED_SUCCESS = 'post_processed_success';
+export const POST_PROCESSED_ERROR = 'post_processed_error';
 
 export default class MeetingAuthorization {
   meetingUuid: string;
   uuid: string;
   userUuid: string;
   userName: string;
+  state: string = PENDING;
 
   constructor({
     meetingUuid,
@@ -30,6 +32,14 @@ export default class MeetingAuthorization {
     this.uuid = uuid;
     this.userUuid = userUuid;
     this.userName = userName;
+  }
+
+  setState(state: string) {
+    this.state = state;
+  }
+
+  getState() {
+    return this.state;
   }
 
   static parse(plain: RawMeetingAuthorization) {
@@ -52,6 +62,6 @@ export default class MeetingAuthorization {
     if (!items) {
       return [];
     }
-    return items.map(plain => MeetingAuthorization.parse(plain));
+    return items.map(MeetingAuthorization.parse);
   }
 }

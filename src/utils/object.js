@@ -2,8 +2,14 @@
 
 import { camelToUnderscore } from './string';
 
-export const convertKeysFromCamelToUnderscore = (args: Object) =>
-  Object.keys(args).reduce((acc, key) => {
-    acc[camelToUnderscore(key)] = args[key];
+export const convertKeysFromCamelToUnderscore = (args: Object) => {
+  if (typeof args !== 'object') {
+    throw new Error('Input is not an object');
+  }
+
+  return Object.keys(args).reduce((acc, key) => {
+    acc[camelToUnderscore(key)] = typeof args[key] === 'object'
+      ? convertKeysFromCamelToUnderscore(args[key]) : args[key];
     return acc;
   }, {});
+};
