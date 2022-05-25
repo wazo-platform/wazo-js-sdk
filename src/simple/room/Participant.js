@@ -312,14 +312,21 @@ class Participant extends Emitter {
     this.videoStreams = streams;
   }
 
-  async ban() {
+  async ban(apiRequestDelay: ?number = null) {
     const { meetingUuid } = this.room;
     if (!meetingUuid) {
       throw new Error('Attempting to ban a participant without a `meetingUuid`');
     }
 
+    // this notifies all that someone is being banned
     this.onBan(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // this allows to delay the actual ban, in order for the banned participant as well as others to react to the situation
+    if (apiRequestDelay) {
+      await new Promise(resolve => setTimeout(resolve, apiRequestDelay));
+    }
+
+    // proceed with the actual kick
     return getApiClient().calld.banMeetingParticipant(meetingUuid, this.callId);
   }
 }
