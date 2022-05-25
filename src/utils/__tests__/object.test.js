@@ -24,6 +24,9 @@ describe('object utils', () => {
       const value = Math.random();
       expect(convertKeysFromCamelToUnderscore({ LoremIpsum: { DoloreSit: { Amet: value }, regular: 'reg' } }))
         .toEqual({ _lorem_ipsum: { _dolore_sit: { _amet: value }, regular: 'reg' } });
+
+      expect(convertKeysFromCamelToUnderscore({ LoremIpsum: { DoloreSit: { Amet: [value] }, regular: ['something'] } }))
+        .toEqual({ _lorem_ipsum: { _dolore_sit: { _amet: [value] }, regular: ['something'] } });
     });
   });
 });

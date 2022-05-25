@@ -8,7 +8,7 @@ export const convertKeysFromCamelToUnderscore = (args: Object) => {
   }
 
   return Object.keys(args).reduce((acc, key) => {
-    acc[camelToUnderscore(key)] = typeof args[key] === 'object'
+    acc[camelToUnderscore(key)] = typeof args[key] === 'object' && !Array.isArray(args[key])
       ? convertKeysFromCamelToUnderscore(args[key]) : args[key];
     return acc;
   }, {});

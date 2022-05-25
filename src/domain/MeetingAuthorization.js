@@ -20,7 +20,7 @@ export default class MeetingAuthorization {
   uuid: string;
   userUuid: string;
   userName: string;
-  state: string = PENDING;
+  status: string;
 
   constructor({
     meetingUuid,
@@ -34,12 +34,12 @@ export default class MeetingAuthorization {
     this.userName = userName;
   }
 
-  setState(state: string) {
-    this.state = state;
+  setStatus(status: string) {
+    this.status = status;
   }
 
-  getState() {
-    return this.state;
+  getStatus() {
+    return this.status;
   }
 
   static parse(plain: RawMeetingAuthorization) {

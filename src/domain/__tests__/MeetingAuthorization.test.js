@@ -16,6 +16,7 @@ describe('MeetingAuthorization', () => {
         uuid: rawAuthorization.uuid,
         userUuid: rawAuthorization.guest_uuid,
         userName: rawAuthorization.guest_name,
+        status: undefined,
       };
 
       const response = MeetingAuthorization.parse(rawAuthorization);
@@ -47,6 +48,7 @@ describe('MeetingAuthorization', () => {
         uuid: rawAuthorization.uuid,
         userUuid: rawAuthorization.guest_uuid,
         userName: rawAuthorization.guest_name,
+        status: undefined,
       }));
 
       const response = MeetingAuthorization.parseMany(rawAuthorizations);
