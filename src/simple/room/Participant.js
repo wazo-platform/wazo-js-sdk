@@ -323,11 +323,15 @@ class Participant extends Emitter {
 
     // this allows to delay the actual ban, in order for the banned participant as well as others to react to the situation
     if (apiRequestDelay) {
-      await new Promise(resolve => setTimeout(resolve, apiRequestDelay));
+      await this.delay(apiRequestDelay);
     }
 
     // proceed with the actual kick
     return getApiClient().calld.banMeetingParticipant(meetingUuid, this.callId);
+  }
+
+  async delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
 
