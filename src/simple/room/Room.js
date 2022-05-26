@@ -590,7 +590,7 @@ class Room extends Emitter {
         const participant: ?Participant = this._getParticipantFromCallId(status.callId);
 
         if (participant) {
-          // we're received, so no need to broadcast, hence the input false arg
+          // we're receiving, so no need to broadcast
           participant.updateStatus(status, false);
         }
         break;

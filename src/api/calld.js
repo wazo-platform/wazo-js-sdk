@@ -137,6 +137,14 @@ export default (client: ApiRequester, baseUrl: string) => ({
   getMeetingParticipantsAsUser: async (meetingUuid: string): Promise<Object> =>
     client.get(`${baseUrl}/users/me/meetings/${meetingUuid}/participants`),
 
+  banMeetingParticipant: (meetingUuid: string, participantUuid: string) =>
+    client.delete(
+      `${baseUrl}/users/me/meetings/${meetingUuid}/participants/${participantUuid}`,
+      null,
+      null,
+      ApiRequester.successResponseParser,
+    ),
+
   listTrunks: () => client.get(`${baseUrl}/trunks`),
 
   mute: (callId: string) =>

@@ -4,6 +4,7 @@ import IssueReporter from '../../service/IssueReporter';
 
 import Room, { SIGNAL_TYPE_PARTICIPANT_UPDATE } from './Room';
 import Contact from '../../domain/Contact';
+import getApiClient from '../../service/getApiClient';
 
 const logger = IssueReporter.loggerFor('room');
 
@@ -20,6 +21,7 @@ class Participant extends Emitter {
   videoMuted: boolean;
   screensharing: boolean;
   isOnHold: boolean;
+  banned: boolean;
   extra: Object;
 
   ON_UPDATED: string;
@@ -37,6 +39,7 @@ class Participant extends Emitter {
   ON_EXTRA_CHANGE: string;
   ON_HOLD: string;
   ON_RESUME: string;
+  ON_BAN: string;
 
   /**
    * @param room Room The room where the participant is
@@ -60,6 +63,7 @@ class Participant extends Emitter {
     this.screensharing = false;
     this.isOnHold = false;
     this.extra = extra;
+    this.banned = false;
 
     this.ON_UPDATED = 'participant/ON_UPDATED';
     this.ON_START_TALKING = 'participant/ON_START_TALKING';
@@ -76,6 +80,7 @@ class Participant extends Emitter {
     this.ON_EXTRA_CHANGE = 'participant/ON_EXTRA_CHANGE';
     this.ON_HOLD = 'participant/ON_HOLD';
     this.ON_RESUME = 'participant/ON_RESUME';
+    this.ON_BAN = 'participant/ON_BAN';
   }
 
   triggerEvent(name: string, ...args: any[]) {
@@ -114,6 +119,10 @@ class Participant extends Emitter {
       }
       case this.ON_EXTRA_CHANGE: {
         status.extra = this.extra;
+        break;
+      }
+      case this.ON_BAN: {
+        status.banned = true;
         break;
       }
       default:
@@ -220,6 +229,11 @@ class Participant extends Emitter {
     this.triggerUpdate(this.ON_RESUME, broadcast);
   }
 
+  onBan(broadcast: boolean = true) {
+    this.banned = true;
+    this.triggerUpdate(this.ON_BAN, broadcast);
+  }
+
   getStatus() {
     return {
       callId: this.callId,
@@ -266,6 +280,10 @@ class Participant extends Emitter {
       }
     }
 
+    if (status.banned) {
+      this.onBan(false);
+    }
+
     // Poor man's object comparison
     if (typeof status.extra !== 'undefined' && JSON.stringify(this.extra) !== JSON.stringify(status.extra)) {
       this.extra = { ...this.extra, ...status.extra };
@@ -292,6 +310,28 @@ class Participant extends Emitter {
   resetStreams(streams: any[]) {
     this.streams = streams;
     this.videoStreams = streams;
+  }
+
+  async ban(apiRequestDelay: ?number = null) {
+    const { meetingUuid } = this.room;
+    if (!meetingUuid) {
+      throw new Error('Attempting to ban a participant without a `meetingUuid`');
+    }
+
+    // this notifies all that someone is being banned
+    this.onBan(true);
+
+    // this allows to delay the actual ban, in order for the banned participant as well as others to react to the situation
+    if (apiRequestDelay) {
+      await this.delay(apiRequestDelay);
+    }
+
+    // proceed with the actual kick
+    return getApiClient().calld.banMeetingParticipant(meetingUuid, this.callId);
+  }
+
+  async delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
 
