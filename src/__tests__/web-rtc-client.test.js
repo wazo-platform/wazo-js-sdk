@@ -106,4 +106,33 @@ describe('changeAudioInputDevice', () => {
     const result = await client.changeAudioInputDevice(defaultId, session, true);
     expect(result).toBeTruthy();
   });
+
+  describe('setVideoInputDevice', () => {
+    it('should retain its original video values', () => {
+      const video = { height: { min: 480, max: 720 }, width: { min: 640, max: 1280 } };
+
+      client.video = video;
+      client.setVideoInputDevice(deviceId);
+      expect(client.video).toEqual({ ...video, deviceId: { exact: deviceId } });
+    });
+
+    it('should set deviceId when video\'s original value is true', () => {
+      client.video = true;
+      client.setVideoInputDevice(deviceId);
+      expect(client.video).toEqual({ deviceId: { exact: deviceId } });
+    });
+
+    it('should set deviceId when video\'s original value is not set', () => {
+      client.video = undefined;
+      client.setVideoInputDevice(deviceId);
+      expect(client.video).toEqual({ deviceId: { exact: deviceId } });
+    });
+
+    it('should NOT set deviceId when its value does not change', () => {
+      client.video = { deviceId: { exact: deviceId } };
+      const result = client.setVideoInputDevice(deviceId);
+      expect(result).toEqual(null);
+      expect(client.video).toEqual({ deviceId: { exact: deviceId } });
+    });
+  });
 });

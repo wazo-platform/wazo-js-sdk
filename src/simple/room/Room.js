@@ -143,7 +143,7 @@ class Room extends Emitter {
     logger.info('connecting to room', { extension, audioOnly, room: !!room });
 
     if (!room) {
-      await Wazo.Phone.connect();
+      await Wazo.Phone.connect({ media: constraints });
 
       const withCamera = constraints && !!constraints.video;
 
