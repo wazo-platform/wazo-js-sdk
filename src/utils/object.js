@@ -3,7 +3,7 @@
 import { camelToUnderscore } from './string';
 
 export const convertKeysFromCamelToUnderscore = (args: Object) => {
-  if (typeof args !== 'object') {
+  if (!args || typeof args !== 'object' || Array.isArray(args)) {
     throw new Error('Input is not an object');
   }
 
