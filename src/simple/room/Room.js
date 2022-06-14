@@ -800,7 +800,11 @@ class Room extends Emitter {
 
       delete this._unassociatedVideoStreams[key];
       delete this._unassociatedParticipants[participant.callId];
+      return;
     }
+
+    // eslint-disable-next-line no-underscore-dangle
+    Wazo.Phone.phone._sendReinviteMessage(this.callSession, false);
   }
 
   _getUnassociatedMapIdFromTrackIdOrStreamId(trackId: string, streamId: ?string) {
