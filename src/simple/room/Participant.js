@@ -297,11 +297,11 @@ class Participant extends Emitter {
     }
   }
 
-  broadcastStatus(inboundStatus: Object = null) {
+  broadcastStatus(inboundStatus: Object = null, sendReinvite: ?boolean) {
     const status = inboundStatus || this.getStatus();
     logger.info('broadcasting participant status', { callId: this.callId, status });
 
-    if (!this.streams.length && Phone.phone) {
+    if (sendReinvite && !this.streams.length && Phone.phone) {
       // eslint-disable-next-line no-underscore-dangle
       Phone.phone._sendReinviteMessage(this.room.callSession, false);
     }
