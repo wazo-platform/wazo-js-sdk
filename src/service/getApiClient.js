@@ -11,6 +11,7 @@ global.wazoClientId = global.wazoClientId || {};
 global.wazoClientToken = global.wazoClientToken || {};
 global.wazoRefreshToken = global.wazoRefreshToken || {};
 global.wazoRefreshTenantId = global.wazoRefreshTenantId || {};
+global.wazoRefreshDomainName = global.wazoRefreshDomainName || {};
 global.wazoOnRefreshToken = global.wazoOnRefreshToken || {};
 global.wazoOnRefreshTokenError = global.wazoOnRefreshTokenError || {};
 global.wazoRefreshExpiration = global.wazoRefreshExpiration || {};
@@ -35,7 +36,12 @@ export const setRefreshToken = (newRefreshToken: ?string, forServer: ?string = n
 };
 
 export const setRefreshTenantId = (refreshTenantId: ?string, forServer: ?string = null) => {
+  console.warn('Use of `setRefreshTenantId` is deprecated, please use `setRefreshDomainName` instead');
   global.wazoRefreshTenantId[forServer] = refreshTenantId;
+};
+
+export const setRefreshDomainName = (refreshDomainName: ?string, forServer: ?string = null) => {
+  global.wazoRefreshDomainName[forServer] = refreshDomainName;
 };
 
 export const setOnRefreshToken = (onRefreshToken: Function, forServer: ?string = null) => {
@@ -64,6 +70,7 @@ export const setFetchOptions = (fetchOptions: Object, forServer: ?string = null)
 
 const fillClient = (apiClient: WazoApiClient) => {
   const { server, token, clientId } = apiClient.client;
+  const tenantId = global.wazoRefreshTenantId[server] || global.wazoRefreshTenantId[null] || apiClient.refreshTenantId;
 
   //  try with null server when dealing with non-related server info
   apiClient.setToken(global.wazoClientToken[server] || global.wazoClientToken[null] || token);
@@ -72,8 +79,12 @@ const fillClient = (apiClient: WazoApiClient) => {
 
   apiClient.setRefreshToken(global.wazoRefreshToken[server] || global.wazoRefreshToken[null] || apiClient.refreshToken);
 
-  apiClient.setRefreshTenantId(
-    global.wazoRefreshTenantId[server] || global.wazoRefreshTenantId[null] || apiClient.refreshTenantId,
+  if (tenantId) {
+    apiClient.setRefreshTenantId(tenantId);
+  }
+
+  apiClient.setRefreshDomainName(
+    global.wazoRefreshDomainName[server] || global.wazoRefreshDomainName[null] || apiClient.refreshDomainName,
   );
 
   apiClient.setFetchOptions(global.wazoFetchOptions[server] || global.wazoFetchOptions[null] || apiClient.fetchOptions);

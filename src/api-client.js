@@ -57,6 +57,7 @@ export default class ApiClient {
   refreshExpiration: ?number;
   refreshBackend: ?string;
   refreshTenantId: ?string;
+  refreshDomainName: ?string;
   isMobile: boolean;
   fetchOptions: Object;
 
@@ -98,6 +99,7 @@ export default class ApiClient {
       refreshToken: this.refreshToken,
       refreshBackend: this.refreshBackend,
       refreshTenantId: this.refreshTenantId,
+      refreshDomainName: this.refreshDomainName,
       refreshExpiration: this.refreshExpiration,
       isMobile: this.isMobile,
     });
@@ -113,6 +115,7 @@ export default class ApiClient {
         this.refreshExpiration,
         this.isMobile,
         this.refreshTenantId,
+        this.refreshDomainName,
       );
 
       logger.info('token refreshed', { token: session.token });
@@ -166,7 +169,12 @@ export default class ApiClient {
   }
 
   setRefreshTenantId(tenantId: ?string) {
+    console.warn('Use of `setRefreshTenantId` is deprecated, use `setRefreshDomainName` instead');
     this.refreshTenantId = tenantId;
+  }
+
+  setRefreshDomainName(domainName: ?string) {
+    this.refreshDomainName = domainName;
   }
 
   setIsMobile(isMobile: boolean) {

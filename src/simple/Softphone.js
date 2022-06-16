@@ -107,6 +107,7 @@ class Softphone {
     wrapUpDuration,
     enableAgent = true,
     tenantId,
+    domainName,
     debug = false,
   }: Object = {}) {
     this.url = url || 'https://softphone.wazo.io';
@@ -131,7 +132,11 @@ class Softphone {
       config.port = port;
     }
     if (tenantId) {
+      console.warn('Use of `tenantId` is deprecated when calling `Softphone.init()`, use `domainName` instead');
       config.tenantId = tenantId;
+    }
+    if (domainName) {
+      config.domainName = domainName;
     }
     if (wrapUpDuration) {
       config.wrapUpDuration = wrapUpDuration;

@@ -11,6 +11,7 @@ import getApiClient, {
   setOnRefreshToken,
   setFetchOptions,
   setRefreshTenantId,
+  setRefreshDomainName,
   setOnRefreshTokenError,
 } from '../service/getApiClient';
 import IssueReporter from '../service/IssueReporter';
@@ -20,6 +21,7 @@ import Wazo from './index';
 export class InvalidSubscription extends Error {}
 export class InvalidAuthorization extends Error {}
 export class NoTenantIdError extends Error {}
+export class NoDomainNameError extends Error {}
 
 const logger = IssueReporter.loggerFor('simple-auth');
 
@@ -83,9 +85,24 @@ class Auth {
     setFetchOptions(options);
   }
 
-  async logIn(username: string, password: string, backend?: string, tenantId?: string) {
-    if (backend && backend !== this.BACKEND_WAZO && !tenantId) {
-      throw new NoTenantIdError('No tenant id');
+  async logIn(username: string, password: string, backend?: string, extra?: string | Object) {
+    let tenantId = null;
+    let domainName = null;
+    if (typeof extra === 'string') {
+      tenantId = extra;
+    }
+    if (extra && typeof extra === 'object') {
+      domainName = extra.domainName;
+    }
+
+    if (backend && backend !== this.BACKEND_WAZO && (!tenantId && !domainName)) {
+      if (!tenantId) {
+        throw new NoTenantIdError('No tenant id');
+      }
+
+      if (!domainName) {
+        throw new NoDomainNameError('No domain name');
+      }
     }
 
     this.authenticated = false;
@@ -95,6 +112,7 @@ class Auth {
       password,
       backend,
       tenantId,
+      domainName,
       expiration: this.expiration,
       mobile: this.mobile,
     });
@@ -103,7 +121,13 @@ class Auth {
       getApiClient().setRefreshBackend(backend);
     }
 
-    getApiClient().setRefreshTenantId(tenantId);
+    if (tenantId) {
+      getApiClient().setRefreshTenantId(tenantId);
+    }
+
+    if (domainName) {
+      getApiClient().setRefreshDomainName(domainName);
+    }
 
     return this._onAuthenticated(rawSession);
   }
@@ -202,9 +226,16 @@ class Auth {
   }
 
   setRefreshTenantId(refreshTenantId: string) {
+    console.warn('Use of `setRefreshTenantId` is deprecated, use `setRefreshDomainName` instead.');
     setRefreshTenantId(refreshTenantId);
 
     getApiClient().setRefreshTenantId(refreshTenantId);
+  }
+
+  setRefreshDomainName(domainName: string) {
+    setRefreshDomainName(domainName);
+
+    getApiClient().setRefreshDomainName(domainName);
   }
 
   forceRefreshToken() {
