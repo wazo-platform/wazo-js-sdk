@@ -2,7 +2,7 @@
 
 import getApiClient from '../service/getApiClient';
 
-export const FEATURES = ['chat', 'video', 'call_recording', 'fax', 'mobile_double_call', 'mobile_gsm'];
+export const FEATURES = ['chat', 'video', 'call_recording', 'fax', 'mobile_double_call', 'mobile_gsm', 'meeting'];
 
 export const getScopeName = (featureName: string) => `enterprise.app.${featureName}`;
 
@@ -16,6 +16,7 @@ class Features {
   _hasFax: boolean;
   _hasMobileDoubleCall: boolean;
   _hasMobileGsm: boolean;
+  _hasMeeting: boolean;
 
   constructor() {
     this._hasChat = true;
@@ -24,6 +25,7 @@ class Features {
     this._hasFax = true;
     this._hasMobileDoubleCall = true;
     this._hasMobileGsm = true;
+    this._hasMeeting = true;
   }
 
   async fetchAccess() {
@@ -44,6 +46,7 @@ class Features {
     this._hasFax = this._hasFeatures(scopes, 'fax');
     this._hasMobileDoubleCall = this._hasFeatures(scopes, 'mobile_double_call');
     this._hasMobileGsm = this._hasFeatures(scopes, 'mobile_gsm');
+    this._hasMeeting = this._hasFeatures(scopes, 'meeting');
   }
 
   hasChat() { return this._hasChat; }
@@ -52,6 +55,7 @@ class Features {
   hasFax() { return this._hasFax; }
   hasMobileDoubleCall() { return this._hasMobileDoubleCall; }
   hasMobileGsm() { return this._hasMobileGsm; }
+  hasMeeting() { return this._hasMeeting; }
 
   _hasFeatures(scopes: Object, featureName: string) {
     const scopeName = getScopeName(featureName);
