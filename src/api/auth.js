@@ -33,6 +33,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     expiration: number,
     mobile?: boolean,
     tenantId?: string,
+    domainName?: string,
   }): Promise<?Session> {
     const body: Object = {
       backend: params.backend || DEFAULT_BACKEND_USER,
@@ -53,7 +54,12 @@ export default (client: ApiRequester, baseUrl: string) => ({
     }
 
     if (params.tenantId) {
+      console.warn('Use of `tenantId` is deprecated when calling logIn() method, use `domainName` instead.');
       body.tenant_id = params.tenantId;
+    }
+
+    if (params.domainName) {
+      body.domain_name = params.domainName;
     }
 
     return client.post(`${baseUrl}/token`, body, headers).then(response => Session.parse(response));
@@ -68,6 +74,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
     expiration: number,
     isMobile: boolean = false,
     tenantId: ?string,
+    domainName?: string,
   ): Promise<?Session> => {
     const body: Object = {
       backend: backend || DEFAULT_BACKEND_USER,
@@ -77,7 +84,12 @@ export default (client: ApiRequester, baseUrl: string) => ({
     };
 
     if (tenantId) {
+      console.warn('Use of `tenantId` is deprecated when calling refreshToken() method, use `domainName` instead.');
       body.tenant_id = tenantId;
+    }
+
+    if (domainName) {
+      body.domain_name = domainName;
     }
 
     const headers: Object = {
