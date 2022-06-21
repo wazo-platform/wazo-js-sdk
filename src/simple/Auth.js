@@ -95,7 +95,7 @@ class Auth {
       domainName = extra.domainName;
     }
 
-    if (backend && backend !== this.BACKEND_WAZO && (!tenantId && !domainName)) {
+    if (backend && backend !== this.BACKEND_WAZO && !tenantId && !domainName) {
       if (!tenantId) {
         throw new NoTenantIdError('No tenant id');
       }
