@@ -110,4 +110,6 @@ export interface Phone {
   isRegistered(): boolean;
 
   hasIncomingCallSession(): boolean;
+
+  setMediaConstraints(media: MediaStreamConstraints): PhoneVoid;
 }
