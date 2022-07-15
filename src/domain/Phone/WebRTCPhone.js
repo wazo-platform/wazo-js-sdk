@@ -493,7 +493,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const screenTrack = screenShareStream.getVideoTracks()[0];
     const sipSession = this.currentSipSession;
     const pc = this.client.getPeerConnection(this.getSipSessionId(sipSession));
-    const sender = pc && pc.getSenders().find(s => s && s.track && s.track.kind === 'video');
+    const sender = pc && pc.getSenders && pc.getSenders().find(s => s && s.track && s.track.kind === 'video');
     const localStream = this.client.getLocalStream(this.getSipSessionId(sipSession));
     const videoTrack = localStream ? localStream.getTracks().find(track => track.kind === 'video') : null;
     const hadVideo = !!videoTrack;
@@ -575,7 +575,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const screenTrack = screenStream.getVideoTracks()[0];
     const sipSessionId = this.getSipSessionId(sipSession);
     const pc = this.client.getPeerConnection(sipSessionId);
-    const sender = pc && pc.getSenders().find(s => s && s.track && s.track.kind === 'video');
+    const sender = pc && pc.getSenders && pc.getSenders().find(s => s && s.track && s.track.kind === 'video');
 
     logger.info('WebRTC phone - on screensharing', {
       hadVideo,

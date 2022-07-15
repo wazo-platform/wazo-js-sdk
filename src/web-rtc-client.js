@@ -877,9 +877,11 @@ export default class WebRTCClient extends Emitter {
     const videoTracks = localStream.getVideoTracks();
 
     // Remove video senders
-    pc.getSenders().filter(sender => sender.track && sender.track.kind === 'video').forEach(videoSender => {
-      videoSender.replaceTrack(null);
-    });
+    if (pc.getSenders) {
+      pc.getSenders().filter(sender => sender.track && sender.track.kind === 'video').forEach(videoSender => {
+        videoSender.replaceTrack(null);
+      });
+    }
 
     videoTracks.forEach(videoTrack => {
       videoTrack.enabled = false;
@@ -1112,7 +1114,8 @@ export default class WebRTCClient extends Emitter {
       const constraints = { audio: { deviceId: { exact: deviceId } } };
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       const audioTrack = stream.getAudioTracks()[0];
-      const sender = pc && pc.getSenders().find(s => audioTrack && s && s.track && s.track.kind === audioTrack.kind);
+      const sender = pc && pc.getSenders
+        && pc.getSenders().find(s => audioTrack && s && s.track && s.track.kind === audioTrack.kind);
 
       if (sender) {
         if (sender.track) {
@@ -1175,10 +1178,11 @@ export default class WebRTCClient extends Emitter {
     // $FlowFixMe
     return navigator.mediaDevices.getUserMedia(constraints).then(async stream => {
       const videoTrack = stream.getVideoTracks()[0];
-      let sender = pc && pc.getSenders().find(s => videoTrack && s && s.track && s.track.kind === videoTrack.kind);
+      let sender = pc && pc.getSenders
+        && pc.getSenders().find(s => videoTrack && s && s.track && s.track.kind === videoTrack.kind);
       let wasTrackEnabled = false;
       if (!sender) {
-        sender = pc && pc.getSenders().find(s => !s.track);
+        sender = pc && pc.getSenders && pc.getSenders().find(s => !s.track);
       }
 
       if (sender) {
