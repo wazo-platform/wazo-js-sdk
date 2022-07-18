@@ -836,7 +836,7 @@ export default class WebRTCClient extends Emitter {
 
       videoSender = transceiverIdx !== -1 ? transceivers[transceiverIdx].sender : null;
     } else {
-      videoSender = pc.getSenders().find(sender => sender.track === null);
+      videoSender = pc && pc.getSenders && pc.getSenders().find(sender => sender.track === null);
     }
 
     if (!videoSender) {
