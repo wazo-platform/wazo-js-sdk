@@ -341,4 +341,6 @@ export default class CTIPhone extends Emitter implements Phone {
   }
 
   useLocalVideoElement() {}
+
+  setMediaConstraints() {}
 }
