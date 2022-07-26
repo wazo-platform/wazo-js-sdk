@@ -2,6 +2,7 @@
 import Emitter from '../../utils/Emitter';
 import IssueReporter from '../../service/IssueReporter';
 
+import Phone from '../Phone';
 import Room, { SIGNAL_TYPE_PARTICIPANT_UPDATE } from './Room';
 import Contact from '../../domain/Contact';
 import getApiClient from '../../service/getApiClient';
@@ -296,9 +297,14 @@ class Participant extends Emitter {
     }
   }
 
-  broadcastStatus(inboundStatus: Object = null) {
+  broadcastStatus(inboundStatus: Object = null, sendReinvite: ?boolean) {
     const status = inboundStatus || this.getStatus();
     logger.info('broadcasting participant status', { callId: this.callId, status });
+
+    if (sendReinvite && !this.streams.length && Phone.phone) {
+      // eslint-disable-next-line no-underscore-dangle
+      Phone.phone._sendReinviteMessage(this.room.callSession, false);
+    }
 
     this.room.sendSignal({
       type: SIGNAL_TYPE_PARTICIPANT_UPDATE,

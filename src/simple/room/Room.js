@@ -602,7 +602,7 @@ class Room extends Emitter {
         // callId is null, someone's requesting everyone's state;
         // or callId is set and matches ours;
         if (this.localParticipant && (!callId || callId === this.localParticipant.callId)) {
-          this.localParticipant.broadcastStatus();
+          this.localParticipant.broadcastStatus(null, true);
         }
 
         // might as well update the requester's status
@@ -704,7 +704,7 @@ class Room extends Emitter {
 
     this.connected = true;
 
-    localParticipant.broadcastStatus();
+    localParticipant.broadcastStatus(null, true);
 
     // we're in the room, now let's request everyone's status
     if (this.localParticipant) {
