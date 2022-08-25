@@ -251,6 +251,12 @@ export default class WebRTCClient extends Emitter {
     };
 
     const ua = new UserAgent(webRTCConfiguration);
+    if (ua.transport && ua.transport.connectPromise) {
+      ua.transport.connectPromise.catch((e => {
+        logger.warn('Transport connect error', e);
+      }));
+    }
+
     ua.transport.onMessage = (rawMessage: string) => {
       const message = Parser.parseMessage(rawMessage, ua.transport.logger);
 
