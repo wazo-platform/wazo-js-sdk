@@ -35,6 +35,11 @@ export default (client: ApiRequester, baseUrl: string) => ({
   listPersonalContacts: (queryParams: ContactSearchQueryParams = null): Promise<Array<Contact>> =>
     client.get(`${baseUrl}/personal`, queryParams).then(response => Contact.parseManyPersonal(response.items)),
 
+  fetchPersonalContact: (contactUuid: string): Promise<Contact> =>
+    client
+      .get(`${baseUrl}/personal/${contactUuid}`)
+      .then(Contact.parsePersonal),
+
   addContact: (contact: NewContact): Promise<Contact> =>
     client.post(`${baseUrl}/personal`, getContactPayload(contact)).then(Contact.parsePersonal),
 
