@@ -58,6 +58,7 @@ export default class ChatMessage {
       userUuid: plain.user_uuid,
       read: true,
       roomUuid: plain.room ? plain.room.uuid : null,
+      reactions: plain.reactions
     });
   }
 
