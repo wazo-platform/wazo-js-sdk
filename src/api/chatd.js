@@ -64,10 +64,13 @@ export default (client: ApiRequester, baseUrl: string) => ({
   createRoom: async (name: string, users: Array<ChatUser>): Promise<ChatRoom> =>
     client.post(`${baseUrl}/users/me/rooms`, { name, users }).then(ChatRoom.parse),
 
-  getRoomMessages: async (roomUuid: string): Promise<Array<ChatMessage>> =>
-    client
-      .get(`${baseUrl}/users/me/rooms/${roomUuid}/messages`)
-      .then((response: ChatMessageListResponse) => ChatMessage.parseMany(response)),
+  getRoomMessages: async (roomUuid: string, params: GetMessagesOptions = {}): Promise<Array<ChatMessage>> => {
+    const qs = ApiRequester.getQueryString(params);
+
+    return client
+      .get(`${baseUrl}/users/me/rooms/${roomUuid}/messages${qs.length ? `?${qs}` : ''}`)
+      .then((response: ChatMessageListResponse) => ChatMessage.parseMany(response));
+  },
 
   sendRoomMessage: async (roomUuid: string, message: ChatMessage): Promise<ChatMessage> =>
     client.post(`${baseUrl}/users/me/rooms/${roomUuid}/messages`, message).then(ChatMessage.parse),
