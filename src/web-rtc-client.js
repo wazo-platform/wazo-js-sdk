@@ -65,6 +65,7 @@ const MESSAGE = 'message';
 const ACCEPTED = 'accepted';
 const REJECTED = 'rejected';
 const ON_TRACK = 'onTrack';
+const ON_EARLY_MEDIA = 'onEarlyMedia';
 const ON_REINVITE = 'reinvite';
 const ON_ERROR = 'onError';
 const ON_SCREEN_SHARING_REINVITE = 'onScreenSharingReinvite';
@@ -148,6 +149,7 @@ export default class WebRTCClient extends Emitter {
   ON_ERROR: string;
   ON_SCREEN_SHARING_REINVITE: string;
   ON_NETWORK_STATS: string;
+  ON_EARLY_MEDIA: string;
   ON_DISCONNECTED: string;
 
   static isAPrivateIp(ip: string): boolean {
@@ -216,6 +218,7 @@ export default class WebRTCClient extends Emitter {
     this.ON_SCREEN_SHARING_REINVITE = ON_SCREEN_SHARING_REINVITE;
     this.ON_NETWORK_STATS = ON_NETWORK_STATS;
     this.ON_DISCONNECTED = ON_DISCONNECTED;
+    this.ON_EARLY_MEDIA = ON_EARLY_MEDIA;
   }
 
   configureMedia(media: MediaConfig) {
@@ -502,6 +505,11 @@ export default class WebRTCClient extends Emitter {
             session.sessionDescriptionHandler.peerConnection.sfu = conference;
           }
           this._onAccepted(session, response.session, true);
+        },
+        onProgress: (payload) => {
+          if (payload.message.statusCode === 183) {
+            this._onEarlyProgress(payload.session);
+          }
         },
         onReject: (response: IncomingResponse) => {
           logger.info('on call rejected', { id: session.id, fromTag: session.fromTag });
@@ -1895,6 +1903,17 @@ export default class WebRTCClient extends Emitter {
     };
   }
 
+  _onEarlyProgress(session: SessionDialog) {
+    this._setupMedias(session);
+
+    const sessionId = this.getSipSessionId(session).substr(0, 20);
+    this.updateRemoteStream(sessionId);
+
+    logger.info('Early media progress progress received', { sessionId });
+
+    this.eventEmitter.emit(ON_EARLY_MEDIA, session);
+  }
+
   _onAccepted(session: Session, sessionDialog?: SessionDialog, withEvent: boolean = true) {
     logger.info('on call accepted', { id: session.id, remoteTag: session.remoteTag });
 
@@ -1946,15 +1965,22 @@ export default class WebRTCClient extends Emitter {
 
   _setupMedias(session: Session, newStream: ?MediaStream) {
     // Safari hack, because you cannot call .play() from a non user action
-    const sessionId = this.getSipSessionId(session);
+    const sessionId = this.getSipSessionId(session).substr(0, 20);
     const isConference = this.isConference(sessionId);
+
+    if (sessionId in this.audioElements) {
+      logger.info('html element already exists for session', { sessionId });
+      return;
+    }
 
     if (this._hasAudio() && this._isWeb() && !(sessionId in this.audioElements)) {
       this.createAudioElementFor(sessionId);
     }
 
     const audioElement = this.audioElements[sessionId];
-    const stream = newStream || this.getRemoteStream(sessionId);
+    const sipSession = this.sipSessions[session.callId];
+    const removeStream = this.getRemoteStream(sessionId);
+    const stream = newStream || removeStream || sipSession.sessionDescriptionHandler.remoteMediaStream;
 
     if (!this._isWeb() || !stream) {
       return;
