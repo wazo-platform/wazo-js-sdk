@@ -1980,7 +1980,9 @@ export default class WebRTCClient extends Emitter {
     const audioElement = this.audioElements[sessionId];
     const sipSession = this.sipSessions[session.callId];
     const removeStream = this.getRemoteStream(sessionId);
-    const stream = newStream || removeStream || sipSession.sessionDescriptionHandler.remoteMediaStream;
+    const earlyStream = sipSession && sipSession.sessionDescriptionHandler
+      ? sipSession.sessionDescriptionHandler.remoteMediaStream : null;
+    const stream = newStream || removeStream || earlyStream;
 
     if (!this._isWeb() || !stream) {
       return;
