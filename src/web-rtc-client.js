@@ -1965,7 +1965,7 @@ export default class WebRTCClient extends Emitter {
 
   _setupMedias(session: Session, newStream: ?MediaStream) {
     // Safari hack, because you cannot call .play() from a non user action
-    const sessionId = this.getSipSessionId(session).substr(0, 20);
+    const sessionId = this.getSipSessionId(session);
     const isConference = this.isConference(sessionId);
 
     if (sessionId in this.audioElements) {
