@@ -1528,9 +1528,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
       logger.info('WebRTC disconnected');
       this.eventEmitter.emit(ON_DISCONNECTED);
     });
-    this.client.on(this.client.ON_EARLY_MEDIA, () => {
+    this.client.on(this.client.ON_EARLY_MEDIA, session => {
       logger.info('WebRTC early media');
-      this.eventEmitter.emit(ON_EARLY_MEDIA);
+      const callSession = this._createCallSession(session);
+      this.eventEmitter.emit(ON_EARLY_MEDIA, callSession);
     });
 
     this.client.on(this.client.REGISTERED, () => {
