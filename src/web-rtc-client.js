@@ -1073,6 +1073,7 @@ export default class WebRTCClient extends Emitter {
 
   changeAudioOutputDevice(id: string) {
     logger.info('Changing audio output device', { id });
+    this.audioOutputDeviceId = id;
 
     Object.values(this.audioElements).forEach(audioElement => {
       // `setSinkId` method is not included in any flow type definitions for HTMLAudioElements but is a valid method
