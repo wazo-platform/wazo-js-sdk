@@ -1,0 +1,19 @@
+{
+  "name": "adhoc-conference-advanced-api",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "scripts": {
+    "build": "npx webpack --config webpack.config.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "webpack": "4.44.2",
+    "webpack-cli": "^3.3.12"
+  },
+  "dependencies": {
+    "@wazo/sdk": "^0.36.1"
+  }
+}

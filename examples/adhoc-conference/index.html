@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <script src="https://unpkg.com/@wazo/sdk@0.37.1/dist/wazo-sdk.js"></script>
+    <title>Wazo WebRTC Adhoc conference</title>
+</head>
+<body>
+    <input type="text" id="extension1" placeholder="Extension 1" />
+    <button id="call1">Call extension 1</button>
+    <br />
+    <input type="text" id="extension2" placeholder="Extension 2" />
+    <button id="call2">Call extension 2</button>
+    <br />
+    <button id="create-conference">Create adhoc conference</button>
+    <br />
+    <br />
+    <button id="hangup">Hangup all</button>
+
+    <script src="./adhoc-conference.js"></script>
+</body>
+</html>
