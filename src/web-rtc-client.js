@@ -114,7 +114,6 @@ export default class WebRTCClient extends Emitter {
   audio: Object | boolean;
   audioElements: { [string]: HTMLAudioElement };
   video: Object | boolean;
-  audioContext: ?AudioContext;
   audioStreams: Object;
   audioOutputDeviceId: ?string;
   audioOutputVolume: number;
@@ -223,7 +222,6 @@ export default class WebRTCClient extends Emitter {
 
   configureMedia(media: MediaConfig) {
     this.hasAudio = !!media.audio;
-    this.audioContext = this._isWeb() ? new (window.AudioContext || window.webkitAudioContext)() : null;
     this.audioStreams = {};
     this.audioElements = {};
   }
