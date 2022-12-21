@@ -598,7 +598,7 @@ class Room extends Emitter {
 
     try {
       body = JSON.parse(message.body);
-    } catch (e) {
+    } catch (e: any) {
       return null;
     }
 
@@ -732,7 +732,7 @@ class Room extends Emitter {
           });
           response = await getApiClient().calld.getConferenceParticipantsAsUser(conferenceId);
         }
-      } catch (e) {
+      } catch (e: any) {
         logger.error('room participants fetching, error', e);
       }
 

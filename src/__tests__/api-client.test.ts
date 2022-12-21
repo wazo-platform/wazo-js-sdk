@@ -144,7 +144,7 @@ describe('With not found API results', () => {
 
       try {
         await client.calld.listVoicemails();
-      } catch (e) {
+      } catch (e: any) {
         error = e;
       }
 
@@ -178,7 +178,7 @@ describe('With erroneous text API results', () => {
         username,
         password,
       });
-    } catch (e) {
+    } catch (e: any) {
       error = e;
     }
 
@@ -201,7 +201,7 @@ describe('With erroneous json API results', () => {
         username,
         password,
       });
-    } catch (e) {
+    } catch (e: any) {
       error = e;
     }
 

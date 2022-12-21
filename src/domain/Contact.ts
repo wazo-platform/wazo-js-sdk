@@ -9,7 +9,7 @@ export const BACKEND = {
   GOOGLE: 'google',
   WAZO: 'wazo',
 };
-export type NewContact = {
+export interface NewContact {
   firstName: string;
   lastName: string;
   phoneNumber: string;
@@ -23,7 +23,7 @@ export type NewContact = {
     mobile: boolean;
   }> | null | undefined;
   connected: boolean | null | undefined;
-};
+}
 export type ContactResponse = {
   source: string;
   backend: string;

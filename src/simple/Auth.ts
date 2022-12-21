@@ -145,7 +145,7 @@ class Auth {
     try {
       const rawSession = await getApiClient().auth.authenticate(token);
       return await this._onAuthenticated(rawSession);
-    } catch (e) {
+    } catch (e: any) {
       logger.error('on validate token error', e);
       console.warn(e);
       return false;
@@ -163,12 +163,12 @@ class Auth {
       if (this.clientId && deleteRefreshToken) {
         await getApiClient().auth.deleteRefreshToken(this.clientId);
       }
-    } catch (e) { // Nothing to
+    } catch (e: any) { // Nothing to
     }
 
     try {
       await getApiClient().auth.logOut(this.session ? this.session.token : null);
-    } catch (e) { // Nothing to
+    } catch (e: any) { // Nothing to
     }
 
     setApiToken(null);
@@ -301,7 +301,7 @@ class Auth {
       if (this.minSubscriptionType !== null) {
         this.checkSubscription(session, +this.minSubscriptionType);
       }
-    } catch (e) {
+    } catch (e: any) {
       // Destroy tokens when validation fails
       if (this.clientId) {
         await getApiClient().auth.deleteRefreshToken(this.clientId);
@@ -319,7 +319,7 @@ class Auth {
         session.profile.lines.map(line => line.id));
       // $FlowFixMe
       session.profile.sipLines = sipLines.filter(line => !!line);
-    } catch (e) { // When an user has only a sccp line, getSipLines return a 404
+    } catch (e: any) { // When an user has only a sccp line, getSipLines return a 404
     }
 
     this.authenticated = true;

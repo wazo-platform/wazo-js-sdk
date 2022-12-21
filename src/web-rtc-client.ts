@@ -132,7 +132,7 @@ export default class WebRTCClient extends Emitter {
 
   skipRegister: boolean;
 
-  networkMonitoringInterval: Record<string, IntervalID>;
+  networkMonitoringInterval: Record<string, typeof setInterval>;
 
   sessionNetworkStats: Record<string, Record<string, any>>;
 
@@ -509,7 +509,7 @@ export default class WebRTCClient extends Emitter {
 
         this._cleanupRegister();
       });
-    } catch (e) {
+    } catch (e: any) {
       logger.error('sdk webrtc unregistering, error', e);
 
       // Avoid issue with `undefined is not an object (evaluating 'new.target.prototype')` when triggering a new
@@ -726,7 +726,7 @@ export default class WebRTCClient extends Emitter {
 
     try {
       return session.reject ? session.reject() : session.cancel();
-    } catch (e) {
+    } catch (e: any) {
       logger.warn('Error when rejecting call', e.message, e.stack);
     }
   }
@@ -1020,7 +1020,7 @@ export default class WebRTCClient extends Emitter {
 
     try {
       newStream = await wazoMediaStreamFactory(newConstraints);
-    } catch (e) { // Nothing to do when the user cancel the screensharing prompt
+    } catch (e: any) { // Nothing to do when the user cancel the screensharing prompt
     }
 
     if (!newStream) {
@@ -1136,7 +1136,7 @@ export default class WebRTCClient extends Emitter {
           },
         },
       });
-    } catch (e) {
+    } catch (e: any) {
       console.warn(e);
     }
   }
@@ -1811,7 +1811,7 @@ export default class WebRTCClient extends Emitter {
       if (!this.userAgent.transport.transitioningState && !this.userAgent.transport.disconnectPromise) {
         try {
           await this.userAgent.transport.disconnect();
-        } catch (e) {
+        } catch (e: any) {
           logger.error('Transport disconnection after heartbeat timeout, error', e);
         }
       }
@@ -2349,7 +2349,7 @@ export default class WebRTCClient extends Emitter {
     if (this.userAgent && this.userAgent.transport && !this.userAgent.transport.disconnectPromise) {
       try {
         await this.userAgent.transport.disconnect();
-      } catch (e) {
+      } catch (e: any) {
         logger.error('WebRTC transport disconnect, error', e);
       }
     }

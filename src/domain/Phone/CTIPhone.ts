@@ -146,7 +146,7 @@ export default class CTIPhone extends Emitter implements Phone {
 
       this.eventEmitter.emit('onCallEnded', callSession);
       return true;
-    } catch (e) {
+    } catch (e: any) {
       logger.error('hangup CTI call, error', e);
       this.eventEmitter.emit('onCallFailed', callSession);
       return false;

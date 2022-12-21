@@ -23,7 +23,7 @@ export default {
       const nbAors = aors.length;
       const availableAors = aors.filter(aor => aor.status === 'Reachable');
       return `Number of AOR: ${nbAors} (${availableAors.length} Avail, ${nbAors - availableAors.length} Unavail)`;
-    } catch (e) {
+    } catch (e: any) {
       if (e.status === 401) {
         return 'Not available for this user';
       }

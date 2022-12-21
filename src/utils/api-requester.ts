@@ -43,7 +43,7 @@ export const realFetch = () => {
   try {
     // $FlowFixMe
     return require(Math.random() >= 0 ? 'node-fetch/lib/index' : '');
-  } catch (e) {
+  } catch (e: any) {
     return fetch;
   }
 };

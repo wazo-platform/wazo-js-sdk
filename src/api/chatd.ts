@@ -28,8 +28,8 @@ type GetMessagesOptions = {
   limit: number | null | undefined;
   order: string | null | undefined;
   offset: string | null | undefined;
-  search: string;
-  distinct: string;
+  search: string | null | undefined;
+  distinct: string | null | undefined;
 };
 export default ((client: ApiRequester, baseUrl: string) => ({
   updateState: (contactUuid: UUID, state: string): Promise<boolean> => client.put(`${baseUrl}/users/${contactUuid}/presences`, {
@@ -46,7 +46,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   getContactStatusInfo: async (contactUuid: UUID): Promise<PresenceResponse> => client.get(`${baseUrl}/users/${contactUuid}/presences`).then((response: PresenceResponse) => response),
   getLineState: async (contactUuid: UUID): Promise<string> => client.get(`${baseUrl}/users/${contactUuid}/presences`).then((response: PresenceResponse) => Profile.getLinesState(response.lines)),
   getMultipleLineState: async (contactUuids: Array<UUID> | null | undefined): Promise<string> => {
-    const body = {};
+    const body: any = {};
 
     if (contactUuids && contactUuids.length) {
       body.user_uuid = contactUuids.join(',');
@@ -59,8 +59,8 @@ export default ((client: ApiRequester, baseUrl: string) => ({
     name,
     users,
   }).then(ChatRoom.parse),
-  getRoomMessages: async (roomUuid: string, params: GetMessagesOptions = {}): Promise<Array<ChatMessage>> => {
-    const qs = ApiRequester.getQueryString(params);
+  getRoomMessages: async (roomUuid: string, params?: GetMessagesOptions): Promise<Array<ChatMessage>> => {
+    const qs = ApiRequester.getQueryString(params || {});
     return client.get(`${baseUrl}/users/me/rooms/${roomUuid}/messages${qs.length ? `?${qs}` : ''}`).then((response: ChatMessageListResponse) => ChatMessage.parseMany(response));
   },
   sendRoomMessage: async (roomUuid: string, message: ChatMessage): Promise<ChatMessage> => client.post(`${baseUrl}/users/me/rooms/${roomUuid}/messages`, message).then(ChatMessage.parse),

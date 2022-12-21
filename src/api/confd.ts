@@ -35,7 +35,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   getUserLinesSip(userUuid: string, lineIds: string[]): Promise<SipLine>[] {
     // We have to catch all exception, unless Promise.all will returns an empty array for 2 lines with a custom one:
     // The custom line will throw a 404 and break the Promise.all.
-    // $FlowFixMe
+    // @ts-ignore
     return Promise.all(lineIds.map(lineId => this.getUserLineSip(userUuid, lineId).catch(() => null)));
   },
 
@@ -46,7 +46,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
         return null;
       }
 
-      const line = user.lines[0];
+      const line:any = user.lines[0];
       return this.getUserLineSip(userUuid, line.uuid || line.id);
     });
   },
@@ -62,7 +62,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
 
     try {
       return await client.get(url).then(ExternalApp.parse);
-    } catch (e) {
+    } catch (e: any) {
       return null;
     }
   },
@@ -75,8 +75,8 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   meetingAuthorizationReject: (meetingUuid: string, authorizationUuid: string): Promise<boolean> => client.put(`${baseUrl}/users/me/meetings/${meetingUuid}/authorizations/${authorizationUuid}/reject`, {}, null, ApiRequester.successResponseParser),
   meetingAuthorizationAccept: (meetingUuid: string, authorizationUuid: string): Promise<boolean> => client.put(`${baseUrl}/users/me/meetings/${meetingUuid}/authorizations/${authorizationUuid}/accept`, {}, null, ApiRequester.successResponseParser),
   guestGetMeeting: (meetingUuid: string): Promise<Meeting> => client.get(`${baseUrl}/guests/me/meetings/${meetingUuid}`, null).then(Meeting.parse),
-  guestAuthorizationRequest: (userUuid: string, meetingUuid: string, username: string): Promise<> => client.post(`${baseUrl}/guests/${userUuid}/meetings/${meetingUuid}/authorizations`, {
+  guestAuthorizationRequest: (userUuid: string, meetingUuid: string, username: string): Promise<any> => client.post(`${baseUrl}/guests/${userUuid}/meetings/${meetingUuid}/authorizations`, {
     guest_name: username,
   }).then(MeetingAuthorization.parse),
-  guestAuthorizationCheck: (userUuid: string, meetingUuid: string, authorizationUuid: string): Promise<> => client.get(`${baseUrl}/guests/${userUuid}/meetings/${meetingUuid}/authorizations/${authorizationUuid}`, null),
+  guestAuthorizationCheck: (userUuid: string, meetingUuid: string, authorizationUuid: string): Promise<any> => client.get(`${baseUrl}/guests/${userUuid}/meetings/${meetingUuid}/authorizations/${authorizationUuid}`, null),
 }));

@@ -539,7 +539,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         await new Promise(resolve => setTimeout(resolve, 500));
         reinvited = await this.sendReinvite(targetCallSession, constraints, conference);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.warn(e);
     }
 
@@ -1354,7 +1354,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     try {
       await Promise.race([this.unregister(), new Promise((resolve, reject) => setTimeout(() => reject(new Error('Unregister, timed out')), 3000))]);
-    } catch (e) {
+    } catch (e: any) {
       logger.error('WebRTC close, unregister error', e);
     }
 
@@ -1580,7 +1580,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         try {
           // Send reinvite with iceRestart
           this.sendReinvite(this.currentCallSession, null, isConference, !hasVideo, true);
-        } catch (e) {
+        } catch (e: any) {
           logger.error('WebRTC reinvite after register, error', {
             message: e.message,
             stack: e.stack,
@@ -1676,7 +1676,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     try {
       body = JSON.parse(message.body);
-    } catch (e) {
+    } catch (e: any) {
       return;
     }
 

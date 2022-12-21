@@ -40,7 +40,7 @@ class Checker {
           result,
         });
         onCheckResult(name, result);
-      } catch (e) {
+      } catch (e: any) {
         logger.info(`Checking ${name} failure`, {
           message: e.message,
         });

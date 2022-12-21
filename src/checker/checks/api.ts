@@ -19,25 +19,25 @@ export default {
     try {
       await client.auth.getPushNotificationSenderId(session.uuid);
       await client.auth.getProviders(session.uuid);
-    } catch (e) {
+    } catch (e: any) {
       handleApiError('wazo-auth', e);
     }
 
     try {
       await client.callLogd.listCallLogs();
-    } catch (e) {
+    } catch (e: any) {
       handleApiError('wazo-callogd', e);
     }
 
     try {
       await client.calld.listCalls();
-    } catch (e) {
+    } catch (e: any) {
       handleApiError('wazo-calld', e);
     }
 
     try {
       await client.calld.listVoicemails();
-    } catch (e) {
+    } catch (e: any) {
       // API throws a 404 when no voicemail
       if (e.status !== 404) {
         handleApiError('wazo-calld', e);
@@ -48,14 +48,14 @@ export default {
       await client.chatd.getState(session.uuid);
       await client.chatd.getContactStatusInfo(session.uuid);
       await client.chatd.getUserRooms();
-    } catch (e) {
+    } catch (e: any) {
       handleApiError('wazo-chatd', e);
     }
 
     try {
       await client.confd.getInfos();
       await client.confd.getUser(session.uuid);
-    } catch (e) {
+    } catch (e: any) {
       handleApiError('wazo-confd', e);
     }
 
@@ -65,13 +65,13 @@ export default {
       await client.dird.fetchWazoSource(session.primaryContext());
       const conferenceSource = await client.dird.fetchConferenceSource(session.primaryContext());
       await client.dird.fetchConferenceContacts(conferenceSource.items[0]);
-    } catch (e) {
+    } catch (e: any) {
       handleApiError('wazo-dird', e);
     }
 
     try {
       await client.webhookd.getSubscriptions();
-    } catch (e) {
+    } catch (e: any) {
       handleApiError('wazo-webhookd', e);
     }
   },

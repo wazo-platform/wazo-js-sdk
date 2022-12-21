@@ -46,7 +46,7 @@ const safeStringify = (object: Record<string, any>) => {
 
   try {
     return JSON.stringify(object);
-  } catch (e) { // Nothing to do
+  } catch (e: any) { // Nothing to do
   }
 
   return result;
@@ -259,7 +259,7 @@ class IssueReporter {
           this.log(methodName, args.join(' '));
           // Use old console method to log it normally
           this.oldConsoleMethods[methodName].apply(null, args);
-        } catch (e) { // Avoid circular structure issues
+        } catch (e: any) { // Avoid circular structure issues
         }
       };
     });

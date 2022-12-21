@@ -49,7 +49,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   },
 
   logOut: (token: Token): Promise<LogoutResponse> => client.delete(`${baseUrl}/token/${token}`, null, {}, ApiRequester.successResponseParser),
-  refreshToken: (refreshToken: string, backend: string, expiration: number, isMobile = false, tenantId: string | null | undefined, domainName?: string): Promise<Session | null | undefined> => {
+  refreshToken: (refreshToken: string, backend: string, expiration: number, isMobile: boolean, tenantId: string | null | undefined, domainName?: string): Promise<Session | null | undefined> => {
     const body: Record<string, any> = {
       backend: backend || DEFAULT_BACKEND_USER,
       expiration: expiration || DETAULT_EXPIRATION,
@@ -111,7 +111,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
     username: string | null | undefined;
     email: string | null | undefined;
   }) => {
-    const body = {};
+    const body: any = {};
 
     if (username) {
       body.username = username;

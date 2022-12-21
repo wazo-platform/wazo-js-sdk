@@ -15,41 +15,41 @@ global.wazoRefreshExpiration = global.wazoRefreshExpiration || {};
 global.wazoRefreshBackend = global.wazoRefreshBackend || {};
 global.wazoIsMobile = global.wazoIsMobile || {};
 global.wazoFetchOptions = global.wazoFetchOptions || {};
-export const setApiClientId = (clientId: string, forServer: string | null | undefined = null) => {
+export const setApiClientId = (clientId: string, forServer: string) => {
   global.wazoClientId[forServer] = clientId;
 };
 export const setCurrentServer = (newServer: string) => {
   global.wazoCurrentServer = newServer;
 };
-export const setApiToken = (newToken: string | null | undefined, forServer: string | null | undefined = null) => {
+export const setApiToken = (newToken: string | null | undefined, forServer: string) => {
   global.wazoClientToken[forServer] = newToken;
 };
-export const setRefreshToken = (newRefreshToken: string | null | undefined, forServer: string | null | undefined = null) => {
+export const setRefreshToken = (newRefreshToken: string | null | undefined, forServer: string) => {
   global.wazoRefreshToken[forServer] = newRefreshToken;
 };
-export const setRefreshTenantId = (refreshTenantId: string | null | undefined, forServer: string | null | undefined = null) => {
+export const setRefreshTenantId = (refreshTenantId: string | null | undefined, forServer: string) => {
   console.warn('Use of `setRefreshTenantId` is deprecated, please use `setRefreshDomainName` instead');
   global.wazoRefreshTenantId[forServer] = refreshTenantId;
 };
-export const setRefreshDomainName = (refreshDomainName: string | null | undefined, forServer: string | null | undefined = null) => {
+export const setRefreshDomainName = (refreshDomainName: string | null | undefined, forServer: string) => {
   global.wazoRefreshDomainName[forServer] = refreshDomainName;
 };
-export const setOnRefreshToken = (onRefreshToken: (...args: Array<any>) => any, forServer: string | null | undefined = null) => {
+export const setOnRefreshToken = (onRefreshToken: (...args: Array<any>) => any, forServer: string) => {
   global.wazoOnRefreshToken[forServer] = onRefreshToken;
 };
-export const setOnRefreshTokenError = (callback: (...args: Array<any>) => any, forServer: string | null | undefined = null) => {
+export const setOnRefreshTokenError = (callback: (...args: Array<any>) => any, forServer: string) => {
   global.wazoOnRefreshTokenError[forServer] = callback;
 };
-export const setRefreshExpiration = (refreshExpiration: number, forServer: string | null | undefined = null) => {
+export const setRefreshExpiration = (refreshExpiration: number, forServer: string) => {
   global.wazoRefreshExpiration[forServer] = refreshExpiration;
 };
-export const setRefreshBackend = (refreshBackend: number, forServer: string | null | undefined = null) => {
+export const setRefreshBackend = (refreshBackend: number, forServer: string) => {
   global.wazoRefreshBackend[forServer] = refreshBackend;
 };
-export const setIsMobile = (isMobile: boolean, forServer: string | null | undefined = null) => {
+export const setIsMobile = (isMobile: boolean, forServer: string) => {
   global.wazoIsMobile[forServer] = isMobile;
 };
-export const setFetchOptions = (fetchOptions: Record<string, any>, forServer: string | null | undefined = null) => {
+export const setFetchOptions = (fetchOptions: Record<string, any>, forServer: string) => {
   global.wazoFetchOptions[forServer] = fetchOptions;
 };
 

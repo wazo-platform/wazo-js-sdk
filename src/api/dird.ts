@@ -89,7 +89,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
     return client.get(`${baseUrl}/backends/conference/sources/${source.uuid}/contacts`).then(response => Contact.parseManyConference(response.items, source));
   },
   // Graphql
-  findMultipleContactsByNumber: (numbers: string[], fields: Record<string, any> = null): Promise<Contact[]> => {
+  findMultipleContactsByNumber: (numbers: string[], fields?: Record<string, any>): Promise<Contact[]> => {
     const query = jsonToGraphQLQuery({
       me: {
         contacts: {
