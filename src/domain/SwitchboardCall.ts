@@ -91,7 +91,7 @@ class SwitchboardCall {
     state,
     switchboardName,
     switchboardUuid,
-  }: SwitchboardCallArguments = {}) {
+  }: SwitchboardCallArguments) {
     this.id = id;
     this.callSession = callSession;
     this.callerIdName = callerIdName;

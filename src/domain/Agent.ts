@@ -1,5 +1,3 @@
-import { $Shape } from 'utility-types';
-
 type AgentResponse = {
   context: string;
   extension: string;
@@ -54,7 +52,7 @@ class Agent {
     number,
     paused,
     pausedReason,
-  }: $Shape<AgentArguments>) {
+  }: AgentArguments) {
     this.context = context;
     this.extension = extension;
     this.id = id;

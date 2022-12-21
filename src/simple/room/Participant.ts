@@ -8,7 +8,7 @@ import getApiClient from '../../service/getApiClient';
 const logger = IssueReporter.loggerFor('room');
 
 class Participant extends Emitter {
-  room: Room;
+  room: Room | undefined;
 
   uuid: string;
 
@@ -345,7 +345,7 @@ class Participant extends Emitter {
     }
   }
 
-  broadcastStatus(inboundStatus: Record<string, any> = null, sendReinvite: boolean | null | undefined) {
+  broadcastStatus(inboundStatus: Record<string, any> | null = null, sendReinvite: boolean | null | undefined = null) {
     const status = inboundStatus || this.getStatus();
     logger.info('broadcasting participant status', {
       callId: this.callId,
@@ -354,10 +354,10 @@ class Participant extends Emitter {
 
     if (sendReinvite && !this.streams.length && Phone.phone) {
       // eslint-disable-next-line no-underscore-dangle
-      Phone.phone._sendReinviteMessage(this.room.callSession, false);
+      Phone.phone._sendReinviteMessage(this.room?.callSession, false);
     }
 
-    this.room.sendSignal({
+    this.room?.sendSignal({
       type: SIGNAL_TYPE_PARTICIPANT_UPDATE,
       origin: this.callId,
       status,
@@ -372,7 +372,7 @@ class Participant extends Emitter {
   async ban(apiRequestDelay: number | null | undefined = null) {
     const {
       meetingUuid,
-    } = this.room;
+    } = this.room || {};
 
     if (!meetingUuid) {
       throw new Error('Attempting to ban a participant without a `meetingUuid`');

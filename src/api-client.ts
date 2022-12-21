@@ -156,7 +156,7 @@ export default class ApiClient {
 
       this.setToken(session.token);
       return session.token;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('token refresh, error', error);
 
       if (this.onRefreshTokenError) {

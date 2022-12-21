@@ -6,6 +6,7 @@ export default function (func: ((...args: Array<any>) => any) | null | undefined
   return function () {
     if (ran) return memo;
     ran = true;
+    // @ts-ignore
     memo = func && func.apply(this, arguments);
     func = null;
     return memo;

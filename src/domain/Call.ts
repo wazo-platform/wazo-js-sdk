@@ -98,6 +98,7 @@ export default class Call {
       lineId: plain.line_id,
       startingTime: moment(plain.creation_time).toDate(),
       talkingToIds: Object.keys(plain.talking_to || {}),
+      // @ts-ignore
       recording: plain.record_state === RECORD_STATE_ACTIVE,
     });
   }
@@ -123,7 +124,7 @@ export default class Call {
     startingTime,
     talkingToIds,
     recording,
-  }: CallArguments = {}) {
+  }: CallArguments) {
     this.id = id;
     this.sipCallId = sipCallId;
     this.callerName = callerName;
@@ -146,6 +147,7 @@ export default class Call {
 
   getElapsedTimeInSeconds(): number {
     const now = Date.now();
+    // @ts-ignore
     return (now - this.startingTime) / 1000;
   }
 

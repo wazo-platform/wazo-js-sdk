@@ -2,15 +2,15 @@
 
 /* global window, document, navigator */
 import 'webrtc-adapter';
-import type InviterInviteOptions from 'sip.js/lib/api/inviter-invite-options';
-import type Invitation from 'sip.js/lib/api/invitation';
+import type { InviterInviteOptions } from 'sip.js/lib/api/inviter-invite-options';
+import type { Invitation } from 'sip.js/lib/api';
 import type { IncomingResponse } from 'sip.js/lib/core/messages/incoming-response';
 import type { Session } from 'sip.js/lib/core/session';
 import type { SessionDialog } from 'sip.js/lib/core/dialogs/session-dialog';
 import type { IncomingRequestMessage } from 'sip.js/lib/core/messages/incoming-request-message';
 import type { SessionDescriptionHandlerFactoryOptions } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-factory-options';
-import type SessionDescriptionHandlerConfiguration from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-configuration';
-import type SessionDescriptionHandler from 'sip.js/lib/platform/web/session-description-handler/session-description-handler';
+import type { SessionDescriptionHandlerConfiguration } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-configuration';
+import type { SessionDescriptionHandler } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler';
 import { UserAgentState } from 'sip.js/lib/api/user-agent-state';
 import { Parser } from 'sip.js/lib/core/messages/parser';
 import { C } from 'sip.js/lib/core/messages/methods/constants';
@@ -65,9 +65,9 @@ export const transportEvents = [CONNECTED, DISCONNECTED, TRANSPORT_ERROR, MESSAG
 export class CanceledCallError extends Error {}
 const MAX_REGISTER_TRIES = 5;
 type MediaConfig = {
-  audio: Record<string, any> & boolean;
-  video: Record<string, any> & boolean;
-  localVideo?: Record<string, any> & boolean;
+  audio: Record<string, any> | boolean;
+  video?: Record<string, any> | boolean;
+  localVideo?: Record<string, any> | boolean;
 };
 type WebRtcConfig = {
   displayName: string;
@@ -100,11 +100,11 @@ export default class WebRTCClient extends Emitter {
 
   hasAudio: boolean;
 
-  audio: Record<string, any> | boolean;
+  audio: MediaTrackConstraints | boolean | undefined;
 
   audioElements: Record<string, HTMLAudioElement>;
 
-  video: Record<string, any> | boolean;
+  video: MediaTrackConstraints | boolean | undefined;
 
   audioStreams: Record<string, any>;
 
@@ -192,7 +192,7 @@ export default class WebRTCClient extends Emitter {
     return [];
   }
 
-  constructor(config: WebRtcConfig, session: Session | null | undefined, uaConfigOverrides: Record<string, any> | null | undefined) {
+  constructor(config: WebRtcConfig, session: Session | null | undefined, uaConfigOverrides: Record<string, any> | null | undefined = undefined) {
     super();
     this.uaConfigOverrides = uaConfigOverrides;
     this.config = config;
@@ -279,7 +279,7 @@ export default class WebRTCClient extends Emitter {
         this.eventEmitter.emit(INVITE, invitation, this.sessionWantsToDoVideo(invitation), shouldAutoAnswer);
       },
     };
-    const ua = new UserAgent(webRTCConfiguration);
+    const ua: any = new UserAgent(webRTCConfiguration);
 
     if (ua.transport && ua.transport.connectPromise) {
       ua.transport.connectPromise.catch(e => {
@@ -379,7 +379,7 @@ export default class WebRTCClient extends Emitter {
       return Promise.resolve();
     }
 
-    if (this.connectionPromise || this.registerer && this.registerer.waiting) {
+    if (this.connectionPromise || this.registerer?.waiting) {
       logger.info('sdk webrtc registering aborted due to a registration in progress.');
       return Promise.resolve();
     }
@@ -643,7 +643,7 @@ export default class WebRTCClient extends Emitter {
     const {
       state,
       id,
-    } = session;
+    }: any = session;
     logger.info('sdk webrtc hangup call', {
       id,
       state,
@@ -677,14 +677,14 @@ export default class WebRTCClient extends Emitter {
       }
 
       return bye();
-    } catch (error) {
+    } catch (error: any) {
       logger.warn('sdk webrtc hangup, error', error);
     }
 
     return null;
   }
 
-  async getStats(session: Session): Record<string, any> | null | undefined {
+  async getStats(session: Session): Promise<Record<string, any> | null | undefined> {
     const pc = session.sessionDescriptionHandler.peerConnection;
 
     if (!pc) {
@@ -1115,6 +1115,7 @@ export default class WebRTCClient extends Emitter {
     return result;
   }
 
+  // eslint-disable-next-line @typescript-eslint/default-param-last
   sendMessage(sipSession: Session = null, body: string, contentType = 'text/plain') {
     if (!sipSession) {
       return;

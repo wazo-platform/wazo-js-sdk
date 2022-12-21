@@ -1,5 +1,6 @@
 export default class BadResponse extends Error {
   static fromResponse(error: Record<string, any>, status: number) {
+    // @ts-ignore
     return new BadResponse(error.message || JSON.stringify(error), status, error.timestamp, error.error_id, error.details, error);
   }
 

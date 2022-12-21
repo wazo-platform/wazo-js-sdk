@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import moment from 'moment';
 import CallLog from '../CallLog';
 import Recording from '../Recording';

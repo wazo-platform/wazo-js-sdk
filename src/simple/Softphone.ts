@@ -195,7 +195,7 @@ class Softphone {
     this._createIframe(() => {
       this.iframeLoaded = true;
 
-      this._pendingMessages.forEach(([type, payload]) => this._sendMessage(type, payload));
+      this._pendingMessages.forEach(([type, payload]: any) => this._sendMessage(type, payload));
 
       this.onIFrameLoaded();
     });
@@ -204,7 +204,7 @@ class Softphone {
   parseLinks() {
     const links = this._getLinks();
 
-    links.forEach(link => {
+    links.forEach((link: any) => {
       link.setAttribute('data-wazo-parsed', true);
       link.addEventListener('click', this._onLinkClick.bind(this));
       this.onLinkEnabled(link);
@@ -303,11 +303,12 @@ class Softphone {
     this.iframe.style.display = 'none';
     this.iframe.id = 'wazo-softphone';
     this.iframe.onload = cb;
+    // @ts-ignore
     document.body.appendChild(this.iframe);
   }
 
   _getLinks() {
-    return [].slice.call(document.querySelectorAll('a:not([data-wazo-parsed])'), 0).filter(link => link.href.indexOf('tel:') === 0 || link.href.indexOf('callto:') === 0);
+    return [].slice.call(document.querySelectorAll('a:not([data-wazo-parsed])'), 0).filter((link: HTMLAnchorElement) => link.href.indexOf('tel:') === 0 || link.href.indexOf('callto:') === 0);
   }
 
   _onLinkClick(e: Record<string, any>) {
@@ -347,7 +348,7 @@ class Softphone {
         break;
 
       case SDK_AUTHENTICATED:
-        this._onAuthenticated(event.data.session);
+        this._onAuthenticated();
 
         this.onAuthenticated(event.data.session);
         break;

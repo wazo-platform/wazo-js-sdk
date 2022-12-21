@@ -8,7 +8,7 @@ export const parseCandidate = line => {
     parts = line.substring(10).split(' ');
   }
 
-  const candidate = {
+  const candidate: any = {
     foundation: parts[0],
     component: parts[1],
     protocol: parts[2].toLowerCase(),

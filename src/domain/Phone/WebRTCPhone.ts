@@ -1,5 +1,4 @@
 /* eslint-disable no-param-reassign */
-
 /* eslint-disable no-underscore-dangle */
 import type { Message } from 'sip.js/lib/api/message';
 import type { Session } from 'sip.js/lib/core/session';
@@ -167,8 +166,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return false;
     }
 
-    const shouldScreenShare = constraints && constraints.screen;
-    const isUpgrade = shouldScreenShare || constraints && constraints.video;
+    const shouldScreenShare = constraints?.screen;
+    const isUpgrade = shouldScreenShare || constraints?.video;
 
     // Downgrade
     if (constraints && !isUpgrade) {
@@ -190,7 +189,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   getUserAgent() {
-    return this.client && this.client.config && this.client.config.userAgentString || 'webrtc-phone';
+    return this.client?.config?.userAgentString || 'webrtc-phone';
   }
 
   startHeartbeat() {
@@ -1193,7 +1192,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       sipSession = this.client.call(number, this.allowVideo ? cameraEnabled : false, audioOnly, conference);
 
       this._bindEvents(sipSession);
-    } catch (error) {
+    } catch (error: any) {
       console.warn(error);
       logger.warn('make WebRTC call, error', {
         message: error.message,
@@ -1405,6 +1404,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return this._createCallSession(sipSession);
   }
 
+  // eslint-disable-next-line @typescript-eslint/default-param-last
   sendMessage(sipSession: Session = null, body: string, contentType = 'text/plain') {
     return this.client.sendMessage(sipSession, body, contentType);
   }

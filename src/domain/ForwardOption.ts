@@ -10,16 +10,16 @@ export const FORWARD_KEYS = {
   UNCONDITIONAL: 'unconditional',
 };
 type ForwardOptionArguments = {
-  destination: string;
-  enabled: boolean;
-  key: string;
+  destination?: string;
+  enabled?: boolean;
+  key?: string;
 };
 export default class ForwardOption {
-  destination: string;
+  destination: string | undefined;
 
-  enabled: boolean;
+  enabled: boolean | undefined;
 
-  key: string;
+  key: string | undefined;
 
   static parse(plain: Response, key: string): ForwardOption {
     return new ForwardOption({

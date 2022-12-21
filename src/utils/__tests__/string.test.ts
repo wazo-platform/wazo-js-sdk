@@ -5,7 +5,9 @@ describe('string utils', () => {
     it('', () => {
       expect(() => camelToUnderscore(null)).toThrow('Input is not a string');
       expect(() => camelToUnderscore(undefined)).toThrow('Input is not a string');
+      // @ts-expect-error
       expect(() => camelToUnderscore({})).toThrow('Input is not a string');
+      // @ts-expect-error
       expect(() => camelToUnderscore([])).toThrow('Input is not a string');
     });
     it('should convert camel-cased string to underscore', () => {

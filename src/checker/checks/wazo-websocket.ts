@@ -2,7 +2,7 @@ import WebSocketClient, { SOCKET_EVENTS, HEARTBEAT_ENGINE_VERSION } from '../../
 
 export default {
   name: 'Wazo Websocket',
-  check: (server, session) => new Promise((resolve, reject) => {
+  check: (server, session) => new Promise<void>((resolve, reject) => {
     const client = new WebSocketClient({
       host: server,
       token: session.token,

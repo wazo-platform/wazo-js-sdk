@@ -1,5 +1,3 @@
-import { $Shape } from 'utility-types';
-
 type SubscriptionResponse = {
   config: Record<string, any>;
   events: string[];
@@ -50,6 +48,7 @@ class Subscription {
     return new Subscription({
       name: plain.name,
       events: plain.events,
+      // @ts-ignore
       config: plain.config,
       uuid: plain.uuid,
       service: plain.service,
@@ -78,7 +77,7 @@ class Subscription {
     metadata,
     ownerTenantUuid,
     ownerUserUuid,
-  }: $Shape<SubscriptionArguments>) {
+  }: SubscriptionArguments) {
     this.name = name;
     this.events = events;
     this.config = config;

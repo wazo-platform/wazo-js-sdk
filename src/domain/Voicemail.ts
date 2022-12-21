@@ -81,7 +81,7 @@ export default class Voicemail {
     duration,
     caller,
     unread,
-  }: VoicemailArguments = {}) {
+  }: VoicemailArguments) {
     this.id = id;
     this.date = date;
     this.duration = duration;

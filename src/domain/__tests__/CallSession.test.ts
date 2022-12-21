@@ -1,3 +1,4 @@
+// @ts-nocheck
 import CallSession from '../CallSession';
 
 const stringify = cs => JSON.parse(JSON.stringify(cs));

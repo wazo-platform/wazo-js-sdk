@@ -3,7 +3,7 @@ import EventEmitter from 'events';
 import type { Session } from 'sip.js/lib/core/session';
 import type { Logger } from 'sip.js/lib/core/log/logger';
 import type { MediaStreamFactory } from 'sip.js/lib/platform/web/session-description-handler/media-stream-factory';
-import type SessionDescriptionHandlerConfiguration from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-configuration';
+import type { SessionDescriptionHandlerConfiguration } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-configuration';
 import { SessionDescriptionHandler } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler';
 import { SessionDescriptionHandlerOptions } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-options';
 import IssueReporter from '../service/IssueReporter';
@@ -32,6 +32,14 @@ export const wazoMediaStreamFactory = (constraints: Record<string, any>): Promis
 class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
   gatheredCandidates: Array<string | null | undefined>;
 
+  eventEmitter: EventEmitter;
+
+  isWeb: boolean;
+
+  session: Session;
+
+  // @ts-ignore
+  // eslint-disable-next-line @typescript-eslint/default-param-last
   constructor(logger: Logger, mediaStreamFactory: MediaStreamFactory, sessionDescriptionHandlerConfiguration?: SessionDescriptionHandlerConfiguration, isWeb: boolean, session: Session) {
     super(logger, mediaStreamFactory, sessionDescriptionHandlerConfiguration);
     this.eventEmitter = new EventEmitter();
@@ -53,13 +61,14 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       this.eventEmitter.emit('setDescription', sessionDescription);
       return result;
     } catch (error) {
+      // @ts-ignore
       this.logger.error('SessionDescriptionHandler.setRemoteSessionDescription error', error);
       throw error;
     }
   }
 
   // Overridden to avoid to fix ice-candidates missing in the SDP in react-native and chrome canary.
-  getDescription(options?: Record<string, any> = {}, modifiers?: Array<(...args: Array<any>) => any>): Promise<any> {
+  getDescription(options: Record<string, any> = {}, modifiers?: Array<(...args: Array<any>) => any>): Promise<any> {
     this.logger.debug('SessionDescriptionHandler.getDescription');
 
     if (this._peerConnection === undefined) {
@@ -77,7 +86,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     // We shouldn't wait for ice when receiving a reinvite (eg: pendingReinviteAck = true)
     const shouldWaitForIce = !this.session.pendingReinviteAck && (iceRestart || 'constraints' in options);
     // ICE gathering timeout may be set on a per call basis, otherwise the configured default is used
-    const iceTimeout = options.iceGatheringTimeout === undefined ? this.sessionDescriptionHandlerConfiguration.iceGatheringTimeout : options.iceGatheringTimeout;
+    const iceTimeout = options.iceGatheringTimeout === undefined ? this.sessionDescriptionHandlerConfiguration?.iceGatheringTimeout : options.iceGatheringTimeout;
     wazoLogger.trace('getting SDP description', {
       iceRestart,
       shouldWaitForIce,
@@ -111,7 +120,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     return this.getLocalMediaStream(options).then(() => this.updateDirection(options, isConference, audioOnly)).then(() => this.createDataChannel(options)).then(() => {
       if (isConference && options.constraints && !options.constraints.video && !('hold' in options) && !audioOnly) {
         // Add a video an empty bundle to be able to replaceTrack when joining a conference without video
-        if (this.peerConnection.addTransceiver) {
+        if (this.peerConnection?.addTransceiver) {
           this.peerConnection.addTransceiver('video', {
             streams: [this._localMediaStream],
             direction: 'sendrecv',
@@ -197,13 +206,13 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     }
 
     // Closing senders via getLocalStreams
-    this.peerConnection.getLocalStreams().forEach(stream => {
+    this.peerConnection?.getLocalStreams().forEach(stream => {
       stream.getTracks().forEach(track => {
         track.stop();
       });
     });
     // Closing receivers via getRemoteStreams
-    this.peerConnection.getRemoteStreams().forEach(stream => {
+    this.peerConnection?.getRemoteStreams().forEach(stream => {
       stream.getTracks().forEach(track => {
         track.stop();
       });
@@ -238,7 +247,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
           // determine the direction to offer given the current direction and hold state
           const directionToOffer = (currentDirection: string, transceiver: Record<string, any>)
           /* RTCRtpTransceiver */
-          : Record<string, any> => {
+          : Record<string, any> | string => {
             if (isConference) {
               if (audioOnly && transceiver.receiver.track && transceiver.receiver.track.kind === 'video') {
                 return 'sendonly';
@@ -391,7 +400,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       throw new Error('Peer connection undefined.');
     }
 
-    const pc = this._peerConnection;
+    const pc: any = this._peerConnection;
     const {
       sfu,
     } = pc;
@@ -418,7 +427,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
 
         trackUpdates.push(new Promise(resolve => {
           this.logger.debug(`SessionDescriptionHandler.setLocalMediaStream - replacing sender ${kind} track`);
-          resolve();
+          resolve(null);
         }).then(() => sender.replaceTrack(newTrack).then(() => {
           const oldTrack = localStream.getTracks().find(localTrack => localTrack.kind === kind);
 
@@ -437,7 +446,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       } else {
         trackUpdates.push(new Promise(resolve => {
           this.logger.debug(`SessionDescriptionHandler.setLocalMediaStream - adding sender ${kind} track`);
-          resolve();
+          resolve(null);
         }).then(() => {
           // Review: could make streamless tracks a configurable option?
           // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/addTrack#Usage_notes

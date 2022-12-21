@@ -73,7 +73,7 @@ export default class Room {
       return this;
     }
 
-    const updatedParticipants = [...this.participants];
+    const updatedParticipants: any = [...this.participants];
 
     if (idx !== -1) {
       updatedParticipants[idx] = { ...updatedParticipants[idx],
@@ -95,7 +95,7 @@ export default class Room {
       return this;
     }
 
-    const updatedParticipants = [...this.participants];
+    const updatedParticipants: any = [...this.participants];
 
     if (idx !== -1) {
       updatedParticipants[idx] = { ...updatedParticipants[idx],

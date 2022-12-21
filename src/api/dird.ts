@@ -8,8 +8,11 @@ import type { Sources } from '../index';
 
 const getContactPayload = (contact: NewContact | Contact) => ({
   email: contact.email,
+  // @ts-ignore
   firstname: contact.firstName ? contact.firstName : '',
+  // @ts-ignore
   lastname: contact.lastName ? contact.lastName : '',
+  // @ts-ignore
   number: contact.phoneNumber ? contact.phoneNumber : '',
   entreprise: contact.entreprise ? contact.entreprise : '',
   birthday: contact.birthday ? contact.birthday : '',

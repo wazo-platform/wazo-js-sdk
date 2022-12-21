@@ -107,6 +107,7 @@ const Wazo = {
   },
 
   get callLogs() {
+    // @ts-ignore
     return getApiClient().callLogs;
   },
 
@@ -140,6 +141,7 @@ const Wazo = {
 };
 
 if (window) {
+  // @ts-ignore
   window.Wazo = Wazo;
 }
 

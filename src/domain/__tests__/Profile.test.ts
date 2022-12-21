@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Profile from '../Profile';
 import Line from '../Line';
 import ForwardOption, { FORWARD_KEYS } from '../ForwardOption';

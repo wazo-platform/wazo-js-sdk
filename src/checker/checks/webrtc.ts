@@ -3,11 +3,12 @@ import WebRTCClient from '../../web-rtc-client';
 
 export default {
   name: 'WebRTC',
-  check: (server, session) => new Promise((resolve, reject) => {
+  check: (server, session) => new Promise<void | string>((resolve, reject) => {
     if (typeof MediaStream === 'undefined') {
       return resolve('Skipped on node');
     }
 
+    // @ts-ignore
     const client = new WebRTCClient({
       host: server,
       media: {
@@ -32,6 +33,7 @@ export default {
     client.on(client.REGISTERED, () => {
       const sipSession = client.call('*10');
 
+      // @ts-ignore
       if (!sipSession || !client.getSipSessionId(sipSession)) {
         return handleError('Unable to make call through WebRTC');
       }

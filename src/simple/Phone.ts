@@ -1,5 +1,5 @@
-import type Inviter from 'sip.js/lib/api/inviter';
-import type Invitation from 'sip.js/lib/api/invitation';
+import type { Inviter } from 'sip.js/lib/api/inviter';
+import type { Invitation } from 'sip.js/lib/api/invitation';
 import { SessionState } from 'sip.js/lib/api/session-state';
 import type SipLine from '../domain/SipLine';
 import type Session from '../domain/Session';
@@ -57,7 +57,7 @@ class Phone extends Emitter {
     const session = Wazo.Auth.getSession();
 
     if (!server || !session) {
-      throw new Error('Please connect to the server using `Wazo.Auth.logIn` or `Wazo.Auth.authenticate` ' + 'before using Room.connect().');
+      throw new Error('Please connect to the server using `Wazo.Auth.logIn` or `Wazo.Auth.authenticate` before using Room.connect().');
     }
 
     this.session = session;
@@ -110,6 +110,7 @@ class Phone extends Emitter {
 
     this.client = new WazoWebRTCClient({
       host,
+      // @ts-ignore
       port,
       displayName,
       authorizationUser: sipLine.username,
@@ -126,7 +127,7 @@ class Phone extends Emitter {
     if (this.phone) {
       if (this.phone.hasAnActiveCall()) {
         logger.info('hangup call on disconnect');
-        await this.phone.hangup();
+        await this.phone.hangup(null);
       }
 
       await this.phone.close();
@@ -234,7 +235,7 @@ class Phone extends Emitter {
     return this.phone && this.phone.atxfer(sipSession);
   }
 
-  async reinvite(callSession: CallSession, constraints: Record<string, any> = null, conference = false) {
+  async reinvite(callSession: CallSession, constraints: (Record<string, any> | null) = null, conference = false) {
     return this.phone ? this.phone.sendReinvite(callSession, constraints, conference) : null;
   }
 
@@ -254,7 +255,7 @@ class Phone extends Emitter {
     return this.phone ? this.phone.getSipSessionId(sipSession) : null;
   }
 
-  sendMessage(body: string, sipSession: Inviter | Invitation = null, contentType = 'text/plain') {
+  sendMessage(body: string, sipSession: Inviter | Invitation | null = null, contentType = 'text/plain') {
     const toSipSession = sipSession || this.getCurrentSipSession();
 
     if (!toSipSession || !this.phone) {
@@ -264,14 +265,14 @@ class Phone extends Emitter {
     return this.phone.sendMessage(toSipSession, body, contentType);
   }
 
-  sendChat(content: string, sipSession: Inviter | Invitation = null) {
+  sendChat(content: string, sipSession: Inviter | Invitation | null = null) {
     return this.sendMessage(JSON.stringify({
       type: MESSAGE_TYPE_CHAT,
       content,
     }), sipSession, 'application/json');
   }
 
-  sendSignal(content: any, sipSession: Inviter | Invitation = null) {
+  sendSignal(content: any, sipSession: Inviter | Invitation | null = null) {
     return this.sendMessage(JSON.stringify({
       type: MESSAGE_TYPE_SIGNAL,
       content,

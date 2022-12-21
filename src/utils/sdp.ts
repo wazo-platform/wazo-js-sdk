@@ -5,7 +5,7 @@ export const getCandidates = (rawSdp: string | null | undefined): Record<string,
     return [];
   }
 
-  const sdp = sdpParser.parse(rawSdp);
+  const sdp: any = sdpParser.parse(rawSdp);
 
   if (!sdp || !sdp.media) {
     return [];
@@ -18,7 +18,7 @@ export const parseCandidate = (candidate: string | null | undefined): Record<str
     return null;
   }
 
-  const result = sdpParser.parse(candidate.indexOf('a=') === 0 ? candidate : `a=${candidate}`);
+  const result: any = sdpParser.parse(candidate.indexOf('a=') === 0 ? candidate : `a=${candidate}`);
   return result.candidates ? result.candidates[0] : null;
 };
 
@@ -30,7 +30,7 @@ export const isSdpValid = (sdp: string | null | undefined): boolean => {
   return areCandidateValid(candidates);
 };
 export const fixBundle = (sdp: string): string => {
-  const parsedSdp = sdpParser.parse(sdp);
+  const parsedSdp: any = sdpParser.parse(sdp);
   const bundleIndex = parsedSdp.groups.findIndex(group => group.type === 'BUNDLE');
 
   if (bundleIndex !== -1) {
@@ -40,7 +40,7 @@ export const fixBundle = (sdp: string): string => {
   return sdpParser.write(parsedSdp);
 };
 export const toggleVideoDirection = (sdp: string, direction: string | null | undefined): string => {
-  const parsedSdp = sdpParser.parse(sdp);
+  const parsedSdp: any = sdpParser.parse(sdp);
   parsedSdp.media = parsedSdp.media.map(media => ({ ...media,
     ...(media.type === 'video' ? {
       direction,
@@ -77,7 +77,7 @@ export const hasAnActiveVideo = (sdp: string | null | undefined): boolean => {
   return !!parsedSdp.media.find(media => media.type === 'video' && media.port > 10 && (!media.direction || media.direction !== 'inactive'));
 };
 export const fixSdp = (sdp: string, candidates: Record<string, any>[], forcePort = true): string => {
-  const parsedSdp = sdpParser.parse(sdp);
+  const parsedSdp: any = sdpParser.parse(sdp);
   const mainCandidate = getSrflxOrRelay(candidates)[0];
   const ip = mainCandidate ? mainCandidate.ip : null;
 

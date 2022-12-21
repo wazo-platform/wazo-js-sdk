@@ -143,7 +143,7 @@ export default class CallLog {
     start,
     end,
     recordings,
-  }: CallLogArguments = {}) {
+  }: CallLogArguments) {
     this.answer = answer;
     this.answered = answered;
     this.callDirection = callDirection;

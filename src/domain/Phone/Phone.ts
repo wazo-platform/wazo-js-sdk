@@ -2,16 +2,16 @@ import Line from '../Line';
 import CallSession from '../CallSession';
 
 export type PhoneEventCallbacks = {
-  onCallIncoming?: (number: string) => {};
-  onCallOutgoing?: (number: string) => {};
+  onCallIncoming?: (number: string) => void;
+  onCallOutgoing?: (number: string) => void;
   onCallRinging?: () => void;
   onCallAccepted?: () => void;
   onCallHeld?: () => void;
   onCallResumed?: () => void;
   onCallMuted?: () => void;
   onCallUnmuted?: () => void;
-  onCallEnded?: () => {};
-  onCallFailed?: (message: string) => {};
+  onCallEnded?: () => void;
+  onCallFailed?: (message: string) => void;
 };
 type PhoneVoid = Promise<void> | void;
 export type AvailablePhoneOptions = {

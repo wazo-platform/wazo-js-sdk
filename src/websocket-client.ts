@@ -16,7 +16,7 @@ export const SOCKET_EVENTS = {
 type Arguments = {
   host: string;
   token: string;
-  events: Array<string>;
+  events?: Array<string>;
   version?: number;
   heartbeat?: {
     delay: number;
@@ -101,11 +101,11 @@ class WebSocketClient extends Emitter {
 
   host: string | null | undefined;
 
-  version: number;
+  version: number | undefined;
 
   token: string | null | undefined;
 
-  events: Array<string>;
+  events: Array<string> | undefined;
 
   options: Record<string, any>;
 
@@ -135,10 +135,16 @@ class WebSocketClient extends Emitter {
   constructor({
     host,
     token,
-    version = 1,
-    events = [],
-    heartbeat = {},
-  }: Arguments, options: Record<string, any> = {}) {
+    version,
+    events,
+    heartbeat,
+  }: Arguments, options: Record<string, any> = {
+    host,
+    token,
+    version: 1,
+    events: [],
+    heartbeat: {},
+  }) {
     super();
     this.initialized = false;
     this.socket = null;
@@ -152,7 +158,7 @@ class WebSocketClient extends Emitter {
       delay,
       timeout,
       max,
-    } = heartbeat;
+    }: any = heartbeat;
     this.heartbeat = new Heartbeat(delay, timeout, max);
     this.heartbeat.setSendHeartbeat(this.pingServer.bind(this));
     this.heartbeat.setOnHeartbeatTimeout(this._onHeartbeatTimeout.bind(this));
@@ -206,6 +212,7 @@ class WebSocketClient extends Emitter {
       }
 
       if (!this.initialized) {
+        // @ts-ignore
         this._handleInitMessage(message, this.socket);
       } else {
         this._handleMessage(message);
@@ -239,6 +246,7 @@ class WebSocketClient extends Emitter {
     this.socket.onerror = event => {
       logger.info('Wazo WS error', {
         message: event.message,
+        // @ts-ignore
         code: event.code,
         readyState: event.target.readyState,
       });
@@ -276,7 +284,7 @@ class WebSocketClient extends Emitter {
 
     if (this.socket) {
       // If still connected, send the token to the WS
-      if (this.isConnected() && this.version >= 2) {
+      if (this.isConnected() && Number(this.version) >= 2) {
         this.socket.send(JSON.stringify({
           op: 'token',
           data: {
@@ -357,13 +365,14 @@ class WebSocketClient extends Emitter {
       return;
     }
 
+    // @ts-ignore
     this.socket.reconnect(reason);
   }
 
   _handleInitMessage(message: WebSocketMessage, sock: ReconnectingWebSocket) {
     switch (message.op) {
       case 'init':
-        this.events.forEach(event => {
+        this.events?.forEach(event => {
           const op = {
             op: 'subscribe',
             data: {
@@ -406,7 +415,7 @@ class WebSocketClient extends Emitter {
       return;
     }
 
-    if (this.version >= 2 && message.op === 'event') {
+    if (Number(this.version) >= 2 && message.op === 'event') {
       this.eventEmitter.emit(message.data.name, message.data);
     }
   }

@@ -10,8 +10,8 @@ export default {
       return resolve('Skipped on node');
     }
 
-    const candidates = {};
-    const rawCandidates = [];
+    const candidates: any = {};
+    const rawCandidates: any = [];
     let nbCandidates = 0;
     const pc = new RTCPeerConnection({
       iceServers: [{
@@ -35,6 +35,7 @@ export default {
       const ports = candidates[Object.keys(candidates)[0]];
 
       if (ports.length === 1) {
+        // @ts-ignore
         resolve();
       } else {
         reject(new Error('Symmetric NAT detected, you should use a TURN server.'));
@@ -52,7 +53,7 @@ export default {
       }
 
       if (e.candidate && e.candidate.candidate.indexOf('srflx') !== -1) {
-        const cand = parseCandidate(e.candidate.candidate);
+        const cand: any = parseCandidate(e.candidate.candidate);
         if (!candidates[cand.relatedPort]) candidates[cand.relatedPort] = [];
         candidates[cand.relatedPort].push(cand.port);
       } else if (!e.candidate) {

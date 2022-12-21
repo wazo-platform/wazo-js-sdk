@@ -1,3 +1,4 @@
+// @ts-nocheck
 import SipLine from '../SipLine';
 
 describe('SipLine domain', () => {

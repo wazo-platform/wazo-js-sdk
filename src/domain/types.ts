@@ -124,7 +124,7 @@ export type ConfdUser = {
   // to check
   cti_profile: string | null | undefined;
   // to check
-  call_permissions: string<>;
+  call_permissions: Array<string>;
   fallbacks: {
     noanswer_destination: string | null | undefined;
     busy_destination: string | null | undefined;

@@ -8,15 +8,15 @@ type ListResponse = {
   items: Response[];
 };
 type Arguments = {
-  name: string;
-  configuration: Record<string, any>;
+  name?: string;
+  configuration?: Record<string, any>;
 };
 export default class ExternalApp {
-  name: string;
+  name: string | undefined;
 
   type: string;
 
-  configuration: Record<string, any>;
+  configuration: Record<string, any> | undefined;
 
   static parse(plain: Response): ExternalApp {
     return new ExternalApp({

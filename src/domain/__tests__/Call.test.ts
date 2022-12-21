@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Call from '../Call';
 
 describe('Call domain', () => {

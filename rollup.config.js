@@ -5,7 +5,7 @@ import commonjs from 'rollup-plugin-commonjs';
 import json from 'rollup-plugin-json';
 import typescript from '@rollup/plugin-typescript';
 
-const esmConfigs = globby.sync('src/**/*.js').map(inputFile => ({
+const esmConfigs = globby.sync('src/**/*.ts').map(inputFile => ({
   input: inputFile,
   output: {
     file: inputFile.replace('src', 'esm'),
@@ -16,7 +16,7 @@ const esmConfigs = globby.sync('src/**/*.js').map(inputFile => ({
   ],
 }));
 
-const csjConfigs = globby.sync('src/**/*.js').map(inputFile => ({
+const csjConfigs = globby.sync('src/**/*.ts').map(inputFile => ({
   input: inputFile,
   output: {
     file: inputFile.replace('src', 'lib'),

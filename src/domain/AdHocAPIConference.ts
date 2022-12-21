@@ -76,6 +76,7 @@ export default class AdHocAPIConference {
 
   async start() {
     this.started = true;
+    // @ts-ignore
     this.answerTime = Object.values(this.participants).length ? Object.values(this.participants)[0].answerTime : null;
     const participantIds = Object.keys(this.participants);
     const conference = await getApiClient().calld.createAdHocConference(this.host.callId, participantIds);

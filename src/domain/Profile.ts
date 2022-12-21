@@ -1,4 +1,3 @@
-import { $Shape } from 'utility-types';
 import Line from './Line';
 import ForwardOption, { FORWARD_KEYS } from './ForwardOption';
 import newFrom from '../utils/new-from';
@@ -180,6 +179,7 @@ export default class Profile {
       firstName: plain.firstName || plain.firstname || '',
       lastName: plain.lastName || plain.lastname || '',
       email: plain.email,
+      // @ts-ignore
       lines: plain.lines.map(line => Line.parse(line)),
       username: plain.username,
       mobileNumber: plain.mobile_phone_number || '',
@@ -220,7 +220,7 @@ export default class Profile {
     sipLines,
     callPickupTargetUsers,
     onlineCallRecordEnabled,
-  }: $Shape<ProfileArguments> = {}) {
+  }: ProfileArguments) {
     this.id = id;
     this.firstName = firstName;
     this.lastName = lastName;

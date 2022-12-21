@@ -132,7 +132,7 @@ export default class Session {
     refreshToken,
     sessionUuid,
     engineUuid,
-  }: SessionArguments = {}) {
+  }: SessionArguments) {
     this.token = token;
     this.uuid = uuid;
     this.tenantUuid = tenantUuid || null;
@@ -199,7 +199,7 @@ export default class Session {
     }
 
     const line = this.primaryLine();
-    return line && line.extensions.length > 0 ? line.extensions[0].context : 'default';
+    return line && Array.isArray(line.extensions) && line.extensions.length > 0 ? line.extensions[0].context : 'default';
   }
 
   hasEngineVersionGte(version: string) {
@@ -208,7 +208,7 @@ export default class Session {
 
   primaryNumber(): string | null | undefined {
     const line = this.primaryLine();
-    return line && line.extensions.length ? line.extensions[0].exten : null;
+    return line && Array.isArray(line.extensions) && line.extensions.length ? line.extensions[0].exten : null;
   }
 
   allLines(): Line[] {
@@ -216,7 +216,7 @@ export default class Session {
   }
 
   allNumbers(): string[] {
-    const extensions = this.allLines().map(line => line.extensions.map(extension => extension.exten));
+    const extensions = this.allLines().map(line => line.extensions?.map(extension => extension.exten) || []);
 
     if (!extensions.length) {
       return [];

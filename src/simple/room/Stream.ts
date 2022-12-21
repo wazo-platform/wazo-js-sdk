@@ -7,7 +7,7 @@ import Wazo from '../index';
 class Stream {
   htmlStream: MediaStream;
 
-  participant: Participant;
+  participant: Participant | undefined;
 
   static detachStream(stream: any) {
     stream.getTracks().forEach(track => {
@@ -15,7 +15,7 @@ class Stream {
     });
   }
 
-  constructor(htmlStream: MediaStream, participant: Participant) {
+  constructor(htmlStream: MediaStream, participant?: Participant) {
     this.htmlStream = htmlStream;
     this.participant = participant;
   }
@@ -36,6 +36,7 @@ class Stream {
       const tracks = this.htmlStream ? this.htmlStream.getVideoTracks() : [];
       tracks.forEach(track => {
         track.enabled = true;
+        // @ts-ignore
         track.loaded = true;
       });
     };

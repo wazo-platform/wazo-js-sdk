@@ -66,6 +66,7 @@
     "@rollup/plugin-typescript": "^10.0.1",
     "@types/jest": "^29.2.4",
     "@types/node": "^18.11.17",
+    "@types/sdp-transform": "^2.4.5",
     "@typescript-eslint/eslint-plugin": "^5.47.0",
     "@typescript-eslint/parser": "^5.47.0",
     "babel-core": "^7.0.0-bridge.0",

@@ -417,7 +417,7 @@ class Room extends Emitter {
     Wazo.Phone.sendDTMF(tone, this.callSession);
   }
 
-  async sendReinvite(newConstraints: Record<string, any> = null) {
+  async sendReinvite(newConstraints: Record<string, any> | null = null) {
     logger.info('send room reinvite', {
       callId: this.callSession ? this.callSession.getId() : null,
       newConstraints,
@@ -544,10 +544,10 @@ class Room extends Emitter {
 
   _mapMsid(rawSdp: string) {
     const sdp = sdpParser.parse(rawSdp);
-    const labelMsidArray = sdp.media.filter(media => !!media.label).map(({
+    const labelMsidArray = sdp.media.filter((media: any) => !!media.label).map(({
       label,
       msid,
-    }) => ({
+    }: any) => ({
       label: String(label),
       streamId: msid.split(' ')[0],
       trackId: msid.split(' ')[1],
@@ -585,13 +585,15 @@ class Room extends Emitter {
   }
 
   _onMessage(message: Message): Record<string, any> | null | undefined {
+    // @ts-ignore
     if (message.method !== 'MESSAGE') {
       return null;
     }
 
-    let body;
+    let body: any;
 
     try {
+      // @ts-ignore
       body = JSON.parse(message.body);
     } catch (e: any) {
       return null;
@@ -740,7 +742,7 @@ class Room extends Emitter {
           return isMe && item.call_id ? new Wazo.LocalParticipant(this, item, this.extra) : new Wazo.RemoteParticipant(this, item);
         });
         this.participants = participants;
-        const localParticipant = participants.find(someParticipant => someParticipant instanceof Wazo.LocalParticipant);
+        const localParticipant = participants.find((someParticipant: any) => someParticipant instanceof Wazo.LocalParticipant);
 
         if (!this.localParticipant && localParticipant) {
           this._onLocalParticipantJoined(localParticipant);
@@ -870,7 +872,7 @@ class Room extends Emitter {
 
     const streamId = this._getStreamIdFrTrackId(trackId);
 
-    const key = this._getUnassociatedMapIdFromTrackIdOrStreamId(trackId, streamId);
+    const key: any = this._getUnassociatedMapIdFromTrackIdOrStreamId(trackId, streamId);
 
     const stream = this._unassociatedVideoStreams[key];
 

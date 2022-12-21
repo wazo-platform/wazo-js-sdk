@@ -79,7 +79,7 @@ class Auth {
   }
 
   async logIn(username: string, password: string, backend?: string, extra?: string | Record<string, any>) {
-    let tenantId = null;
+    let tenantId: string | null = null;
     let domainName = null;
 
     if (typeof extra === 'string') {
@@ -202,6 +202,7 @@ class Auth {
   checkSubscription(session: Session, minSubscriptionType: number) {
     const userSubscriptionType = session.profile ? session.profile.subscriptionType : null;
 
+    // @ts-ignore
     if (userSubscriptionType === null || +userSubscriptionType <= minSubscriptionType) {
       const message = `Invalid subscription ${userSubscriptionType || 'n/a'}, required at least ${minSubscriptionType}`;
       throw new InvalidSubscription(message);
@@ -299,6 +300,7 @@ class Auth {
       this.checkAuthorizations(session, this.authorizationName);
 
       if (this.minSubscriptionType !== null) {
+        // @ts-ignore
         this.checkSubscription(session, +this.minSubscriptionType);
       }
     } catch (e: any) {
@@ -315,7 +317,8 @@ class Auth {
     }
 
     try {
-      const sipLines = await getApiClient().confd.getUserLinesSip(session.uuid, session.profile.lines.map(line => line.id));
+      const sipLines = await getApiClient().confd.getUserLinesSip(session.uuid, session.profile?.lines.map(line => line.id));
+      // @ts-ignore
       session.profile.sipLines = sipLines.filter(line => !!line);
     } catch (e: any) { // When an user has only a sccp line, getSipLines return a 404
     }

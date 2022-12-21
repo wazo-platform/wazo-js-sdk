@@ -20,11 +20,11 @@ export default {
     }
 
     const mobile = isMobile();
-    const offerOptions = {
+    const offerOptions: any = {
       offerToReceiveAudio: 1,
     };
     const ips = [];
-    const config = {
+    const config: any = {
       iceServers: [{
         urls: 'stun:stun1.l.google.com:19302',
       }, {
@@ -56,7 +56,8 @@ export default {
 
         if (rawCandidate.indexOf('srflx') !== -1 || rawCandidate.indexOf('relay') !== -1) {
           hasSrflxOrRelay = true;
-          const candidate = parseCandidate(e.candidate.candidate);
+          const candidate: any = parseCandidate(e.candidate.candidate);
+          // @ts-ignore
           ips.push(candidate.ip);
         }
       } else if (!e.candidate) {
@@ -65,6 +66,7 @@ export default {
         }
 
         if (ips.every(checkIsIPV4)) {
+          // @ts-ignore
           resolve();
         } else {
           const nonIPV4 = ips.find(ip => !checkIsIPV4(ip));
@@ -73,6 +75,7 @@ export default {
       }
     };
 
+    // @ts-ignore
     pc.createOffer(offerOptions).then(offer => pc.setLocalDescription(offer)).then(description => (mobile ? pc.createOffer(offerOptions) : description)).then(sessionDescription => (mobile ? pc.setLocalDescription(sessionDescription) : sessionDescription));
   }),
 };

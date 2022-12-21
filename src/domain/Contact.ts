@@ -533,7 +533,7 @@ export default class Contact {
     }> = [];
 
     if (single.emails) {
-      single.emails.forEach(email => (typeof email === 'object' ? {
+      single.emails.forEach((email: any) => (typeof email === 'object' ? {
         email: email.address,
         label: email.label,
       } : {
@@ -568,8 +568,8 @@ export default class Contact {
   }
 
   static parseWazo(single: WazoResponse, source: DirectorySource): Contact {
-    const emails = [];
-    const numbers = [];
+    const emails: any[] = [];
+    const numbers: any[] = [];
 
     if (single.email) {
       emails.push({
@@ -609,7 +609,7 @@ export default class Contact {
   }
 
   static parseConference(single: ConferenceResponse, source: DirectorySource): Contact {
-    const numbers = [];
+    const numbers: any[] = [];
     let firstNumber = '';
 
     if (single && single.extensions && single.extensions.length > 0 && single.extensions[0].exten) {

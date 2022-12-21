@@ -74,7 +74,7 @@ export default class CallSession {
   // Asterisk callId, like `7aed6793-4405-466d-873e-92d21c2fef9f`
   sipCallId: string;
 
-  sipStatus: number | null | undefined;
+  sipStatus: string | number | null | undefined;
 
   muted: boolean;
 
@@ -96,7 +96,7 @@ export default class CallSession {
 
   recordingPaused: boolean;
 
-  sipSession: Session;
+  sipSession: Session | undefined;
 
   conference: boolean;
 

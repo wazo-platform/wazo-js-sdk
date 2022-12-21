@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/default-param-last */
 /* global btoa, window, fetch */
 
 /* eslint-disable global-require */
@@ -15,7 +16,7 @@ type ConstructorParams = {
   agent: Record<string, any> | null | undefined;
   clientId: string | null | undefined;
   refreshTokenCallback: (...args: Array<any>) => any;
-  token?: string;
+  token?: string | null;
   fetchOptions: Record<string, any> | null | undefined;
 };
 const methods = ['head', 'get', 'post', 'put', 'delete'];
@@ -117,6 +118,7 @@ export default class ApiRequester {
       ApiRequester.prototype[method] = function sugar(...args) {
         // Add method in arguments passed to `call`
         args.splice(1, 0, method);
+        // @ts-ignore
         return this.call.call(this, ...args);
       };
     });
@@ -145,7 +147,7 @@ export default class ApiRequester {
   async call(path: string, method = 'get', body: Record<string, any> | null | undefined = null, headers: (string | null | undefined) | (Record<string, any> | null | undefined) = null, parse: (...args: Array<any>) => any = ApiRequester.defaultParser, firstCall = true): Promise<any> {
     const url = this.computeUrl(method, path, body);
     const newHeaders = this.getHeaders(headers);
-    let newBody = method === 'get' ? null : body;
+    let newBody: any = method === 'get' ? null : body;
 
     if (newBody && newHeaders['Content-Type'] === 'application/json') {
       newBody = JSON.stringify(newBody);
@@ -182,7 +184,7 @@ export default class ApiRequester {
       IssueReporter.logRequest(url, options, response, start);
 
       // Throw an error only if status >= 400
-      if (isHead && response.status >= 500 || !isHead && response.status >= 400) {
+      if ((isHead && response.status >= 500) || (!isHead && response.status >= 400)) {
         const promise = isJson ? response.json() : response.text();
         const exceptionClass = response.status >= 500 ? ServerError : BadResponse;
         return promise.then(async (err: Record<string, any>) => {
@@ -231,7 +233,14 @@ export default class ApiRequester {
     return err && err.reason && err.reason[0] === 'No such token';
   }
 
-  _replayWithNewToken(err: Record<string, any>, path: string, method: string, body: Record<string, any> | null | undefined = null, headers: (string | null | undefined) | (Record<string, any> | null | undefined) = null, parse: (...args: Array<any>) => any) {
+  _replayWithNewToken(
+    err: Record<string, any>,
+    path: string,
+    method: string,
+    body: Record<string, any> | null | undefined = null,
+    headers: (string | null | undefined) | (Record<string, any> | null | undefined) = null,
+    parse: ((...args: Array<any>) => any),
+  ) {
     const isTokenNotFound = this._isTokenNotFound(err);
 
     let newPath = path;
@@ -239,7 +248,7 @@ export default class ApiRequester {
       inProgress: !!this.refreshTokenPromise,
     });
     this.refreshTokenPromise = this.refreshTokenPromise || this.refreshTokenCallback();
-    return this.refreshTokenPromise.then(() => {
+    return this.refreshTokenPromise?.then(() => {
       this.refreshTokenPromise = null;
       logger.info('token refreshed', {
         isTokenNotFound,

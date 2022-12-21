@@ -63,7 +63,7 @@ class IssueReporter {
 
   ERROR: string;
 
-  oldConsoleMethods: Record<string, any>;
+  oldConsoleMethods: Record<string, any> | null;
 
   enabled: boolean;
 
@@ -71,7 +71,7 @@ class IssueReporter {
 
   buffer: Record<string, any>[];
 
-  bufferTimeout: TimeoutID | null | undefined;
+  bufferTimeout: any | null | undefined;
 
   _boundProcessBuffer: (...args: Array<any>) => any;
 
@@ -141,7 +141,7 @@ class IssueReporter {
     // Handle category label
     let category = null;
     let skipSendToRemote = false;
-    let extra = {};
+    let extra: any = {};
 
     if (args[0].indexOf(CATEGORY_PREFIX) === 0) {
       category = args[0].split('=')[1];
@@ -152,12 +152,13 @@ class IssueReporter {
     // Handle extra data as object for the last argument
     const lastArg = args[args.length - 1];
 
-    if (lastArg && (typeof lastArg === 'object' && Object.keys(lastArg).length || lastArg instanceof Error)) {
+    if (lastArg && ((typeof lastArg === 'object' && Object.keys(lastArg).length) || lastArg instanceof Error)) {
       if (lastArg instanceof Error) {
         extra = {
           errorMessage: lastArg.message,
           errorStack: lastArg.stack,
           errorType: lastArg.constructor.name,
+          // @ts-ignore
           skipSendToRemote: lastArg.skipSendToRemote,
         };
       } else {
@@ -189,7 +190,7 @@ class IssueReporter {
     // Log the message in the console anyway (but don't console.error on mobile)
     const consoleLevel = isMobile() && level === 'error' ? WARN : level;
     // eslint-disable-next-line
-    const oldMethod = this.oldConsoleMethods[consoleLevel] || this.oldConsoleMethods.log;
+    const oldMethod = this.oldConsoleMethods?.[consoleLevel] || this.oldConsoleMethods?.log;
     oldMethod.apply(oldMethod, [date, consoleMessage]);
 
     if (this._callback) {
@@ -214,6 +215,7 @@ class IssueReporter {
     const {
       status,
     } = response;
+    // @ts-ignore
     const duration = new Date() - start;
     let level = TRACE;
 
@@ -250,6 +252,7 @@ class IssueReporter {
   _catchConsole() {
     this.oldConsoleMethods = {};
     CONSOLE_METHODS.forEach((methodName: string) => {
+      // @ts-ignore
       // eslint-disable-next-line
       this.oldConsoleMethods[methodName] = console[methodName];
       const parent:any = typeof window !== 'undefined' ? window : global;
@@ -258,6 +261,7 @@ class IssueReporter {
         try {
           this.log(methodName, args.join(' '));
           // Use old console method to log it normally
+          // @ts-ignore
           this.oldConsoleMethods[methodName].apply(null, args);
         } catch (e: any) { // Avoid circular structure issues
         }
@@ -320,7 +324,7 @@ class IssueReporter {
     const {
       bufferSize,
       bufferTimeout,
-    } = this.remoteClientConfiguration;
+    }: any = this.remoteClientConfiguration;
 
     if (this.buffer.length > bufferSize) {
       return this._processBuffer();
@@ -364,12 +368,14 @@ class IssueReporter {
       },
       body,
     }).catch((e: Error) => {
+      // @ts-ignore
       e.skipSendToRemote = true;
       this.log('error', this._makeCategory('grafana'), 'Sending log to grafana, error', e);
       setTimeout(() => {
         if (isArray) {
           payload = payload.map(message => this._writeRetryCount(message, retry + 1));
         } else if (payload && typeof payload === 'object') {
+          // @ts-ignore
           payload = this._writeRetryCount(payload, retry + 1);
         }
 

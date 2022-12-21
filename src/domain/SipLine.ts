@@ -69,6 +69,7 @@ export default class SipLine {
 
       const usernameOption = findOption(plain.auth_section_options, 'username');
       const secretOption = findOption(plain.auth_section_options, 'password');
+      // @ts-ignore
       const hostOption = findOption(plain.endpoint_section_options, 'media_address');
       username = usernameOption ? usernameOption[1] : '';
       secret = secretOption ? secretOption[1] : '';
@@ -134,7 +135,7 @@ export default class SipLine {
     links,
     trunk,
     line,
-  }: SipLineArguments = {}) {
+  }: SipLineArguments) {
     this.id = id;
     this.uuid = uuid;
     this.tenantUuid = tenantUuid;

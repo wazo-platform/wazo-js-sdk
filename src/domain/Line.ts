@@ -25,8 +25,8 @@ type LineResponse = {
   id: number;
 };
 type LineArguments = {
-  id: number;
-  extensions: Array<Extension>;
+  id?: number;
+  extensions?: Array<Extension>;
   endpointCustom?: Endpoint | null;
   endpointSccp?: Endpoint | null;
   endpointSip?: Endpoint | null;
@@ -34,9 +34,9 @@ type LineArguments = {
 export default class Line {
   type: string;
 
-  id: number;
+  id: number | undefined;
 
-  extensions: Array<Extension>;
+  extensions: Array<Extension> | undefined;
 
   endpointCustom: Endpoint | null;
 

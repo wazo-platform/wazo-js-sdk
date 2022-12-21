@@ -11,9 +11,9 @@ class Heartbeat {
 
   hasHeartbeat: boolean;
 
-  _heartbeatDelayTimeout: TimeoutID | null | undefined;
+  _heartbeatDelayTimeout: ReturnType<typeof setTimeout> | undefined;
 
-  _heartbeatNotReceivedTimeout: TimeoutID | null | undefined;
+  _heartbeatNotReceivedTimeout: ReturnType<typeof setTimeout> | undefined;
 
   _heartbeatTries: number;
 

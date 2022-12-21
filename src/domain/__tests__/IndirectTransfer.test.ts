@@ -1,3 +1,4 @@
+// @ts-nocheck
 import CallSession from '../CallSession';
 import IndirectTransfer from '../IndirectTransfer';
 
