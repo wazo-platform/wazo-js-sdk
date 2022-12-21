@@ -1,4 +1,3 @@
-// @flow
 import { SessionState } from 'sip.js/lib/api/session-state';
 import type { Session } from 'sip.js/lib/api/session';
 

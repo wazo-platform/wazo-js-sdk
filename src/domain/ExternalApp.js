@@ -1,4 +1,3 @@
-// @flow
 import newFrom from '../utils/new-from';
 
 type Response = {
@@ -17,7 +16,9 @@ type Arguments = {
 
 export default class ExternalApp {
   name: string;
+
   type: string;
+
   configuration: Object;
 
   static parse(plain: Response): ExternalApp {

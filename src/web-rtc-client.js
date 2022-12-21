@@ -1,4 +1,3 @@
-// @flow
 /* eslint-disable class-methods-use-this, no-param-reassign, max-classes-per-file, no-underscore-dangle */
 /* global window, document, navigator */
 import 'webrtc-adapter';

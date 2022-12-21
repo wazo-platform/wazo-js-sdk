@@ -1,4 +1,3 @@
-// @flow
 
 import ApiClient from './api-client';
 import WebRTCClient from './web-rtc-client';

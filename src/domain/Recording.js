@@ -1,4 +1,3 @@
-// @flow
 import moment from 'moment';
 
 export type RecordingResponse = {
@@ -15,13 +14,17 @@ type RecordingArguments = {
   fileName: string,
   start: Date,
   uuid: string,
-}
+};
 
 export default class Recording {
   deleted: boolean;
+
   end: ?Date;
+
   fileName: string;
+
   start: Date;
+
   uuid: string;
 
   static parseMany(recordings: RecordingResponse[] = []): Recording[] {

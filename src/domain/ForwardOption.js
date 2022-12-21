@@ -1,4 +1,3 @@
-// @flow
 
 import newFrom from '../utils/new-from';
 
@@ -21,7 +20,9 @@ type ForwardOptionArguments = {
 
 export default class ForwardOption {
   destination: string;
+
   enabled: boolean;
+
   key: string;
 
   static parse(plain: Response, key: string): ForwardOption {

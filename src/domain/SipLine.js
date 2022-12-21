@@ -1,4 +1,3 @@
-// @flow
 import newFrom from '../utils/new-from';
 import type { Endpoint } from './Line';
 
@@ -37,16 +36,27 @@ type SipLineArguments = {
 
 export default class SipLine {
   id: any;
+
   uuid: string;
+
   tenantUuid: string;
+
   username: string;
+
   secret: string;
+
   type: string;
+
   host: string;
+
   options: ?string[][];
+
   endpointSectionOptions: ?string[][];
+
   links: Array<Object>;
+
   trunk: ?string;
+
   line: Endpoint;
 
   static parse(plain: SipLineResponse): SipLine {

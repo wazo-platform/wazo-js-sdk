@@ -1,4 +1,3 @@
-// @flow
 
 import CallSession from './CallSession';
 import newFrom from '../utils/new-from';
@@ -51,14 +50,23 @@ class SwitchboardCall {
   static STATE: Object;
 
   id: string;
+
   callSession: ?CallSession;
+
   callerIdName: ?string;
+
   callerIdNumber: ?string;
+
   answerTime: ?Date;
+
   participantId: ?string;
+
   state: string;
+
   switchboardName: string;
+
   switchboardUuid: string;
+
   type: string;
 
   static parse(plain: SwitchboardCallResponse): SwitchboardCall {

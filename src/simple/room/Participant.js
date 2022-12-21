@@ -1,4 +1,3 @@
-// @flow
 import Emitter from '../../utils/Emitter';
 import IssueReporter from '../../service/IssueReporter';
 
@@ -11,35 +10,63 @@ const logger = IssueReporter.loggerFor('room');
 
 class Participant extends Emitter {
   room: Room;
+
   uuid: string;
+
   name: string;
+
   number: string;
+
   callId: string;
+
   isTalking: boolean;
+
   streams: any[];
+
   videoStreams: any[];
+
   audioMuted: boolean;
+
   videoMuted: boolean;
+
   screensharing: boolean;
+
   isOnHold: boolean;
+
   banned: boolean;
+
   extra: Object;
 
   ON_UPDATED: string;
+
   ON_START_TALKING: string;
+
   ON_STOP_TALKING: string;
+
   ON_DISCONNECT: string;
+
   ON_STREAM_SUBSCRIBED: string;
+
   ON_STREAM_UNSUBSCRIBED: string;
+
   ON_AUDIO_MUTED: string;
+
   ON_AUDIO_UNMUTED: string;
+
   ON_VIDEO_MUTED: string;
+
   ON_VIDEO_UNMUTED: string;
+
   ON_SCREENSHARING: string;
+
   ON_STOP_SCREENSHARING: string;
+
   ON_EXTRA_CHANGE: string;
+
   ON_HOLD: string;
+
   ON_RESUME: string;
+
   ON_BAN: string;
 
   /**
@@ -89,7 +116,7 @@ class Participant extends Emitter {
     this.eventEmitter.emit.apply(this.eventEmitter, [this.ON_UPDATED, ...args]);
   }
 
-  triggerUpdate(eventType: string, broadcast: boolean = true) {
+  triggerUpdate(eventType: string, broadcast = true) {
     const status: Object = { callId: this.callId };
 
     switch (eventType) {
@@ -158,7 +185,7 @@ class Participant extends Emitter {
     return this.triggerEvent(this.ON_STREAM_UNSUBSCRIBED, stream);
   }
 
-  onAudioMuted(broadcast: boolean = true) {
+  onAudioMuted(broadcast = true) {
     if (this.audioMuted) {
       return;
     }
@@ -167,7 +194,7 @@ class Participant extends Emitter {
     this.triggerUpdate(this.ON_AUDIO_MUTED, broadcast);
   }
 
-  onAudioUnMuted(broadcast: boolean = true) {
+  onAudioUnMuted(broadcast = true) {
     if (!this.audioMuted) {
       return;
     }
@@ -176,7 +203,7 @@ class Participant extends Emitter {
     this.triggerUpdate(this.ON_AUDIO_UNMUTED, broadcast);
   }
 
-  onVideoMuted(broadcast: boolean = true) {
+  onVideoMuted(broadcast = true) {
     if (this.videoMuted) {
       return;
     }
@@ -185,7 +212,7 @@ class Participant extends Emitter {
     this.triggerUpdate(this.ON_VIDEO_MUTED, broadcast);
   }
 
-  onVideoUnMuted(broadcast: boolean = true) {
+  onVideoUnMuted(broadcast = true) {
     if (!this.videoMuted) {
       return;
     }
@@ -194,7 +221,7 @@ class Participant extends Emitter {
     this.triggerUpdate(this.ON_VIDEO_UNMUTED, broadcast);
   }
 
-  onScreensharing(broadcast: boolean = true) {
+  onScreensharing(broadcast = true) {
     if (this.screensharing) {
       return;
     }
@@ -203,7 +230,7 @@ class Participant extends Emitter {
     this.triggerUpdate(this.ON_SCREENSHARING, broadcast);
   }
 
-  onStopScreensharing(broadcast: boolean = true) {
+  onStopScreensharing(broadcast = true) {
     if (!this.screensharing) {
       return;
     }
@@ -212,7 +239,7 @@ class Participant extends Emitter {
     this.triggerUpdate(this.ON_STOP_SCREENSHARING, broadcast);
   }
 
-  onHold(broadcast: boolean = true) {
+  onHold(broadcast = true) {
     if (this.isOnHold) {
       return;
     }
@@ -221,7 +248,7 @@ class Participant extends Emitter {
     this.triggerUpdate(this.ON_HOLD, broadcast);
   }
 
-  onResume(broadcast: boolean = true) {
+  onResume(broadcast = true) {
     if (!this.isOnHold) {
       return;
     }
@@ -230,7 +257,7 @@ class Participant extends Emitter {
     this.triggerUpdate(this.ON_RESUME, broadcast);
   }
 
-  onBan(broadcast: boolean = true) {
+  onBan(broadcast = true) {
     this.banned = true;
     this.triggerUpdate(this.ON_BAN, broadcast);
   }
@@ -246,7 +273,7 @@ class Participant extends Emitter {
     };
   }
 
-  updateStatus(status: Object, broadcast: boolean = true) {
+  updateStatus(status: Object, broadcast = true) {
     logger.info('updating participant status', { name: this.name, status });
 
     if (typeof status.audioMuted !== 'undefined' && status.audioMuted !== this.audioMuted) {

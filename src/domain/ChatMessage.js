@@ -1,4 +1,3 @@
-// @flow
 import moment from 'moment';
 
 import newFrom from '../utils/new-from';
@@ -34,11 +33,17 @@ export default class ChatMessage {
   type: string;
 
   uuid: string;
+
   content: string;
+
   date: Date;
+
   alias: string;
+
   userUuid: string;
+
   roomUuid: ?string;
+
   read: boolean;
 
   static parseMany(plain: ChatMessageListResponse): Array<ChatMessage> {

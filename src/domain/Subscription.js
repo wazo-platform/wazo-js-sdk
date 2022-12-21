@@ -1,4 +1,3 @@
-// @flow
 
 type SubscriptionResponse = {
   config: Object;
@@ -11,7 +10,7 @@ type SubscriptionResponse = {
   owner_user_uuid: string;
   service: string;
   uuid: string;
-}
+};
 
 type SubscriptionArguments = {
   name: string;
@@ -24,19 +23,28 @@ type SubscriptionArguments = {
   metadata: Object;
   ownerTenantUuid: string;
   ownerUserUuid: string;
-}
+};
 
 class Subscription {
 
   name: string;
+
   events: string[];
+
   config: string;
+
   uuid: string;
+
   service: string;
+
   eventsUserUuid: string;
+
   eventsWazoUuid: string;
+
   metadata: Object;
+
   ownerTenantUuid: string;
+
   ownerUserUuid: string;
 
   static parse(plain: SubscriptionResponse): Subscription {

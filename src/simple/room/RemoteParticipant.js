@@ -1,4 +1,3 @@
-// @flow
 import Room from './Room';
 import Participant from './Participant';
 

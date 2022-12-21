@@ -1,4 +1,3 @@
-// @flow
 /* eslint-disable no-nested-ternary */
 import { KEYUTIL, jws, b64utoutf8 } from 'jsrsasign';
 
@@ -64,15 +63,25 @@ type SessionArguments = {
 
 export default class Session {
   acl: string[];
+
   token: string;
+
   refreshToken: ?string;
+
   uuid: ?string;
+
   tenantUuid: ?string;
+
   engineUuid: ?string;
+
   sessionUuid: ?string;
+
   engineVersion: ?string;
+
   profile: ?Profile;
+
   expiresAt: Date;
+
   authorizations: Array<Authorization>;
 
   static parse(plain: Response): ?Session {

@@ -1,4 +1,3 @@
-// @flow
 /* eslint-disable */
 
 import type { Device } from './Device';

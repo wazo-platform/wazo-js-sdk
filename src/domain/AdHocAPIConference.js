@@ -1,4 +1,3 @@
-// @flow
 
 import CallSession from './CallSession';
 import type WebRTCPhone from './Phone/WebRTCPhone';
@@ -25,7 +24,7 @@ export type ConferenceArguments = {
   phone: WebRTCPhone,
   host: CallSession,
   finished?: boolean,
-  participants: {[string]: CallSession};
+  participants: { [string]: CallSession };
   started?: boolean,
   answerTime?: ?number,
   conferenceId?: ?string,
@@ -39,7 +38,7 @@ export default class AdHocAPIConference {
 
   host: CallSession;
 
-  participants: {[string]: CallSession};
+  participants: { [string]: CallSession };
 
   started: boolean;
 

@@ -1,4 +1,3 @@
-// @flow
 /* global btoa */
 
 import moment from 'moment';

@@ -1,4 +1,3 @@
-// @flow
 /* eslint-disable no-underscore-dangle */
 import ReconnectingWebSocket from 'reconnecting-websocket';
 
@@ -109,16 +108,27 @@ const messageLogger = IssueReporter.loggerFor('wazo-ws-message');
 
 class WebSocketClient extends Emitter {
   initialized: boolean;
+
   host: ?string;
+
   version: number;
+
   token: ?string;
+
   events: Array<string>;
+
   options: Object;
+
   socket: ?ReconnectingWebSocket;
+
   _boundOnHeartbeat: Function;
+
   heartbeat: Heartbeat;
+
   onHeartBeatTimeout: Function;
+
   heartbeatCb: Function;
+
   eventLists: string[];
 
   static eventLists: Array<string>;
@@ -220,7 +230,7 @@ class WebSocketClient extends Emitter {
     };
   }
 
-  close(force: boolean = false): void {
+  close(force = false): void {
     logger.info('Wazo WS close', { socket: !!this.socket, host: this.host, token: this.token });
 
     if (!this.socket) {

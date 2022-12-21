@@ -1,4 +1,3 @@
-// @flow
 import LibPhoneNumber from 'google-libphonenumber';
 
 const PhoneNumberUtil = LibPhoneNumber.PhoneNumberUtil.getInstance();
@@ -23,7 +22,7 @@ const isSameCountry = (country1, country2) => {
   return country1 === country2;
 };
 
-const getDisplayableNumber = (rawNumber: string, country: string, asYouType: boolean = false): string => {
+const getDisplayableNumber = (rawNumber: string, country: string, asYouType = false): string => {
   if (!rawNumber) {
     return rawNumber;
   }

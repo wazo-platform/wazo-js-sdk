@@ -1,4 +1,3 @@
-// @flow
 
 export default (instance: any, ToClass: any) => {
   const args = {};

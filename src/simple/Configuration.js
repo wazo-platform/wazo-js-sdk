@@ -1,4 +1,3 @@
-// @flow
 import Auth from './Auth';
 import getApiClient from '../service/getApiClient';
 

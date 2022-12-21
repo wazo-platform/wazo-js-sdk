@@ -1,4 +1,3 @@
-// @flow
 import moment from 'moment';
 
 import newFrom from '../utils/new-from';
@@ -39,9 +38,13 @@ export default class Voicemail {
   type: string;
 
   id: string;
+
   date: Date;
+
   duration: number;
+
   unread: ?boolean;
+
   caller: {
     name: string,
     number: string,

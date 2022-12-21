@@ -1,4 +1,3 @@
-// @flow
 
 export const camelToUnderscore = (key: string) => {
   if (typeof key !== 'string') {

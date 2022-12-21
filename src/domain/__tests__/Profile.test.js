@@ -1,4 +1,3 @@
-// @flow
 
 import Profile from '../Profile';
 import Line from '../Line';

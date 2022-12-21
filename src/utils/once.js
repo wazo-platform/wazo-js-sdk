@@ -1,4 +1,3 @@
-// @flow
 /* eslint-disable */
 // Can't use arrow function here due to `apply`
 export default function(func: ?Function) {

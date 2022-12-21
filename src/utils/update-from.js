@@ -1,4 +1,3 @@
-// @flow
 /* eslint-disable no-param-reassign */
 
 export default (instance: any, from: any) => {

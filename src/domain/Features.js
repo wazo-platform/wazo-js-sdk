@@ -1,4 +1,3 @@
-// @flow
 
 import getApiClient from '../service/getApiClient';
 
@@ -11,11 +10,17 @@ const scopesToCheck = FEATURES.map(getScopeName);
 // Handle available features on the engine.
 class Features {
   _hasChat: boolean;
+
   _hasVideo: boolean;
+
   _hasCallRecording: boolean;
+
   _hasFax: boolean;
+
   _hasMobileDoubleCall: boolean;
+
   _hasMobileGsm: boolean;
+
   _hasMeeting: boolean;
 
   constructor() {
@@ -50,11 +55,17 @@ class Features {
   }
 
   hasChat() { return this._hasChat; }
+
   hasVideo() { return this._hasVideo; }
+
   hasCallRecording() { return this._hasCallRecording; }
+
   hasFax() { return this._hasFax; }
+
   hasMobileDoubleCall() { return this._hasMobileDoubleCall; }
+
   hasMobileGsm() { return this._hasMobileGsm; }
+
   hasMeeting() { return this._hasMeeting; }
 
   _hasFeatures(scopes: Object, featureName: string) {

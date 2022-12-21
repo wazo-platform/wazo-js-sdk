@@ -1,4 +1,3 @@
-// @flow
 
 const DEFAULT_HEARTBEAT_DELAY = 2000;
 const DEFAULT_HEARTBEAT_TIMEOUT = 5000;
@@ -6,14 +5,21 @@ const DEFAULT_MAX_HEARTBEATS = 3;
 
 class Heartbeat {
   heartbeatDelay: number;
+
   heartbeatTimeout: number;
+
   maxHeartbeats: number;
 
   hasHeartbeat: boolean;
+
   _heartbeatDelayTimeout: ?TimeoutID;
+
   _heartbeatNotReceivedTimeout: ?TimeoutID;
+
   _heartbeatTries: number;
+
   _sendHeartbeatCallback: ?Function;
+
   _onTimeoutCallback: ?Function;
 
   constructor(heartbeatDelay: number = DEFAULT_HEARTBEAT_DELAY, heartbeatTimeout: number = DEFAULT_HEARTBEAT_TIMEOUT,

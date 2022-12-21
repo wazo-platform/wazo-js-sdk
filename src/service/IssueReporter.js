@@ -1,6 +1,5 @@
 /* global window */
 /* eslint-disable prefer-destructuring, no-param-reassign, no-underscore-dangle */
-// @flow
 import moment from 'moment';
 
 import { realFetch } from '../utils/api-requester';
@@ -51,19 +50,29 @@ const safeStringify = (object: Object) => {
 
 class IssueReporter {
   TRACE: string;
+
   INFO: string;
+
   LOG: string;
+
   WARN: string;
+
   ERROR: string;
 
   oldConsoleMethods: Object;
+
   enabled: boolean;
+
   remoteClientConfiguration: ?Object;
 
   buffer: Object[];
+
   bufferTimeout: ?TimeoutID;
+
   _boundProcessBuffer: Function;
+
   _boundParseLoggerBody: Function;
+
   _callback: ?Function;
 
   constructor() {
@@ -305,7 +314,7 @@ class IssueReporter {
     }
   }
 
-  _sendDebugToGrafana(payload: Object | Object[], retry: number = 0) {
+  _sendDebugToGrafana(payload: Object | Object[], retry = 0) {
     if (!this.remoteClientConfiguration || retry >= MAX_REMOTE_RETRY) {
       return;
     }

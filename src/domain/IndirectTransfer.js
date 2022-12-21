@@ -1,4 +1,3 @@
-// @flow
 
 import CallSession from './CallSession';
 import newFrom from '../utils/new-from';
@@ -19,7 +18,7 @@ type Reponse = {
   recipient_call: string,
   status: string,
   flow: string,
-}
+};
 
 export default class IndirectTransfer {
   status: ?string;

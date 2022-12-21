@@ -1,4 +1,3 @@
-// @flow
 import getApiClient from '../service/getApiClient';
 
 class Directory {

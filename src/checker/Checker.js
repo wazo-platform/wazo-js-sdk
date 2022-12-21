@@ -1,4 +1,3 @@
-// @flow
 
 import type Session from '../domain/Session';
 import WazoApiClient from '../api-client';
@@ -10,8 +9,11 @@ const logger = IssueReporter.loggerFor('engine-check');
 
 class Checker {
   session: Session;
+
   server: string;
+
   externalAppConfig: Object;
+
   checks: Object[];
 
   constructor(server: string, session: Session, externalAppConfig: Object = {}) {

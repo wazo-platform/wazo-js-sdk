@@ -1,4 +1,3 @@
-// @flow
 import newFrom from '../utils/new-from';
 
 type NotificationOptionResponse = {
@@ -13,6 +12,7 @@ type NotificationOptionsArguments = {
 
 export default class NotificationOptions {
   sound: boolean;
+
   vibration: boolean;
 
   static parse(plain: NotificationOptionResponse): NotificationOptions {

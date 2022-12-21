@@ -1,4 +1,3 @@
-// @flow
 
 import Session from '../Session';
 import Call from '../Call';
@@ -26,7 +25,7 @@ export default class CTIPhone extends Emitter implements Phone {
 
   currentCall: ?Call;
 
-  constructor(session: Session, isMobile: boolean = false, callbackAllLines: boolean = false) {
+  constructor(session: Session, isMobile = false, callbackAllLines = false) {
     super();
     logger.info('CTI Phone created');
     this.session = session;

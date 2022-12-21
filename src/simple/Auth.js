@@ -1,4 +1,3 @@
-// @flow
 /* eslint-disable max-classes-per-file */
 import Session from '../domain/Session';
 import { BACKEND_LDAP_USER, DEFAULT_BACKEND_USER, DETAULT_EXPIRATION } from '../api/auth';
@@ -27,16 +26,27 @@ const logger = IssueReporter.loggerFor('simple-auth');
 
 class Auth {
   clientId: string;
+
   expiration: number;
+
   minSubscriptionType: ?number;
+
   authorizationName: ?string;
+
   host: ?string;
+
   session: ?Session;
+
   onRefreshTokenCallback: ?Function;
+
   onRefreshTokenCallbackError: ?Function;
+
   authenticated: boolean;
+
   mobile: boolean;
+
   BACKEND_WAZO: string;
+
   BACKEND_LDAP: string;
 
   constructor() {
@@ -149,7 +159,7 @@ class Auth {
     // Check if the token is valid
     try {
       const rawSession = await getApiClient().auth.authenticate(token);
-      return this._onAuthenticated(rawSession);
+      return await this._onAuthenticated(rawSession);
     } catch (e) {
       logger.error('on validate token error', e);
       console.warn(e);
@@ -161,7 +171,7 @@ class Auth {
     return getApiClient().auth.refreshToken(refreshToken, null, this.expiration);
   }
 
-  async logout(deleteRefreshToken: boolean = true) {
+  async logout(deleteRefreshToken = true) {
     try {
       Wazo.Websocket.close(true);
 

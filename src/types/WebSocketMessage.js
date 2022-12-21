@@ -1,4 +1,3 @@
-// @flow
 
 import type {
   SwitchboardCallItems,
@@ -21,7 +20,7 @@ export type CallMessage = {
   call_id: string,
   caller_id_number: string,
   creation_time: string,
-  dialed_extension: String,
+  dialed_extension: string,
   on_hold: boolean,
   peer_caller_id_name: string,
   peer_caller_id_number: string,

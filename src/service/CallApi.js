@@ -1,4 +1,3 @@
-// @flow
 
 import Call from '../domain/Call';
 import CallLog from '../domain/CallLog';
@@ -15,7 +14,7 @@ export default class CallApi {
     return getApiClient().callLogd.listCallLogs(offset, limit);
   }
 
-  static async fetchDistinctCallLogs(offset: number, limit: number, distinct: string = 'peer_exten'): Promise<Call[]> {
+  static async fetchDistinctCallLogs(offset: number, limit: number, distinct = 'peer_exten'): Promise<Call[]> {
     return getApiClient().callLogd.listDistinctCallLogs(offset, limit, distinct);
   }
 
@@ -44,8 +43,8 @@ export default class CallApi {
     return getApiClient().calld.cancelCall(callSession.callId);
   }
 
-  static async makeCall(callFromLine: Line, extension: string, isMobile: boolean = false,
-    callbackAllLines: boolean = false): Promise<?Call> {
+  static async makeCall(callFromLine: Line, extension: string, isMobile = false,
+    callbackAllLines = false): Promise<?Call> {
     const lineId = callFromLine ? callFromLine.id : null;
 
     const response = await getApiClient().calld.makeCall(extension, isMobile, lineId, callbackAllLines);

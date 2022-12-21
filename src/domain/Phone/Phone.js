@@ -1,4 +1,3 @@
-// @flow
 import Line from '../Line';
 import CallSession from '../CallSession';
 

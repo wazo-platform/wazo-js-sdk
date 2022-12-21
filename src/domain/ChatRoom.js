@@ -1,4 +1,3 @@
-// @flow
 import type { ChatUser } from './ChatMessage';
 import newFrom from '../utils/new-from';
 
@@ -18,7 +17,9 @@ export default class ChatRoom {
   type: string;
 
   uuid: string;
+
   name: string;
+
   users: Array<ChatUser>;
 
   static parseMany(plain: RootListResponse): Array<ChatRoom> {

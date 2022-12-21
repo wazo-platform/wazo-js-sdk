@@ -1,5 +1,4 @@
 /* global RTCSessionDescriptionInit, navigator */
-// @flow
 import EventEmitter from 'events';
 
 import type { Session } from 'sip.js/lib/core/session';
@@ -221,8 +220,8 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
   }
 
   // Overridden to send `inactive` in conference
-  updateDirection(options?: SessionDescriptionHandlerOptions, isConference: boolean = false,
-    audioOnly: boolean = false): Promise<void> {
+  updateDirection(options?: SessionDescriptionHandlerOptions, isConference = false,
+    audioOnly = false): Promise<void> {
     if (this._peerConnection === undefined) {
       return Promise.reject(new Error('Peer connection closed.'));
     }

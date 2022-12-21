@@ -1,4 +1,3 @@
-// @flow
 
 export type RawMeetingAuthorization = {
   created_at: string,
@@ -6,7 +5,7 @@ export type RawMeetingAuthorization = {
   uuid: string,
   guest_uuid: string,
   guest_name: string,
-}
+};
 
 export const PENDING = 'pending';
 export const ACCEPTED = 'accepted';
@@ -17,9 +16,13 @@ export const POST_PROCESSED_ERROR = 'post_processed_error';
 
 export default class MeetingAuthorization {
   meetingUuid: string;
+
   uuid: string;
+
   userUuid: string;
+
   userName: string;
+
   status: string;
 
   constructor({

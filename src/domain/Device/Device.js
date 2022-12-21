@@ -1,4 +1,3 @@
-// @flow
 
 export interface Device {
   connectToCall(): void;

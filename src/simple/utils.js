@@ -1,5 +1,4 @@
 /* global navigator */
-// @flow
 import Wazo from './index';
 
 const createLocalStream = async (kind: string, options: Object = {}) => {

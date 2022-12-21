@@ -1,4 +1,3 @@
-// @flow
 
 import Line from './Line';
 import ForwardOption, { FORWARD_KEYS } from './ForwardOption';
@@ -115,24 +114,42 @@ type ProfileArguments = {
 
 export default class Profile {
   id: string;
+
   firstName: string;
+
   lastName: string;
+
   email: string;
+
   lines: Array<Line>;
+
   sipLines: Array<SipLine>;
+
   username: string;
+
   mobileNumber: string;
+
   forwards: Array<ForwardOption>;
+
   doNotDisturb: ?boolean;
+
   onlineCallRecordEnabled: ?boolean;
+
   state: ?string;
+
   ringSeconds: ?number;
+
   voicemail: ?{ id: number, name: string };
+
   status: string;
+
   subscriptionType: ?number;
+
   agent: ?{ firstname: string, id: number, lastname: string, number: string };
+
   switchboards: Array<any>;
-  callPickupTargetUsers: ?Array<{ firstname: string, lastname: string, uuid: string }>
+
+  callPickupTargetUsers: ?Array<{ firstname: string, lastname: string, uuid: string }>;
 
   static parse(plain: ProfileResponse): Profile {
     return new Profile({

@@ -1,4 +1,3 @@
-// @flow
 
 import Contact from '../Contact';
 

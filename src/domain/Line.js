@@ -1,4 +1,3 @@
-// @flow
 import newFrom from '../utils/new-from';
 
 type Extension = {
@@ -34,9 +33,13 @@ export default class Line {
   type: string;
 
   id: number;
+
   extensions: Array<Extension>;
+
   endpointCustom: Endpoint | null;
+
   endpointSccp: Endpoint | null;
+
   endpointSip: Endpoint | null;
 
   static parse(plain: LineResponse): Line {

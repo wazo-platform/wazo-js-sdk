@@ -1,4 +1,3 @@
-// @flow
 
 import CallSession from './CallSession';
 import newFrom from '../utils/new-from';
@@ -48,7 +47,7 @@ export default class Room {
     return this;
   }
 
-  updateParticipant(uuid: string, participant: Object, shouldAdd: boolean = false) {
+  updateParticipant(uuid: string, participant: Object, shouldAdd = false) {
     const idx = this.participants.findIndex(someParticipant => someParticipant.uuid === uuid);
     if (idx === -1 && !shouldAdd) {
       return this;
@@ -64,7 +63,7 @@ export default class Room {
     return new Room({ ...this, participants: updatedParticipants });
   }
 
-  updateParticipantByExtension(extension: string, participant: Object, shouldAdd: boolean = false) {
+  updateParticipantByExtension(extension: string, participant: Object, shouldAdd = false) {
     const idx = this.participants.findIndex(someParticipant => someParticipant.extension === extension);
     if (idx === -1 && !shouldAdd) {
       return this;

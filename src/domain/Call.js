@@ -1,4 +1,3 @@
-// @flow
 
 import moment from 'moment';
 import newFrom from '../utils/new-from';
@@ -47,20 +46,35 @@ export default class Call {
   type: string;
 
   id: string;
+
   sipCallId: string;
+
   callerName: string;
+
   callerNumber: string;
+
   calleeName: string;
+
   calleeNumber: string;
+
   dialedExtension: string;
+
   lineId: ?number;
+
   isCaller: boolean;
+
   isVideo: boolean;
+
   onHold: boolean;
+
   muted: boolean;
+
   status: string;
+
   startingTime: Date;
+
   talkingToIds: string[];
+
   recording: boolean;
 
   static parseMany(plain: Array<CallResponse>): Array<Call> {

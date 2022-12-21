@@ -1,4 +1,3 @@
-// @flow
 import type Session from '../domain/Session';
 import WazoWebSocketClient, * as WebSocketClient from '../websocket-client';
 import Emitter from '../utils/Emitter';
@@ -11,6 +10,7 @@ const logger = IssueReporter.loggerFor('simple-ws-client');
 
 class Websocket extends Emitter {
   ws: ?WazoWebSocketClient;
+
   eventLists: string[];
 
   constructor() {

@@ -1,4 +1,3 @@
-// @flow
 import { convertKeysFromCamelToUnderscore } from '../object';
 
 describe('object utils', () => {

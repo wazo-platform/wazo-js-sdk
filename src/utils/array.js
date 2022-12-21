@@ -1,4 +1,3 @@
-// @flow
 export const lastIndexOf = (array: any[], method: Function): number => {
   const start = array.length - 1;
 

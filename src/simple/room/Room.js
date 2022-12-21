@@ -1,4 +1,3 @@
-// @flow
 import type { Message } from 'sip.js/lib/api/message';
 import sdpParser from 'sdp-transform';
 
@@ -18,42 +17,76 @@ const logger = IssueReporter.loggerFor('sdk-room');
 
 class Room extends Emitter {
   callSession: ?CallSession;
+
   name: string;
+
   extension: string;
+
   sourceId: ?number;
+
   meetingUuid: ?string;
+
   participants: Participant[];
+
   callId: ?string;
+
   connected: boolean;
+
   localParticipant: ?Participant;
+
   _callIdStreamIdMap: Object;
+
   _unassociatedVideoStreams: Object;
+
   _unassociatedParticipants: Object;
+
   _boundOnParticipantJoined: Function;
+
   _boundOnParticipantLeft: Function;
+
   _boundOnMessage: Function;
+
   _boundOnChat: Function;
+
   _boundOnSignal: Function;
+
   _boundSaveLocalVideoStream: Function;
+
   _boundOnReinvite: Function;
+
   audioStream: ?any;
+
   extra: Object;
+
   // video tag representing the room audio stream
   roomAudioElement: any;
 
   CONFERENCE_USER_PARTICIPANT_JOINED: string;
+
   CONFERENCE_USER_PARTICIPANT_LEFT: string;
+
   MEETING_USER_PARTICIPANT_JOINED: string;
+
   MEETING_USER_PARTICIPANT_LEFT: string;
+
   ON_SHARE_SCREEN_ENDED: string;
+
   ON_MESSAGE: string;
+
   ON_CHAT: string;
+
   ON_SIGNAL: string;
+
   ON_AUDIO_STREAM: string;
+
   ON_VIDEO_STREAM: string;
+
   ON_REMOVE_STREAM: string;
+
   ON_DISCONNECTED: string;
+
   ON_JOINED: string;
+
   ON_VIDEO_INPUT_CHANGE: string;
 
   /**
@@ -283,7 +316,7 @@ class Room extends Emitter {
     return screensharingStream;
   }
 
-  async stopScreenSharing(restoreLocalStream: boolean = true) {
+  async stopScreenSharing(restoreLocalStream = true) {
     logger.info('stop room screen sharing');
 
     await Wazo.Phone.stopScreenSharing(this.callSession, restoreLocalStream);
@@ -507,7 +540,7 @@ class Room extends Emitter {
     }
   }
 
-  _mapMsid(rawSdp: String) {
+  _mapMsid(rawSdp: string) {
     const sdp = sdpParser.parse(rawSdp);
     const labelMsidArray = sdp.media.filter(media => !!media.label).map(({ label, msid }) => ({
       label: String(label),

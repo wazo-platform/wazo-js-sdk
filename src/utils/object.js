@@ -1,8 +1,6 @@
-// @flow
-
 import { camelToUnderscore } from './string';
 
-export const convertKeysFromCamelToUnderscore = (args: Object) => {
+export const convertKeysFromCamelToUnderscore = (args: any) => {
   if (!args || typeof args !== 'object' || Array.isArray(args)) {
     throw new Error('Input is not an object');
   }

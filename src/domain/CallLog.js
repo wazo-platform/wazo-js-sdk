@@ -1,4 +1,3 @@
-// @flow
 import moment from 'moment';
 
 import newFrom from '../utils/new-from';
@@ -58,9 +57,13 @@ export default class CallLog {
   type: string;
 
   answer: ?Date;
+
   answered: boolean;
+
   newMissedCall: boolean;
+
   callDirection: string;
+
   destination: {
     extension: string,
     name: string,
@@ -74,8 +77,11 @@ export default class CallLog {
   };
 
   id: number;
+
   duration: number;
+
   start: Date;
+
   end: ?Date;
 
   static merge(current: Array<CallLog>, toMerge: Array<CallLog>): Array<?CallLog> {

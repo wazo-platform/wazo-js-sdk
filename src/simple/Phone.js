@@ -1,4 +1,3 @@
-// @flow
 import type Inviter from 'sip.js/lib/api/inviter';
 import type Invitation from 'sip.js/lib/api/invitation';
 import { SessionState } from 'sip.js/lib/api/session-state';
@@ -24,12 +23,17 @@ const protocolDebugMessages = ['Received WebSocket text message:', 'Sending WebS
 
 class Phone extends Emitter {
   client: WazoWebRTCClient;
+
   phone: ?WebRTCPhone;
+
   session: Session;
+
   sipLine: ?SipLine;
 
   ON_CHAT: string;
+
   ON_SIGNAL: string;
+
   SessionState: Object;
 
   constructor() {
@@ -135,8 +139,8 @@ class Phone extends Emitter {
   }
 
   // If audioOnly is set to true, all video stream will be deactivated, even remotes ones.
-  async call(extension: string, withCamera: boolean = false, rawSipLine: ?SipLine = null, audioOnly: boolean = false,
-    conference: boolean = false) {
+  async call(extension: string, withCamera = false, rawSipLine: ?SipLine = null, audioOnly = false,
+    conference = false) {
     if (!this.phone) {
       return;
     }
@@ -172,7 +176,7 @@ class Phone extends Emitter {
     return adHocConference.start();
   }
 
-  mute(callSession: CallSession, withApi: boolean = true) {
+  mute(callSession: CallSession, withApi = true) {
     if (withApi) {
       this.muteViaAPI(callSession);
     }
@@ -180,7 +184,7 @@ class Phone extends Emitter {
     return this.phone && this.phone.mute(callSession);
   }
 
-  unmute(callSession: CallSession, withApi: boolean = true) {
+  unmute(callSession: CallSession, withApi = true) {
     if (withApi) {
       this.unmuteViaAPI(callSession);
     }
@@ -228,7 +232,7 @@ class Phone extends Emitter {
     return this.phone && this.phone.atxfer(sipSession);
   }
 
-  async reinvite(callSession: CallSession, constraints: Object = null, conference: boolean = false) {
+  async reinvite(callSession: CallSession, constraints: Object = null, conference = false) {
     return this.phone ? this.phone.sendReinvite(callSession, constraints, conference) : null;
   }
 
@@ -236,7 +240,7 @@ class Phone extends Emitter {
     return this.phone ? this.phone.getStats(callSession) : null;
   }
 
-  startNetworkMonitoring(callSession: CallSession, interval: number = 1000) {
+  startNetworkMonitoring(callSession: CallSession, interval = 1000) {
     return this.phone ? this.phone.startNetworkMonitoring(callSession, interval) : null;
   }
 
@@ -248,7 +252,7 @@ class Phone extends Emitter {
     return this.phone ? this.phone.getSipSessionId(sipSession) : null;
   }
 
-  sendMessage(body: string, sipSession: Inviter | Invitation = null, contentType: string = 'text/plain') {
+  sendMessage(body: string, sipSession: Inviter | Invitation = null, contentType = 'text/plain') {
     const toSipSession = sipSession || this.getCurrentSipSession();
     if (!toSipSession || !this.phone) {
       return null;
@@ -285,7 +289,7 @@ class Phone extends Emitter {
     return this.phone && this.phone.startScreenSharing(constraints, callSession);
   }
 
-  stopScreenSharing(callSession?: CallSession, restoreLocalStream: boolean = true) {
+  stopScreenSharing(callSession?: CallSession, restoreLocalStream = true) {
     return this.phone && this.phone.stopScreenSharing(restoreLocalStream, callSession);
   }
 

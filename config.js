@@ -1,5 +1,3 @@
-// @flow
-
 export const swarmPublicKey  = `-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmkXOuNfY8u5xoTiIhkb8
 djnbIwG/Wrz3vpo8BZir8L5e1a1nSy740qBjP7ZINBQoALDhFfmdOfJnCyEGiHuz

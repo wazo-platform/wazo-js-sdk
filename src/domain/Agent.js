@@ -1,4 +1,3 @@
-// @flow
 
 type AgentResponse = {
   context: string;
@@ -8,7 +7,7 @@ type AgentResponse = {
   number: string;
   paused: boolean;
   paused_reason: string;
-}
+};
 
 type AgentArguments = {
   context: string;
@@ -18,16 +17,22 @@ type AgentArguments = {
   number: string;
   paused: boolean;
   pausedReason: string;
-}
+};
 
 class Agent {
 
   context: string;
+
   extension: string;
+
   id: number;
+
   logged: boolean;
+
   number: string;
+
   paused: boolean;
+
   pausedReason: string;
 
   static parse(plain: AgentResponse): Agent {

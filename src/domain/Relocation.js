@@ -1,4 +1,3 @@
-// @flow
 
 export type RelocationResponse = {
   completions: Array<string>,

@@ -1,4 +1,3 @@
-// @flow
 import moment from 'moment';
 
 import newFrom from '../utils/new-from';
@@ -9,12 +8,12 @@ export type MeetingCreateArguments = {
   name: string,
   requireAuthorization: boolean,
   persistent: boolean,
-}
+};
 
 export type MeetingUpdateArguments = {
   name?: string,
   requireAuthorization?: boolean,
-}
+};
 
 export type MeetingCreationResponse = {
   guest_sip_authorization: string,
@@ -27,21 +26,31 @@ export type MeetingCreationResponse = {
   persistent: boolean,
   creation_time: string,
   require_authorization: boolean,
-}
+};
 
 export default class Meeting {
   type: string;
 
   guestSipAuthorization: string;
+
   uri: string;
+
   uuid: string;
+
   name: string;
+
   port: string;
+
   extension: string;
+
   persistent: boolean;
+
   ownerUuids: Array<string>;
+
   creationTime: Date;
-  pendingAuthorizations: Array<MeetingAuthorization>
+
+  pendingAuthorizations: Array<MeetingAuthorization>;
+
   requireAuthorization: boolean;
 
   static parse(plain: MeetingCreationResponse): Meeting {

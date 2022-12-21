@@ -1,4 +1,3 @@
-// @flow
 
 import type { Message } from 'sip.js/lib/api/message';
 import IssueReporter from '../../service/IssueReporter';

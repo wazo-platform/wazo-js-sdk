@@ -1,4 +1,3 @@
-// @flow
 
 import Session from './Session';
 import { LINE_STATE, STATE } from './Profile';
@@ -21,7 +20,7 @@ export type NewContact = {
   entreprise: ?string,
   birthday: ?string,
   note: ?string,
-  sessions: ?Array<{ uuid: string, mobile: boolean}>,
+  sessions: ?Array<{ uuid: string, mobile: boolean }>,
   connected: ?boolean,
 };
 
@@ -149,7 +148,7 @@ type ContactArguments = {
   status?: string,
   backend?: string,
   personalStatus?: string,
-  sessions?: Array<{ uuid: string, mobile: boolean}>,
+  sessions?: Array<{ uuid: string, mobile: boolean }>,
   connected?: boolean,
   doNotDisturb?: boolean,
   ringing?: boolean,
@@ -229,33 +228,61 @@ export default class Contact {
   type: string;
 
   id: ?string;
+
   uuid: ?string;
+
   name: ?string;
+
   number: ?string;
+
   numbers: ?Array<{ label?: string, number: string }>;
+
   favorited: ?boolean;
+
   email: ?string;
+
   emails: ?Array<{ label?: string, email: string }>;
+
   entreprise: ?string;
+
   birthday: ?string;
+
   address: ?string;
+
   note: ?string;
+
   endpointId: ?number;
+
   personal: ?boolean;
+
   state: ?string;
+
   lineState: ?string;
+
   previousPresential: ?string;
+
   lastActivity: ?string;
+
   mobile: ?boolean;
+
   source: ?string;
+
   sourceId: ?string;
+
   status: ?string;
+
   backend: ?string;
+
   personalStatus: string;
-  sessions: ?Array<{ uuid: string, mobile: boolean}>;
+
+  sessions: ?Array<{ uuid: string, mobile: boolean }>;
+
   connected: ?boolean;
+
   doNotDisturb: ?boolean;
+
   ringing: ?boolean;
+
   lines: Object[];
 
   static merge(oldContacts: Array<Contact>, newContacts: Array<Contact>): Array<Contact> {
