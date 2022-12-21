@@ -1,7 +1,6 @@
 {
-  "extends": ["airbnb-base", "plugin:flowtype/recommended"],
-  "plugins": [
-    "flowtype"
+  "extends": [
+    "airbnb-base"
   ],
   "env": {
     "jest": true
@@ -11,10 +10,36 @@
     "arrow-body-style": 0,
     "arrow-parens": 0,
     "class-methods-use-this": 0,
-    "max-len": ["error", { "code": 120, "ignoreComments": true }],
-    "lines-between-class-members": ["error", "always", { "exceptAfterSingleLine": true }],
-    "no-underscore-dangle": ["error", { "allowAfterThis": true }],
-    "no-console": ["error", { "allow": ["info", "warn", "error"] }],
+    "max-len": [
+      "error",
+      {
+        "code": 120,
+        "ignoreComments": true
+      }
+    ],
+    "lines-between-class-members": [
+      "error",
+      "always",
+      {
+        "exceptAfterSingleLine": true
+      }
+    ],
+    "no-underscore-dangle": [
+      "error",
+      {
+        "allowAfterThis": true
+      }
+    ],
+    "no-console": [
+      "error",
+      {
+        "allow": [
+          "info",
+          "warn",
+          "error"
+        ]
+      }
+    ],
     "import/no-cycle": 0,
     "no-plusplus": 0,
     "object-curly-newline": 0,

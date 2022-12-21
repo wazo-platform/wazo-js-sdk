@@ -3,7 +3,7 @@ import resolve from 'rollup-plugin-node-resolve';
 import { terser } from 'rollup-plugin-terser';
 import commonjs from 'rollup-plugin-commonjs';
 import json from 'rollup-plugin-json';
-import flow from 'rollup-plugin-flow';
+import typescript from '@rollup/plugin-typescript';
 
 const esmConfigs = globby.sync('src/**/*.js').map(inputFile => ({
   input: inputFile,
@@ -12,7 +12,7 @@ const esmConfigs = globby.sync('src/**/*.js').map(inputFile => ({
     format: 'esm',
   },
   plugins: [
-    flow(),
+    typescript(),
   ],
 }));
 
@@ -23,14 +23,14 @@ const csjConfigs = globby.sync('src/**/*.js').map(inputFile => ({
     format: 'cjs',
   },
   plugins: [
-    flow(),
+    typescript(),
   ],
 }));
 
 const configs = esmConfigs.concat(csjConfigs);
 
 const plugins = [
-  flow(),
+  typescript(),
   json(),
   resolve({
     preferBuiltins: false,
