@@ -1,2 +1,4 @@
 dist/*
 docs/*
+esm/*
+lib/*
