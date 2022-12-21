@@ -317,7 +317,6 @@ class IssueReporter {
     }
 
     this.buffer.push(payload);
-    // $FlowFixMe
     const {
       bufferSize,
       bufferTimeout,
@@ -363,10 +362,8 @@ class IssueReporter {
         Accept: 'application/json',
         'Content-Type': 'application/json',
       },
-      // $FlowFixMe
       body,
     }).catch((e: Error) => {
-      // $FlowFixMe
       e.skipSendToRemote = true;
       this.log('error', this._makeCategory('grafana'), 'Sending log to grafana, error', e);
       setTimeout(() => {
@@ -383,7 +380,6 @@ class IssueReporter {
 
   _writeRetryCount(message: string | Record<string, any>, count: number): string | Record<string, any> {
     if (message && typeof message === 'object') {
-      // $FlowFixMe
       message._retry = count;
     }
 

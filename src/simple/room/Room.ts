@@ -330,7 +330,6 @@ class Room extends Emitter {
     if (this.localParticipant) {
       this._updateLocalParticipantStream();
 
-      // $FlowFixMe
       this.localParticipant.onStopScreensharing();
     }
   }
@@ -394,12 +393,9 @@ class Room extends Emitter {
       // Update local participant stream (useful when resuming a shreenshared conference)
       this._updateLocalParticipantStream();
 
-      // $FlowFixMe
       this.localParticipant.onResume();
 
-      // $FlowFixMe
       if (!newStream && this.localParticipant.screensharing) {
-        // $FlowFixMe
         this.localParticipant.onStopScreensharing();
       }
     }
@@ -438,7 +434,6 @@ class Room extends Emitter {
       const localVideoStream = Wazo.Phone.phone.getLocalVideoStream(this.callSession);
 
       if (localVideoStream) {
-        // $FlowFixMe
         this._associateStreamTo(localVideoStream, this.localParticipant);
       }
     } else if (this.localParticipant && wasScreensharing && newConstraints && !newConstraints.video) {

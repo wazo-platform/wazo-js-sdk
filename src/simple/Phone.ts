@@ -37,7 +37,6 @@ class Phone extends Emitter {
     super();
     // Sugar syntax for `Wazo.Phone.EVENT_NAME`
     Object.keys(PHONE_EVENTS).forEach(key => {
-      // $FlowFixMe
       this[key] = PHONE_EVENTS[key];
     });
     this.SessionState = SessionState;
@@ -127,11 +126,9 @@ class Phone extends Emitter {
     if (this.phone) {
       if (this.phone.hasAnActiveCall()) {
         logger.info('hangup call on disconnect');
-        // $FlowFixMe
         await this.phone.hangup();
       }
 
-      // $FlowFixMe
       await this.phone.close();
     }
 

@@ -1012,7 +1012,6 @@ export default class WebRTCClient extends Emitter {
 
   async getStreamFromConstraints(constraints: Record<string, any>, conference = false): Promise<MediaStream | null | undefined> {
     const video = constraints && constraints.video;
-    // $FlowFixMe
     const {
       constraints: newConstraints,
     } = this.getMediaConfiguration(video, conference, constraints);
@@ -1027,7 +1026,6 @@ export default class WebRTCClient extends Emitter {
       return null;
     }
 
-    // $FlowFixMe
     newStream.local = true;
     return newStream;
   }
@@ -1190,7 +1188,6 @@ export default class WebRTCClient extends Emitter {
       // audioElement is an array of HTMLAudioElements, and HTMLAudioElement inherits the method from HTMLMediaElement
       // https://developer.mozilla.org/en-US/docs/Web/API/HTMLAudioElement
       // https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
-      // $FlowFixMe
       if (audioElement.setSinkId) {
         audioElement.setSinkId(id);
       }
@@ -1322,7 +1319,6 @@ export default class WebRTCClient extends Emitter {
         },
       } : true,
     };
-    // $FlowFixMe
     return navigator.mediaDevices.getUserMedia(constraints).then(async stream => {
       const videoTrack = stream.getVideoTracks()[0];
       let sender = pc && pc.getSenders && pc.getSenders().find(s => videoTrack && s && s.track && s.track.kind === videoTrack.kind);
@@ -1352,12 +1348,10 @@ export default class WebRTCClient extends Emitter {
   }
 
   getAudioDeviceId(): string | null | undefined {
-    // $FlowFixMe
     return this.audio && typeof this.audio === 'object' && 'deviceId' in this.audio ? this.audio.deviceId.exact : undefined;
   }
 
   getVideoDeviceId(): string | null | undefined {
-    // $FlowFixMe
     return this.video && typeof this.video === 'object' && 'deviceId' in this.video ? this.video.deviceId.exact : undefined;
   }
 
@@ -1395,7 +1389,6 @@ export default class WebRTCClient extends Emitter {
       conference,
       audioOnly,
     };
-    // $FlowFixMe
     const {
       constraints,
     } = this.getMediaConfiguration(shouldDoVideo, conference, newConstraints);
@@ -1450,7 +1443,6 @@ export default class WebRTCClient extends Emitter {
       audio: this._getAudioConstraints(),
       video: this._getVideoConstraints(constraints.video),
     };
-    // $FlowFixMe
     return navigator.mediaDevices.getUserMedia(newConstraints);
   }
 
@@ -1868,7 +1860,6 @@ export default class WebRTCClient extends Emitter {
 
     if (this.connectionPromise) {
       logger.info('webrtc sdk, connection promise connecting...');
-      // $FlowFixMe
       return this.connectionPromise;
     }
 

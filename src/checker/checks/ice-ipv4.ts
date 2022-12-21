@@ -42,7 +42,6 @@ export default {
     }
 
     if (externalAppConfig && externalAppConfig.turn_servers) {
-      // $FlowFixMe
       config.iceServers = [...JSON.parse(externalAppConfig.turn_servers), ...config.iceServers];
       // Force to use TURN when defined in config
       config.iceTransportPolicy = 'relay';

@@ -65,7 +65,6 @@ export default class SipLine {
 
     // Since 20.13 engine so options are now in section
     if (plain.auth_section_options) {
-      // $FlowFixMe
       const findOption = (options: string[][], name: string) => options.find(option => option[0] === name);
 
       const usernameOption = findOption(plain.auth_section_options, 'username');

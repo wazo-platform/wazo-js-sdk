@@ -291,11 +291,8 @@ class Softphone {
 
   _createIframe(cb: (...args: Array<any>) => any = () => {}) {
     this.iframe = document.createElement('iframe');
-    // $FlowFixMe
     this.iframe.width = this.width;
-    // $FlowFixMe
     this.iframe.height = this.height;
-    // $FlowFixMe
     this.iframe.allow = 'camera *; microphone *; autoplay *; display-capture *';
     this.iframe.style.position = 'absolute';
     this.iframe.style.left = '0';
@@ -306,7 +303,6 @@ class Softphone {
     this.iframe.style.display = 'none';
     this.iframe.id = 'wazo-softphone';
     this.iframe.onload = cb;
-    // $FlowFixMe
     document.body.appendChild(this.iframe);
   }
 
@@ -351,7 +347,6 @@ class Softphone {
         break;
 
       case SDK_AUTHENTICATED:
-        // $FlowFixMe
         this._onAuthenticated(event.data.session);
 
         this.onAuthenticated(event.data.session);

@@ -47,7 +47,6 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     this.eventEmitter.removeListener(event, callback);
   }
 
-  // $FlowFixMe
   setRemoteSessionDescription(sessionDescription: RTCSessionDescriptionInit): Promise<void> {
     try {
       const result = super.setRemoteSessionDescription(sessionDescription);

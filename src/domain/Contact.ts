@@ -758,7 +758,6 @@ export default class Contact {
 
   merge(old: Contact): Contact {
     Object.keys(old).filter(key => key !== 'lineState').forEach(key => {
-      // $FlowFixMe
       this[key] = old[key] || this[key];
     });
 

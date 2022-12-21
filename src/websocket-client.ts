@@ -196,7 +196,6 @@ class WebSocketClient extends Emitter {
       }
 
       if (BLACKLIST_EVENTS.indexOf(name) === -1) {
-        // $FlowFixMe
         messageLogger.trace(IssueReporter.removeSlashes(event.data), {
           method: 'onmessage',
         });
@@ -278,7 +277,6 @@ class WebSocketClient extends Emitter {
     if (this.socket) {
       // If still connected, send the token to the WS
       if (this.isConnected() && this.version >= 2) {
-        // $FlowFixMe
         this.socket.send(JSON.stringify({
           op: 'token',
           data: {

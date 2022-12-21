@@ -315,9 +315,7 @@ class Auth {
     }
 
     try {
-      const sipLines = await getApiClient().confd.getUserLinesSip(session.uuid, // $FlowFixMe
-        session.profile.lines.map(line => line.id));
-      // $FlowFixMe
+      const sipLines = await getApiClient().confd.getUserLinesSip(session.uuid, session.profile.lines.map(line => line.id));
       session.profile.sipLines = sipLines.filter(line => !!line);
     } catch (e: any) { // When an user has only a sccp line, getSipLines return a 404
     }

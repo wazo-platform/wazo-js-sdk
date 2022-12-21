@@ -360,12 +360,10 @@ describe('Session domain', () => {
     });
     const oldWarn = console.warn;
 
-    // $FlowFixMe
     console.warn = () => {};
 
     expect(session.acls).toEqual(acl);
     expect(session.acl).toEqual(acl);
-    // $FlowFixMe
     console.warn = oldWarn;
   });
 });

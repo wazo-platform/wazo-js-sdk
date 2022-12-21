@@ -36,7 +36,6 @@ class Stream {
       const tracks = this.htmlStream ? this.htmlStream.getVideoTracks() : [];
       tracks.forEach(track => {
         track.enabled = true;
-        // $FlowFixMe
         track.loaded = true;
       });
     };

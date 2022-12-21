@@ -41,7 +41,6 @@ export const realFetch = () => {
   // Used to trick the optimizer to avoid requiring `node-fetch/lib/index` directly
   // It causes to require it on browsers when delivered by a nodejs engine (cf: vitejs).
   try {
-    // $FlowFixMe
     return require(Math.random() >= 0 ? 'node-fetch/lib/index' : '');
   } catch (e: any) {
     return fetch;
@@ -115,7 +114,6 @@ export default class ApiRequester {
 
     this.shouldLogErrors = true;
     methods.forEach(method => {
-      // $FlowFixMe
       ApiRequester.prototype[method] = function sugar(...args) {
         // Add method in arguments passed to `call`
         args.splice(1, 0, method);

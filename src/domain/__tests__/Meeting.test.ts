@@ -46,8 +46,7 @@ describe('Meeting domain', () => {
       return acc;
     }, {});
     const meeting = new Meeting(args);
-    keys.forEach(key => // $FlowFixMe
-      expect(meeting[key]).toEqual(`some-${key}`));
+    keys.forEach(key => expect(meeting[key]).toEqual(`some-${key}`));
   });
   it('can return username and secret from an base64 encrypted string', () => {
     const USERNAME = 'username';

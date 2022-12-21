@@ -167,7 +167,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return false;
     }
 
-    // $FlowFixMe
     const shouldScreenShare = constraints && constraints.screen;
     const isUpgrade = shouldScreenShare || constraints && constraints.video;
 
@@ -723,7 +722,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
           }
         }
 
-        // $FlowFixMe
         this.eventEmitter.emit(ON_CALL_INCOMING, nextCallSession, nextCallSession.cameraEnabled);
       }, 100);
     }
@@ -858,7 +856,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
       logger.info('accept call, session found', {
         sipId: sipSession.id,
       });
-      // $FlowFixMe
       return this.client.answer(sipSession, this.allowVideo ? cameraEnabled : false).then(() => {
         return callSession.sipCallId;
       }).catch(e => {

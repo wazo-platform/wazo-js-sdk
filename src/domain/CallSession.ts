@@ -367,7 +367,6 @@ export default class CallSession {
   toJSON() {
     const jsonObj = { ...this,
     };
-    // $FlowFixMe
     jsonObj.answered = this.answered;
     return jsonObj;
   }

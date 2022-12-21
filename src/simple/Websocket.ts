@@ -19,11 +19,9 @@ class Websocket extends Emitter {
     super();
     // Sugar syntax for `Wazo.WebSocket.EVENT_NAME`
     Object.keys(OTHER_EVENTS).forEach(key => {
-      // $FlowFixMe
       this[key] = OTHER_EVENTS[key];
     });
     Object.keys(SOCKET_EVENTS).forEach(key => {
-      // $FlowFixMe
       this[key] = SOCKET_EVENTS[key];
     });
     this.eventLists = WazoWebSocketClient.eventLists;
