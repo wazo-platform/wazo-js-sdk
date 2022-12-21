@@ -1,4 +1,5 @@
-import Heartbeat from "../Heartbeat";
+import Heartbeat from '../Heartbeat';
+
 describe('Heartbeat', () => {
   describe('When onHearbeat is not called', () => {
     it('should retry the call with a new token', async () => {

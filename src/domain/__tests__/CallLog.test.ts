@@ -1,6 +1,7 @@
-import moment from "moment";
-import CallLog from "../CallLog";
-import Recording from "../Recording";
+import moment from 'moment';
+import CallLog from '../CallLog';
+import Recording from '../Recording';
+
 describe('CallLog domain', () => {
   it('can parse a plain call log to domain', () => {
     const response = {
@@ -26,10 +27,10 @@ describe('CallLog domain', () => {
           end_time: '2021-08-11T13:22:50.519733+00:00',
           filename: '2021-08-11T13_22_45UTC-61886-xxxx-5c72-4072-8503-e3ad9a41c0a0.wav',
           start_time: '2021-08-11T13:22:45.161954+00:00',
-          uuid: '0394ad6f-5c72-4072-8503-e3ad9a41c0a0'
-        }]
+          uuid: '0394ad6f-5c72-4072-8503-e3ad9a41c0a0',
+        }],
       }],
-      total: 233
+      total: 233,
     };
     const logs = CallLog.parseMany(response);
     expect(logs).toEqual([new CallLog({
@@ -39,12 +40,12 @@ describe('CallLog domain', () => {
       destination: {
         extension: '4182250459',
         name: '',
-        uuid: '456'
+        uuid: '456',
       },
       source: {
         extension: '8020',
         name: 'Jonathan Lessard',
-        uuid: '123'
+        uuid: '123',
       },
       id: 215,
       duration: 4000,
@@ -55,8 +56,8 @@ describe('CallLog domain', () => {
         end: moment('2021-08-11T13:22:50.519733+00:00').toDate(),
         fileName: '2021-08-11T13_22_45UTC-61886-xxxx-5c72-4072-8503-e3ad9a41c0a0.wav',
         start: moment('2021-08-11T13:22:45.161954+00:00').toDate(),
-        uuid: '0394ad6f-5c72-4072-8503-e3ad9a41c0a0'
-      })]
+        uuid: '0394ad6f-5c72-4072-8503-e3ad9a41c0a0',
+      })],
     })]);
   });
 });

@@ -1,7 +1,8 @@
 // Using directly Wazo to avoid issues with require cycle
-import getApiClient from "../../../service/getApiClient";
-import Wazo from "../../index";
-import Room from "../Room";
+import getApiClient from '../../../service/getApiClient';
+import Wazo from '../../index';
+import Room from '../Room';
+
 jest.mock('../../../service/getApiClient');
 describe('Participant', () => {
   describe('ban', () => {
@@ -10,7 +11,7 @@ describe('Participant', () => {
       const participant = new Wazo.RemoteParticipant(room, {
         call_id: 'id',
         caller_id_name: 'Alice',
-        caller_id_number: 'number'
+        caller_id_number: 'number',
       });
       await expect(async () => participant.ban()).rejects.toThrow('Attempting to ban a participant without a `meetingUuid`');
     });
@@ -23,13 +24,13 @@ describe('Participant', () => {
       const banMeetingParticipant = jest.fn();
       getApiClient.mockImplementation(() => ({
         calld: {
-          banMeetingParticipant
-        }
+          banMeetingParticipant,
+        },
       }));
       const participant = new Wazo.RemoteParticipant(room, {
         call_id: callId,
         caller_id_name: 'Alice',
-        caller_id_number: number
+        caller_id_number: number,
       });
       participant.onBan = jest.fn();
       await participant.ban();
@@ -46,13 +47,13 @@ describe('Participant', () => {
       const banMeetingParticipant = jest.fn();
       getApiClient.mockImplementation(() => ({
         calld: {
-          banMeetingParticipant
-        }
+          banMeetingParticipant,
+        },
       }));
       const participant = new Wazo.RemoteParticipant(room, {
         call_id: callId,
         caller_id_name: 'Alice',
-        caller_id_number: number
+        caller_id_number: number,
       });
       participant.delay = jest.fn();
       participant.onBan = jest.fn();

@@ -1,22 +1,23 @@
 /* eslint-disable camelcase */
-import ApiRequester from "../utils/api-requester";
-import type { ListNodesResponse, ListCallNodesResponse } from "../domain/types";
+import ApiRequester from '../utils/api-requester';
+import type { ListNodesResponse, ListCallNodesResponse } from '../domain/types';
+
 export default ((client: ApiRequester, baseUrl: string) => ({
   bridgeCall(applicationUuid: string, callId: number, context: string, exten: string, autoanswer: string, displayed_caller_id_number: string | null | undefined) {
     const url = `${baseUrl}/${applicationUuid}/nodes`;
     const body = {
       calls: [{
-        id: callId
-      }]
+        id: callId,
+      }],
     };
     return client.post(url, body, null, res => res.json().then(response => response.uuid)).then(nodeUuid => client.post(`${url}/${nodeUuid}/calls`, {
       context,
       exten,
       autoanswer,
-      displayed_caller_id_number
+      displayed_caller_id_number,
     }).then(data => ({
       nodeUuid,
-      data
+      data,
     })));
   },
 
@@ -25,7 +26,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   hangupCall: (applicationUuid: string, callId: number) => client.delete(`${baseUrl}/${applicationUuid}/calls/${callId}`),
   startPlaybackCall: (applicationUuid: string, callId: number, language: string, uri: string) => client.post(`${baseUrl}/${applicationUuid}/calls/${callId}/playbacks`, {
     language,
-    uri
+    uri,
   }),
   stopPlaybackCall: (applicationUuid: string, playbackUuid: string) => client.delete(`${baseUrl}/${applicationUuid}/playbacks/${playbackUuid}`),
   startProgressCall: (applicationUuid: string, callId: number) => client.put(`${baseUrl}/${applicationUuid}/calls/${callId}/progress/start`, {}, null, ApiRequester.successResponseParser),
@@ -37,16 +38,16 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   startMuteCall: (applicationUuid: string, callId: number) => client.put(`${baseUrl}/${applicationUuid}/calls/${callId}/mute/start`, {}, null, ApiRequester.successResponseParser),
   stopMuteCall: (applicationUuid: string, callId: number) => client.put(`${baseUrl}/${applicationUuid}/calls/${callId}/mute/stop`, {}, null, ApiRequester.successResponseParser),
   sendDTMFCall: (applicationUuid: string, callId: number, digits: number) => client.put(`${baseUrl}/${applicationUuid}/calls/${callId}/dtmf`, {
-    digits
+    digits,
   }, null, ApiRequester.successResponseParser),
-  addCallNodes: (applicationUuid: string, nodeUuid: string, callId: string): Promise<Boolean> => client.put(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}/calls/${callId}`, {}, null, ApiRequester.successResponseParser),
+  addCallNodes: (applicationUuid: string, nodeUuid: string, callId: string): Promise<boolean> => client.put(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}/calls/${callId}`, {}, null, ApiRequester.successResponseParser),
   createNewNodeWithCall: (applicationUuid: string, calls: Array<Record<string, any>>) => client.post(`${baseUrl}/${applicationUuid}/nodes`, {
-    calls
+    calls,
   }),
   addNewCallNodes: (applicationUuid: string, nodeUuid: string, context: string, exten: string, autoanswer: string) => client.post(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}/calls`, {
     context,
     exten,
-    autoanswer
+    autoanswer,
   }),
   listCallsNodes: (applicationUuid: string, nodeUuid: string): Promise<ListCallNodesResponse> => client.get(`${baseUrl}/${applicationUuid}/nodes/${nodeUuid}`),
   listNodes: (applicationUuid: string): Promise<ListNodesResponse> => client.get(`${baseUrl}/${applicationUuid}/nodes`),
@@ -57,9 +58,9 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   viewSnoop: (applicationUuid: string, snoopUuid: string): Promise<ListNodesResponse> => client.get(`${baseUrl}/${applicationUuid}/snoops/${snoopUuid}`),
   createSnoop: (applicationUuid: string, callId: number, snoopingCallId: number, whisperMode: string) => client.post(`${baseUrl}/${applicationUuid}/calls/${callId}/snoops`, {
     snooping_call_id: snoopingCallId,
-    whisper_mode: whisperMode
+    whisper_mode: whisperMode,
   }),
   updateSnoop: (applicationUuid: string, snoopUuid: string, whisperMode: string) => client.put(`${baseUrl}/${applicationUuid}/snoops/${snoopUuid}`, {
-    whisper_mode: whisperMode
-  }, null, ApiRequester.successResponseParser)
+    whisper_mode: whisperMode,
+  }, null, ApiRequester.successResponseParser),
 }));

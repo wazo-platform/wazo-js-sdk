@@ -1,4 +1,5 @@
-import { $Shape } from "utility-types";
+import { $Shape } from 'utility-types';
+
 type AgentResponse = {
   context: string;
   extension: string;
@@ -20,11 +21,17 @@ type AgentArguments = {
 
 class Agent {
   context: string;
+
   extension: string;
+
   id: number;
+
   logged: boolean;
+
   number: string;
+
   paused: boolean;
+
   pausedReason: string;
 
   static parse(plain: AgentResponse): Agent {
@@ -35,7 +42,7 @@ class Agent {
       logged: plain.logged,
       number: plain.number,
       paused: plain.paused,
-      pausedReason: plain.paused_reason
+      pausedReason: plain.paused_reason,
     });
   }
 
@@ -46,7 +53,7 @@ class Agent {
     logged,
     number,
     paused,
-    pausedReason
+    pausedReason,
   }: $Shape<AgentArguments>) {
     this.context = context;
     this.extension = extension;

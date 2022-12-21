@@ -1,4 +1,5 @@
-import type { UUID } from "./types";
+import type { UUID } from './types';
+
 export type DirectorySource = {
   backend: string;
   name: string;

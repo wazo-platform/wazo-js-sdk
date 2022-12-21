@@ -1,4 +1,5 @@
-import { $Shape } from "utility-types";
+import { $Shape } from 'utility-types';
+
 type SubscriptionResponse = {
   config: Record<string, any>;
   events: string[];
@@ -26,14 +27,23 @@ type SubscriptionArguments = {
 
 class Subscription {
   name: string;
+
   events: string[];
+
   config: string;
+
   uuid: string;
+
   service: string;
+
   eventsUserUuid: string;
+
   eventsWazoUuid: string;
+
   metadata: Record<string, any>;
+
   ownerTenantUuid: string;
+
   ownerUserUuid: string;
 
   static parse(plain: SubscriptionResponse): Subscription {
@@ -47,7 +57,7 @@ class Subscription {
       eventsWazoUuid: plain.events_wazo_uuid,
       metadata: plain.metadata,
       ownerTenantUuid: plain.owner_tenant_uuid,
-      ownerUserUuid: plain.owner_user_uuid
+      ownerUserUuid: plain.owner_user_uuid,
     });
   }
 
@@ -67,7 +77,7 @@ class Subscription {
     eventsWazoUuid,
     metadata,
     ownerTenantUuid,
-    ownerUserUuid
+    ownerUserUuid,
   }: $Shape<SubscriptionArguments>) {
     this.name = name;
     this.events = events;

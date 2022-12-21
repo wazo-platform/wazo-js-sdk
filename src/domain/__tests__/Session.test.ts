@@ -1,6 +1,7 @@
-import Session from "../Session";
-import Profile from "../Profile";
-import Line from "../Line";
+import Session from '../Session';
+import Profile from '../Profile';
+import Line from '../Line';
+
 describe('Session domain', () => {
   it('can parse a plain session to domain', () => {
     const plain = {
@@ -14,11 +15,11 @@ describe('Session domain', () => {
         utc_issued_at: '2017-07-19T20:27:53.086990',
         auth_id: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54',
         metadata: {
-          uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54'
+          uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54',
         },
         expires_at: '2017-07-19T17:27:53.086990',
-        xivo_user_uuid: null
-      }
+        xivo_user_uuid: null,
+      },
     };
     const session = Session.parse(plain);
     expect(session).toEqual(new Session({
@@ -28,7 +29,7 @@ describe('Session domain', () => {
       uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54',
       expiresAt: new Date('2017-07-19T21:27:53.086990z'),
       sessionUuid: 'f14dd6d6-547c-434d-bd5c-e882b5b83b32',
-      engineUuid: '6cd695d2-cdb9-4444-8b2d-27425ab85fa8'
+      engineUuid: '6cd695d2-cdb9-4444-8b2d-27425ab85fa8',
     }));
   });
   describe('about voicemails', () => {
@@ -40,10 +41,10 @@ describe('Session domain', () => {
         profile: new Profile({
           voicemail: {
             id: 1234,
-            name: 'inbox'
-          }
+            name: 'inbox',
+          },
         }),
-        expiresAt: A_DATE
+        expiresAt: A_DATE,
       });
       expect(session.hasAccessToVoicemail()).toBeTruthy();
     });
@@ -59,18 +60,18 @@ describe('Session domain', () => {
                 extensions: [{
                   id: 1,
                   exten: '8000',
-                  context: 'default'
-                }]
+                  context: 'default',
+                }],
               }), new Line({
                 id: 3421,
                 extensions: [{
                   id: 2,
                   exten: '9980',
-                  context: 'internal'
-                }]
-              })]
+                  context: 'internal',
+                }],
+              })],
             }),
-            expiresAt: A_DATE
+            expiresAt: A_DATE,
           });
           expect(session.allNumbers().length).toBeGreaterThan(1);
         });
@@ -86,11 +87,11 @@ describe('Session domain', () => {
                 extensions: [{
                   id: 1,
                   exten: '8000',
-                  context: 'default'
-                }]
-              })]
+                  context: 'default',
+                }],
+              })],
             }),
-            expiresAt: A_DATE
+            expiresAt: A_DATE,
           });
           expect(session.allNumbers().length).toEqual(1);
         });
@@ -101,9 +102,9 @@ describe('Session domain', () => {
         token: 'ref-12345',
         uuid: '1234',
         profile: new Profile({
-          voicemail: undefined
+          voicemail: undefined,
         }),
-        expiresAt: A_DATE
+        expiresAt: A_DATE,
       });
       expect(session.hasAccessToVoicemail()).toBeFalsy();
     });
@@ -111,7 +112,7 @@ describe('Session domain', () => {
       const session = new Session({
         token: 'ref-12345',
         uuid: '1234',
-        expiresAt: A_DATE
+        expiresAt: A_DATE,
       });
       expect(session.hasAccessToVoicemail()).toBeFalsy();
     });
@@ -122,7 +123,7 @@ describe('Session domain', () => {
       const session = new Session({
         token: 'ref-12345',
         uuid: '1234',
-        expiresAt: EXPIRATION_DATE
+        expiresAt: EXPIRATION_DATE,
       });
       const currentDate = new Date(2006, 5, 6, 14, 30, 1);
       expect(session.hasExpired(currentDate)).toBeTruthy();
@@ -131,7 +132,7 @@ describe('Session domain', () => {
       const session = new Session({
         token: 'ref-12345',
         uuid: '1234',
-        expiresAt: EXPIRATION_DATE
+        expiresAt: EXPIRATION_DATE,
       });
       const currentDate = new Date(2006, 5, 6, 14, 32, 0);
       expect(session.hasExpired(currentDate)).toBeTruthy();
@@ -140,7 +141,7 @@ describe('Session domain', () => {
       const session = new Session({
         token: 'ref-12345',
         uuid: '1234',
-        expiresAt: EXPIRATION_DATE
+        expiresAt: EXPIRATION_DATE,
       });
       const currentDate = new Date(2006, 5, 6, 14, 29, 0);
       expect(session.hasExpired(currentDate)).toBeFalsy();
@@ -156,18 +157,18 @@ describe('Session domain', () => {
           extensions: [{
             id: 1,
             exten: '8000',
-            context: 'default'
-          }]
+            context: 'default',
+          }],
         }), new Line({
           id: 3421,
           extensions: [{
             id: 2,
             exten: '9980',
-            context: 'internal'
-          }]
-        })]
+            context: 'internal',
+          }],
+        })],
       }),
-      expiresAt: new Date(9999, 0, 1)
+      expiresAt: new Date(9999, 0, 1),
     });
     it('should return true given it owns the extension', () => {
       expect(session.hasExtension('8000')).toBeTruthy();
@@ -188,19 +189,19 @@ describe('Session domain', () => {
         token: 'ref-12345',
         uuid: '1234',
         expiresAt: new Date(9999, 0, 1),
-        engineVersion: null
+        engineVersion: null,
       });
     });
     describe('given NO engine version', () => {
       beforeEach(() => {
         A_SESSION = new Session({ ...A_SESSION,
-          engineVersion: null
+          engineVersion: null,
         });
       });
       describe('and NO profile', () => {
         beforeEach(() => {
           A_SESSION = new Session({ ...A_SESSION,
-            profile: null
+            profile: null,
           });
         });
         it('should return default context', async () => {
@@ -212,8 +213,8 @@ describe('Session domain', () => {
         beforeEach(() => {
           A_SESSION = new Session({ ...A_SESSION,
             profile: new Profile({
-              lines: []
-            })
+              lines: [],
+            }),
           });
         });
         it('should return default context', async () => {
@@ -227,16 +228,16 @@ describe('Session domain', () => {
             extensions: [{
               context: SOME_CONTEXT,
               id: 1,
-              exten: '1'
+              exten: '1',
             }],
             id: 1,
-            exten: 1
+            exten: 1,
           });
           const profile = new Profile({
-            lines: [line]
+            lines: [line],
           });
           A_SESSION = new Session({ ...A_SESSION,
-            profile
+            profile,
           });
         });
         it('should return line context', async () => {
@@ -249,16 +250,16 @@ describe('Session domain', () => {
       describe('that is invalid', () => {
         beforeEach(() => {
           A_SESSION = new Session({ ...A_SESSION,
-            engineVersion: '19.09'
+            engineVersion: '19.09',
           });
         });
         describe('and NO lines', () => {
           beforeEach(() => {
             const profile = new Profile({
-              lines: []
+              lines: [],
             });
             A_SESSION = new Session({ ...A_SESSION,
-              profile
+              profile,
             });
           });
           it('should return default context', async () => {
@@ -272,17 +273,17 @@ describe('Session domain', () => {
               extensions: [{
                 context: SOME_CONTEXT,
                 id: 1,
-                exten: '1'
+                exten: '1',
               }],
               id: 1,
-              exten: 1
+              exten: 1,
             });
             const profile = new Profile({
-              lines: [line]
+              lines: [line],
             });
             A_SESSION = new Session({ ...A_SESSION,
               profile,
-              engineVersion: '18.08'
+              engineVersion: '18.08',
             });
           });
           it('should return line context', async () => {
@@ -305,16 +306,16 @@ describe('Session domain', () => {
                 extensions: [{
                   context: SOME_CONTEXT,
                   id: 1,
-                  exten: '1'
+                  exten: '1',
                 }],
                 id: 1,
-                exten: 1
+                exten: 1,
               });
               const profile = new Profile({
-                lines: [line]
+                lines: [line],
               });
               A_SESSION = new Session({ ...A_SESSION,
-                profile
+                profile,
               });
             });
             it('should return line context', async () => {
@@ -339,7 +340,7 @@ describe('Session domain', () => {
       describe('when version is 19.10', () => {
         it('should not consider that version is 19.1', () => {
           A_SESSION = new Session({ ...A_SESSION,
-            engineVersion: '19.10'
+            engineVersion: '19.10',
           });
           expect(A_SESSION.hasEngineVersionGte('19.10')).toBeTruthy();
           expect(A_SESSION.hasEngineVersionGte('19.11')).toBeFalsy();
@@ -355,7 +356,7 @@ describe('Session domain', () => {
     const session = new Session({
       acl,
       expiresAt: new Date(),
-      token: 'abc'
+      token: 'abc',
     });
     const oldWarn = console.warn;
 

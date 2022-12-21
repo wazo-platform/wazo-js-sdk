@@ -1,8 +1,9 @@
-import { SessionState } from "sip.js/lib/api/session-state";
-import type { Session } from "sip.js/lib/api/session";
-import Call from "./Call";
-import newFrom from "../utils/new-from";
-import updateFrom from "../utils/update-from";
+import { SessionState } from 'sip.js/lib/api/session-state';
+import type { Session } from 'sip.js/lib/api/session';
+import Call from './Call';
+import newFrom from '../utils/new-from';
+import updateFrom from '../utils/update-from';
+
 type CallSessionArguments = {
   answered: boolean;
   answerTime?: Date | null | undefined;
@@ -36,39 +37,67 @@ type CallSessionArguments = {
 };
 export default class CallSession {
   call: Call | null | undefined;
+
   // Wazo's callId, like `1594062407.xxxx`
   callId: string;
+
   displayName: string;
+
   // Used to retrieve the real callee when doing indirect transfer
   realDisplayName: string;
+
   updatedNumber: string;
+
   number: string;
+
   callerNumber: string;
+
   creationTime: Date | null | undefined;
+
   startTime: number; // = creationTime
 
   answerTime: Date | null | undefined;
+
   endTime: Date | null | undefined;
+
   isCaller: boolean;
+
   answeredBySystem: boolean;
+
   dialedExtension: string;
+
   ringing: boolean;
+
   // Should be computed ?
   paused: boolean;
+
   // Asterisk callId, like `7aed6793-4405-466d-873e-92d21c2fef9f`
   sipCallId: string;
+
   sipStatus: number | null | undefined;
+
   muted: boolean;
+
   videoMuted: boolean;
+
   videoRemotelyDowngraded: boolean | null | undefined;
+
   cameraEnabled: boolean;
+
   autoAnswer: boolean;
+
   ignored: boolean;
+
   screensharing: boolean;
+
   type: string;
+
   recording: boolean;
+
   recordingPaused: boolean;
+
   sipSession: Session;
+
   conference: boolean;
 
   constructor({
@@ -99,7 +128,7 @@ export default class CallSession {
     videoRemotelyDowngraded,
     sipSession,
     answerTime,
-    conference
+    conference,
   }: CallSessionArguments) {
     this.callId = callId;
     this.sipCallId = sipCallId;
@@ -306,7 +335,7 @@ export default class CallSession {
     const lastName = names.slice(1).join(' ');
     return {
       firstName,
-      lastName
+      lastName,
     };
   }
 
@@ -336,7 +365,7 @@ export default class CallSession {
   }
 
   toJSON() {
-    const jsonObj = { ...this
+    const jsonObj = { ...this,
     };
     // $FlowFixMe
     jsonObj.answered = this.answered;
@@ -365,7 +394,7 @@ export default class CallSession {
       cameraEnabled: call.isVideo,
       dialedExtension: call.dialedExtension,
       call,
-      conference: false // @FIXME?
+      conference: false, // @FIXME?
 
     });
   }

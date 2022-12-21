@@ -45,11 +45,17 @@ const SDK_LOGGED_OUT = 'sdk/SDK_LOGGED_OUT';
 
 class Softphone {
   url: string;
+
   width: number;
+
   height: number;
+
   displayed: boolean;
+
   iframe: Record<string, any> | null | undefined;
+
   iframeLoaded: boolean;
+
   // Message waiting for the iframe to be loaded
   _pendingMessages: Record<string, any>[];
 
@@ -134,7 +140,7 @@ class Softphone {
     enableAgent = true,
     tenantId,
     domainName,
-    debug = false
+    debug = false,
   }: Record<string, any> = {}) {
     this.url = url || 'https://softphone.wazo.io';
     this.width = width || 500;
@@ -150,7 +156,7 @@ class Softphone {
     }
 
     const config: Record<string, any> = {
-      server
+      server,
     };
 
     if (language) {
@@ -175,7 +181,7 @@ class Softphone {
     }
 
     this._sendMessage(BRIDGE_CONFIG_RETRIEVED, {
-      config
+      config,
     });
 
     if (enableAgent) {
@@ -209,7 +215,7 @@ class Softphone {
     this.displaySoftphone();
 
     this._sendMessage(SDK_CLICK_TO_CALL, {
-      number
+      number,
     });
   }
 
@@ -244,34 +250,34 @@ class Softphone {
   optionsFetched(fieldId: string, options: any[]) {
     this._sendMessage(BRIDGE_OPTIONS_FETCHED, {
       fieldId,
-      options
+      options,
     });
   }
 
   onOptionsResults(fieldId: string, options: any[]) {
     this._sendMessage(BRIDGE_OPTIONS_FOUND, {
       fieldId,
-      options
+      options,
     });
   }
 
   setFormSchema(schema: Record<string, any>, uiSchema: Record<string, any>) {
     this._sendMessage(BRIDGE_UPDATE_FORM_SCHEMA, {
       schema,
-      uiSchema
+      uiSchema,
     });
   }
 
   setCardValue(field: string, value: any) {
     this._sendMessage(BRIDGE_SET_CARD_CONTENT, {
       field,
-      value
+      value,
     });
   }
 
   injectCss(css: string) {
     this._sendMessage(BRIDGE_INJECT_CSS, {
-      css
+      css,
     });
   }
 
@@ -279,7 +285,7 @@ class Softphone {
     this._sendMessage(BRIDGE_CUSTOMIZE_APPEARANCE, {
       themes,
       translations,
-      assets
+      assets,
     });
   }
 
@@ -329,16 +335,16 @@ class Softphone {
         break;
 
       case SDK_CALL_ENDED:
-        {
-          const {
-            callSession,
-            content,
-            direction,
-            userExtension
-          } = event.data;
-          this.onCallEnded(callSession, content, direction, userExtension);
-          break;
-        }
+      {
+        const {
+          callSession,
+          content,
+          direction,
+          userExtension,
+        } = event.data;
+        this.onCallEnded(callSession, content, direction, userExtension);
+        break;
+      }
 
       case SDK_CALL_INCOMING:
         this.onCallIncoming(event.data.callSession);
@@ -356,23 +362,23 @@ class Softphone {
         break;
 
       case BRIDGE_CREATE_OR_UPDATE_CARD:
-        {
-          const {
-            content
-          } = event.data;
-          this.onCardSaved(content);
-          break;
-        }
+      {
+        const {
+          content,
+        } = event.data;
+        this.onCardSaved(content);
+        break;
+      }
 
       case BRIDGE_SEARCH_OPTIONS:
-        {
-          const {
-            fieldId,
-            query
-          } = event.data;
-          this.onSearchOptions(fieldId, query);
-          break;
-        }
+      {
+        const {
+          fieldId,
+          query,
+        } = event.data;
+        this.onSearchOptions(fieldId, query);
+        break;
+      }
 
       case BRIDGE_DISPLAY_LINKED_OPTION:
         this.onDisplayLinkedOption(event.data.linkedOptionId);
@@ -485,7 +491,7 @@ class Softphone {
 
     this.iframe.contentWindow.postMessage({
       type,
-      ...payload
+      ...payload,
     }, '*');
   }
 

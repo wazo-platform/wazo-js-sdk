@@ -1,6 +1,7 @@
-import CallSession from "./CallSession";
-import newFrom from "../utils/new-from";
-import updateFrom from "../utils/update-from";
+import CallSession from './CallSession';
+import newFrom from '../utils/new-from';
+import updateFrom from '../utils/update-from';
+
 export type RoomArguments = {
   connectedCallSession: CallSession | null;
   id: string;
@@ -14,8 +15,11 @@ export type RoomArguments = {
 
 export default class Room {
   id: string;
+
   name: string | typeof undefined;
+
   connectedCallSession: CallSession | null;
+
   participants: Array<{
     extension: string;
     uuid: string;
@@ -26,7 +30,7 @@ export default class Room {
     id,
     connectedCallSession,
     participants,
-    name
+    name,
   }: RoomArguments) {
     this.id = id;
     this.connectedCallSession = connectedCallSession;
@@ -40,7 +44,7 @@ export default class Room {
 
   connect(callSession: CallSession): Room {
     return new Room({ ...this,
-      connectedCallSession: callSession
+      connectedCallSession: callSession,
     });
   }
 
@@ -54,8 +58,8 @@ export default class Room {
         participants: [...this.participants, {
           uuid,
           extension,
-          talking
-        }]
+          talking,
+        }],
       });
     }
 
@@ -73,14 +77,14 @@ export default class Room {
 
     if (idx !== -1) {
       updatedParticipants[idx] = { ...updatedParticipants[idx],
-        ...participant
+        ...participant,
       };
     } else {
       updatedParticipants.push(participant);
     }
 
     return new Room({ ...this,
-      participants: updatedParticipants
+      participants: updatedParticipants,
     });
   }
 
@@ -95,14 +99,14 @@ export default class Room {
 
     if (idx !== -1) {
       updatedParticipants[idx] = { ...updatedParticipants[idx],
-        ...participant
+        ...participant,
       };
     } else {
       updatedParticipants.push(participant);
     }
 
     return new Room({ ...this,
-      participants: updatedParticipants
+      participants: updatedParticipants,
     });
   }
 
@@ -112,19 +116,19 @@ export default class Room {
 
   disconnect(): Room {
     return new Room({ ...this,
-      connectedCallSession: null
+      connectedCallSession: null,
     });
   }
 
   removeParticipantWithUUID(uuid: string) {
     return new Room({ ...this,
-      participants: this.participants.filter(participant => participant.uuid !== uuid)
+      participants: this.participants.filter(participant => participant.uuid !== uuid),
     });
   }
 
   removeParticipantWithExtension(extension: string) {
     return new Room({ ...this,
-      participants: this.participants.filter(participant => participant.extension !== extension)
+      participants: this.participants.filter(participant => participant.extension !== extension),
     });
   }
 

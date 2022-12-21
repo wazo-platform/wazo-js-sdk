@@ -1,5 +1,6 @@
 /* global MediaStream */
-import WebRTCClient from "../../web-rtc-client";
+import WebRTCClient from '../../web-rtc-client';
+
 export default {
   name: 'WebRTC',
   check: (server, session) => new Promise((resolve, reject) => {
@@ -10,8 +11,8 @@ export default {
     const client = new WebRTCClient({
       host: server,
       media: {
-        audio: true
-      }
+        audio: true,
+      },
     }, session);
 
     const handleError = message => {
@@ -40,5 +41,5 @@ export default {
         handleSuccess();
       }, 1000);
     });
-  })
+  }),
 };

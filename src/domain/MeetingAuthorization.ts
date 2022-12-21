@@ -13,16 +13,20 @@ export const POST_PROCESSED_SUCCESS = 'post_processed_success';
 export const POST_PROCESSED_ERROR = 'post_processed_error';
 export default class MeetingAuthorization {
   meetingUuid: string;
+
   uuid: string;
+
   userUuid: string;
+
   userName: string;
+
   status: string;
 
   constructor({
     meetingUuid,
     uuid,
     userUuid,
-    userName
+    userName,
   }: Record<string, any> = {}) {
     this.meetingUuid = meetingUuid;
     this.uuid = uuid;
@@ -43,13 +47,13 @@ export default class MeetingAuthorization {
       meeting_uuid: meetingUuid,
       uuid,
       guest_uuid: userUuid,
-      guest_name: userName
+      guest_name: userName,
     } = plain;
     return new MeetingAuthorization({
       meetingUuid,
       uuid,
       userUuid,
-      userName
+      userName,
     });
   }
 

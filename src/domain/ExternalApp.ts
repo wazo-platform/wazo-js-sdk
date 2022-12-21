@@ -1,4 +1,5 @@
-import newFrom from "../utils/new-from";
+import newFrom from '../utils/new-from';
+
 type Response = {
   name: string;
   configuration: Record<string, any>;
@@ -12,13 +13,15 @@ type Arguments = {
 };
 export default class ExternalApp {
   name: string;
+
   type: string;
+
   configuration: Record<string, any>;
 
   static parse(plain: Response): ExternalApp {
     return new ExternalApp({
       name: plain.name,
-      configuration: plain.configuration
+      configuration: plain.configuration,
     });
   }
 
@@ -32,7 +35,7 @@ export default class ExternalApp {
 
   constructor({
     name,
-    configuration
+    configuration,
   }: Arguments = {}) {
     this.name = name;
     this.configuration = configuration;

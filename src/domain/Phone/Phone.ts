@@ -1,5 +1,6 @@
-import Line from "../Line";
-import CallSession from "../CallSession";
+import Line from '../Line';
+import CallSession from '../CallSession';
+
 export type PhoneEventCallbacks = {
   onCallIncoming?: (number: string) => {};
   onCallOutgoing?: (number: string) => {};

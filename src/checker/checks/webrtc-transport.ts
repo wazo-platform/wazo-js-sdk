@@ -1,12 +1,13 @@
-import WebRTCClient from "../../web-rtc-client";
+import WebRTCClient from '../../web-rtc-client';
+
 export default {
   name: 'WebRTC Transport (WS) ~30s',
   check: (server, session) => new Promise((resolve, reject) => {
     const client = new WebRTCClient({
       host: server,
       media: {
-        audio: true
-      }
+        audio: true,
+      },
     }, session);
 
     const handleError = message => {
@@ -32,5 +33,5 @@ export default {
       });
       client.startHeartbeat();
     });
-  })
+  }),
 };

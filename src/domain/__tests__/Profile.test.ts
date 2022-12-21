@@ -1,6 +1,7 @@
-import Profile from "../Profile";
-import Line from "../Line";
-import ForwardOption, { FORWARD_KEYS } from "../ForwardOption";
+import Profile from '../Profile';
+import Line from '../Line';
+import ForwardOption, { FORWARD_KEYS } from '../ForwardOption';
+
 describe('Profile domain', () => {
   it('should create a new Profile from another one', () => {
     const attributes = {
@@ -13,13 +14,13 @@ describe('Profile domain', () => {
         extensions: [{
           id: 1,
           exten: '8000',
-          context: 'default'
+          context: 'default',
         }],
-        endpoint_custom: null
+        endpoint_custom: null,
       })],
       username: 'john.doe',
       forwards: [],
-      mobileNumber: '123'
+      mobileNumber: '123',
     };
     const oldProfile = new Profile(attributes);
     const newProfile = Profile.newFrom(oldProfile);
@@ -41,37 +42,37 @@ describe('Profile domain', () => {
         extensions: [{
           id: 1,
           exten: '8000',
-          context: 'default'
+          context: 'default',
         }],
-        endpoint_custom: null
+        endpoint_custom: null,
       }, {
         id: 3421,
         extensions: [{
           id: 2,
           exten: '9980',
-          context: 'internal'
+          context: 'internal',
         }],
-        endpoint_custom: null
+        endpoint_custom: null,
       }],
       username: 'john.doe',
       services: {
         dnd: {
-          enabled: false
-        }
+          enabled: false,
+        },
       },
       forwards: {
         busy: {
           destination: '1',
-          enabled: true
+          enabled: true,
         },
         noanswer: {
           destination: '',
-          enabled: false
+          enabled: false,
         },
         unconditional: {
           destination: '12',
-          enabled: true
-        }
+          enabled: true,
+        },
       },
       groups: [],
       language: 'FR',
@@ -82,9 +83,9 @@ describe('Profile domain', () => {
       call_pickup_target_users: [{
         uuid: 'uuid-0',
         firstname: 'FirstName-0',
-        lastname: 'LastName-0'
+        lastname: 'LastName-0',
       }],
-      online_call_record_enabled: true
+      online_call_record_enabled: true,
     };
     const profile = Profile.parse(plain);
     expect(profile).toEqual(new Profile({
@@ -95,30 +96,30 @@ describe('Profile domain', () => {
       forwards: [new ForwardOption({
         destination: '12',
         enabled: true,
-        key: FORWARD_KEYS.UNCONDITIONAL
+        key: FORWARD_KEYS.UNCONDITIONAL,
       }), new ForwardOption({
         destination: '',
         enabled: false,
-        key: FORWARD_KEYS.NO_ANSWER
+        key: FORWARD_KEYS.NO_ANSWER,
       }), new ForwardOption({
         destination: '1',
         enabled: true,
-        key: FORWARD_KEYS.BUSY
+        key: FORWARD_KEYS.BUSY,
       })],
       lines: [new Line({
         id: 9012,
         extensions: [{
           id: 1,
           exten: '8000',
-          context: 'default'
-        }]
+          context: 'default',
+        }],
       }), new Line({
         id: 3421,
         extensions: [{
           id: 2,
           exten: '9980',
-          context: 'internal'
-        }]
+          context: 'internal',
+        }],
       })],
       mobileNumber: '',
       username: 'john.doe',
@@ -129,9 +130,9 @@ describe('Profile domain', () => {
       callPickupTargetUsers: [{
         uuid: 'uuid-0',
         firstname: 'FirstName-0',
-        lastname: 'LastName-0'
+        lastname: 'LastName-0',
       }],
-      onlineCallRecordEnabled: true
+      onlineCallRecordEnabled: true,
     }));
   });
 });

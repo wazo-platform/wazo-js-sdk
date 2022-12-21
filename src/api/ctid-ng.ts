@@ -1,13 +1,14 @@
 /* eslint-disable camelcase */
 
 /* DEPRECATED: USE CALLD INSTEAD CTID-NG */
-import ApiRequester from "../utils/api-requester";
-import type { UUID, RequestError, CTITransfer } from "../domain/types";
-import Relocation from "../domain/Relocation";
-import ChatMessage from "../domain/ChatMessage";
-import Voicemail from "../domain/Voicemail";
-import Call from "../domain/Call";
-import { TRANSFER_FLOW_BLIND } from "../domain/Phone/CTIPhone";
+import ApiRequester from '../utils/api-requester';
+import type { UUID, RequestError, CTITransfer } from '../domain/types';
+import Relocation from '../domain/Relocation';
+import ChatMessage from '../domain/ChatMessage';
+import Voicemail from '../domain/Voicemail';
+import Call from '../domain/Call';
+import { TRANSFER_FLOW_BLIND } from '../domain/Phone/CTIPhone';
+
 type CallQuery = {
   from_mobile: boolean;
   extension: string;
@@ -15,8 +16,8 @@ type CallQuery = {
   all_lines?: boolean;
 };
 export default ((client: ApiRequester, baseUrl: string) => ({
-  updatePresence: (presence: string): Promise<Boolean> => client.put(`${baseUrl}/users/me/presences`, {
-    presence
+  updatePresence: (presence: string): Promise<boolean> => client.put(`${baseUrl}/users/me/presences`, {
+    presence,
   }, null, ApiRequester.successResponseParser),
   listMessages: (participantUuid: UUID | null | undefined, limit?: number): Promise<Array<ChatMessage>> => {
     const query: Record<string, any> = {};
@@ -35,14 +36,14 @@ export default ((client: ApiRequester, baseUrl: string) => ({
     const body = {
       alias,
       msg,
-      to: toUserId
+      to: toUserId,
     };
     return client.post(`${baseUrl}/users/me/chats`, body, null, ApiRequester.successResponseParser);
   },
   makeCall: (extension: string, fromMobile: boolean, lineId: number | null | undefined, allLines: boolean | null | undefined = false) => {
     const query: CallQuery = {
       from_mobile: fromMobile,
-      extension
+      extension,
     };
 
     if (lineId) {
@@ -55,7 +56,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
 
     return client.post(`${baseUrl}/users/me/calls`, query);
   },
-  cancelCall: (callId: number): Promise<Boolean> => client.delete(`${baseUrl}/users/me/calls/${callId}`),
+  cancelCall: (callId: number): Promise<boolean> => client.delete(`${baseUrl}/users/me/calls/${callId}`),
   listCalls: (): Promise<Array<Call>> => client.get(`${baseUrl}/users/me/calls`).then(response => Call.parseMany(response.items)),
 
   relocateCall(callId: number, destination: string, lineId: number | null | undefined, contact?: string | null | undefined): Promise<Relocation> {
@@ -63,7 +64,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
       completions: ['answer'],
       destination,
       initiator_call: callId,
-      auto_answer: true
+      auto_answer: true,
     };
 
     if (lineId || contact) {
@@ -85,7 +86,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
     const body: Record<string, any> = {
       exten: number,
       flow,
-      initiator_call: callId
+      initiator_call: callId,
     };
     return client.post(`${baseUrl}/users/me/transfers`, body).then(response => response);
   },
@@ -95,7 +96,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   // @TODO: fix response type
   confirmCallTransfer: (transferId: string): Promise<RequestError | void> => client.put(`${baseUrl}/users/me/transfers/${transferId}/complete`),
   listVoicemails: (): Promise<RequestError | Array<Voicemail>> => client.get(`${baseUrl}/users/me/voicemails`, null).then(response => Voicemail.parseMany(response)),
-  deleteVoicemail: (voicemailId: number): Promise<Boolean> => client.delete(`${baseUrl}/users/me/voicemails/messages/${voicemailId}`, null),
+  deleteVoicemail: (voicemailId: number): Promise<boolean> => client.delete(`${baseUrl}/users/me/voicemails/messages/${voicemailId}`, null),
   getPresence: (contactUuid: UUID): Promise<{
     presence: string;
     user_uuid: string;
@@ -110,12 +111,12 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   sendFax: (extension: string, fax: string, callerId: string | null | undefined = null) => {
     const headers = {
       'Content-type': 'application/pdf',
-      'X-Auth-Token': client.token
+      'X-Auth-Token': client.token,
     };
     const params = ApiRequester.getQueryString({
       extension,
-      caller_id: callerId
+      caller_id: callerId,
     });
     return client.post(`${baseUrl}/users/me/faxes?${params}`, fax, headers);
-  }
+  },
 }));

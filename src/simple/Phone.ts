@@ -1,17 +1,18 @@
-import type Inviter from "sip.js/lib/api/inviter";
-import type Invitation from "sip.js/lib/api/invitation";
-import { SessionState } from "sip.js/lib/api/session-state";
-import type SipLine from "../domain/SipLine";
-import type Session from "../domain/Session";
-import type CallSession from "../domain/CallSession";
-import AdHocAPIConference from "../domain/AdHocAPIConference";
-import WebRTCPhone, * as PHONE_EVENTS from "../domain/Phone/WebRTCPhone";
-import { MESSAGE_TYPE_CHAT, MESSAGE_TYPE_SIGNAL } from "../domain/Phone/WebRTCPhone";
-import WazoWebRTCClient, { events as clientEvents, transportEvents } from "../web-rtc-client";
-import IssueReporter from "../service/IssueReporter";
-import Emitter from "../utils/Emitter";
-import Wazo from "./index";
-import SFUNotAvailableError from "../domain/SFUNotAvailableError";
+import type Inviter from 'sip.js/lib/api/inviter';
+import type Invitation from 'sip.js/lib/api/invitation';
+import { SessionState } from 'sip.js/lib/api/session-state';
+import type SipLine from '../domain/SipLine';
+import type Session from '../domain/Session';
+import type CallSession from '../domain/CallSession';
+import AdHocAPIConference from '../domain/AdHocAPIConference';
+import WebRTCPhone, * as PHONE_EVENTS from '../domain/Phone/WebRTCPhone';
+import { MESSAGE_TYPE_CHAT, MESSAGE_TYPE_SIGNAL } from '../domain/Phone/WebRTCPhone';
+import WazoWebRTCClient, { events as clientEvents, transportEvents } from '../web-rtc-client';
+import IssueReporter from '../service/IssueReporter';
+import Emitter from '../utils/Emitter';
+import Wazo from './index';
+import SFUNotAvailableError from '../domain/SFUNotAvailableError';
+
 const logger = IssueReporter.loggerFor('simple-phone');
 const sipLogger = IssueReporter.loggerFor('sip.js');
 const protocolLogger = IssueReporter.loggerFor('sip');
@@ -19,11 +20,17 @@ const protocolDebugMessages = ['Received WebSocket text message:', 'Sending WebS
 
 class Phone extends Emitter {
   client: WazoWebRTCClient;
+
   phone: WebRTCPhone | null | undefined;
+
   session: Session;
+
   sipLine: SipLine | null | undefined;
+
   ON_CHAT: string;
+
   ON_SIGNAL: string;
+
   SessionState: Record<string, any>;
 
   constructor() {
@@ -74,7 +81,7 @@ class Phone extends Emitter {
     const options = rawOptions;
     options.media = options.media || {
       audio: true,
-      video: false
+      video: false,
     };
     options.uaConfigOverrides = options.uaConfigOverrides || {};
 
@@ -92,11 +99,11 @@ class Phone extends Emitter {
           const message = content.replace(`${protocolDebugMessages[protocolIndex]}\n\n`, '').replace('\r\n', '\n');
           protocolLogger.trace(message, {
             className,
-            direction
+            direction,
           });
         } else {
           sipLogger.trace(content, {
-            className
+            className,
           });
         }
       };
@@ -109,7 +116,7 @@ class Phone extends Emitter {
       authorizationUser: sipLine.username,
       password: sipLine.secret,
       uri: `${sipLine.username}@${server}`,
-      ...options
+      ...options,
     }, null, options.uaConfigOverrides);
     this.phone = new WebRTCPhone(this.client, options.audioDeviceOutput, true, options.audioDeviceRing);
 
@@ -143,7 +150,7 @@ class Phone extends Emitter {
 
   async hangup(callSession: CallSession) {
     logger.info('hangup via simple phone', {
-      callId: callSession.getId()
+      callId: callSession.getId(),
     });
     return this.phone && this.phone.hangup(callSession);
   }
@@ -151,7 +158,7 @@ class Phone extends Emitter {
   async accept(callSession: CallSession, cameraEnabled?: boolean) {
     logger.info('accept via simple phone', {
       callId: callSession.getId(),
-      cameraEnabled
+      cameraEnabled,
     });
     return this.phone && this.phone.accept(callSession, cameraEnabled);
   }
@@ -169,7 +176,7 @@ class Phone extends Emitter {
     const adHocConference = new AdHocAPIConference({
       phone: this.phone,
       host,
-      participants
+      participants,
     });
     return adHocConference.start();
   }
@@ -263,14 +270,14 @@ class Phone extends Emitter {
   sendChat(content: string, sipSession: Inviter | Invitation = null) {
     return this.sendMessage(JSON.stringify({
       type: MESSAGE_TYPE_CHAT,
-      content
+      content,
     }), sipSession, 'application/json');
   }
 
   sendSignal(content: any, sipSession: Inviter | Invitation = null) {
     return this.sendMessage(JSON.stringify({
       type: MESSAGE_TYPE_SIGNAL,
-      content
+      content,
     }), sipSession, 'application/json');
   }
 

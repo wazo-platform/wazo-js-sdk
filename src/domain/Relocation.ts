@@ -14,22 +14,25 @@ type RelocationArguments = {
 
 class Relocation {
   static MIN_ENGINE_VERSION_REQUIRED: string;
+
   relocatedCall: string;
+
   initiatorCall: string;
+
   recipientCall: string;
 
   static parse(response: RelocationResponse) {
     return new Relocation({
       initiatorCall: response.initiator_call,
       recipientCall: response.recipient_call,
-      relocatedCall: response.relocated_call
+      relocatedCall: response.relocated_call,
     });
   }
 
   constructor({
     relocatedCall,
     initiatorCall,
-    recipientCall
+    recipientCall,
   }: RelocationArguments) {
     this.initiatorCall = initiatorCall || '';
     this.relocatedCall = relocatedCall || '';

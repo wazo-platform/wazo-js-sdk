@@ -1,5 +1,6 @@
-import newFrom from "../utils/new-from";
-import type { Endpoint } from "./Line";
+import newFrom from '../utils/new-from';
+import type { Endpoint } from './Line';
+
 const availableCodecs = ['vp8', 'vp9', 'h264'];
 type SipLineResponse = {
   id: number;
@@ -32,23 +33,34 @@ type SipLineArguments = {
 };
 export default class SipLine {
   id: any;
+
   uuid: string;
+
   tenantUuid: string;
+
   username: string;
+
   secret: string;
+
   type: string;
+
   host: string;
+
   options: string[][] | null | undefined;
+
   endpointSectionOptions: string[][] | null | undefined;
+
   links: Array<Record<string, any>>;
+
   trunk: string | null | undefined;
+
   line: Endpoint;
 
   static parse(plain: SipLineResponse): SipLine {
     let {
       username,
       secret,
-      host
+      host,
     } = plain;
 
     // Since 20.13 engine so options are now in section
@@ -76,7 +88,7 @@ export default class SipLine {
       endpointSectionOptions: plain.endpoint_section_options,
       links: plain.links,
       trunk: plain.trunk,
-      line: plain.line
+      line: plain.line,
     });
   }
 
@@ -122,7 +134,7 @@ export default class SipLine {
     endpointSectionOptions,
     links,
     trunk,
-    line
+    line,
   }: SipLineArguments = {}) {
     this.id = id;
     this.uuid = uuid;

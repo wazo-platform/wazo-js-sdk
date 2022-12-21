@@ -1,6 +1,7 @@
 /* global btoa */
-import moment from "moment";
-import Meeting from "../Meeting";
+import moment from 'moment';
+import Meeting from '../Meeting';
+
 const rawCreationTime = '2021-12-21T15:56:42.880Z';
 describe('Meeting domain', () => {
   it('should retain its values when parsed', () => {
@@ -14,7 +15,7 @@ describe('Meeting domain', () => {
       exten: 'some-exten',
       persistent: true,
       creation_time: rawCreationTime,
-      require_authorization: true
+      require_authorization: true,
     };
     const meeting = Meeting.parse(args);
     const {
@@ -26,7 +27,7 @@ describe('Meeting domain', () => {
       persistent,
       ownerUuids,
       creationTime,
-      requireAuthorization
+      requireAuthorization,
     } = meeting;
     expect(uri).toEqual(args.ingress_http_uri);
     expect(uuid).toEqual(args.uuid);
@@ -46,7 +47,7 @@ describe('Meeting domain', () => {
     }, {});
     const meeting = new Meeting(args);
     keys.forEach(key => // $FlowFixMe
-    expect(meeting[key]).toEqual(`some-${key}`));
+      expect(meeting[key]).toEqual(`some-${key}`));
   });
   it('can return username and secret from an base64 encrypted string', () => {
     const USERNAME = 'username';
@@ -61,12 +62,12 @@ describe('Meeting domain', () => {
       uuid: '',
       exten: '',
       persistent: false,
-      require_authorization: false
+      require_authorization: false,
     };
     const meeting = Meeting.parse(args);
     const {
       username,
-      secret
+      secret,
     } = meeting.getGuestSipCredentials();
     expect(username).toEqual(USERNAME);
     expect(secret).toEqual(SECRET);
@@ -82,10 +83,10 @@ describe('Meeting domain', () => {
       uuid: '',
       exten: '',
       persistent: false,
-      require_authorization: false
+      require_authorization: false,
     };
     const {
-      creationTime
+      creationTime,
     } = Meeting.parse(args);
     expect(creationTime.getDate()).toEqual(21);
     expect(creationTime.getFullYear()).toEqual(2021);

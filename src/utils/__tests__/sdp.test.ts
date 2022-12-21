@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
-import sdpParser from "sdp-transform";
-import { getCandidates, isSdpValid, parseCandidate, areCandidateValid, fixSdp, fixBundle, toggleVideoDirection, hasAnActiveVideo, addIcesInAllBundles } from "../sdp";
+import sdpParser from 'sdp-transform';
+import { getCandidates, isSdpValid, parseCandidate, areCandidateValid, fixSdp, fixBundle, toggleVideoDirection, hasAnActiveVideo, addIcesInAllBundles } from '../sdp';
+
 const goodSdp = `
 c=IN IP4 203.0.113.1
 m=audio 54400 RTP/SAVPF 0 96

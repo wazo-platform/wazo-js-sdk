@@ -4,6 +4,7 @@
 import moment from 'moment';
 import { realFetch } from '../utils/api-requester';
 import isMobile from '../utils/isMobile';
+
 const TRACE = 'trace';
 const DEBUG = 'debug';
 const INFO = 'info';
@@ -45,7 +46,7 @@ const safeStringify = (object: Record<string, any>) => {
 
   try {
     return JSON.stringify(object);
-  } catch (e) {// Nothing to do
+  } catch (e) { // Nothing to do
   }
 
   return result;
@@ -258,7 +259,7 @@ class IssueReporter {
           this.log(methodName, args.join(' '));
           // Use old console method to log it normally
           this.oldConsoleMethods[methodName].apply(null, args);
-        } catch (e) {// Avoid circular structure issues
+        } catch (e) { // Avoid circular structure issues
         }
       };
     });

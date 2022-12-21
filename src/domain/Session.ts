@@ -1,13 +1,14 @@
 /* eslint-disable no-nested-ternary */
-import { KEYUTIL, jws, b64utoutf8 } from "jsrsasign";
-import { swarmPublicKey } from "../../config";
-import Profile from "./Profile";
-import Contact from "./Contact";
-import Line from "./Line";
-import SipLine from "./SipLine";
-import type { UUID, Token } from "./types";
-import newFrom from "../utils/new-from";
-import compareVersions from "../utils/compare-version";
+import { KEYUTIL, jws, b64utoutf8 } from 'jsrsasign';
+import { swarmPublicKey } from '../../config';
+import Profile from './Profile';
+import Contact from './Contact';
+import Line from './Line';
+import SipLine from './SipLine';
+import type { UUID, Token } from './types';
+import newFrom from '../utils/new-from';
+import compareVersions from '../utils/compare-version';
+
 const swarmKey = KEYUTIL.getKey(swarmPublicKey);
 const MINIMUM_WAZO_ENGINE_VERSION_FOR_DEFAULT_CONTEXT = '19.08';
 type Response = {
@@ -64,15 +65,25 @@ type SessionArguments = {
 };
 export default class Session {
   acl: string[];
+
   token: string;
+
   refreshToken: string | null | undefined;
+
   uuid: string | null | undefined;
+
   tenantUuid: string | null | undefined;
+
   engineUuid: string | null | undefined;
+
   sessionUuid: string | null | undefined;
+
   engineVersion: string | null | undefined;
+
   profile: Profile | null | undefined;
+
   expiresAt: Date;
+
   authorizations: Array<Authorization>;
 
   static parse(plain: Response): Session | null | undefined {
@@ -83,7 +94,7 @@ export default class Session {
     if (token) {
       const isValid = jws.JWS.verifyJWT(token, swarmKey, {
         alg: ['RS256'],
-        verifyAt: new Date()
+        verifyAt: new Date(),
       });
 
       if (isValid) {
@@ -101,7 +112,7 @@ export default class Session {
       acl: plain.data.acls ? plain.data.acls : plain.data.acl ? plain.data.acl : [],
       tenantUuid: plain.data.metadata ? plain.data.metadata.tenant_uuid : undefined,
       expiresAt: new Date(`${plain.data.utc_expires_at}z`),
-      engineUuid: plain.data.xivo_uuid
+      engineUuid: plain.data.xivo_uuid,
     });
   }
 
@@ -120,7 +131,7 @@ export default class Session {
     engineVersion,
     refreshToken,
     sessionUuid,
-    engineUuid
+    engineUuid,
   }: SessionArguments = {}) {
     this.token = token;
     this.uuid = uuid;

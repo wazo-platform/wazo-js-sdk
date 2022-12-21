@@ -1,19 +1,23 @@
-import Session from "../Session";
-import Call from "../Call";
-import Line from "../Line";
-import CallSession from "../CallSession";
-import type { Phone, AvailablePhoneOptions } from "./Phone";
-import Emitter from "../../utils/Emitter";
-import CallApi from "../../service/CallApi";
-import IssueReporter from "../../service/IssueReporter";
+import Session from '../Session';
+import Call from '../Call';
+import Line from '../Line';
+import CallSession from '../CallSession';
+import type { Phone, AvailablePhoneOptions } from './Phone';
+import Emitter from '../../utils/Emitter';
+import CallApi from '../../service/CallApi';
+import IssueReporter from '../../service/IssueReporter';
+
 export const TRANSFER_FLOW_ATTENDED = 'attended';
 export const TRANSFER_FLOW_BLIND = 'blind';
 // const MINIMUM_WAZO_ENGINE_VERSION_FOR_CTI_HOLD = '20.11';
 const logger = IssueReporter ? IssueReporter.loggerFor('cti-phone') : console;
 export default class CTIPhone extends Emitter implements Phone {
   session: Session;
+
   isMobile: boolean;
+
   callbackAllLines: boolean;
+
   currentCall: Call | null | undefined;
 
   constructor(session: Session, isMobile = false, callbackAllLines = false) {
@@ -36,7 +40,7 @@ export default class CTIPhone extends Emitter implements Phone {
       sendKey: true,
       addParticipant: false,
       record: true,
-      merge: false
+      merge: false,
     };
   }
 
@@ -72,7 +76,7 @@ export default class CTIPhone extends Emitter implements Phone {
 
   async makeCall(number: string, line: Line): Promise<CallSession | null | undefined> {
     logger.info('make CTI call', {
-      number
+      number,
     });
 
     if (!number) {
@@ -81,7 +85,7 @@ export default class CTIPhone extends Emitter implements Phone {
 
     try {
       this.currentCall = await CallApi.makeCall(line, number, this.isMobile, this.callbackAllLines);
-    } catch (_) {// We have to deal with error like `User has no mobile phone number` error in the UI.
+    } catch (_) { // We have to deal with error like `User has no mobile phone number` error in the UI.
     }
 
     if (!this.currentCall) {
@@ -100,7 +104,7 @@ export default class CTIPhone extends Emitter implements Phone {
 
     logger.info('accept CTI call', {
       callId: callSession.getId(),
-      number: callSession.number
+      number: callSession.number,
     });
 
     if (!this.currentCall) {
@@ -117,7 +121,7 @@ export default class CTIPhone extends Emitter implements Phone {
 
     logger.info('end current CTI call', {
       callId: callSession.getId(),
-      number: callSession.number
+      number: callSession.number,
     });
     this.currentCall = undefined;
     this.eventEmitter.emit('onCallEnded', callSession);
@@ -130,7 +134,7 @@ export default class CTIPhone extends Emitter implements Phone {
 
     logger.info('hangup CTI call', {
       callId: callSession.getId(),
-      number: callSession.number
+      number: callSession.number,
     });
 
     try {
@@ -158,7 +162,7 @@ export default class CTIPhone extends Emitter implements Phone {
 
     logger.info('reject CTI call', {
       callId: callSession.getId(),
-      number: callSession.number
+      number: callSession.number,
     });
     await CallApi.cancelCall(callSession);
     this.eventEmitter.emit('onCallEnded', callSession);
@@ -172,7 +176,7 @@ export default class CTIPhone extends Emitter implements Phone {
     logger.info('transfer CTI call', {
       callId: callSession.getId(),
       number: callSession.number,
-      to: number
+      to: number,
     });
     await CallApi.transferCall(callSession.callId, number, TRANSFER_FLOW_BLIND);
   }
@@ -189,21 +193,21 @@ export default class CTIPhone extends Emitter implements Phone {
     logger.info('indirect CTI transfer', {
       callId: callSession.getId(),
       number: callSession.number,
-      to: number
+      to: number,
     });
     return CallApi.transferCall(callSession.callId, number, TRANSFER_FLOW_ATTENDED);
   }
 
   async cancelCTIIndirectTransfer(transferId: string): Promise<any> {
     logger.info('cancel CTI transfer', {
-      transferId
+      transferId,
     });
     return CallApi.cancelCallTransfer(transferId);
   }
 
   async confirmCTIIndirectTransfer(transferId: string): Promise<any> {
     logger.info('confirm CTI transfer', {
-      transferId
+      transferId,
     });
     return CallApi.confirmCallTransfer(transferId);
   }
@@ -216,7 +220,7 @@ export default class CTIPhone extends Emitter implements Phone {
     logger.info('send CTI key', {
       callId: callSession.getId(),
       number: callSession.number,
-      digits
+      digits,
     });
     return CallApi.sendDTMF(callSession.callId, digits);
   }
@@ -238,7 +242,7 @@ export default class CTIPhone extends Emitter implements Phone {
 
     logger.info('CTI hold', {
       callId: callSession.getId(),
-      number: callSession.number
+      number: callSession.number,
     });
     return CallApi.hold(callSession.callId);
   }
@@ -250,7 +254,7 @@ export default class CTIPhone extends Emitter implements Phone {
 
     logger.info('CTI resume', {
       callId: callSession.getId(),
-      number: callSession.number
+      number: callSession.number,
     });
     return CallApi.resume(callSession.callId);
   }
@@ -262,7 +266,7 @@ export default class CTIPhone extends Emitter implements Phone {
 
     logger.info('CTI mute', {
       callId: callSession.getId(),
-      number: callSession.number
+      number: callSession.number,
     });
     return CallApi.mute(callSession.callId);
   }
@@ -274,7 +278,7 @@ export default class CTIPhone extends Emitter implements Phone {
 
     logger.info('CTI unmute', {
       callId: callSession.getId(),
-      number: callSession.number
+      number: callSession.number,
     });
     return CallApi.unmute(callSession.callId);
   }

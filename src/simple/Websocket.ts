@@ -1,7 +1,8 @@
-import type Session from "../domain/Session";
-import WazoWebSocketClient, * as WebSocketClient from "../websocket-client";
-import Emitter from "../utils/Emitter";
-import IssueReporter from "../service/IssueReporter";
+import type Session from '../domain/Session';
+import WazoWebSocketClient, * as WebSocketClient from '../websocket-client';
+import Emitter from '../utils/Emitter';
+import IssueReporter from '../service/IssueReporter';
+
 const {
   SOCKET_EVENTS,
   ...OTHER_EVENTS
@@ -11,6 +12,7 @@ const logger = IssueReporter.loggerFor('simple-ws-client');
 
 class Websocket extends Emitter {
   ws: WazoWebSocketClient | null | undefined;
+
   eventLists: string[];
 
   constructor() {
@@ -31,16 +33,16 @@ class Websocket extends Emitter {
   open(host: string, session: Session) {
     logger.info('open simple WebSocket', {
       host,
-      token: session.token
+      token: session.token,
     });
     this.ws = new WazoWebSocketClient({
       host,
       token: session.token,
       events: ['*'],
-      version: 2
+      version: 2,
     }, {
       rejectUnauthorized: false,
-      binaryType: 'arraybuffer'
+      binaryType: 'arraybuffer',
     });
     this.ws.connect();
     // Re-emit all events
@@ -58,7 +60,7 @@ class Websocket extends Emitter {
   updateToken(token: string) {
     logger.info('update token via simple Websocket', {
       token,
-      ws: !!this.ws
+      ws: !!this.ws,
     });
 
     if (!this.ws) {

@@ -1,12 +1,13 @@
-import Session from "./Session";
-import { LINE_STATE, STATE } from "./Profile";
-import newFrom from "../utils/new-from";
-import type { DirectorySource } from "./DirectorySource";
+import Session from './Session';
+import { LINE_STATE, STATE } from './Profile';
+import newFrom from '../utils/new-from';
+import type { DirectorySource } from './DirectorySource';
+
 export const BACKEND = {
   OFFICE365: 'office365',
   PERSONAL: 'personal',
   GOOGLE: 'google',
-  WAZO: 'wazo'
+  WAZO: 'wazo',
 };
 export type NewContact = {
   firstName: string;
@@ -236,43 +237,72 @@ type GoogleResponse = {
 const SOURCE_MOBILE = 'mobile';
 export default class Contact {
   type: string;
+
   id: string | null | undefined;
+
   uuid: string | null | undefined;
+
   name: string | null | undefined;
+
   number: string | null | undefined;
+
   numbers: Array<{
     label?: string;
     number: string;
   }> | null | undefined;
+
   favorited: boolean | null | undefined;
+
   email: string | null | undefined;
+
   emails: Array<{
     label?: string;
     email: string;
   }> | null | undefined;
+
   entreprise: string | null | undefined;
+
   birthday: string | null | undefined;
+
   address: string | null | undefined;
+
   note: string | null | undefined;
+
   endpointId: number | null | undefined;
+
   personal: boolean | null | undefined;
+
   state: string | null | undefined;
+
   lineState: string | null | undefined;
+
   previousPresential: string | null | undefined;
+
   lastActivity: string | null | undefined;
+
   mobile: boolean | null | undefined;
+
   source: string | null | undefined;
+
   sourceId: string | null | undefined;
+
   status: string | null | undefined;
+
   backend: string | null | undefined;
+
   personalStatus: string;
+
   sessions: Array<{
     uuid: string;
     mobile: boolean;
   }> | null | undefined;
+
   connected: boolean | null | undefined;
+
   doNotDisturb: boolean | null | undefined;
+
   ringing: boolean | null | undefined;
+
   lines: Record<string, any>[];
 
   static merge(oldContacts: Array<Contact>, newContacts: Array<Contact>): Array<Contact> {
@@ -316,7 +346,7 @@ export default class Contact {
         }
 
         const {
-          email
+          email,
         } = edge.node;
         const name = edge.node.firstname && edge.node.lastname ? `${edge.node.firstname || ''} ${edge.node.lastname || ''}` : edge.node.wazoReverse;
         return new Contact({
@@ -324,7 +354,7 @@ export default class Contact {
           number: numbers[i],
           numbers: [{
             label: 'primary',
-            number: numbers[i]
+            number: numbers[i],
           }],
           backend: edge.node.wazoBackend,
           source: edge.node.wazoSourceName,
@@ -332,9 +362,9 @@ export default class Contact {
           email: email || '',
           emails: email ? [{
             label: 'primary',
-            email
+            email,
           }] : [],
-          uuid: edge.node.userUuid
+          uuid: edge.node.userUuid,
         });
       }).filter(contact => !!contact);
     };
@@ -343,7 +373,7 @@ export default class Contact {
   static fetchNumbers(plain: ContactResponse, columns: Array<string | null | undefined>): Array<string> {
     const numberColumns = columns.map((e, index) => ({
       index,
-      columnName: e
+      columnName: e,
     })).filter(e => e.columnName === 'number' || e.columnName === 'callable').map(e => e.index);
     return plain.column_values.filter((e, index) => numberColumns.some(i => i === index) && e !== null);
   }
@@ -356,13 +386,13 @@ export default class Contact {
       number: numbers.length ? numbers[0] : '',
       numbers: numbers.map((number, i) => ({
         label: i === 0 ? 'primary' : 'secondary',
-        number
+        number,
       })),
       favorited: plain.column_values[columns.indexOf('favorite')],
       email: email || '',
       emails: email ? [{
         label: 'primary',
-        email
+        email,
       }] : [],
       entreprise: plain.column_values[columns.indexOf('entreprise')] || '',
       birthday: plain.column_values[columns.indexOf('birthday')] || '',
@@ -373,7 +403,7 @@ export default class Contact {
       source: plain.source,
       sourceId: plain.relations.source_entry_id || '',
       uuid: plain.relations.user_uuid,
-      backend: plain.backend || ''
+      backend: plain.backend || '',
     });
   }
 
@@ -387,12 +417,12 @@ export default class Contact {
       number: plain.number || '',
       numbers: plain.number ? [{
         label: 'primary',
-        number: plain.number
+        number: plain.number,
       }] : [],
       email: plain.email || '',
       emails: plain.email ? [{
         label: 'primary',
-        email: plain.email
+        email: plain.email,
       }] : [],
       source: 'personal',
       sourceId: plain.id || '',
@@ -402,7 +432,7 @@ export default class Contact {
       note: plain.note || '',
       favorited: plain.favorited,
       personal: true,
-      backend: plain.backend || BACKEND.PERSONAL
+      backend: plain.backend || BACKEND.PERSONAL,
     });
   }
 
@@ -419,12 +449,12 @@ export default class Contact {
       number: plain.phoneNumbers.length ? plain.phoneNumbers[0].number : '',
       numbers: plain.phoneNumbers.length ? [{
         label: 'primary',
-        number: plain.phoneNumbers[0].number
+        number: plain.phoneNumbers[0].number,
       }] : [],
       email: plain.emailAddresses.length ? plain.emailAddresses[0].email : '',
       emails: plain.emailAddresses.length ? [{
         label: 'primary',
-        email: plain.emailAddresses[0].email
+        email: plain.emailAddresses[0].email,
       }] : [],
       source: SOURCE_MOBILE,
       sourceId: plain.recordID || '',
@@ -432,7 +462,7 @@ export default class Contact {
       address,
       note: plain.note || '',
       favorited: false,
-      personal: true
+      personal: true,
     });
   }
 
@@ -452,28 +482,28 @@ export default class Contact {
 
     if (single.emailAddresses) {
       single.emailAddresses.map(email => emails.push({
-        email: email.address
+        email: email.address,
       }));
     }
 
     if (single.businessPhones) {
       single.businessPhones.map(phone => numbers.push({
         label: 'business',
-        number: phone
+        number: phone,
       }));
     }
 
     if (single.mobilePhone) {
       numbers.push({
         label: 'mobile',
-        number: single.mobilePhone
+        number: single.mobilePhone,
       });
     }
 
     if (single.homePhones) {
       single.homePhones.map(phone => numbers.push({
         label: 'home',
-        number: phone
+        number: phone,
       }));
     }
 
@@ -484,7 +514,7 @@ export default class Contact {
       numbers,
       emails,
       source: source.name,
-      backend: BACKEND.OFFICE365
+      backend: BACKEND.OFFICE365,
     });
   }
 
@@ -503,22 +533,22 @@ export default class Contact {
     }> = [];
 
     if (single.emails) {
-      single.emails.forEach(email => typeof email === 'object' ? {
+      single.emails.forEach(email => (typeof email === 'object' ? {
         email: email.address,
-        label: email.label
+        label: email.label,
       } : {
-        email
-      });
+        email,
+      }));
     }
 
     if (single.numbers_by_label) {
       Object.keys(single.numbers_by_label).forEach(label => numbers.push({
         label,
-        number: single.numbers_by_label[label]
+        number: single.numbers_by_label[label],
       }));
     } else if (single.numbers) {
       single.numbers.forEach(phone => numbers.push({
-        number: phone
+        number: phone,
       }));
     }
 
@@ -529,7 +559,7 @@ export default class Contact {
       numbers,
       emails,
       source: source.name,
-      backend: BACKEND.GOOGLE
+      backend: BACKEND.GOOGLE,
     });
   }
 
@@ -544,21 +574,21 @@ export default class Contact {
     if (single.email) {
       emails.push({
         label: 'email',
-        email: single.email
+        email: single.email,
       });
     }
 
     if (single.exten) {
       numbers.push({
         label: 'exten',
-        number: single.exten
+        number: single.exten,
       });
     }
 
     if (single.mobile_phone_number) {
       numbers.push({
         label: 'mobile',
-        number: single.mobile_phone_number
+        number: single.mobile_phone_number,
       });
     }
 
@@ -570,7 +600,7 @@ export default class Contact {
       numbers,
       emails,
       source: source.name,
-      backend: BACKEND.WAZO
+      backend: BACKEND.WAZO,
     });
   }
 
@@ -586,7 +616,7 @@ export default class Contact {
       firstNumber = single.extensions[0].exten;
       numbers.push({
         label: 'exten',
-        number: firstNumber
+        number: firstNumber,
       });
     }
 
@@ -596,7 +626,7 @@ export default class Contact {
       number: firstNumber,
       numbers,
       source: source.name,
-      backend: 'conference'
+      backend: 'conference',
     });
   }
 
@@ -633,7 +663,7 @@ export default class Contact {
     doNotDisturb,
     ringing,
     previousPresential,
-    lines
+    lines,
   }: ContactArguments = {}) {
     this.id = id;
     this.uuid = uuid;
@@ -766,7 +796,7 @@ export default class Contact {
     if (!this.name) {
       return {
         firstName: '',
-        lastName: ''
+        lastName: '',
       };
     }
 
@@ -775,7 +805,7 @@ export default class Contact {
     const lastName = names.slice(1).join(' ');
     return {
       firstName,
-      lastName
+      lastName,
     };
   }
 

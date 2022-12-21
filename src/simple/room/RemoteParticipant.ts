@@ -1,5 +1,5 @@
-import Room from "./Room";
-import Participant from "./Participant";
+import Room from './Room';
+import Participant from './Participant';
 
 class RemoteParticipant extends Participant {
   constructor(room: Room, rawParticipant: Record<string, any> = {}, extra: Record<string, any> = {}) {

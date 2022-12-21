@@ -8,10 +8,15 @@ export default class BadResponse extends Error {
   }
 
   message: string;
+
   status: number;
+
   timestamp: number | null | undefined;
+
   errorId: string | null | undefined;
+
   details: Record<string, any> | null | undefined;
+
   error: Error | null | undefined;
 
   constructor(message: string, status: number, timestamp: number | null | undefined = null, errorId: string | null | undefined = null, details: Record<string, any> | null | undefined = null, error: Error | null | undefined = null) {

@@ -1,6 +1,7 @@
-import CallSession from "./CallSession";
-import newFrom from "../utils/new-from";
-import updateFrom from "../utils/update-from";
+import CallSession from './CallSession';
+import newFrom from '../utils/new-from';
+import updateFrom from '../utils/update-from';
+
 export type SwitchboardCallItem = {
   caller_id_name: string;
   caller_id_number: string;
@@ -45,15 +46,25 @@ export type SwitchboardCallResponse = {
 
 class SwitchboardCall {
   static STATE: Record<string, any>;
+
   id: string;
+
   callSession: CallSession | null | undefined;
+
   callerIdName: string | null | undefined;
+
   callerIdNumber: string | null | undefined;
+
   answerTime: Date | null | undefined;
+
   participantId: string | null | undefined;
+
   state: string;
+
   switchboardName: string;
+
   switchboardUuid: string;
+
   type: string;
 
   static parse(plain: SwitchboardCallResponse): SwitchboardCall {
@@ -66,7 +77,7 @@ class SwitchboardCall {
       answerTime: plain.startTime,
       state: plain.state,
       switchboardName: plain.switchboardName,
-      switchboardUuid: plain.switchboardUuid
+      switchboardUuid: plain.switchboardUuid,
     });
   }
 
@@ -79,7 +90,7 @@ class SwitchboardCall {
     answerTime,
     state,
     switchboardName,
-    switchboardUuid
+    switchboardUuid,
   }: SwitchboardCallArguments = {}) {
     this.id = id;
     this.callSession = callSession;
@@ -111,6 +122,6 @@ class SwitchboardCall {
 SwitchboardCall.STATE = {
   INCOMING: 'incoming',
   ONGOING: 'ongoing',
-  HELD: 'held'
+  HELD: 'held',
 };
 export default SwitchboardCall;

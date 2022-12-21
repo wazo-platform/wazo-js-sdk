@@ -1,9 +1,10 @@
-import WazoApiClient from "../../api-client";
+import WazoApiClient from '../../api-client';
+
 export default {
   name: 'List of AOR',
   check: async (server, session) => {
     const apiClient = new WazoApiClient({
-      server
+      server,
     });
     apiClient.setToken(session.token);
     apiClient.disableErrorLogging();
@@ -14,7 +15,7 @@ export default {
     }
 
     const {
-      username
+      username,
     } = line;
 
     try {
@@ -29,5 +30,5 @@ export default {
 
       throw e;
     }
-  }
+  },
 };

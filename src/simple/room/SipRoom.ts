@@ -1,7 +1,8 @@
-import type { Message } from "sip.js/lib/api/message";
-import IssueReporter from "../../service/IssueReporter";
-import Wazo from "../index";
-import Room from "./Room";
+import type { Message } from 'sip.js/lib/api/message';
+import IssueReporter from '../../service/IssueReporter';
+import Wazo from '../index';
+import Room from './Room';
+
 const logger = IssueReporter.loggerFor('sdk-sip-room');
 
 class SipRoom extends Room {
@@ -10,17 +11,17 @@ class SipRoom extends Room {
     constraints,
     audioOnly = false,
     extra,
-    room
+    room,
   }: Record<string, any>) {
     logger.info('connecting to sip room', {
       extension,
       audioOnly,
-      room: !!room
+      room: !!room,
     });
 
     if (!room) {
       await Wazo.Phone.connect({
-        media: constraints
+        media: constraints,
       });
       const withCamera = constraints && !!constraints.video;
       const callSession = await Wazo.Phone.call(extension, withCamera, null, audioOnly, true);
@@ -33,7 +34,7 @@ class SipRoom extends Room {
     }
 
     logger.info('connected to room', {
-      extension: room.extension
+      extension: room.extension,
     });
     return room;
   }
@@ -82,26 +83,26 @@ class SipRoom extends Room {
         break;
 
       case 'ConfbridgeJoin':
-        {
-          const channel = getChannel();
+      {
+        const channel = getChannel();
 
-          this._onParticipantJoined(channel);
+        this._onParticipantJoined(channel);
 
-          break;
-        }
+        break;
+      }
 
       case 'ConfbridgeLeave':
-        {
-          const channel = getChannel();
+      {
+        const channel = getChannel();
 
-          this._onParticipantLeft({
-            data: {
-              call_id: channel.id
-            }
-          });
+        this._onParticipantLeft({
+          data: {
+            call_id: channel.id,
+          },
+        });
 
-          break;
-        }
+        break;
+      }
 
       default:
         break;
@@ -115,11 +116,11 @@ class SipRoom extends Room {
     const ParticipantClass = isLocal ? Wazo.LocalParticipant : Wazo.RemoteParticipant;
     const name = channel.caller ? channel.caller.name : null;
     const extra = isLocal ? {
-      guestName: this.getLocalGuestName()
+      guestName: this.getLocalGuestName(),
     } : {};
     const participant = new ParticipantClass(this, {
       caller_id_name: name,
-      call_id: callId
+      call_id: callId,
     }, extra);
     const participantIdx = this.participants.findIndex(other => other.callId === participant.callId);
 

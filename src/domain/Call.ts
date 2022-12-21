@@ -1,5 +1,6 @@
-import moment from "moment";
-import newFrom from "../utils/new-from";
+import moment from 'moment';
+import newFrom from '../utils/new-from';
+
 const RECORD_STATE_ACTIVE = 'active';
 type CallResponse = {
   call_id: string;
@@ -39,21 +40,37 @@ type CallArguments = {
 };
 export default class Call {
   type: string;
+
   id: string;
+
   sipCallId: string;
+
   callerName: string;
+
   callerNumber: string;
+
   calleeName: string;
+
   calleeNumber: string;
+
   dialedExtension: string;
+
   lineId: number | null | undefined;
+
   isCaller: boolean;
+
   isVideo: boolean;
+
   onHold: boolean;
+
   muted: boolean;
+
   status: string;
+
   startingTime: Date;
+
   talkingToIds: string[];
+
   recording: boolean;
 
   static parseMany(plain: Array<CallResponse>): Array<Call> {
@@ -81,7 +98,7 @@ export default class Call {
       lineId: plain.line_id,
       startingTime: moment(plain.creation_time).toDate(),
       talkingToIds: Object.keys(plain.talking_to || {}),
-      recording: plain.record_state === RECORD_STATE_ACTIVE
+      recording: plain.record_state === RECORD_STATE_ACTIVE,
     });
   }
 
@@ -105,7 +122,7 @@ export default class Call {
     status,
     startingTime,
     talkingToIds,
-    recording
+    recording,
   }: CallArguments = {}) {
     this.id = id;
     this.sipCallId = sipCallId;
@@ -141,7 +158,7 @@ export default class Call {
     const lastName = names.slice(1).join(' ');
     return {
       firstName,
-      lastName
+      lastName,
     };
   }
 

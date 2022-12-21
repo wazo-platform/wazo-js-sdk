@@ -1,4 +1,5 @@
-import { camelToUnderscore } from "../string";
+import { camelToUnderscore } from '../string';
+
 describe('string utils', () => {
   describe('camelToUnderscore', () => {
     it('', () => {

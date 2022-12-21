@@ -1,4 +1,5 @@
-import newFrom from "../utils/new-from";
+import newFrom from '../utils/new-from';
+
 type Response = {
   destination: string;
   enabled: boolean;
@@ -6,7 +7,7 @@ type Response = {
 export const FORWARD_KEYS = {
   BUSY: 'busy',
   NO_ANSWER: 'noanswer',
-  UNCONDITIONAL: 'unconditional'
+  UNCONDITIONAL: 'unconditional',
 };
 type ForwardOptionArguments = {
   destination: string;
@@ -15,14 +16,16 @@ type ForwardOptionArguments = {
 };
 export default class ForwardOption {
   destination: string;
+
   enabled: boolean;
+
   key: string;
 
   static parse(plain: Response, key: string): ForwardOption {
     return new ForwardOption({
       destination: plain.destination || '',
       enabled: plain.enabled,
-      key
+      key,
     });
   }
 
@@ -33,7 +36,7 @@ export default class ForwardOption {
   constructor({
     destination,
     enabled,
-    key
+    key,
   }: ForwardOptionArguments = {}) {
     this.destination = destination;
     this.enabled = enabled;

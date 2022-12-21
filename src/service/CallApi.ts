@@ -1,11 +1,12 @@
-import Call from "../domain/Call";
-import CallLog from "../domain/CallLog";
-import Line from "../domain/Line";
-import Session from "../domain/Session";
-import Relocation from "../domain/Relocation";
-import CallSession from "../domain/CallSession";
-import getApiClient from "./getApiClient";
-import Transfer from "../domain/IndirectTransfer";
+import Call from '../domain/Call';
+import CallLog from '../domain/CallLog';
+import Line from '../domain/Line';
+import Session from '../domain/Session';
+import Relocation from '../domain/Relocation';
+import CallSession from '../domain/CallSession';
+import getApiClient from './getApiClient';
+import Transfer from '../domain/IndirectTransfer';
+
 export default class CallApi {
   static async fetchCallLogs(offset: number, limit: number): Promise<Call[]> {
     return getApiClient().callLogd.listCallLogs(offset, limit);

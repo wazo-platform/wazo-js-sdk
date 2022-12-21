@@ -1,4 +1,5 @@
-import { getDisplayableNumber, getCallableNumber } from "../PhoneNumberUtil";
+import { getDisplayableNumber, getCallableNumber } from '../PhoneNumberUtil';
+
 describe('Formatting phone numbers', () => {
   it('should not format all phone numbers', () => {
     expect(getDisplayableNumber('*143450', 'FR')).toBe('*143450');

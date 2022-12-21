@@ -1,18 +1,19 @@
-import CallSession from "../CallSession";
-import IndirectTransfer from "../IndirectTransfer";
+import CallSession from '../CallSession';
+import IndirectTransfer from '../IndirectTransfer';
+
 describe('Indirect transfer', () => {
   describe('on parse from call session', () => {
     it('should return valid IndirectTransfer', async () => {
       const sourceId = 'source-id';
       const destinationId = 'destination-id';
       const indirectTransfer = IndirectTransfer.parseFromCallSession(new CallSession({
-        callId: sourceId
+        callId: sourceId,
       }), new CallSession({
-        callId: destinationId
+        callId: destinationId,
       }));
       expect(indirectTransfer).toEqual({
         sourceId,
-        destinationId
+        destinationId,
       });
     });
   });
@@ -21,10 +22,10 @@ describe('Indirect transfer', () => {
       const destinationId = 'destination-id';
       const indirectTransfer = new IndirectTransfer({
         sourceId: 'some-id',
-        destinationId
+        destinationId,
       });
       const isDestination = indirectTransfer.destinationIs(new CallSession({
-        callId: destinationId
+        callId: destinationId,
       }));
       expect(isDestination).toBeTruthy();
     });
@@ -32,10 +33,10 @@ describe('Indirect transfer', () => {
       const destinationId = 'destination-id';
       const indirectTransfer = new IndirectTransfer({
         sourceId: 'some-id',
-        destinationId: 'some-other-id'
+        destinationId: 'some-other-id',
       });
       const isDestination = indirectTransfer.destinationIs(new CallSession({
-        callId: destinationId
+        callId: destinationId,
       }));
       expect(isDestination).toBeFalsy();
     });
@@ -45,10 +46,10 @@ describe('Indirect transfer', () => {
       const sourceId = 'source-id';
       const indirectTransfer = new IndirectTransfer({
         destinationId: 'some-id',
-        sourceId
+        sourceId,
       });
       const isSource = indirectTransfer.sourceIs(new CallSession({
-        callId: sourceId
+        callId: sourceId,
       }));
       expect(isSource).toBeTruthy();
     });
@@ -56,10 +57,10 @@ describe('Indirect transfer', () => {
       const sourceId = 'source-id';
       const indirectTransfer = new IndirectTransfer({
         sourceId: 'some-id',
-        destinationId: 'some-other-id'
+        destinationId: 'some-other-id',
       });
       const isSource = indirectTransfer.sourceIs(new CallSession({
-        callId: sourceId
+        callId: sourceId,
       }));
       expect(isSource).toBeFalsy();
     });

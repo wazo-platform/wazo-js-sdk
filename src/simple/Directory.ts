@@ -1,4 +1,4 @@
-import getApiClient from "../service/getApiClient";
+import getApiClient from '../service/getApiClient';
 
 class Directory {
   async findMultipleContactsByNumber(numbers: string[]) {

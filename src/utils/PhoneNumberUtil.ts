@@ -1,8 +1,9 @@
-import LibPhoneNumber from "google-libphonenumber";
+import LibPhoneNumber from 'google-libphonenumber';
+
 const PhoneNumberUtil = LibPhoneNumber.PhoneNumberUtil.getInstance();
 const {
   PhoneNumberFormat,
-  AsYouTypeFormatter
+  AsYouTypeFormatter,
 } = LibPhoneNumber;
 // eslint-disable-next-line
 const EXTRA_CHAR_REGEXP = /[^+*\d]/g;

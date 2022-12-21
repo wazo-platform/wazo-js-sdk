@@ -1,16 +1,17 @@
-import authMethods from "./api/auth";
-import applicationMethods from "./api/application";
-import confdMethods from "./api/confd";
-import ctidNgMethods from "./api/ctid-ng";
-import dirdMethods from "./api/dird";
-import callLogdMethods from "./api/call-logd";
-import chatdMethods from "./api/chatd";
-import calldMethods from "./api/calld";
-import agentdMethods from "./api/agentd";
-import webhookdMethods from "./api/webhookd";
-import amidMethods from "./api/amid";
-import ApiRequester from "./utils/api-requester";
-import IssueReporter from "./service/IssueReporter";
+import authMethods from './api/auth';
+import applicationMethods from './api/application';
+import confdMethods from './api/confd';
+import ctidNgMethods from './api/ctid-ng';
+import dirdMethods from './api/dird';
+import callLogdMethods from './api/call-logd';
+import chatdMethods from './api/chatd';
+import calldMethods from './api/calld';
+import agentdMethods from './api/agentd';
+import webhookdMethods from './api/webhookd';
+import amidMethods from './api/amid';
+import ApiRequester from './utils/api-requester';
+import IssueReporter from './service/IssueReporter';
+
 type ConstructorParams = {
   server: string;
   agent?: Record<string, any> | null | undefined;
@@ -33,25 +34,45 @@ const AMID_VERSION = '1.0';
 const logger = IssueReporter ? IssueReporter.loggerFor('api') : console;
 export default class ApiClient {
   client: ApiRequester;
+
   auth: Record<string, any>;
+
   application: Record<string, any>;
+
   confd: Record<string, any>;
+
   ctidNg: Record<string, any>;
+
   dird: Record<string, any>;
+
   callLogd: Record<string, any>;
+
   chatd: Record<string, any>;
+
   calld: Record<string, any>;
+
   agentd: Record<string, any>;
+
   webhookd: Record<string, any>;
+
   amid: Record<string, any>;
+
   refreshToken: string | null | undefined;
+
   onRefreshToken: ((...args: Array<any>) => any) | null | undefined;
+
   onRefreshTokenError: ((...args: Array<any>) => any) | null | undefined;
+
   refreshExpiration: number | null | undefined;
+
   refreshBackend: string | null | undefined;
+
   refreshTenantId: string | null | undefined;
+
   refreshDomainName: string | null | undefined;
+
   isMobile: boolean;
+
   fetchOptions: Record<string, any>;
 
   // @see https://github.com/facebook/flow/issues/183#issuecomment-358607052
@@ -61,13 +82,13 @@ export default class ApiClient {
     refreshToken,
     clientId,
     isMobile = false,
-    fetchOptions
+    fetchOptions,
   }: ConstructorParams) {
     this.updateParameters({
       server,
       agent,
       clientId,
-      fetchOptions
+      fetchOptions,
     });
     this.refreshToken = refreshToken;
     this.isMobile = isMobile || false;
@@ -91,7 +112,7 @@ export default class ApiClient {
     server,
     agent,
     clientId,
-    fetchOptions
+    fetchOptions,
   }: Record<string, any>) {
     const refreshTokenCallback = this.refreshTokenCallback.bind(this);
     this.client = new ApiRequester({
@@ -99,7 +120,7 @@ export default class ApiClient {
       agent,
       refreshTokenCallback,
       clientId,
-      fetchOptions
+      fetchOptions,
     });
     this.initializeEndpoints();
   }
@@ -116,7 +137,7 @@ export default class ApiClient {
       refreshTenantId: this.refreshTenantId,
       refreshDomainName: this.refreshDomainName,
       refreshExpiration: this.refreshExpiration,
-      isMobile: this.isMobile
+      isMobile: this.isMobile,
     });
 
     if (!this.refreshToken) {
@@ -126,7 +147,7 @@ export default class ApiClient {
     try {
       const session = await this.auth.refreshToken(this.refreshToken, this.refreshBackend, this.refreshExpiration, this.isMobile, this.refreshTenantId, this.refreshDomainName);
       logger.info('token refreshed', {
-        token: session.token
+        token: session.token,
       });
 
       if (this.onRefreshToken) {

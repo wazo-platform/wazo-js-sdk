@@ -1,11 +1,12 @@
-import WebSocketClient, { SOCKET_EVENTS, HEARTBEAT_ENGINE_VERSION } from "../../websocket-client";
+import WebSocketClient, { SOCKET_EVENTS, HEARTBEAT_ENGINE_VERSION } from '../../websocket-client';
+
 export default {
   name: 'Wazo Websocket',
   check: (server, session) => new Promise((resolve, reject) => {
     const client = new WebSocketClient({
       host: server,
       token: session.token,
-      version: 2
+      version: 2,
     });
 
     const handleError = message => {
@@ -36,5 +37,5 @@ export default {
       }
     });
     client.connect();
-  })
+  }),
 };

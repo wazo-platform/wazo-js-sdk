@@ -1,54 +1,90 @@
-import type { Message } from "sip.js/lib/api/message";
-import sdpParser from "sdp-transform";
-import type CallSession from "../../domain/CallSession";
-import getApiClient from "../../service/getApiClient";
-import Emitter from "../../utils/Emitter";
-import Wazo from "../index";
-import Participant from "./Participant";
-import RemoteParticipant from "./RemoteParticipant";
-import IssueReporter from "../../service/IssueReporter";
-import LocalParticipant from "./LocalParticipant";
+import type { Message } from 'sip.js/lib/api/message';
+import sdpParser from 'sdp-transform';
+import type CallSession from '../../domain/CallSession';
+import getApiClient from '../../service/getApiClient';
+import Emitter from '../../utils/Emitter';
+import Wazo from '../index';
+import Participant from './Participant';
+import RemoteParticipant from './RemoteParticipant';
+import IssueReporter from '../../service/IssueReporter';
+import LocalParticipant from './LocalParticipant';
+
 export const SIGNAL_TYPE_PARTICIPANT_UPDATE = 'signal/PARTICIPANT_UPDATE';
 export const SIGNAL_TYPE_PARTICIPANT_REQUEST = 'signal/PARTICIPANT_REQUEST';
 const logger = IssueReporter.loggerFor('sdk-room');
 
 class Room extends Emitter {
   callSession: CallSession | null | undefined;
+
   name: string;
+
   extension: string;
+
   sourceId: number | null | undefined;
+
   meetingUuid: string | null | undefined;
+
   participants: Participant[];
+
   callId: string | null | undefined;
+
   connected: boolean;
+
   localParticipant: Participant | null | undefined;
+
   _callIdStreamIdMap: Record<string, any>;
+
   _unassociatedVideoStreams: Record<string, any>;
+
   _unassociatedParticipants: Record<string, any>;
+
   _boundOnParticipantJoined: (...args: Array<any>) => any;
+
   _boundOnParticipantLeft: (...args: Array<any>) => any;
+
   _boundOnMessage: (...args: Array<any>) => any;
+
   _boundOnChat: (...args: Array<any>) => any;
+
   _boundOnSignal: (...args: Array<any>) => any;
+
   _boundSaveLocalVideoStream: (...args: Array<any>) => any;
+
   _boundOnReinvite: (...args: Array<any>) => any;
+
   audioStream: any | null | undefined;
+
   extra: Record<string, any>;
+
   // video tag representing the room audio stream
   roomAudioElement: any;
+
   CONFERENCE_USER_PARTICIPANT_JOINED: string;
+
   CONFERENCE_USER_PARTICIPANT_LEFT: string;
+
   MEETING_USER_PARTICIPANT_JOINED: string;
+
   MEETING_USER_PARTICIPANT_LEFT: string;
+
   ON_SHARE_SCREEN_ENDED: string;
+
   ON_MESSAGE: string;
+
   ON_CHAT: string;
+
   ON_SIGNAL: string;
+
   ON_AUDIO_STREAM: string;
+
   ON_VIDEO_STREAM: string;
+
   ON_REMOVE_STREAM: string;
+
   ON_DISCONNECTED: string;
+
   ON_JOINED: string;
+
   ON_VIDEO_INPUT_CHANGE: string;
 
   /**
@@ -66,7 +102,7 @@ class Room extends Emitter {
       callId,
       extension,
       sourceId,
-      meetingUuid
+      meetingUuid,
     });
     // Represents the room callSession
     this.callSession = callSession;
@@ -132,17 +168,17 @@ class Room extends Emitter {
     audioOnly = false,
     extra,
     room,
-    meeting
+    meeting,
   }: Record<string, any>) {
     logger.info('connecting to room', {
       extension,
       audioOnly,
-      room: !!room
+      room: !!room,
     });
 
     if (!room) {
       await Wazo.Phone.connect({
-        media: constraints
+        media: constraints,
       });
       const withCamera = constraints && !!constraints.video;
 
@@ -152,10 +188,10 @@ class Room extends Emitter {
 
       // Call_created is triggered before call_accepted, so we have to listen for it here.
       Wazo.Websocket.once(Wazo.Websocket.CALL_CREATED, ({
-        data
+        data,
       }) => {
         logger.info('room call received via WS', {
-          callId: data.call_id
+          callId: data.call_id,
         });
 
         if (room) {
@@ -185,7 +221,7 @@ class Room extends Emitter {
       const conference = contacts.find(contact => contact.numbers.find(number => number.number === extension));
       logger.info('connected to room', {
         sourceId: conference ? conference.sourceId : null,
-        name: conference ? conference.name : null
+        name: conference ? conference.name : null,
       });
 
       if (conference) {
@@ -195,7 +231,7 @@ class Room extends Emitter {
     } else if (meeting) {
       logger.info('Already connected to meeting', {
         uuid: meeting.uuid,
-        name: meeting.name
+        name: meeting.name,
       });
       room.setMeetingUuid(meeting.uuid);
       room.setName(meeting.name);
@@ -229,21 +265,21 @@ class Room extends Emitter {
 
   setSourceId(sourceId: number) {
     logger.info('set room source id', {
-      sourceId
+      sourceId,
     });
     this.sourceId = sourceId;
   }
 
   setMeetingUuid(meetingUuid: string) {
     logger.info('set meeting uuid', {
-      meetingUuid
+      meetingUuid,
     });
     this.meetingUuid = meetingUuid;
   }
 
   setCallId(callId: string) {
     logger.info('set room call id', {
-      callId
+      callId,
     });
 
     if (callId) {
@@ -253,7 +289,7 @@ class Room extends Emitter {
 
   setName(name: string) {
     logger.info('set room name', {
-      name
+      name,
     });
     this.name = name;
   }
@@ -273,7 +309,7 @@ class Room extends Emitter {
 
   async startScreenSharing(constraints: Record<string, any>) {
     logger.info('start room screen sharing', {
-      constraints
+      constraints,
     });
     const screensharingStream = await Wazo.Phone.startScreenSharing(constraints, this.callSession);
 
@@ -380,7 +416,7 @@ class Room extends Emitter {
 
   sendDTMF(tone: string) {
     logger.info('send room DTMF', {
-      tone
+      tone,
     });
     Wazo.Phone.sendDTMF(tone, this.callSession);
   }
@@ -388,7 +424,7 @@ class Room extends Emitter {
   async sendReinvite(newConstraints: Record<string, any> = null) {
     logger.info('send room reinvite', {
       callId: this.callSession ? this.callSession.getId() : null,
-      newConstraints
+      newConstraints,
     });
     const wasScreensharing = this.localParticipant && this.localParticipant.screensharing;
     Wazo.Phone.on(Wazo.Phone.ON_SHARE_SCREEN_STARTED, () => {
@@ -437,7 +473,7 @@ class Room extends Emitter {
     // Retrieve mapping
     Wazo.Phone.phone.currentSipSession.sessionDescriptionHandler.on('setDescription', ({
       type,
-      sdp: rawSdp
+      sdp: rawSdp,
     }) => {
       if (type !== 'offer') {
         return;
@@ -462,7 +498,7 @@ class Room extends Emitter {
     });
     this.on(this.ON_VIDEO_STREAM, (stream, streamId, event, sipSession) => {
       logger.info('on room video stream', {
-        streamId
+        streamId,
       });
 
       this._mapMsid(sipSession.body.body);
@@ -515,20 +551,20 @@ class Room extends Emitter {
     const sdp = sdpParser.parse(rawSdp);
     const labelMsidArray = sdp.media.filter(media => !!media.label).map(({
       label,
-      msid
+      msid,
     }) => ({
       label: String(label),
       streamId: msid.split(' ')[0],
-      trackId: msid.split(' ')[1]
+      trackId: msid.split(' ')[1],
     }));
     labelMsidArray.forEach(({
       label,
       streamId,
-      trackId
+      trackId,
     }) => {
       this._callIdStreamIdMap[String(label)] = {
         streamId,
-        trackId
+        trackId,
       };
       const callId = String(label);
 
@@ -568,23 +604,23 @@ class Room extends Emitter {
 
     switch (body.type) {
       case 'ConfbridgeTalking':
-        {
-          // Update participant
-          const channel = body.channels[0];
-          const {
-            id: callId,
-            talking_status: talkingStatus
-          } = channel;
-          const isTalking = talkingStatus === 'on';
-          const participantIdx = this.participants.findIndex(participant => participant.callId === callId);
+      {
+        // Update participant
+        const channel = body.channels[0];
+        const {
+          id: callId,
+          talking_status: talkingStatus,
+        } = channel;
+        const isTalking = talkingStatus === 'on';
+        const participantIdx = this.participants.findIndex(participant => participant.callId === callId);
 
-          if (participantIdx === -1) {
-            return;
-          }
-
-          this.participants[participantIdx].onTalking(isTalking);
-          break;
+        if (participantIdx === -1) {
+          return;
         }
+
+        this.participants[participantIdx].onTalking(isTalking);
+        break;
+      }
 
       default:
     }
@@ -599,74 +635,74 @@ class Room extends Emitter {
 
   _onSignal(content: Record<string, any>) {
     const {
-      type
+      type,
     } = content;
 
     switch (type) {
       // we're receiving a external update
       case SIGNAL_TYPE_PARTICIPANT_UPDATE:
-        {
-          const {
-            status
-          } = content;
+      {
+        const {
+          status,
+        } = content;
 
-          const participant: Participant | null | undefined = this._getParticipantFromCallId(status.callId);
+        const participant: Participant | null | undefined = this._getParticipantFromCallId(status.callId);
 
-          if (participant) {
-            // we're receiving, so no need to broadcast
-            participant.updateStatus(status, false);
-          }
-
-          break;
+        if (participant) {
+          // we're receiving, so no need to broadcast
+          participant.updateStatus(status, false);
         }
+
+        break;
+      }
 
       // this is a request to broadcast our current status
       case SIGNAL_TYPE_PARTICIPANT_REQUEST:
-        {
-          const {
-            callId,
-            origin
-          } = content;
+      {
+        const {
+          callId,
+          origin,
+        } = content;
 
-          // callId is null, someone's requesting everyone's state;
-          // or callId is set and matches ours;
-          if (this.localParticipant && (!callId || callId === this.localParticipant.callId)) {
-            this.localParticipant.broadcastStatus(null, true);
-          }
-
-          // might as well update the requester's status
-          const requester: Participant | null | undefined = this._getParticipantFromCallId(origin.callId);
-
-          if (requester) {
-            // @FIXME?: when need to trigger an update on join-in; this is a bit of a hack
-            logger.info('trigger room requester status', {
-              origin
-            });
-            requester.triggerUpdate('REQUESTER_UPDATE');
-          }
-
-          break;
+        // callId is null, someone's requesting everyone's state;
+        // or callId is set and matches ours;
+        if (this.localParticipant && (!callId || callId === this.localParticipant.callId)) {
+          this.localParticipant.broadcastStatus(null, true);
         }
+
+        // might as well update the requester's status
+        const requester: Participant | null | undefined = this._getParticipantFromCallId(origin.callId);
+
+        if (requester) {
+          // @FIXME?: when need to trigger an update on join-in; this is a bit of a hack
+          logger.info('trigger room requester status', {
+            origin,
+          });
+          requester.triggerUpdate('REQUESTER_UPDATE');
+        }
+
+        break;
+      }
 
       case Wazo.Phone.ON_MESSAGE_TRACK_UPDATED:
-        {
-          const {
-            callId,
-            update
-          } = content;
-          const participantIdx = this.participants.findIndex(p => p.callId === callId);
+      {
+        const {
+          callId,
+          update,
+        } = content;
+        const participantIdx = this.participants.findIndex(p => p.callId === callId);
 
-          if (participantIdx !== -1) {
-            this.participants[participantIdx] = this._onParticipantTrackUpdate(this.participants[participantIdx], update);
-          }
-
-          break;
+        if (participantIdx !== -1) {
+          this.participants[participantIdx] = this._onParticipantTrackUpdate(this.participants[participantIdx], update);
         }
+
+        break;
+      }
 
       default:
-        {
-          console.warn('uncaught signal', content);
-        }
+      {
+        console.warn('uncaught signal', content);
+      }
     }
 
     this.eventEmitter.emit(Wazo.Phone.ON_SIGNAL, content);
@@ -687,12 +723,12 @@ class Room extends Emitter {
       try {
         if (this.meetingUuid) {
           logger.info('fetching meeting participants', {
-            meetingUuid: this.meetingUuid
+            meetingUuid: this.meetingUuid,
           });
           response = await getApiClient().calld.getMeetingParticipantsAsUser(this.meetingUuid);
         } else {
           logger.info('fetching conference participants', {
-            conferenceId
+            conferenceId,
           });
           response = await getApiClient().calld.getConferenceParticipantsAsUser(conferenceId);
         }
@@ -702,7 +738,7 @@ class Room extends Emitter {
 
       if (response) {
         logger.info('conference participants fetched', {
-          nb: response.items.length
+          nb: response.items.length,
         });
         participants = response.items.map(item => {
           const isMe = item.call_id === this.callId;
@@ -725,7 +761,7 @@ class Room extends Emitter {
     const remoteParticipant: RemoteParticipant | null | undefined = !this.participants.some(p => p.callId === participant.call_id) ? new Wazo.RemoteParticipant(this, participant) : null;
     logger.info('other room user joined', {
       callId: participant.call_id,
-      remoteParticipant: !!remoteParticipant
+      remoteParticipant: !!remoteParticipant,
     });
 
     if (remoteParticipant) {
@@ -753,7 +789,7 @@ class Room extends Emitter {
     if (this.localParticipant) {
       this.sendSignal({
         type: SIGNAL_TYPE_PARTICIPANT_REQUEST,
-        origin: this.localParticipant.getStatus()
+        origin: this.localParticipant.getStatus(),
       });
     }
   }
@@ -769,7 +805,7 @@ class Room extends Emitter {
 
   _saveLocalVideoStream(stream: MediaStream) {
     const {
-      localParticipant
+      localParticipant,
     } = this;
 
     if (!localParticipant) {
@@ -802,7 +838,7 @@ class Room extends Emitter {
     const newParticipant = oldParticipant;
     const {
       trackId,
-      streamId
+      streamId,
     } = this._callIdStreamIdMap[newParticipant.callId] || {};
     const pc = Wazo.Phone.phone.currentSipSession.sessionDescriptionHandler.peerConnection;
     // Can't use `getReceivers` here because on FF we make the mapping based on the streamId
@@ -825,7 +861,7 @@ class Room extends Emitter {
   // Associate audio/video streams to the participant and triggers events on it
   __associateStreams(participant: Participant) {
     const {
-      trackId
+      trackId,
     } = this._callIdStreamIdMap[participant.callId] || {};
 
     if (!trackId) {

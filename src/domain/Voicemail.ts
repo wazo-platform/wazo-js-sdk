@@ -1,5 +1,6 @@
-import moment from "moment";
-import newFrom from "../utils/new-from";
+import moment from 'moment';
+import newFrom from '../utils/new-from';
+
 type MessageResponse = {
   caller_id_name: string;
   caller_id_num: string;
@@ -31,10 +32,15 @@ type VoicemailArguments = {
 };
 export default class Voicemail {
   type: string;
+
   id: string;
+
   date: Date;
+
   duration: number;
+
   unread: boolean | null | undefined;
+
   caller: {
     name: string;
     number: string;
@@ -47,9 +53,9 @@ export default class Voicemail {
       duration: plain.duration * 1000,
       caller: {
         name: plain.caller_id_name,
-        number: plain.caller_id_num
+        number: plain.caller_id_num,
       },
-      unread: plain.folder ? plain.folder.type === 'new' : null
+      unread: plain.folder ? plain.folder.type === 'new' : null,
     });
   }
 
@@ -74,7 +80,7 @@ export default class Voicemail {
     date,
     duration,
     caller,
-    unread
+    unread,
   }: VoicemailArguments = {}) {
     this.id = id;
     this.date = date;

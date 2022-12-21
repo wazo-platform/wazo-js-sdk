@@ -14,5 +14,5 @@ export default {
   UNITED_KINGDOM: 'GB',
   UNITED_STATES: 'US',
   SPAIN: 'ES',
-  SWITZERLAND: 'CH'
+  SWITZERLAND: 'CH',
 };

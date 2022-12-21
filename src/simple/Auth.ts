@@ -1,9 +1,10 @@
 /* eslint-disable max-classes-per-file */
-import Session from "../domain/Session";
-import { BACKEND_LDAP_USER, DEFAULT_BACKEND_USER, DETAULT_EXPIRATION } from "../api/auth";
-import getApiClient, { setCurrentServer, setApiToken, setRefreshToken, setApiClientId, setRefreshExpiration, setOnRefreshToken, setFetchOptions, setRefreshTenantId, setRefreshDomainName, setOnRefreshTokenError } from "../service/getApiClient";
-import IssueReporter from "../service/IssueReporter";
-import Wazo from "./index";
+import Session from '../domain/Session';
+import { BACKEND_LDAP_USER, DEFAULT_BACKEND_USER, DETAULT_EXPIRATION } from '../api/auth';
+import getApiClient, { setCurrentServer, setApiToken, setRefreshToken, setApiClientId, setRefreshExpiration, setOnRefreshToken, setFetchOptions, setRefreshTenantId, setRefreshDomainName, setOnRefreshTokenError } from '../service/getApiClient';
+import IssueReporter from '../service/IssueReporter';
+import Wazo from './index';
+
 export class InvalidSubscription extends Error {}
 export class InvalidAuthorization extends Error {}
 export class NoTenantIdError extends Error {}
@@ -12,16 +13,27 @@ const logger = IssueReporter.loggerFor('simple-auth');
 
 class Auth {
   clientId: string;
+
   expiration: number;
+
   minSubscriptionType: number | null | undefined;
+
   authorizationName: string | null | undefined;
+
   host: string | null | undefined;
+
   session: Session | null | undefined;
+
   onRefreshTokenCallback: ((...args: Array<any>) => any) | null | undefined;
+
   onRefreshTokenCallbackError: ((...args: Array<any>) => any) | null | undefined;
+
   authenticated: boolean;
+
   mobile: boolean;
+
   BACKEND_WAZO: string;
+
   BACKEND_LDAP: string;
 
   constructor() {
@@ -44,7 +56,7 @@ class Auth {
     setRefreshExpiration(this.expiration);
     setOnRefreshToken((token: string, session: Session) => {
       logger.info('on refresh token done', {
-        token
+        token,
       });
       setApiToken(token);
       Wazo.Websocket.updateToken(token);
@@ -97,7 +109,7 @@ class Auth {
       tenantId,
       domainName,
       expiration: this.expiration,
-      mobile: this.mobile
+      mobile: this.mobile,
     });
 
     if (backend) {
@@ -151,12 +163,12 @@ class Auth {
       if (this.clientId && deleteRefreshToken) {
         await getApiClient().auth.deleteRefreshToken(this.clientId);
       }
-    } catch (e) {// Nothing to
+    } catch (e) { // Nothing to
     }
 
     try {
       await getApiClient().auth.logOut(this.session ? this.session.token : null);
-    } catch (e) {// Nothing to
+    } catch (e) { // Nothing to
     }
 
     setApiToken(null);
@@ -179,7 +191,7 @@ class Auth {
     }
 
     const {
-      authorizations
+      authorizations,
     } = session;
 
     if (!authorizations.find(authorization => authorization.rules.find(rule => rule.name === authorizationName))) {
@@ -280,7 +292,7 @@ class Auth {
 
     try {
       const [profile, {
-        wazo_version: engineVersion
+        wazo_version: engineVersion,
       }] = await Promise.all([getApiClient().confd.getUser(session.uuid), getApiClient().confd.getInfos()]);
       session.engineVersion = engineVersion;
       session.profile = profile;
@@ -304,10 +316,10 @@ class Auth {
 
     try {
       const sipLines = await getApiClient().confd.getUserLinesSip(session.uuid, // $FlowFixMe
-      session.profile.lines.map(line => line.id));
+        session.profile.lines.map(line => line.id));
       // $FlowFixMe
       session.profile.sipLines = sipLines.filter(line => !!line);
-    } catch (e) {// When an user has only a sccp line, getSipLines return a 404
+    } catch (e) { // When an user has only a sccp line, getSipLines return a 404
     }
 
     this.authenticated = true;

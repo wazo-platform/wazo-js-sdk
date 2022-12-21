@@ -1,5 +1,5 @@
-import Auth from "./Auth";
-import getApiClient from "../service/getApiClient";
+import Auth from './Auth';
+import getApiClient from '../service/getApiClient';
 
 class Configuration {
   async getCurrentUser() {

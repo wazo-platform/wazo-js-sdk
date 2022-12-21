@@ -1,41 +1,41 @@
 /* eslint-disable class-methods-use-this, no-param-reassign, max-classes-per-file, no-underscore-dangle */
 
 /* global window, document, navigator */
-import "webrtc-adapter";
-import type InviterInviteOptions from "sip.js/lib/api/inviter-invite-options";
-import type Invitation from "sip.js/lib/api/invitation";
-import type { IncomingResponse } from "sip.js/lib/core/messages/incoming-response";
-import type { Session } from "sip.js/lib/core/session";
-import type { SessionDialog } from "sip.js/lib/core/dialogs/session-dialog";
-import type { IncomingRequestMessage } from "sip.js/lib/core/messages/incoming-request-message";
-import type { SessionDescriptionHandlerFactoryOptions } from "sip.js/lib/platform/web/session-description-handler/session-description-handler-factory-options";
-import type SessionDescriptionHandlerConfiguration from "sip.js/lib/platform/web/session-description-handler/session-description-handler-configuration";
-import type SessionDescriptionHandler from "sip.js/lib/platform/web/session-description-handler/session-description-handler";
-import { UserAgentState } from "sip.js/lib/api/user-agent-state";
-import { Parser } from "sip.js/lib/core/messages/parser";
-import { C } from "sip.js/lib/core/messages/methods/constants";
-import { URI } from "sip.js/lib/grammar/uri";
-import { UserAgent } from "sip.js/lib/api/user-agent";
-import { holdModifier, stripVideo } from "sip.js/lib/platform/web/modifiers/modifiers";
-import { Registerer } from "sip.js/lib/api/registerer";
-import { Inviter } from "sip.js/lib/api/inviter";
-import { Messager } from "sip.js/lib/api/messager";
-import { RegistererState } from "sip.js/lib/api/registerer-state";
-import { SessionState } from "sip.js/lib/api/session-state";
-import { TransportState } from "sip.js/lib/api/transport-state";
-import { defaultPeerConnectionConfiguration } from "sip.js/lib/platform/web/session-description-handler/peer-connection-configuration-default";
-import getStats from "getstats";
-import WazoSessionDescriptionHandler, { wazoMediaStreamFactory } from "./lib/WazoSessionDescriptionHandler";
-import Emitter from "./utils/Emitter";
-import ApiClient from "./api-client";
-import IssueReporter from "./service/IssueReporter";
-import Heartbeat from "./utils/Heartbeat";
-import { getVideoDirection, hasAnActiveVideo } from "./utils/sdp";
-import { lastIndexOf } from "./utils/array";
+import 'webrtc-adapter';
+import type InviterInviteOptions from 'sip.js/lib/api/inviter-invite-options';
+import type Invitation from 'sip.js/lib/api/invitation';
+import type { IncomingResponse } from 'sip.js/lib/core/messages/incoming-response';
+import type { Session } from 'sip.js/lib/core/session';
+import type { SessionDialog } from 'sip.js/lib/core/dialogs/session-dialog';
+import type { IncomingRequestMessage } from 'sip.js/lib/core/messages/incoming-request-message';
+import type { SessionDescriptionHandlerFactoryOptions } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-factory-options';
+import type SessionDescriptionHandlerConfiguration from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-configuration';
+import type SessionDescriptionHandler from 'sip.js/lib/platform/web/session-description-handler/session-description-handler';
+import { UserAgentState } from 'sip.js/lib/api/user-agent-state';
+import { Parser } from 'sip.js/lib/core/messages/parser';
+import { C } from 'sip.js/lib/core/messages/methods/constants';
+import { URI } from 'sip.js/lib/grammar/uri';
+import { UserAgent } from 'sip.js/lib/api/user-agent';
+import { holdModifier, stripVideo } from 'sip.js/lib/platform/web/modifiers/modifiers';
+import { Registerer } from 'sip.js/lib/api/registerer';
+import { Inviter } from 'sip.js/lib/api/inviter';
+import { Messager } from 'sip.js/lib/api/messager';
+import { RegistererState } from 'sip.js/lib/api/registerer-state';
+import { SessionState } from 'sip.js/lib/api/session-state';
+import { TransportState } from 'sip.js/lib/api/transport-state';
+import { defaultPeerConnectionConfiguration } from 'sip.js/lib/platform/web/session-description-handler/peer-connection-configuration-default';
+import getStats from 'getstats';
+import WazoSessionDescriptionHandler, { wazoMediaStreamFactory } from './lib/WazoSessionDescriptionHandler';
+import Emitter from './utils/Emitter';
+import ApiClient from './api-client';
+import IssueReporter from './service/IssueReporter';
+import Heartbeat from './utils/Heartbeat';
+import { getVideoDirection, hasAnActiveVideo } from './utils/sdp';
+import { lastIndexOf } from './utils/array';
 // We need to replace 0.0.0.0 to 127.0.0.1 in the sdp to avoid MOH during a createOffer.
 export const replaceLocalIpModifier = (description: Record<string, any>) => Promise.resolve({ // description is immutable... so we have to clone it or the `type` attribute won't be returned.
   ...JSON.parse(JSON.stringify(description)),
-  sdp: description.sdp.replace('c=IN IP4 0.0.0.0', 'c=IN IP4 127.0.0.1')
+  sdp: description.sdp.replace('c=IN IP4 0.0.0.0', 'c=IN IP4 127.0.0.1'),
 });
 const DEFAULT_ICE_TIMEOUT = 3000;
 const SEND_STATS_DELAY = 5000;
@@ -91,47 +91,88 @@ type WebRtcConfig = {
 
 export default class WebRTCClient extends Emitter {
   config: WebRtcConfig;
+
   uaConfigOverrides: Record<string, any> | null | undefined;
+
   userAgent: UserAgent;
+
   registerer: Registerer;
+
   hasAudio: boolean;
+
   audio: Record<string, any> | boolean;
+
   audioElements: Record<string, HTMLAudioElement>;
+
   video: Record<string, any> | boolean;
+
   audioStreams: Record<string, any>;
+
   audioOutputDeviceId: string | null | undefined;
+
   audioOutputVolume: number;
+
   heldSessions: Record<string, any>;
+
   connectionPromise: Promise<void> | null | undefined;
+
   _boundOnHeartbeat: (...args: Array<any>) => any;
+
   heartbeat: Heartbeat;
+
   heartbeatTimeoutCb: ((...args: Array<any>) => any) | null | undefined;
+
   heartbeatCb: ((...args: Array<any>) => any) | null | undefined;
+
   statsIntervals: Record<string, any>;
+
   sipSessions: Record<string, Session>;
+
   conferences: Record<string, boolean>;
+
   skipRegister: boolean;
+
   networkMonitoringInterval: Record<string, IntervalID>;
+
   sessionNetworkStats: Record<string, Record<string, any>>;
+
   forceClosed: boolean;
+
   // sugar
   ON_USER_AGENT: string;
+
   REGISTERED: string;
+
   UNREGISTERED: string;
+
   REGISTRATION_FAILED: string;
+
   INVITE: string;
+
   CONNECTED: string;
+
   DISCONNECTED: string;
+
   TRANSPORT_ERROR: string;
+
   MESSAGE: string;
+
   ACCEPTED: string;
+
   REJECTED: string;
+
   ON_TRACK: string;
+
   ON_REINVITE: string;
+
   ON_ERROR: string;
+
   ON_SCREEN_SHARING_REINVITE: string;
+
   ON_NETWORK_STATS: string;
+
   ON_EARLY_MEDIA: string;
+
   ON_DISCONNECTED: string;
 
   static isAPrivateIp(ip: string): boolean {
@@ -144,7 +185,7 @@ export default class WebRTCClient extends Emitter {
   }> {
     if (WebRTCClient.isAPrivateIp(ip)) {
       return [{
-        urls: ['stun:stun.l.google.com:19302', 'stun:stun4.l.google.com:19302']
+        urls: ['stun:stun.l.google.com:19302', 'stun:stun4.l.google.com:19302'],
       }];
     }
 
@@ -169,7 +210,7 @@ export default class WebRTCClient extends Emitter {
       this.configureMedia(config.media);
       this.setMediaConstraints({
         audio: config.media.audio,
-        video: config.media.video
+        video: config.media.video,
       });
     }
 
@@ -220,7 +261,7 @@ export default class WebRTCClient extends Emitter {
     const webRTCConfiguration = this._createWebRTCConfiguration(configOverrides);
 
     logger.info('sdk webrtc, creating UA', {
-      webRTCConfiguration
+      webRTCConfiguration,
     });
     webRTCConfiguration.delegate = {
       onConnect: this.onConnect.bind(this),
@@ -229,14 +270,14 @@ export default class WebRTCClient extends Emitter {
         logger.info('sdk webrtc on invite', {
           method: 'delegate.onInvite',
           id: invitation.id,
-          remoteURI: invitation.remoteURI
+          remoteURI: invitation.remoteURI,
         });
 
         this._setupSession(invitation);
 
         const shouldAutoAnswer = !!invitation.request.getHeader('alert-info');
         this.eventEmitter.emit(INVITE, invitation, this.sessionWantsToDoVideo(invitation), shouldAutoAnswer);
-      }
+      },
     };
     const ua = new UserAgent(webRTCConfiguration);
 
@@ -256,7 +297,7 @@ export default class WebRTCClient extends Emitter {
       if (message && message.method === C.MESSAGE) {
         // We have to manually reply to MESSAGE with a 200 OK or Asterisk will hangup.
         ua.userAgentCore.replyStateless(message, {
-          statusCode: 200
+          statusCode: 200,
         });
       }
     };
@@ -278,7 +319,7 @@ export default class WebRTCClient extends Emitter {
 
   onConnect() {
     logger.info('sdk webrtc connected', {
-      method: 'delegate.onConnect'
+      method: 'delegate.onConnect',
     });
     this.eventEmitter.emit(CONNECTED);
 
@@ -292,7 +333,7 @@ export default class WebRTCClient extends Emitter {
   async onDisconnect(error?: Error) {
     logger.info('sdk webrtc disconnected', {
       method: 'delegate.onConnect',
-      error
+      error,
     });
     this.connectionPromise = null;
     // The UA will attempt to reconnect automatically when an error occurred
@@ -309,7 +350,7 @@ export default class WebRTCClient extends Emitter {
     }
   }
 
-  register(tries: number = 0): Promise<any> {
+  register(tries = 0): Promise<any> {
     const logInfo = {
       userAgent: !!this.userAgent,
       registered: this.isRegistered(),
@@ -317,7 +358,7 @@ export default class WebRTCClient extends Emitter {
       registerer: !!this.registerer,
       waiting: this.registerer && this.registerer.waiting,
       tries,
-      skipRegister: this.skipRegister
+      skipRegister: this.skipRegister,
     };
     this.forceClosed = false;
 
@@ -344,14 +385,14 @@ export default class WebRTCClient extends Emitter {
     }
 
     const registerOptions = this._isWeb() ? {} : {
-      extraContactHeaderParams: ['mobility=mobile']
+      extraContactHeaderParams: ['mobility=mobile'],
     };
 
     const onRegisterFailed = () => {
       logger.info('sdk webrtc registering failed', {
         tries,
         registerer: !!this.registerer,
-        forceClosed: this.forceClosed
+        forceClosed: this.forceClosed,
       });
 
       if (this.forceClosed) {
@@ -366,7 +407,7 @@ export default class WebRTCClient extends Emitter {
 
       if (tries <= MAX_REGISTER_TRIES) {
         logger.info('sdk webrtc registering, retrying...', {
-          tries
+          tries,
         });
         setTimeout(() => this.register(tries + 1), 300);
       }
@@ -382,7 +423,7 @@ export default class WebRTCClient extends Emitter {
 
       logger.info('sdk webrtc registering, transport connected', {
         registerOptions,
-        ua: !!this.userAgent
+        ua: !!this.userAgent,
       });
       this.registerer = new Registerer(this.userAgent, registerOptions);
       this.connectionPromise = null;
@@ -392,7 +433,7 @@ export default class WebRTCClient extends Emitter {
       // Bind registerer events
       this.registerer.stateChange.addListener(newState => {
         logger.info('sdk webrtc registering, state changed', {
-          newState
+          newState,
         });
 
         if (newState === RegistererState.Registered && this.registerer && this.registerer.state === RegistererState.Registered) {
@@ -405,11 +446,11 @@ export default class WebRTCClient extends Emitter {
         requestDelegate: {
           onReject: response => {
             logger.error('sdk webrtc registering, rejected', {
-              response
+              response,
             });
             onRegisterFailed();
-          }
-        }
+          },
+        },
       };
       return this.registerer.register(options).catch(e => {
         logger.error('sdk webrtc registering, error', e);
@@ -451,7 +492,7 @@ export default class WebRTCClient extends Emitter {
   unregister() {
     logger.info('sdk webrtc unregistering..', {
       userAgent: !!this.userAgent,
-      registerer: !!this.registerer
+      registerer: !!this.registerer,
     });
 
     if (!this.registerer) {
@@ -479,7 +520,7 @@ export default class WebRTCClient extends Emitter {
 
   stop(): Promise<any> {
     logger.info('sdk webrtc stop', {
-      userAgent: !!this.userAgent
+      userAgent: !!this.userAgent,
     });
 
     if (!this.userAgent) {
@@ -491,24 +532,24 @@ export default class WebRTCClient extends Emitter {
     }).catch(e => {
       logger.warn('sdk webrtc stop, error', {
         message: e.message,
-        stack: e.stack
+        stack: e.stack,
       });
     });
   }
 
-  call(number: string, enableVideo?: boolean, audioOnly: boolean = false, conference: boolean = false): Session {
+  call(number: string, enableVideo?: boolean, audioOnly = false, conference = false): Session {
     logger.info('sdk webrtc creating call', {
       number,
       enableVideo,
       audioOnly,
-      conference
+      conference,
     });
     const inviterOptions: Record<string, any> = {
       sessionDescriptionHandlerOptionsReInvite: {
         conference,
-        audioOnly
+        audioOnly,
       },
-      earlyMedia: true
+      earlyMedia: true,
     };
 
     if (audioOnly) {
@@ -541,16 +582,16 @@ export default class WebRTCClient extends Emitter {
         onReject: (response: IncomingResponse) => {
           logger.info('on call rejected', {
             id: session.id,
-            fromTag: session.fromTag
+            fromTag: session.fromTag,
           });
 
           this._stopSendingStats(session);
 
           this.stopNetworkMonitoring(session);
           this.eventEmitter.emit(REJECTED, session, response);
-        }
+        },
       },
-      sessionDescriptionHandlerOptions: this.getMediaConfiguration(enableVideo || false, conference)
+      sessionDescriptionHandlerOptions: this.getMediaConfiguration(enableVideo || false, conference),
     };
     inviteOptions.sessionDescriptionHandlerOptions.audioOnly = audioOnly;
     inviteOptions.sessionDescriptionHandlerModifiers = [replaceLocalIpModifier];
@@ -567,7 +608,7 @@ export default class WebRTCClient extends Emitter {
   answer(session: Invitation, enableVideo?: boolean) {
     logger.info('sdk webrtc answer call', {
       id: session.id,
-      enableVideo
+      enableVideo,
     });
 
     if (!session || !session.accept) {
@@ -577,13 +618,13 @@ export default class WebRTCClient extends Emitter {
     }
 
     const options = {
-      sessionDescriptionHandlerOptions: this.getMediaConfiguration(enableVideo || false)
+      sessionDescriptionHandlerOptions: this.getMediaConfiguration(enableVideo || false),
     };
     return session.accept(options).then(() => {
       if (session.isCanceled) {
         const message = 'accepted a canceled session (or was canceled during the accept phase).';
         logger.error(message, {
-          id: session.id
+          id: session.id,
         });
         this.onCallEnded(session);
         throw new CanceledCallError(message);
@@ -601,11 +642,11 @@ export default class WebRTCClient extends Emitter {
   hangup(session: Session) {
     const {
       state,
-      id
+      id,
     } = session;
     logger.info('sdk webrtc hangup call', {
       id,
-      state
+      state,
     });
 
     try {
@@ -627,7 +668,7 @@ export default class WebRTCClient extends Emitter {
       const actions = {
         [SessionState.Initial]: isInviter ? cancel : reject,
         [SessionState.Establishing]: isInviter ? cancel : reject,
-        [SessionState.Established]: bye
+        [SessionState.Established]: bye,
       };
 
       // Handle different session status
@@ -654,10 +695,10 @@ export default class WebRTCClient extends Emitter {
   }
 
   // Fetch and emit an event at `interval` with session network stats
-  startNetworkMonitoring(session: Session, interval: number = 1000): Record<string, any> | null | undefined {
+  startNetworkMonitoring(session: Session, interval = 1000): Record<string, any> | null | undefined {
     const sessionId = this.getSipSessionId(session);
     logger.info('starting network inspection', {
-      id: sessionId
+      id: sessionId,
     });
     this.sessionNetworkStats[sessionId] = [];
     this.networkMonitoringInterval[sessionId] = setInterval(() => this._fetchNetworkStats(sessionId), interval);
@@ -668,7 +709,7 @@ export default class WebRTCClient extends Emitter {
     const exists = (sessionId in this.networkMonitoringInterval);
     logger.info('stopping network inspection', {
       id: sessionId,
-      exists
+      exists,
     });
 
     if (exists) {
@@ -680,7 +721,7 @@ export default class WebRTCClient extends Emitter {
 
   reject(session: Inviter) {
     logger.info('sdk webrtc reject call', {
-      id: session.id
+      id: session.id,
     });
 
     try {
@@ -690,10 +731,10 @@ export default class WebRTCClient extends Emitter {
     }
   }
 
-  async close(force: boolean = false) {
+  async close(force = false) {
     logger.info('sdk webrtc closing client', {
       userAgent: !!this.userAgent,
-      force
+      force,
     });
     this.forceClosed = force;
 
@@ -721,7 +762,7 @@ export default class WebRTCClient extends Emitter {
     try {
       // Don't wait here, It can take ~30s to stop ...
       this.userAgent.stop().catch(console.error);
-    } catch (_) {// Avoid to raise exception when trying to close with hanged-up sessions remaining
+    } catch (_) { // Avoid to raise exception when trying to close with hanged-up sessions remaining
       // eg: "INVITE not rejectable in state Completed"
     }
 
@@ -729,7 +770,7 @@ export default class WebRTCClient extends Emitter {
     logger.info('sdk webrtc client closed');
   }
 
-  getNumber(session: Inviter): String | null | undefined {
+  getNumber(session: Inviter): string | null | undefined {
     if (!session) {
       return null;
     }
@@ -740,7 +781,7 @@ export default class WebRTCClient extends Emitter {
 
   mute(session: Inviter) {
     logger.info('sdk webrtc mute', {
-      id: session.id
+      id: session.id,
     });
 
     this._toggleAudio(session, true);
@@ -748,7 +789,7 @@ export default class WebRTCClient extends Emitter {
 
   unmute(session: Inviter) {
     logger.info('sdk webrtc unmute', {
-      id: session.id
+      id: session.id,
     });
 
     this._toggleAudio(session, false);
@@ -793,7 +834,7 @@ export default class WebRTCClient extends Emitter {
 
   toggleCameraOn(session: Inviter) {
     logger.info('sdk webrtc toggle camera on', {
-      id: session.id
+      id: session.id,
     });
 
     this._toggleVideo(session, false);
@@ -801,13 +842,13 @@ export default class WebRTCClient extends Emitter {
 
   toggleCameraOff(session: Inviter) {
     logger.info('sdk webrtc toggle camera off', {
-      id: session.id
+      id: session.id,
     });
 
     this._toggleVideo(session, true);
   }
 
-  hold(session: Inviter, isConference: boolean = false, hadVideo: boolean = false) {
+  hold(session: Inviter, isConference = false, hadVideo = false) {
     const sessionId = this.getSipSessionId(session);
     const hasVideo = hadVideo || this.hasLocalVideo(sessionId);
     logger.info('sdk webrtc hold', {
@@ -815,7 +856,7 @@ export default class WebRTCClient extends Emitter {
       keys: Object.keys(this.heldSessions),
       pendingReinvite: !!session.pendingReinvite,
       isConference,
-      hasVideo
+      hasVideo,
     });
 
     if (sessionId in this.heldSessions) {
@@ -828,7 +869,7 @@ export default class WebRTCClient extends Emitter {
 
     this.heldSessions[sessionId] = {
       hasVideo,
-      isConference
+      isConference,
     };
 
     if (isConference) {
@@ -837,7 +878,7 @@ export default class WebRTCClient extends Emitter {
 
     session.sessionDescriptionHandlerOptionsReInvite = {
       hold: true,
-      conference: isConference
+      conference: isConference,
     };
     const options = this.getMediaConfiguration(false, isConference);
 
@@ -848,7 +889,7 @@ export default class WebRTCClient extends Emitter {
     options.sessionDescriptionHandlerOptions = {
       constraints: options.constraints,
       hold: true,
-      conference: isConference
+      conference: isConference,
     };
 
     // Avoid sdh to create a new stream
@@ -860,7 +901,7 @@ export default class WebRTCClient extends Emitter {
     return session.invite(options);
   }
 
-  unhold(session: Inviter, isConference: boolean = false) {
+  unhold(session: Inviter, isConference = false) {
     const sessionId = this.getSipSessionId(session);
     const hasVideo = sessionId in this.heldSessions && this.heldSessions[sessionId].hasVideo;
     logger.info('sdk webrtc unhold', {
@@ -868,7 +909,7 @@ export default class WebRTCClient extends Emitter {
       keys: Object.keys(this.heldSessions),
       pendingReinvite: !!session.pendingReinvite,
       isConference,
-      hasVideo
+      hasVideo,
     });
 
     if (session.pendingReinvite) {
@@ -882,7 +923,7 @@ export default class WebRTCClient extends Emitter {
     delete this.heldSessions[this.getSipSessionId(session)];
     session.sessionDescriptionHandlerOptionsReInvite = {
       hold: false,
-      conference: isConference
+      conference: isConference,
     };
     const options = this.getMediaConfiguration(false, isConference);
 
@@ -895,7 +936,7 @@ export default class WebRTCClient extends Emitter {
     options.sessionDescriptionHandlerOptions = {
       constraints: options.constraints,
       hold: false,
-      conference: isConference
+      conference: isConference,
     };
     // Send re-INVITE
     return session.invite(options);
@@ -969,17 +1010,17 @@ export default class WebRTCClient extends Emitter {
     });
   }
 
-  async getStreamFromConstraints(constraints: Record<string, any>, conference: boolean = false): Promise<MediaStream | null | undefined> {
+  async getStreamFromConstraints(constraints: Record<string, any>, conference = false): Promise<MediaStream | null | undefined> {
     const video = constraints && constraints.video;
     // $FlowFixMe
     const {
-      constraints: newConstraints
+      constraints: newConstraints,
     } = this.getMediaConfiguration(video, conference, constraints);
     let newStream;
 
     try {
       newStream = await wazoMediaStreamFactory(newConstraints);
-    } catch (e) {// Nothing to do when the user cancel the screensharing prompt
+    } catch (e) { // Nothing to do when the user cancel the screensharing prompt
     }
 
     if (!newStream) {
@@ -1018,7 +1059,7 @@ export default class WebRTCClient extends Emitter {
 
     logger.info('Sending DTMF', {
       id: this.getSipSessionId(session),
-      tone
+      tone,
     });
     return session.sessionDescriptionHandler.sendDtmf(tone);
   }
@@ -1032,14 +1073,14 @@ export default class WebRTCClient extends Emitter {
     this.hold(session);
     logger.info('Transfering a session', {
       id: this.getSipSessionId(session),
-      target
+      target,
     });
     const options = {
       requestDelegate: {
         onAccept: () => {
           this.hangup(session);
-        }
-      }
+        },
+      },
     };
     setTimeout(() => {
       session.refer(this._makeURI(target), options);
@@ -1050,40 +1091,40 @@ export default class WebRTCClient extends Emitter {
   atxfer(session: Inviter) {
     this.hold(session);
     logger.info('webrtc transfer started', {
-      id: this.getSipSessionId(session)
+      id: this.getSipSessionId(session),
     });
     const result: Record<string, any> = {
       newSession: null,
       init: async (target: string) => {
         logger.info('webrtc transfer initialized', {
           id: this.getSipSessionId(session),
-          target
+          target,
         });
         result.newSession = await this.call(target);
       },
       complete: () => {
         logger.info('webrtc transfer completed', {
           id: this.getSipSessionId(session),
-          referId: this.getSipSessionId(result.newSession)
+          referId: this.getSipSessionId(result.newSession),
         });
         session.refer(result.newSession);
       },
       cancel: () => {
         this.hangup(result.newSession);
         this.unhold(session);
-      }
+      },
     };
     return result;
   }
 
-  sendMessage(sipSession: Session = null, body: string, contentType: string = 'text/plain') {
+  sendMessage(sipSession: Session = null, body: string, contentType = 'text/plain') {
     if (!sipSession) {
       return;
     }
 
     logger.info('send WebRTC message', {
       sipId: sipSession.id,
-      contentType
+      contentType,
     });
 
     try {
@@ -1091,9 +1132,9 @@ export default class WebRTCClient extends Emitter {
         requestOptions: {
           body: {
             content: body,
-            contentType
-          }
-        }
+            contentType,
+          },
+        },
       });
     } catch (e) {
       console.warn(e);
@@ -1128,7 +1169,7 @@ export default class WebRTCClient extends Emitter {
 
   changeAudioOutputVolume(volume: number) {
     logger.info('Changing audio output volume', {
-      volume
+      volume,
     });
     Object.values(this.audioElements).forEach(audioElement => {
       if (audioElement instanceof HTMLAudioElement) {
@@ -1141,7 +1182,7 @@ export default class WebRTCClient extends Emitter {
 
   changeAudioOutputDevice(id: string) {
     logger.info('Changing audio output device', {
-      id
+      id,
     });
     this.audioOutputDeviceId = id;
     Object.values(this.audioElements).forEach(audioElement => {
@@ -1161,7 +1202,7 @@ export default class WebRTCClient extends Emitter {
     logger.info('setting audio input device', {
       id,
       currentId,
-      session: !!session
+      session: !!session,
     });
 
     if (!force && id === currentId) {
@@ -1194,8 +1235,8 @@ export default class WebRTCClient extends Emitter {
     if (this.audio) {
       this.audio = {
         deviceId: {
-          exact: deviceId
-        }
+          exact: deviceId,
+        },
       };
     }
 
@@ -1205,9 +1246,9 @@ export default class WebRTCClient extends Emitter {
       const constraints = {
         audio: {
           deviceId: {
-            exact: deviceId
-          }
-        }
+            exact: deviceId,
+          },
+        },
       };
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       const audioTrack = stream.getAudioTracks()[0];
@@ -1237,7 +1278,7 @@ export default class WebRTCClient extends Emitter {
     const currentId = this.getVideoDeviceId();
     logger.info('setting video input device', {
       id,
-      currentId
+      currentId,
     });
 
     if (id === currentId) {
@@ -1248,8 +1289,8 @@ export default class WebRTCClient extends Emitter {
     const videoObject = typeof this.video === 'object' ? this.video : {};
     this.video = { ...videoObject,
       deviceId: {
-        exact: id
-      }
+        exact: id,
+      },
     };
   }
 
@@ -1264,7 +1305,7 @@ export default class WebRTCClient extends Emitter {
     const localStream = this.getLocalStream(sessionId);
     logger.info('changing video input device', {
       id,
-      sessionId
+      sessionId,
     });
 
     // Release old video stream
@@ -1277,9 +1318,9 @@ export default class WebRTCClient extends Emitter {
     const constraints = {
       video: id ? {
         deviceId: {
-          exact: id
-        }
-      } : true
+          exact: id,
+        },
+      } : true,
     };
     // $FlowFixMe
     return navigator.mediaDevices.getUserMedia(constraints).then(async stream => {
@@ -1320,7 +1361,7 @@ export default class WebRTCClient extends Emitter {
     return this.video && typeof this.video === 'object' && 'deviceId' in this.video ? this.video.deviceId.exact : undefined;
   }
 
-  reinvite(sipSession: Session, newConstraints: Record<string, any> | null | undefined = null, conference: boolean = false, audioOnly: boolean = false, iceRestart: boolean = false) {
+  reinvite(sipSession: Session, newConstraints: Record<string, any> | null | undefined = null, conference = false, audioOnly = false, iceRestart = false) {
     if (!sipSession) {
       return false;
     }
@@ -1341,7 +1382,7 @@ export default class WebRTCClient extends Emitter {
       wasMuted,
       shouldDoVideo,
       shouldDoScreenSharing,
-      desktop
+      desktop,
     });
 
     // When upgrading to video, remove the `stripVideo` modifiers
@@ -1352,11 +1393,11 @@ export default class WebRTCClient extends Emitter {
 
     sipSession.sessionDescriptionHandlerOptionsReInvite = { ...sipSession.sessionDescriptionHandlerOptionsReInvite,
       conference,
-      audioOnly
+      audioOnly,
     };
     // $FlowFixMe
     const {
-      constraints
+      constraints,
     } = this.getMediaConfiguration(shouldDoVideo, conference, newConstraints);
     return sipSession.invite({
       requestDelegate: {
@@ -1372,7 +1413,7 @@ export default class WebRTCClient extends Emitter {
           logger.info('on re-INVITE accepted', {
             id: this.getSipSessionId(sipSession),
             wasMuted,
-            shouldDoScreenSharing
+            shouldDoScreenSharing,
           });
           this.updateRemoteStream(this.getSipSessionId(sipSession));
 
@@ -1387,27 +1428,27 @@ export default class WebRTCClient extends Emitter {
           }
 
           return this.eventEmitter.emit(ON_REINVITE, sipSession, response);
-        }
+        },
       },
       sessionDescriptionHandlerModifiers: [replaceLocalIpModifier],
       requestOptions: {
-        extraHeaders: [`Subject: ${shouldDoScreenSharing ? 'screenshare' : 'upgrade-video'}`]
+        extraHeaders: [`Subject: ${shouldDoScreenSharing ? 'screenshare' : 'upgrade-video'}`],
       },
       sessionDescriptionHandlerOptions: {
         constraints,
         conference,
         audioOnly,
         offerOptions: {
-          iceRestart
-        }
-      }
+          iceRestart,
+        },
+      },
     });
   }
 
   async getUserMedia(constraints: Record<string, any>) {
     const newConstraints = {
       audio: this._getAudioConstraints(),
-      video: this._getVideoConstraints(constraints.video)
+      video: this._getVideoConstraints(constraints.video),
     };
     // $FlowFixMe
     return navigator.mediaDevices.getUserMedia(newConstraints);
@@ -1533,7 +1574,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     const {
-      body
+      body,
     } = session.request || session;
     // Sometimes with InviteClientContext the body is in the body attribute ...
     const sdp = typeof body === 'object' && body ? body.body : body;
@@ -1546,7 +1587,7 @@ export default class WebRTCClient extends Emitter {
 
   startHeartbeat() {
     logger.info('sdk webrtc start heartbeat', {
-      userAgent: !!this.userAgent
+      userAgent: !!this.userAgent,
     });
 
     if (!this.userAgent) {
@@ -1584,7 +1625,7 @@ export default class WebRTCClient extends Emitter {
 
   attemptReconnection(): void {
     logger.info('attempt reconnection', {
-      userAgent: !!this.userAgent
+      userAgent: !!this.userAgent,
     });
 
     if (!this.userAgent) {
@@ -1615,7 +1656,7 @@ export default class WebRTCClient extends Emitter {
 
     logger.info('setting local media stream', {
       sipSessionId,
-      tracks: newStream ? newStream.getTracks() : null
+      tracks: newStream ? newStream.getTracks() : null,
     });
     // eslint-disable-next-line no-underscore-dangle
     sipSession.sessionDescriptionHandler._localMediaStream = newStream;
@@ -1632,7 +1673,7 @@ export default class WebRTCClient extends Emitter {
     logger.info('updating local stream', {
       sipSessionId,
       oldStream: !!oldStream,
-      tracks: newStream.getTracks()
+      tracks: newStream.getTracks(),
     });
 
     if (oldStream) {
@@ -1651,7 +1692,7 @@ export default class WebRTCClient extends Emitter {
     logger.info('Updating remote stream', {
       sessionId,
       tracks: remoteStream ? remoteStream.getTracks() : null,
-      receiverTracks: pc && pc.getReceivers ? pc.getReceivers().map(receiver => receiver.track) : null
+      receiverTracks: pc && pc.getReceivers ? pc.getReceivers().map(receiver => receiver.track) : null,
     });
 
     if (!pc || !remoteStream) {
@@ -1669,7 +1710,7 @@ export default class WebRTCClient extends Emitter {
     }
   }
 
-  getMediaConfiguration(enableVideo: boolean, conference: boolean = false, constraints: Record<string, any> | null | undefined = null): Record<string, any> {
+  getMediaConfiguration(enableVideo: boolean, conference = false, constraints: Record<string, any> | null | undefined = null): Record<string, any> {
     const screenSharing = constraints && 'screen' in constraints ? constraints.screen : false;
     const isDesktop = constraints && 'desktop' in constraints ? constraints.desktop : false;
     const withAudio = constraints && 'audio' in constraints ? constraints.audio : true;
@@ -1679,7 +1720,7 @@ export default class WebRTCClient extends Emitter {
       screenSharing,
       isDesktop,
       withAudio,
-      constraints
+      constraints,
     });
     return {
       constraints: {
@@ -1688,14 +1729,14 @@ export default class WebRTCClient extends Emitter {
         video: screenSharing ? isDesktop ? {
           mandatory: {
             chromeMediaSource: 'desktop',
-            ...(mandatoryVideo || {})
-          }
+            ...(mandatoryVideo || {}),
+          },
         } : {
-          cursor: 'always'
+          cursor: 'always',
         } : this._getVideoConstraints(enableVideo),
         screen: screenSharing,
         desktop: isDesktop,
-        conference
+        conference,
       },
       enableVideo,
       conference,
@@ -1704,9 +1745,9 @@ export default class WebRTCClient extends Emitter {
         OfferToReceiveVideo: enableVideo,
         mandatory: {
           OfferToReceiveAudio: this._hasAudio(),
-          OfferToReceiveVideo: enableVideo
-        }
-      }
+          OfferToReceiveVideo: enableVideo,
+        },
+      },
     };
   }
 
@@ -1744,7 +1785,7 @@ export default class WebRTCClient extends Emitter {
     if (body && body.indexOf('200 OK') !== -1) {
       if (this.hasHeartbeat()) {
         logger.info('on heartbeat received from Asterisk', {
-          hasHeartbeat: this.hasHeartbeat()
+          hasHeartbeat: this.hasHeartbeat(),
         });
         this.heartbeat.onHeartbeat();
 
@@ -1758,7 +1799,7 @@ export default class WebRTCClient extends Emitter {
   async _onHeartbeatTimeout() {
     logger.warn('sdk webrtc heartbeat timed out', {
       userAgent: !!this.userAgent,
-      cb: !!this.heartbeatTimeoutCb
+      cb: !!this.heartbeatTimeoutCb,
     });
 
     if (this.heartbeatTimeoutCb) {
@@ -1796,7 +1837,7 @@ export default class WebRTCClient extends Emitter {
     return this.audio && this.audio.deviceId && this.audio.deviceId.exact ? this.audio : true;
   }
 
-  _getVideoConstraints(video: boolean = false) {
+  _getVideoConstraints(video = false) {
     if (!video) {
       return false;
     }
@@ -1806,7 +1847,7 @@ export default class WebRTCClient extends Emitter {
 
   _connectIfNeeded(): Promise<void> {
     logger.info('connect if needed, checking', {
-      connected: this.isConnected()
+      connected: this.isConnected(),
     });
 
     if (!this.userAgent) {
@@ -1853,7 +1894,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     const client = new ApiClient({
-      server: config.host
+      server: config.host,
     });
     client.setToken(session.token);
     client.setRefreshToken(session.refreshToken);
@@ -1861,13 +1902,13 @@ export default class WebRTCClient extends Emitter {
       authorizationUser: sipLine.username,
       password: sipLine.secret,
       uri: `${sipLine.username}@${config.host}`,
-      ...config
+      ...config,
     }));
   }
 
   _createWebRTCConfiguration(configOverrides: Record<string, any> = {}) {
     let {
-      host
+      host,
     } = this.config;
     let port = this.config.port || 443;
 
@@ -1882,7 +1923,7 @@ export default class WebRTCClient extends Emitter {
       autoStart: true,
       hackIpInContact: true,
       contactParams: {
-        transport: 'wss'
+        transport: 'wss',
       },
       logBuiltinEnabled: this.config.log ? this.config.log.builtinEnabled : null,
       logLevel: this.config.log ? this.config.log.logLevel : null,
@@ -1900,21 +1941,21 @@ export default class WebRTCClient extends Emitter {
         const sdhOptions: SessionDescriptionHandlerConfiguration = { ...options,
           iceGatheringTimeout,
           peerConnectionConfiguration: { ...defaultPeerConnectionConfiguration(),
-            ...(options.peerConnectionConfiguration || {})
-          }
+            ...(options.peerConnectionConfiguration || {}),
+          },
         };
         return new WazoSessionDescriptionHandler(uaLogger, wazoMediaStreamFactory, sdhOptions, isWeb, session);
       },
       transportOptions: {
         traceSip: configOverrides.traceSip || false,
-        wsServers: `wss://${host}:${port}/api/asterisk/ws`
+        wsServers: `wss://${host}:${port}/api/asterisk/ws`,
       },
       sessionDescriptionHandlerFactoryOptions: {
         modifiers: [replaceLocalIpModifier],
         alwaysAcquireMediaFirst: this.isFirefox(),
         constraints: {
           audio: this._getAudioConstraints(),
-          video: this._getVideoConstraints()
+          video: this._getVideoConstraints(),
         },
         peerConnectionOptions: {
           iceCheckingTimeout: this.config.iceCheckingTimeout || 1000,
@@ -1923,19 +1964,19 @@ export default class WebRTCClient extends Emitter {
             rtcpMuxPolicy: 'require',
             iceServers: WebRTCClient.getIceServers(this.config.host),
             ...this._getRtcOptions(),
-            ...(configOverrides.peerConnectionOptions || {})
-          }
+            ...(configOverrides.peerConnectionOptions || {}),
+          },
         },
         // Configuration used in SDH to create the PeerConnection
         peerConnectionConfiguration: {
           rtcpMuxPolicy: 'require',
           iceServers: WebRTCClient.getIceServers(this.config.host),
-          ...(configOverrides.peerConnectionOptions || {})
-        }
-      }
+          ...(configOverrides.peerConnectionOptions || {}),
+        },
+      },
     };
     return { ...config,
-      ...configOverrides
+      ...configOverrides,
     };
   }
 
@@ -1944,8 +1985,8 @@ export default class WebRTCClient extends Emitter {
     return {
       mandatory: {
         OfferToReceiveAudio: this._hasAudio(),
-        OfferToReceiveVideo: false
-      }
+        OfferToReceiveVideo: false,
+      },
     };
   }
 
@@ -1969,9 +2010,9 @@ export default class WebRTCClient extends Emitter {
             port: error.port,
             errorCode: error.errorCode,
             errorText: error.errorText,
-            url: error.url
+            url: error.url,
           });
-        }
+        },
       };
     };
 
@@ -1997,7 +2038,7 @@ export default class WebRTCClient extends Emitter {
       logger.info('re-invite received', {
         updatedCalleeName,
         updatedNumber,
-        hadRemoteVideo
+        hadRemoteVideo,
       });
 
       // Useful to know if it's a video upgrade or an unhold from a remote peer with a video stream
@@ -2023,15 +2064,15 @@ export default class WebRTCClient extends Emitter {
     const sessionId = this.getSipSessionId(session).substr(0, 20);
     this.updateRemoteStream(sessionId);
     logger.info('Early media progress progress received', {
-      sessionId
+      sessionId,
     });
     this.eventEmitter.emit(ON_EARLY_MEDIA, session);
   }
 
-  _onAccepted(session: Session, sessionDialog?: SessionDialog, withEvent: boolean = true) {
+  _onAccepted(session: Session, sessionDialog?: SessionDialog, withEvent = true) {
     logger.info('on call accepted', {
       id: session.id,
-      remoteTag: session.remoteTag
+      remoteTag: session.remoteTag,
     });
     this.storeSipSession(session);
 
@@ -2048,7 +2089,7 @@ export default class WebRTCClient extends Emitter {
         label,
         readyState,
         id,
-        muted
+        muted,
       } = event.track;
       logger.info('on track event', {
         isAudioOnly,
@@ -2056,7 +2097,7 @@ export default class WebRTCClient extends Emitter {
         label,
         readyState,
         id,
-        muted
+        muted,
       });
 
       // Stop video track in audio only mode
@@ -2076,7 +2117,7 @@ export default class WebRTCClient extends Emitter {
     if (pc) {
       pc.oniceconnectionstatechange = () => {
         logger.info('on ice connection state changed', {
-          state: pc.iceConnectionState
+          state: pc.iceConnectionState,
         });
 
         if (pc.iceConnectionState === 'disconnected') {
@@ -2103,7 +2144,7 @@ export default class WebRTCClient extends Emitter {
 
     if (sessionId in this.audioElements) {
       logger.info('html element already exists for session', {
-        sessionId
+        sessionId,
       });
       return;
     }
@@ -2228,7 +2269,7 @@ export default class WebRTCClient extends Emitter {
       remoteStream = typeof global !== 'undefined' && global.window && global.window.MediaStream ? new global.window.MediaStream() : new window.MediaStream();
       pc.getReceivers().forEach(receiver => {
         const {
-          track
+          track,
         } = receiver;
 
         if (track) {
@@ -2267,7 +2308,7 @@ export default class WebRTCClient extends Emitter {
       this.statsIntervals[sessionId] = nomore;
       statsLogger.trace('stats', {
         sessionId,
-        ...stats
+        ...stats,
       });
     }, SEND_STATS_DELAY);
   }
@@ -2276,12 +2317,12 @@ export default class WebRTCClient extends Emitter {
     const sessionId = this.getSipSessionId(session);
     logger.trace('Check for stopping stats', {
       sessionId,
-      ids: Object.keys(this.statsIntervals)
+      ids: Object.keys(this.statsIntervals),
     });
 
     if (sessionId in this.statsIntervals) {
       logger.trace('Stop sending stats for call', {
-        sessionId
+        sessionId,
       });
       this.statsIntervals[sessionId]();
       delete this.statsIntervals[sessionId];
@@ -2292,7 +2333,7 @@ export default class WebRTCClient extends Emitter {
     return UserAgent.makeURI(`sip:${target}@${this.config.host}`);
   }
 
-  async _disconnectTransport(force: boolean = false) {
+  async _disconnectTransport(force = false) {
     if (force && this.userAgent && this.userAgent.transport) {
       // Bypass sip.js state machine that prevent to close WS with the state `Connecting`
       this.userAgent.transport.disconnectResolve = () => {};
@@ -2326,7 +2367,7 @@ export default class WebRTCClient extends Emitter {
       audioBytesSent: 0,
       videoBytesSent: 0,
       videoBytesReceived: 0,
-      audioBytesReceived: 0
+      audioBytesReceived: 0,
     };
     const nbStats = this.sessionNetworkStats[sessionId].length;
     const lastNetworkStats = this.sessionNetworkStats[sessionId][nbStats - 1];

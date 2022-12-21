@@ -1,4 +1,5 @@
-import newFrom from "../utils/new-from";
+import newFrom from '../utils/new-from';
+
 type NotificationOptionResponse = {
   sound: boolean;
   vibration: boolean;
@@ -9,19 +10,20 @@ type NotificationOptionsArguments = {
 };
 export default class NotificationOptions {
   sound: boolean;
+
   vibration: boolean;
 
   static parse(plain: NotificationOptionResponse): NotificationOptions {
     if (!plain) {
       return new NotificationOptions({
         sound: true,
-        vibration: true
+        vibration: true,
       });
     }
 
     return new NotificationOptions({
       sound: plain.sound,
-      vibration: plain.vibration
+      vibration: plain.vibration,
     });
   }
 
@@ -31,7 +33,7 @@ export default class NotificationOptions {
 
   constructor({
     sound = true,
-    vibration = true
+    vibration = true,
   }: NotificationOptionsArguments = {}) {
     this.sound = sound;
     this.vibration = vibration;

@@ -1,5 +1,5 @@
 /* eslint-disable dot-notation */
-import WazoApiClient from "../api-client";
+import WazoApiClient from '../api-client';
 // Can't use node cache mechanism here because when requiring lib/CallApi.js
 // this file will be merge with CallApi.js and the cache will be lost.
 // So we have to store values in global scope.
@@ -57,25 +57,25 @@ const fillClient = (apiClient: WazoApiClient) => {
   const {
     server,
     token,
-    clientId
+    clientId,
   } = apiClient.client;
-  const tenantId = global.wazoRefreshTenantId[server] || global.wazoRefreshTenantId[null] || apiClient.refreshTenantId;
+  const tenantId = global.wazoRefreshTenantId[server] || global.wazoRefreshTenantId.null || apiClient.refreshTenantId;
   //  try with null server when dealing with non-related server info
-  apiClient.setToken(global.wazoClientToken[server] || global.wazoClientToken[null] || token);
-  apiClient.setClientId(global.wazoClientId[server] || global.wazoClientId[null] || clientId);
-  apiClient.setRefreshToken(global.wazoRefreshToken[server] || global.wazoRefreshToken[null] || apiClient.refreshToken);
+  apiClient.setToken(global.wazoClientToken[server] || global.wazoClientToken.null || token);
+  apiClient.setClientId(global.wazoClientId[server] || global.wazoClientId.null || clientId);
+  apiClient.setRefreshToken(global.wazoRefreshToken[server] || global.wazoRefreshToken.null || apiClient.refreshToken);
 
   if (tenantId) {
     apiClient.setRefreshTenantId(tenantId);
   }
 
-  apiClient.setRefreshDomainName(global.wazoRefreshDomainName[server] || global.wazoRefreshDomainName[null] || apiClient.refreshDomainName);
-  apiClient.setFetchOptions(global.wazoFetchOptions[server] || global.wazoFetchOptions[null] || apiClient.fetchOptions);
-  apiClient.setOnRefreshToken(global.wazoOnRefreshToken[server] || global.wazoOnRefreshToken[null] || apiClient.onRefreshToken);
-  apiClient.setOnRefreshTokenError(global.wazoOnRefreshTokenError[server] || global.wazoOnRefreshTokenError[null] || apiClient.onRefreshTokenError);
-  apiClient.setRefreshExpiration(global.wazoRefreshExpiration[server] || global.wazoRefreshExpiration[null] || apiClient.refreshExpiration);
-  apiClient.setRefreshBackend(global.wazoRefreshBackend[server] || global.wazoRefreshBackend[null] || apiClient.refreshBackend);
-  apiClient.setIsMobile(global.wazoIsMobile[server] || global.wazoIsMobile[null] || apiClient.isMobile);
+  apiClient.setRefreshDomainName(global.wazoRefreshDomainName[server] || global.wazoRefreshDomainName.null || apiClient.refreshDomainName);
+  apiClient.setFetchOptions(global.wazoFetchOptions[server] || global.wazoFetchOptions.null || apiClient.fetchOptions);
+  apiClient.setOnRefreshToken(global.wazoOnRefreshToken[server] || global.wazoOnRefreshToken.null || apiClient.onRefreshToken);
+  apiClient.setOnRefreshTokenError(global.wazoOnRefreshTokenError[server] || global.wazoOnRefreshTokenError.null || apiClient.onRefreshTokenError);
+  apiClient.setRefreshExpiration(global.wazoRefreshExpiration[server] || global.wazoRefreshExpiration.null || apiClient.refreshExpiration);
+  apiClient.setRefreshBackend(global.wazoRefreshBackend[server] || global.wazoRefreshBackend.null || apiClient.refreshBackend);
+  apiClient.setIsMobile(global.wazoIsMobile[server] || global.wazoIsMobile.null || apiClient.isMobile);
   return apiClient;
 };
 
@@ -87,7 +87,7 @@ export default ((forServer: string | null | undefined = null): WazoApiClient => 
   }
 
   global.wazoClients[server] = new WazoApiClient({
-    server
+    server,
   });
   return fillClient(global.wazoClients[server]);
 });

@@ -1,5 +1,6 @@
 /* global MediaStream, RTCPeerConnection */
-import { parseCandidate } from "../../utils/webrtc";
+import { parseCandidate } from '../../utils/webrtc';
+
 const timeoutDuration = 8000; // @see https://webrtchacks.com/symmetric-nat/
 
 export default {
@@ -14,12 +15,12 @@ export default {
     let nbCandidates = 0;
     const pc = new RTCPeerConnection({
       iceServers: [{
-        urls: 'stun:stun.wazo.io:443'
+        urls: 'stun:stun.wazo.io:443',
       }, {
-        urls: 'stun:stun1.l.google.com:19302'
+        urls: 'stun:stun1.l.google.com:19302',
       }, {
-        urls: 'stun:stun2.l.google.com:19302'
-      }]
+        urls: 'stun:stun2.l.google.com:19302',
+      }],
     });
     let timeout;
 
@@ -60,5 +61,5 @@ export default {
     };
 
     pc.createOffer().then(offer => pc.setLocalDescription(offer));
-  })
+  }),
 };

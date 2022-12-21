@@ -1,15 +1,22 @@
-import getApiClient from "../service/getApiClient";
+import getApiClient from '../service/getApiClient';
+
 export const FEATURES = ['chat', 'video', 'call_recording', 'fax', 'mobile_double_call', 'mobile_gsm', 'meeting'];
 export const getScopeName = (featureName: string) => `enterprise.app.${featureName}`;
 const scopesToCheck = FEATURES.map(getScopeName); // Handle available features on the engine.
 
 class Features {
   _hasChat: boolean;
+
   _hasVideo: boolean;
+
   _hasCallRecording: boolean;
+
   _hasFax: boolean;
+
   _hasMobileDoubleCall: boolean;
+
   _hasMobileGsm: boolean;
+
   _hasMeeting: boolean;
 
   constructor() {
@@ -27,7 +34,7 @@ class Features {
 
     try {
       response = await getApiClient().auth.getRestrictionPolicies(scopesToCheck);
-    } catch (_) {// Noting to do because everything should be available even if the API is not available
+    } catch (_) { // Noting to do because everything should be available even if the API is not available
     }
 
     if (!response) {
@@ -35,7 +42,7 @@ class Features {
     }
 
     const {
-      scopes
+      scopes,
     } = response;
     this._hasChat = this._hasFeatures(scopes, 'chat');
     this._hasVideo = this._hasFeatures(scopes, 'video');

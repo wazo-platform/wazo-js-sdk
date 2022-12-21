@@ -1,13 +1,14 @@
 /* global RTCSessionDescriptionInit, navigator */
-import EventEmitter from "events";
-import type { Session } from "sip.js/lib/core/session";
-import type { Logger } from "sip.js/lib/core/log/logger";
-import type { MediaStreamFactory } from "sip.js/lib/platform/web/session-description-handler/media-stream-factory";
-import type SessionDescriptionHandlerConfiguration from "sip.js/lib/platform/web/session-description-handler/session-description-handler-configuration";
-import { SessionDescriptionHandler } from "sip.js/lib/platform/web/session-description-handler/session-description-handler";
-import { SessionDescriptionHandlerOptions } from "sip.js/lib/platform/web/session-description-handler/session-description-handler-options";
-import IssueReporter from "../service/IssueReporter";
-import { addIcesInAllBundles, fixSdp, parseCandidate } from "../utils/sdp";
+import EventEmitter from 'events';
+import type { Session } from 'sip.js/lib/core/session';
+import type { Logger } from 'sip.js/lib/core/log/logger';
+import type { MediaStreamFactory } from 'sip.js/lib/platform/web/session-description-handler/media-stream-factory';
+import type SessionDescriptionHandlerConfiguration from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-configuration';
+import { SessionDescriptionHandler } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler';
+import { SessionDescriptionHandlerOptions } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-options';
+import IssueReporter from '../service/IssueReporter';
+import { addIcesInAllBundles, fixSdp, parseCandidate } from '../utils/sdp';
+
 const wazoLogger = IssueReporter ? IssueReporter.loggerFor('webrtc-sdh') : console;
 // Customized mediaStreamFactory allowing to send screensharing stream directory when upgrading
 export const wazoMediaStreamFactory = (constraints: Record<string, any>): Promise<MediaStream> => {
@@ -81,7 +82,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     wazoLogger.trace('getting SDP description', {
       iceRestart,
       shouldWaitForIce,
-      iceTimeout
+      iceTimeout,
     });
     // Fetch ice ourselves for re-invite
     this.gatheredCandidates = [];
@@ -92,7 +93,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
 
     this.peerConnectionDelegate.onicecandidate = event => {
       wazoLogger.trace('onicecandidate', event.candidate ? event.candidate.candidate : {
-        done: true
+        done: true,
       });
 
       if (event.candidate) {
@@ -101,7 +102,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         // When receiving a `srflx` or a `relay` candidate, consider the negotiation done.
         if (event.candidate.candidate.indexOf('srflx') !== -1 || event.candidate.candidate.indexOf('relay') !== -1) {
           wazoLogger.info('A valid ice was found, triggering ice gathering complete callback.', {
-            ice: event.candidate.candidate
+            ice: event.candidate.candidate,
           });
           this.iceGatheringComplete();
         }
@@ -114,40 +115,48 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         if (this.peerConnection.addTransceiver) {
           this.peerConnection.addTransceiver('video', {
             streams: [this._localMediaStream],
-            direction: 'sendrecv'
+            direction: 'sendrecv',
           });
         }
       }
-    }).then(() => this.createLocalOfferOrAnswer(options)).then(sessionDescription => this.setLocalSessionDescription(sessionDescription)).then(() => this.waitForIceGatheringComplete(iceRestart, iceTimeout)).then(() => this.getLocalSessionDescription()).then(description => {
-      const {
-        sdp
-      } = description;
+    })
+      .then(() => this.createLocalOfferOrAnswer(options))
+      .then(sessionDescription => this.setLocalSessionDescription(sessionDescription))
+      .then(() => this.waitForIceGatheringComplete(iceRestart, iceTimeout))
+      .then(() => this.getLocalSessionDescription())
+      .then(description => {
+        const {
+          sdp,
+        } = description;
 
-      // Check if we got ICEs
-      if (sdp.indexOf('a=candidate') !== -1) {
+        // Check if we got ICEs
+        if (sdp.indexOf('a=candidate') !== -1) {
+          return {
+            type: description.type,
+            sdp: addIcesInAllBundles(sdp),
+          };
+        }
+
+        wazoLogger.info('No ICE candidates found in SDP, fixing it with gathered ices', this.gatheredCandidates);
+        // @TODO: find a better way to set sdp in answer.
+        //  We can't call createAnswer again, so we have to put candidates manually with fixSdp
+        // In reinvite, createOffer doesn't update the SDP
         return {
           type: description.type,
-          sdp: addIcesInAllBundles(sdp)
+          // Fix sdp only when no candidates
+          sdp: fixSdp(sdp, this.gatheredCandidates, options && options.constraints ? options.constraints.video : false),
         };
-      }
-
-      wazoLogger.info('No ICE candidates found in SDP, fixing it with gathered ices', this.gatheredCandidates);
-      // @TODO: find a better way to set sdp in answer.
-      //  We can't call createAnswer again, so we have to put candidates manually with fixSdp
-      // In reinvite, createOffer doesn't update the SDP
-      return {
-        type: description.type,
-        // Fix sdp only when no candidates
-        sdp: fixSdp(sdp, this.gatheredCandidates, options && options.constraints ? options.constraints.video : false)
-      };
-    }).then(sessionDescription => this.applyModifiers(sessionDescription, modifiers)).then(sessionDescription => ({
-      body: sessionDescription.sdp,
-      contentType: 'application/sdp'
-    })).catch(error => {
-      wazoLogger.error('error when creating media', error);
-      this.logger.error(`SessionDescriptionHandler.getDescription failed - ${error}`);
-      throw error;
-    });
+      })
+      .then(sessionDescription => this.applyModifiers(sessionDescription, modifiers))
+      .then(sessionDescription => ({
+        body: sessionDescription.sdp,
+        contentType: 'application/sdp',
+      }))
+      .catch(error => {
+        wazoLogger.error('error when creating media', error);
+        this.logger.error(`SessionDescriptionHandler.getDescription failed - ${error}`);
+        throw error;
+      });
   }
 
   // Overridden to avoid to use peerConnection.getReceivers and peerConnection.getSenders in react-native
@@ -163,13 +172,13 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     const body = {
       contentDisposition: 'render',
       contentType: 'application/dtmf-relay',
-      content: `Signal=${tones}\r\nDuration=${options.duration || 1000}`
+      content: `Signal=${tones}\r\nDuration=${options.duration || 1000}`,
     };
     const requestOptions = {
-      body
+      body,
     };
     return this.session.info({
-      requestOptions
+      requestOptions,
     });
   }
 
@@ -265,13 +274,13 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
             if (transceiver.direction
             /* guarding, but should always be true */
             ) {
-                const offerDirection = directionToOffer(transceiver.direction, transceiver);
+              const offerDirection = directionToOffer(transceiver.direction, transceiver);
 
-                if (transceiver.direction !== offerDirection) {
-                  // eslint-disable-next-line no-param-reassign
-                  transceiver.direction = offerDirection;
-                }
+              if (transceiver.direction !== offerDirection) {
+                // eslint-disable-next-line no-param-reassign
+                transceiver.direction = offerDirection;
               }
+            }
           });
         }
         break;
@@ -285,7 +294,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
           // considering first match in the offered SDP and using that to determine the answer direction.
           // While that may be fine for our current use cases, it is not a generally correct approach.
           // determine the offered direction
-          const offeredDirection = ((): "inactive" | "recvonly" | "sendonly" | "sendrecv" => {
+          const offeredDirection = ((): 'inactive' | 'recvonly' | 'sendonly' | 'sendrecv' => {
             const description = this._peerConnection.remoteDescription;
 
             if (!description) {
@@ -317,7 +326,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
           })();
 
           // determine the answer direction based on the offered direction and our hold state
-          const answerDirection = ((): "inactive" | "recvonly" | "sendonly" | "sendrecv" => {
+          const answerDirection = ((): 'inactive' | 'recvonly' | 'sendonly' | 'sendrecv' => {
             switch (offeredDirection) {
               case 'inactive':
                 return 'inactive';
@@ -345,21 +354,21 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
             if (transceiver.direction
             /* guarding, but should always be true */
             ) {
-                const {
-                  receiver
-                } = transceiver;
+              const {
+                receiver,
+              } = transceiver;
 
-                if (isConference && audioOnly && receiver.track && receiver.track.kind === 'video') {
-                  // eslint-disable-next-line no-param-reassign
-                  transceiver.direction = 'inactive';
-                  return;
-                }
-
-                if (transceiver.direction !== 'stopped' && transceiver.direction !== answerDirection) {
-                  // eslint-disable-next-line no-param-reassign
-                  transceiver.direction = answerDirection;
-                }
+              if (isConference && audioOnly && receiver.track && receiver.track.kind === 'video') {
+                // eslint-disable-next-line no-param-reassign
+                transceiver.direction = 'inactive';
+                return;
               }
+
+              if (transceiver.direction !== 'stopped' && transceiver.direction !== answerDirection) {
+                // eslint-disable-next-line no-param-reassign
+                transceiver.direction = answerDirection;
+              }
+            }
           });
         }
         break;
@@ -385,14 +394,14 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
 
     const pc = this._peerConnection;
     const {
-      sfu
+      sfu,
     } = pc;
     const localStream = this._localMediaStream;
     const trackUpdates: Array<Promise<void>> = [];
 
     const updateTrack = (newTrack: MediaStreamTrack): void => {
       const {
-        kind
+        kind,
       } = newTrack;
 
       if (kind !== 'audio' && kind !== 'video') {
@@ -475,7 +484,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       return Promise.reject(new Error('Peer connection closed.'));
     }
 
-    let constraints = options.constraints ? { ...options.constraints
+    let constraints = options.constraints ? { ...options.constraints,
     } : {};
 
     // if we already have a local media stream...
@@ -487,7 +496,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     } else if (constraints.audio === undefined && constraints.video === undefined) {
       // if no constraints have been specified, default to audio for initial media stream
       constraints = {
-        audio: true
+        audio: true,
       };
     }
 

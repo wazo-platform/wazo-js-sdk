@@ -1,6 +1,7 @@
-import moment from "moment";
-import newFrom from "../utils/new-from";
-import MeetingAuthorization from "./MeetingAuthorization";
+import moment from 'moment';
+import newFrom from '../utils/new-from';
+import MeetingAuthorization from './MeetingAuthorization';
+
 export type MeetingCreateArguments = {
   name: string;
   requireAuthorization: boolean;
@@ -24,16 +25,27 @@ export type MeetingCreationResponse = {
 };
 export default class Meeting {
   type: string;
+
   guestSipAuthorization: string;
+
   uri: string;
+
   uuid: string;
+
   name: string;
+
   port: string;
+
   extension: string;
+
   persistent: boolean;
+
   ownerUuids: Array<string>;
+
   creationTime: Date;
+
   pendingAuthorizations: Array<MeetingAuthorization>;
+
   requireAuthorization: boolean;
 
   static parse(plain: MeetingCreationResponse): Meeting {
@@ -47,7 +59,7 @@ export default class Meeting {
       extension: plain.exten,
       persistent: plain.persistent,
       creationTime: moment(plain.creation_time).toDate(),
-      requireAuthorization: plain.require_authorization
+      requireAuthorization: plain.require_authorization,
     });
   }
 
@@ -73,7 +85,7 @@ export default class Meeting {
     extension,
     persistent,
     creationTime,
-    requireAuthorization
+    requireAuthorization,
   }: Record<string, any> = {}) {
     this.guestSipAuthorization = guestSipAuthorization;
     this.uri = uri;
@@ -94,7 +106,7 @@ export default class Meeting {
     const [username, secret] = atob(this.guestSipAuthorization).split(':');
     return {
       username,
-      secret
+      secret,
     };
   }
 

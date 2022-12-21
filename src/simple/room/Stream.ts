@@ -1,11 +1,12 @@
 /* global document */
 
 /* eslint-disable no-param-reassign */
-import type Participant from "./Participant";
-import Wazo from "../index";
+import type Participant from './Participant';
+import Wazo from '../index';
 
 class Stream {
   htmlStream: MediaStream;
+
   participant: Participant;
 
   static detachStream(stream: any) {

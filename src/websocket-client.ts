@@ -1,16 +1,17 @@
 /* eslint-disable no-underscore-dangle */
-import ReconnectingWebSocket from "reconnecting-websocket";
-import Emitter from "./utils/Emitter";
-import type { WebSocketMessage } from "./types/WebSocketMessage";
-import IssueReporter from "./service/IssueReporter";
-import Heartbeat from "./utils/Heartbeat";
+import ReconnectingWebSocket from 'reconnecting-websocket';
+import Emitter from './utils/Emitter';
+import type { WebSocketMessage } from './types/WebSocketMessage';
+import IssueReporter from './service/IssueReporter';
+import Heartbeat from './utils/Heartbeat';
+
 export const SOCKET_EVENTS = {
   ON_OPEN: 'onopen',
   ON_MESSAGE: 'onmessage',
   ON_ERROR: 'onerror',
   ON_CLOSE: 'onclose',
   INITIALIZED: 'initialized',
-  ON_AUTH_FAILED: 'on_auth_failed'
+  ON_AUTH_FAILED: 'on_auth_failed',
 };
 type Arguments = {
   host: string;
@@ -97,17 +98,29 @@ const messageLogger = IssueReporter.loggerFor('wazo-ws-message');
 
 class WebSocketClient extends Emitter {
   initialized: boolean;
+
   host: string | null | undefined;
+
   version: number;
+
   token: string | null | undefined;
+
   events: Array<string>;
+
   options: Record<string, any>;
+
   socket: ReconnectingWebSocket | null | undefined;
+
   _boundOnHeartbeat: (...args: Array<any>) => any;
+
   heartbeat: Heartbeat;
+
   onHeartBeatTimeout: (...args: Array<any>) => any;
+
   heartbeatCb: (...args: Array<any>) => any;
+
   eventLists: string[];
+
   static eventLists: Array<string>;
 
   /**
@@ -124,7 +137,7 @@ class WebSocketClient extends Emitter {
     token,
     version = 1,
     events = [],
-    heartbeat = {}
+    heartbeat = {},
   }: Arguments, options: Record<string, any> = {}) {
     super();
     this.initialized = false;
@@ -138,7 +151,7 @@ class WebSocketClient extends Emitter {
     const {
       delay,
       timeout,
-      max
+      max,
     } = heartbeat;
     this.heartbeat = new Heartbeat(delay, timeout, max);
     this.heartbeat.setSendHeartbeat(this.pingServer.bind(this));
@@ -149,7 +162,7 @@ class WebSocketClient extends Emitter {
   connect() {
     logger.info('connect method started', {
       host: this.host,
-      token: this.token
+      token: this.token,
     });
     this.socket = new ReconnectingWebSocket(this._getUrl.bind(this), [], this.options);
 
@@ -160,7 +173,7 @@ class WebSocketClient extends Emitter {
     this.socket.onopen = () => {
       logger.info('on Wazo WS open', {
         method: 'connect',
-        host: this.host
+        host: this.host,
       });
       this.eventEmitter.emit(SOCKET_EVENTS.ON_OPEN);
     };
@@ -174,7 +187,7 @@ class WebSocketClient extends Emitter {
       this.eventEmitter.emit(SOCKET_EVENTS.ON_MESSAGE, event.data);
       const message = JSON.parse(typeof event.data === 'string' ? event.data : '{}');
       let {
-        name
+        name,
       } = message;
 
       if (message.data && message.data.name) {
@@ -185,11 +198,11 @@ class WebSocketClient extends Emitter {
       if (BLACKLIST_EVENTS.indexOf(name) === -1) {
         // $FlowFixMe
         messageLogger.trace(IssueReporter.removeSlashes(event.data), {
-          method: 'onmessage'
+          method: 'onmessage',
         });
       } else {
         messageLogger.trace(`{"name": "${name}", "info": "content not shown"}`, {
-          method: 'onmessage'
+          method: 'onmessage',
         });
       }
 
@@ -207,7 +220,7 @@ class WebSocketClient extends Emitter {
         code: event.code,
         readyState: event.target.readyState,
         host: this.host,
-        token: this.token
+        token: this.token,
       });
       this.initialized = false;
       this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE, event);
@@ -228,7 +241,7 @@ class WebSocketClient extends Emitter {
       logger.info('Wazo WS error', {
         message: event.message,
         code: event.code,
-        readyState: event.target.readyState
+        readyState: event.target.readyState,
       });
     };
   }
@@ -237,7 +250,7 @@ class WebSocketClient extends Emitter {
     logger.info('Wazo WS close', {
       socket: !!this.socket,
       host: this.host,
-      token: this.token
+      token: this.token,
     });
 
     if (!this.socket) {
@@ -259,7 +272,7 @@ class WebSocketClient extends Emitter {
     logger.info('Wazo WS updating token', {
       url: this._getUrl(),
       token,
-      socket: !!this.socket
+      socket: !!this.socket,
     });
 
     if (this.socket) {
@@ -269,8 +282,8 @@ class WebSocketClient extends Emitter {
         this.socket.send(JSON.stringify({
           op: 'token',
           data: {
-            token
-          }
+            token,
+          },
         }));
       } else if (!this.isConnected()) {
         this.reconnect('token refreshed');
@@ -285,7 +298,7 @@ class WebSocketClient extends Emitter {
   startHeartbeat() {
     logger.info('Wazo WS start heartbeat', {
       host: this.host,
-      token: this.token
+      token: this.token,
     });
 
     if (!this.socket) {
@@ -301,7 +314,7 @@ class WebSocketClient extends Emitter {
   stopHeartbeat() {
     logger.info('Wazo WS stop heartbeat', {
       host: this.host,
-      token: this.token
+      token: this.token,
     });
     this.heartbeat.stop();
   }
@@ -323,10 +336,10 @@ class WebSocketClient extends Emitter {
       this.socket.send(JSON.stringify({
         op: 'ping',
         data: {
-          payload: 'pong'
-        }
+          payload: 'pong',
+        },
       }));
-    } catch (_) {// Nothing to do
+    } catch (_) { // Nothing to do
     }
   }
 
@@ -339,7 +352,7 @@ class WebSocketClient extends Emitter {
       reason,
       socket: !!this.socket,
       host: this.host,
-      token: this.token
+      token: this.token,
     });
 
     if (!this.socket) {
@@ -356,13 +369,13 @@ class WebSocketClient extends Emitter {
           const op = {
             op: 'subscribe',
             data: {
-              event_name: event
-            }
+              event_name: event,
+            },
           };
           sock.send(JSON.stringify(op));
         });
         sock.send(JSON.stringify({
-          op: 'start'
+          op: 'start',
         }));
         break;
 
@@ -407,7 +420,7 @@ class WebSocketClient extends Emitter {
 
     const url = `wss://${this.host || ''}/api/websocketd/?token=${this.token || ''}&version=${this.version}`;
     logger.info('Wazo WS url computed to reconnect', {
-      url
+      url,
     });
     return url;
   }
@@ -422,7 +435,7 @@ class WebSocketClient extends Emitter {
   async _onHeartbeatTimeout() {
     logger.log('heartbeat timed out', {
       host: this.host,
-      token: this.token
+      token: this.token,
     });
     this.close();
     this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE, new Error('Websocket ping failure.'));
@@ -433,7 +446,6 @@ class WebSocketClient extends Emitter {
   }
 
 } // Can't use static
-
 
 WebSocketClient.eventLists = [AUTH_SESSION_EXPIRE_SOON, FAVORITE_ADDED, FAVORITE_DELETED, USER_STATUS_UPDATE, CHAT_MESSAGE_SENT, CHAT_MESSAGE_RECEIVED, ENDPOINT_STATUS_UPDATE, USERS_FORWARDS_BUSY_UPDATED, USERS_FORWARDS_NOANSWER_UPDATED, USERS_FORWARDS_UNCONDITIONAL_UPDATED, USERS_SERVICES_DND_UPDATED, USER_VOICEMAIL_MESSAGE_CREATED, USER_VOICEMAIL_MESSAGE_UPDATED, USER_VOICEMAIL_MESSAGE_DELETED, CALL_LOG_USER_CREATED, CALL_ANSWERED, CALL_CREATED, CALL_DTMF_CREATED, CALL_ENDED, CALL_UPDATED, CALL_HELD, CALL_RESUMED, AUTH_USER_EXTERNAL_AUTH_ADDED, AUTH_USER_EXTERNAL_AUTH_DELETED, CHATD_PRESENCE_UPDATED, CHATD_USER_ROOM_MESSAGE_CREATED, CHATD_USER_ROOM_CREATED, CONFERENCE_USER_PARTICIPANT_JOINED, CONFERENCE_USER_PARTICIPANT_LEFT, MEETING_USER_PARTICIPANT_JOINED, MEETING_USER_PARTICIPANT_LEFT, CONFERENCE_USER_PARTICIPANT_TALK_STARTED, CONFERENCE_USER_PARTICIPANT_TALK_STOPPED, SWITCHBOARD_QUEUED_CALLS_UPDATED, SWITCHBOARD_QUEUED_CALL_ANSWERED, SWITCHBOARD_HELD_CALLS_UPDATED, SWITCHBOARD_HELD_CALL_ANSWERED, FAX_OUTBOUND_USER_CREATED, FAX_OUTBOUND_USER_SUCCEEDED, FAX_OUTBOUND_USER_FAILED, APPLICATION_CALL_DTMF_RECEIVED, APPLICATION_CALL_ENTERED, APPLICATION_CALL_INITIATED, APPLICATION_CALL_DELETED, APPLICATION_CALL_UPDATED, APPLICATION_CALL_ANSWERED, APPLICATION_PROGRESS_STARTED, APPLICATION_PROGRESS_STOPPED, APPLICATION_DESTINATION_NODE_CREATED, APPLICATION_NODE_CREATED, APPLICATION_NODE_DELETED, APPLICATION_NODE_UPDATED, APPLICATION_PLAYBACK_CREATED, APPLICATION_PLAYBACK_DELETED, APPLICATION_SNOOP_CREATED, APPLICATION_SNOOP_DELETED, APPLICATION_SNOOP_UPDATED, APPLICATION_USER_OUTGOING_CALL_CREATED, TRUNK_STATUS_UPDATED, LINE_STATUS_UPDATED, AGENT_STATUS_UPDATE, AGENT_PAUSED, AGENT_UNPAUSED, CONFERENCE_ADHOC_PARTICIPANT_LEFT, CONFERENCE_ADHOC_DELETED, MEETING_USER_PROGRESS, MEETING_USER_GUEST_AUTHORIZATION_CREATED];
 export default WebSocketClient;

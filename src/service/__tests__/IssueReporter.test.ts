@@ -3,8 +3,9 @@
 /* eslint-disable no-useless-escape */
 
 /* eslint-disable no-console */
-import IssueReporter from "../IssueReporter";
-import { realFetch } from "../../utils/api-requester";
+import IssueReporter from '../IssueReporter';
+import { realFetch } from '../../utils/api-requester';
+
 jest.mock('../../utils/api-requester');
 let oldLog;
 let oldError;
@@ -25,7 +26,7 @@ describe('IssueReporter', () => {
   beforeEach(() => {
     jest.resetAllMocks();
     realFetch.mockImplementation(() => () => ({
-      catch: () => {}
+      catch: () => {},
     }));
   });
   afterAll(() => {
@@ -44,7 +45,7 @@ describe('IssueReporter', () => {
   it('should send if verbosity is higher than required', () => {
     // Same level
     IssueReporter.configureRemoteClient({
-      level: 'trace'
+      level: 'trace',
     });
 
     IssueReporter._sendToRemoteLogger('info');
@@ -54,7 +55,7 @@ describe('IssueReporter', () => {
   it('should send if verbosity is equal than required', () => {
     // Same level
     IssueReporter.configureRemoteClient({
-      level: 'trace'
+      level: 'trace',
     });
 
     IssueReporter._sendToRemoteLogger('trace');
@@ -64,7 +65,7 @@ describe('IssueReporter', () => {
   it('should not send if verbosity is lower than required', () => {
     // Lower level
     IssueReporter.configureRemoteClient({
-      level: 'info'
+      level: 'info',
     });
 
     IssueReporter._sendToRemoteLogger('trace');
@@ -74,13 +75,13 @@ describe('IssueReporter', () => {
   it('should log extra data', () => {
     jest.spyOn(IssueReporter, '_sendToRemoteLogger').mockImplementation(() => {});
     IssueReporter.log('log', 'logger-category=http', 'my message', {
-      status: 200
+      status: 200,
     });
     expect(IssueReporter._sendToRemoteLogger).toHaveBeenCalledWith('log', {
       date: expect.anything(),
       message: 'my message',
       category: 'http',
-      status: 200
+      status: 200,
     });
   });
   it('should log an error', () => {
@@ -92,7 +93,7 @@ describe('IssueReporter', () => {
       category: 'http',
       errorMessage: 'nope',
       errorStack: expect.anything(),
-      errorType: 'MyError'
+      errorType: 'MyError',
     });
   });
   it('remove slashes', () => {
@@ -105,7 +106,7 @@ describe('IssueReporter', () => {
     expect(IssueReporter._writeRetryCount('', 1)).toBe('');
     expect(IssueReporter._writeRetryCount('{}', 1)).toBe('{}');
     expect(IssueReporter._writeRetryCount({}, 1)).toEqual({
-      _retry: 1
+      _retry: 1,
     });
   });
 });

@@ -1,11 +1,12 @@
-import ApiRequester from "../utils/api-requester";
-import type { User, Tenant, Token, UUID, LogoutResponse, ListTenantsResponse, RequestError, ListUsersResponse, ListGroupsResponse, ListPoliciesResponse, GetTenantResponse, GetUserResponse } from "../domain/types";
-import Session from "../domain/Session";
+import ApiRequester from '../utils/api-requester';
+import type { User, Tenant, Token, UUID, LogoutResponse, ListTenantsResponse, RequestError, ListUsersResponse, ListGroupsResponse, ListPoliciesResponse, GetTenantResponse, GetUserResponse } from '../domain/types';
+import Session from '../domain/Session';
+
 export const DEFAULT_BACKEND_USER = 'wazo_user';
 export const BACKEND_LDAP_USER = 'ldap_user';
 export const DETAULT_EXPIRATION = 3600;
 export default ((client: ApiRequester, baseUrl: string) => ({
-  checkToken: (token: Token): Promise<Boolean> => client.head(`${baseUrl}/token/${token}`, null, {}),
+  checkToken: (token: Token): Promise<boolean> => client.head(`${baseUrl}/token/${token}`, null, {}),
   authenticate: (token: Token): Promise<Session | null | undefined> => client.get(`${baseUrl}/token/${token}`, null, {}).then(response => Session.parse(response)),
 
   logIn(params: {
@@ -19,11 +20,11 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   }): Promise<Session | null | undefined> {
     const body: Record<string, any> = {
       backend: params.backend || DEFAULT_BACKEND_USER,
-      expiration: params.expiration || DETAULT_EXPIRATION
+      expiration: params.expiration || DETAULT_EXPIRATION,
     };
     const headers: Record<string, any> = {
       Authorization: `Basic ${ApiRequester.base64Encode(`${params.username}:${params.password}`)}`,
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     };
 
     if (client.clientId) {
@@ -48,12 +49,12 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   },
 
   logOut: (token: Token): Promise<LogoutResponse> => client.delete(`${baseUrl}/token/${token}`, null, {}, ApiRequester.successResponseParser),
-  refreshToken: (refreshToken: string, backend: string, expiration: number, isMobile: boolean = false, tenantId: string | null | undefined, domainName?: string): Promise<Session | null | undefined> => {
+  refreshToken: (refreshToken: string, backend: string, expiration: number, isMobile = false, tenantId: string | null | undefined, domainName?: string): Promise<Session | null | undefined> => {
     const body: Record<string, any> = {
       backend: backend || DEFAULT_BACKEND_USER,
       expiration: expiration || DETAULT_EXPIRATION,
       refresh_token: refreshToken,
-      client_id: client.clientId
+      client_id: client.clientId,
     };
 
     if (tenantId) {
@@ -68,22 +69,22 @@ export default ((client: ApiRequester, baseUrl: string) => ({
     const headers: Record<string, any> = {
       'Content-Type': 'application/json',
       ...(isMobile ? {
-        'Wazo-Session-Type': 'mobile'
-      } : {})
+        'Wazo-Session-Type': 'mobile',
+      } : {}),
     };
     return client.post(`${baseUrl}/token`, body, headers, ApiRequester.defaultParser, false).then(Session.parse);
   },
   deleteRefreshToken: (clientId: string): Promise<boolean> => client.delete(`${baseUrl}/users/me/tokens/${clientId}`, null, null, ApiRequester.successResponseParser),
-  updatePassword: (userUuid: UUID, oldPassword: string, newPassword: string): Promise<Boolean> => {
+  updatePassword: (userUuid: UUID, oldPassword: string, newPassword: string): Promise<boolean> => {
     const body = {
       new_password: newPassword,
-      old_password: oldPassword
+      old_password: oldPassword,
     };
     return client.put(`${baseUrl}/users/${userUuid}/password`, body, null, ApiRequester.successResponseParser);
   },
   sendDeviceToken: (userUuid: UUID, deviceToken: string, apnsVoipToken: string | null | undefined, apnsNotificationToken: string | null | undefined) => {
     const body: Record<string, any> = {
-      token: deviceToken
+      token: deviceToken,
     };
 
     if (apnsVoipToken) {
@@ -105,7 +106,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
    */
   sendResetPasswordEmail: ({
     username,
-    email
+    email,
   }: {
     username: string | null | undefined;
     email: string | null | undefined;
@@ -124,7 +125,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   },
   resetPassword: (userUuid: string, password: string) => {
     const body = {
-      password
+      password,
     };
     return client.post(`${baseUrl}/users/password/reset?user_uuid=${userUuid}`, body, null, ApiRequester.successResponseParser);
   },
@@ -134,7 +135,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
       username,
       password,
       firstname,
-      lastname
+      lastname,
     };
     return client.post(`${baseUrl}/users`, body);
   },
@@ -142,14 +143,14 @@ export default ((client: ApiRequester, baseUrl: string) => ({
     const body = {
       emails: [{
         address: email,
-        main
-      }]
+        main,
+      }],
     };
     return client.put(`${baseUrl}/users/${userUuid}/emails`, body);
   },
   addUserPolicy: (userUuid: UUID, policyUuid: UUID) => client.put(`${baseUrl}/users/${userUuid}/policies/${policyUuid}`),
   getRestrictionPolicies: (scopes: string[]) => client.post(`${baseUrl}/token/${client.token}/scopes/check`, {
-    scopes
+    scopes,
   }),
   deleteUserPolicy: (userUuid: UUID, policyUuid: UUID) => client.delete(`${baseUrl}/users/${userUuid}/policies/${policyUuid}`),
   addUserGroup: (userUuid: UUID, groupUuid: UUID) => client.put(`${baseUrl}/groups/${groupUuid}/users/${userUuid}`),
@@ -159,41 +160,41 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   getUserSession: (userUuid: UUID) => client.get(`${baseUrl}/users/${userUuid}/sessions`),
   deleteUserSession: (userUuid: UUID, sessionUuids: UUID) => client.delete(`${baseUrl}/users/${userUuid}/sessions/${sessionUuids}`),
   listUsers: (): Promise<ListUsersResponse> => client.get(`${baseUrl}/users`),
-  deleteUser: (userUuid: UUID): Promise<Boolean | RequestError> => client.delete(`${baseUrl}/users/${userUuid}`),
+  deleteUser: (userUuid: UUID): Promise<boolean | RequestError> => client.delete(`${baseUrl}/users/${userUuid}`),
   listTenants: (): Promise<ListTenantsResponse> => client.get(`${baseUrl}/tenants`),
   getTenant: (tenantUuid: UUID): Promise<GetTenantResponse> => client.get(`${baseUrl}/tenants/${tenantUuid}`),
   createTenant: (name: string): Promise<Tenant | RequestError> => client.post(`${baseUrl}/tenants`, {
-    name
+    name,
   }),
   updateTenant: (uuid: UUID, name: string, contact: string, phone: string, address: Array<Record<string, any>>): Promise<Tenant | RequestError> => {
     const body = {
       name,
       contact,
       phone,
-      address
+      address,
     };
     return client.put(`${baseUrl}/tenants/${uuid}`, body);
   },
-  deleteTenant: (uuid: UUID): Promise<Boolean | RequestError> => client.delete(`${baseUrl}/tenants/${uuid}`),
+  deleteTenant: (uuid: UUID): Promise<boolean | RequestError> => client.delete(`${baseUrl}/tenants/${uuid}`),
   createGroup: (name: string) => client.post(`${baseUrl}/groups`, {
-    name
+    name,
   }),
   listGroups: (): Promise<ListGroupsResponse> => client.get(`${baseUrl}/groups`),
-  deleteGroup: (uuid: UUID): Promise<Boolean | RequestError> => client.delete(`${baseUrl}/groups/${uuid}`),
+  deleteGroup: (uuid: UUID): Promise<boolean | RequestError> => client.delete(`${baseUrl}/groups/${uuid}`),
   createPolicy: (name: string, description: string, aclTemplates: Array<Record<string, any>>) => {
     const body = {
       name,
       description,
       acl_templates: aclTemplates,
       // deprecated
-      acl: aclTemplates
+      acl: aclTemplates,
     };
     client.post(`${baseUrl}/policies`, body);
   },
   listPolicies: (): Promise<ListPoliciesResponse> => client.get(`${baseUrl}/policies`),
-  deletePolicy: (policyUuid: UUID): Promise<Boolean | RequestError> => client.delete(`${baseUrl}/policies/${policyUuid}`),
+  deletePolicy: (policyUuid: UUID): Promise<boolean | RequestError> => client.delete(`${baseUrl}/policies/${policyUuid}`),
   getProviders: (userUuid: UUID) => client.get(`${baseUrl}/users/${userUuid}/external`),
   getProviderToken: (userUuid: UUID, provider: string) => client.get(`${baseUrl}/users/${userUuid}/external/${provider}`),
   getProviderAuthUrl: (userUuid: UUID, provider: string) => client.post(`${baseUrl}/users/${userUuid}/external/${provider}`, {}),
-  deleteProviderToken: (userUuid: UUID, provider: string) => client.delete(`${baseUrl}/users/${userUuid}/external/${provider}`)
+  deleteProviderToken: (userUuid: UUID, provider: string) => client.delete(`${baseUrl}/users/${userUuid}/external/${provider}`),
 }));

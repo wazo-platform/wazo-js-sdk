@@ -1,4 +1,5 @@
-import compareVersions from "../compare-version";
+import compareVersions from '../compare-version';
+
 describe('Comparing versions', () => {
   it('should compare non semver versions', () => {
     expect(compareVersions('1.0', '1.0')).toBe(0);

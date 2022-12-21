@@ -1,10 +1,11 @@
-import WazoApiClient from "../../api-client";
-import ServerError from "../../domain/ServerError";
+import WazoApiClient from '../../api-client';
+import ServerError from '../../domain/ServerError';
+
 export default {
   name: 'API',
   check: async (server, session) => {
     const client = new WazoApiClient({
-      server
+      server,
     });
     client.setToken(session.token);
     client.disableErrorLogging();
@@ -73,5 +74,5 @@ export default {
     } catch (e) {
       handleApiError('wazo-webhookd', e);
     }
-  }
+  },
 };

@@ -1,4 +1,5 @@
-import newFrom from "../utils/new-from";
+import newFrom from '../utils/new-from';
+
 type Extension = {
   context: string;
   exten: string;
@@ -32,10 +33,15 @@ type LineArguments = {
 };
 export default class Line {
   type: string;
+
   id: number;
+
   extensions: Array<Extension>;
+
   endpointCustom: Endpoint | null;
+
   endpointSccp: Endpoint | null;
+
   endpointSip: Endpoint | null;
 
   static parse(plain: LineResponse): Line {
@@ -44,7 +50,7 @@ export default class Line {
       extensions: plain.extensions,
       endpointCustom: plain.endpoint_custom || null,
       endpointSccp: plain.endpoint_sccp || null,
-      endpointSip: plain.endpoint_sip || null
+      endpointSip: plain.endpoint_sip || null,
     });
   }
 
@@ -69,7 +75,7 @@ export default class Line {
     extensions,
     endpointCustom,
     endpointSccp,
-    endpointSip
+    endpointSip,
   }: LineArguments = {}) {
     this.id = id;
     this.extensions = extensions;

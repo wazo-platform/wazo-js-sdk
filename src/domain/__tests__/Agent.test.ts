@@ -1,4 +1,5 @@
-import Agent from "../Agent";
+import Agent from '../Agent';
+
 const fieldMap = {
   context: 'context',
   extension: 'extension',
@@ -6,7 +7,7 @@ const fieldMap = {
   logged: 'logged',
   number: 'number',
   paused: 'paused',
-  pausedReason: 'paused_reason'
+  pausedReason: 'paused_reason',
 };
 const plain = {
   context: 'bogus_context',
@@ -18,7 +19,7 @@ const plain = {
   paused: true,
   paused_reason: 'this is a reason',
   state_interface: 'undefined_state_interface',
-  tenant_uuid: '3fa85f64-5717-4562-b3fc-2c963f66afa6'
+  tenant_uuid: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
 };
 const formatted = {};
 Object.keys(fieldMap).forEach(field => {

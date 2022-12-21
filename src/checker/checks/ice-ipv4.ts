@@ -1,6 +1,6 @@
 /* global MediaStream, RTCPeerConnection */
-import { parseCandidate } from "../../utils/webrtc";
-import isMobile from "../../utils/isMobile";
+import { parseCandidate } from '../../utils/webrtc';
+import isMobile from '../../utils/isMobile';
 
 const checkIsIPV4 = ip => {
   const blocks = ip.split('.');
@@ -21,23 +21,23 @@ export default {
 
     const mobile = isMobile();
     const offerOptions = {
-      offerToReceiveAudio: 1
+      offerToReceiveAudio: 1,
     };
     const ips = [];
     const config = {
       iceServers: [{
-        urls: 'stun:stun1.l.google.com:19302'
+        urls: 'stun:stun1.l.google.com:19302',
       }, {
-        urls: 'stun:stun2.l.google.com:19302'
-      }]
+        urls: 'stun:stun2.l.google.com:19302',
+      }],
     };
     let hasSrflxOrRelay = false;
 
     if (externalAppConfig && externalAppConfig.stun_servers) {
       config.iceServers = { ...externalAppConfig.stun_servers.split(',').map(url => ({
-          urls: url
-        })),
-        ...config.iceServers
+        urls: url,
+      })),
+      ...config.iceServers,
       };
     }
 
@@ -74,6 +74,6 @@ export default {
       }
     };
 
-    pc.createOffer(offerOptions).then(offer => pc.setLocalDescription(offer)).then(description => mobile ? pc.createOffer(offerOptions) : description).then(sessionDescription => mobile ? pc.setLocalDescription(sessionDescription) : sessionDescription);
-  })
+    pc.createOffer(offerOptions).then(offer => pc.setLocalDescription(offer)).then(description => (mobile ? pc.createOffer(offerOptions) : description)).then(sessionDescription => (mobile ? pc.setLocalDescription(sessionDescription) : sessionDescription));
+  }),
 };

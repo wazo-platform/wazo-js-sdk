@@ -1,8 +1,9 @@
-import moment from "moment";
-import newFrom from "../utils/new-from";
-import Session from "./Session";
-import type { RecordingResponse } from "./Recording";
-import Recording from "./Recording";
+import moment from 'moment';
+import newFrom from '../utils/new-from';
+import Session from './Session';
+import type { RecordingResponse } from './Recording';
+import Recording from './Recording';
+
 type CallLogResponse = {
   answer: string | null | undefined;
   answered: boolean;
@@ -49,22 +50,33 @@ type CallLogArguments = {
 };
 export default class CallLog {
   type: string;
+
   answer: Date | null | undefined;
+
   answered: boolean;
+
   newMissedCall: boolean;
+
   callDirection: string;
+
   destination: {
     extension: string;
     name: string;
   };
+
   recordings: Recording[];
+
   source: {
     extension: string;
     name: string;
   };
+
   id: number;
+
   duration: number;
+
   start: Date;
+
   end: Date | null | undefined;
 
   static merge(current: Array<CallLog>, toMerge: Array<CallLog>): Array<CallLog | null | undefined> {
@@ -93,19 +105,19 @@ export default class CallLog {
         // which is admittedly a very dangerous assumption. Did i mention it was temporary?
         extension: plain.requested_extension || plain.destination_extension || `meeting-${plain.requested_name || plain.destination_name || ''}`,
         name: plain.requested_name || plain.destination_name || '',
-        uuid: plain.destination_user_uuid
+        uuid: plain.destination_user_uuid,
       },
       source: {
         extension: plain.source_extension,
         name: plain.source_name,
-        uuid: plain.source_user_uuid
+        uuid: plain.source_user_uuid,
       },
       id: plain.id,
       duration: (plain.duration || 0) * 1000,
       // duration is in seconds
       start: moment(plain.start).toDate(),
       end: plain.end ? moment(plain.end).toDate() : null,
-      recordings: Recording.parseMany(plain.recordings || [])
+      recordings: Recording.parseMany(plain.recordings || []),
     });
   }
 
@@ -130,7 +142,7 @@ export default class CallLog {
     duration,
     start,
     end,
-    recordings
+    recordings,
   }: CallLogArguments = {}) {
     this.answer = answer;
     this.answered = answered;

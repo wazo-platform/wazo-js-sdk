@@ -1,13 +1,17 @@
-import type Session from "../domain/Session";
-import WazoApiClient from "../api-client";
-import IssueReporter from "../service/IssueReporter";
-import checks from "./checks/index";
+import type Session from '../domain/Session';
+import WazoApiClient from '../api-client';
+import IssueReporter from '../service/IssueReporter';
+import checks from './checks/index';
+
 const logger = IssueReporter.loggerFor('engine-check');
 
 class Checker {
   session: Session;
+
   server: string;
+
   externalAppConfig: Record<string, any>;
+
   checks: Record<string, any>[];
 
   constructor(server: string, session: Session, externalAppConfig: Record<string, any> = {}) {
@@ -24,7 +28,7 @@ class Checker {
     for (let i = 0; i < this.checks.length; i++) {
       const {
         name,
-        check
+        check,
       } = this.checks[i];
       logger.info(`Checking ${name} ...`);
       onCheckBegin(name);
@@ -33,12 +37,12 @@ class Checker {
         // eslint-disable-next-line no-await-in-loop
         const result = await check(this.server, this.session, this.externalAppConfig);
         logger.info(`Checking ${name} success.`, {
-          result
+          result,
         });
         onCheckResult(name, result);
       } catch (e) {
         logger.info(`Checking ${name} failure`, {
-          message: e.message
+          message: e.message,
         });
         onCheckResult(name, e);
       }
@@ -54,11 +58,11 @@ class Checker {
   async _addEngineVersion() {
     if (!this.session.engineVersion) {
       const apiClient = new WazoApiClient({
-        server: this.server
+        server: this.server,
       });
       apiClient.setToken(this.session.token);
       const {
-        wazo_version: engineVersion
+        wazo_version: engineVersion,
       } = await apiClient.confd.getInfos();
       this.session.engineVersion = engineVersion;
     }

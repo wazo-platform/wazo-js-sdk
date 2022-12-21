@@ -1,4 +1,5 @@
-import moment from "moment";
+import moment from 'moment';
+
 export type RecordingResponse = {
   deleted: boolean;
   end_time: string | null | undefined;
@@ -15,9 +16,13 @@ type RecordingArguments = {
 };
 export default class Recording {
   deleted: boolean;
+
   end: Date | null | undefined;
+
   fileName: string;
+
   start: Date;
+
   uuid: string;
 
   static parseMany(recordings: RecordingResponse[] = []): Recording[] {
@@ -34,7 +39,7 @@ export default class Recording {
       fileName: plain.filename,
       end: plain.end_time ? moment(plain.end_time).toDate() : null,
       start: moment(plain.start_time).toDate(),
-      uuid: plain.uuid
+      uuid: plain.uuid,
     });
   }
 
@@ -43,7 +48,7 @@ export default class Recording {
     end,
     fileName,
     start,
-    uuid
+    uuid,
   }: RecordingArguments) {
     this.deleted = deleted;
     this.end = end;

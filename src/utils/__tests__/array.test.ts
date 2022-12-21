@@ -1,14 +1,15 @@
-import { lastIndexOf } from "../array";
+import { lastIndexOf } from '../array';
+
 describe('Finding last index of an array of object', () => {
   const array = [{
     a: 1,
-    b: 3
+    b: 3,
   }, {
     a: 1,
-    b: 2
+    b: 2,
   }, {
     a: 1,
-    b: 3
+    b: 3,
   }];
   it('should compare non semver versions', () => {
     expect(lastIndexOf(array, elem => elem.a === 1 && elem.b === 3)).toBe(2);

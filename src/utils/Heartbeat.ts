@@ -4,13 +4,21 @@ const DEFAULT_MAX_HEARTBEATS = 3;
 
 class Heartbeat {
   heartbeatDelay: number;
+
   heartbeatTimeout: number;
+
   maxHeartbeats: number;
+
   hasHeartbeat: boolean;
+
   _heartbeatDelayTimeout: TimeoutID | null | undefined;
+
   _heartbeatNotReceivedTimeout: TimeoutID | null | undefined;
+
   _heartbeatTries: number;
+
   _sendHeartbeatCallback: ((...args: Array<any>) => any) | null | undefined;
+
   _onTimeoutCallback: ((...args: Array<any>) => any) | null | undefined;
 
   constructor(heartbeatDelay: number = DEFAULT_HEARTBEAT_DELAY, heartbeatTimeout: number = DEFAULT_HEARTBEAT_TIMEOUT, maxHeartbeats: number = DEFAULT_MAX_HEARTBEATS) {

@@ -1,15 +1,16 @@
-import { $Shape } from "utility-types";
-import Line from "./Line";
-import ForwardOption, { FORWARD_KEYS } from "./ForwardOption";
-import newFrom from "../utils/new-from";
-import type { Endpoint } from "./Line";
-import SipLine from "./SipLine";
+import { $Shape } from 'utility-types';
+import Line from './Line';
+import ForwardOption, { FORWARD_KEYS } from './ForwardOption';
+import newFrom from '../utils/new-from';
+import type { Endpoint } from './Line';
+import SipLine from './SipLine';
+
 export const STATE = {
   AVAILABLE: 'available',
   UNAVAILABLE: 'unavailable',
   INVISIBLE: 'invisible',
   DISCONNECTED: 'disconnected',
-  AWAY: 'away'
+  AWAY: 'away',
 };
 export const LINE_STATE = {
   AVAILABLE: 'available',
@@ -17,7 +18,7 @@ export const LINE_STATE = {
   RINGING: 'ringing',
   TALKING: 'talking',
   UNAVAILABLE: 'unavailable',
-  PROGRESSING: 'progressing'
+  PROGRESSING: 'progressing',
 };
 type ProfileResponse = {
   groups: Array<{
@@ -124,31 +125,49 @@ type ProfileArguments = {
 };
 export default class Profile {
   id: string;
+
   firstName: string;
+
   lastName: string;
+
   email: string;
+
   lines: Array<Line>;
+
   sipLines: Array<SipLine>;
+
   username: string;
+
   mobileNumber: string;
+
   forwards: Array<ForwardOption>;
+
   doNotDisturb: boolean | null | undefined;
+
   onlineCallRecordEnabled: boolean | null | undefined;
+
   state: string | null | undefined;
+
   ringSeconds: number | null | undefined;
+
   voicemail: {
     id: number;
     name: string;
   } | null | undefined;
+
   status: string;
+
   subscriptionType: number | null | undefined;
+
   agent: {
     firstname: string;
     id: number;
     lastname: string;
     number: string;
   } | null | undefined;
+
   switchboards: Array<any>;
+
   callPickupTargetUsers: Array<{
     firstname: string;
     lastname: string;
@@ -173,7 +192,7 @@ export default class Profile {
       agent: plain.agent,
       status: '',
       callPickupTargetUsers: plain.call_pickup_target_users || [],
-      onlineCallRecordEnabled: plain.online_call_record_enabled
+      onlineCallRecordEnabled: plain.online_call_record_enabled,
     });
   }
 
@@ -200,7 +219,7 @@ export default class Profile {
     ringSeconds,
     sipLines,
     callPickupTargetUsers,
-    onlineCallRecordEnabled
+    onlineCallRecordEnabled,
   }: $Shape<ProfileArguments> = {}) {
     this.id = id;
     this.firstName = firstName;

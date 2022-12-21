@@ -1,65 +1,66 @@
-import { Base64 } from "js-base64";
-import WazoApiClient from "../api-client";
-import ServerError from "../domain/ServerError";
-import BadResponse from "../domain/BadResponse";
-import Session from "../domain/Session";
+import { Base64 } from 'js-base64';
+import WazoApiClient from '../api-client';
+import ServerError from '../domain/ServerError';
+import BadResponse from '../domain/BadResponse';
+import Session from '../domain/Session';
+
 const mockedResponse = {
   data: {
-    token: 1
-  }
+    token: 1,
+  },
 };
 const mockedNotFoundResponse = {
-  message: 'No such user voicemail'
+  message: 'No such user voicemail',
 };
 const mockedTextErrorPayload = {
-  message: 'No such user voicemail'
+  message: 'No such user voicemail',
 };
 const mockedJsonErrorPayload = {
   timestamp: 1537529588.789515,
   message: 'No such user voicemail',
   error_id: 'no-such-user-voicemail',
   details: {
-    user_uuid: 'xxx-xxx-xxx-xxx-xxxx'
-  }
+    user_uuid: 'xxx-xxx-xxx-xxx-xxxx',
+  },
 };
 const mockedTextError = {
   ok: false,
   text: () => Promise.resolve(mockedTextErrorPayload),
   status: 500,
   headers: {
-    get: () => 'text/plain'
-  }
+    get: () => 'text/plain',
+  },
 };
 const mockedJsonError = {
   ok: false,
   json: () => Promise.resolve(mockedJsonErrorPayload),
   status: 500,
   headers: {
-    get: () => 'application/json'
-  }
+    get: () => 'application/json',
+  },
 };
 const mockedJson = {
   ok: true,
   json: () => Promise.resolve(mockedResponse),
   headers: {
-    get: () => 'application/json'
-  }
+    get: () => 'application/json',
+  },
 };
 const mockedUnAuthorized = {
   text: () => Promise.resolve(mockedResponse),
   ok: false,
   status: 401,
   headers: {
-    get: () => 'text/plain'
-  }
+    get: () => 'text/plain',
+  },
 };
 const mockedNotFound = {
   json: () => Promise.resolve(mockedNotFoundResponse),
   ok: false,
   status: 404,
   headers: {
-    get: () => 'application/json'
-  }
+    get: () => 'application/json',
+  },
 };
 const server = 'localhost';
 const authVersion = '0.1';
@@ -68,7 +69,7 @@ const password = 'zowa';
 jest.mock('node-fetch/lib/index', () => {});
 const token = 1234;
 const client = new WazoApiClient({
-  server
+  server,
 });
 client.setToken(token);
 describe('With correct API results', () => {
@@ -80,15 +81,15 @@ describe('With correct API results', () => {
     it('should retrieve user token', async () => {
       const data = {
         backend: 'wazo_user',
-        expiration: 3600
+        expiration: 3600,
       };
       const headers = {
         Authorization: `Basic ${Base64.encode(`${username}:${password}`)}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       };
       const result = await client.auth.logIn({
         username,
-        password
+        password,
       });
       expect(result).toBeInstanceOf(Session);
       expect(result.token).toBe(1);
@@ -96,7 +97,7 @@ describe('With correct API results', () => {
         method: 'post',
         body: JSON.stringify(data),
         headers,
-        agent: null
+        agent: null,
       });
     });
   });
@@ -108,7 +109,7 @@ describe('With correct API results', () => {
         method: 'delete',
         body: null,
         headers: {},
-        agent: null
+        agent: null,
       });
     });
   });
@@ -127,7 +128,7 @@ describe('With unAuthorized API results', () => {
         method: 'head',
         body: null,
         headers: {},
-        agent: null
+        agent: null,
       });
     });
   });
@@ -157,9 +158,9 @@ describe('With not found API results', () => {
         headers: {
           'X-Auth-Token': token,
           'Content-Type': 'application/json',
-          Accept: 'application/json'
+          Accept: 'application/json',
         },
-        agent: null
+        agent: null,
       });
     });
   });
@@ -175,7 +176,7 @@ describe('With erroneous text API results', () => {
     try {
       await client.auth.logIn({
         username,
-        password
+        password,
       });
     } catch (e) {
       error = e;
@@ -198,7 +199,7 @@ describe('With erroneous json API results', () => {
     try {
       await client.auth.logIn({
         username,
-        password
+        password,
       });
     } catch (e) {
       error = e;

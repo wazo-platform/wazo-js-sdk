@@ -3,10 +3,11 @@ export type MeetingStatusResponse = {
 };
 export default class MeetingStatus {
   type: string;
+
   full: boolean;
 
   constructor({
-    full
+    full,
   }: Record<string, any> = {}) {
     this.full = full;
     // Useful to compare instead of instanceof with minified code
@@ -15,7 +16,7 @@ export default class MeetingStatus {
 
   static parse(plain: MeetingStatusResponse): MeetingStatus {
     return new MeetingStatus({
-      full: plain.full
+      full: plain.full,
     });
   }
 

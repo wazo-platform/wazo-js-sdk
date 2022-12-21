@@ -1,4 +1,5 @@
-import WebRTCClient from "../web-rtc-client";
+import WebRTCClient from '../web-rtc-client';
+
 const client = new WebRTCClient({});
 describe('WebRTC client', () => {
   it('should compute muted/unmuted state', async () => {
@@ -8,11 +9,11 @@ describe('WebRTC client', () => {
           getSenders: () => [{
             track: {
               kind: 'audio',
-              enabled: false
-            }
-          }]
-        }
-      }
+              enabled: false,
+            },
+          }],
+        },
+      },
     };
     const unMutedSession = {
       sessionDescriptionHandler: {
@@ -20,33 +21,33 @@ describe('WebRTC client', () => {
           getSenders: () => [{
             track: {
               kind: 'audio',
-              enabled: true
-            }
-          }]
-        }
-      }
+              enabled: true,
+            },
+          }],
+        },
+      },
     };
     const oldKindMuted = {
       sessionDescriptionHandler: {
         peerConnection: {
           getLocalStreams: () => [{
             getAudioTracks: () => [{
-              enabled: false
-            }]
-          }]
-        }
-      }
+              enabled: false,
+            }],
+          }],
+        },
+      },
     };
     const oldKindUnmuted = {
       sessionDescriptionHandler: {
         peerConnection: {
           getLocalStreams: () => [{
             getAudioTracks: () => [{
-              enabled: true
-            }]
-          }]
-        }
-      }
+              enabled: true,
+            }],
+          }],
+        },
+      },
     };
     expect(client.isAudioMuted(mutedSession)).toBeTruthy();
     expect(client.isAudioMuted(oldKindMuted)).toBeTruthy();
@@ -60,10 +61,10 @@ describe('changeAudioInputDevice', () => {
   const constraints = {
     audio: {
       deviceId: {
-        exact: defaultId
-      }
+        exact: defaultId,
+      },
     },
-    video: null
+    video: null,
   };
   const session = {
     sessionDescriptionHandler: {
@@ -71,16 +72,16 @@ describe('changeAudioInputDevice', () => {
         getSenders: () => [{
           track: {
             kind: 'audio',
-            enabled: true
-          }
-        }]
-      }
-    }
+            enabled: true,
+          },
+        }],
+      },
+    },
   };
   const stream = {};
   const getAudioTracksMock = jest.fn(() => []);
   Object.defineProperty(stream, 'getAudioTracks', {
-    value: getAudioTracksMock
+    value: getAudioTracksMock,
   });
   const getUserMediaMock = jest.fn(async () => {
     return new Promise(resolve => {
@@ -91,12 +92,12 @@ describe('changeAudioInputDevice', () => {
     deviceId: 'default',
     kind: 'audioinput',
     label: 'Default - Fake Microphone',
-    groupId: 'fak3Gr0up3'
+    groupId: 'fak3Gr0up3',
   }, {
     deviceId: 'fak3d3v1c3',
     kind: 'audioinput',
     label: 'Fake Microphone',
-    groupId: 'fak3Gr0up3'
+    groupId: 'fak3Gr0up3',
   }];
   const enumerateDevicesMock = jest.fn(async () => {
     return new Promise(resolve => {
@@ -106,8 +107,8 @@ describe('changeAudioInputDevice', () => {
   Object.defineProperty(global.navigator, 'mediaDevices', {
     value: {
       getUserMedia: getUserMediaMock,
-      enumerateDevices: enumerateDevicesMock
-    }
+      enumerateDevices: enumerateDevicesMock,
+    },
   });
   it('should change the audio input track if the provided id is different', async () => {
     client.setMediaConstraints(constraints);
@@ -132,19 +133,19 @@ describe('changeAudioInputDevice', () => {
       const video = {
         height: {
           min: 480,
-          max: 720
+          max: 720,
         },
         width: {
           min: 640,
-          max: 1280
-        }
+          max: 1280,
+        },
       };
       client.video = video;
       client.setVideoInputDevice(deviceId);
       expect(client.video).toEqual({ ...video,
         deviceId: {
-          exact: deviceId
-        }
+          exact: deviceId,
+        },
       });
     });
     it('should set deviceId when video\'s original value is true', () => {
@@ -152,8 +153,8 @@ describe('changeAudioInputDevice', () => {
       client.setVideoInputDevice(deviceId);
       expect(client.video).toEqual({
         deviceId: {
-          exact: deviceId
-        }
+          exact: deviceId,
+        },
       });
     });
     it('should set deviceId when video\'s original value is not set', () => {
@@ -161,22 +162,22 @@ describe('changeAudioInputDevice', () => {
       client.setVideoInputDevice(deviceId);
       expect(client.video).toEqual({
         deviceId: {
-          exact: deviceId
-        }
+          exact: deviceId,
+        },
       });
     });
     it('should NOT set deviceId when its value does not change', () => {
       client.video = {
         deviceId: {
-          exact: deviceId
-        }
+          exact: deviceId,
+        },
       };
       const result = client.setVideoInputDevice(deviceId);
       expect(result).toEqual(null);
       expect(client.video).toEqual({
         deviceId: {
-          exact: deviceId
-        }
+          exact: deviceId,
+        },
       });
     });
   });

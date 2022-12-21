@@ -1,41 +1,71 @@
-import Emitter from "../../utils/Emitter";
-import IssueReporter from "../../service/IssueReporter";
-import Phone from "../Phone";
-import Room, { SIGNAL_TYPE_PARTICIPANT_UPDATE } from "./Room";
-import Contact from "../../domain/Contact";
-import getApiClient from "../../service/getApiClient";
+import Emitter from '../../utils/Emitter';
+import IssueReporter from '../../service/IssueReporter';
+import Phone from '../Phone';
+import Room, { SIGNAL_TYPE_PARTICIPANT_UPDATE } from './Room';
+import Contact from '../../domain/Contact';
+import getApiClient from '../../service/getApiClient';
+
 const logger = IssueReporter.loggerFor('room');
 
 class Participant extends Emitter {
   room: Room;
+
   uuid: string;
+
   name: string;
+
   number: string;
+
   callId: string;
+
   isTalking: boolean;
+
   streams: any[];
+
   videoStreams: any[];
+
   audioMuted: boolean;
+
   videoMuted: boolean;
+
   screensharing: boolean;
+
   isOnHold: boolean;
+
   banned: boolean;
+
   extra: Record<string, any>;
+
   ON_UPDATED: string;
+
   ON_START_TALKING: string;
+
   ON_STOP_TALKING: string;
+
   ON_DISCONNECT: string;
+
   ON_STREAM_SUBSCRIBED: string;
+
   ON_STREAM_UNSUBSCRIBED: string;
+
   ON_AUDIO_MUTED: string;
+
   ON_AUDIO_UNMUTED: string;
+
   ON_VIDEO_MUTED: string;
+
   ON_VIDEO_UNMUTED: string;
+
   ON_SCREENSHARING: string;
+
   ON_STOP_SCREENSHARING: string;
+
   ON_EXTRA_CHANGE: string;
+
   ON_HOLD: string;
+
   ON_RESUME: string;
+
   ON_BAN: string;
 
   /**
@@ -84,56 +114,56 @@ class Participant extends Emitter {
 
   triggerUpdate(eventType: string, broadcast = true) {
     const status: Record<string, any> = {
-      callId: this.callId
+      callId: this.callId,
     };
 
     switch (eventType) {
       case this.ON_START_TALKING:
       case this.ON_STOP_TALKING:
-        {
-          status.isTalking = this.isTalking;
-          break;
-        }
+      {
+        status.isTalking = this.isTalking;
+        break;
+      }
 
       case this.ON_AUDIO_MUTED:
       case this.ON_AUDIO_UNMUTED:
-        {
-          status.audioMuted = this.audioMuted;
-          break;
-        }
+      {
+        status.audioMuted = this.audioMuted;
+        break;
+      }
 
       case this.ON_VIDEO_MUTED:
       case this.ON_VIDEO_UNMUTED:
-        {
-          status.videoMuted = this.videoMuted;
-          break;
-        }
+      {
+        status.videoMuted = this.videoMuted;
+        break;
+      }
 
       case this.ON_SCREENSHARING:
       case this.ON_STOP_SCREENSHARING:
-        {
-          status.screensharing = this.screensharing;
-          break;
-        }
+      {
+        status.screensharing = this.screensharing;
+        break;
+      }
 
       case this.ON_HOLD:
       case this.ON_RESUME:
-        {
-          status.isOnHold = this.isOnHold;
-          break;
-        }
+      {
+        status.isOnHold = this.isOnHold;
+        break;
+      }
 
       case this.ON_EXTRA_CHANGE:
-        {
-          status.extra = this.extra;
-          break;
-        }
+      {
+        status.extra = this.extra;
+        break;
+      }
 
       case this.ON_BAN:
-        {
-          status.banned = true;
-          break;
-        }
+      {
+        status.banned = true;
+        break;
+      }
 
       default:
         break;
@@ -151,7 +181,7 @@ class Participant extends Emitter {
     logger.info('on participant talking', {
       name: this.name,
       isTalking,
-      callId: this.callId
+      callId: this.callId,
     });
     this.isTalking = isTalking;
     // you may notice we're not broadcasting: since all participants are getting this info
@@ -255,14 +285,14 @@ class Participant extends Emitter {
       videoMuted: this.videoMuted,
       screensharing: this.screensharing,
       isTalking: this.isTalking,
-      extra: this.extra
+      extra: this.extra,
     };
   }
 
   updateStatus(status: Record<string, any>, broadcast = true) {
     logger.info('updating participant status', {
       name: this.name,
-      status
+      status,
     });
 
     if (typeof status.audioMuted !== 'undefined' && status.audioMuted !== this.audioMuted) {
@@ -304,7 +334,7 @@ class Participant extends Emitter {
     // Poor man's object comparison
     if (typeof status.extra !== 'undefined' && JSON.stringify(this.extra) !== JSON.stringify(status.extra)) {
       this.extra = { ...this.extra,
-        ...status.extra
+        ...status.extra,
       };
 
       if (this.extra.contact && !(this.extra.contact instanceof Contact)) {
@@ -319,7 +349,7 @@ class Participant extends Emitter {
     const status = inboundStatus || this.getStatus();
     logger.info('broadcasting participant status', {
       callId: this.callId,
-      status
+      status,
     });
 
     if (sendReinvite && !this.streams.length && Phone.phone) {
@@ -330,7 +360,7 @@ class Participant extends Emitter {
     this.room.sendSignal({
       type: SIGNAL_TYPE_PARTICIPANT_UPDATE,
       origin: this.callId,
-      status
+      status,
     });
   }
 
@@ -341,7 +371,7 @@ class Participant extends Emitter {
 
   async ban(apiRequestDelay: number | null | undefined = null) {
     const {
-      meetingUuid
+      meetingUuid,
     } = this.room;
 
     if (!meetingUuid) {

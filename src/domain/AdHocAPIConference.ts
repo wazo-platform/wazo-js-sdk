@@ -1,6 +1,7 @@
-import CallSession from "./CallSession";
-import type WebRTCPhone from "./Phone/WebRTCPhone";
-import getApiClient from "../service/getApiClient";
+import CallSession from './CallSession';
+import type WebRTCPhone from './Phone/WebRTCPhone';
+import getApiClient from '../service/getApiClient';
+
 export type ConferenceParticipant = {
   admin: boolean;
   call_id: string;
@@ -30,13 +31,21 @@ export type ConferenceArguments = {
 
 export default class AdHocAPIConference {
   phone: WebRTCPhone;
+
   host: CallSession;
+
   participants: Record<string, CallSession>;
+
   started: boolean;
+
   finished: boolean;
+
   conferenceId: string;
+
   answerTime: number | null | undefined;
+
   muted: boolean;
+
   paused: boolean;
 
   constructor({
@@ -48,7 +57,7 @@ export default class AdHocAPIConference {
     answerTime,
     conferenceId,
     muted,
-    paused
+    paused,
   }: ConferenceArguments) {
     this.phone = phone;
     this.host = host;
@@ -82,18 +91,18 @@ export default class AdHocAPIConference {
   async addParticipant(newParticipant: CallSession): Promise<AdHocAPIConference> {
     const participantCallId = newParticipant.getTalkingToIds()[0];
     const participants = { ...this.participants,
-      [participantCallId]: newParticipant
+      [participantCallId]: newParticipant,
     };
     await getApiClient().calld.addAdHocConferenceParticipant(this.conferenceId, participantCallId);
     return new AdHocAPIConference({ ...this,
-      participants
+      participants,
     });
   }
 
   participantHasLeft(leaver: CallSession): AdHocAPIConference {
     delete this.participants[leaver.getId()];
     return new AdHocAPIConference({ ...this,
-      participants: this.participants
+      participants: this.participants,
     });
   }
 
@@ -104,28 +113,28 @@ export default class AdHocAPIConference {
   mute(): AdHocAPIConference {
     this.muted = true;
     this.phone.mute(this.host);
-    return new AdHocAPIConference({ ...this
+    return new AdHocAPIConference({ ...this,
     });
   }
 
   unmute(): AdHocAPIConference {
     this.muted = false;
     this.phone.unmute(this.host);
-    return new AdHocAPIConference({ ...this
+    return new AdHocAPIConference({ ...this,
     });
   }
 
   hold(): AdHocAPIConference {
     this.paused = true;
     this.phone.hold(this.host);
-    return new AdHocAPIConference({ ...this
+    return new AdHocAPIConference({ ...this,
     });
   }
 
   resume(): AdHocAPIConference {
     this.paused = false;
     this.phone.resume(this.host);
-    return new AdHocAPIConference({ ...this
+    return new AdHocAPIConference({ ...this,
     });
   }
 
@@ -141,7 +150,7 @@ export default class AdHocAPIConference {
     await getApiClient().calld.deleteAdHocConference(this.conferenceId);
     return new AdHocAPIConference({ ...this,
       finished: true,
-      participant: []
+      participant: [],
     });
   }
 
@@ -150,7 +159,7 @@ export default class AdHocAPIConference {
     delete this.participants[callId];
     await getApiClient().calld.removeAdHocConferenceParticipant(this.conferenceId, callId);
     return new AdHocAPIConference({ ...this,
-      participants: this.participants
+      participants: this.participants,
     });
   }
 

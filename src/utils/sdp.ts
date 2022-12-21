@@ -1,4 +1,5 @@
-import sdpParser from "sdp-transform";
+import sdpParser from 'sdp-transform';
+
 export const getCandidates = (rawSdp: string | null | undefined): Record<string, any>[] => {
   if (!rawSdp) {
     return [];
@@ -33,7 +34,7 @@ export const fixBundle = (sdp: string): string => {
   const bundleIndex = parsedSdp.groups.findIndex(group => group.type === 'BUNDLE');
 
   if (bundleIndex !== -1) {
-    parsedSdp.groups[bundleIndex].mids = parsedSdp.media.map((media, index) => 'mid' in media ? media.mid : index).join(' ');
+    parsedSdp.groups[bundleIndex].mids = parsedSdp.media.map((media, index) => ('mid' in media ? media.mid : index)).join(' ');
   }
 
   return sdpParser.write(parsedSdp);
@@ -42,8 +43,8 @@ export const toggleVideoDirection = (sdp: string, direction: string | null | und
   const parsedSdp = sdpParser.parse(sdp);
   parsedSdp.media = parsedSdp.media.map(media => ({ ...media,
     ...(media.type === 'video' ? {
-      direction
-    } : {})
+      direction,
+    } : {}),
   }));
   return sdpParser.write(parsedSdp);
 };
@@ -75,7 +76,7 @@ export const hasAnActiveVideo = (sdp: string | null | undefined): boolean => {
   const parsedSdp = sdpParser.parse(sdp);
   return !!parsedSdp.media.find(media => media.type === 'video' && media.port > 10 && (!media.direction || media.direction !== 'inactive'));
 };
-export const fixSdp = (sdp: string, candidates: Record<string, any>[], forcePort: boolean = true): string => {
+export const fixSdp = (sdp: string, candidates: Record<string, any>[], forcePort = true): string => {
   const parsedSdp = sdpParser.parse(sdp);
   const mainCandidate = getSrflxOrRelay(candidates)[0];
   const ip = mainCandidate ? mainCandidate.ip : null;
@@ -89,7 +90,7 @@ export const fixSdp = (sdp: string, candidates: Record<string, any>[], forcePort
     return { ...media,
       port,
       candidates: (media.candidates || []).concat(candidates),
-      direction: port < 10 ? 'inactive' : media.direction
+      direction: port < 10 ? 'inactive' : media.direction,
     };
   });
   let fixed = sdpParser.write(parsedSdp);
@@ -109,10 +110,10 @@ export const addIcesInAllBundles = (sdp: string) => {
   }
 
   const {
-    candidates
+    candidates,
   } = mediaWithCandidate;
   parsedSdp.media = parsedSdp.media.map(media => ({ ...media,
-    candidates: media.candidates || candidates
+    candidates: media.candidates || candidates,
   }));
   return sdpParser.write(parsedSdp);
 };

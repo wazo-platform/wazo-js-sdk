@@ -1,5 +1,6 @@
-import type { ChatUser } from "./ChatMessage";
-import newFrom from "../utils/new-from";
+import type { ChatUser } from './ChatMessage';
+import newFrom from '../utils/new-from';
+
 export type RoomResponse = {
   name: string;
   uuid: string;
@@ -12,8 +13,11 @@ export type RootListResponse = {
 };
 export default class ChatRoom {
   type: string;
+
   uuid: string;
+
   name: string;
+
   users: Array<ChatUser>;
 
   static parseMany(plain: RootListResponse): Array<ChatRoom> {
@@ -28,7 +32,7 @@ export default class ChatRoom {
     return new ChatRoom({
       uuid: plain.uuid,
       name: plain.name,
-      users: plain.users
+      users: plain.users,
     });
   }
 
@@ -39,7 +43,7 @@ export default class ChatRoom {
   constructor({
     uuid,
     name,
-    users
+    users,
   }: Record<string, any> = {}) {
     this.uuid = uuid;
     this.name = name;

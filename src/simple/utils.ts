@@ -1,5 +1,5 @@
 /* global navigator */
-import Wazo from "./index";
+import Wazo from './index';
 
 const createLocalStream = async (kind: string, options: Record<string, any> = {}) => {
   const createOptions = {};

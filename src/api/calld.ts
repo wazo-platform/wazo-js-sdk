@@ -1,12 +1,13 @@
 /* eslint-disable camelcase */
-import ApiRequester from "../utils/api-requester";
-import type { UUID, RequestError } from "../domain/types";
-import Relocation from "../domain/Relocation";
-import ChatMessage from "../domain/ChatMessage";
-import Voicemail from "../domain/Voicemail";
-import Call from "../domain/Call";
-import IndirectTransfer from "../domain/IndirectTransfer";
-import MeetingStatus from "../domain/MeetingStatus";
+import ApiRequester from '../utils/api-requester';
+import type { UUID, RequestError } from '../domain/types';
+import Relocation from '../domain/Relocation';
+import ChatMessage from '../domain/ChatMessage';
+import Voicemail from '../domain/Voicemail';
+import Call from '../domain/Call';
+import IndirectTransfer from '../domain/IndirectTransfer';
+import MeetingStatus from '../domain/MeetingStatus';
+
 type CallQuery = {
   from_mobile: boolean;
   extension: string;
@@ -14,8 +15,8 @@ type CallQuery = {
   all_lines?: boolean;
 };
 export default ((client: ApiRequester, baseUrl: string) => ({
-  updatePresence: (presence: string): Promise<Boolean> => client.put(`${baseUrl}/users/me/presences`, {
-    presence
+  updatePresence: (presence: string): Promise<boolean> => client.put(`${baseUrl}/users/me/presences`, {
+    presence,
   }, null, ApiRequester.successResponseParser),
   listMessages: (participantUuid: UUID | null | undefined, limit?: number): Promise<Array<ChatMessage>> => {
     const query: Record<string, any> = {};
@@ -34,14 +35,14 @@ export default ((client: ApiRequester, baseUrl: string) => ({
     const body = {
       alias,
       msg,
-      to: toUserId
+      to: toUserId,
     };
     return client.post(`${baseUrl}/users/me/chats`, body, null, ApiRequester.successResponseParser);
   },
   makeCall: (extension: string, fromMobile: boolean, lineId: number | null | undefined, allLines: boolean | null | undefined = false) => {
     const query: CallQuery = {
       from_mobile: fromMobile,
-      extension
+      extension,
     };
 
     if (lineId) {
@@ -54,7 +55,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
 
     return client.post(`${baseUrl}/users/me/calls`, query);
   },
-  cancelCall: (callId: number): Promise<Boolean> => client.delete(`${baseUrl}/users/me/calls/${callId}`, null),
+  cancelCall: (callId: number): Promise<boolean> => client.delete(`${baseUrl}/users/me/calls/${callId}`, null),
   listCalls: (): Promise<Array<Call>> => client.get(`${baseUrl}/users/me/calls`, null).then(response => Call.parseMany(response.items)),
 
   relocateCall(callId: number, destination: string, lineId: number | null | undefined, contact?: string | null | undefined): Promise<Relocation> {
@@ -62,7 +63,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
       completions: ['answer'],
       destination,
       initiator_call: callId,
-      auto_answer: true
+      auto_answer: true,
     };
 
     if (lineId || contact) {
@@ -81,10 +82,10 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   },
 
   listVoicemails: (): Promise<RequestError | Array<Voicemail>> => client.get(`${baseUrl}/users/me/voicemails`).then(response => Voicemail.parseMany(response)),
-  deleteVoicemail: (voicemailId: number): Promise<Boolean> => client.delete(`${baseUrl}/users/me/voicemails/messages/${voicemailId}`),
+  deleteVoicemail: (voicemailId: number): Promise<boolean> => client.delete(`${baseUrl}/users/me/voicemails/messages/${voicemailId}`),
   getVoicemailUrl: (voicemail: Voicemail) => {
     const body = {
-      token: client.token
+      token: client.token,
     };
     return client.computeUrl('get', `${baseUrl}/users/me/voicemails/messages/${voicemail.id}/recording`, body);
   },
@@ -96,11 +97,11 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   sendFax: (extension: string, fax: string, callerId: string | null | undefined = null) => {
     const headers = {
       'Content-type': 'application/pdf',
-      'X-Auth-Token': client.token
+      'X-Auth-Token': client.token,
     };
     const params = ApiRequester.getQueryString({
       extension,
-      caller_id: callerId
+      caller_id: callerId,
     });
     return client.post(`${baseUrl}/users/me/faxes?${params}`, fax, headers);
   },
@@ -116,7 +117,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   transferCall: (initiator_call: string, exten: string, flow: string) => client.post(`${baseUrl}/users/me/transfers`, {
     initiator_call,
     exten,
-    flow
+    flow,
   }).then(IndirectTransfer.parseFromApi),
   confirmCallTransfer: (transferId: string) => client.put(`${baseUrl}/users/me/transfers/${transferId}/complete`),
   cancelCallTransfer: (transferId: string) => client.delete(`${baseUrl}/users/me/transfers/${transferId}`),
@@ -125,7 +126,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   isAhHocConferenceAPIEnabled: () => client.head(`${baseUrl}/users/me/conferences/adhoc`, null, null, ApiRequester.successResponseParser),
   createAdHocConference: (hostCallId: string, participantCallIds: string) => client.post(`${baseUrl}/users/me/conferences/adhoc`, {
     host_call_id: hostCallId,
-    participant_call_ids: participantCallIds
+    participant_call_ids: participantCallIds,
   }),
   addAdHocConferenceParticipant: (conferenceId: string, callId: string) => client.put(`${baseUrl}/users/me/conferences/adhoc/${conferenceId}/participants/${callId}`, null, null, ApiRequester.successResponseParser),
   removeAdHocConferenceParticipant: (conferenceId: string, participantCallId: string) => client.delete(`${baseUrl}/users/me/conferences/adhoc/${conferenceId}/participants/${participantCallId}`, null, null, ApiRequester.successResponseParser),
@@ -134,5 +135,5 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   stopRecording: (callId: string) => client.put(`${baseUrl}/users/me/calls/${callId}/record/stop`, null, null, ApiRequester.successResponseParser),
   pauseRecording: (callId: string) => client.put(`${baseUrl}/users/me/calls/${callId}/record/pause`, null, null, ApiRequester.successResponseParser),
   resumeRecording: (callId: string) => client.put(`${baseUrl}/users/me/calls/${callId}/record/resume`, null, null, ApiRequester.successResponseParser),
-  guestGetMeetingStatus: (meetingUuid: string): Promise<MeetingStatus> => client.get(`${baseUrl}/guests/me/meetings/${meetingUuid}/status`).then(MeetingStatus.parse)
+  guestGetMeetingStatus: (meetingUuid: string): Promise<MeetingStatus> => client.get(`${baseUrl}/guests/me/meetings/${meetingUuid}/status`).then(MeetingStatus.parse),
 }));

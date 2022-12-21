@@ -1,4 +1,5 @@
-import Line from "../Line";
+import Line from '../Line';
+
 describe('Line domain', () => {
   it('can parse a plain line to domain', () => {
     const response = {
@@ -8,8 +9,8 @@ describe('Line domain', () => {
         username: 'ipcor1pj',
         links: [{
           href: 'https://stack.example.com/api/confd/1.1/endpoints/sip/19',
-          rel: 'endpoint_sip'
-        }]
+          rel: 'endpoint_sip',
+        }],
       },
       endpoint_sccp: null,
       endpoint_custom: null,
@@ -19,13 +20,13 @@ describe('Line domain', () => {
         context: 'default',
         links: [{
           href: 'https://stack.example.com/api/confd/1.1/extensions/59',
-          rel: 'extensions'
-        }]
+          rel: 'extensions',
+        }],
       }],
       links: [{
         href: 'https://stack.example.com/api/confd/1.1/lines/8',
-        rel: 'lines'
-      }]
+        rel: 'lines',
+      }],
     };
     const line = Line.parse(response);
     expect(line).toEqual(new Line({
@@ -36,17 +37,17 @@ describe('Line domain', () => {
         context: 'default',
         links: [{
           href: 'https://stack.example.com/api/confd/1.1/extensions/59',
-          rel: 'extensions'
-        }]
+          rel: 'extensions',
+        }],
       }],
       endpointSip: {
         id: 19,
         links: [{
           href: 'https://stack.example.com/api/confd/1.1/endpoints/sip/19',
-          rel: 'endpoint_sip'
+          rel: 'endpoint_sip',
         }],
-        username: 'ipcor1pj'
-      }
+        username: 'ipcor1pj',
+      },
     }));
   });
 });

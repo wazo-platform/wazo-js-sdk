@@ -90,7 +90,7 @@ export type Line = {
   }>;
 };
 export type ConfdUser = {
-  id: Number;
+  id: number;
   uuid: UUID;
   firstname: string;
   lastname: string;
@@ -124,7 +124,7 @@ export type ConfdUser = {
   // to check
   cti_profile: string | null | undefined;
   // to check
-  call_permissions: String<>;
+  call_permissions: string<>;
   fallbacks: {
     noanswer_destination: string | null | undefined;
     busy_destination: string | null | undefined;
@@ -214,11 +214,11 @@ export type WebRtcConfig = {
   username: string;
 };
 export type CTITransfer = {
-  "flow": string;
-  "id": string;
-  "initiator_call": string;
-  "initiator_uuid": string;
-  "recipient_call": string;
-  "status": string;
-  "transferred_call": string;
+  'flow': string;
+  'id': string;
+  'initiator_call': string;
+  'initiator_uuid': string;
+  'recipient_call': string;
+  'status': string;
+  'transferred_call': string;
 };

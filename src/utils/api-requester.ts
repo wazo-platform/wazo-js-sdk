@@ -3,12 +3,13 @@
 /* eslint-disable global-require */
 
 /* eslint-disable import/no-dynamic-require */
-import { Base64 } from "js-base64";
-import BadResponse from "../domain/BadResponse";
-import ServerError from "../domain/ServerError";
-import isMobile from "./isMobile";
-import type { Token } from "../domain/types";
-import IssueReporter from "../service/IssueReporter";
+import { Base64 } from 'js-base64';
+import BadResponse from '../domain/BadResponse';
+import ServerError from '../domain/ServerError';
+import isMobile from './isMobile';
+import type { Token } from '../domain/types';
+import IssueReporter from '../service/IssueReporter';
+
 type ConstructorParams = {
   server: string;
   agent: Record<string, any> | null | undefined;
@@ -48,18 +49,31 @@ export const realFetch = () => {
 };
 export default class ApiRequester {
   server: string;
+
   agent: Record<string, any> | null | undefined;
+
   clientId: string | null | undefined;
+
   token: string;
+
   tenant: string | null | undefined;
+
   fetchOptions: Record<string, any>;
+
   refreshTokenCallback: (...args: Array<any>) => any;
+
   refreshTokenPromise: Promise<any> | null | undefined;
+
   shouldLogErrors: boolean;
+
   head: (...args: Array<any>) => any;
+
   get: (...args: Array<any>) => any;
+
   post: (...args: Array<any>) => any;
+
   put: (...args: Array<any>) => any;
+
   delete: (...args: Array<any>) => any;
 
   // eslint-disable-next-line
@@ -86,7 +100,7 @@ export default class ApiRequester {
     clientId,
     agent = null,
     token = null,
-    fetchOptions
+    fetchOptions,
   }: ConstructorParams) {
     this.server = server;
     this.agent = agent;
@@ -130,7 +144,7 @@ export default class ApiRequester {
     this.shouldLogErrors = true;
   }
 
-  async call(path: string, method: string = 'get', body: Record<string, any> | null | undefined = null, headers: (string | null | undefined) | (Record<string, any> | null | undefined) = null, parse: (...args: Array<any>) => any = ApiRequester.defaultParser, firstCall: boolean = true): Promise<any> {
+  async call(path: string, method = 'get', body: Record<string, any> | null | undefined = null, headers: (string | null | undefined) | (Record<string, any> | null | undefined) = null, parse: (...args: Array<any>) => any = ApiRequester.defaultParser, firstCall = true): Promise<any> {
     const url = this.computeUrl(method, path, body);
     const newHeaders = this.getHeaders(headers);
     let newBody = method === 'get' ? null : body;
@@ -142,7 +156,7 @@ export default class ApiRequester {
     const isHead = method === 'head';
     const hasEmptyResponse = method === 'delete' || isHead;
     const newParse = hasEmptyResponse ? ApiRequester.successResponseParser : parse;
-    const fetchOptions = { ...(this.fetchOptions || {})
+    const fetchOptions = { ...(this.fetchOptions || {}),
     };
     const extraHeaders = fetchOptions.headers || {};
     delete fetchOptions.headers;
@@ -150,15 +164,15 @@ export default class ApiRequester {
       method,
       body: newBody,
       headers: { ...this.getHeaders(headers),
-        ...extraHeaders
+        ...extraHeaders,
       },
       agent: this.agent,
-      ...fetchOptions
+      ...fetchOptions,
     };
 
     if (this.refreshTokenPromise) {
       logger.info('A token is already refreshing, waiting ...', {
-        url
+        url,
       });
       await this.refreshTokenPromise;
     }
@@ -177,7 +191,7 @@ export default class ApiRequester {
           // Check if the token is still valid
           if (firstCall && this._checkTokenExpired(response, err)) {
             logger.warn('token expired', {
-              error: err.reason
+              error: err.reason,
             });
             // Replay the call after refreshing the token
             return this._replayWithNewToken(err, path, method, body, headers, parse);
@@ -200,7 +214,7 @@ export default class ApiRequester {
           url,
           options,
           message: error.message,
-          stack: error.stack
+          stack: error.stack,
         });
       }
 
@@ -224,13 +238,13 @@ export default class ApiRequester {
 
     let newPath = path;
     logger.info('refreshing token', {
-      inProgress: !!this.refreshTokenPromise
+      inProgress: !!this.refreshTokenPromise,
     });
     this.refreshTokenPromise = this.refreshTokenPromise || this.refreshTokenCallback();
     return this.refreshTokenPromise.then(() => {
       this.refreshTokenPromise = null;
       logger.info('token refreshed', {
-        isTokenNotFound
+        isTokenNotFound,
       });
 
       if (isTokenNotFound) {
@@ -255,10 +269,10 @@ export default class ApiRequester {
     return {
       'X-Auth-Token': this.token,
       ...(this.tenant ? {
-        'Wazo-Tenant': this.tenant
+        'Wazo-Tenant': this.tenant,
       } : null),
       Accept: 'application/json',
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     };
   }
 

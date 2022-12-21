@@ -1,4 +1,4 @@
-import CallSession from "../CallSession";
+import CallSession from '../CallSession';
 
 const stringify = cs => JSON.parse(JSON.stringify(cs));
 
@@ -10,14 +10,14 @@ describe('CallSession domain', () => {
       paused: false,
       number: '8001',
       isCaller: true,
-      dialedExtension: null
+      dialedExtension: null,
     });
     const anotherCallSession = new CallSession({
       callId: 345,
       callerNumber: '8008',
       number: '8008',
       isCaller: false,
-      dialedExtension: undefined
+      dialedExtension: undefined,
     });
     callSession.updateFrom(anotherCallSession);
     expect(callSession.callId).toBe(345);
@@ -32,11 +32,11 @@ describe('CallSession domain', () => {
   it('should compare 2 callSession', () => {
     const cs1 = new CallSession({
       callId: 123,
-      sipCallId: 456
+      sipCallId: 456,
     });
     const cs2 = new CallSession({
       callId: 123,
-      sipCallId: null
+      sipCallId: null,
     });
     expect(cs1.is(cs2)).toBeTruthy();
     expect(cs2.is(cs1)).toBeTruthy();
@@ -47,7 +47,7 @@ describe('CallSession domain', () => {
     const cs2 = new CallSession({});
     cs2.answer();
     const cs3 = new CallSession({
-      answered: true
+      answered: true,
     });
     expect(cs1.answered).toEqual(true);
     expect(cs1.answerTime).not.toBeNull();
@@ -66,7 +66,7 @@ describe('CallSession domain', () => {
     const cs1 = new CallSession({});
     cs1.answered = false;
     const cs2 = new CallSession({
-      answered: false
+      answered: false,
     });
     expect(cs1.answered).toEqual(false);
     expect(cs1.answerTime).toBeNull();

@@ -1,8 +1,9 @@
-import type { SwitchboardCallItems, SwitchboardAnwseredQueuedCall, SwitchboardAnwseredHeldCall } from "../domain/SwitchboardCall";
-import type { ChatMessageResponse } from "../domain/ChatMessage";
-import ChatRoom from "../domain/ChatRoom";
-import Meeting from "../domain/Meeting";
-import type MeetingAuthorization from "../domain/MeetingAuthorization";
+import type { SwitchboardCallItems, SwitchboardAnwseredQueuedCall, SwitchboardAnwseredHeldCall } from '../domain/SwitchboardCall';
+import type { ChatMessageResponse } from '../domain/ChatMessage';
+import ChatRoom from '../domain/ChatRoom';
+import Meeting from '../domain/Meeting';
+import type MeetingAuthorization from '../domain/MeetingAuthorization';
+
 type WebSocketBaseMessage = {
   op: string;
   origin_uuid: string;
@@ -150,134 +151,134 @@ export type AgentStatusUpdateEvent = {
 };
 type CallCreated = WebSocketBaseMessage & {
   data: CallMessage;
-  name: "call_created";
+  name: 'call_created';
 };
 type CallUpdated = WebSocketBaseMessage & {
   data: CallMessage;
-  name: "call_updated";
+  name: 'call_updated';
 };
 type CallEnded = WebSocketBaseMessage & {
   data: CallMessage;
-  name: "call_ended";
+  name: 'call_ended';
 };
 type CallHeld = WebSocketBaseMessage & {
   data: CallEventMessage;
-  name: "call_held";
+  name: 'call_held';
 };
 type CallResumed = WebSocketBaseMessage & {
   data: CallEventMessage;
-  name: "call_resumed";
+  name: 'call_resumed';
 };
 type ChatMessageSent = WebSocketBaseMessage & {
   data: ChatMessageEvent;
-  name: "chatd_user_room_created";
+  name: 'chatd_user_room_created';
 };
 type ChatRoomCreate = WebSocketBaseMessage & {
   data: ChatRoom;
-  name: "chatd_user_room_message_created";
+  name: 'chatd_user_room_message_created';
 };
 type VoicemailCreated = WebSocketBaseMessage & {
   data: VoicemailEvent;
-  name: "user_voicemail_message_created";
+  name: 'user_voicemail_message_created';
 };
 type UpdateDoNotDisturb = WebSocketBaseMessage & {
   data: DoNotDisturbUpdateEvent;
-  name: "users_services_dnd_updated";
+  name: 'users_services_dnd_updated';
 };
 type VoicemailDeleted = WebSocketBaseMessage & {
   data: VoicemailEvent;
-  name: "user_voicemail_message_deleted";
+  name: 'user_voicemail_message_deleted';
 };
 type FavoriteAdded = WebSocketBaseMessage & {
   data: FavoriteEvent;
-  name: "favorite_added";
+  name: 'favorite_added';
 };
 type FavoriteDeleted = WebSocketBaseMessage & {
   data: FavoriteEvent;
-  name: "favorite_deleted";
+  name: 'favorite_deleted';
 };
 type NewCallLog = WebSocketBaseMessage & {
   data: CallLogEvent;
-  name: "call_log_user_created";
+  name: 'call_log_user_created';
 };
 type UserStatusUpdate = WebSocketBaseMessage & {
   data: UserStatusUpdateEvent;
-  name: "user_status_update";
+  name: 'user_status_update';
 };
 type EndpointStatusUpdate = WebSocketBaseMessage & {
   data: EndpointStatusUpdateEvent;
-  name: "endpoint_status_update";
+  name: 'endpoint_status_update';
 };
 type ExternalAuthAdded = WebSocketBaseMessage & {
   data: ExternalAuth;
-  name: "auth_user_external_auth_added";
+  name: 'auth_user_external_auth_added';
 };
 type ExternalAuthDeleted = WebSocketBaseMessage & {
   data: ExternalAuth;
-  name: "auth_user_external_auth_deleted";
+  name: 'auth_user_external_auth_deleted';
 };
 type PresencesRead = WebSocketBaseMessage & {
   data: PresencesReadEvent;
-  name: "chatd_presence_updated";
+  name: 'chatd_presence_updated';
 };
 type ParticipantJoinedRoom = WebSocketBaseMessage & {
   data: RoomParticipantUpdate;
-  name: "conference_user_participant_joined";
+  name: 'conference_user_participant_joined';
 };
 type ParticipantLeftRoom = WebSocketBaseMessage & {
   data: RoomParticipantUpdate;
-  name: "conference_user_participant_left";
+  name: 'conference_user_participant_left';
 };
 type ParticipantJoinedMeeting = WebSocketBaseMessage & {
   data: MeetingParticipantUpdate;
-  name: "meeting_user_participant_joined";
+  name: 'meeting_user_participant_joined';
 };
 type ParticipantLeftMeeting = WebSocketBaseMessage & {
   data: MeetingParticipantUpdate;
-  name: "meeting_user_participant_left";
+  name: 'meeting_user_participant_left';
 };
 type SwitchboardQueuedCallsUpdated = WebSocketBaseMessage & {
   data: SwitchboardCallItems;
-  name: "switchboard_queued_calls_updated";
+  name: 'switchboard_queued_calls_updated';
 };
 type SwitchboardQueuedCallAnswered = WebSocketBaseMessage & {
   data: SwitchboardAnwseredQueuedCall;
-  name: "switchboard_queued_call_answered";
+  name: 'switchboard_queued_call_answered';
 };
 type SwitchboardHeldCallsUpdated = WebSocketBaseMessage & {
   data: any;
-  name: "switchboard_held_calls_updated";
+  name: 'switchboard_held_calls_updated';
 };
 type SwitchboardHeldCallAnswered = WebSocketBaseMessage & {
   data: SwitchboardAnwseredHeldCall;
-  name: "switchboard_held_call_answered";
+  name: 'switchboard_held_call_answered';
 };
 type FaxOutboundFailed = WebSocketBaseMessage & {
   data: FaxOutboundFailedEvent;
-  name: "fax_outbound_user_failed";
+  name: 'fax_outbound_user_failed';
 };
 type FaxOutboundSucceeded = WebSocketBaseMessage & {
   data: FaxOutboundSucceededEvent;
-  name: "fax_outbound_user_succeeded";
+  name: 'fax_outbound_user_succeeded';
 };
 type AgentStatusUpdate = WebSocketBaseMessage & {
   data: AgentStatusUpdateEvent;
-  name: "agent_status_update";
+  name: 'agent_status_update';
 };
 type AgentPaused = WebSocketBaseMessage & {
   data: any;
-  name: "agent_paused";
+  name: 'agent_paused';
 };
 type AgentUnpaused = WebSocketBaseMessage & {
   data: any;
-  name: "agent_unpaused";
+  name: 'agent_unpaused';
 };
 type MeetingUserProgress = WebSocketBaseMessage & {
   data: Meeting;
-  name: "meeting_user_progress";
+  name: 'meeting_user_progress';
 };
 type MeetingAuthorizationPending = WebSocketBaseMessage & {
   data: MeetingAuthorization;
-  name: "meeting_authorization_pending";
+  name: 'meeting_authorization_pending';
 };
 export type WebSocketMessage = CallCreated | CallUpdated | CallEnded | CallHeld | CallResumed | NewCallLog | ChatMessageSent | (WebSocketBaseMessage & ChatMessageResponse) | ChatRoomCreate | VoicemailCreated | UpdateDoNotDisturb | VoicemailDeleted | FavoriteAdded | FavoriteDeleted | UserStatusUpdate | EndpointStatusUpdate | ExternalAuthAdded | ExternalAuthDeleted | PresencesRead | SwitchboardQueuedCallsUpdated | SwitchboardQueuedCallAnswered | SwitchboardHeldCallsUpdated | SwitchboardHeldCallAnswered | ParticipantJoinedRoom | ParticipantLeftRoom | ParticipantJoinedMeeting | ParticipantLeftMeeting | FaxOutboundFailed | FaxOutboundSucceeded | AgentStatusUpdate | AgentPaused | AgentUnpaused | MeetingUserProgress | MeetingAuthorizationPending;

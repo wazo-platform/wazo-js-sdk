@@ -1,5 +1,6 @@
-import moment from "moment";
-import newFrom from "../utils/new-from";
+import moment from 'moment';
+import newFrom from '../utils/new-from';
+
 export type ChatUser = {
   tenant_uuid: string;
   uuid: string;
@@ -25,12 +26,19 @@ export type ChatMessageListResponse = {
 };
 export default class ChatMessage {
   type: string;
+
   uuid: string;
+
   content: string;
+
   date: Date;
+
   alias: string;
+
   userUuid: string;
+
   roomUuid: string | null | undefined;
+
   read: boolean;
 
   static parseMany(plain: ChatMessageListResponse): Array<ChatMessage> {
@@ -49,7 +57,7 @@ export default class ChatMessage {
       alias: plain.alias,
       userUuid: plain.user_uuid,
       read: true,
-      roomUuid: plain.room ? plain.room.uuid : null
+      roomUuid: plain.room ? plain.room.uuid : null,
     });
   }
 
@@ -64,7 +72,7 @@ export default class ChatMessage {
     userUuid,
     alias,
     roomUuid,
-    read
+    read,
   }: Record<string, any> = {}) {
     this.uuid = uuid;
     this.date = date;

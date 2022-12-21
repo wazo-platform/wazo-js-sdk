@@ -16,7 +16,7 @@ export const parseCandidate = line => {
     ip: parts[4],
     port: parseInt(parts[5], 10),
     // skip parts[6] == 'typ'
-    type: parts[7]
+    type: parts[7],
   };
 
   for (let i = 8; i < parts.length; i += 2) {
