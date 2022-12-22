@@ -13,7 +13,7 @@ export const getCandidates = (rawSdp: string | null | undefined): Record<string,
 
   return sdp.media.map(media => media.candidates).flat().filter(candidate => !!candidate);
 };
-export const parseCandidate = (candidate: string | null | undefined): Record<string, any> | null | undefined => {
+export const parseCandidate = (candidate?: string): Record<string, any> | null => {
   if (!candidate) {
     return null;
   }

@@ -1,5 +1,6 @@
 import { SessionState } from 'sip.js/lib/api/session-state';
-import type { Session } from 'sip.js/lib/api/session';
+import type Invitation from './sip.js/Invitation';
+import type Inviter from './sip.js/Inviter';
 import Call from './Call';
 import newFrom from '../utils/new-from';
 import updateFrom from '../utils/update-from';
@@ -25,14 +26,14 @@ type CallSessionArguments = {
   ringing: boolean;
   sipCallId: string;
   sipId?: string;
-  sipStatus?: number;
+  sipStatus?: string;
   startTime: number;
   autoAnswer?: boolean;
   ignored?: boolean;
   screensharing: boolean;
   recording: boolean;
   recordingPaused: boolean;
-  sipSession?: Session;
+  sipSession?: Inviter | Invitation;
   conference: boolean;
 };
 export default class CallSession {
@@ -96,7 +97,7 @@ export default class CallSession {
 
   recordingPaused: boolean;
 
-  sipSession: Session | undefined;
+  sipSession: Inviter | Invitation | undefined;
 
   conference: boolean;
 
@@ -319,7 +320,7 @@ export default class CallSession {
   }
 
   isId(id: string): boolean {
-    return this.getId() === id || this.sipCallId && this.sipCallId === id || Boolean(this.callId) && this.callId === id;
+    return this.getId() === id || (!!this.sipCallId && this.sipCallId === id) || (!!this.callId && this.callId === id);
   }
 
   updateFrom(session: CallSession) {

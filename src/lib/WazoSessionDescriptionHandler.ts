@@ -1,6 +1,5 @@
 /* global RTCSessionDescriptionInit, navigator */
 import EventEmitter from 'events';
-import type { Session } from 'sip.js/lib/core/session';
 import type { Logger } from 'sip.js/lib/core/log/logger';
 import type { MediaStreamFactory } from 'sip.js/lib/platform/web/session-description-handler/media-stream-factory';
 import type { SessionDescriptionHandlerConfiguration } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-configuration';
@@ -8,6 +7,8 @@ import { SessionDescriptionHandler } from 'sip.js/lib/platform/web/session-descr
 import { SessionDescriptionHandlerOptions } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-options';
 import IssueReporter from '../service/IssueReporter';
 import { addIcesInAllBundles, fixSdp, parseCandidate } from '../utils/sdp';
+import type Invitation from '../domain/sip.js/Invitation';
+import type Inviter from '../domain/sip.js/Inviter';
 
 const wazoLogger = IssueReporter ? IssueReporter.loggerFor('webrtc-sdh') : console;
 // Customized mediaStreamFactory allowing to send screensharing stream directory when upgrading
@@ -36,11 +37,11 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
 
   isWeb: boolean;
 
-  session: Session;
+  session: Inviter | Invitation;
 
   // @ts-ignore
   // eslint-disable-next-line @typescript-eslint/default-param-last
-  constructor(logger: Logger, mediaStreamFactory: MediaStreamFactory, sessionDescriptionHandlerConfiguration?: SessionDescriptionHandlerConfiguration, isWeb: boolean, session: Session) {
+  constructor(logger: Logger, mediaStreamFactory: MediaStreamFactory, sessionDescriptionHandlerConfiguration?: SessionDescriptionHandlerConfiguration, isWeb: boolean, session: Inviter | Invitation) {
     super(logger, mediaStreamFactory, sessionDescriptionHandlerConfiguration);
     this.eventEmitter = new EventEmitter();
     this.isWeb = isWeb;
@@ -76,6 +77,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     }
 
     // Callback on data channel creation
+    // @ts-ignore
     this.onDataChannel = options.onDataChannel;
     // ICE will restart upon applying an offer created with the iceRestart option
     const iceRestart = options.offerOptions ? options.offerOptions.iceRestart : false;
@@ -105,6 +107,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       });
 
       if (event.candidate) {
+        // @ts-ignore @REEVALUATE
         this.gatheredCandidates.push(parseCandidate(event.candidate.candidate));
 
         // When receiving a `srflx` or a `relay` candidate, consider the negotiation done.
@@ -152,6 +155,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         return {
           type: description.type,
           // Fix sdp only when no candidates
+          // @ts-ignore
           sdp: fixSdp(sdp, this.gatheredCandidates, options && options.constraints ? options.constraints.video : false),
         };
       })
@@ -171,7 +175,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
   sendDtmf(tones: string, options: {
     duration: number;
     interToneGap: number;
-  } = {}): boolean {
+  } = { duration: 0, interToneGap: 0 }): boolean {
     if (this.isWeb) {
       return super.sendDtmf(tones, options);
     }
@@ -185,6 +189,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     const requestOptions = {
       body,
     };
+    // @ts-ignore @REEVALUATE: session.info is asynched
     return this.session.info({
       requestOptions,
     });
@@ -206,12 +211,14 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     }
 
     // Closing senders via getLocalStreams
+    // @ts-ignore
     this.peerConnection?.getLocalStreams().forEach(stream => {
       stream.getTracks().forEach(track => {
         track.stop();
       });
     });
     // Closing receivers via getRemoteStreams
+    // @ts-ignore
     this.peerConnection?.getRemoteStreams().forEach(stream => {
       stream.getTracks().forEach(track => {
         track.stop();
@@ -285,6 +292,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
               const offerDirection = directionToOffer(transceiver.direction, transceiver);
 
               if (transceiver.direction !== offerDirection) {
+                // @ts-ignore - @REEVALUATE
                 // eslint-disable-next-line no-param-reassign
                 transceiver.direction = offerDirection;
               }
@@ -355,6 +363,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
 
           // set the transceiver direction to the answer direction
           this._peerConnection.getTransceivers().forEach(transceiver => {
+            // @ts-ignore
             if (transceiver.stopped) {
               return;
             }
@@ -434,10 +443,12 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
           if (oldTrack) {
             oldTrack.stop();
             localStream.removeTrack(oldTrack);
+            // @ts-ignore
             SessionDescriptionHandler.dispatchRemoveTrackEvent(localStream, oldTrack);
           }
 
           localStream.addTrack(newTrack);
+          // @ts-ignore
           SessionDescriptionHandler.dispatchAddTrackEvent(localStream, newTrack);
         }).catch((error: Error) => {
           this.logger.error(`SessionDescriptionHandler.setLocalMediaStream - failed to replace sender ${kind} track`);
@@ -462,6 +473,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
           }
 
           localStream.addTrack(newTrack);
+          // @ts-ignore
           SessionDescriptionHandler.dispatchAddTrackEvent(localStream, newTrack);
         }));
       }
@@ -496,8 +508,10 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     } : {};
 
     // if we already have a local media stream...
+    // @ts-ignore
     if (this.localMediaStreamConstraints) {
       // if constraints have not changed, do not get a new media stream
+      // @ts-ignore
       if (JSON.stringify(this.localMediaStreamConstraints.audio) === JSON.stringify(constraints.audio) && JSON.stringify(this.localMediaStreamConstraints.video) === JSON.stringify(constraints.video)) {
         return Promise.resolve();
       }
@@ -508,6 +522,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       };
     }
 
+    // @ts-ignore
     this.localMediaStreamConstraints = constraints;
     return this.mediaStreamFactory(constraints, this).then(mediaStream => this.setLocalMediaStream(mediaStream));
   }

@@ -1,15 +1,16 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable no-underscore-dangle */
 import type { Message } from 'sip.js/lib/api/message';
-import type { Session } from 'sip.js/lib/core/session';
-import { Invitation } from 'sip.js/lib/api/invitation';
 import { SessionState } from 'sip.js/lib/api/session-state';
 import type { IncomingRequestMessage } from 'sip.js/lib/core/messages/incoming-request-message';
+import { OutgoingInviteRequest } from 'sip.js/lib/core';
 import CallSession from '../CallSession';
 import type { Phone, AvailablePhoneOptions } from './Phone';
 import WazoWebRTCClient from '../../web-rtc-client';
 import Emitter from '../../utils/Emitter';
 import IssueReporter from '../../service/IssueReporter';
+import Inviter from '../sip.js/Inviter';
+import Invitation from '../sip.js/Invitation';
 
 export const ON_USER_AGENT = 'onUserAgent';
 export const ON_REGISTERED = 'onRegistered';
@@ -66,7 +67,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   incomingSessions: string[];
 
-  currentSipSession: Session;
+  currentSipSession: Invitation | Inviter | undefined;
 
   currentCallSession: CallSession | null | undefined;
 
@@ -86,9 +87,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   ignoredSessions: Record<string, any>;
 
-  currentScreenShare: Record<string, any>;
+  currentScreenShare: Record<string, any> | null;
 
-  lastScreenShare: Record<string, any>;
+  lastScreenShare: Record<string, any> | null;
 
   shouldSendReinvite: boolean;
 
@@ -163,7 +164,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     });
 
     if (!sipSession) {
-      return false;
+      return;
     }
 
     const shouldScreenShare = constraints?.screen;
@@ -174,14 +175,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
       // No reinvite needed
       this._downgradeToAudio(callSession);
 
-      return false;
+      return;
     }
 
     if (isUpgrade) {
       const shouldReinvite = await this._upgradeToVideo(callSession, constraints, conference);
 
       if (!shouldReinvite) {
-        return false;
+        return;
       }
     }
 
@@ -309,7 +310,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const shouldScreenShare = constraints && !!constraints.screen;
     const desktop = constraints && constraints.desktop;
     const options = sipSession.sessionDescriptionHandlerOptionsReInvite;
-    const wasAudioOnly = options && options.audioOnly;
+    // @ts-ignore
+    const wasAudioOnly = options?.audioOnly;
     const newStream = await this.client.upgradeToVideo(sipSession, constraints, isConference);
 
     if (callSession) {
@@ -351,7 +353,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         content: {
           type: ON_MESSAGE_TRACK_UPDATED,
           update: isUpgrade ? 'upgrade' : 'downgrade',
-          sipCallId: this.getSipSessionId(sipSession),
+          sipCallId: sipSession && this.getSipSessionId(sipSession),
           callId: callSession ? callSession.callId : null,
           number: callSession ? callSession.number : null,
           callerNumber: callSession ? callSession.callerNumber : null,
@@ -360,8 +362,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }, 2500);
   }
 
-  _bindEvents(sipSession: Session) {
-    if (sipSession._onCancel) {
+  _bindEvents(sipSession: Invitation | Inviter) {
+    if (sipSession instanceof Invitation) {
       // Monkey patch to know when canceled with the CANCEL message
       const onCancel = sipSession._onCancel.bind(sipSession);
 
@@ -429,6 +431,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     // Video events
     const {
+      // @ts-ignore
       peerConnection,
     } = sipSession.sessionDescriptionHandler;
 
@@ -477,9 +480,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     const screenTrack = screenShareStream.getVideoTracks()[0];
     const sipSession = this.currentSipSession;
-    const pc = this.client.getPeerConnection(this.getSipSessionId(sipSession));
+    const pc = sipSession && this.client.getPeerConnection(this.getSipSessionId(sipSession));
     const sender = pc && pc.getSenders && pc.getSenders().find(s => s && s.track && s.track.kind === 'video');
-    const localStream = this.client.getLocalStream(this.getSipSessionId(sipSession));
+    const localStream = sipSession && this.client.getLocalStream(this.getSipSessionId(sipSession));
     const videoTrack = localStream ? localStream.getTracks().find(track => track.kind === 'video') : null;
     const hadVideo = !!videoTrack;
 
@@ -498,12 +501,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
       sender.replaceTrack(screenTrack);
     }
 
+    // @ts-ignore
     this._onScreenSharing(screenShareStream, sipSession, callSession, hadVideo, constraints.desktop);
 
     return screenShareStream;
   }
 
-  async stopScreenSharing(restoreLocalStream = true, callSession?: CallSession | null | undefined) {
+  async stopScreenSharing(restoreLocalStream = true, callSession?: CallSession | null | undefined): Promise<Record<string, any> | undefined> {
     if (!this.currentScreenShare) {
       return;
     }
@@ -511,7 +515,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     logger.info('WebRTC phone - stop screen sharing', {
       restoreLocalStream,
     });
-    let reinvited = false;
+    let reinvited: OutgoingInviteRequest | undefined;
 
     try {
       if (this.currentScreenShare.stream) {
@@ -542,14 +546,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     const sipSession = this.currentSipSession;
-    this.eventEmitter.emit(ON_SHARE_SCREEN_ENDED, callSession ? this._createCallSession(sipSession, callSession, {
+    this.eventEmitter.emit(ON_SHARE_SCREEN_ENDED, callSession && sipSession ? this._createCallSession(sipSession, callSession, {
       screensharing: false,
     }) : null);
     this.currentScreenShare = null;
     return reinvited;
   }
 
-  _onScreenSharing(screenStream: Record<string, any>, sipSession: Session, callSession: CallSession | null | undefined, hadVideo: boolean, desktop?: boolean | null | undefined = false) {
+  _onScreenSharing(screenStream: MediaStream, sipSession: Invitation | Inviter, callSession: CallSession | null | undefined, hadVideo: boolean, desktop?: boolean | null | undefined) {
     const screenTrack = screenStream.getVideoTracks()[0];
     const sipSessionId = this.getSipSessionId(sipSession);
     const pc = this.client.getPeerConnection(sipSessionId);
@@ -584,7 +588,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }), screenStream);
   }
 
-  _onCallAccepted(sipSession: Session, cameraEnabled: boolean): CallSession {
+  _onCallAccepted(sipSession: Inviter | Invitation, cameraEnabled: boolean): CallSession {
     logger.info('WebRTC phone - on call accepted', {
       sipId: sipSession.id,
       cameraEnabled,
@@ -645,14 +649,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.audioRingVolume = volume;
   }
 
-  changeAudioInputDevice(id: string, force: boolean | null | undefined) {
+  changeAudioInputDevice(id: string, force?: boolean) {
     logger.info('WebRTC phone - changeAudio input device', {
       deviceId: id,
     });
     return this.client.changeAudioInputDevice(id, this.currentSipSession, force);
   }
 
-  changeVideoInputDevice(id: string | null | undefined) {
+  changeVideoInputDevice(id?: string) {
     logger.info('WebRTC phone - change video input device', {
       deviceId: id,
     });
@@ -663,10 +667,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
     logger.info('WebRTC phone - change session video input device', {
       deviceId: id,
     });
-    return this.client.changeSessionVideoInputDevice(id, this.currentSipSession);
+    return this.currentSipSession && this.client.changeSessionVideoInputDevice(id, this.currentSipSession);
   }
 
-  _onCallTerminated(sipSession: Session) {
+  _onCallTerminated(sipSession: Invitation | Inviter) {
     logger.info('WebRTC phone - on call terminated', {
       sipId: sipSession.id,
     });
@@ -721,7 +725,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
           }
         }
 
-        this.eventEmitter.emit(ON_CALL_INCOMING, nextCallSession, nextCallSession.cameraEnabled);
+        this.eventEmitter.emit(ON_CALL_INCOMING, nextCallSession, nextCallSession?.cameraEnabled);
       }, 100);
     }
 
@@ -763,6 +767,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     const {
+      // @ts-ignore
       peerConnection,
     } = sipSession.sessionDescriptionHandler;
     const remoteStream = peerConnection.getRemoteStreams().find(stream => !!stream.getVideoTracks().length);
@@ -844,7 +849,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     this.acceptedSessions[callSession.getId()] = true;
     this.eventEmitter.emit(ON_CALL_ANSWERED, callSession);
-    const sipSession = this.client.getSipSession(callSession.getId());
+    const sipSession = this.client.getSipSession(callSession.getId()) as Invitation;
 
     if (sipSession) {
       if (sipSession.state === SessionState.Terminated || sipSession.state === SessionState.Terminating) {
@@ -907,7 +912,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   atxfer(callSession: CallSession): Record<string, any> | null | undefined {
-    const sipSession = this.findSipSession(callSession);
+    const sipSession = this.findSipSession(callSession) as Inviter;
 
     if (sipSession) {
       logger.info('WebRTC atxfer', {
@@ -963,7 +968,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return promise;
   }
 
-  async holdSipSession(sipSession: Session, callSession: CallSession | null | undefined, withEvent = true): Promise<any> {
+  async holdSipSession(sipSession: Inviter | Invitation, callSession: CallSession | null | undefined, withEvent = true): Promise<any> {
     if (!sipSession) {
       return new Promise((resolve, reject) => reject(new Error('No session to hold')));
     }
@@ -996,7 +1001,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return promise;
   }
 
-  async unholdSipSession(sipSession: Session, callSession: CallSession | null | undefined, withEvent = true): Promise<any> {
+  async unholdSipSession(sipSession: Inviter | Invitation, callSession: CallSession | null | undefined, withEvent = true): Promise<any> {
     if (!sipSession) {
       return new Promise((resolve, reject) => reject(new Error('No session to unhold')));
     }
@@ -1186,7 +1191,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       });
     }
 
-    let sipSession: Session;
+    let sipSession: Inviter | Invitation;
 
     try {
       sipSession = this.client.call(number, this.allowVideo ? cameraEnabled : false, audioOnly, conference);
@@ -1214,7 +1219,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.eventEmitter.emit(ON_CALL_OUTGOING, callSession);
 
     // If an invite promise exists, catch exceptions on it to trigger error like OverConstraintsError.
+    // @ts-ignore
     if (sipSession.invitePromise) {
+      // @ts-ignore
       sipSession.invitePromise.catch(error => {
         this.eventEmitter.emit(ON_CALL_ERROR, error, callSession);
       });
@@ -1260,6 +1267,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
           },
         },
       };
+      // @ts-ignore
       return sipSessionTarget.refer(sipSession, options);
     });
   }
@@ -1270,7 +1278,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   confirmCTIIndirectTransfer() {}
 
-  async hangup(callSession: CallSession | null | undefined): Promise<boolean> {
+  async hangup(callSession?: CallSession | null): Promise<boolean> {
     const sipSession = this.findSipSession(callSession);
 
     if (!sipSession) {
@@ -1289,7 +1297,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.endCurrentCall(callSession);
     } else if (sipSessionId) {
       if (callSession) {
-        delete this.callSessions[callSession.getId()];
+        delete this.callSessions[sipSessionId];
       }
     }
 
@@ -1312,7 +1320,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return sipSession ? this.client.stopNetworkMonitoring(sipSession) : null;
   }
 
-  forceCancel(sipSession: Session): void {
+  forceCancel(sipSession: Inviter): void {
     if (!sipSession || !sipSession.outgoingInviteRequest) {
       return;
     }
@@ -1357,7 +1365,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.close(force);
     this.unbind();
     this.incomingSessions = [];
-    this.currentSipSession = null;
+    this.currentSipSession = undefined;
     this.currentCallSession = null;
     this.shouldSendReinvite = false;
     this.rejectedSessions = {};
@@ -1405,7 +1413,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   // eslint-disable-next-line @typescript-eslint/default-param-last
-  sendMessage(sipSession: Session = null, body: string, contentType = 'text/plain') {
+  sendMessage(sipSession: Invitation | Inviter | null = null, body: string, contentType = 'text/plain') {
     return this.client.sendMessage(sipSession, body, contentType);
   }
 
@@ -1457,7 +1465,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   bindClientEvents() {
     this.client.unbind();
-    this.client.on(this.client.INVITE, (sipSession: Session, wantsToDoVideo: boolean) => {
+    this.client.on(this.client.INVITE, (sipSession: Invitation | Inviter, wantsToDoVideo: boolean) => {
       const autoAnswer = sipSession.request.getHeader('Answer-Mode') === 'Auto';
       const withVideo = this.allowVideo ? wantsToDoVideo : false;
       logger.info('WebRTC invite received', {
@@ -1505,7 +1513,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         this.eventEmitter.emit.apply(this.eventEmitter, [this.client.ON_REINVITE, ...args]);
       }, 2000);
     });
-    this.client.on(this.client.ACCEPTED, (sipSession: Session) => {
+    this.client.on(this.client.ACCEPTED, (sipSession: Inviter | Invitation) => {
       const sessionId = this.getSipSessionId(sipSession);
       const hasSession = (sessionId in this.callSessions);
       logger.info('WebRTC call accepted', {
@@ -1570,7 +1578,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
       // send a reinvite to renegociate ICE with new IP
       if (this.shouldSendReinvite && this.currentSipSession && this.currentSipSession.state === SessionState.Established) {
         this.shouldSendReinvite = false;
-        const pc = this.currentSipSession.sessionDescriptionHandler.peerConnection;
+        // @ts-ignore
+        const pc = this.currentSipSession?.sessionDescriptionHandler?.peerConnection;
         const isConference = pc ? pc.sfu : false;
         const hasVideo = this.currentCallSession && this.currentCallSession.cameraEnabled;
 
@@ -1617,21 +1626,22 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.eventEmitter.emit(ON_NETWORK_STATS, callSession, stats, previousStats);
     });
     // Used when upgrading directly in screenshare mode
-    this.client.on(this.client.ON_SCREEN_SHARING_REINVITE, (sipSession: Session, response: any, desktop: boolean) => {
+    this.client.on(this.client.ON_SCREEN_SHARING_REINVITE, (sipSession: Inviter | Invitation, response: any, desktop: boolean) => {
       const sipSessionId = this.getSipSessionId(sipSession);
       const localStream = this.client.getLocalStream(sipSessionId);
       const callSession = this.callSessions[sipSessionId];
       logger.info('Updrading directly in screensharing mode', {
         sipSessionId,
-        tracks: localStream ? localStream.getTracks() : null,
+        tracks: localStream?.getTracks() || null,
       });
 
+      // @ts-ignore
       this._onScreenSharing(localStream, sipSession, callSession, false, desktop);
     });
   }
 
   // Find a corresponding sipSession from a CallSession
-  findSipSession(callSession: CallSession | null | undefined): Session | null | undefined {
+  findSipSession(callSession: CallSession | null | undefined): Invitation | Inviter | null | undefined {
     const keys = this.client.getSipSessionIds();
     const keyIndex = keys.findIndex(sessionId => callSession && callSession.isId(sessionId));
 
@@ -1647,7 +1657,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return this.callSessions[sipSessionId];
   }
 
-  getSipSessionId(sipSession: Session) {
+  getSipSessionId(sipSession: Inviter | Invitation) {
     return this.client.getSipSessionId(sipSession);
   }
 
@@ -1665,6 +1675,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   _onMessage(message: Message) {
+    // @ts-ignore
     if (!message || message.method !== 'MESSAGE') {
       return;
     }
@@ -1672,6 +1683,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     let body;
 
     try {
+      // @ts-ignore
       body = JSON.parse(message.body);
     } catch (e: any) {
       return;
@@ -1697,7 +1709,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
   }
 
-  _createIncomingCallSession(sipSession: Session, cameraEnabled: boolean, fromSession?: CallSession | null | undefined, autoAnswer = false): CallSession {
+  _createIncomingCallSession(sipSession: Invitation | Inviter, cameraEnabled: boolean, fromSession?: CallSession | null | undefined, autoAnswer = false): CallSession {
     return this._createCallSession(sipSession, fromSession, {
       incoming: true,
       ringing: true,
@@ -1706,7 +1718,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     });
   }
 
-  _createOutgoingCallSession(sipSession: Session, cameraEnabled: boolean, fromSession?: CallSession): CallSession {
+  _createOutgoingCallSession(sipSession: Invitation | Inviter, cameraEnabled: boolean, fromSession?: CallSession): CallSession {
     return this._createCallSession(sipSession, fromSession, {
       incoming: false,
       ringing: true,
@@ -1714,39 +1726,40 @@ export default class WebRTCPhone extends Emitter implements Phone {
     });
   }
 
-  _createAcceptedCallSession(sipSession: Session, cameraEnabled?: boolean, fromSession?: CallSession): CallSession {
+  _createAcceptedCallSession(sipSession: Invitation | Inviter, cameraEnabled?: boolean, fromSession?: CallSession): CallSession {
     return this._createCallSession(sipSession, fromSession, {
       cameraEnabled: cameraEnabled !== undefined ? cameraEnabled : false,
     });
   }
 
-  _createMutedCallSession(sipSession: Session, fromSession?: CallSession): CallSession {
+  _createMutedCallSession(sipSession: Invitation | Inviter, fromSession?: CallSession): CallSession {
     return this._createCallSession(sipSession, fromSession, {
       muted: true,
     });
   }
 
-  _createUnmutedCallSession(sipSession: Session, fromSession?: CallSession): CallSession {
+  _createUnmutedCallSession(sipSession: Invitation | Inviter, fromSession?: CallSession): CallSession {
     return this._createCallSession(sipSession, fromSession, {
       muted: false,
     });
   }
 
-  _createCameraResumedCallSession(sipSession: Session, fromSession?: CallSession): CallSession {
+  _createCameraResumedCallSession(sipSession: Invitation | Inviter, fromSession?: CallSession): CallSession {
     return this._createCallSession(sipSession, fromSession, {
       videoMuted: false,
     });
   }
 
-  _createCameraDisabledCallSession(sipSession: Session, fromSession?: CallSession): CallSession {
+  _createCameraDisabledCallSession(sipSession: Invitation | Inviter, fromSession?: CallSession): CallSession {
     return this._createCallSession(sipSession, fromSession, {
       videoMuted: true,
     });
   }
 
-  _createCallSession(sipSession: Session, fromSession?: CallSession | null | undefined, extra: Record<string, any> = {}): CallSession {
+  _createCallSession(sipSession: Invitation | Inviter, fromSession?: CallSession | null | undefined, extra: Record<string, any> = {}): CallSession {
     // eslint-disable-next-line
     const identity = sipSession ? sipSession.remoteIdentity || sipSession.assertedIdentity : null;
+    // @ts-ignore
     const number = identity ? identity.uri._normal.user : null;
     const {
       state,
@@ -1758,6 +1771,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       sipCallId: sessionId,
       sipStatus: state,
       displayName: identity ? identity.displayName || number : number,
+      // @ts-ignore: @HEADSUP: startTime should be a number, not a date
       startTime: fromSession ? fromSession.startTime : new Date(),
       creationTime: fromSession ? fromSession.creationTime : null,
       answerTime: fromSession ? fromSession.answerTime : null,

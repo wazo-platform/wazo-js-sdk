@@ -1,5 +1,3 @@
-import type { Inviter } from 'sip.js/lib/api/inviter';
-import type { Invitation } from 'sip.js/lib/api/invitation';
 import { SessionState } from 'sip.js/lib/api/session-state';
 import type SipLine from '../domain/SipLine';
 import type Session from '../domain/Session';
@@ -12,6 +10,9 @@ import IssueReporter from '../service/IssueReporter';
 import Emitter from '../utils/Emitter';
 import Wazo from './index';
 import SFUNotAvailableError from '../domain/SFUNotAvailableError';
+
+import type Invitation from '../domain/sip.js/Invitation';
+import type Inviter from '../domain/sip.js/Inviter';
 
 const logger = IssueReporter.loggerFor('simple-phone');
 const sipLogger = IssueReporter.loggerFor('sip.js');
@@ -231,8 +232,8 @@ class Phone extends Emitter {
     return this.phone && this.phone.transfer(callSession, target);
   }
 
-  atxfer(sipSession: Inviter | Invitation) {
-    return this.phone && this.phone.atxfer(sipSession);
+  atxfer(callSession: CallSession) {
+    return this.phone && this.phone.atxfer(callSession);
   }
 
   async reinvite(callSession: CallSession, constraints: (Record<string, any> | null) = null, conference = false) {
@@ -251,8 +252,11 @@ class Phone extends Emitter {
     return this.phone ? this.phone.stopNetworkMonitoring(callSession) : null;
   }
 
-  getSipSessionId(sipSession: Session): string | null | undefined {
-    return this.phone ? this.phone.getSipSessionId(sipSession) : null;
+  getSipSessionId(sipSession: Invitation | Inviter): string | null | undefined {
+    if (!sipSession || !this.phone) {
+      return null;
+    }
+    return this.phone.getSipSessionId(sipSession);
   }
 
   sendMessage(body: string, sipSession: Inviter | Invitation | null = null, contentType = 'text/plain') {
