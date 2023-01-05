@@ -1,5 +1,5 @@
 /* eslint-disable no-nested-ternary */
-import { KEYUTIL, jws, b64utoutf8 } from 'jsrsasign';
+import { KEYUTIL, KJUR, b64utoutf8 } from 'jsrsasign';
 import { swarmPublicKey } from '../../config';
 import Profile from './Profile';
 import Contact from './Contact';
@@ -9,7 +9,9 @@ import type { UUID, Token } from './types';
 import newFrom from '../utils/new-from';
 import compareVersions from '../utils/compare-version';
 
-const swarmKey = KEYUTIL.getKey(swarmPublicKey);
+const { jws } = KJUR;
+
+const swarmKey = <unknown>(KEYUTIL.getKey(swarmPublicKey)) as string;
 const MINIMUM_WAZO_ENGINE_VERSION_FOR_DEFAULT_CONTEXT = '19.08';
 type Response = {
   data: {
@@ -94,11 +96,12 @@ export default class Session {
     if (token) {
       const isValid = jws.JWS.verifyJWT(token, swarmKey, {
         alg: ['RS256'],
-        verifyAt: new Date(),
+        // @TS-HEADSUP: was `new Date`
+        verifyAt: Date.now(),
       });
 
       if (isValid) {
-        const decodedToken = jws.JWS.readSafeJSONString(b64utoutf8(token.split('.')[1]));
+        const decodedToken: any = jws.JWS.readSafeJSONString(b64utoutf8(token.split('.')[1]));
         authorizations = decodedToken ? decodedToken.authorizations : [];
       }
     }
