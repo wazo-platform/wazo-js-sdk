@@ -27,8 +27,10 @@
     "url": "https://github.com/wazo-platform/wazo-js-sdk/issues"
   },
   "scripts": {
-    "build": "./node_modules/.bin/rollup --config --extend",
-    "build:dev": "DEV=1 ./node_modules/.bin/rollup --config --extend",
+    "clean": "rm -rf ./lib && rm -rf ./esm",
+    "build": "yarn clean && yarn build:cjs",
+    "build:esm": "tsc -p ./tsconfig.esm.json && mv esm/index.js esm/index.mjs",
+    "build:cjs": "tsc -p ./tsconfig.cjs.json",
     "test": "yarn jest && yarn lint && yarn typecheck && yarn checkbuild",
     "lint": "./node_modules/.bin/eslint src/",
     "jest": "./node_modules/.bin/jest src/",
@@ -41,6 +43,18 @@
     "transformIgnorePatterns": [
       "node_modules/?!(sip.js/lib/api/session-state)"
     ]
+  },
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./esm/types/index.d.ts",
+        "default": "./esm/index.mjs"
+      },
+      "require": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/index.js"
+      }
+    }
   },
   "dependencies": {
     "events": "^3.3.0",
