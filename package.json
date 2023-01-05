@@ -30,7 +30,6 @@
     "build": "./node_modules/.bin/rollup --config --extend",
     "build:dev": "DEV=1 ./node_modules/.bin/rollup --config --extend",
     "test": "yarn jest && yarn lint && yarn typecheck && yarn checkbuild",
-    "watch": "./node_modules/.bin/webpack --mode=development --watch",
     "lint": "./node_modules/.bin/eslint src/",
     "jest": "./node_modules/.bin/jest src/",
     "checkbuild": "yarn build && node dist/wazo-sdk.js",
@@ -93,10 +92,7 @@
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-terser": "^7.0.2",
     "rollup-plugin-visualizer": "^4.2.2",
-    "typescript": "^4.9.4",
-    "webpack": "^5.27.2",
-    "webpack-bundle-analyzer": "^4.4.0",
-    "webpack-cli": "^4.5.0"
+    "typescript": "^4.9.4"
   },
   "engines": {
     "node": ">=0.8"

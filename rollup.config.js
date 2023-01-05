@@ -5,27 +5,31 @@ import commonjs from 'rollup-plugin-commonjs';
 import json from 'rollup-plugin-json';
 import typescript from '@rollup/plugin-typescript';
 
-const esmConfigs = globby.sync('src/**/*.ts').map(inputFile => ({
-  input: inputFile,
-  output: {
-    file: inputFile.replace('src', 'esm'),
-    format: 'esm',
-  },
-  plugins: [
-    typescript(),
-  ],
-}));
+const esmConfigs = globby.sync('src/**/*.ts')
+  .filter(inputFile => !inputFile.includes('.test.'))
+  .map(inputFile => ({
+    input: inputFile,
+    output: {
+      file: inputFile.replace('src', 'esm'),
+      format: 'esm',
+    },
+    plugins: [
+      typescript(),
+    ],
+  }));
 
-const csjConfigs = globby.sync('src/**/*.ts').map(inputFile => ({
-  input: inputFile,
-  output: {
-    file: inputFile.replace('src', 'lib'),
-    format: 'cjs',
-  },
-  plugins: [
-    typescript(),
-  ],
-}));
+const csjConfigs = globby.sync('src/**/*.ts')
+  .filter(inputFile => !inputFile.includes('.test.'))
+  .map(inputFile => ({
+    input: inputFile,
+    output: {
+      file: inputFile.replace('src', 'lib'),
+      format: 'cjs',
+    },
+    plugins: [
+      typescript(),
+    ],
+  }));
 
 const configs = esmConfigs.concat(csjConfigs);
 
