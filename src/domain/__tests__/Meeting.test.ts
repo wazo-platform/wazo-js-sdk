@@ -1,4 +1,3 @@
-/* global btoa */
 import moment from 'moment';
 import Meeting from '../Meeting';
 
@@ -52,7 +51,7 @@ describe('Meeting domain', () => {
     const USERNAME = 'username';
     const SECRET = 'secret';
     const args = {
-      guest_sip_authorization: btoa(`${USERNAME}:${SECRET}`),
+      guest_sip_authorization: Buffer.from(`${USERNAME}:${SECRET}`).toString('base64'),
       creation_time: '',
       ingress_http_uri: '',
       name: '',

@@ -93,13 +93,17 @@ describe('SDP utils', () => {
   describe('Parsing candidate', () => {
     it('should parse a single candidate', () => {
       const parsed = parseCandidate(candidate);
+      // @ts-expect-error
       expect(parsed.type).toBe('relay');
+      // @ts-expect-error
       expect(parsed.ip).toBe('14.72.2.1');
     });
   });
   describe('Validating candidates', () => {
     it('should parse a single candidate', () => {
+      // @ts-expect-error
       expect(areCandidateValid([null])).toBeFalsy();
+      // @ts-expect-error
       expect(areCandidateValid([parseCandidate(candidate)])).toBeTruthy();
     });
   });
@@ -113,10 +117,13 @@ describe('SDP utils', () => {
   describe('Fixing sdp', () => {
     it('should fix a SDP without candidate or IN ip', () => {
       const candidates = [parseCandidate(candidate)];
+      // @ts-expect-error
       const fixedSdp = fixSdp(badMobileSdp, candidates);
       const parsed = sdpParser.parse(fixedSdp);
+      // @ts-expect-error
       expect(parsed.media[0].candidates.length).toBe(1);
       expect(parsed.media[0].port).toBe(57021);
+      // @ts-expect-error
       expect(parsed.origin.address).toBe('14.72.2.1');
       expect(fixedSdp.indexOf('IN 0.0.0.0')).toBe(-1);
     });
@@ -125,6 +132,7 @@ describe('SDP utils', () => {
     it('should set a bundle for each m section', async () => {
       const invalid = fixBundle(invalidBundle);
       const parsed = sdpParser.parse(invalid);
+      // @ts-expect-error
       expect(parsed.groups[0].mids).toBe('0 1');
     });
   });
@@ -152,9 +160,13 @@ a=candidate:0 1 UDP 2113667327 203.0.113.1 54400 typ host
 a=candidate:3996450952 1 udp 41819903 14.72.21.2 65092 typ relay raddr 0.0.0.0 rport 0 generation 0 network-id 3 network-cost 10
 `;
       const fixedAudioWithoutCandidate = sdpParser.parse(addIcesInAllBundles(audioWithoutCandidate));
+      // @ts-expect-error
       expect(fixedAudioWithoutCandidate.media[0].candidates[0].type).toBe('host');
+      // @ts-expect-error
       expect(fixedAudioWithoutCandidate.media[0].candidates[1].type).toBe('relay');
+      // @ts-expect-error
       expect(fixedAudioWithoutCandidate.media[1].candidates[0].type).toBe('host');
+      // @ts-expect-error
       expect(fixedAudioWithoutCandidate.media[1].candidates[1].type).toBe('relay');
       // It should not add candidate if already present
       const audioWithCandidate = `
@@ -166,7 +178,9 @@ m=video 54400 RTP/SAVPF 0 96
 a=candidate:0 1 UDP 2113667327 203.0.113.1 54400 typ host
 `;
       const fixedAudioWithCandidate = sdpParser.parse(addIcesInAllBundles(audioWithCandidate));
+      // @ts-expect-error
       expect(fixedAudioWithCandidate.media[0].candidates[0].type).toBe('srflx');
+      // @ts-expect-error
       expect(fixedAudioWithCandidate.media[1].candidates[0].type).toBe('host');
     });
   });

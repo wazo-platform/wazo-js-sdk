@@ -103,7 +103,7 @@ export default class Meeting {
 
   getGuestSipCredentials() {
     // eslint-disable-next-line no-undef
-    const [username, secret] = atob(this.guestSipAuthorization).split(':');
+    const [username, secret] = Buffer.from(this.guestSipAuthorization, 'base64').toString('ascii').split(':');
     return {
       username,
       secret,

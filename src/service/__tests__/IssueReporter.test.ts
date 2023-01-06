@@ -25,6 +25,7 @@ describe('IssueReporter', () => {
   });
   beforeEach(() => {
     jest.resetAllMocks();
+    // @ts-expect-error
     realFetch.mockImplementation(() => () => ({
       catch: () => {},
     }));

@@ -27,12 +27,14 @@ Object.keys(fieldMap).forEach(field => {
 });
 describe('Call Center Agent domain', () => {
   it('should keep its values', () => {
+    // @ts-expect-error
     const agent = new Agent(formatted);
     expect(agent).toBeInstanceOf(Agent);
     Object.keys(fieldMap).map(key => expect(agent[key]).toBe(formatted[key]));
   });
   it('can parse a plain call center agent to domain', () => {
     const agent = Agent.parse(plain);
+    // @ts-expect-error
     expect(agent).toEqual(new Agent(formatted));
   });
 });

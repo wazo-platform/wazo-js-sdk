@@ -1,6 +1,8 @@
 import WebRTCClient from '../web-rtc-client';
 
+// @ts-expect-error
 const client = new WebRTCClient({});
+
 describe('WebRTC client', () => {
   it('should compute muted/unmuted state', async () => {
     const mutedSession = {
@@ -49,9 +51,13 @@ describe('WebRTC client', () => {
         },
       },
     };
+    // @ts-expect-error
     expect(client.isAudioMuted(mutedSession)).toBeTruthy();
+    // @ts-expect-error
     expect(client.isAudioMuted(oldKindMuted)).toBeTruthy();
+    // @ts-expect-error
     expect(client.isAudioMuted(unMutedSession)).toBeFalsy();
+    // @ts-expect-error
     expect(client.isAudioMuted(oldKindUnmuted)).toBeFalsy();
   });
 });
@@ -111,20 +117,26 @@ describe('changeAudioInputDevice', () => {
     },
   });
   it('should change the audio input track if the provided id is different', async () => {
+    // @ts-expect-error
     client.setMediaConstraints(constraints);
     expect(client.getAudioDeviceId()).toBe(defaultId);
+    // @ts-expect-error
     const result = await client.changeAudioInputDevice(deviceId, session);
     expect(result).toBeTruthy();
   });
   it('should NOT change the audio input track if the provided id is the same', async () => {
+    // @ts-expect-error
     client.setMediaConstraints(constraints);
     expect(client.getAudioDeviceId()).toBe(defaultId);
+    // @ts-expect-error
     const result = await client.changeAudioInputDevice(defaultId, session);
     expect(result).toBeFalsy();
   });
   it('should change the audio input track if the provided id is the same and force param is TRUE', async () => {
+    // @ts-expect-error
     client.setMediaConstraints(constraints);
     expect(client.getAudioDeviceId()).toBe(defaultId);
+    // @ts-expect-error
     const result = await client.changeAudioInputDevice(defaultId, session, true);
     expect(result).toBeTruthy();
   });

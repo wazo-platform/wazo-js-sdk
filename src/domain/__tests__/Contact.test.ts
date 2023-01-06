@@ -222,10 +222,12 @@ describe('Contact domain', () => {
     const contact = new Contact({
       uuid: 'uuid-12345',
       lastActivity: 'yesterday',
+      // @ts-expect-error
       birthday: null,
     });
     const contact2 = new Contact({
       uuid: 'uuid-12345',
+      // @ts-expect-error
       lastActivity: null,
       birthday: 'tomorrow',
     });

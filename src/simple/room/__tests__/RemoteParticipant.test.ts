@@ -4,6 +4,7 @@ import Wazo from '../../index';
 describe('RemoteParticipant', () => {
   it('should fall back on number when name is <unknown>', () => {
     const number = '1234';
+    // @ts-expect-error
     const participant = new Wazo.RemoteParticipant(null, {
       caller_id_name: '<unknown>',
       caller_id_number: number,

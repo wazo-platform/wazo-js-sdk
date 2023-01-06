@@ -38,6 +38,7 @@ describe('Session domain', () => {
       const session = new Session({
         token: 'ref-12345',
         uuid: '1234',
+        // @ts-expect-error
         profile: new Profile({
           voicemail: {
             id: 1234,
@@ -54,6 +55,7 @@ describe('Session domain', () => {
           const session = new Session({
             token: 'ref-12345',
             uuid: '1234',
+            // @ts-expect-error
             profile: new Profile({
               lines: [new Line({
                 id: 9012,
@@ -81,6 +83,7 @@ describe('Session domain', () => {
           const session = new Session({
             token: 'ref-12345',
             uuid: '1234',
+            // @ts-expect-error
             profile: new Profile({
               lines: [new Line({
                 id: 9012,
@@ -101,6 +104,7 @@ describe('Session domain', () => {
       const session = new Session({
         token: 'ref-12345',
         uuid: '1234',
+        // @ts-expect-error
         profile: new Profile({
           voicemail: undefined,
         }),
@@ -151,6 +155,7 @@ describe('Session domain', () => {
     const session = new Session({
       token: 'ref-12345',
       uuid: '1234',
+      // @ts-expect-error
       profile: new Profile({
         lines: [new Line({
           id: 9012,
@@ -212,6 +217,7 @@ describe('Session domain', () => {
       describe('and NO lines', () => {
         beforeEach(() => {
           A_SESSION = new Session({ ...A_SESSION,
+            // @ts-expect-error
             profile: new Profile({
               lines: [],
             }),
@@ -231,8 +237,10 @@ describe('Session domain', () => {
               exten: '1',
             }],
             id: 1,
+            // @ts-expect-error
             exten: 1,
           });
+          // @ts-expect-error
           const profile = new Profile({
             lines: [line],
           });
@@ -255,6 +263,7 @@ describe('Session domain', () => {
         });
         describe('and NO lines', () => {
           beforeEach(() => {
+            // @ts-expect-error
             const profile = new Profile({
               lines: [],
             });
@@ -276,8 +285,10 @@ describe('Session domain', () => {
                 exten: '1',
               }],
               id: 1,
+              // @ts-expect-error
               exten: 1,
             });
+            // @ts-expect-error
             const profile = new Profile({
               lines: [line],
             });
@@ -309,8 +320,10 @@ describe('Session domain', () => {
                   exten: '1',
                 }],
                 id: 1,
+                // @ts-expect-error
                 exten: 1,
               });
+              // @ts-expect-error
               const profile = new Profile({
                 lines: [line],
               });

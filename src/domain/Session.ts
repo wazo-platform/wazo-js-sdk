@@ -1,5 +1,6 @@
 /* eslint-disable no-nested-ternary */
 import { KEYUTIL, KJUR, b64utoutf8 } from 'jsrsasign';
+// @ts-ignore
 import { swarmPublicKey } from '../../config';
 import Profile from './Profile';
 import Contact from './Contact';

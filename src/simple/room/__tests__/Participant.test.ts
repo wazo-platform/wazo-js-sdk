@@ -4,9 +4,11 @@ import Wazo from '../../index';
 import Room from '../Room';
 
 jest.mock('../../../service/getApiClient');
+
 describe('Participant', () => {
   describe('ban', () => {
     it('should throw an error when there is no meeting', async () => {
+      // @ts-expect-error
       const room = new Room();
       const participant = new Wazo.RemoteParticipant(room, {
         call_id: 'id',
@@ -19,9 +21,11 @@ describe('Participant', () => {
       const number = '1234';
       const meetingUuid = 'some-meeting-uuid';
       const callId = 'some-call-id';
+      // @ts-expect-error
       const room = new Room();
       room.setMeetingUuid(meetingUuid);
       const banMeetingParticipant = jest.fn();
+      // @ts-expect-error
       getApiClient.mockImplementation(() => ({
         calld: {
           banMeetingParticipant,
@@ -42,9 +46,11 @@ describe('Participant', () => {
       const meetingUuid = 'some-meeting-uuid';
       const callId = 'some-call-id';
       const someDelay = 2;
+      // @ts-expect-error
       const room = new Room();
       room.setMeetingUuid(meetingUuid);
       const banMeetingParticipant = jest.fn();
+      // @ts-expect-error
       getApiClient.mockImplementation(() => ({
         calld: {
           banMeetingParticipant,

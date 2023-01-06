@@ -39,11 +39,6 @@
     "typecheck": "./node_modules/.bin/tsc --noEmit",
     "prepublishOnly": "./node_modules/.bin/rimraf lib/* esm/* && yarn build"
   },
-  "jest": {
-    "transformIgnorePatterns": [
-      "node_modules/?!(sip.js/lib/api/session-state)"
-    ]
-  },
   "exports": {
     ".": {
       "import": {
@@ -79,7 +74,7 @@
     "@rollup/plugin-typescript": "^10.0.1",
     "@types/events": "^3.0.0",
     "@types/google-libphonenumber": "^7.4.23",
-    "@types/jest": "^29.2.4",
+    "@types/jest": "^26.0.24",
     "@types/jsrsasign": "^10.5.4",
     "@types/node": "^18.11.17",
     "@types/sdp-transform": "^2.4.5",
@@ -87,7 +82,6 @@
     "@typescript-eslint/parser": "^5.47.0",
     "babel-core": "^7.0.0-bridge.0",
     "babel-eslint": "10.1.0",
-    "babel-jest": "^26.6.3",
     "babel-loader": "^8.2.2",
     "eslint": "^7.22.0",
     "eslint-config-airbnb-base": "^14.2.1",
@@ -106,6 +100,7 @@
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-terser": "^7.0.2",
     "rollup-plugin-visualizer": "^4.2.2",
+    "ts-jest": "^26.5.4",
     "typescript": "^4.9.4"
   },
   "engines": {

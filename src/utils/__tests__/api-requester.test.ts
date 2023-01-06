@@ -34,6 +34,10 @@ describe('Computing fetch URL', () => {
   it('should add query string to URL in get method with body', () => {
     const client = new ApiRequester({
       server: 'localhost',
+      agent: null,
+      clientId: null,
+      refreshTokenCallback: () => null,
+      fetchOptions: null,
     });
     expect(client.computeUrl('get', 'auth', {
       a: 1,
@@ -50,20 +54,29 @@ describe('Retrieving headers', () => {
     const tenant = 'abc234';
     const requester = new ApiRequester({
       server,
+      agent: null,
+      clientId: null,
+      refreshTokenCallback: () => null,
+      fetchOptions: null,
     });
     requester.setTenant(tenant);
-    expect(requester.getHeaders()['Wazo-Tenant']).toBe(tenant);
+    expect(requester.getHeaders(null)['Wazo-Tenant']).toBe(tenant);
   });
   it('should not send a tenant if not present', () => {
     const requester = new ApiRequester({
       server,
+      agent: null,
+      clientId: null,
+      refreshTokenCallback: () => null,
+      fetchOptions: null,
     });
-    expect(requester.getHeaders()).not.toHaveProperty('Wazo-Tenant');
+    expect(requester.getHeaders(null)).not.toHaveProperty('Wazo-Tenant');
   });
 });
 describe('Calling fetch', () => {
   it('should call fetch without body but query string in get method', async () => {
     jest.mock('node-fetch/lib/index', () => {});
+    // @ts-ignore
     global.fetch = jest.fn(() => Promise.resolve({
       json: () => Promise.resolve({}),
       headers: {
@@ -72,6 +85,10 @@ describe('Calling fetch', () => {
     }));
     await new ApiRequester({
       server,
+      agent: null,
+      clientId: null,
+      refreshTokenCallback: () => null,
+      fetchOptions: null,
     }).call(path, method, body, {});
     expect(global.fetch).toBeCalledWith(url, {
       method: 'get',
@@ -85,6 +102,7 @@ describe('With a refresh token', () => {
   it('should retry the call with a new token', async () => {
     jest.mock('node-fetch/lib/index', () => {});
     let calls = 0;
+    // @ts-ignore
     global.fetch = jest.fn(() => {
       calls++;
       return Promise.resolve({
@@ -97,12 +115,16 @@ describe('With a refresh token', () => {
     });
     const requester = new ApiRequester({
       server,
+      agent: null,
+      clientId: null,
+      refreshTokenCallback: () => null,
+      fetchOptions: null,
     });
     requester.token = token;
 
     requester.refreshTokenCallback = () => {
       requester.token = newToken;
-      return new Promise(resolve => resolve());
+      return new Promise(resolve => resolve(null));
     };
 
     const updatedHeaders = {
