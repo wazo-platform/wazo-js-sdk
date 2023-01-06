@@ -38,7 +38,6 @@ import IssueReporter from '../service/IssueReporter';
 import Features from '../domain/Features';
 import Meeting from '../domain/Meeting';
 import Checker from '../checker/Checker';
-import Softphone from './Softphone';
 
 const Wazo = {
   Auth,
@@ -58,7 +57,6 @@ const Wazo = {
   loggerFor: IssueReporter.loggerFor.bind(IssueReporter),
   Features,
   Checker,
-  Softphone,
   // Domain
   domain: {
     BadResponse,
