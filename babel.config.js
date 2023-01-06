@@ -1,6 +1,7 @@
 module.exports = {
   presets: [
     '@babel/preset-env',
+    '@babel/preset-typescript'
   ],
   env: {
     test: {
@@ -10,6 +11,7 @@ module.exports = {
             node: 'current',
           },
         }],
+        '@babel/preset-typescript',
       ],
     },
   },

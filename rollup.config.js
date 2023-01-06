@@ -1,20 +1,26 @@
 import globby from 'globby';
-import resolve from 'rollup-plugin-node-resolve';
-import { terser } from 'rollup-plugin-terser';
-import commonjs from 'rollup-plugin-commonjs';
-import json from 'rollup-plugin-json';
+import resolve from '@rollup/plugin-node-resolve';
+import terser from '@rollup/plugin-terser';
+import commonjs from '@rollup/plugin-commonjs';
+import json from '@rollup/plugin-json';
 import typescript from '@rollup/plugin-typescript';
+
+import tsconfigEsm from './tsconfig.esm.json';
+import tsconfigCjs from './tsconfig.cjs.json';
+
+delete tsconfigEsm.extends;
+delete tsconfigCjs.extends;
 
 const esmConfigs = globby.sync('src/**/*.ts')
   .filter(inputFile => !inputFile.includes('.test.'))
   .map(inputFile => ({
     input: inputFile,
     output: {
-      file: inputFile.replace('src', 'esm'),
+      file: inputFile.replace('src', 'esm').replace(/\.ts$/g, '.js'),
       format: 'esm',
     },
     plugins: [
-      typescript(),
+      typescript(tsconfigEsm),
     ],
   }));
 
@@ -23,11 +29,11 @@ const csjConfigs = globby.sync('src/**/*.ts')
   .map(inputFile => ({
     input: inputFile,
     output: {
-      file: inputFile.replace('src', 'lib'),
+      file: inputFile.replace('src', 'lib').replace(/\.ts$/g, '.js'),
       format: 'cjs',
     },
     plugins: [
-      typescript(),
+      typescript(tsconfigCjs),
     ],
   }));
 
@@ -47,7 +53,7 @@ if (!process.env.DEV) {
 }
 
 configs.push({
-  input: 'src/index.js',
+  input: 'src/index.ts',
   output: {
     file: 'dist/wazo-sdk.js',
     format: 'umd',
