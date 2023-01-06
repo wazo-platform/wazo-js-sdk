@@ -115,7 +115,7 @@ export default class ApiRequester {
 
     this.shouldLogErrors = true;
     methods.forEach(method => {
-      ApiRequester.prototype[method] = function sugar(...args) {
+      this[method] = function sugar(...args) {
         // Add method in arguments passed to `call`
         args.splice(1, 0, method);
         // @ts-ignore

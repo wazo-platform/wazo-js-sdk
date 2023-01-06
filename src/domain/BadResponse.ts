@@ -8,8 +8,6 @@ export default class BadResponse extends Error {
     return new BadResponse(response, status);
   }
 
-  message: string;
-
   status: number;
 
   timestamp: number | null | undefined;
