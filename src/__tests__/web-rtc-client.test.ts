@@ -1,5 +1,7 @@
 import WebRTCClient from '../web-rtc-client';
 
+jest.mock('sip.js/lib/platform/web/transport');
+
 // @ts-expect-error
 const client = new WebRTCClient({});
 
