@@ -224,7 +224,8 @@ class IssueReporter {
     CONSOLE_METHODS.forEach((methodName: string) => {
       // eslint-disable-next-line
       this.oldConsoleMethods[methodName] = console[methodName];
-      window.console[methodName] = (...args) => {
+      const parent = typeof window !== 'undefined' ? window : global;
+      parent.console[methodName] = (...args) => {
         // Store message
         try {
           this.log(methodName, args.join(' '));

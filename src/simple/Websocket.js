@@ -72,6 +72,8 @@ class Websocket extends Emitter {
   }
 
   close(force: boolean = false) {
+    logger.info('Closing Wazo websocket', { force, ws: !!this.ws });
+
     if (this.ws) {
       this.ws.close(force);
     }
