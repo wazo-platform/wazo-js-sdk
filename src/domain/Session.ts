@@ -1,7 +1,6 @@
 /* eslint-disable no-nested-ternary */
 import { KEYUTIL, KJUR, b64utoutf8 } from 'jsrsasign';
-// @ts-ignore
-import { swarmPublicKey } from '../../config';
+import swarmPublicKey from '../pubkey';
 import Profile from './Profile';
 import Contact from './Contact';
 import Line from './Line';
@@ -97,8 +96,8 @@ export default class Session {
     if (token) {
       const isValid = jws.JWS.verifyJWT(token, swarmKey, {
         alg: ['RS256'],
-        // @TS-HEADSUP: was `new Date`
-        verifyAt: Date.now(),
+        // @ts-ignore
+        verifyAt: new Date(),
       });
 
       if (isValid) {

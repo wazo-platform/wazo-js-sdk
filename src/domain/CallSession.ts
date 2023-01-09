@@ -1,6 +1,6 @@
 import { SessionState } from 'sip.js/lib/api/session-state';
-import type Invitation from './sip.js/Invitation';
-import type Inviter from './sip.js/Inviter';
+import type { Invitation } from 'sip.js/lib/api';
+import { Inviter } from 'sip.js/lib/api';
 import Call from './Call';
 import newFrom from '../utils/new-from';
 import updateFrom from '../utils/update-from';

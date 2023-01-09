@@ -5,10 +5,9 @@ import type { MediaStreamFactory } from 'sip.js/lib/platform/web/session-descrip
 import type { SessionDescriptionHandlerConfiguration } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-configuration';
 import { SessionDescriptionHandler } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler';
 import { SessionDescriptionHandlerOptions } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-options';
+import { Inviter, Invitation } from 'sip.js/lib/api';
 import IssueReporter from '../service/IssueReporter';
 import { addIcesInAllBundles, fixSdp, parseCandidate } from '../utils/sdp';
-import type Invitation from '../domain/sip.js/Invitation';
-import type Inviter from '../domain/sip.js/Inviter';
 
 const wazoLogger = IssueReporter ? IssueReporter.loggerFor('webrtc-sdh') : console;
 // Customized mediaStreamFactory allowing to send screensharing stream directory when upgrading
@@ -86,6 +85,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     // We should wait for ice when iceRestart (reinvite) or for the first invite
     // We shouldn't wait for ice when holding or resuming the call
     // We shouldn't wait for ice when receiving a reinvite (eg: pendingReinviteAck = true)
+    // @ts-ignore
     const shouldWaitForIce = !this.session.pendingReinviteAck && (iceRestart || 'constraints' in options);
     // ICE gathering timeout may be set on a per call basis, otherwise the configured default is used
     const iceTimeout = options.iceGatheringTimeout === undefined ? this.sessionDescriptionHandlerConfiguration?.iceGatheringTimeout : options.iceGatheringTimeout;

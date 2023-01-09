@@ -24,9 +24,7 @@ import { TransportState } from 'sip.js/lib/api/transport-state';
 import { defaultPeerConnectionConfiguration } from 'sip.js/lib/platform/web/session-description-handler/peer-connection-configuration-default';
 import getStats from 'getstats';
 
-import Inviter from './domain/sip.js/Inviter';
-import Invitation from './domain/sip.js/Invitation';
-import Registerer from './domain/sip.js/Registerer';
+import { Inviter, Invitation, Registerer } from 'sip.js/lib/api';
 import WazoSessionDescriptionHandler, { wazoMediaStreamFactory } from './lib/WazoSessionDescriptionHandler';
 import Emitter from './utils/Emitter';
 import ApiClient from './api-client';
@@ -326,7 +324,9 @@ export default class WebRTCClient extends Emitter {
     });
     this.eventEmitter.emit(CONNECTED);
 
+    // @ts-ignore
     if (!this.isRegistered() && this.registerer && this.registerer.waiting) {
+      // @ts-ignore
       this.registerer.waitingToggle(false);
     }
 
@@ -345,7 +345,9 @@ export default class WebRTCClient extends Emitter {
     if (this.isRegistered()) {
       await this.unregister();
 
+      // @ts-ignore
       if (this.registerer && this.registerer.waiting) {
+        // @ts-ignore
         this.registerer.waitingToggle(false);
       }
 
@@ -359,6 +361,7 @@ export default class WebRTCClient extends Emitter {
       registered: this.isRegistered(),
       connectionPromise: !!this.connectionPromise,
       registerer: !!this.registerer,
+      // @ts-ignore
       waiting: this.registerer && this.registerer.waiting,
       tries,
       skipRegister: this.skipRegister,
@@ -382,6 +385,7 @@ export default class WebRTCClient extends Emitter {
       return Promise.resolve();
     }
 
+    // @ts-ignore
     if (this.connectionPromise || this.registerer?.waiting) {
       logger.info('sdk webrtc registering aborted due to a registration in progress.');
       return Promise.resolve();
@@ -404,7 +408,9 @@ export default class WebRTCClient extends Emitter {
 
       this.connectionPromise = null;
 
+      // @ts-ignore
       if (this.registerer && this.registerer.waiting) {
+        // @ts-ignore
         this.registerer.waitingToggle(false);
       }
 
@@ -472,10 +478,14 @@ export default class WebRTCClient extends Emitter {
       return;
     }
 
+    // @ts-ignore
     const oldWaitingToggle = registerer.waitingToggle.bind(registerer);
+    // @ts-ignore
     const oldUnregistered = registerer.unregistered.bind(registerer);
 
+    // @ts-ignore
     registerer.waitingToggle = (waiting: boolean) => {
+      // @ts-ignore
       if (!registerer || registerer.waiting === waiting) {
         return;
       }
@@ -483,6 +493,7 @@ export default class WebRTCClient extends Emitter {
       oldWaitingToggle(waiting);
     };
 
+    // @ts-ignore
     registerer.unregistered = () => {
       if (!registerer || registerer.state === RegistererState.Terminated) {
         return;
@@ -1476,9 +1487,12 @@ export default class WebRTCClient extends Emitter {
         onAccept: (response: IncomingResponse) => {
           // Update the SDP body to be able to call sessionWantsToDoVideo correctly in `_setup[Local|Remote]Media`.
           // Can't set directly sipSession.body because it's a getter.
+          // @ts-ignore
           if (sipSession instanceof Inviter && sipSession.outgoingRequestMessage.body) {
+            // @ts-ignore
             sipSession.outgoingRequestMessage.body.body = response.message.body;
           } else if (sipSession instanceof Invitation) {
+            // @ts-ignore
             sipSession.incomingInviteRequest.message.body = response.message.body;
           }
 
@@ -1633,7 +1647,9 @@ export default class WebRTCClient extends Emitter {
     }
 
     // For Inviter
+    // @ts-ignore
     if (sipSession instanceof Inviter && sipSession.outgoingRequestMessage) {
+      // @ts-ignore
       return sipSession.outgoingRequestMessage.callId;
     }
 
@@ -1983,9 +1999,12 @@ export default class WebRTCClient extends Emitter {
     const client = new ApiClient({
       server: config.host,
     });
+    // @ts-ignore
     client.setToken(session.token);
+    // @ts-ignore
     client.setRefreshToken(session.refreshToken);
 
+    // @ts-ignore
     return client.confd.getUserLineSipFromToken(session.uuid).then(sipLine => ({
       // @ts-ignore
       authorizationUser: sipLine.username,
@@ -2143,8 +2162,11 @@ export default class WebRTCClient extends Emitter {
       // Update SDP
       // Remote video is handled by the `track` event. Here we're dealing with video stream removal.
       if (session instanceof Invitation) {
+        // @ts-ignore
         session.incomingInviteRequest.message.body = request.body;
+        // @ts-ignore
       } else if (session instanceof Inviter && session.outgoingInviteRequest.message.body) {
+        // @ts-ignore
         session.outgoingInviteRequest.message.body.body = request.body;
       }
 
@@ -2170,6 +2192,7 @@ export default class WebRTCClient extends Emitter {
   _onAccepted(session: Inviter | Invitation, sessionDialog?: SessionDialog, withEvent = true) {
     logger.info('on call accepted', {
       id: session.id,
+      // @ts-ignore
       remoteTag: (<Inviter>session).remoteTag,
     });
     this.storeSipSession(session);
@@ -2256,6 +2279,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     const audioElement = this.audioElements[sessionId];
+    // @ts-ignore
     const sipSession = this.sipSessions[session.callId];
     const removeStream = this.getRemoteStream(sessionId);
     // @ts-ignore

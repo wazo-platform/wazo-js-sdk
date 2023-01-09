@@ -158,7 +158,7 @@ class WebSocketClient extends Emitter {
       delay,
       timeout,
       max,
-    }: any = heartbeat;
+    }: any = heartbeat || {};
     this.heartbeat = new Heartbeat(delay, timeout, max);
     this.heartbeat.setSendHeartbeat(this.pingServer.bind(this));
     this.heartbeat.setOnHeartbeatTimeout(this._onHeartbeatTimeout.bind(this));

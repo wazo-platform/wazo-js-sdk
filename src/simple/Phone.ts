@@ -1,4 +1,5 @@
 import { SessionState } from 'sip.js/lib/api/session-state';
+import { Inviter, Invitation } from 'sip.js/lib/api';
 import type SipLine from '../domain/SipLine';
 import type Session from '../domain/Session';
 import type CallSession from '../domain/CallSession';
@@ -10,9 +11,6 @@ import IssueReporter from '../service/IssueReporter';
 import Emitter from '../utils/Emitter';
 import Wazo from './index';
 import SFUNotAvailableError from '../domain/SFUNotAvailableError';
-
-import type Invitation from '../domain/sip.js/Invitation';
-import type Inviter from '../domain/sip.js/Inviter';
 
 const logger = IssueReporter.loggerFor('simple-phone');
 const sipLogger = IssueReporter.loggerFor('sip.js');

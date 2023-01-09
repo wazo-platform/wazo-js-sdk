@@ -4,13 +4,12 @@ import type { Message } from 'sip.js/lib/api/message';
 import { SessionState } from 'sip.js/lib/api/session-state';
 import type { IncomingRequestMessage } from 'sip.js/lib/core/messages/incoming-request-message';
 import { OutgoingInviteRequest } from 'sip.js/lib/core';
+import { Inviter, Invitation } from 'sip.js/lib/api';
 import CallSession from '../CallSession';
 import type { Phone, AvailablePhoneOptions } from './Phone';
 import WazoWebRTCClient from '../../web-rtc-client';
 import Emitter from '../../utils/Emitter';
 import IssueReporter from '../../service/IssueReporter';
-import Inviter from '../sip.js/Inviter';
-import Invitation from '../sip.js/Invitation';
 
 export const ON_USER_AGENT = 'onUserAgent';
 export const ON_REGISTERED = 'onRegistered';
@@ -733,6 +732,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return;
     }
 
+    // @ts-ignore
     if (!sipSession.isCanceled) {
       setTimeout(() => {
         this.eventEmitter.emit(ON_PLAY_HANGUP_SOUND, this.audioOutputDeviceId, this.audioOutputVolume, callSession);
@@ -1321,10 +1321,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   forceCancel(sipSession: Inviter): void {
+    // @ts-ignore
     if (!sipSession || !sipSession.outgoingInviteRequest) {
       return;
     }
 
+    // @ts-ignore
     sipSession.outgoingInviteRequest.cancel();
   }
 

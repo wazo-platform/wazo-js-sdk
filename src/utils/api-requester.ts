@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/default-param-last */
-/* global btoa, window, fetch */
+/* global window */
 
 /* eslint-disable global-require */
 
