@@ -4,10 +4,10 @@ import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import typescript from '@rollup/plugin-typescript';
 
-const configs = [];
-
 const plugins = [
-  typescript(),
+  typescript({
+    tsconfig: './tsconfig.umd.json'
+  }),
   json(),
   resolve({
     preferBuiltins: false,
@@ -19,7 +19,7 @@ if (!process.env.DEV) {
   plugins.push(terser());
 }
 
-configs.push({
+const configs = [{
   input: 'src/index.ts',
   output: {
     file: 'dist/wazo-sdk.js',
@@ -40,6 +40,6 @@ if (typeof(window) === 'undefined') {
   },
   plugins,
   moduleContext: { 'node_modules/node-fetch/lib/index': 'window' },
-});
+}];
 
 export default configs;

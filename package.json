@@ -14,9 +14,9 @@
   "homepage": "https://github.com/wazo-platform/wazo-js-sdk",
   "files": [
     "dist/*.js",
-    "src/**/*.js",
-    "esm/**/*.js",
-    "lib/**/*.js"
+    "src/**/*",
+    "esm/**/*",
+    "lib/**/*"
   ],
   "repository": {
     "type": "git",
@@ -27,8 +27,8 @@
   },
   "scripts": {
     "clean": "./node_modules/.bin/rimraf lib/* esm/* dist/*",
-    "build": "yarn clean && yarn build:esm && yarn build:cjs && yarn build:amd",
-    "build:amd": "./node_modules/.bin/rollup --config --extend --bundleConfigAsCjs",
+    "build": "yarn clean && yarn build:esm && yarn build:cjs && yarn build:umd",
+    "build:umd": "./node_modules/.bin/rollup --config --extend --bundleConfigAsCjs",
     "build:esm": "tsc -p ./tsconfig.esm.json",
     "build:cjs": "tsc -p ./tsconfig.cjs.json",
     "test": "yarn jest && yarn lint && yarn typecheck && yarn checkbuild",
