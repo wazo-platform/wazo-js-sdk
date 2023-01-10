@@ -55,7 +55,6 @@
     "events": "^3.3.0",
     "fstream": "^1.0.12",
     "getstats": "manuquentin/getStats#fix_stats_mobile",
-    "globby": "^11.0.3",
     "google-libphonenumber": "^3.2.18",
     "js-base64": "^3.6.0",
     "json-to-graphql-query": "^2.0.0",
