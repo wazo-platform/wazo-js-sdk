@@ -1,3 +1,6 @@
+// @TODO: stand-in for empty object types. Was `type Something = {};` in JS
+type TodoObject = object;
+
 export type Token = string;
 export type UUID = string;
 export type DateString = string;
@@ -39,7 +42,7 @@ export type Tenant = {
   }>;
   parent_uuid: UUID;
 };
-export type Group = {};
+export type Group = TodoObject;
 export type Policy = {
   acl_templates: Array<string>;
   // Deprecated
@@ -68,7 +71,7 @@ export type ListPoliciesResponse = {
   total: number;
   items: Array<Policy>;
 };
-export type AccessdGroup = {};
+export type AccessdGroup = TodoObject;
 export type Link = {
   href: string;
   rel: string;
@@ -189,7 +192,7 @@ export type Node = {
   calls: Array<Record<string, any>>; // @TODO
 
 };
-export type CallNode = {};
+export type CallNode = TodoObject;
 export type ListNodesResponse = {
   items: Array<Node>;
 };
@@ -197,8 +200,8 @@ export type ListCallNodesResponse = {
   uuid: UUID;
   items: Array<CallNode>;
 };
-export type GetTenantResponse = {};
-export type GetUserResponse = {};
+export type GetTenantResponse = TodoObject;
+export type GetUserResponse = TodoObject;
 export type WebRtcConfig = {
   id: number;
   host: string;

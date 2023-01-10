@@ -17,7 +17,7 @@ const shouldBeFormatted = (number: string | null | undefined) => {
 };
 
 const isSameCountry = (country1, country2) => {
-  if (country1 === 'US' && country2 === 'CA' || country2 === 'US' && country1 === 'CA') {
+  if ((country1 === 'US' && country2 === 'CA') || (country2 === 'US' && country1 === 'CA')) {
     return true;
   }
 

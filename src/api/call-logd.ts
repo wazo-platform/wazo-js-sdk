@@ -14,7 +14,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
     offset,
     limit,
   }).then(CallLog.parseMany),
-  listDistinctCallLogs: (offset: number, limit = 5, distinct: string): Promise<Array<CallLog>> => client.get(`${baseUrl}/users/me/cdr`, {
+  listDistinctCallLogs: (offset: number, limit = 5, distinct = undefined): Promise<Array<CallLog>> => client.get(`${baseUrl}/users/me/cdr`, {
     offset,
     limit,
     distinct,
