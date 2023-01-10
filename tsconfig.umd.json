@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "files": [
+    "./src/index-umd",
+    "./src/index"
+  ],
+  "compilerOptions": {
+    "module": "AMD",
+    "outFile": "./dist/wazo-sdk.js"
+  }
+}

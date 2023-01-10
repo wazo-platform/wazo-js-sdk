@@ -16,8 +16,7 @@
     "dist/*.js",
     "src/**/*.js",
     "esm/**/*.js",
-    "lib/**/*.js",
-    "config.js"
+    "lib/**/*.js"
   ],
   "repository": {
     "type": "git",
@@ -27,9 +26,10 @@
     "url": "https://github.com/wazo-platform/wazo-js-sdk/issues"
   },
   "scripts": {
-    "clean": "rm -rf ./lib && rm -rf ./esm",
-    "build": "./node_modules/.bin/rollup --config --extend --bundleConfigAsCjs",
-    "build:esm": "tsc -p ./tsconfig.esm.json && mv esm/index.js esm/index.mjs",
+    "clean": "./node_modules/.bin/rimraf lib/* esm/* dist/*",
+    "build": "yarn clean && yarn build:esm && yarn build:cjs && yarn build:umd",
+    "build:umd": "tsc -p ./tsconfig.umd.json",
+    "build:esm": "tsc -p ./tsconfig.esm.json",
     "build:cjs": "tsc -p ./tsconfig.cjs.json",
     "test": "yarn jest && yarn lint && yarn typecheck && yarn checkbuild",
     "lint": "./node_modules/.bin/eslint src/",
@@ -37,7 +37,7 @@
     "checkbuild": "yarn build && node dist/wazo-sdk.js",
     "format": "./node_modules/.bin/prettier-eslint --write \"src/**/*.js\" \"__tests__/**/*.js\" --single-quote --trailing-comma es5",
     "typecheck": "./node_modules/.bin/tsc --noEmit",
-    "prepublishOnly": "./node_modules/.bin/rimraf lib/* esm/* && yarn build"
+    "prepublishOnly": "yarn build"
   },
   "exports": {
     ".": {
