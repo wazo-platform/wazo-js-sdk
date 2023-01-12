@@ -32,7 +32,7 @@ export interface Phone {
   changeAudioVolume(volume: number): PhoneVoid;
   changeRingVolume(volume: number): PhoneVoid;
   changeAudioInputDevice(id: string): Promise<MediaStream | null | undefined> | null | undefined;
-  changeVideoInputDevice(id: string): Promise<MediaStream | null | undefined> | null | undefined;
+  changeVideoInputDevice(id: string): Promise<MediaStream | null | undefined | void> | null | undefined;
   onConnectionMade(): PhoneVoid;
   close(): Promise<PhoneVoid>;
   disableRinging(): PhoneVoid;
