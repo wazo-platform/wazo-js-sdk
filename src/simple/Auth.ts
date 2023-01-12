@@ -363,7 +363,7 @@ class Auth implements IAuth {
     }
 
     this.authenticated = true;
-    Wazo.Websocket.open(this.host, session);
+    Wazo.Websocket.open(this.host as string, session);
     this.session = session;
     return session;
   }

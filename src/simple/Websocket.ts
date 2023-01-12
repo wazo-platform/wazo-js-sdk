@@ -1,6 +1,6 @@
 import type Session from '../domain/Session';
 import WazoWebSocketClient, * as WebSocketClient from '../websocket-client';
-import Emitter from '../utils/Emitter';
+import Emitter, { IEmitter } from '../utils/Emitter';
 import IssueReporter from '../service/IssueReporter';
 
 const {
@@ -10,10 +10,36 @@ const {
 const ALL_EVENTS = [...Object.values(SOCKET_EVENTS), ...Object.values(OTHER_EVENTS)];
 const logger = IssueReporter.loggerFor('simple-ws-client');
 
-class Websocket extends Emitter {
+export interface IWebsocket extends IEmitter {
+  ws: WazoWebSocketClient | null | undefined;
+  eventLists: string[];
+
+  CONFERENCE_USER_PARTICIPANT_JOINED: string;
+  CONFERENCE_USER_PARTICIPANT_LEFT: string;
+  MEETING_USER_PARTICIPANT_JOINED: string;
+  MEETING_USER_PARTICIPANT_LEFT: string;
+  CALL_CREATED: string;
+
+  open: (host: string, session: Session) => void;
+  updateToken: (token: string) => void;
+  isOpen: () => boolean;
+  close: (force?: boolean) => void;
+}
+
+class Websocket extends Emitter implements IWebsocket {
   ws: WazoWebSocketClient | null | undefined;
 
   eventLists: string[];
+
+  CONFERENCE_USER_PARTICIPANT_JOINED: string;
+
+  CONFERENCE_USER_PARTICIPANT_LEFT: string;
+
+  MEETING_USER_PARTICIPANT_JOINED: string;
+
+  MEETING_USER_PARTICIPANT_LEFT: string;
+
+  CALL_CREATED: string;
 
   constructor() {
     super();
@@ -68,8 +94,8 @@ class Websocket extends Emitter {
     this.ws.updateToken(token);
   }
 
-  isOpen() {
-    return this.ws && this.ws.isConnected();
+  isOpen(): boolean {
+    return this.ws?.isConnected() || false;
   }
 
   close(force = false) {
