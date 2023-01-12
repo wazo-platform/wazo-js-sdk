@@ -88,11 +88,13 @@ describe('With correct API results', () => {
         Authorization: `Basic ${Base64.encode(`${username}:${password}`)}`,
         'Content-Type': 'application/json',
       };
+      // @ts-expect-error
       const result = await client.auth.logIn({
         username,
         password,
       });
       expect(result).toBeInstanceOf(Session);
+      // @ts-expect-error
       expect(result.token).toBe(1);
       expect(global.fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token`, {
         method: 'post',
@@ -105,6 +107,7 @@ describe('With correct API results', () => {
   describe('logOut test', () => {
     it('should delete the specified token', async () => {
       const oldToken = 123;
+      // @ts-expect-error
       await client.auth.logOut(oldToken);
       expect(global.fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token/${oldToken}`, {
         method: 'delete',
@@ -123,7 +126,7 @@ describe('With unAuthorized API results', () => {
   });
   describe('checkLogin test', () => {
     it('should return false on 401 status', async () => {
-      const tokenToCheck = 123;
+      const tokenToCheck = '123';
       const result = await client.auth.checkToken(tokenToCheck);
       expect(result).toBeFalsy();
       expect(global.fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token/${tokenToCheck}`, {
@@ -180,6 +183,7 @@ describe('With erroneous text API results', () => {
     let error = null;
 
     try {
+      // @ts-expect-error
       await client.auth.logIn({
         username,
         password,
@@ -206,6 +210,7 @@ describe('With erroneous json API results', () => {
     let error = null;
 
     try {
+      // @ts-expect-error
       await client.auth.logIn({
         username,
         password,

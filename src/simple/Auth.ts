@@ -16,17 +16,17 @@ class Auth {
 
   expiration: number;
 
-  minSubscriptionType: number | null | undefined;
+  minSubscriptionType: number | null;
 
-  authorizationName: string | null | undefined;
+  authorizationName: string | null;
 
-  host: string | null | undefined;
+  host: string | null;
 
-  session: Session | null | undefined;
+  session: Session | null;
 
-  onRefreshTokenCallback: ((...args: Array<any>) => any) | null | undefined;
+  onRefreshTokenCallback: ((...args: Array<any>) => any) | null;
 
-  onRefreshTokenCallbackError: ((...args: Array<any>) => any) | null | undefined;
+  onRefreshTokenCallbackError: ((...args: Array<any>) => any) | null;
 
   authenticated: boolean;
 
@@ -44,7 +44,7 @@ class Auth {
     this.BACKEND_LDAP = BACKEND_LDAP_USER;
   }
 
-  init(clientId: string, expiration: number, minSubscriptionType: number | null | undefined, authorizationName: string | null | undefined, mobile: boolean) {
+  init(clientId: string, expiration: number, minSubscriptionType: number | null | undefined, authorizationName: string | null, mobile: boolean): void {
     this.clientId = clientId;
     this.expiration = expiration;
     this.minSubscriptionType = typeof minSubscriptionType === 'undefined' ? null : minSubscriptionType;
@@ -78,7 +78,7 @@ class Auth {
     setFetchOptions(options);
   }
 
-  async logIn(username: string, password: string, backend?: string, extra?: string | Record<string, any>) {
+  async logIn(username: string, password: string, backend?: string, extra?: string | Record<string, any>): Promise<Session | null> {
     let tenantId: string | null = null;
     let domainName = null;
 
@@ -105,9 +105,9 @@ class Auth {
     const rawSession = await getApiClient().auth.logIn({
       username,
       password,
-      backend,
-      tenantId,
-      domainName,
+      backend: backend as string,
+      tenantId: tenantId as string,
+      domainName: <unknown>domainName as string,
       expiration: this.expiration,
       mobile: this.mobile,
     });
@@ -124,12 +124,12 @@ class Auth {
       getApiClient().setRefreshDomainName(domainName);
     }
 
-    return this._onAuthenticated(rawSession);
+    return this._onAuthenticated(rawSession as Session);
   }
 
-  async logInViaRefreshToken(refreshToken: string) {
-    const rawSession = await getApiClient().auth.refreshToken(refreshToken, null, this.expiration, this.mobile);
-    return this._onAuthenticated(rawSession);
+  async logInViaRefreshToken(refreshToken: string): Promise<Session | null> {
+    const rawSession = await getApiClient().auth.refreshToken(refreshToken, '', this.expiration, this.mobile);
+    return this._onAuthenticated(rawSession as Session);
   }
 
   async validateToken(token: string, refreshToken: string) {
@@ -144,7 +144,7 @@ class Auth {
     // Check if the token is valid
     try {
       const rawSession = await getApiClient().auth.authenticate(token);
-      return await this._onAuthenticated(rawSession);
+      return await this._onAuthenticated(rawSession as Session);
     } catch (e: any) {
       logger.error('on validate token error', e);
       console.warn(e);
@@ -152,11 +152,11 @@ class Auth {
     }
   }
 
-  async generateNewToken(refreshToken: string) {
-    return getApiClient().auth.refreshToken(refreshToken, null, this.expiration);
+  async generateNewToken(refreshToken: string): Promise<Session | null | undefined> {
+    return getApiClient().auth.refreshToken(refreshToken, '', this.expiration);
   }
 
-  async logout(deleteRefreshToken = true) {
+  async logout(deleteRefreshToken = true): Promise<void> {
     try {
       Wazo.Websocket.close(true);
 
@@ -167,7 +167,7 @@ class Auth {
     }
 
     try {
-      await getApiClient().auth.logOut(this.session ? this.session.token : null);
+      await getApiClient().auth.logOut(this.session?.token || '');
     } catch (e: any) { // Nothing to
     }
 
@@ -185,7 +185,7 @@ class Auth {
     this.onRefreshTokenCallbackError = callback;
   }
 
-  checkAuthorizations(session: Session, authorizationName: string | null | undefined) {
+  checkAuthorizations(session: Session, authorizationName: string | null | undefined): void {
     if (!authorizationName) {
       return;
     }
@@ -199,7 +199,7 @@ class Auth {
     }
   }
 
-  checkSubscription(session: Session, minSubscriptionType: number) {
+  checkSubscription(session: Session, minSubscriptionType: number): void {
     const userSubscriptionType = session.profile ? session.profile.subscriptionType : null;
 
     // @ts-ignore
@@ -209,44 +209,44 @@ class Auth {
     }
   }
 
-  setHost(host: string) {
+  setHost(host: string): void {
     this.host = host;
     setCurrentServer(host);
   }
 
-  setApiToken(token: string) {
+  setApiToken(token: string): void {
     setApiToken(token);
   }
 
-  setRefreshToken(refreshToken: string) {
+  setRefreshToken(refreshToken: string): void {
     setRefreshToken(refreshToken);
   }
 
-  setRefreshTenantId(refreshTenantId: string) {
+  setRefreshTenantId(refreshTenantId: string): void {
     console.warn('Use of `setRefreshTenantId` is deprecated, use `setRefreshDomainName` instead.');
     setRefreshTenantId(refreshTenantId);
     getApiClient().setRefreshTenantId(refreshTenantId);
   }
 
-  setRefreshDomainName(domainName: string) {
+  setRefreshDomainName(domainName: string): void {
     setRefreshDomainName(domainName);
     getApiClient().setRefreshDomainName(domainName);
   }
 
-  forceRefreshToken() {
+  forceRefreshToken(): void {
     getApiClient().forceRefreshToken();
   }
 
-  setIsMobile(mobile: boolean) {
+  setIsMobile(mobile: boolean): void {
     this.mobile = mobile;
   }
 
-  getHost() {
-    return this.host;
+  getHost(): string | undefined {
+    return this.host || undefined;
   }
 
-  getSession() {
-    return this.session;
+  getSession(): Session | undefined {
+    return this.session || undefined;
   }
 
   getFirstName(): string {
@@ -265,16 +265,16 @@ class Auth {
     return this.session.profile.lastName;
   }
 
-  setClientId(clientId: string) {
+  setClientId(clientId: string): void {
     this.clientId = clientId;
     setApiClientId(this.clientId);
   }
 
-  getName() {
+  getName(): string {
     return `${this.getFirstName()} ${this.getLastName()}`;
   }
 
-  async _onAuthenticated(rawSession: Session) {
+  async _onAuthenticated(rawSession: Session): Promise<Session | null> {
     if (this.authenticated && this.session) {
       return this.session;
     }

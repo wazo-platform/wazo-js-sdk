@@ -1,8 +1,8 @@
-import authMethods from './api/auth';
+import authMethods, { AuthD } from './api/auth';
 import applicationMethods from './api/application';
 import confdMethods from './api/confd';
 import ctidNgMethods from './api/ctid-ng';
-import dirdMethods from './api/dird';
+import dirdMethods, { DirD } from './api/dird';
 import callLogdMethods from './api/call-logd';
 import chatdMethods from './api/chatd';
 import calldMethods from './api/calld';
@@ -35,7 +35,7 @@ const logger = IssueReporter ? IssueReporter.loggerFor('api') : console;
 export default class ApiClient {
   client: ApiRequester;
 
-  auth: Record<string, any>;
+  auth: AuthD;
 
   application: Record<string, any>;
 
@@ -43,7 +43,7 @@ export default class ApiClient {
 
   ctidNg: Record<string, any>;
 
-  dird: Record<string, any>;
+  dird: DirD;
 
   callLogd: Record<string, any>;
 
@@ -145,7 +145,11 @@ export default class ApiClient {
     }
 
     try {
-      const session = await this.auth.refreshToken(this.refreshToken, this.refreshBackend, this.refreshExpiration, this.isMobile, this.refreshTenantId, this.refreshDomainName);
+      const session = await this.auth.refreshToken(this.refreshToken, this.refreshBackend as string, this.refreshExpiration as number, this.isMobile, this.refreshTenantId as string, this.refreshDomainName as string);
+      if (!session) {
+        return null;
+      }
+
       logger.info('token refreshed', {
         token: session.token,
       });

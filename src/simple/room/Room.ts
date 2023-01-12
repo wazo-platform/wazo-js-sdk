@@ -218,7 +218,7 @@ class Room extends Emitter {
       // Retrieve conference sources
       const contacts = await getApiClient().dird.fetchConferenceContacts(sources.items[0]);
       // Retrieve conference
-      const conference = contacts.find(contact => contact.numbers.find(number => number.number === extension));
+      const conference = contacts?.find(contact => contact.numbers?.find(number => number.number === extension));
       logger.info('connected to room', {
         sourceId: conference ? conference.sourceId : null,
         name: conference ? conference.name : null,
