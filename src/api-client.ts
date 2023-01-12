@@ -1,7 +1,7 @@
 import authMethods, { AuthD } from './api/auth';
 import applicationMethods, { ApplicationD } from './api/application';
 import confdMethods, { ConfD } from './api/confd';
-import ctidNgMethods from './api/ctid-ng';
+import ctidNgMethods, { CtidNg } from './api/ctid-ng';
 import dirdMethods, { DirD } from './api/dird';
 import callLogdMethods, { CallLogD } from './api/call-logd';
 import chatdMethods, { ChatD } from './api/chatd';
@@ -41,7 +41,7 @@ export default class ApiClient {
 
   confd: ConfD;
 
-  ctidNg: Record<string, any>;
+  ctidNg: CtidNg;
 
   dird: DirD;
 
