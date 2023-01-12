@@ -31,7 +31,22 @@ type GetMessagesOptions = {
   search: string | null | undefined;
   distinct: string | null | undefined;
 };
-export default ((client: ApiRequester, baseUrl: string) => ({
+
+export interface ChatD {
+  updateState: (contactUuid: UUID, state: string) => Promise<boolean>;
+  updateStatus: (contactUuid: UUID, state: string, status: string) => Promise<boolean>;
+  getState: (contactUuid: UUID) => Promise<string>;
+  getContactStatusInfo: (contactUuid: UUID) => Promise<PresenceResponse>;
+  getLineState: (contactUuid: UUID) => Promise<string>;
+  getMultipleLineState: (contactUuids: Array<UUID> | null | undefined) => Promise<string>;
+  getUserRooms: () => Promise<Array<ChatRoom>>;
+  createRoom: (name: string, users: Array<ChatUser>) => Promise<ChatRoom>;
+  getRoomMessages: (roomUuid: string, params?: GetMessagesOptions) => Promise<Array<ChatMessage>>;
+  sendRoomMessage: (roomUuid: string, message: ChatMessage) => Promise<ChatMessage>;
+  getMessages: (options: GetMessagesOptions) => Promise<ChatMessage>;
+}
+
+export default ((client: ApiRequester, baseUrl: string): ChatD => ({
   updateState: (contactUuid: UUID, state: string): Promise<boolean> => client.put(`${baseUrl}/users/${contactUuid}/presences`, {
     state,
   }, null, ApiRequester.successResponseParser),
