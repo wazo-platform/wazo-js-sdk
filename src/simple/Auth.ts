@@ -294,7 +294,7 @@ class Auth {
     try {
       const [profile, {
         wazo_version: engineVersion,
-      }] = await Promise.all([getApiClient().confd.getUser(session.uuid), getApiClient().confd.getInfos()]);
+      }] = await Promise.all([getApiClient().confd.getUser(session.uuid as string), getApiClient().confd.getInfos()]);
       session.engineVersion = engineVersion;
       session.profile = profile;
       this.checkAuthorizations(session, this.authorizationName);
@@ -317,7 +317,7 @@ class Auth {
     }
 
     try {
-      const sipLines = await getApiClient().confd.getUserLinesSip(session.uuid, session.profile?.lines.map(line => line.id));
+      const sipLines = await getApiClient().confd.getUserLinesSip(session.uuid as string, session.profile?.lines.map(line => `${line.id}`));
       // @ts-ignore
       session.profile.sipLines = sipLines.filter(line => !!line);
     } catch (e: any) { // When an user has only a sccp line, getSipLines return a 404

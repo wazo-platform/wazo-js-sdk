@@ -8,7 +8,36 @@ import Meeting from '../domain/Meeting';
 import MeetingAuthorization from '../domain/MeetingAuthorization';
 import { convertKeysFromCamelToUnderscore } from '../utils/object';
 
-export default ((client: ApiRequester, baseUrl: string) => ({
+export interface ConfD {
+  listUsers: () => Promise<ListConfdUsersResponse>;
+  getUser: (userUuid: string) => Promise<Profile>;
+  updateUser: (userUuid: string, profile: Profile) => Promise<boolean>;
+  updateForwardOption: (userUuid: string, key: string, destination: string, enabled: boolean) => Promise<boolean>;
+  updateDoNotDisturb: (userUuid: UUID, enabled: boolean) => Promise<boolean>;
+  getUserLineSip: (userUuid: string, lineId: string) => Promise<SipLine>;
+  getUserLinesSip: (userUuid: string, lineIds: string[]) => Promise<SipLine>[];
+  getUserLineSipFromToken: (userUuid: string) => Promise<any>; // @TODO
+  listApplications: () => Promise<ListApplicationsResponse>;
+  getInfos: () => Promise<{
+    uuid: string;
+    wazo_version: string;
+  }>;
+  getExternalApps: (userUuid: string) => Promise<ExternalApp[]>;
+  getExternalApp: (userUuid: string, name: string) => Promise<ExternalApp | null | undefined>;
+  getMyMeetings: () => Promise<Meeting>;
+  createMyMeeting: (args: MeetingCreateArguments) => Promise<Meeting>;
+  updateMyMeeting: (meetingUuid: string, data: MeetingUpdateArguments) => Promise<boolean>;
+  deleteMyMeeting: (meetingUuid: string) => Promise<Meeting>;
+  getMeeting: (meetingUuid: string) => Promise<Meeting>;
+  meetingAuthorizations: (meetingUuid: string) => Promise<Array<MeetingAuthorization>>;
+  meetingAuthorizationReject: (meetingUuid: string, authorizationUuid: string) => Promise<boolean>;
+  meetingAuthorizationAccept: (meetingUuid: string, authorizationUuid: string) => Promise<boolean>;
+  guestGetMeeting: (meetingUuid: string) => Promise<Meeting>;
+  guestAuthorizationRequest: (userUuid: string, meetingUuid: string, username: string) => Promise<any>;
+  guestAuthorizationCheck: (userUuid: string, meetingUuid: string, authorizationUuid: string) => Promise<any>;
+}
+
+export default ((client: ApiRequester, baseUrl: string): ConfD => ({
   listUsers: (): Promise<ListConfdUsersResponse> => client.get(`${baseUrl}/users`, null),
   getUser: (userUuid: string): Promise<Profile> => client.get(`${baseUrl}/users/${userUuid}`, null).then(Profile.parse),
   updateUser: (userUuid: string, profile: Profile): Promise<boolean> => {
