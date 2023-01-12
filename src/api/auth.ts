@@ -62,7 +62,7 @@ export interface AuthD {
   deleteProviderToken: (userUuid: UUID, provider: string) => Promise<void>;
 }
 
-export default ((client: ApiRequester, baseUrl: string) => ({
+export default ((client: ApiRequester, baseUrl: string): AuthD => ({
   checkToken: (token: Token): Promise<boolean> => client.head(`${baseUrl}/token/${token}`, null, {}),
   authenticate: (token: Token): Promise<Session | null | undefined> => client.get(`${baseUrl}/token/${token}`, null, {}).then(response => Session.parse(response)),
 
