@@ -76,8 +76,7 @@ export default class ApiRequester {
 
   delete: (...args: Array<any>) => any;
 
-  // eslint-disable-next-line
-  static successResponseParser(response: Record<string, any>, isJson: boolean) {
+  static successResponseParser(response: Record<string, any>, isJson: boolean): boolean {
     return response.status === 204 || response.status === 201 || response.status === 200;
   }
 

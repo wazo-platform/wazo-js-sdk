@@ -1,5 +1,5 @@
 import authMethods, { AuthD } from './api/auth';
-import applicationMethods from './api/application';
+import applicationMethods, { ApplicationD } from './api/application';
 import confdMethods, { ConfD } from './api/confd';
 import ctidNgMethods from './api/ctid-ng';
 import dirdMethods, { DirD } from './api/dird';
@@ -37,7 +37,7 @@ export default class ApiClient {
 
   auth: AuthD;
 
-  application: Record<string, any>;
+  application: ApplicationD;
 
   confd: ConfD;
 
