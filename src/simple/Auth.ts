@@ -11,7 +11,47 @@ export class NoTenantIdError extends Error {}
 export class NoDomainNameError extends Error {}
 const logger = IssueReporter.loggerFor('simple-auth');
 
-class Auth {
+export interface IAuth {
+  clientId: string;
+  expiration: number;
+  minSubscriptionType: number | null;
+  authorizationName: string | null;
+  host: string | null;
+  session: Session | null;
+  onRefreshTokenCallback: ((...args: Array<any>) => any) | null;
+  onRefreshTokenCallbackError: ((...args: Array<any>) => any) | null;
+  authenticated: boolean;
+  mobile: boolean;
+  BACKEND_WAZO: string;
+  BACKEND_LDAP: string;
+  init: (clientId: string, expiration: number, minSubscriptionType: number | null | undefined, authorizationName: string | null, mobile: boolean) => void;
+  setFetchOptions: (options: Record<string, any>) => void;
+  logIn: (username: string, password: string, backend?: string, extra?: string | Record<string, any>) => Promise<Session | null>;
+  logInViaRefreshToken: (refreshToken: string) => Promise<Session | null>;
+  validateToken: (token: string, refreshToken: string) => Promise<Session | undefined | null>;
+  generateNewToken: (refreshToken: string) => Promise<Session | null | undefined>;
+  logout: (deleteRefreshToken) => Promise<void>;
+  setOnRefreshToken: (callback: (...args: Array<any>) => any) => void;
+  setOnRefreshTokenError: (callback: (...args: Array<any>) => any) => void;
+  checkAuthorizations: (session: Session, authorizationName: string | null | undefined) => void;
+  checkSubscription: (session: Session, minSubscriptionType: number) => void;
+  setHost: (host: string) => void;
+  setApiToken: (token: string) => void;
+  setRefreshToken: (refreshToken: string) => void ;
+  setRefreshTenantId: (refreshTenantId: string) => void;
+  setRefreshDomainName: (domainName: string) => void;
+  forceRefreshToken: () => void;
+  setIsMobile: (mobile: boolean) => void ;
+  getHost: () => string | undefined;
+  getSession: () => Session | undefined;
+  getFirstName: () => string;
+  getLastName: () => string;
+  setClientId: (clientId: string) => void;
+  getName: () => string ;
+  _onAuthenticated: (rawSession: Session) => Promise<Session | null>;
+}
+
+class Auth implements IAuth {
   clientId: string;
 
   expiration: number;
@@ -132,9 +172,9 @@ class Auth {
     return this._onAuthenticated(rawSession as Session);
   }
 
-  async validateToken(token: string, refreshToken: string) {
+  async validateToken(token: string, refreshToken: string): Promise<Session | undefined | null> {
     if (!token) {
-      return null;
+      return;
     }
 
     if (refreshToken) {
@@ -144,11 +184,10 @@ class Auth {
     // Check if the token is valid
     try {
       const rawSession = await getApiClient().auth.authenticate(token);
-      return await this._onAuthenticated(rawSession as Session);
+      return this._onAuthenticated(rawSession as Session);
     } catch (e: any) {
       logger.error('on validate token error', e);
       console.warn(e);
-      return false;
     }
   }
 

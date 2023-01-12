@@ -375,7 +375,7 @@ class Phone extends Emitter {
   }
 
   getPrimaryWebRtcLine(): SipLine | null {
-    const session: Session = Wazo.Auth.getSession();
+    const session = Wazo.Auth.getSession();
     return session?.primaryWebRtcLine() || null;
   }
 
@@ -384,7 +384,7 @@ class Phone extends Emitter {
   }
 
   getPrimaryLine(): SipLine | null {
-    const session: Session = Wazo.Auth.getSession();
+    const session = Wazo.Auth.getSession();
     return session?.primarySipLine() || null;
   }
 

@@ -711,7 +711,7 @@ class Room extends Emitter {
     let participants = [];
 
     // When we join the room, we can call `getConferenceParticipantsAsUser`, not before.
-    if (participant.user_uuid === session.uuid) {
+    if (participant.user_uuid === session?.uuid) {
       logger.info('room current user joined');
       // Retrieve participants via an API calls
       const conferenceId = this.sourceId || payload.data.conference_id;
