@@ -1,6 +1,6 @@
 /* global window */
 import Auth, { IAuth, InvalidSubscription, InvalidAuthorization, NoTenantIdError, NoDomainNameError } from './Auth';
-import Phone from './Phone';
+import Phone, { IPhone } from './Phone';
 import Websocket from './Websocket';
 import Room from './room/Room';
 import SipRoom from './room/SipRoom';
@@ -41,7 +41,7 @@ import Checker from '../checker/Checker';
 
 const Wazo = {
   Auth: Auth as IAuth,
-  Phone,
+  Phone: Phone as IPhone,
   Websocket,
   Room,
   SipRoom,

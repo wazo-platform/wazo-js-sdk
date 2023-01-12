@@ -1,6 +1,14 @@
 import EventEmitter from 'events';
 
-export default class Emitter {
+export interface IEmitter {
+  eventEmitter: EventEmitter;
+  on: (event: string, callback: (...args: Array<any>) => any) => void;
+  once: (event: string, callback: (...args: Array<any>) => any) => void;
+  off: (event: string, callback: (...args: Array<any>) => any) => void;
+  unbind: () => void;
+}
+
+export default class Emitter implements IEmitter {
   eventEmitter: EventEmitter;
 
   constructor() {

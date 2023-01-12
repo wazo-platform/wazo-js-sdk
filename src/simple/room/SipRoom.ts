@@ -1,4 +1,6 @@
+import type { Invitation, Inviter } from 'sip.js';
 import type { Message } from 'sip.js/lib/api/message';
+import CallSession from '../../domain/CallSession';
 import IssueReporter from '../../service/IssueReporter';
 import Wazo from '../index';
 import Room from './Room';
@@ -26,7 +28,7 @@ class SipRoom extends Room {
       const withCamera = constraints && !!constraints.video;
       const callSession = await Wazo.Phone.call(extension, withCamera, null, audioOnly, true);
       // eslint-disable-next-line no-param-reassign
-      room = new SipRoom(callSession, extension, null, null, extra);
+      room = new SipRoom(callSession as CallSession, extension, null, null, extra);
     }
 
     if (room && room.callSession && room.callSession.call) {
@@ -41,18 +43,19 @@ class SipRoom extends Room {
 
   mute() {
     logger.info('mute sip room');
-    Wazo.Phone.mute(this.callSession, false);
+    Wazo.Phone.mute(this.callSession as CallSession, false);
     this.sendMuteStatus();
   }
 
   unmute() {
     logger.info('unmute sip room');
-    Wazo.Phone.unmute(this.callSession, false);
+    Wazo.Phone.unmute(this.callSession as CallSession, false);
     this.sendUnMuteStatus();
   }
 
-  getLocalGuestName() {
-    return Wazo.Phone.phone.client.userAgent.options.displayName;
+  getLocalGuestName(): string | null {
+    // @ts-ignore
+    return Wazo.Phone.phone?.client.userAgent?.options.displayName || null;
   }
 
   // Overridden to not listen to websocket messages
@@ -156,7 +159,7 @@ class SipRoom extends Room {
   }
 
   _getCurrentSipCallIs() {
-    return Wazo.Phone.getSipSessionId(Wazo.Phone.phone.currentSipSession);
+    return Wazo.Phone.getSipSessionId(Wazo.Phone.phone?.currentSipSession as Invitation | Inviter);
   }
 
 }

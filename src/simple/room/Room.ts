@@ -1,5 +1,6 @@
 import type { Message } from 'sip.js/lib/api/message';
 import sdpParser from 'sdp-transform';
+import { Invitation, Inviter } from 'sip.js';
 import type CallSession from '../../domain/CallSession';
 import getApiClient from '../../service/getApiClient';
 import Emitter from '../../utils/Emitter';
@@ -200,7 +201,7 @@ class Room extends Emitter {
       });
       const callSession = await Wazo.Phone.call(extension, withCamera, null, audioOnly, true);
       // eslint-disable-next-line no-param-reassign
-      room = new Room(callSession, extension, null, null, extra);
+      room = new Room(callSession as CallSession, extension, null, null, extra);
       // Wait for the call to be accepted
       await new Promise((resolve, reject) => {
         Wazo.Phone.once(Wazo.Phone.ON_CALL_ACCEPTED, resolve);
@@ -247,7 +248,7 @@ class Room extends Emitter {
 
   async disconnect() {
     logger.info('disconnection to room called');
-    await Wazo.Phone.hangup(this.callSession);
+    await Wazo.Phone.hangup(this.callSession as CallSession);
     this.callSession = null;
     this.eventEmitter.emit(this.ON_DISCONNECTED, this);
     this.connected = false;
@@ -256,7 +257,7 @@ class Room extends Emitter {
     Wazo.Phone.off(this.ON_CHAT, this._boundOnChat);
     Wazo.Phone.off(this.ON_SIGNAL, this._boundOnSignal);
     Wazo.Phone.off(this.ON_VIDEO_INPUT_CHANGE, this._boundSaveLocalVideoStream);
-    Wazo.Phone.phone.off(Wazo.Phone.phone.client.ON_REINVITE, this._boundOnReinvite);
+    Wazo.Phone.phone?.off(Wazo.Phone.phone.client.ON_REINVITE, this._boundOnReinvite);
     Wazo.Websocket.off(this.CONFERENCE_USER_PARTICIPANT_JOINED, this._boundOnParticipantJoined);
     Wazo.Websocket.off(this.CONFERENCE_USER_PARTICIPANT_LEFT, this._boundOnParticipantLeft);
     Wazo.Websocket.off(this.MEETING_USER_PARTICIPANT_JOINED, this._boundOnParticipantJoined);
@@ -311,7 +312,7 @@ class Room extends Emitter {
     logger.info('start room screen sharing', {
       constraints,
     });
-    const screensharingStream = await Wazo.Phone.startScreenSharing(constraints, this.callSession);
+    const screensharingStream = await Wazo.Phone.startScreenSharing(constraints, this.callSession as CallSession);
 
     if (!screensharingStream) {
       console.warn('screensharing stream is null (likely due to user cancellation)');
@@ -325,7 +326,7 @@ class Room extends Emitter {
 
   async stopScreenSharing(restoreLocalStream = true) {
     logger.info('stop room screen sharing');
-    await Wazo.Phone.stopScreenSharing(this.callSession, restoreLocalStream);
+    await Wazo.Phone.stopScreenSharing(this.callSession as CallSession, restoreLocalStream);
 
     if (this.localParticipant) {
       this._updateLocalParticipantStream();
@@ -336,7 +337,7 @@ class Room extends Emitter {
 
   turnCameraOff() {
     logger.info('turn room camera off');
-    Wazo.Phone.turnCameraOff(this.callSession);
+    Wazo.Phone.turnCameraOff(this.callSession as CallSession);
 
     if (this.localParticipant) {
       this.localParticipant.onVideoMuted();
@@ -345,7 +346,7 @@ class Room extends Emitter {
 
   turnCameraOn() {
     logger.info('turn room camera on');
-    Wazo.Phone.turnCameraOn(this.callSession);
+    Wazo.Phone.turnCameraOn(this.callSession as CallSession);
 
     if (this.localParticipant) {
       this.localParticipant.onVideoUnMuted();
@@ -354,13 +355,13 @@ class Room extends Emitter {
 
   mute() {
     logger.info('mute room');
-    Wazo.Phone.mute(this.callSession);
+    Wazo.Phone.mute(this.callSession as CallSession);
     this.sendMuteStatus();
   }
 
   unmute() {
     logger.info('unmute room');
-    Wazo.Phone.unmute(this.callSession);
+    Wazo.Phone.unmute(this.callSession as CallSession);
     this.sendUnMuteStatus();
   }
 
@@ -378,7 +379,7 @@ class Room extends Emitter {
 
   hold() {
     logger.info('hold room');
-    Wazo.Phone.hold(this.callSession, true);
+    Wazo.Phone.hold(this.callSession as CallSession);
 
     if (this.localParticipant) {
       this.localParticipant.onHold();
@@ -387,7 +388,7 @@ class Room extends Emitter {
 
   async resume() {
     logger.info('resume room');
-    const newStream = await Wazo.Phone.resume(this.callSession, true);
+    const newStream = await Wazo.Phone.resume(this.callSession as CallSession);
 
     if (this.localParticipant) {
       // Update local participant stream (useful when resuming a shreenshared conference)
@@ -402,7 +403,7 @@ class Room extends Emitter {
   }
 
   _updateLocalParticipantStream() {
-    const localStream = Wazo.Phone.getLocalStream(this.callSession);
+    const localStream = Wazo.Phone.getLocalStream(this.callSession as CallSession);
 
     if (this.localParticipant && localStream) {
       const localWazoStream = new Wazo.Stream(localStream);
@@ -414,7 +415,7 @@ class Room extends Emitter {
     logger.info('send room DTMF', {
       tone,
     });
-    Wazo.Phone.sendDTMF(tone, this.callSession);
+    Wazo.Phone.sendDTMF(tone, this.callSession as CallSession);
   }
 
   async sendReinvite(newConstraints: Record<string, any> | null = null) {
@@ -428,10 +429,10 @@ class Room extends Emitter {
         this._onScreenSharing();
       }
     });
-    const response = await Wazo.Phone.phone.sendReinvite(this.callSession, newConstraints, true);
+    const response = await Wazo.Phone.phone?.sendReinvite(this.callSession, newConstraints, true);
 
     if (this.localParticipant && newConstraints && newConstraints.video) {
-      const localVideoStream = Wazo.Phone.phone.getLocalVideoStream(this.callSession);
+      const localVideoStream = Wazo.Phone.phone?.getLocalVideoStream(this.callSession as CallSession);
 
       if (localVideoStream) {
         this._associateStreamTo(localVideoStream, this.localParticipant);
@@ -445,19 +446,19 @@ class Room extends Emitter {
   }
 
   hasALocalVideoTrack() {
-    return Wazo.Phone.hasALocalVideoTrack(this.callSession);
+    return Wazo.Phone.hasALocalVideoTrack(this.callSession as CallSession);
   }
 
   getLocalStream() {
-    return Wazo.Phone.getLocalStream(this.callSession);
+    return Wazo.Phone.getLocalStream(this.callSession as CallSession);
   }
 
   getRemoteStream() {
-    return Wazo.Phone.getRemoteStream(this.callSession);
+    return Wazo.Phone.getRemoteStream(this.callSession as CallSession);
   }
 
   getRemoteVideoStream() {
-    return Wazo.Phone.getRemoteVideoStream(this.callSession);
+    return Wazo.Phone.getRemoteVideoStream(this.callSession as CallSession);
   }
 
   _bindEvents() {
@@ -466,6 +467,7 @@ class Room extends Emitter {
     }
 
     // Retrieve mapping
+    // @ts-ignore
     Wazo.Phone.phone.currentSipSession.sessionDescriptionHandler.on('setDescription', ({
       type,
       sdp: rawSdp,
@@ -484,8 +486,8 @@ class Room extends Emitter {
       this.audioStream = stream;
 
       if (!this.roomAudioElement) {
-        const sessionId = Wazo.Phone.phone.getSipSessionId(Wazo.Phone.phone.currentSipSession);
-        this.roomAudioElement = Wazo.Phone.phone.createAudioElementFor(sessionId);
+        const sessionId = Wazo.Phone.phone?.getSipSessionId(Wazo.Phone.phone?.currentSipSession as Inviter | Invitation);
+        this.roomAudioElement = Wazo.Phone.phone?.createAudioElementFor(sessionId as string);
         this.roomAudioElement.srcObject = stream;
       } else {
         this.roomAudioElement.srcObject = stream;
@@ -837,6 +839,7 @@ class Room extends Emitter {
       trackId,
       streamId,
     } = this._callIdStreamIdMap[newParticipant.callId] || {};
+    // @ts-ignore
     const pc = Wazo.Phone.phone.currentSipSession.sessionDescriptionHandler.peerConnection;
     // Can't use `getReceivers` here because on FF we make the mapping based on the streamId
     const stream = pc.getRemoteStreams().find(someStream => someStream.id === streamId || someStream.getTracks().some(track => track.id === trackId));
@@ -922,7 +925,7 @@ class Room extends Emitter {
   }
 
   _getLocalVideoStream() {
-    return Wazo.Phone.getLocalVideoStream(this.callSession);
+    return Wazo.Phone.getLocalVideoStream(this.callSession as CallSession);
   }
 
 }
