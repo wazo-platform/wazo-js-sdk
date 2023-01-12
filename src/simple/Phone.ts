@@ -300,8 +300,7 @@ class Phone extends Emitter implements IPhone {
 
     this.client = new WazoWebRTCClient({
       host,
-      // @ts-ignore
-      port,
+      port: typeof port === 'string' ? parseInt(port, 10) : port,
       displayName,
       authorizationUser: sipLine.username,
       password: sipLine.secret,

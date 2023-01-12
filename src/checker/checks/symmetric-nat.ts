@@ -5,7 +5,7 @@ const timeoutDuration = 8000; // @see https://webrtchacks.com/symmetric-nat/
 
 export default {
   name: 'Symmetric NAT',
-  check: () => new Promise((resolve, reject) => {
+  check: (): Promise<string | void> => new Promise((resolve, reject) => {
     if (typeof MediaStream === 'undefined') {
       return resolve('Skipped on node');
     }
@@ -35,7 +35,6 @@ export default {
       const ports = candidates[Object.keys(candidates)[0]];
 
       if (ports.length === 1) {
-        // @ts-ignore
         resolve();
       } else {
         reject(new Error('Symmetric NAT detected, you should use a TURN server.'));

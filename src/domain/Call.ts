@@ -18,7 +18,7 @@ export type CallResponse = {
   on_hold: boolean;
   muted: boolean;
   talking_to: Record<string, any>;
-  record_state: boolean;
+  record_state: string;
 };
 type CallArguments = {
   id: string;
@@ -98,7 +98,6 @@ export default class Call {
       lineId: plain.line_id,
       startingTime: moment(plain.creation_time).toDate(),
       talkingToIds: Object.keys(plain.talking_to || {}),
-      // @ts-ignore
       recording: plain.record_state === RECORD_STATE_ACTIVE,
     });
   }

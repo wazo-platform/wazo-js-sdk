@@ -2,8 +2,7 @@ import WebRTCClient from '../../web-rtc-client';
 
 export default {
   name: 'WebRTC Transport (WS) ~30s',
-  check: (server, session) => new Promise<void>((resolve, reject) => {
-    // @ts-ignore
+  check: (server, session): Promise<void> => new Promise((resolve, reject) => {
     const client = new WebRTCClient({
       host: server,
       media: {
@@ -25,6 +24,7 @@ export default {
     client.on(client.TRANSPORT_ERROR, error => {
       handleError(`Transport error : ${error}`);
     });
+
     client.on(client.REGISTERED, () => {
       client.setOnHeartbeatTimeout(() => {
         handleError('No response to heartbeat');

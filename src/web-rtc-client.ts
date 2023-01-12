@@ -72,23 +72,23 @@ type MediaConfig = {
   localVideo?: Record<string, any> | boolean;
 };
 type WebRtcConfig = {
-  displayName: string;
+  displayName?: string;
   host: string;
   port?: number;
-  websocketSip?: string | null | undefined;
-  authorizationUser: string | null | undefined;
-  password: string | null | undefined;
-  uri: string;
-  media: MediaConfig;
-  iceCheckingTimeout: number | null | undefined;
+  websocketSip?: string;
+  authorizationUser?: string;
+  password?: string;
+  uri?: string;
+  media?: MediaConfig;
+  iceCheckingTimeout?: number;
   log?: Record<string, any>;
   audioOutputDeviceId?: string;
   audioOutputVolume?: number;
   userAgentString?: string;
-  heartbeatDelay: number;
-  heartbeatTimeout: number;
-  maxHeartbeats: number;
-  skipRegister: boolean;
+  heartbeatDelay?: number;
+  heartbeatTimeout?: number;
+  maxHeartbeats?: number;
+  skipRegister?: boolean;
 }; // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
 
 export default class WebRTCClient extends Emitter {
@@ -198,7 +198,7 @@ export default class WebRTCClient extends Emitter {
     super();
     this.uaConfigOverrides = uaConfigOverrides;
     this.config = config;
-    this.skipRegister = config.skipRegister;
+    this.skipRegister = config.skipRegister as boolean;
 
     this._buildConfig(config, session).then((newConfig: WebRtcConfig) => {
       this.config = newConfig;

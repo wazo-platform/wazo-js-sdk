@@ -104,9 +104,8 @@ const Wazo = {
     return getApiClient().auth;
   },
 
-  get callLogs() {
-    // @ts-ignore
-    return getApiClient().callLogs;
+  get callLogd() {
+    return getApiClient().callLogd;
   },
 
   get calld() {

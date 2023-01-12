@@ -1,6 +1,5 @@
 export default class BadResponse extends Error {
   static fromResponse(error: Record<string, any>, status: number) {
-    // @ts-ignore
     return new BadResponse(error.message || JSON.stringify(error), status, error.timestamp, error.error_id, error.details, error);
   }
 
@@ -16,9 +15,9 @@ export default class BadResponse extends Error {
 
   details: Record<string, any> | null | undefined;
 
-  error: Error | null | undefined;
+  error: Record<string, any> | Error | null | undefined;
 
-  constructor(message: string, status: number, timestamp: number | null | undefined = null, errorId: string | null | undefined = null, details: Record<string, any> | null | undefined = null, error: Error | null | undefined = null) {
+  constructor(message: string, status: number, timestamp: number | null | undefined = null, errorId: string | null | undefined = null, details: Record<string, any> | null | undefined = null, error: Record<string, any> | Error | null | undefined = null) {
     super(message);
     this.timestamp = timestamp;
     this.status = status;

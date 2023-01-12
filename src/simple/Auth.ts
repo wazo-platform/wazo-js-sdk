@@ -239,10 +239,9 @@ class Auth implements IAuth {
   }
 
   checkSubscription(session: Session, minSubscriptionType: number): void {
-    const userSubscriptionType = session.profile ? session.profile.subscriptionType : null;
+    const userSubscriptionType = <number>session.profile?.subscriptionType || null;
 
-    // @ts-ignore
-    if (userSubscriptionType === null || +userSubscriptionType <= minSubscriptionType) {
+    if (userSubscriptionType === null || userSubscriptionType <= minSubscriptionType) {
       const message = `Invalid subscription ${userSubscriptionType || 'n/a'}, required at least ${minSubscriptionType}`;
       throw new InvalidSubscription(message);
     }
@@ -339,7 +338,6 @@ class Auth implements IAuth {
       this.checkAuthorizations(session, this.authorizationName);
 
       if (this.minSubscriptionType !== null) {
-        // @ts-ignore
         this.checkSubscription(session, +this.minSubscriptionType);
       }
     } catch (e: any) {

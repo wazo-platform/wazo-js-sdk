@@ -8,7 +8,6 @@ export default {
       return resolve('Skipped on node');
     }
 
-    // @ts-ignore
     const client = new WebRTCClient({
       host: server,
       media: {
@@ -33,7 +32,6 @@ export default {
     client.on(client.REGISTERED, () => {
       const sipSession = client.call('*10');
 
-      // @ts-ignore
       if (!sipSession || !client.getSipSessionId(sipSession)) {
         return handleError('Unable to make call through WebRTC');
       }
