@@ -8,7 +8,7 @@ import chatdMethods, { ChatD } from './api/chatd';
 import calldMethods, { CallD } from './api/calld';
 import agentdMethods, { AgentD } from './api/agentd';
 import webhookdMethods, { WebhookD } from './api/webhookd';
-import amidMethods from './api/amid';
+import amidMethods, { AmiD } from './api/amid';
 import ApiRequester from './utils/api-requester';
 import IssueReporter from './service/IssueReporter';
 
@@ -55,7 +55,7 @@ export default class ApiClient {
 
   webhookd: WebhookD;
 
-  amid: Record<string, any>;
+  amid: AmiD;
 
   refreshToken: string | null | undefined;
 
