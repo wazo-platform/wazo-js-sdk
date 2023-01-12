@@ -7,7 +7,7 @@ import callLogdMethods, { CallLogD } from './api/call-logd';
 import chatdMethods, { ChatD } from './api/chatd';
 import calldMethods, { CallD } from './api/calld';
 import agentdMethods, { AgentD } from './api/agentd';
-import webhookdMethods from './api/webhookd';
+import webhookdMethods, { WebhookD } from './api/webhookd';
 import amidMethods from './api/amid';
 import ApiRequester from './utils/api-requester';
 import IssueReporter from './service/IssueReporter';
@@ -53,7 +53,7 @@ export default class ApiClient {
 
   agentd: AgentD;
 
-  webhookd: Record<string, any>;
+  webhookd: WebhookD;
 
   amid: Record<string, any>;
 
