@@ -23,7 +23,7 @@ export default {
     const offerOptions: any = {
       offerToReceiveAudio: 1,
     };
-    const ips = [];
+    const ips: string[] = [];
     const config: any = {
       iceServers: [{
         urls: 'stun:stun1.l.google.com:19302',
@@ -56,8 +56,7 @@ export default {
 
         if (rawCandidate.indexOf('srflx') !== -1 || rawCandidate.indexOf('relay') !== -1) {
           hasSrflxOrRelay = true;
-          const candidate: any = parseCandidate(e.candidate.candidate);
-          // @ts-ignore
+          const candidate = parseCandidate(e.candidate.candidate);
           ips.push(candidate.ip);
         }
       } else if (!e.candidate) {

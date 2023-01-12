@@ -15,7 +15,7 @@ export interface ConfD {
   updateForwardOption: (userUuid: string, key: string, destination: string, enabled: boolean) => Promise<boolean>;
   updateDoNotDisturb: (userUuid: UUID, enabled: boolean) => Promise<boolean>;
   getUserLineSip: (userUuid: string, lineId: string) => Promise<SipLine>;
-  getUserLinesSip: (userUuid: string, lineIds: string[]) => Promise<SipLine>[];
+  getUserLinesSip: (userUuid: string, lineIds: string[]) => Promise<(SipLine | null)[]>;
   getUserLineSipFromToken: (userUuid: string) => Promise<any>; // @TODO
   listApplications: () => Promise<ListApplicationsResponse>;
   getInfos: () => Promise<{
@@ -61,10 +61,9 @@ export default ((client: ApiRequester, baseUrl: string): ConfD => ({
   }, null, ApiRequester.successResponseParser),
   getUserLineSip: (userUuid: string, lineId: string): Promise<SipLine> => client.get(`${baseUrl}/users/${userUuid}/lines/${lineId}/associated/endpoints/sip?view=merged`).then(SipLine.parse),
 
-  getUserLinesSip(userUuid: string, lineIds: string[]): Promise<SipLine>[] {
+  getUserLinesSip(userUuid: string, lineIds: string[]): Promise<(SipLine | null)[]> {
     // We have to catch all exception, unless Promise.all will returns an empty array for 2 lines with a custom one:
     // The custom line will throw a 404 and break the Promise.all.
-    // @ts-ignore
     return Promise.all(lineIds.map(lineId => this.getUserLineSip(userUuid, lineId).catch(() => null)));
   },
 

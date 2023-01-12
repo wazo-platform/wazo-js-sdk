@@ -212,8 +212,7 @@ class WebSocketClient extends Emitter {
       }
 
       if (!this.initialized) {
-        // @ts-ignore
-        this._handleInitMessage(message, this.socket);
+        this._handleInitMessage(message, this.socket as ReconnectingWebSocket);
       } else {
         this._handleMessage(message);
       }
@@ -365,8 +364,8 @@ class WebSocketClient extends Emitter {
       return;
     }
 
-    // @ts-ignore
-    this.socket.reconnect(reason);
+    // @HEADS UP: first arg is `code`, second is `reason`; inputing arbitrary value for `code`
+    this.socket.reconnect(0, reason);
   }
 
   _handleInitMessage(message: WebSocketMessage, sock: ReconnectingWebSocket) {

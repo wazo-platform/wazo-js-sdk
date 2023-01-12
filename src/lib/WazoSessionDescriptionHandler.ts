@@ -38,9 +38,8 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
 
   session: Inviter | Invitation;
 
-  // @ts-ignore
   // eslint-disable-next-line @typescript-eslint/default-param-last
-  constructor(logger: Logger, mediaStreamFactory: MediaStreamFactory, sessionDescriptionHandlerConfiguration?: SessionDescriptionHandlerConfiguration, isWeb: boolean, session: Inviter | Invitation) {
+  constructor(logger: Logger, mediaStreamFactory: MediaStreamFactory, sessionDescriptionHandlerConfiguration: SessionDescriptionHandlerConfiguration, isWeb: boolean, session: Inviter | Invitation) {
     super(logger, mediaStreamFactory, sessionDescriptionHandlerConfiguration);
     this.eventEmitter = new EventEmitter();
     this.isWeb = isWeb;

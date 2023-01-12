@@ -1,3 +1,16 @@
+type Candidate = {
+  foundation: string,
+  component: string,
+  protocol: string,
+  priority: number,
+  ip: string,
+  port: number,
+  type: string,
+  relatedAddress?: string,
+  relatedPort?: number,
+  tcpType?: string
+};
+
 export const parseCandidate = line => {
   let parts;
 
@@ -8,7 +21,7 @@ export const parseCandidate = line => {
     parts = line.substring(10).split(' ');
   }
 
-  const candidate: any = {
+  const candidate: Candidate = {
     foundation: parts[0],
     component: parts[1],
     protocol: parts[2].toLowerCase(),
