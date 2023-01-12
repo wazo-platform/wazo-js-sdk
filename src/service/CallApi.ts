@@ -8,11 +8,11 @@ import getApiClient from './getApiClient';
 import Transfer from '../domain/IndirectTransfer';
 
 export default class CallApi {
-  static async fetchCallLogs(offset: number, limit: number): Promise<Call[]> {
+  static async fetchCallLogs(offset: number, limit: number): Promise<CallLog[]> {
     return getApiClient().callLogd.listCallLogs(offset, limit);
   }
 
-  static async fetchDistinctCallLogs(offset: number, limit: number, distinct = 'peer_exten'): Promise<Call[]> {
+  static async fetchDistinctCallLogs(offset: number, limit: number, distinct = 'peer_exten'): Promise<CallLog[]> {
     return getApiClient().callLogd.listDistinctCallLogs(offset, limit, distinct);
   }
 

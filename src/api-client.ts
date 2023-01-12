@@ -3,7 +3,7 @@ import applicationMethods from './api/application';
 import confdMethods, { ConfD } from './api/confd';
 import ctidNgMethods from './api/ctid-ng';
 import dirdMethods, { DirD } from './api/dird';
-import callLogdMethods from './api/call-logd';
+import callLogdMethods, { CallLogD } from './api/call-logd';
 import chatdMethods from './api/chatd';
 import calldMethods from './api/calld';
 import agentdMethods, { AgentD } from './api/agentd';
@@ -45,7 +45,7 @@ export default class ApiClient {
 
   dird: DirD;
 
-  callLogd: Record<string, any>;
+  callLogd: CallLogD;
 
   chatd: Record<string, any>;
 
