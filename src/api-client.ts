@@ -5,7 +5,7 @@ import ctidNgMethods from './api/ctid-ng';
 import dirdMethods, { DirD } from './api/dird';
 import callLogdMethods, { CallLogD } from './api/call-logd';
 import chatdMethods, { ChatD } from './api/chatd';
-import calldMethods from './api/calld';
+import calldMethods, { CallD } from './api/calld';
 import agentdMethods, { AgentD } from './api/agentd';
 import webhookdMethods from './api/webhookd';
 import amidMethods from './api/amid';
@@ -49,7 +49,7 @@ export default class ApiClient {
 
   chatd: ChatD;
 
-  calld: Record<string, any>;
+  calld: CallD;
 
   agentd: AgentD;
 

@@ -4,7 +4,7 @@ import type { UUID, RequestError } from '../domain/types';
 import Relocation from '../domain/Relocation';
 import ChatMessage from '../domain/ChatMessage';
 import Voicemail from '../domain/Voicemail';
-import Call from '../domain/Call';
+import Call, { CallResponse } from '../domain/Call';
 import IndirectTransfer from '../domain/IndirectTransfer';
 import MeetingStatus from '../domain/MeetingStatus';
 
@@ -14,7 +14,51 @@ type CallQuery = {
   line_id?: number;
   all_lines?: boolean;
 };
-export default ((client: ApiRequester, baseUrl: string) => ({
+
+export interface CallD {
+  updatePresence: (presence: string) => Promise<boolean>;
+  listMessages: (participantUuid: UUID | null | undefined, limit?: number) => Promise<Array<ChatMessage>>;
+  sendMessage: (alias: string, msg: string, toUserId: string) => Promise<boolean>;
+  makeCall: (extension: string, fromMobile: boolean, lineId: number | null | undefined, allLines: boolean | null | undefined) => Promise<CallResponse>;
+  cancelCall: (callId: string) => Promise<boolean>;
+  listCalls: () => Promise<Array<Call>>;
+  relocateCall: (callId: string, destination: string, lineId: number | null | undefined, contact?: string | null | undefined) => Promise<Relocation>;
+  listVoicemails: () => Promise<RequestError | Array<Voicemail>>;
+  deleteVoicemail: (voicemailId: number) => Promise<boolean>;
+  getVoicemailUrl: (voicemail: Voicemail) => string;
+  fetchSwitchboardHeldCalls: (switchboardUuid: UUID) => Promise<any>; // @TODO: replace `any`
+  holdSwitchboardCall: (switchboardUuid: UUID, callId: string) => Promise<boolean>;
+  answerSwitchboardHeldCall: (switchboardUuid: UUID, callId: string, lineId: string | null | undefined) => Promise<void>;
+  fetchSwitchboardQueuedCalls: (switchboardUuid: UUID) => Promise<any>; // @TODO: replace `any`
+  answerSwitchboardQueuedCall: (switchboardUuid: UUID, callId: string, lineId: string | null | undefined) => Promise<any>; // @TODO: replace `any`
+  sendFax: (extension: string, fax: string, callerId: string | null | undefined) => Promise<void>;
+  getConferenceParticipantsAsUser: (conferenceId: string) => Promise<Record<string, any>>; // @TODO: replace `any`
+  getMeetingParticipantsAsUser: (meetingUuid: string) => Promise<Record<string, any>>; // @TODO: replace `any`
+  banMeetingParticipant: (meetingUuid: string, participantUuid: string) => Promise<boolean>;
+  listTrunks: () => Promise<any>;
+  mute: (callId: string) => Promise<boolean>;
+  unmute: (callId: string) => Promise<boolean>;
+  hold: (callId: string) => Promise<boolean>;
+  resume: (callId: string) => Promise<boolean>;
+  // eslint-disable-next-line camelcase
+  transferCall: (initiator_call: string, exten: string, flow: string) => Promise<IndirectTransfer>;
+  confirmCallTransfer: (transferId: string) => Promise<boolean>;
+  cancelCallTransfer: (transferId: string) => Promise<boolean>;
+  sendDTMF: (callId: string, digits: string) => Promise<boolean>;
+  // @deprecated: check for engine version >= 20.12 instead
+  isAhHocConferenceAPIEnabled: () => Promise<boolean>;
+  createAdHocConference: (hostCallId: string, participantCallIds: string[]) => Promise<any>; // @TODO: replace `any`
+  addAdHocConferenceParticipant: (conferenceId: string, callId: string) => Promise<boolean>;
+  removeAdHocConferenceParticipant: (conferenceId: string, participantCallId: string) => Promise<boolean>;
+  deleteAdHocConference: (conferenceId: string) => Promise<boolean>;
+  startRecording: (callId: string) => Promise<boolean>;
+  stopRecording: (callId: string) => Promise<boolean>;
+  pauseRecording: (callId: string) => Promise<boolean>;
+  resumeRecording: (callId: string) => Promise<boolean>;
+  guestGetMeetingStatus: (meetingUuid: string) => Promise<MeetingStatus>
+}
+
+export default ((client: ApiRequester, baseUrl: string): CallD => ({
   updatePresence: (presence: string): Promise<boolean> => client.put(`${baseUrl}/users/me/presences`, {
     presence,
   }, null, ApiRequester.successResponseParser),
@@ -39,7 +83,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
     };
     return client.post(`${baseUrl}/users/me/chats`, body, null, ApiRequester.successResponseParser);
   },
-  makeCall: (extension: string, fromMobile: boolean, lineId: number | null | undefined, allLines: boolean | null | undefined = false) => {
+  makeCall: (extension: string, fromMobile: boolean, lineId: number | null | undefined, allLines: boolean | null | undefined = false): Promise<CallResponse> => {
     const query: CallQuery = {
       from_mobile: fromMobile,
       extension,
@@ -55,10 +99,10 @@ export default ((client: ApiRequester, baseUrl: string) => ({
 
     return client.post(`${baseUrl}/users/me/calls`, query);
   },
-  cancelCall: (callId: number): Promise<boolean> => client.delete(`${baseUrl}/users/me/calls/${callId}`, null),
+  cancelCall: (callId: string): Promise<boolean> => client.delete(`${baseUrl}/users/me/calls/${callId}`, null),
   listCalls: (): Promise<Array<Call>> => client.get(`${baseUrl}/users/me/calls`, null).then(response => Call.parseMany(response.items)),
 
-  relocateCall(callId: number, destination: string, lineId: number | null | undefined, contact?: string | null | undefined): Promise<Relocation> {
+  relocateCall(callId: string, destination: string, lineId: number | null | undefined, contact?: string | null | undefined): Promise<Relocation> {
     const body: Record<string, any> = {
       completions: ['answer'],
       destination,
@@ -83,7 +127,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
 
   listVoicemails: (): Promise<RequestError | Array<Voicemail>> => client.get(`${baseUrl}/users/me/voicemails`).then(response => Voicemail.parseMany(response)),
   deleteVoicemail: (voicemailId: number): Promise<boolean> => client.delete(`${baseUrl}/users/me/voicemails/messages/${voicemailId}`),
-  getVoicemailUrl: (voicemail: Voicemail) => {
+  getVoicemailUrl: (voicemail: Voicemail): string => {
     const body = {
       token: client.token,
     };
@@ -119,12 +163,12 @@ export default ((client: ApiRequester, baseUrl: string) => ({
     exten,
     flow,
   }).then(IndirectTransfer.parseFromApi),
-  confirmCallTransfer: (transferId: string) => client.put(`${baseUrl}/users/me/transfers/${transferId}/complete`),
-  cancelCallTransfer: (transferId: string) => client.delete(`${baseUrl}/users/me/transfers/${transferId}`),
+  confirmCallTransfer: (transferId: string): Promise<boolean> => client.put(`${baseUrl}/users/me/transfers/${transferId}/complete`, null, null, ApiRequester.successResponseParser),
+  cancelCallTransfer: (transferId: string): Promise<boolean> => client.delete(`${baseUrl}/users/me/transfers/${transferId}`, null, null, ApiRequester.successResponseParser),
   sendDTMF: (callId: string, digits: string) => client.put(`${baseUrl}/users/me/calls/${callId}/dtmf?digits=${encodeURIComponent(digits)}`, null, null, ApiRequester.successResponseParser),
   // @deprecated: check for engine version >= 20.12 instead
   isAhHocConferenceAPIEnabled: () => client.head(`${baseUrl}/users/me/conferences/adhoc`, null, null, ApiRequester.successResponseParser),
-  createAdHocConference: (hostCallId: string, participantCallIds: string) => client.post(`${baseUrl}/users/me/conferences/adhoc`, {
+  createAdHocConference: (hostCallId: string, participantCallIds: string[]) => client.post(`${baseUrl}/users/me/conferences/adhoc`, {
     host_call_id: hostCallId,
     participant_call_ids: participantCallIds,
   }),

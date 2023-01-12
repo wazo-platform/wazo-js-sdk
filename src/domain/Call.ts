@@ -2,7 +2,7 @@ import moment from 'moment';
 import newFrom from '../utils/new-from';
 
 const RECORD_STATE_ACTIVE = 'active';
-type CallResponse = {
+export type CallResponse = {
   call_id: string;
   sip_call_id: string;
   caller_id_name: string;

@@ -222,7 +222,8 @@ export default class CTIPhone extends Emitter implements Phone {
       number: callSession.number,
       digits,
     });
-    return CallApi.sendDTMF(callSession.callId, digits);
+
+    CallApi.sendDTMF(callSession.callId, digits);
   }
 
   onConnectionMade() {
@@ -235,9 +236,9 @@ export default class CTIPhone extends Emitter implements Phone {
     return Promise.resolve();
   }
 
-  async hold(callSession: CallSession): Promise<void> {
+  async hold(callSession: CallSession): Promise<boolean> {
     if (!callSession) {
-      return;
+      return false;
     }
 
     logger.info('CTI hold', {
@@ -247,9 +248,9 @@ export default class CTIPhone extends Emitter implements Phone {
     return CallApi.hold(callSession.callId);
   }
 
-  async resume(callSession: CallSession): Promise<void> {
+  async resume(callSession: CallSession): Promise<boolean> {
     if (!callSession) {
-      return;
+      return false;
     }
 
     logger.info('CTI resume', {
@@ -268,7 +269,8 @@ export default class CTIPhone extends Emitter implements Phone {
       callId: callSession.getId(),
       number: callSession.number,
     });
-    return CallApi.mute(callSession.callId);
+
+    await CallApi.mute(callSession.callId);
   }
 
   async unmute(callSession: CallSession): Promise<void> {
@@ -280,7 +282,7 @@ export default class CTIPhone extends Emitter implements Phone {
       callId: callSession.getId(),
       number: callSession.number,
     });
-    return CallApi.unmute(callSession.callId);
+    await CallApi.unmute(callSession.callId);
   }
 
   putOnSpeaker() {}

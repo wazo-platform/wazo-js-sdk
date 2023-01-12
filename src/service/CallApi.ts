@@ -37,7 +37,7 @@ export default class CallApi {
     return getApiClient().confd.getUserLineSip(session.uuid as string, lineToUse ? <unknown>lineToUse.id as string : '');
   }
 
-  static async cancelCall(callSession: CallSession): Promise<void> {
+  static async cancelCall(callSession: CallSession): Promise<boolean> {
     return getApiClient().calld.cancelCall(callSession.callId);
   }
 
@@ -51,23 +51,23 @@ export default class CallApi {
     return getApiClient().calld.relocateCall(callId, 'line', line, contactIdentifier);
   }
 
-  static async hold(callId: string): Promise<void> {
+  static async hold(callId: string): Promise<boolean> {
     return getApiClient().calld.hold(callId);
   }
 
-  static async resume(callId: string): Promise<void> {
+  static async resume(callId: string): Promise<boolean> {
     return getApiClient().calld.resume(callId);
   }
 
-  static async mute(callId: string): Promise<void> {
+  static async mute(callId: string): Promise<boolean> {
     return getApiClient().calld.mute(callId);
   }
 
-  static async sendDTMF(callId: string, digits: string): Promise<void> {
+  static async sendDTMF(callId: string, digits: string): Promise<boolean> {
     return getApiClient().calld.sendDTMF(callId, digits);
   }
 
-  static async unmute(callId: string): Promise<void> {
+  static async unmute(callId: string): Promise<boolean> {
     return getApiClient().calld.unmute(callId);
   }
 
@@ -75,11 +75,11 @@ export default class CallApi {
     return getApiClient().calld.transferCall(callId, number, flow);
   }
 
-  static async cancelCallTransfer(transferId: string): Promise<Transfer> {
+  static async cancelCallTransfer(transferId: string): Promise<boolean> {
     return getApiClient().calld.cancelCallTransfer(transferId);
   }
 
-  static async confirmCallTransfer(transferId: string): Promise<Transfer> {
+  static async confirmCallTransfer(transferId: string): Promise<boolean> {
     return getApiClient().calld.confirmCallTransfer(transferId);
   }
 
