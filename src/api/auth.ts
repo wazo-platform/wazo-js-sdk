@@ -6,19 +6,20 @@ export const DEFAULT_BACKEND_USER = 'wazo_user';
 export const BACKEND_LDAP_USER = 'ldap_user';
 export const DETAULT_EXPIRATION = 3600;
 
+type LoginParams = {
+  username: string;
+  password: string;
+  backend: string;
+  expiration: number;
+  mobile?: boolean;
+  tenantId?: string;
+  domainName?: string;
+};
+
 export interface AuthD {
   checkToken: (token: Token) => Promise<boolean>;
   authenticate: (token: Token) => Promise<Session | null | undefined>;
-  logIn(params: {
-    username: string;
-    password: string;
-    backend: string;
-    expiration: number;
-    mobile?: boolean;
-    tenantId?: string;
-    domainName?: string;
-  }): Promise<Session | null | undefined> ;
-
+  logIn(params: LoginParams): Promise<Session | null | undefined> ;
   logOut: (token: Token) => Promise<LogoutResponse>;
   refreshToken: (refreshToken: string, backend: string, expiration: number, isMobile?: boolean, tenantId?: string, domainName?: string) => Promise<Session | null | undefined>;
   deleteRefreshToken: (clientId: string) => Promise<boolean>;
@@ -28,8 +29,8 @@ export interface AuthD {
   sendResetPasswordEmail: ({
     username,
     email,
-  }) => Promise<void>; // @TODO: validate
-  resetPassword: (userUuid: string, password: string) => Promise<void>;
+  }) => Promise<boolean>;
+  resetPassword: (userUuid: string, password: string) => Promise<boolean>;
   removeDeviceToken: (userUuid: UUID) => Promise<void>;
   createUser: (username: string, password: string, firstname: string, lastname: string) => Promise<User | RequestError>;
   addUserEmail: (userUuid: UUID, email: string, main?: boolean) => Promise<void>;

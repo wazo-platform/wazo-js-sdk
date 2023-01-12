@@ -3,15 +3,15 @@ import Agent from '../domain/Agent';
 
 export interface AgentD {
   getAgent: (agentId: string) => Promise<Agent>;
-  login: (agentNumber: string, context: string, extension: string) => Promise<void>;
-  loginWithLineId: (lineId: number) => Promise<void>;
-  logout: (agentNumber: string) => Promise<void>;
-  pause: (agentNumber: string) => Promise<void>;
-  resume: (agentNumber: string) => Promise<void>;
+  login: (agentNumber: string, context: string, extension: string) => Promise<boolean>;
+  loginWithLineId: (lineId: number) => Promise<boolean>;
+  logout: (agentNumber: string) => Promise<boolean>;
+  pause: (agentNumber: string) => Promise<boolean>;
+  resume: (agentNumber: string) => Promise<boolean>;
   getStatus: () => Promise<Agent>;
-  staticLogout: () => Promise<void>;
-  staticPause: () => Promise<void>;
-  staticResume: () => Promise<void>;
+  staticLogout: () => Promise<boolean>;
+  staticPause: () => Promise<boolean>;
+  staticResume: () => Promise<boolean>;
 }
 
 export default ((client: ApiRequester, baseUrl: string): AgentD => ({
