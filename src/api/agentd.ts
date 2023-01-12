@@ -1,7 +1,20 @@
 import ApiRequester from '../utils/api-requester';
 import Agent from '../domain/Agent';
 
-export default ((client: ApiRequester, baseUrl: string) => ({
+export interface AgentD {
+  getAgent: (agentId: string) => Promise<Agent>;
+  login: (agentNumber: string, context: string, extension: string) => Promise<void>;
+  loginWithLineId: (lineId: number) => Promise<void>;
+  logout: (agentNumber: string) => Promise<void>;
+  pause: (agentNumber: string) => Promise<void>;
+  resume: (agentNumber: string) => Promise<void>;
+  getStatus: () => Promise<Agent>;
+  staticLogout: () => Promise<void>;
+  staticPause: () => Promise<void>;
+  staticResume: () => Promise<void>;
+}
+
+export default ((client: ApiRequester, baseUrl: string): AgentD => ({
   getAgent: (agentId: string): Promise<Agent> => client.get(`${baseUrl}/agents/by-id/${agentId}`, null).then(Agent.parse),
   login: (agentNumber: string, context: string, extension: string) => client.post(`${baseUrl}/agents/by-number/${agentNumber}/login`, {
     context,
