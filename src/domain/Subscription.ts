@@ -10,10 +10,11 @@ type SubscriptionResponse = {
   service: string;
   uuid: string;
 };
+
 type SubscriptionArguments = {
   name: string;
   events: string[];
-  config: string;
+  config: Record<string, any>;
   uuid: string;
   service: string;
   eventsUserUuid: string;
@@ -28,7 +29,7 @@ class Subscription {
 
   events: string[];
 
-  config: string;
+  config: Record<string, any>;
 
   uuid: string;
 
@@ -48,7 +49,6 @@ class Subscription {
     return new Subscription({
       name: plain.name,
       events: plain.events,
-      // @ts-ignore
       config: plain.config,
       uuid: plain.uuid,
       service: plain.service,
@@ -61,7 +61,7 @@ class Subscription {
   }
 
   static parseMany(response: {
-    items: SubscriptionResponse[];
+    items: [];
   }): Subscription[] {
     return response.items.map(payload => Subscription.parse(payload));
   }

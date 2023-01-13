@@ -3,9 +3,9 @@ import { camelToUnderscore } from '../string';
 describe('string utils', () => {
   describe('camelToUnderscore', () => {
     it('', () => {
-      // @ts-ignore
+      // @ts-expect-error
       expect(() => camelToUnderscore(null)).toThrow('Input is not a string');
-      // @ts-ignore
+      // @ts-expect-error
       expect(() => camelToUnderscore(undefined)).toThrow('Input is not a string');
       // @ts-expect-error
       expect(() => camelToUnderscore({})).toThrow('Input is not a string');

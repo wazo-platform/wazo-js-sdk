@@ -69,8 +69,7 @@ export default class SipLine {
 
       const usernameOption = findOption(plain.auth_section_options, 'username');
       const secretOption = findOption(plain.auth_section_options, 'password');
-      // @ts-ignore
-      const hostOption = findOption(plain.endpoint_section_options, 'media_address');
+      const hostOption = findOption(plain.endpoint_section_options as string[][], 'media_address');
       username = usernameOption ? usernameOption[1] : '';
       secret = secretOption ? secretOption[1] : '';
       host = hostOption ? hostOption[1] : '';

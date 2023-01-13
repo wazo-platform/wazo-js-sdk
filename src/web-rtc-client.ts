@@ -134,7 +134,7 @@ export default class WebRTCClient extends Emitter {
 
   skipRegister: boolean;
 
-  networkMonitoringInterval: Record<string, typeof setInterval>;
+  networkMonitoringInterval: Record<string, any>;
 
   sessionNetworkStats: Record<string, Record<string, any>>;
 
@@ -635,7 +635,6 @@ export default class WebRTCClient extends Emitter {
     }
 
     // Do not await invite here or we'll miss the Establishing state transition
-    // @ts-ignore
     session.invitePromise = session.invite(inviteOptions);
     return session;
   }
@@ -738,7 +737,6 @@ export default class WebRTCClient extends Emitter {
       id: sessionId,
     });
     this.sessionNetworkStats[sessionId] = [];
-    // @ts-ignore
     this.networkMonitoringInterval[sessionId] = setInterval(() => this._fetchNetworkStats(sessionId), interval);
   }
 
@@ -751,8 +749,7 @@ export default class WebRTCClient extends Emitter {
     });
 
     if (exists) {
-      // @ts-ignore
-      clearInterval(this.networkMonitoringInterval[sessionId]);
+      clearInterval(this.networkMonitoringInterval[sessionId] as string);
       delete this.networkMonitoringInterval[sessionId];
       delete this.sessionNetworkStats[sessionId];
     }
@@ -783,7 +780,6 @@ export default class WebRTCClient extends Emitter {
     });
     this.forceClosed = force;
 
-    // @ts-ignore: this is odd, may want to validate
     this._cleanupMedia();
 
     this.connectionPromise = null;
@@ -1200,10 +1196,11 @@ export default class WebRTCClient extends Emitter {
     try {
       sipSession.message({
         requestOptions: {
-          // @ts-ignore
           body: {
             content: body,
             contentType,
+            // @HEADSUP: contentDisposition is a required string, setting it to '' arbitrarily
+            contentDisposition: '',
           },
         },
       });
@@ -1349,7 +1346,7 @@ export default class WebRTCClient extends Emitter {
     return null;
   }
 
-  async changeVideoInputDevice(id?: string, session?: Inviter | Invitation): Promise<MediaStream | void> {
+  async changeVideoInputDevice(id: string, session?: Inviter | Invitation): Promise<MediaStream | void> {
     this.setVideoInputDevice(id);
 
     if (session) {
@@ -1357,7 +1354,7 @@ export default class WebRTCClient extends Emitter {
     }
   }
 
-  setVideoInputDevice(id: string | null | undefined) {
+  setVideoInputDevice(id: string) {
     const currentId = this.getVideoDeviceId();
     logger.info('setting video input device', {
       id,
@@ -1371,7 +1368,6 @@ export default class WebRTCClient extends Emitter {
     // let's make sure we don't lose other video constraints settings -- width, height, frameRate...
     const videoObject = typeof this.video === 'object' ? this.video : {};
     this.video = { ...videoObject,
-      // @ts-ignore
       deviceId: {
         exact: id,
       },
@@ -1440,7 +1436,7 @@ export default class WebRTCClient extends Emitter {
     return this.audio && typeof this.audio === 'object' && 'deviceId' in this.audio ? this.audio.deviceId.exact : undefined;
   }
 
-  getVideoDeviceId(): string | null | undefined {
+  getVideoDeviceId(): string | null {
     // @ts-ignore
     return this.video && typeof this.video === 'object' && 'deviceId' in this.video ? this.video.deviceId.exact : undefined;
   }
@@ -1455,7 +1451,6 @@ export default class WebRTCClient extends Emitter {
       return Promise.resolve();
     }
 
-    // @ts-ignore
     const wasMuted = this.isAudioMuted(sipSession);
     const shouldDoVideo = newConstraints ? newConstraints.video : this.sessionWantsToDoVideo(sipSession);
     const shouldDoScreenSharing = newConstraints && newConstraints.screen;
@@ -1556,10 +1551,10 @@ export default class WebRTCClient extends Emitter {
   }
 
   // Local streams
-  getLocalStream(sessionId: string): MediaStream | null | undefined {
+  getLocalStream(sessionId: string): MediaStream | null {
     const sipSession = this.sipSessions[sessionId];
     // @ts-ignore
-    return sipSession && sipSession.sessionDescriptionHandler ? sipSession.sessionDescriptionHandler.localMediaStream : null;
+    return sipSession.sessionDescriptionHandler?.localMediaStream || null;
   }
 
   getLocalTracks(sessionId: string): MediaStreamTrack[] {
@@ -1935,12 +1930,12 @@ export default class WebRTCClient extends Emitter {
     return this.hasAudio;
   }
 
-  _getAudioConstraints(): Record<string, any> | boolean {
+  _getAudioConstraints(): MediaTrackConstraints | boolean {
     // @ts-ignore
     return this.audio?.deviceId?.exact ? this.audio : true;
   }
 
-  _getVideoConstraints(video = false): Record<string, any> | boolean {
+  _getVideoConstraints(video = false): MediaTrackConstraints | boolean {
     if (!video) {
       return false;
     }
@@ -2009,11 +2004,8 @@ export default class WebRTCClient extends Emitter {
 
     // @ts-ignore
     return client.confd.getUserLineSipFromToken(session.uuid).then(sipLine => ({
-      // @ts-ignore
       authorizationUser: sipLine.username,
-      // @ts-ignore
       password: sipLine.secret,
-      // @ts-ignore
       uri: `${sipLine.username}@${config.host}`,
       ...config,
     }));
@@ -2196,7 +2188,7 @@ export default class WebRTCClient extends Emitter {
     logger.info('on call accepted', {
       id: session.id,
       // @ts-ignore
-      remoteTag: (<Inviter>session).remoteTag,
+      remoteTag: session.remoteTag,
     });
     this.storeSipSession(session);
 
@@ -2307,7 +2299,7 @@ export default class WebRTCClient extends Emitter {
     audioElement.play().catch(() => {});
   }
 
-  _cleanupMedia(session: Inviter | Invitation): void {
+  _cleanupMedia(session?: Inviter | Invitation): void {
     const sessionId = this.getSipSessionId(session);
     const localStream = this.getLocalStream(sessionId);
 

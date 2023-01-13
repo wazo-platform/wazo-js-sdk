@@ -17,13 +17,15 @@ export type Endpoint = {
   }>;
   username?: string;
 };
-type LineResponse = {
+
+export type LineResponse = {
   endpoint_custom: Endpoint | null | undefined;
   endpoint_sccp: Endpoint | null | undefined;
   endpoint_sip: Endpoint | null | undefined;
   extensions: Array<Extension>;
   id: number;
 };
+
 type LineArguments = {
   id?: number;
   extensions?: Array<Extension>;

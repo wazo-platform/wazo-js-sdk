@@ -68,8 +68,7 @@ class SipRoom extends Room {
     [this.ON_AUDIO_STREAM, this.ON_VIDEO_STREAM, this.ON_REMOVE_STREAM].forEach(event => Wazo.Phone.on(event, (...args) => this.eventEmitter.emit.apply(this.eventEmitter, [event, ...args])));
   }
 
-  // @ts-ignore
-  _onMessage(message: Message) {
+  _onMessage(message: Message): Record<string, any> | null | undefined {
     // eslint-disable-next-line no-underscore-dangle
     const body = super._onMessage(message);
 
@@ -113,7 +112,6 @@ class SipRoom extends Room {
     }
   }
 
-  // @ts-ignore
   async _onParticipantJoined(channel: Record<string, any>) {
     const isLocal = channel.channelvars.WAZO_SIP_CALL_ID === this._getCurrentSipCallIs();
 
@@ -124,7 +122,6 @@ class SipRoom extends Room {
       guestName: this.getLocalGuestName(),
     } : {};
 
-    // @ts-ignore
     const participant = new ParticipantClass(this, {
       caller_id_name: name,
       call_id: callId,

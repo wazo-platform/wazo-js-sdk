@@ -1,7 +1,6 @@
-import Line from './Line';
+import Line, { LineResponse } from './Line';
 import ForwardOption, { FORWARD_KEYS } from './ForwardOption';
 import newFrom from '../utils/new-from';
-import type { Endpoint } from './Line';
 import SipLine from './SipLine';
 
 export const STATE = {
@@ -19,6 +18,7 @@ export const LINE_STATE = {
   UNAVAILABLE: 'unavailable',
   PROGRESSING: 'progressing',
 };
+
 type ProfileResponse = {
   groups: Array<{
     id: number;
@@ -29,21 +29,7 @@ type ProfileResponse = {
   lastName: string;
   lastname?: string;
   uuid: string;
-  lines: Array<{
-    id: number;
-    extensions: Array<{
-      id: number;
-      exten: string;
-      context: string;
-      links?: Array<{
-        href: string;
-        rel: string;
-      }>;
-    }>;
-    endpoint_custom?: Endpoint | null;
-    endpoint_sccp?: Endpoint | null;
-    endpoint_sip?: Endpoint | null;
-  }>;
+  lines: Array<LineResponse>;
   id: number;
   username: string;
   timezone: string | null | undefined;
@@ -89,6 +75,7 @@ type ProfileResponse = {
   }>;
   online_call_record_enabled: boolean | null | undefined;
 };
+
 type ProfileArguments = {
   id: string;
   firstName: string;
@@ -179,7 +166,6 @@ export default class Profile {
       firstName: plain.firstName || plain.firstname || '',
       lastName: plain.lastName || plain.lastname || '',
       email: plain.email,
-      // @ts-ignore
       lines: plain.lines.map(line => Line.parse(line)),
       username: plain.username,
       mobileNumber: plain.mobile_phone_number || '',

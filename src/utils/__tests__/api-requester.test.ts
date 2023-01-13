@@ -14,6 +14,7 @@ const headers = {
   'Content-Type': 'application/json',
   'X-Auth-Token': token,
 };
+
 describe('Generating query string', () => {
   it('should generate a simple query string from an object', () => {
     expect(ApiRequester.getQueryString({
@@ -30,6 +31,7 @@ describe('Generating query string', () => {
     })).toBe('b=yep');
   });
 });
+
 describe('Computing fetch URL', () => {
   it('should add query string to URL in get method with body', () => {
     const client = new ApiRequester({
@@ -49,6 +51,7 @@ describe('Computing fetch URL', () => {
     expect(client.computeUrl('get', 'auth', {})).toBe('https://localhost/api/auth');
   });
 });
+
 describe('Retrieving headers', () => {
   it('should send a tenant if exists', () => {
     const tenant = 'abc234';
@@ -62,6 +65,7 @@ describe('Retrieving headers', () => {
     requester.setTenant(tenant);
     expect(requester.getHeaders(null)['Wazo-Tenant']).toBe(tenant);
   });
+
   it('should not send a tenant if not present', () => {
     const requester = new ApiRequester({
       server,
@@ -76,6 +80,7 @@ describe('Retrieving headers', () => {
 describe('Calling fetch', () => {
   it('should call fetch without body but query string in get method', async () => {
     jest.mock('node-fetch/lib/index', () => {});
+
     // @ts-ignore
     global.fetch = jest.fn(() => Promise.resolve({
       json: () => Promise.resolve({}),
@@ -83,6 +88,7 @@ describe('Calling fetch', () => {
         get: () => '',
       },
     }));
+
     await new ApiRequester({
       server,
       agent: null,
@@ -90,6 +96,7 @@ describe('Calling fetch', () => {
       refreshTokenCallback: () => null,
       fetchOptions: null,
     }).call(path, method, body, {});
+
     expect(global.fetch).toBeCalledWith(url, {
       method: 'get',
       body: null,
@@ -98,6 +105,7 @@ describe('Calling fetch', () => {
     });
   });
 });
+
 describe('With a refresh token', () => {
   it('should retry the call with a new token', async () => {
     jest.mock('node-fetch/lib/index', () => {});

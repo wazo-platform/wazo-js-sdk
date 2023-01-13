@@ -146,8 +146,7 @@ export default class Call {
 
   getElapsedTimeInSeconds(): number {
     const now = Date.now();
-    // @ts-ignore
-    return (now - this.startingTime) / 1000;
+    return (now - +this.startingTime) / 1000;
   }
 
   separateCalleeName(): {

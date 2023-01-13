@@ -4,6 +4,7 @@ import { BACKEND_LDAP_USER, DEFAULT_BACKEND_USER, DETAULT_EXPIRATION } from '../
 import getApiClient, { setCurrentServer, setApiToken, setRefreshToken, setApiClientId, setRefreshExpiration, setOnRefreshToken, setFetchOptions, setRefreshTenantId, setRefreshDomainName, setOnRefreshTokenError } from '../service/getApiClient';
 import IssueReporter from '../service/IssueReporter';
 import Wazo from './index';
+import SipLine from '../domain/SipLine';
 
 export class InvalidSubscription extends Error {}
 export class InvalidAuthorization extends Error {}
@@ -355,8 +356,7 @@ class Auth implements IAuth {
 
     try {
       const sipLines = await getApiClient().confd.getUserLinesSip(session.uuid as string, session.profile?.lines.map(line => `${line.id}`));
-      // @ts-ignore
-      session.profile.sipLines = sipLines.filter(line => !!line);
+      session.profile.sipLines = sipLines.filter(line => line instanceof SipLine) as SipLine[];
     } catch (e: any) { // When an user has only a sccp line, getSipLines return a 404
     }
 

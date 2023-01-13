@@ -215,8 +215,8 @@ class IssueReporter {
     const {
       status,
     } = response;
-    // @ts-ignore
-    const duration = new Date() - start;
+
+    const duration = +(new Date()) - +start;
     let level = TRACE;
 
     if (status >= 400 && status < 500) {
@@ -252,17 +252,19 @@ class IssueReporter {
   _catchConsole() {
     this.oldConsoleMethods = {};
     CONSOLE_METHODS.forEach((methodName: string) => {
-      // @ts-ignore
-      // eslint-disable-next-line
-      this.oldConsoleMethods[methodName] = console[methodName];
+      if (this.oldConsoleMethods) {
+        // eslint-disable-next-line
+        this.oldConsoleMethods[methodName] = console[methodName];
+      }
       const parent:any = typeof window !== 'undefined' ? window : global;
       parent.console[methodName] = (...args: any) => {
         // Store message
         try {
           this.log(methodName, args.join(' '));
-          // Use old console method to log it normally
-          // @ts-ignore
-          this.oldConsoleMethods[methodName].apply(null, args);
+          if (this.oldConsoleMethods) {
+            // Use old console method to log it normally
+            this.oldConsoleMethods[methodName].apply(null, args);
+          }
         } catch (e: any) { // Avoid circular structure issues
         }
       };
@@ -321,6 +323,7 @@ class IssueReporter {
     }
 
     this.buffer.push(payload);
+
     const {
       bufferSize,
       bufferTimeout,
@@ -346,7 +349,7 @@ class IssueReporter {
     }
   }
 
-  _sendDebugToGrafana(payload: Record<string, any> | Record<string, any>[], retry = 0) {
+  _sendDebugToGrafana(payload: string | Record<string, any> | Record<string, any>[], retry = 0) {
     if (!this.remoteClientConfiguration || retry >= MAX_REMOTE_RETRY) {
       return;
     }
@@ -356,10 +359,11 @@ class IssueReporter {
       host,
       port,
     } = this.remoteClientConfiguration;
-    const isArray = Array.isArray(payload);
+
     const isSecure = +port === 443;
     const url = `http${isSecure ? 's' : ''}://${host}${isSecure ? '' : `:${port}`}/${tag}`;
-    const body = isArray ? `[${payload.map(this._boundParseLoggerBody).join(',')}]` : this._parseLoggerBody(payload);
+    const body = Array.isArray(payload) ? `[${payload.map(this._boundParseLoggerBody).join(',')}]` : this._parseLoggerBody(payload as Record<string, any>);
+
     realFetch()(url, {
       method: 'POST',
       headers: {
@@ -372,10 +376,9 @@ class IssueReporter {
       e.skipSendToRemote = true;
       this.log('error', this._makeCategory('grafana'), 'Sending log to grafana, error', e);
       setTimeout(() => {
-        if (isArray) {
+        if (Array.isArray(payload)) {
           payload = payload.map(message => this._writeRetryCount(message, retry + 1));
         } else if (payload && typeof payload === 'object') {
-          // @ts-ignore
           payload = this._writeRetryCount(payload, retry + 1);
         }
 

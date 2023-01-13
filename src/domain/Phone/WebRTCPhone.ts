@@ -500,8 +500,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       sender.replaceTrack(screenTrack);
     }
 
-    // @ts-ignore
-    this._onScreenSharing(screenShareStream, sipSession, callSession, hadVideo, constraints.desktop);
+    this._onScreenSharing(screenShareStream, sipSession as Inviter | Invitation, callSession, hadVideo, constraints.desktop);
 
     return screenShareStream;
   }
@@ -655,7 +654,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return this.client.changeAudioInputDevice(id, this.currentSipSession, force);
   }
 
-  async changeVideoInputDevice(id?: string): Promise<void | MediaStream | null | undefined> {
+  async changeVideoInputDevice(id: string): Promise<void | MediaStream | null | undefined> {
     logger.info('WebRTC phone - change video input device', {
       deviceId: id,
     });
@@ -1637,8 +1636,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         tracks: localStream?.getTracks() || null,
       });
 
-      // @ts-ignore
-      this._onScreenSharing(localStream, sipSession, callSession, false, desktop);
+      this._onScreenSharing(localStream as MediaStream, sipSession, callSession, false, desktop);
     });
   }
 
@@ -1788,7 +1786,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
       videoMuted: fromSession ? fromSession.isVideoMuted() : false,
       recording: fromSession ? fromSession.isRecording() : false,
       recordingPaused: false,
-      // @TODO
       sipSession,
       conference: !!fromSession && fromSession.isConference(),
       ...extra,
