@@ -3,7 +3,7 @@ import WebRTCClient from '../../web-rtc-client';
 
 export default {
   name: 'WebRTC',
-  check: (server, session) => new Promise<void | string>((resolve, reject) => {
+  check: (server: string, session: any) => new Promise<void | string>((resolve, reject) => {
     if (typeof MediaStream === 'undefined') {
       return resolve('Skipped on node');
     }
@@ -15,7 +15,7 @@ export default {
       },
     }, session);
 
-    const handleError = message => {
+    const handleError = (message: any) => {
       client.close();
       reject(new Error(message));
     };

@@ -1,5 +1,5 @@
 export default ((instance: any, ToClass: any) => {
-  const args = {};
+  const args: Record<string, any> = {};
   Object.getOwnPropertyNames(instance).forEach(prop => {
     args[prop] = instance[prop];
   });

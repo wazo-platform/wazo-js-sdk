@@ -13,7 +13,8 @@ const { jws } = KJUR;
 
 const swarmKey = <unknown>(KEYUTIL.getKey(swarmPublicKey)) as string;
 const MINIMUM_WAZO_ENGINE_VERSION_FOR_DEFAULT_CONTEXT = '19.08';
-type Response = {
+
+export type Response = {
   data: {
     token: Token;
     refresh_token?: Token;
@@ -42,6 +43,7 @@ type Response = {
     } | null | undefined;
   };
 };
+
 type Authorization = {
   uuid: string;
   rules: Array<{
@@ -50,6 +52,7 @@ type Authorization = {
   }>;
   service: string | null | undefined;
 };
+
 type SessionArguments = {
   acls?: string[];
   // deprecated
@@ -65,6 +68,7 @@ type SessionArguments = {
   engineVersion?: string | null | undefined;
   engineUuid?: string | null | undefined;
 };
+
 export default class Session {
   acl: string[];
 

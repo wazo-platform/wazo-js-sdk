@@ -1,4 +1,4 @@
-type AgentResponse = {
+export type AgentResponse = {
   context: string;
   extension: string;
   id: number;
@@ -7,6 +7,7 @@ type AgentResponse = {
   paused: boolean;
   paused_reason: string;
 };
+
 type AgentArguments = {
   context: string;
   extension: string;

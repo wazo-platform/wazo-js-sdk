@@ -4,10 +4,14 @@ describe('object utils', () => {
   describe('convertKeysFromCamelToUnderscore', () => {
     it('should throw an error when input is not an object', () => {
       const msg = 'Input is not an object';
+      // @ts-expect-error
       expect(() => convertKeysFromCamelToUnderscore(true)).toThrow(msg);
+      // @ts-expect-error
       expect(() => convertKeysFromCamelToUnderscore(null)).toThrow(msg);
+      // @ts-expect-error
       expect(() => convertKeysFromCamelToUnderscore(undefined)).toThrow(msg);
       expect(() => convertKeysFromCamelToUnderscore([])).toThrow(msg);
+      // @ts-expect-error
       expect(() => convertKeysFromCamelToUnderscore('some-string')).toThrow(msg);
     });
     it('should convert camel-cased keys to underscore', () => {

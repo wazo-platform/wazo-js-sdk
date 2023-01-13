@@ -2,14 +2,14 @@ import WebSocketClient, { SOCKET_EVENTS, HEARTBEAT_ENGINE_VERSION } from '../../
 
 export default {
   name: 'Wazo Websocket',
-  check: (server, session) => new Promise<void>((resolve, reject) => {
+  check: (server: string, session: any) => new Promise<void>((resolve, reject) => {
     const client = new WebSocketClient({
       host: server,
       token: session.token,
       version: 2,
     });
 
-    const handleError = message => {
+    const handleError = (message: any) => {
       client.close();
       reject(new Error(message));
     };

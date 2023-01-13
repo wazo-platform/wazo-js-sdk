@@ -80,7 +80,7 @@ export default class CallLog {
   end: Date | null | undefined;
 
   static merge(current: Array<CallLog>, toMerge: Array<CallLog>): Array<CallLog | null | undefined> {
-    const onlyUnique = (value, index, self) => self.indexOf(value) === index;
+    const onlyUnique = (value: any, index: any, self: any) => self.indexOf(value) === index;
 
     const allLogs: Array<CallLog> = current.concat(toMerge);
     const onlyUniqueIds: Array<number> = allLogs.map(c => c.id).filter(onlyUnique);

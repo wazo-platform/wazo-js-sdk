@@ -73,7 +73,7 @@ export interface IPhone extends IEmitter {
   connect: (options: Record<string, any>, sipLine?: SipLine | null | undefined) => Promise<void>;
   connectWithCredentials: (server: string, sipLine: SipLine, displayName: string, rawOptions: Record<string, any>) => void;
   disconnect: () => Promise<void>;
-  call: (extension: string, withCamera, rawSipLine: SipLine | null | undefined, audioOnly, conference) => Promise<CallSession | null | undefined>;
+  call: (extension: string, withCamera: boolean, rawSipLine: SipLine | null | undefined, audioOnly: boolean, conference: boolean) => Promise<CallSession | null | undefined>;
   hangup: (callSession: CallSession) => Promise<boolean> ;
   startConference: (host: CallSession, otherCalls: CallSession[]) => Promise<AdHocAPIConference>;
   mute: (callSession: CallSession, withApi?: boolean) => void;
@@ -86,9 +86,9 @@ export interface IPhone extends IEmitter {
   reject: (callSession: CallSession) => Promise<void> | undefined;
   transfer: (callSession: CallSession, target: string) => void;
   atxfer: (callSession: CallSession) => Record<string, any> | null;
-  reinvite: (callSession: CallSession, constraints: (Record<string, any> | null), conference) => Promise<OutgoingInviteRequest | void | null>;
+  reinvite: (callSession: CallSession, constraints: (Record<string, any> | null), conference: boolean) => Promise<OutgoingInviteRequest | void | null>;
   getStats: (callSession: CallSession) => Promise<RTCStatsReport | null | undefined>;
-  startNetworkMonitoring: (callSession: CallSession, interval) => void;
+  startNetworkMonitoring: (callSession: CallSession, interval: number) => void;
   stopNetworkMonitoring: (callSession: CallSession) => void;
   getSipSessionId: (sipSession: Invitation | Inviter) => string | null | undefined;
   sendMessage: (body: string, sipSession?: Inviter | Invitation, contentType?: string) => void;
@@ -226,7 +226,8 @@ class Phone extends Emitter implements IPhone {
   constructor() {
     super();
     // Sugar syntax for `Wazo.Phone.EVENT_NAME`
-    Object.keys(PHONE_EVENTS).forEach(key => {
+    Object.keys(PHONE_EVENTS).forEach((key: string) => {
+      // @ts-ignore
       this[key] = PHONE_EVENTS[key];
     });
     this.SessionState = SessionState;
@@ -280,7 +281,7 @@ class Phone extends Emitter implements IPhone {
       options.log.builtinEnabled = false;
       options.log.logLevel = 'debug';
 
-      options.log.connector = (level, className, label, content) => {
+      options.log.connector = (level: any, className: string, label: any, content: string) => {
         const protocolIndex = content && content.indexOf ? protocolDebugMessages.findIndex(prefix => content.indexOf(prefix) !== -1) : -1;
 
         if (className === 'sip.Transport' && protocolIndex !== -1) {

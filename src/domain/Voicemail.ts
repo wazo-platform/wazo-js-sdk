@@ -9,7 +9,8 @@ type MessageResponse = {
   folder?: Record<string, any>;
   timestamp: number;
 };
-type Response = {
+
+export type Response = {
   id: string;
   name: string;
   number: string;
@@ -20,6 +21,7 @@ type Response = {
     messages: Array<MessageResponse>;
   }>;
 };
+
 type VoicemailArguments = {
   id: string;
   date: Date;

@@ -5,7 +5,7 @@ import type CallSession from '../../domain/CallSession';
 import getApiClient from '../../service/getApiClient';
 import Emitter from '../../utils/Emitter';
 import Wazo from '../index';
-import Participant from './Participant';
+import Participant, { RawParticipant } from './Participant';
 import RemoteParticipant from './RemoteParticipant';
 import IssueReporter from '../../service/IssueReporter';
 import LocalParticipant from './LocalParticipant';
@@ -471,7 +471,7 @@ class Room extends Emitter {
     Wazo.Phone.phone.currentSipSession.sessionDescriptionHandler.on('setDescription', ({
       type,
       sdp: rawSdp,
-    }) => {
+    }: any) => {
       if (type !== 'offer') {
         return;
       }
@@ -710,7 +710,7 @@ class Room extends Emitter {
   async _onParticipantJoined(payload: Record<string, any>) {
     const participant = payload.data;
     const session = Wazo.Auth.getSession();
-    let participants = [];
+    let participants: Participant[] = [];
 
     // When we join the room, we can call `getConferenceParticipantsAsUser`, not before.
     if (participant.user_uuid === session?.uuid) {
@@ -739,7 +739,7 @@ class Room extends Emitter {
         logger.info('conference participants fetched', {
           nb: response.items.length,
         });
-        participants = response.items.map(item => {
+        participants = response.items.map((item: RawParticipant) => {
           const isMe = item.call_id === this.callId;
           return isMe && item.call_id ? new Wazo.LocalParticipant(this, item, this.extra) : new Wazo.RemoteParticipant(this, item);
         });
@@ -750,7 +750,7 @@ class Room extends Emitter {
           this._onLocalParticipantJoined(localParticipant);
         }
 
-        participants.forEach(someParticipant => this._isParticipantJoining(someParticipant));
+        participants.forEach((someParticipant: Participant) => this._isParticipantJoining(someParticipant));
         this.eventEmitter.emit(this.ON_JOINED, localParticipant, participants);
       }
 
@@ -842,7 +842,7 @@ class Room extends Emitter {
     // @ts-ignore
     const pc = Wazo.Phone.phone.currentSipSession.sessionDescriptionHandler.peerConnection;
     // Can't use `getReceivers` here because on FF we make the mapping based on the streamId
-    const stream = pc.getRemoteStreams().find(someStream => someStream.id === streamId || someStream.getTracks().some(track => track.id === trackId));
+    const stream = pc.getRemoteStreams().find((someStream: any) => someStream.id === streamId || someStream.getTracks().some((track: any) => track.id === trackId));
 
     if (update === 'downgrade') {
       newParticipant.resetStreams([]);

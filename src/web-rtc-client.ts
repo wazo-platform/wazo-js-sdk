@@ -285,7 +285,7 @@ export default class WebRTCClient extends Emitter {
     const ua: any = new UserAgent(webRTCConfiguration);
 
     if (ua.transport && ua.transport.connectPromise) {
-      ua.transport.connectPromise.catch(e => {
+      ua.transport.connectPromise.catch((e: any) => {
         logger.warn('Transport connect error', e);
       });
     }
@@ -455,7 +455,7 @@ export default class WebRTCClient extends Emitter {
       });
       const options = {
         requestDelegate: {
-          onReject: response => {
+          onReject: (response: any) => {
             logger.error('sdk webrtc registering, rejected', {
               response,
             });
@@ -573,7 +573,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     const uri = this._makeURI(number);
-    let session;
+    let session: any;
 
     if (uri) {
       session = this.userAgent ? new Inviter(this.userAgent, uri, inviterOptions) : null;
@@ -700,7 +700,7 @@ export default class WebRTCClient extends Emitter {
       const bye = () => session.bye && session.bye();
 
       // @see github.com/onsip/SIP.js/blob/f11dfd584bc9788ccfc94e03034020672b738975/src/platform/web/simple-user/simple-user.ts#L1004
-      const actions = {
+      const actions: Record<string, any> = {
         [SessionState.Initial]: isInviter ? cancel : reject,
         [SessionState.Establishing]: isInviter ? cancel : reject,
         [SessionState.Established]: bye,
@@ -858,7 +858,7 @@ export default class WebRTCClient extends Emitter {
         return false;
       }
 
-      pc.getSenders().forEach(sender => {
+      pc.getSenders().forEach((sender: any) => {
         if (sender && sender.track && sender.track.kind === 'audio') {
           muted = muted && !sender.track.enabled;
         }
@@ -868,7 +868,7 @@ export default class WebRTCClient extends Emitter {
         return false;
       }
 
-      pc.getLocalStreams().forEach(stream => {
+      pc.getLocalStreams().forEach((stream: MediaStream) => {
         stream.getAudioTracks().forEach(track => {
           muted = muted && !track.enabled;
         });
@@ -1008,7 +1008,7 @@ export default class WebRTCClient extends Emitter {
       const transceiverIdx = lastIndexOf(transceivers, transceiver => transceiver.sender.track === null && transceiver.mid && transceiver.mid.indexOf('video') === -1);
       videoSender = transceiverIdx !== -1 ? transceivers[transceiverIdx].sender : null;
     } else {
-      videoSender = pc && pc.getSenders && pc.getSenders().find(sender => sender.track === null);
+      videoSender = pc && pc.getSenders && pc.getSenders().find((sender: any) => sender.track === null);
     }
 
     if (!videoSender) {
@@ -1027,7 +1027,7 @@ export default class WebRTCClient extends Emitter {
     // Add previous local audio track
     if (constraints && !constraints.audio) {
       // @ts-ignore
-      const localVideoStream = session.sessionDescriptionHandler.localMediaStream;
+      const localVideoStream: MediaStream = session.sessionDescriptionHandler.localMediaStream;
       const localAudioTrack = localVideoStream.getTracks().find(track => track.kind === 'audio');
 
       if (localAudioTrack) {
@@ -1055,12 +1055,12 @@ export default class WebRTCClient extends Emitter {
 
     // Remove video senders
     if (pc.getSenders) {
-      pc.getSenders().filter(sender => sender.track && sender.track.kind === 'video').forEach(videoSender => {
+      pc.getSenders().filter((sender: any) => sender.track && sender.track.kind === 'video').forEach((videoSender: any) => {
         videoSender.replaceTrack(null);
       });
     }
 
-    videoTracks.forEach(videoTrack => {
+    videoTracks.forEach((videoTrack: MediaStreamTrack) => {
       videoTrack.enabled = false;
       videoTrack.stop();
       localStream.removeTrack(videoTrack);
@@ -1083,6 +1083,7 @@ export default class WebRTCClient extends Emitter {
       return null;
     }
 
+    // @ts-ignore
     newStream.local = true;
     return newStream;
   }
@@ -1232,6 +1233,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   getState(): UserAgentState {
+    // @ts-ignore
     return this.userAgent ? states[this.userAgent.state] : UserAgentState.Stopped;
   }
 
@@ -1330,7 +1332,7 @@ export default class WebRTCClient extends Emitter {
       };
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       const audioTrack = stream.getAudioTracks()[0];
-      const sender = pc && pc.getSenders && pc.getSenders().find(s => audioTrack && s && s.track && s.track.kind === audioTrack.kind);
+      const sender = pc && pc.getSenders && pc.getSenders().find((s: any) => audioTrack && s && s.track && s.track.kind === audioTrack.kind);
 
       if (sender) {
         if (sender.track) {
@@ -1405,11 +1407,11 @@ export default class WebRTCClient extends Emitter {
     };
     return navigator.mediaDevices.getUserMedia(constraints).then(async stream => {
       const videoTrack = stream.getVideoTracks()[0];
-      let sender = pc && pc.getSenders && pc.getSenders().find(s => videoTrack && s && s.track && s.track.kind === videoTrack.kind);
+      let sender = pc && pc.getSenders && pc.getSenders().find((s: any) => videoTrack && s && s.track && s.track.kind === videoTrack.kind);
       let wasTrackEnabled = false;
 
       if (!sender) {
-        sender = pc && pc.getSenders && pc.getSenders().find(s => !s.track);
+        sender = pc && pc.getSenders && pc.getSenders().find((s: any) => !s.track);
       }
 
       if (sender) {
@@ -1622,7 +1624,7 @@ export default class WebRTCClient extends Emitter {
       return null;
     }
 
-    return pc.getRemoteStreams().find(stream => !!stream.getVideoTracks().length);
+    return pc.getRemoteStreams().find((stream: MediaStream) => !!stream.getVideoTracks().length);
   }
 
   hasVideo(sessionId: string): boolean {
@@ -1788,7 +1790,7 @@ export default class WebRTCClient extends Emitter {
     logger.info('Updating remote stream', {
       sessionId,
       tracks: remoteStream ? remoteStream.getTracks() : null,
-      receiverTracks: pc && pc.getReceivers ? pc.getReceivers().map(receiver => receiver.track) : null,
+      receiverTracks: pc && pc.getReceivers ? pc.getReceivers().map((receiver: any) => receiver.track) : null,
     });
 
     if (!pc || !remoteStream) {
@@ -1800,7 +1802,7 @@ export default class WebRTCClient extends Emitter {
     });
 
     if (pc.getReceivers) {
-      pc.getReceivers().forEach(receiver => {
+      pc.getReceivers().forEach((receiver: any) => {
         remoteStream.addTrack(receiver.track);
       });
     }
@@ -2307,7 +2309,7 @@ export default class WebRTCClient extends Emitter {
       this._cleanupStream(localStream);
     }
 
-    const cleanLocalElement = id => {
+    const cleanLocalElement = (id: string) => {
       const element = this.audioElements[id];
 
       if (!element) {
@@ -2346,14 +2348,14 @@ export default class WebRTCClient extends Emitter {
     }
 
     if (pc.getSenders) {
-      pc.getSenders().forEach(sender => {
+      pc.getSenders().forEach((sender: any) => {
         if (sender && sender.track && sender.track.kind === 'audio') {
           // eslint-disable-next-line
           sender.track.enabled = !muteAudio;
         }
       });
     } else {
-      pc.getLocalStreams().forEach(stream => {
+      pc.getLocalStreams().forEach((stream: MediaStream) => {
         stream.getAudioTracks().forEach(track => {
           // eslint-disable-next-line
           track.enabled = !muteAudio;
@@ -2367,14 +2369,14 @@ export default class WebRTCClient extends Emitter {
     const pc = session.sessionDescriptionHandler?.peerConnection;
 
     if (pc.getSenders) {
-      pc.getSenders().forEach(sender => {
+      pc.getSenders().forEach((sender: any) => {
         if (sender && sender.track && sender.track.kind === 'video') {
           // eslint-disable-next-line
           sender.track.enabled = !muteCamera;
         }
       });
     } else {
-      pc.getLocalStreams().forEach(stream => {
+      pc.getLocalStreams().forEach((stream: MediaStream) => {
         stream.getVideoTracks().forEach(track => {
           // eslint-disable-next-line
           track.enabled = !muteCamera;
@@ -2386,17 +2388,18 @@ export default class WebRTCClient extends Emitter {
   /**
    * @param pc RTCPeerConnection
    */
-  _getRemoteStream(pc: any): MediaStream {
-    let remoteStream;
+  _getRemoteStream(pc: any): MediaStream | null {
+    let remoteStream: MediaStream | null = null;
 
     if (pc && pc.getReceivers) {
       remoteStream = typeof global !== 'undefined' && global.window && global.window.MediaStream ? new global.window.MediaStream() : new window.MediaStream();
-      pc.getReceivers().forEach(receiver => {
+
+      pc.getReceivers().forEach((receiver: any) => {
         const {
           track,
         } = receiver;
 
-        if (track) {
+        if (track && remoteStream) {
           remoteStream.addTrack(track);
         }
       });

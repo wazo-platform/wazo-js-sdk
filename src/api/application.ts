@@ -40,12 +40,12 @@ export default ((client: ApiRequester, baseUrl: string): ApplicationD => ({
         id: callId,
       }],
     };
-    return client.post(url, body, null, res => res.json().then(response => response.uuid)).then(nodeUuid => client.post(`${url}/${nodeUuid}/calls`, {
+    return client.post(url, body, null, (res: Record<string, any>) => res.json().then((response: Record<string, any>) => response.uuid)).then((nodeUuid: string) => client.post(`${url}/${nodeUuid}/calls`, {
       context,
       exten,
       autoanswer,
       displayed_caller_id_number,
-    }).then(data => ({
+    }).then((data: any) => ({
       nodeUuid,
       data,
     })));

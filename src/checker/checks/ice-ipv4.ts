@@ -2,7 +2,7 @@
 import { parseCandidate } from '../../utils/webrtc';
 import isMobile from '../../utils/isMobile';
 
-const checkIsIPV4 = ip => {
+const checkIsIPV4 = (ip: string) => {
   const blocks = ip.split('.');
 
   if (blocks.length !== 4) {
@@ -14,7 +14,7 @@ const checkIsIPV4 = ip => {
 
 export default {
   name: 'Non IP v4 ice',
-  check: (server, session, externalAppConfig) => new Promise((resolve, reject) => {
+  check: (server: string, session: any, externalAppConfig: Record<string, any>) => new Promise((resolve, reject) => {
     if (typeof MediaStream === 'undefined') {
       return resolve('Skipped on node');
     }
@@ -34,7 +34,7 @@ export default {
     let hasSrflxOrRelay = false;
 
     if (externalAppConfig && externalAppConfig.stun_servers) {
-      config.iceServers = { ...externalAppConfig.stun_servers.split(',').map(url => ({
+      config.iceServers = { ...externalAppConfig.stun_servers.split(',').map((url: string) => ({
         urls: url,
       })),
       ...config.iceServers,

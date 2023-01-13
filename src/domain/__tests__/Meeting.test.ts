@@ -40,7 +40,7 @@ describe('Meeting domain', () => {
   });
   it('should retain its values when instantiated', () => {
     const keys = ['uuid', 'name', 'guestSipAuthorization', 'ownerUuids', 'port', 'uri', 'extension', 'persistent', 'creationTime', 'requireAuthorization'];
-    const args = keys.reduce((acc, key) => {
+    const args = keys.reduce((acc: any, key) => {
       acc[key] = `some-${key}`;
       return acc;
     }, {});

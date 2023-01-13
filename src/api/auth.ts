@@ -1,6 +1,6 @@
 import ApiRequester from '../utils/api-requester';
 import type { User, Tenant, Token, UUID, LogoutResponse, ListTenantsResponse, RequestError, ListUsersResponse, ListGroupsResponse, ListPoliciesResponse, GetTenantResponse, GetUserResponse } from '../domain/types';
-import Session from '../domain/Session';
+import Session, { Response } from '../domain/Session';
 
 export const DEFAULT_BACKEND_USER = 'wazo_user';
 export const BACKEND_LDAP_USER = 'ldap_user';
@@ -16,6 +16,11 @@ type LoginParams = {
   domainName?: string;
 };
 
+type SendResetPasswordArgs = {
+  username: string,
+  email: string,
+};
+
 export interface AuthD {
   checkToken: (token: Token) => Promise<boolean>;
   authenticate: (token: Token) => Promise<Session | null | undefined>;
@@ -26,10 +31,7 @@ export interface AuthD {
   updatePassword: (userUuid: UUID, oldPassword: string, newPassword: string) => Promise<boolean>;
   sendDeviceToken: (userUuid: UUID, deviceToken: string, apnsVoipToken: string | null | undefined, apnsNotificationToken: string | null | undefined) => Promise<void>;
   getPushNotificationSenderId: (userUuid: UUID) => Promise<string>;
-  sendResetPasswordEmail: ({
-    username,
-    email,
-  }) => Promise<boolean>;
+  sendResetPasswordEmail: (params: SendResetPasswordArgs) => Promise<boolean>;
   resetPassword: (userUuid: string, password: string) => Promise<boolean>;
   removeDeviceToken: (userUuid: UUID) => Promise<void>;
   createUser: (username: string, password: string, firstname: string, lastname: string) => Promise<User | RequestError>;
@@ -64,7 +66,7 @@ export interface AuthD {
 
 export default ((client: ApiRequester, baseUrl: string): AuthD => ({
   checkToken: (token: Token): Promise<boolean> => client.head(`${baseUrl}/token/${token}`, null, {}),
-  authenticate: (token: Token): Promise<Session | null | undefined> => client.get(`${baseUrl}/token/${token}`, null, {}).then(response => Session.parse(response)),
+  authenticate: (token: Token): Promise<Session | null | undefined> => client.get(`${baseUrl}/token/${token}`, null, {}).then((response: Response) => Session.parse(response)),
 
   logIn(params: {
     username: string;
@@ -102,7 +104,7 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
       body.domain_name = params.domainName;
     }
 
-    return client.post(`${baseUrl}/token`, body, headers).then(response => Session.parse(response));
+    return client.post(`${baseUrl}/token`, body, headers).then((response: Response) => Session.parse(response));
   },
 
   logOut: (token: Token): Promise<LogoutResponse> => client.delete(`${baseUrl}/token/${token}`, null, {}, ApiRequester.successResponseParser),
@@ -156,7 +158,7 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
 
     return client.post(`${baseUrl}/users/${userUuid}/external/mobile`, body);
   },
-  getPushNotificationSenderId: (userUuid: UUID) => client.get(`${baseUrl}/users/${userUuid}/external/mobile/sender_id`, null).then(response => response.sender_id),
+  getPushNotificationSenderId: (userUuid: UUID) => client.get(`${baseUrl}/users/${userUuid}/external/mobile/sender_id`, null).then((response: Record<string, any>) => response.sender_id),
 
   /**
    * `username` or `email` should be set.

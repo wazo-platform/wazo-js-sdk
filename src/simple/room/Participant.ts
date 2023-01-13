@@ -7,14 +7,21 @@ import getApiClient from '../../service/getApiClient';
 
 const logger = IssueReporter.loggerFor('room');
 
+export type RawParticipant = {
+  user_uuid?: string,
+  caller_id_name: string,
+  caller_id_number?: string
+  call_id: string,
+};
+
 class Participant extends Emitter {
   room: Room | null | undefined;
 
-  uuid: string;
+  uuid?: string;
 
   name: string;
 
-  number: string;
+  number?: string;
 
   callId: string;
 
@@ -73,7 +80,7 @@ class Participant extends Emitter {
    * @param rawParticipant string Participant sent via the Wazo WS
    * @param extra Object extra status of the participant
    */
-  constructor(room: Room | null, rawParticipant: Record<string, any> = {}, extra: Record<string, any> = {}) {
+  constructor(room: Room | null, rawParticipant: RawParticipant, extra: Record<string, any> = {}) {
     super();
     this.room = room;
     this.uuid = rawParticipant.user_uuid;

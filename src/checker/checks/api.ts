@@ -3,22 +3,22 @@ import ServerError from '../../domain/ServerError';
 
 export default {
   name: 'API',
-  check: async (server, session) => {
+  check: async (server: string, session: any) => {
     const client = new WazoApiClient({
       server,
     });
     client.setToken(session.token);
     client.disableErrorLogging();
 
-    const handleApiError = (apiName, error) => {
+    const handleApiError = (apiName: string, error: any) => {
       const statusText = error instanceof ServerError ? 'server error' : 'api error';
       throw new Error(`${apiName} fails with status (${error.status}, ${statusText}) : ${error.message}`);
     };
 
     // Check simple API call
     try {
-      await client.auth.getPushNotificationSenderId(session.uuid);
-      await client.auth.getProviders(session.uuid);
+      await client.auth.getPushNotificationSenderId(session.uuid as string);
+      await client.auth.getProviders(session.uuid as string);
     } catch (e: any) {
       handleApiError('wazo-auth', e);
     }
@@ -45,8 +45,8 @@ export default {
     }
 
     try {
-      await client.chatd.getState(session.uuid);
-      await client.chatd.getContactStatusInfo(session.uuid);
+      await client.chatd.getState(session.uuid as string);
+      await client.chatd.getContactStatusInfo(session.uuid as string);
       await client.chatd.getUserRooms();
     } catch (e: any) {
       handleApiError('wazo-chatd', e);
@@ -54,7 +54,7 @@ export default {
 
     try {
       await client.confd.getInfos();
-      await client.confd.getUser(session.uuid);
+      await client.confd.getUser(session.uuid as string);
     } catch (e: any) {
       handleApiError('wazo-confd', e);
     }

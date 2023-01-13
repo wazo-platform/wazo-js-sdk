@@ -25,17 +25,17 @@ const addLevelsTo = (instance: Record<string, any>, withMethods = false) => {
   instance.ERROR = ERROR;
 
   if (withMethods) {
-    instance.trace = (...args) => instance.apply(null, [TRACE, ...args]);
+    instance.trace = (...args: any) => instance.apply(null, [TRACE, ...args]);
 
-    instance.debug = (...args) => instance.apply(null, [DEBUG, ...args]);
+    instance.debug = (...args: any) => instance.apply(null, [DEBUG, ...args]);
 
-    instance.info = (...args) => instance.apply(null, [INFO, ...args]);
+    instance.info = (...args: any) => instance.apply(null, [INFO, ...args]);
 
-    instance.log = (...args) => instance.apply(null, [LOG, ...args]);
+    instance.log = (...args: any) => instance.apply(null, [LOG, ...args]);
 
-    instance.warn = (...args) => instance.apply(null, [WARN, ...args]);
+    instance.warn = (...args: any) => instance.apply(null, [WARN, ...args]);
 
-    instance.error = (...args) => instance.apply(null, [ERROR, ...args]);
+    instance.error = (...args: any) => instance.apply(null, [ERROR, ...args]);
   }
 
   return instance;
@@ -253,6 +253,7 @@ class IssueReporter {
     this.oldConsoleMethods = {};
     CONSOLE_METHODS.forEach((methodName: string) => {
       if (this.oldConsoleMethods) {
+        // @ts-ignore
         // eslint-disable-next-line
         this.oldConsoleMethods[methodName] = console[methodName];
       }

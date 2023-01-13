@@ -94,7 +94,7 @@ export default ((client: ApiRequester, baseUrl: string): ConfD => ({
       return null;
     }
   },
-  getMyMeetings: (): Promise<Meeting> => client.get(`${baseUrl}/users/me/meetings`).then(response => Meeting.parseMany(response.items)),
+  getMyMeetings: (): Promise<Meeting> => client.get(`${baseUrl}/users/me/meetings`).then((response: any) => Meeting.parseMany(response.items)),
   createMyMeeting: (args: MeetingCreateArguments): Promise<Meeting> => client.post(`${baseUrl}/users/me/meetings`, convertKeysFromCamelToUnderscore(args)).then(Meeting.parse),
   updateMyMeeting: (meetingUuid: string, data: MeetingUpdateArguments): Promise<boolean> => client.put(`${baseUrl}/users/me/meetings/${meetingUuid}`, convertKeysFromCamelToUnderscore(data), null, ApiRequester.successResponseParser),
   deleteMyMeeting: (meetingUuid: string): Promise<Meeting> => client.delete(`${baseUrl}/users/me/meetings/${meetingUuid}`, null),

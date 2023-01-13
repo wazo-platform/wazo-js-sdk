@@ -11,6 +11,6 @@ export default ((client: ApiRequester, baseUrl: string): AmiD => ({
     const rawEvents = await client.post(`${baseUrl}/action/PJSIPShowEndpoint`, {
       Endpoint: endpoint,
     });
-    return rawEvents.filter(event => event.Event === 'ContactStatusDetail');
+    return rawEvents.filter((event: Record<string, any>) => event.Event === 'ContactStatusDetail');
   },
 }));

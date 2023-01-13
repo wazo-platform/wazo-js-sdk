@@ -14,6 +14,7 @@ describe('Participant', () => {
         call_id: 'id',
         caller_id_name: 'Alice',
         caller_id_number: 'number',
+        user_uuid: 'some_uuid',
       });
       await expect(async () => participant.ban()).rejects.toThrow('Attempting to ban a participant without a `meetingUuid`');
     });
@@ -35,6 +36,7 @@ describe('Participant', () => {
         call_id: callId,
         caller_id_name: 'Alice',
         caller_id_number: number,
+        user_uuid: 'some_uuid',
       });
       participant.onBan = jest.fn();
       await participant.ban();
@@ -60,6 +62,7 @@ describe('Participant', () => {
         call_id: callId,
         caller_id_name: 'Alice',
         caller_id_number: number,
+        user_uuid: 'some_uuid',
       });
       participant.delay = jest.fn();
       participant.onBan = jest.fn();

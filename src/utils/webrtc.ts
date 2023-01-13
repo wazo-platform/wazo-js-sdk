@@ -11,7 +11,7 @@ type Candidate = {
   tcpType?: string
 };
 
-export const parseCandidate = line => {
+export const parseCandidate = (line: string) => {
   let parts;
 
   // Parse both variants.

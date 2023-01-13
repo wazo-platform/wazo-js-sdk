@@ -31,7 +31,7 @@ export interface IAuth {
   logInViaRefreshToken: (refreshToken: string) => Promise<Session | null>;
   validateToken: (token: string, refreshToken: string) => Promise<Session | undefined | null>;
   generateNewToken: (refreshToken: string) => Promise<Session | null | undefined>;
-  logout: (deleteRefreshToken) => Promise<void>;
+  logout: (deleteRefreshToken?: boolean) => Promise<void>;
   setOnRefreshToken: (callback: (...args: Array<any>) => any) => void;
   setOnRefreshTokenError: (callback: (...args: Array<any>) => any) => void;
   checkAuthorizations: (session: Session, authorizationName: string | null | undefined) => void;

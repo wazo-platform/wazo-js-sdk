@@ -1,12 +1,12 @@
 import Room from './Room';
-import Participant from './Participant';
+import Participant, { RawParticipant } from './Participant';
 
 class RemoteParticipant extends Participant {
-  constructor(room: Room, rawParticipant: Record<string, any> = {}, extra: Record<string, any> = {}) {
+  constructor(room: Room, rawParticipant: RawParticipant, extra: Record<string, any> = {}) {
     super(room, rawParticipant, extra);
 
     if (this.name === '<unknown>') {
-      this.name = this.number;
+      this.name = String(this.number);
     }
   }
 

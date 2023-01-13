@@ -16,7 +16,7 @@ const shouldBeFormatted = (number: string | null | undefined) => {
   return !number.includes('#') && !number.includes('*') && !number.match(/[aA-zZ]/);
 };
 
-const isSameCountry = (country1, country2) => {
+const isSameCountry = (country1: string, country2: string) => {
   if ((country1 === 'US' && country2 === 'CA') || (country2 === 'US' && country1 === 'CA')) {
     return true;
   }
@@ -46,7 +46,7 @@ const getDisplayableNumber = (rawNumber: string, country: string, asYouType = fa
     try {
       const parsedNumber = PhoneNumberUtil.parseAndKeepRawInput(number, country);
       const numberCountry = PhoneNumberUtil.getRegionCodeForNumber(parsedNumber);
-      const format = isSameCountry(numberCountry, country) ? PhoneNumberFormat.NATIONAL : PhoneNumberFormat.INTERNATIONAL;
+      const format = isSameCountry(String(numberCountry), country) ? PhoneNumberFormat.NATIONAL : PhoneNumberFormat.INTERNATIONAL;
       displayValue = PhoneNumberUtil.format(parsedNumber, format);
     } catch (_) {
       // Avoid to crash when phone number like `0080510` can't be parsed

@@ -114,7 +114,7 @@ export default class SipLine {
 
   hasVideo() {
     const allow = this.getOptions().find(option => option[0] === 'allow');
-    return Array.isArray(allow) && allow[1].split(',').some(codec => availableCodecs.some(c => c === codec));
+    return Array.isArray(allow) && allow[1].split(',').some((codec: string) => availableCodecs.some(c => c === codec));
   }
 
   hasVideoConference() {

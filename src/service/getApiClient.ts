@@ -1,5 +1,6 @@
 /* eslint-disable dot-notation */
 import WazoApiClient from '../api-client';
+
 // Can't use node cache mechanism here because when requiring lib/CallApi.js
 // this file will be merge with CallApi.js and the cache will be lost.
 // So we have to store values in global scope.

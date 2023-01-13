@@ -188,7 +188,7 @@ describe('Session domain', () => {
   describe('when getting the primary context', () => {
     const DEFAULT_CONTEXT = 'default';
     const SOME_CONTEXT = 'some-context';
-    let A_SESSION;
+    let A_SESSION: any;
     beforeEach(() => {
       A_SESSION = new Session({
         token: 'ref-12345',

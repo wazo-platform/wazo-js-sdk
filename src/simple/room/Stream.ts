@@ -10,7 +10,7 @@ class Stream {
   participant: Participant | undefined;
 
   static detachStream(stream: any) {
-    stream.getTracks().forEach(track => {
+    stream.getTracks().forEach((track: any) => {
       track.stop();
     });
   }

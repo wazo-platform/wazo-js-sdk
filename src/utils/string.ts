@@ -1,4 +1,4 @@
-export const camelToUnderscore = (key: string) => {
+export const camelToUnderscore = (key: string): string => {
   if (typeof key !== 'string') {
     throw new Error('Input is not a string');
   }

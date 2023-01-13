@@ -54,7 +54,7 @@ export default ((client: ApiRequester, baseUrl: string): DirD => ({
   search: (context: string, term: string): Promise<Array<Contact>> => client.get(`${baseUrl}/directories/lookup/${context}`, {
     term,
   }).then(Contact.parseMany),
-  listPersonalContacts: (queryParams: ContactSearchQueryParams = null): Promise<Array<Contact>> => client.get(`${baseUrl}/personal`, queryParams).then(response => Contact.parseManyPersonal(response.items)),
+  listPersonalContacts: (queryParams: ContactSearchQueryParams = null): Promise<Array<Contact>> => client.get(`${baseUrl}/personal`, queryParams).then((response: any) => Contact.parseManyPersonal(response.items)),
   fetchPersonalContact: (contactUuid: string): Promise<Contact> => client.get(`${baseUrl}/personal/${contactUuid}`).then(Contact.parsePersonal),
   addContact: (contact: NewContact): Promise<Contact> => client.post(`${baseUrl}/personal`, getContactPayload(contact)).then(Contact.parsePersonal),
   editContact: (contact: Contact): Promise<Contact> => client.put(`${baseUrl}/personal/${contact.sourceId || contact.id || ''}`, getContactPayload(contact)).then(Contact.parsePersonal),
@@ -63,7 +63,7 @@ export default ((client: ApiRequester, baseUrl: string): DirD => ({
       'Content-Type': 'text/csv; charset=utf-8',
       'X-Auth-Token': client.token,
     };
-    return client.post(`${baseUrl}/personal/import`, csv, headers).then(result => Contact.parseManyPersonal(result.created));
+    return client.post(`${baseUrl}/personal/import`, csv, headers).then((result: any) => Contact.parseManyPersonal(result.created));
   },
   deleteContact: (contactUuid: UUID) => client.delete(`${baseUrl}/personal/${contactUuid}`),
   listFavorites: (context: string): Promise<Array<Contact>> => client.get(`${baseUrl}/directories/favorites/${context}`).then(Contact.parseMany),
@@ -80,7 +80,7 @@ export default ((client: ApiRequester, baseUrl: string): DirD => ({
       return null;
     }
 
-    return client.get(`${baseUrl}/backends/office365/sources/${source.uuid}/contacts`, queryParams).then(response => Contact.parseManyOffice365(response.items, source));
+    return client.get(`${baseUrl}/backends/office365/sources/${source.uuid}/contacts`, queryParams).then((response: any) => Contact.parseManyOffice365(response.items, source));
   },
   fetchWazoSource: (context: string): Promise<Sources> => client.get(`${baseUrl}/directories/${context}/sources`, {
     backend: 'wazo',
@@ -91,7 +91,7 @@ export default ((client: ApiRequester, baseUrl: string): DirD => ({
       return null;
     }
 
-    return client.get(`${baseUrl}/backends/wazo/sources/${source.uuid}/contacts`, queryParams).then(response => Contact.parseManyWazo(response.items, source));
+    return client.get(`${baseUrl}/backends/wazo/sources/${source.uuid}/contacts`, queryParams).then((response: any) => Contact.parseManyWazo(response.items, source));
   },
   fetchGoogleSource: (context: string): Promise<Sources> => client.get(`${baseUrl}/directories/${context}/sources`, {
     backend: 'google',
@@ -101,7 +101,7 @@ export default ((client: ApiRequester, baseUrl: string): DirD => ({
       return null;
     }
 
-    return client.get(`${baseUrl}/backends/google/sources/${source.uuid}/contacts`, queryParams).then(response => Contact.parseManyGoogle(response.items, source));
+    return client.get(`${baseUrl}/backends/google/sources/${source.uuid}/contacts`, queryParams).then((response: any) => Contact.parseManyGoogle(response.items, source));
   },
   fetchConferenceSource: (context: string): Promise<Sources> => client.get(`${baseUrl}/directories/${context}/sources`, {
     backend: 'conference',
@@ -111,7 +111,7 @@ export default ((client: ApiRequester, baseUrl: string): DirD => ({
       return null;
     }
 
-    return client.get(`${baseUrl}/backends/conference/sources/${source.uuid}/contacts`).then(response => Contact.parseManyConference(response.items, source));
+    return client.get(`${baseUrl}/backends/conference/sources/${source.uuid}/contacts`).then((response: any) => Contact.parseManyConference(response.items, source));
   },
   // Graphql
   findMultipleContactsByNumber: (numbers: string[], fields?: Record<string, any>): Promise<Contact[]> => {

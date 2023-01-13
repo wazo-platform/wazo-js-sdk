@@ -6,9 +6,11 @@ export type ChatUser = {
   uuid: string;
   wazo_uuid: string;
 };
+
 export type ChatMessageResponseRoom = {
   uuid: string | null | undefined;
 };
+
 export type ChatMessageResponse = {
   alias: string;
   content: string;
@@ -19,11 +21,13 @@ export type ChatMessageResponse = {
   wazo_uuid: string;
   room: ChatMessageResponseRoom | null | undefined;
 };
+
 export type ChatMessageListResponse = {
   filtered: number;
   total: number;
   items: Array<ChatMessageResponse>;
 };
+
 export default class ChatMessage {
   type: string;
 

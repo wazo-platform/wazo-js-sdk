@@ -22,7 +22,7 @@ export default {
         urls: 'stun:stun2.l.google.com:19302',
       }],
     });
-    let timeout;
+    let timeout: any;
 
     const onEnded = () => {
       clearTimeout(timeout);

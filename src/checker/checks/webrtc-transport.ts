@@ -1,8 +1,9 @@
+import { Invitation, Inviter } from 'sip.js';
 import WebRTCClient from '../../web-rtc-client';
 
 export default {
   name: 'WebRTC Transport (WS) ~30s',
-  check: (server, session): Promise<void> => new Promise((resolve, reject) => {
+  check: (server: string, session: Inviter | Invitation): Promise<void> => new Promise((resolve, reject) => {
     const client = new WebRTCClient({
       host: server,
       media: {
@@ -10,7 +11,7 @@ export default {
       },
     }, session);
 
-    const handleError = message => {
+    const handleError = (message: any) => {
       client.close();
       reject(new Error(message));
     };

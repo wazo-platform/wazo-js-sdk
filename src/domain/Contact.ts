@@ -758,6 +758,7 @@ export default class Contact {
 
   merge(old: Contact): Contact {
     Object.keys(old).filter(key => key !== 'lineState').forEach(key => {
+      // @ts-ignore
       this[key] = old[key] || this[key];
     });
 

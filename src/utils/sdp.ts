@@ -11,7 +11,7 @@ export const getCandidates = (rawSdp: string | null | undefined): Record<string,
     return [];
   }
 
-  return sdp.media.map(media => media.candidates).flat().filter(candidate => !!candidate);
+  return sdp.media.map((media: any) => media.candidates).flat().filter((candidate: any) => !!candidate);
 };
 export const parseCandidate = (candidate?: string): Record<string, any> | null => {
   if (!candidate) {
@@ -31,17 +31,17 @@ export const isSdpValid = (sdp: string | null | undefined): boolean => {
 };
 export const fixBundle = (sdp: string): string => {
   const parsedSdp: any = sdpParser.parse(sdp);
-  const bundleIndex = parsedSdp.groups.findIndex(group => group.type === 'BUNDLE');
+  const bundleIndex = parsedSdp.groups.findIndex((group: any) => group.type === 'BUNDLE');
 
   if (bundleIndex !== -1) {
-    parsedSdp.groups[bundleIndex].mids = parsedSdp.media.map((media, index) => ('mid' in media ? media.mid : index)).join(' ');
+    parsedSdp.groups[bundleIndex].mids = parsedSdp.media.map((media: any, index: any) => ('mid' in media ? media.mid : index)).join(' ');
   }
 
   return sdpParser.write(parsedSdp);
 };
 export const toggleVideoDirection = (sdp: string, direction: string | null | undefined): string => {
   const parsedSdp: any = sdpParser.parse(sdp);
-  parsedSdp.media = parsedSdp.media.map(media => ({ ...media,
+  parsedSdp.media = parsedSdp.media.map((media: any) => ({ ...media,
     ...(media.type === 'video' ? {
       direction,
     } : {}),
@@ -85,7 +85,7 @@ export const fixSdp = (sdp: string, candidates: Record<string, any>[], forcePort
     parsedSdp.origin.address = ip;
   }
 
-  parsedSdp.media = parsedSdp.media.map(media => {
+  parsedSdp.media = parsedSdp.media.map((media: any) => {
     const port = forcePort ? mainCandidate ? mainCandidate.port : media.port : media.port;
     return { ...media,
       port,

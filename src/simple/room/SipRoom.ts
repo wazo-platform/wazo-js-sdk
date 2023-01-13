@@ -1,4 +1,4 @@
-import type { Invitation, Inviter } from 'sip.js';
+import { Invitation, Inviter } from 'sip.js';
 import type { Message } from 'sip.js/lib/api/message';
 import CallSession from '../../domain/CallSession';
 import IssueReporter from '../../service/IssueReporter';
@@ -80,7 +80,7 @@ class SipRoom extends Room {
 
     switch (body.type) {
       case 'ConfbridgeWelcome':
-        body.channels.forEach(channel => {
+        body.channels.forEach((channel: any) => {
           this._onParticipantJoined(channel);
         });
         break;
@@ -112,7 +112,7 @@ class SipRoom extends Room {
     }
   }
 
-  async _onParticipantJoined(channel: Record<string, any>) {
+  async _onParticipantJoined(channel: Record<string, any>): Promise<any> {
     const isLocal = channel.channelvars.WAZO_SIP_CALL_ID === this._getCurrentSipCallIs();
 
     const callId = channel.id;

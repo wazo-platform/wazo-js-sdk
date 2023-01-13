@@ -1,8 +1,8 @@
 /* eslint-disable camelcase */
 import ApiRequester from '../utils/api-requester';
 import type { UUID, RequestError } from '../domain/types';
-import Relocation from '../domain/Relocation';
-import ChatMessage from '../domain/ChatMessage';
+import Relocation, { RelocationResponse } from '../domain/Relocation';
+import ChatMessage, { ChatMessageListResponse } from '../domain/ChatMessage';
 import Voicemail from '../domain/Voicemail';
 import Call, { CallResponse } from '../domain/Call';
 import IndirectTransfer from '../domain/IndirectTransfer';
@@ -73,7 +73,7 @@ export default ((client: ApiRequester, baseUrl: string): CallD => ({
       query.limit = limit;
     }
 
-    return client.get(`${baseUrl}/users/me/chats`, query).then(response => ChatMessage.parseMany(response));
+    return client.get(`${baseUrl}/users/me/chats`, query).then((response: ChatMessageListResponse) => ChatMessage.parseMany(response));
   },
   sendMessage: (alias: string, msg: string, toUserId: string) => {
     const body = {
@@ -100,7 +100,7 @@ export default ((client: ApiRequester, baseUrl: string): CallD => ({
     return client.post(`${baseUrl}/users/me/calls`, query);
   },
   cancelCall: (callId: string): Promise<boolean> => client.delete(`${baseUrl}/users/me/calls/${callId}`, null),
-  listCalls: (): Promise<Array<Call>> => client.get(`${baseUrl}/users/me/calls`, null).then(response => Call.parseMany(response.items)),
+  listCalls: (): Promise<Array<Call>> => client.get(`${baseUrl}/users/me/calls`, null).then((response: any) => Call.parseMany(response.items)),
 
   relocateCall(callId: string, destination: string, lineId: number | null | undefined, contact?: string | null | undefined): Promise<Relocation> {
     const body: Record<string, any> = {
@@ -122,10 +122,10 @@ export default ((client: ApiRequester, baseUrl: string): CallD => ({
       body.location.contact = contact;
     }
 
-    return client.post(`${baseUrl}/users/me/relocates`, body).then(response => Relocation.parse(response));
+    return client.post(`${baseUrl}/users/me/relocates`, body).then((response: RelocationResponse) => Relocation.parse(response));
   },
 
-  listVoicemails: (): Promise<RequestError | Array<Voicemail>> => client.get(`${baseUrl}/users/me/voicemails`).then(response => Voicemail.parseMany(response)),
+  listVoicemails: (): Promise<RequestError | Array<Voicemail>> => client.get(`${baseUrl}/users/me/voicemails`).then((response: any) => Voicemail.parseMany(response)),
   deleteVoicemail: (voicemailId: number): Promise<boolean> => client.delete(`${baseUrl}/users/me/voicemails/messages/${voicemailId}`),
   getVoicemailUrl: (voicemail: Voicemail): string => {
     const body = {

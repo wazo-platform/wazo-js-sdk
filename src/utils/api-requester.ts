@@ -114,6 +114,7 @@ export default class ApiRequester {
 
     this.shouldLogErrors = true;
     methods.forEach(method => {
+      // @ts-ignore
       this[method] = function sugar(...args) {
         // Add method in arguments passed to `call`
         args.splice(1, 0, method);
@@ -177,7 +178,7 @@ export default class ApiRequester {
     }
 
     const start = new Date();
-    return realFetch()(url, options).then(response => {
+    return realFetch()(url, options).then((response: any) => {
       const contentType = response.headers.get('content-type') || '';
       const isJson = contentType.indexOf('application/json') !== -1;
       IssueReporter.logRequest(url, options, response, start);
@@ -207,7 +208,7 @@ export default class ApiRequester {
       }
 
       return newParse(response, isJson);
-    }).catch(error => {
+    }).catch((error: any) => {
       if (this.shouldLogErrors) {
         logger.error('Fetch failed', {
           url,

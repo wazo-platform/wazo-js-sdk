@@ -130,10 +130,10 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       }
     })
       .then(() => this.createLocalOfferOrAnswer(options))
-      .then(sessionDescription => this.setLocalSessionDescription(sessionDescription))
+      .then((sessionDescription: any) => this.setLocalSessionDescription(sessionDescription))
       .then(() => this.waitForIceGatheringComplete(iceRestart, iceTimeout))
       .then(() => this.getLocalSessionDescription())
-      .then(description => {
+      .then((description: any) => {
         const {
           sdp,
         } = description;
@@ -157,12 +157,12 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
           sdp: fixSdp(sdp, this.gatheredCandidates, options && options.constraints ? options.constraints.video : false),
         };
       })
-      .then(sessionDescription => this.applyModifiers(sessionDescription, modifiers))
-      .then(sessionDescription => ({
+      .then((sessionDescription: any) => this.applyModifiers(sessionDescription, modifiers))
+      .then((sessionDescription: any) => ({
         body: sessionDescription.sdp,
         contentType: 'application/sdp',
       }))
-      .catch(error => {
+      .catch((error: Error) => {
         wazoLogger.error('error when creating media', error);
         this.logger.error(`SessionDescriptionHandler.getDescription failed - ${error}`);
         throw error;
@@ -211,14 +211,14 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     // Closing senders via getLocalStreams
     // @ts-ignore
     this.peerConnection?.getLocalStreams().forEach(stream => {
-      stream.getTracks().forEach(track => {
+      stream.getTracks().forEach((track: MediaStreamTrack) => {
         track.stop();
       });
     });
     // Closing receivers via getRemoteStreams
     // @ts-ignore
     this.peerConnection?.getRemoteStreams().forEach(stream => {
-      stream.getTracks().forEach(track => {
+      stream.getTracks().forEach((track: MediaStreamTrack) => {
         track.stop();
       });
     });
@@ -423,7 +423,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         throw new Error(`Unknown new track kind ${kind}.`);
       }
 
-      const sender = pc.getSenders && pc.getSenders().find(otherSender => otherSender.track && otherSender.track.kind === kind);
+      const sender = pc.getSenders && pc.getSenders().find((otherSender: any) => otherSender.track && otherSender.track.kind === kind);
 
       // Do not reuse sender video tracks in SFU
       if (sender && (!sfu || newTrack.kind === 'audio')) {
@@ -495,7 +495,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
   }
 
   // Overridden to avoid replacing constraints with `localMediaStreamConstraints`
-  getLocalMediaStream(options: Record<string, any>) {
+  getLocalMediaStream(options: Record<string, any>): Promise<any> {
     this.logger.debug('WazoSessionDescriptionHandler.getLocalMediaStream');
 
     if (this._peerConnection === undefined) {
@@ -522,7 +522,11 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
 
     // @ts-ignore
     this.localMediaStreamConstraints = constraints;
-    return this.mediaStreamFactory(constraints, this).then(mediaStream => this.setLocalMediaStream(mediaStream));
+    // @ts-ignore
+    return this.mediaStreamFactory(constraints, this).then(mediaStream => {
+      this.setLocalMediaStream(mediaStream);
+      return mediaStream;
+    });
   }
 
 }

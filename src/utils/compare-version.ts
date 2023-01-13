@@ -1,5 +1,5 @@
 // Can't use `semver` package as Wazo version aren't in semver format
-const compareVersions = (a, b) => {
+const compareVersions = (a: string, b: string) => {
   let i;
   let diff;
   const regExStrip0 = /(\.0+)+$/;

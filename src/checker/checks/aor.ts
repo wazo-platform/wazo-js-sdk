@@ -2,7 +2,7 @@ import WazoApiClient from '../../api-client';
 
 export default {
   name: 'List of AOR',
-  check: async (server, session) => {
+  check: async (server: string, session: any) => {
     const apiClient = new WazoApiClient({
       server,
     });

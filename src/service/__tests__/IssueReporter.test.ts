@@ -7,8 +7,8 @@ import IssueReporter from '../IssueReporter';
 import { realFetch } from '../../utils/api-requester';
 
 jest.mock('../../utils/api-requester');
-let oldLog;
-let oldError;
+let oldLog: any;
+let oldError: any;
 
 class MyError extends Error {}
 
