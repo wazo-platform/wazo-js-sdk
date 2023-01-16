@@ -60,7 +60,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       this.eventEmitter.emit('setDescription', sessionDescription);
       return result;
     } catch (error) {
-      this.logger.error('SessionDescriptionHandler.setRemoteSessionDescription error', error);
+      this.logger.error(`SessionDescriptionHandler.setRemoteSessionDescription: ${error}`);
       throw error;
     }
   }
