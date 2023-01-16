@@ -1556,7 +1556,7 @@ export default class WebRTCClient extends Emitter {
   getLocalStream(sessionId: string): MediaStream | null {
     const sipSession = this.sipSessions[sessionId];
     // @ts-ignore
-    return sipSession.sessionDescriptionHandler?.localMediaStream || null;
+    return sipSession?.sessionDescriptionHandler?.localMediaStream || null;
   }
 
   getLocalTracks(sessionId: string): MediaStreamTrack[] {
