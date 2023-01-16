@@ -44,7 +44,7 @@ describe('Meeting domain', () => {
       acc[key] = `some-${key}`;
       return acc;
     }, {});
-    const meeting = new Meeting(args);
+    const meeting = new Meeting(args) as any;
     keys.forEach(key => expect(meeting[key]).toEqual(`some-${key}`));
   });
   it('can return username and secret from an base64 encrypted string', () => {

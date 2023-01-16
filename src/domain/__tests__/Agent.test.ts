@@ -28,7 +28,7 @@ Object.keys(fieldMap).forEach((field: string) => {
 describe('Call Center Agent domain', () => {
   it('should keep its values', () => {
     // @ts-expect-error
-    const agent = new Agent(formatted);
+    const agent = new Agent(formatted) as any;
     expect(agent).toBeInstanceOf(Agent);
     Object.keys(fieldMap).map(key => expect(agent[key]).toBe(formatted[key]));
   });
