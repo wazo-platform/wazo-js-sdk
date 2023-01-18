@@ -96,7 +96,7 @@ export default (client: ApiRequester, baseUrl: string) => ({
 
   meetingAuthorizations: (meetingUuid: string): Promise<Array<MeetingAuthorization>> =>
     client.get(`${baseUrl}/users/me/meetings/${meetingUuid}/authorizations`, null)
-    .then(response => MeetingAuthorization.parseMany(response.items)),
+      .then(response => MeetingAuthorization.parseMany(response.items)),
 
   meetingAuthorizationReject: (meetingUuid: string, authorizationUuid: string): Promise<Boolean> =>
     client.put(
