@@ -1,36 +1,13 @@
-import globby from 'globby';
-import resolve from 'rollup-plugin-node-resolve';
-import { terser } from 'rollup-plugin-terser';
-import commonjs from 'rollup-plugin-commonjs';
-import json from 'rollup-plugin-json';
-import flow from 'rollup-plugin-flow';
-
-const esmConfigs = globby.sync('src/**/*.js').map(inputFile => ({
-  input: inputFile,
-  output: {
-    file: inputFile.replace('src', 'esm'),
-    format: 'esm',
-  },
-  plugins: [
-    flow(),
-  ],
-}));
-
-const csjConfigs = globby.sync('src/**/*.js').map(inputFile => ({
-  input: inputFile,
-  output: {
-    file: inputFile.replace('src', 'lib'),
-    format: 'cjs',
-  },
-  plugins: [
-    flow(),
-  ],
-}));
-
-const configs = esmConfigs.concat(csjConfigs);
+import resolve from '@rollup/plugin-node-resolve';
+import terser from '@rollup/plugin-terser';
+import commonjs from '@rollup/plugin-commonjs';
+import json from '@rollup/plugin-json';
+import typescript from '@rollup/plugin-typescript';
 
 const plugins = [
-  flow(),
+  typescript({
+    tsconfig: './tsconfig.umd.json'
+  }),
   json(),
   resolve({
     preferBuiltins: false,
@@ -42,8 +19,8 @@ if (!process.env.DEV) {
   plugins.push(terser());
 }
 
-configs.push({
-  input: 'src/index.js',
+const configs = [{
+  input: 'src/index.ts',
   output: {
     file: 'dist/wazo-sdk.js',
     format: 'umd',
@@ -63,6 +40,6 @@ if (typeof(window) === 'undefined') {
   },
   plugins,
   moduleContext: { 'node_modules/node-fetch/lib/index': 'window' },
-});
+}];
 
 export default configs;
