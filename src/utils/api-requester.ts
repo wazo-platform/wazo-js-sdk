@@ -21,6 +21,8 @@ type ConstructorParams = {
 };
 const methods = ['head', 'get', 'post', 'put', 'delete', 'options'];
 const logger = IssueReporter ? IssueReporter.loggerFor('api') : console;
+const REQUEST_TIMEOUT_MS = 10 * 1000;
+
 // Use a function here to be able to mock it in tests
 export const realFetch = () => {
   if (typeof fetch !== 'undefined') {
@@ -38,7 +40,7 @@ export const realFetch = () => {
   }
 
   // nodejs
-  // this package is disable for react-native in package.json because it requires nodejs modules
+  // this package is disabled for react-native in package.json because it requires nodejs modules
   // Used to trick the optimizer to avoid requiring `node-fetch/lib/index` directly
   // It causes to require it on browsers when delivered by a nodejs engine (cf: vitejs).
   try {
@@ -181,7 +183,7 @@ export default class ApiRequester {
     }
 
     const start = new Date();
-    return realFetch()(url, options).then((response: any) => {
+    const requestPromise = realFetch()(url, options).then((response: any) => {
       const contentType = response.headers.get('content-type') || '';
       const isJson = contentType.indexOf('application/json') !== -1;
       IssueReporter.logRequest(url, options, response, start);
@@ -223,6 +225,12 @@ export default class ApiRequester {
 
       throw error;
     });
+
+    const requestTimeout = new Promise((resolve, reject) => {
+      setTimeout(() => reject(new Error('Request timeout')), REQUEST_TIMEOUT_MS);
+    });
+
+    return Promise.race([requestPromise, requestTimeout]);
   }
 
   _checkTokenExpired(response: Record<string, any>, err: Record<string, any>) {
