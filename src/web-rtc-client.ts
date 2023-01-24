@@ -674,7 +674,7 @@ export default class WebRTCClient extends Emitter {
     });
   }
 
-  hangup(session: Invitation | Inviter): Promise<OutgoingByeRequest | null> {
+  async hangup(session: Invitation | Inviter): Promise<OutgoingByeRequest | null> {
     const {
       state,
       id,
@@ -708,10 +708,10 @@ export default class WebRTCClient extends Emitter {
 
       // Handle different session status
       if (actions[state]) {
-        return actions[state]();
+        return await actions[state]();
       }
 
-      return bye();
+      return await bye();
     } catch (error: any) {
       logger.warn('sdk webrtc hangup, error', error);
     }
