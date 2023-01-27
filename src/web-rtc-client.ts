@@ -39,6 +39,7 @@ export const replaceLocalIpModifier = (description: Record<string, any>) => Prom
   ...JSON.parse(JSON.stringify(description)),
   sdp: description.sdp.replace('c=IN IP4 0.0.0.0', 'c=IN IP4 127.0.0.1'),
 });
+const SIP_ID_LENGTH = 36;
 const DEFAULT_ICE_TIMEOUT = 3000;
 const SEND_STATS_DELAY = 5000;
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
@@ -1643,18 +1644,18 @@ export default class WebRTCClient extends Emitter {
     // @ts-ignore
     if (sipSession.message?.callId) {
       // @ts-ignore
-      return sipSession.message.callId;
+      return sipSession.message.callId.substring(0, SIP_ID_LENGTH);
     }
 
     // For Inviter
     // @ts-ignore
     if (sipSession instanceof Inviter && sipSession.outgoingRequestMessage) {
       // @ts-ignore
-      return sipSession.outgoingRequestMessage.callId;
+      return sipSession.outgoingRequestMessage.callId.substring(0, SIP_ID_LENGTH);
     }
 
     // For Invitation
-    return (sipSession.id || '').substr(0, 36);
+    return (sipSession.id || '').substring(0, SIP_ID_LENGTH);
   }
 
   async waitForRegister(): Promise<void> {
@@ -1735,7 +1736,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   getSipSession(id: string): Invitation | Inviter | null | undefined {
-    return id in this.sipSessions ? this.sipSessions[id] : null;
+    return id in this.sipSessions ? this.sipSessions[id.substring(0, SIP_ID_LENGTH)] : null;
   }
 
   getSipSessionIds(): string[] {
