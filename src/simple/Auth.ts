@@ -355,7 +355,9 @@ class Auth implements IAuth {
     }
 
     try {
-      const sipLines = await getApiClient().confd.getUserLinesSip(session.uuid as string, session.profile?.lines.map(line => `${line.id}`));
+      const lineIds: string[] = session.profile?.lines.filter(line => !line.endpointSccp).map(line => String(line.id));
+      const sipLines = await getApiClient().confd.getUserLinesSip(session.uuid as string, lineIds);
+
       session.profile.sipLines = sipLines.filter(line => line instanceof SipLine) as SipLine[];
     } catch (e: any) { // When an user has only a sccp line, getSipLines return a 404
     }
