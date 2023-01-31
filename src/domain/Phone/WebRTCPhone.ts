@@ -868,9 +868,17 @@ export default class WebRTCPhone extends Emitter implements Phone {
       });
     }
 
-    logger.warn('no CallSession found to accept.', {
+    const error = 'No CallSession found to accept.';
+
+    logger.warn(error, {
       id: callSession ? callSession.getId() : 'n/a',
+      ids: this.client.getSipSessionIds(),
     });
+
+    if (callSession) {
+      this.eventEmitter.emit(ON_CALL_ERROR, new Error(error), callSession);
+    }
+
     return Promise.resolve(null);
   }
 
@@ -1197,7 +1205,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
       this._bindEvents(sipSession);
     } catch (error: any) {
-      console.warn(error);
       logger.warn('make WebRTC call, error', {
         message: error.message,
         stack: error.stack,
