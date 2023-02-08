@@ -851,14 +851,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const sipSession = this.client.getSipSession(callSession.getId()) as Invitation;
 
     if (sipSession) {
-      if (sipSession.state === SessionState.Terminated || sipSession.state === SessionState.Terminating) {
-        logger.warn('Trying to answer a terminated sipSession.');
-        return Promise.resolve(null);
-      }
+      logger.info('accept call, session found', { sipId: sipSession.id });
 
-      logger.info('accept call, session found', {
-        sipId: sipSession.id,
-      });
       return this.client.answer(sipSession, this.allowVideo ? cameraEnabled : false).then(() => {
         return callSession.sipCallId;
       }).catch(e => {
@@ -1332,8 +1326,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return;
     }
 
-    // @ts-ignore
-    sipSession.outgoingInviteRequest.cancel();
+    try {
+      // @ts-ignore
+      sipSession.outgoingInviteRequest.cancel();
+    } catch (e) {
+      logger.info('force cancel, error', e);
+    }
   }
 
   endCurrentCall(callSession: CallSession): void {
