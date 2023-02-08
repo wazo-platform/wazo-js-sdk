@@ -4,6 +4,10 @@
 import 'webrtc-adapter';
 import type { InviterInviteOptions } from 'sip.js/lib/api/inviter-invite-options';
 import type { IncomingResponse } from 'sip.js/lib/core/messages/incoming-response';
+import type { InvitationRejectOptions } from 'sip.js/lib/api/invitation-reject-options';
+import type { InviterCancelOptions } from 'sip.js/lib/api/inviter-cancel-options';
+import type { SessionByeOptions } from 'sip.js/lib/api/session-bye-options';
+import type { InvitationAcceptOptions } from 'sip.js/lib/api/invitation-accept-options';
 
 import type { SessionDialog } from 'sip.js/lib/core/dialogs/session-dialog';
 import type { IncomingRequestMessage } from 'sip.js/lib/core/messages/incoming-request-message';
@@ -655,7 +659,7 @@ export default class WebRTCClient extends Emitter {
     const options = {
       sessionDescriptionHandlerOptions: this.getMediaConfiguration(enableVideo || false),
     };
-    return session.accept(options).then(() => {
+    return this._accept(session, options).then(() => {
       // @ts-ignore
       if (session.isCanceled) {
         const message = 'accepted a canceled session (or was canceled during the accept phase).';
@@ -676,14 +680,8 @@ export default class WebRTCClient extends Emitter {
   }
 
   async hangup(session: Invitation | Inviter): Promise<OutgoingByeRequest | null> {
-    const {
-      state,
-      id,
-    }: any = session;
-    logger.info('sdk webrtc hangup call', {
-      id,
-      state,
-    });
+    const { state, id }: any = session;
+    logger.info('sdk webrtc hangup call', { id, state });
 
     try {
       this._stopSendingStats(session);
@@ -694,17 +692,11 @@ export default class WebRTCClient extends Emitter {
       // Check if Invitation or Inviter (Invitation = incoming call)
       const isInviter = session instanceof Inviter;
 
-      const cancel = () => (<Inviter>session).cancel();
-
-      const reject = () => (<Invitation>session).reject();
-
-      const bye = () => session.bye && session.bye();
-
       // @see github.com/onsip/SIP.js/blob/f11dfd584bc9788ccfc94e03034020672b738975/src/platform/web/simple-user/simple-user.ts#L1004
       const actions: Record<string, any> = {
-        [SessionState.Initial]: isInviter ? cancel : reject,
-        [SessionState.Establishing]: isInviter ? cancel : reject,
-        [SessionState.Established]: bye,
+        [SessionState.Initial]: isInviter ? this._cancel.bind(this, session) : this._reject.bind(this, session),
+        [SessionState.Establishing]: isInviter ? this._cancel.bind(this, session) : this._reject.bind(this, session),
+        [SessionState.Established]: this._bye.bind(this, session),
       };
 
       // Handle different session status
@@ -712,7 +704,7 @@ export default class WebRTCClient extends Emitter {
         return await actions[state]();
       }
 
-      return await bye();
+      return await this._bye(session);
     } catch (error: any) {
       logger.warn('sdk webrtc hangup, error', error);
     }
@@ -763,11 +755,11 @@ export default class WebRTCClient extends Emitter {
 
     try {
       if (session instanceof Invitation) {
-        return session.reject();
+        return this._reject(session);
       }
 
       if (session instanceof Inviter) {
-        return session.cancel();
+        return this._cancel(session);
       }
     } catch (e: any) {
       logger.warn('Error when rejecting call', e.message, e.stack);
@@ -2598,4 +2590,77 @@ export default class WebRTCClient extends Emitter {
     this.sessionNetworkStats[sessionId].push(networkStats);
   }
 
+  async _accept(session: Invitation, options: InvitationAcceptOptions = {}) {
+    if (session.state === SessionState.Terminated || session.state === SessionState.Terminating) {
+      const error = 'Trying to accept a terminated sipSession.';
+      logger.warn(error, { state: session.state, sessionId: session.id });
+      throw new Error(error);
+    }
+
+    if (session.state !== SessionState.Initial) {
+      const error = 'Trying to accept a non Initial sipSession.';
+      logger.warn(error, { state: session.state, sessionId: session.id });
+      throw new Error(error);
+    }
+
+    // @ts-ignore
+    if (!session.incomingInviteRequest.acceptable) {
+      const error = 'Trying to reject a non `acceptable` session';
+      logger.warn(error, { state: session.state, sessionId: session.id });
+      throw new Error(error);
+    }
+
+    try {
+      return await session.accept(options);
+    } catch (e) {
+      logger.warn('Session accept, error', e);
+    }
+  }
+
+  async _reject(session: Invitation, options: InvitationRejectOptions = {}) {
+    if (session.state !== SessionState.Initial && session.state !== SessionState.Establishing) {
+      logger.warn('Trying to reject a session in a wrong state', { state: session.state, sessionId: session.id });
+      return;
+    }
+
+    // @ts-ignore
+    if (!session.incomingInviteRequest.rejectable) {
+      logger.warn('Trying to reject a non `rejectable` session', { state: session.state, sessionId: session.id });
+      return;
+    }
+
+    try {
+      return await session.reject(options);
+    } catch (e) {
+      logger.warn('Session reject, error', e);
+    }
+  }
+
+  async _cancel(session: Inviter, options: InviterCancelOptions = {}) {
+    if (session.state !== SessionState.Initial && session.state !== SessionState.Establishing) {
+      logger.warn('Trying to cancel a session in a wrong state', { state: session.state, sessionId: session.id });
+      return;
+    }
+
+    try {
+      return await session.cancel(options);
+    } catch (e) {
+      logger.warn('Session cancel, error', e);
+    }
+  }
+
+  async _bye(session: Invitation | Inviter, options: SessionByeOptions = {}) {
+    if (session.state !== SessionState.Established) {
+      logger.warn('Trying to end a session in a wrong state', { state: session.state, sessionId: session.id });
+      return null;
+    }
+
+    try {
+      return await session.bye(options);
+    } catch (e) {
+      logger.warn('Session bye, error', e);
+    }
+
+    return null;
+  }
 }
