@@ -1449,3 +1449,65 @@ ws.updateToken(newToken: string);
 ```js
 ws.close();
 ```
+
+
+# Usage with webpack 5
+
+As webpack 5 dropped some polyfill, you have to add them:
+
+```sh
+yarn add -D assert buffer https-browserify url stream-http stream-browserify browserify-zlib process
+```
+
+If you have used `create-react-app` to create your app, you can customize the webpack configuration with `react-app-rewired` :
+
+```sh
+yarn add -D react-app-rewired
+```
+
+Create a `config-overrides.js` file :
+```js
+const webpack = require('webpack');
+module.exports = function override(config, env) {
+  config.resolve.fallback = {
+    ...config.resolve.fallback,
+    assert: require.resolve("assert"),
+    buffer: require.resolve('buffer'),
+    https: require.resolve('https-browserify'),
+    url: require.resolve('url'),
+    http: require.resolve('stream-http'),
+    stream: require.resolve('stream-browserify'),
+    zlib: require.resolve('browserify-zlib'),
+  };
+
+  config.plugins.push(
+    new webpack.ProvidePlugin({
+      process: 'process/browser',
+      Buffer: ['buffer', 'Buffer'],
+    }),
+  );
+
+  config.module.rules.push({
+    test: /\.m?js/,
+    resolve: {
+      fullySpecified: false
+    }
+  })
+
+  return config;
+}
+```
+
+Then edit in `package.json` :
+```json
+"scripts": {
+  // ...
+  "start": "react-app-rewired start",
+  "build": "react-app-rewired build",
+  "test": "react-app-rewired test",
+  "eject": "react-app-rewired eject"
+  // ...
+},
+```
+
+Please refer to https://github.com/facebook/create-react-app/issues/11756 for more details.
