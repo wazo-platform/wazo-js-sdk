@@ -111,11 +111,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   register() {
+    logger.info('WebRTC register', { client: !!this.client });
     if (!this.client) {
       return Promise.resolve();
     }
 
     return this.client.register().then(() => {
+      logger.info('WebRTC register, registered');
       return this.bindClientEvents();
     }).catch(error => {
       // Avoid exception on `t.server.scheme` in sip transport when losing the webrtc socket connection
