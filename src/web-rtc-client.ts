@@ -634,7 +634,10 @@ export default class WebRTCClient extends Emitter {
     }
 
     // Do not await invite here or we'll miss the Establishing state transition
-    session.invitePromise = session.invite(inviteOptions);
+    session.invitePromise = session.invite(inviteOptions).catch((e: Error) => {
+      logger.warn('sdk webrtc creating call, error', e);
+    });
+
     return session;
   }
 
@@ -940,7 +943,9 @@ export default class WebRTCClient extends Emitter {
     }
 
     // Send re-INVITE
-    return session.invite(options);
+    return session.invite(options).catch((e: Error) => {
+      logger.warn('sdk webrtc re-invite during hold, error', e);
+    });
   }
 
   unhold(session: Inviter | Invitation, isConference = false): Promise<OutgoingInviteRequest | void> {
@@ -984,7 +989,9 @@ export default class WebRTCClient extends Emitter {
       conference: isConference,
     };
     // Send re-INVITE
-    return session.invite(options);
+    return session.invite(options).catch((e: Error) => {
+      logger.warn('sdk webrtc re-invite during resume, error', e);
+    });
   }
 
   // Returns true if a re-INVITE is required
