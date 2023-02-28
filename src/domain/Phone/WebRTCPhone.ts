@@ -364,6 +364,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   _bindEvents(sipSession: Invitation | Inviter) {
+    const sipSessionId = this.getSipSessionId(sipSession);
+
     if (sipSession instanceof Invitation) {
       // Monkey patch to know when canceled with the CANCEL message
       const onCancel = sipSession._onCancel.bind(sipSession);
@@ -371,13 +373,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
       sipSession._onCancel = (message: IncomingRequestMessage) => {
         logger.trace('on sip session canceled', {
           callId: message.callId,
+          sipSessionId,
         });
         onCancel(message);
         const elsewhere = message.data.indexOf('cause=26') !== -1 && message.data.indexOf('completed elsewhere') !== -1;
-
         const callSession = this._createCallSession(sipSession);
 
-        delete this.callSessions[callSession.getId()];
+        delete this.callSessions[sipSessionId];
         this.eventEmitter.emit(ON_CALL_CANCELED, callSession, elsewhere);
       };
     } else if (sipSession instanceof Invitation) {
@@ -671,10 +673,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   _onCallTerminated(sipSession: Invitation | Inviter): boolean {
+    const sipSessionId = this.getSipSessionId(sipSession);
+
     logger.info('WebRTC phone - on call terminated', {
       sipId: sipSession.id,
+      sipSessionId,
+      ids: Object.keys(this.callSessions),
     });
-    const sipSessionId = this.getSipSessionId(sipSession);
 
     const callSession = this._createCallSession(sipSession);
 
@@ -697,7 +702,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.removeIncomingSessions(sipSessionId);
     }
 
-    delete this.callSessions[callSession.getId()];
+    delete this.callSessions[sipSessionId];
 
     if (isCurrentSession) {
       this.currentSipSession = undefined;
@@ -1287,20 +1292,19 @@ export default class WebRTCPhone extends Emitter implements Phone {
       console.error('Call is unknown to the WebRTC phone', callSession ? callSession.sipCallId : null, callSession ? callSession.callId : null);
       return false;
     }
+    const sipSessionId = this.getSipSessionId(sipSession);
 
     logger.info('WebRTC hangup', {
       sipId: sipSession.id,
+      sipSessionId,
     });
-    const sipSessionId = this.getSipSessionId(sipSession);
     await this.client.hangup(sipSession);
 
     if (callSession) {
       // Removal of `this.callSessions` will be done in `_onCallTerminated`.
       this.endCurrentCall(callSession);
     } else if (sipSessionId) {
-      if (callSession) {
-        delete this.callSessions[sipSessionId];
-      }
+      delete this.callSessions[sipSessionId];
     }
 
     this.shouldSendReinvite = false;
@@ -1552,9 +1556,11 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
       const callSession = this._createCallSession(session);
 
-      callSession.endTime = new Date();
+      // `_createCallSession` add the CallSession in `this.callSessions`.
+      // so we have to remove it or `callCount` will always return 1 even if the call was rejected
+      delete this.callSessions[this.getSipSessionId(session)];
 
-      this._updateCallSession(callSession);
+      callSession.endTime = new Date();
 
       this.eventEmitter.emit(ON_CALL_REJECTED, callSession);
     });
@@ -1797,7 +1803,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       conference: !!fromSession && fromSession.isConference(),
       ...extra,
     });
-    this.callSessions[callSession.getId()] = callSession;
+    this.callSessions[sessionId] = callSession;
     return callSession;
   }
 
