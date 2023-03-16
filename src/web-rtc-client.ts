@@ -800,6 +800,9 @@ export default class WebRTCClient extends Emitter {
     this._cleanupRegister();
 
     try {
+      // Prevent `Connect aborted.` error when disconnecting
+      // @ts-ignore
+      this.userAgent.transport.connectReject = () => {};
       // Don't wait here, It can take ~30s to stop ...
       this.userAgent.stop().catch(console.error);
     } catch (_) { // Avoid to raise exception when trying to close with hanged-up sessions remaining
