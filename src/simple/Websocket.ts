@@ -69,6 +69,10 @@ class Websocket extends Emitter implements IWebsocket {
     }, {
       rejectUnauthorized: false,
       binaryType: 'arraybuffer',
+      timeoutInterval: 10000,
+      reconnectInterval: 4000 + Math.random() * 2000, // 4 to 6 seconds
+      maxReconnectInterval: 50000 + Math.random() * 20000, // 50 to 70 seconds
+      reconnectDecay: 1.5 + Math.random(), // 1.5 to 2.5 times the last reconnectInterval
     });
     this.ws.connect();
     // Re-emit all events
