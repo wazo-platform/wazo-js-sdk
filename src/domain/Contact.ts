@@ -445,7 +445,7 @@ export default class Contact {
     }
 
     return new Contact({
-      name: `${plain.givenName || ''} ${plain.familyName || ''}`,
+      name: `${plain.givenName || plain.company || ''} ${plain.familyName || ''}`,
       number: plain.phoneNumbers.length ? plain.phoneNumbers[0].number : '',
       numbers: plain.phoneNumbers.length ? [{
         label: 'primary',
