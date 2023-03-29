@@ -38,13 +38,16 @@ export interface ChatD {
   getState: (contactUuid: UUID) => Promise<string>;
   getContactStatusInfo: (contactUuid: UUID) => Promise<PresenceResponse>;
   getLineState: (contactUuid: UUID) => Promise<string>;
-  getMultipleLineState: (contactUuids: Array<UUID> | null | undefined) => Promise<string>;
+  getMultipleLineState: (contactUuids: Array<UUID> | null | undefined) => Promise<Array<PresenceResponse>>;
   getUserRooms: () => Promise<Array<ChatRoom>>;
   createRoom: (name: string, users: Array<ChatUser>) => Promise<ChatRoom>;
   getRoomMessages: (roomUuid: string, params?: GetMessagesOptions) => Promise<Array<ChatMessage>>;
   sendRoomMessage: (roomUuid: string, message: ChatMessage) => Promise<ChatMessage>;
   getMessages: (options: GetMessagesOptions) => Promise<ChatMessage>;
 }
+
+// split contact status retrieval to avoid `414 Request-URI Too Large`.
+const MAX_PRESENCE_FETCHED = 30;
 
 export default ((client: ApiRequester, baseUrl: string): ChatD => ({
   updateState: (contactUuid: UUID, state: string): Promise<boolean> => client.put(`${baseUrl}/users/${contactUuid}/presences`, {
@@ -60,11 +63,26 @@ export default ((client: ApiRequester, baseUrl: string): ChatD => ({
   getState: async (contactUuid: UUID): Promise<string> => client.get(`${baseUrl}/users/${contactUuid}/presences`).then((response: PresenceResponse) => response.state),
   getContactStatusInfo: async (contactUuid: UUID): Promise<PresenceResponse> => client.get(`${baseUrl}/users/${contactUuid}/presences`).then((response: PresenceResponse) => response),
   getLineState: async (contactUuid: UUID): Promise<string> => client.get(`${baseUrl}/users/${contactUuid}/presences`).then((response: PresenceResponse) => Profile.getLinesState(response.lines)),
-  getMultipleLineState: async (contactUuids: Array<UUID> | null | undefined): Promise<string> => {
+  async getMultipleLineState(contactUuids: Array<UUID> | null | undefined): Promise<Array<PresenceResponse>> {
     const body: any = {};
+    const uuids: Array<UUID> = contactUuids || [];
 
-    if (contactUuids && contactUuids.length) {
-      body.user_uuid = contactUuids.join(',');
+    if (uuids.length > MAX_PRESENCE_FETCHED) {
+      const requests = uuids.reduce((acc, _, i) => {
+        if (i % MAX_PRESENCE_FETCHED === 0) {
+          // @ts-ignore
+          acc.push(this.getMultipleLineState(uuids.slice(i, i + MAX_PRESENCE_FETCHED)));
+        }
+        return acc;
+      }, []);
+
+      const splittedStatuses = await Promise.all(requests);
+
+      return splittedStatuses.flat();
+    }
+
+    if (uuids.length) {
+      body.user_uuid = uuids.join(',');
     }
 
     return client.get(`${baseUrl}/users/presences`, body).then((response: PresenceListResponse) => response.items);
