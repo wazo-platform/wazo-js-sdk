@@ -272,8 +272,8 @@ class Auth implements IAuth {
     getApiClient().setRefreshDomainName(domainName);
   }
 
-  forceRefreshToken(): void {
-    getApiClient().forceRefreshToken();
+  forceRefreshToken(): Promise<string | null> {
+    return getApiClient().forceRefreshToken();
   }
 
   setIsMobile(mobile: boolean): void {

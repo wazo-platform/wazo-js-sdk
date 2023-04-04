@@ -125,12 +125,12 @@ export default class ApiClient {
     this.initializeEndpoints();
   }
 
-  async forceRefreshToken() {
+  async forceRefreshToken(): Promise<string | null> {
     logger.info('forcing refresh token, calling callback');
     return this.refreshTokenCallback();
   }
 
-  async refreshTokenCallback() {
+  async refreshTokenCallback(): Promise<string | null> {
     logger.info('refresh token callback called', {
       refreshToken: this.refreshToken,
       refreshBackend: this.refreshBackend,
@@ -167,6 +167,8 @@ export default class ApiClient {
         this.onRefreshTokenError(error);
       }
     }
+
+    return null;
   }
 
   setToken(token: string) {
