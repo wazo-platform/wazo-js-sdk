@@ -444,8 +444,14 @@ export default class Contact {
       address = `${postalAddress.street} ${postalAddress.city} ${postalAddress.postCode} ${postalAddress.country}`;
     }
 
+    const firstName = plain.givenName || '';
+    const lastName = plain.familyName || '';
+    const companyName = plain.company || '';
+    const isCompanyAccount = !firstName && !lastName;
+    const name = isCompanyAccount ? companyName : `${firstName} ${lastName}`;
+
     return new Contact({
-      name: `${plain.givenName || ''} ${plain.familyName || ''}`,
+      name,
       number: plain.phoneNumbers.length ? plain.phoneNumbers[0].number : '',
       numbers: plain.phoneNumbers.length ? [{
         label: 'primary',
