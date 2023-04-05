@@ -1,3 +1,5 @@
+import type { UserAgentOptions } from 'sip.js';
+
 // @TODO: stand-in for empty object types. Was `type Something = {};` in JS
 type TodoObject = object;
 
@@ -202,20 +204,6 @@ export type ListCallNodesResponse = {
 };
 export type GetTenantResponse = TodoObject;
 export type GetUserResponse = TodoObject;
-export type WebRtcConfig = {
-  id: number;
-  host: string;
-  line: {
-    id: number;
-    links: Array<Link>;
-  };
-  links: Array<Link>;
-  options: Array<Array<string>>;
-  secret: string;
-  tenant_uuid: string;
-  type: string;
-  username: string;
-};
 export type CTITransfer = {
   'flow': string;
   'id': string;
@@ -224,4 +212,35 @@ export type CTITransfer = {
   'recipient_call': string;
   'status': string;
   'transferred_call': string;
+};
+export type UserAgentConfigOverrides = Partial<UserAgentOptions & { traceSip: any }>;
+export type MediaConfig = {
+  audio: Record<string, any> | boolean;
+  video?: Record<string, any> | boolean;
+  localVideo?: Record<string, any> | boolean;
+};
+export type WebRtcConfig = {
+  displayName?: string;
+  host: string;
+  port?: number;
+  websocketSip?: string;
+  authorizationUser?: string;
+  password?: string;
+  uri?: string;
+  media?: MediaConfig;
+  iceCheckingTimeout?: number;
+  log?: Record<string, any>;
+  audioOutputDeviceId?: string;
+  audioOutputVolume?: number;
+  userAgentString?: string;
+  heartbeatDelay?: number;
+  heartbeatTimeout?: number;
+  maxHeartbeats?: number;
+  skipRegister?: boolean;
+}; // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
+
+export type ConnectionOptions = WebRtcConfig & {
+  uaConfigOverrides: UserAgentConfigOverrides,
+  audioDeviceOutput: string,
+  audioDeviceRing: string
 };

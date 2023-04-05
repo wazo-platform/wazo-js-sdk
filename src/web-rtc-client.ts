@@ -8,7 +8,6 @@ import type { InvitationRejectOptions } from 'sip.js/lib/api/invitation-reject-o
 import type { InviterCancelOptions } from 'sip.js/lib/api/inviter-cancel-options';
 import type { SessionByeOptions } from 'sip.js/lib/api/session-bye-options';
 import type { InvitationAcceptOptions } from 'sip.js/lib/api/invitation-accept-options';
-
 import type { SessionDialog } from 'sip.js/lib/core/dialogs/session-dialog';
 import type { IncomingRequestMessage } from 'sip.js/lib/core/messages/incoming-request-message';
 import type { SessionDescriptionHandlerFactoryOptions } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-factory-options';
@@ -29,7 +28,7 @@ import { defaultPeerConnectionConfiguration } from 'sip.js/lib/platform/web/sess
 import getStats from 'getstats';
 
 import { OutgoingByeRequest, OutgoingInviteRequest, OutgoingRequest } from 'sip.js/lib/core';
-import { Inviter, Invitation, Registerer } from 'sip.js/lib/api';
+import { Inviter, Invitation, Registerer, UserAgentOptions } from 'sip.js/lib/api';
 import WazoSessionDescriptionHandler, { wazoMediaStreamFactory } from './lib/WazoSessionDescriptionHandler';
 import Emitter from './utils/Emitter';
 import ApiClient from './api-client';
@@ -37,6 +36,7 @@ import IssueReporter from './service/IssueReporter';
 import Heartbeat from './utils/Heartbeat';
 import { getVideoDirection, hasAnActiveVideo } from './utils/sdp';
 import { lastIndexOf } from './utils/array';
+import type { MediaConfig, UserAgentConfigOverrides, WebRtcConfig } from './domain/types';
 
 // We need to replace 0.0.0.0 to 127.0.0.1 in the sdp to avoid MOH during a createOffer.
 export const replaceLocalIpModifier = (description: Record<string, any>) => Promise.resolve({ // description is immutable... so we have to clone it or the `type` attribute won't be returned.
@@ -71,37 +71,13 @@ export const events = [REGISTERED, UNREGISTERED, REGISTRATION_FAILED, INVITE];
 export const transportEvents = [CONNECTED, DISCONNECTED, TRANSPORT_ERROR, MESSAGE];
 export class CanceledCallError extends Error {}
 const MAX_REGISTER_TRIES = 5;
-type MediaConfig = {
-  audio: Record<string, any> | boolean;
-  video?: Record<string, any> | boolean;
-  localVideo?: Record<string, any> | boolean;
-};
-type WebRtcConfig = {
-  displayName?: string;
-  host: string;
-  port?: number;
-  websocketSip?: string;
-  authorizationUser?: string;
-  password?: string;
-  uri?: string;
-  media?: MediaConfig;
-  iceCheckingTimeout?: number;
-  log?: Record<string, any>;
-  audioOutputDeviceId?: string;
-  audioOutputVolume?: number;
-  userAgentString?: string;
-  heartbeatDelay?: number;
-  heartbeatTimeout?: number;
-  maxHeartbeats?: number;
-  skipRegister?: boolean;
-}; // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
 
 export default class WebRTCClient extends Emitter {
   clientId: number;
 
   config: WebRtcConfig;
 
-  uaConfigOverrides: Record<string, any> | null | undefined;
+  uaConfigOverrides?: UserAgentConfigOverrides;
 
   userAgent: UserAgent | null;
 
@@ -201,7 +177,7 @@ export default class WebRTCClient extends Emitter {
     return [];
   }
 
-  constructor(config: WebRtcConfig, session: Invitation | Inviter | null | undefined, uaConfigOverrides: Record<string, any> | null | undefined = undefined) {
+  constructor(config: WebRtcConfig, session: Invitation | Inviter | null | undefined, uaConfigOverrides?: UserAgentConfigOverrides) {
     super();
 
     // For debug purpose
@@ -271,11 +247,11 @@ export default class WebRTCClient extends Emitter {
     this.audio = media.audio;
   }
 
-  createUserAgent(configOverrides: Record<string, any> | null | undefined): UserAgent {
-    const webRTCConfiguration = this._createWebRTCConfiguration(configOverrides);
+  createUserAgent(uaConfigOverrides?: UserAgentConfigOverrides): UserAgent {
+    const uaOptions = this._createUaOptions(uaConfigOverrides);
 
-    logger.info('sdk webrtc, creating UA', { webRTCConfiguration, clientId: this.clientId });
-    webRTCConfiguration.delegate = {
+    logger.info('sdk webrtc, creating UA', { uaOptions, clientId: this.clientId });
+    uaOptions.delegate = {
       onConnect: this.onConnect.bind(this),
       onDisconnect: this.onDisconnect.bind(this),
       onInvite: (invitation: Invitation) => {
@@ -293,7 +269,7 @@ export default class WebRTCClient extends Emitter {
         this.eventEmitter.emit(INVITE, invitation, this.sessionWantsToDoVideo(invitation), shouldAutoAnswer);
       },
     };
-    const ua: any = new UserAgent(webRTCConfiguration);
+    const ua: any = new UserAgent(uaOptions);
 
     if (ua.transport && ua.transport.connectPromise) {
       ua.transport.connectPromise.catch((e: any) => {
@@ -2013,7 +1989,7 @@ export default class WebRTCClient extends Emitter {
     }));
   }
 
-  _createWebRTCConfiguration(configOverrides: Record<string, any> | null = {}): Record<string, any> {
+  _createUaOptions(uaOptionsOverrides: UserAgentConfigOverrides = {}): UserAgentOptions {
     let {
       host,
     } = this.config;
@@ -2025,7 +2001,7 @@ export default class WebRTCClient extends Emitter {
       port = Number(webSocketSip[1]);
     }
 
-    const config: Record<string, any> = {
+    const uaOptions: UserAgentOptions = {
       authorizationUsername: this.config.authorizationUser,
       authorizationPassword: this.config.password,
       displayName: this.config.displayName,
@@ -2041,6 +2017,7 @@ export default class WebRTCClient extends Emitter {
       userAgentString: this.config.userAgentString || 'wazo-sdk',
       reconnectionAttempts: 10000,
       reconnectionDelay: 5,
+      // @ts-ignore
       sessionDescriptionHandlerFactory: (session: Inviter | Invitation, options: SessionDescriptionHandlerFactoryOptions = {}) => {
         const uaLogger = session.userAgent.getLogger('sip.WazoSessionDescriptionHandler');
 
@@ -2057,7 +2034,7 @@ export default class WebRTCClient extends Emitter {
         return new WazoSessionDescriptionHandler(uaLogger, wazoMediaStreamFactory, sdhOptions, isWeb, session);
       },
       transportOptions: {
-        traceSip: configOverrides?.traceSip || false,
+        traceSip: uaOptionsOverrides?.traceSip || false,
         wsServers: `wss://${host}:${port}/api/asterisk/ws`,
       },
       sessionDescriptionHandlerFactoryOptions: {
@@ -2074,6 +2051,7 @@ export default class WebRTCClient extends Emitter {
             rtcpMuxPolicy: 'require',
             iceServers: WebRTCClient.getIceServers(this.config.host),
             ...this._getRtcOptions(),
+            // @ts-ignore
             ...(configOverrides?.peerConnectionOptions || {}),
           },
         },
@@ -2081,12 +2059,17 @@ export default class WebRTCClient extends Emitter {
         peerConnectionConfiguration: {
           rtcpMuxPolicy: 'require',
           iceServers: WebRTCClient.getIceServers(this.config.host),
+          // @ts-ignore
           ...(configOverrides?.peerConnectionOptions || {}),
         },
       },
     };
-    return { ...config,
-      ...configOverrides,
+
+    delete uaOptionsOverrides?.traceSip;
+
+    return {
+      ...uaOptions,
+      ...uaOptionsOverrides,
     };
   }
 
