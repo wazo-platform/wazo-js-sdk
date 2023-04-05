@@ -1,4 +1,6 @@
-import type { UserAgentOptions } from 'sip.js';
+import type { Session, UserAgentOptions as sipJsUserAgentOptions } from 'sip.js';
+import { SessionDescriptionHandlerFactoryOptions } from 'sip.js/lib/platform/web';
+import WazoSessionDescriptionHandler from '../lib/WazoSessionDescriptionHandler';
 
 // @TODO: stand-in for empty object types. Was `type Something = {};` in JS
 type TodoObject = object;
@@ -213,7 +215,13 @@ export type CTITransfer = {
   'status': string;
   'transferred_call': string;
 };
-export type UserAgentConfigOverrides = Partial<UserAgentOptions & { traceSip: any }>;
+export type UserAgentOptions = sipJsUserAgentOptions & {
+  peerConnectionOptions?: Record<string, any>,
+  sessionDescriptionHandlerFactory: (session: Session, options: SessionDescriptionHandlerFactoryOptions) => WazoSessionDescriptionHandler,
+};
+export type UserAgentConfigOverrides = Partial<UserAgentOptions & {
+  traceSip: any,
+}>;
 export type MediaConfig = {
   audio: Record<string, any> | boolean;
   video?: Record<string, any> | boolean;

@@ -28,7 +28,7 @@ import { defaultPeerConnectionConfiguration } from 'sip.js/lib/platform/web/sess
 import getStats from 'getstats';
 
 import { OutgoingByeRequest, OutgoingInviteRequest, OutgoingRequest } from 'sip.js/lib/core';
-import { Inviter, Invitation, Registerer, UserAgentOptions } from 'sip.js/lib/api';
+import { Inviter, Invitation, Registerer, Session } from 'sip.js/lib/api';
 import WazoSessionDescriptionHandler, { wazoMediaStreamFactory } from './lib/WazoSessionDescriptionHandler';
 import Emitter from './utils/Emitter';
 import ApiClient from './api-client';
@@ -36,7 +36,7 @@ import IssueReporter from './service/IssueReporter';
 import Heartbeat from './utils/Heartbeat';
 import { getVideoDirection, hasAnActiveVideo } from './utils/sdp';
 import { lastIndexOf } from './utils/array';
-import type { MediaConfig, UserAgentConfigOverrides, WebRtcConfig } from './domain/types';
+import type { MediaConfig, UserAgentConfigOverrides, WebRtcConfig, UserAgentOptions } from './domain/types';
 
 // We need to replace 0.0.0.0 to 127.0.0.1 in the sdp to avoid MOH during a createOffer.
 export const replaceLocalIpModifier = (description: Record<string, any>) => Promise.resolve({ // description is immutable... so we have to clone it or the `type` attribute won't be returned.
@@ -572,9 +572,7 @@ export default class WebRTCClient extends Emitter {
     const inviteOptions: InviterInviteOptions = {
       requestDelegate: {
         onAccept: (response: IncomingResponse) => {
-          // @ts-ignore
           if (session.sessionDescriptionHandler?.peerConnection) {
-            // @ts-ignore
             session.sessionDescriptionHandler.peerConnection.sfu = conference;
           }
           // @ts-ignore
@@ -2021,8 +2019,8 @@ export default class WebRTCClient extends Emitter {
       userAgentString: this.config.userAgentString || 'wazo-sdk',
       reconnectionAttempts: 10000,
       reconnectionDelay: 5,
-      // @ts-ignore
-      sessionDescriptionHandlerFactory: (session: Inviter | Invitation, options: SessionDescriptionHandlerFactoryOptions = {}) => {
+
+      sessionDescriptionHandlerFactory: (session: Session, options: SessionDescriptionHandlerFactoryOptions = {}) => {
         const uaLogger = session.userAgent.getLogger('sip.WazoSessionDescriptionHandler');
 
         const isWeb = this._isWeb();
@@ -2035,7 +2033,7 @@ export default class WebRTCClient extends Emitter {
             ...(options.peerConnectionConfiguration || {}),
           },
         };
-        return new WazoSessionDescriptionHandler(uaLogger, wazoMediaStreamFactory, sdhOptions, isWeb, session);
+        return new WazoSessionDescriptionHandler(uaLogger, wazoMediaStreamFactory, sdhOptions, isWeb, session as Inviter | Invitation);
       },
       transportOptions: {
         traceSip: uaOptionsOverrides?.traceSip || false,
@@ -2055,16 +2053,14 @@ export default class WebRTCClient extends Emitter {
             rtcpMuxPolicy: 'require',
             iceServers: WebRTCClient.getIceServers(this.config.host),
             ...this._getRtcOptions(),
-            // @ts-ignore
-            ...(configOverrides?.peerConnectionOptions || {}),
+            ...(uaOptionsOverrides?.peerConnectionOptions || {}),
           },
         },
         // Configuration used in SDH to create the PeerConnection
         peerConnectionConfiguration: {
           rtcpMuxPolicy: 'require',
           iceServers: WebRTCClient.getIceServers(this.config.host),
-          // @ts-ignore
-          ...(configOverrides?.peerConnectionOptions || {}),
+          ...(uaOptionsOverrides?.peerConnectionOptions || {}),
         },
       },
     };
