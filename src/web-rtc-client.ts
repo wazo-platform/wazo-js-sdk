@@ -70,7 +70,10 @@ const ON_DISCONNECTED = 'onDisconnected';
 export const events = [REGISTERED, UNREGISTERED, REGISTRATION_FAILED, INVITE];
 export const transportEvents = [CONNECTED, DISCONNECTED, TRANSPORT_ERROR, MESSAGE];
 export class CanceledCallError extends Error {}
+
 const MAX_REGISTER_TRIES = 5;
+// setting a 24hr timeout and letting the backend define the actual value
+const NO_ANSWER_TIMEOUT = 60 * 60 * 24; // in seconds
 
 export default class WebRTCClient extends Emitter {
   clientId: number;
@@ -2002,6 +2005,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     const uaOptions: UserAgentOptions = {
+      noAnswerTimeout: NO_ANSWER_TIMEOUT,
       authorizationUsername: this.config.authorizationUser,
       authorizationPassword: this.config.password,
       displayName: this.config.displayName,
