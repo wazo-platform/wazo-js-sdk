@@ -211,16 +211,16 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     // Closing senders via getLocalStreams
     // @ts-ignore
     this.peerConnection?.getLocalStreams().forEach(stream => {
-      stream.getTracks().forEach((track: MediaStreamTrack) => {
-        track.stop();
-      });
+      stream.getTracks()
+        .filter((track: MediaStreamTrack) => track.enabled)
+        .forEach((track: MediaStreamTrack) => track.stop());
     });
     // Closing receivers via getRemoteStreams
     // @ts-ignore
     this.peerConnection?.getRemoteStreams().forEach(stream => {
-      stream.getTracks().forEach((track: MediaStreamTrack) => {
-        track.stop();
-      });
+      stream.getTracks()
+        .filter((track: MediaStreamTrack) => track.enabled)
+        .forEach((track: MediaStreamTrack) => track.stop());
     });
 
     if (this._dataChannel) {

@@ -521,7 +521,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     try {
       if (this.currentScreenShare.stream) {
-        this.currentScreenShare.stream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
+        this.currentScreenShare.stream.getTracks()
+          .filter((track: MediaStreamTrack) => track.enabled)
+          .forEach((track: MediaStreamTrack) => track.stop());
       }
 
       if (restoreLocalStream) {
