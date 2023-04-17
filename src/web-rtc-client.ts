@@ -1395,9 +1395,9 @@ export default class WebRTCClient extends Emitter {
 
     // Release old video stream
     if (localStream) {
-      localStream.getVideoTracks().forEach(track => {
-        track.stop();
-      });
+      localStream.getVideoTracks()
+        .filter((track: MediaStreamTrack) => track.enabled)
+        .forEach((track: MediaStreamTrack) => track.stop());
     }
 
     const constraints = {
@@ -2337,7 +2337,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   _cleanupStream(stream: MediaStream): void {
-    stream.getTracks().forEach(track => track.stop());
+    stream.getTracks().filter(track => track.enabled).forEach(track => track.stop());
   }
 
   _toggleAudio(session: Inviter | Invitation, muteAudio: boolean): void {
