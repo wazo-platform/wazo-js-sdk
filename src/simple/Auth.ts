@@ -1,7 +1,19 @@
 /* eslint-disable max-classes-per-file */
 import Session from '../domain/Session';
 import { BACKEND_LDAP_USER, DEFAULT_BACKEND_USER, DETAULT_EXPIRATION } from '../api/auth';
-import getApiClient, { setCurrentServer, setApiToken, setRefreshToken, setApiClientId, setRefreshExpiration, setOnRefreshToken, setFetchOptions, setRefreshTenantId, setRefreshDomainName, setOnRefreshTokenError } from '../service/getApiClient';
+import getApiClient, {
+  setCurrentServer,
+  setApiToken,
+  setRefreshToken,
+  setApiClientId,
+  setRefreshExpiration,
+  setOnRefreshToken,
+  setFetchOptions,
+  setRefreshTenantId,
+  setRefreshDomainName,
+  setOnRefreshTokenError,
+  getFetchOptions,
+} from '../service/getApiClient';
 import IssueReporter from '../service/IssueReporter';
 import Wazo from './index';
 import SipLine from '../domain/SipLine';
@@ -215,6 +227,7 @@ class Auth implements IAuth {
     setRefreshToken(null);
     this.session = null;
     this.authenticated = false;
+    setFetchOptions({});
   }
 
   setOnRefreshToken(callback: (...args: Array<any>) => any) {
@@ -319,6 +332,7 @@ class Auth implements IAuth {
     }
 
     const session = rawSession;
+    this._setHttpUserUuidHeader(session);
 
     if (!session) {
       return null;
@@ -366,6 +380,25 @@ class Auth implements IAuth {
     Wazo.Websocket.open(this.host as string, session);
     this.session = session;
     return session;
+  }
+
+  async _setHttpUserUuidHeader(session: Session) {
+    const headers = {
+      ...(getFetchOptions()?.headers || {}),
+      'X-User-UUID': session.uuid,
+    };
+
+    try {
+      await getApiClient().client.head('auth/0.1/status', null, headers);
+
+      // If the previous request went well, it means that the header is accepted
+      setFetchOptions({
+        ...getFetchOptions(),
+        headers,
+      });
+    } catch (_) {
+      // Nothing to do
+    }
   }
 
 }
