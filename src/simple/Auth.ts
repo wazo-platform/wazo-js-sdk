@@ -215,12 +215,16 @@ class Auth implements IAuth {
       if (this.clientId && deleteRefreshToken) {
         await getApiClient().auth.deleteRefreshToken(this.clientId);
       }
-    } catch (e: any) { // Nothing to
+    } catch (e: any) {
+      // Nothing to
     }
 
     try {
-      await getApiClient().auth.logOut(this.session?.token || '');
-    } catch (e: any) { // Nothing to
+      if (this.session?.token) {
+        await getApiClient().auth.logOut(this.session.token);
+      }
+    } catch (e: any) {
+      // Nothing to
     }
 
     setApiToken(null);
