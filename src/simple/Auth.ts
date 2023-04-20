@@ -330,13 +330,35 @@ class Auth implements IAuth {
     return `${this.getFirstName()} ${this.getLastName()}`;
   }
 
+  async setHttpUserUuidHeader(uuid: string | null | undefined) {
+    if (!uuid) {
+      return;
+    }
+    const headers = {
+      ...(getFetchOptions()?.headers || {}),
+      'X-User-UUID': uuid,
+    };
+
+    try {
+      await getApiClient().client.head('auth/0.1/status', null, headers);
+
+      // If the previous request went well, it means that the header is accepted
+      setFetchOptions({
+        ...getFetchOptions(),
+        headers,
+      });
+    } catch (_) {
+      // Nothing to do
+    }
+  }
+
   async _onAuthenticated(rawSession: Session): Promise<Session | null> {
     if (this.authenticated && this.session) {
       return this.session;
     }
 
     const session = rawSession;
-    this._setHttpUserUuidHeader(session);
+    await this.setHttpUserUuidHeader(session.uuid);
 
     if (!session) {
       return null;
@@ -384,25 +406,6 @@ class Auth implements IAuth {
     Wazo.Websocket.open(this.host as string, session);
     this.session = session;
     return session;
-  }
-
-  async _setHttpUserUuidHeader(session: Session) {
-    const headers = {
-      ...(getFetchOptions()?.headers || {}),
-      'X-User-UUID': session.uuid,
-    };
-
-    try {
-      await getApiClient().client.head('auth/0.1/status', null, headers);
-
-      // If the previous request went well, it means that the header is accepted
-      setFetchOptions({
-        ...getFetchOptions(),
-        headers,
-      });
-    } catch (_) {
-      // Nothing to do
-    }
   }
 
 }
