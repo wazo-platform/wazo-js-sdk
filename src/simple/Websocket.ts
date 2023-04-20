@@ -66,6 +66,7 @@ class Websocket extends Emitter implements IWebsocket {
       token: session.token,
       events: ['*'],
       version: 2,
+      session,
     }, {
       rejectUnauthorized: false,
       binaryType: 'arraybuffer',

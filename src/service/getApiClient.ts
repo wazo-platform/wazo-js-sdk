@@ -53,6 +53,8 @@ export const setIsMobile = (isMobile: boolean, forServer: string | null | undefi
 export const setFetchOptions = (fetchOptions: Record<string, any>, forServer: string | null | undefined = null) => {
   global.wazoFetchOptions[String(forServer)] = fetchOptions;
 };
+export const getFetchOptions = (forServer: string | null | undefined = null) =>
+  (forServer ? global.wazoFetchOptions[forServer] : global.wazoFetchOptions.null) || global.wazoFetchOptions.null;
 
 const fillClient = (apiClient: WazoApiClient) => {
   const {

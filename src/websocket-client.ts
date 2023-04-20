@@ -1,5 +1,7 @@
 /* eslint-disable no-underscore-dangle */
 import ReconnectingWebSocket from 'reconnecting-websocket';
+
+import Session from './domain/Session';
 import Emitter from './utils/Emitter';
 import type { WebSocketMessage } from './types/WebSocketMessage';
 import IssueReporter from './service/IssueReporter';
@@ -18,6 +20,7 @@ type Arguments = {
   token: string;
   events?: Array<string>;
   version?: number;
+  session?: Session,
   heartbeat?: {
     delay: number;
     timeout: number;
@@ -99,6 +102,8 @@ const messageLogger = IssueReporter.loggerFor('wazo-ws-message');
 class WebSocketClient extends Emitter {
   initialized: boolean;
 
+  session?: Session;
+
   host: string | null | undefined;
 
   version: number | undefined;
@@ -130,6 +135,7 @@ class WebSocketClient extends Emitter {
    * @param events
    * @param version
    * @param heartbeat
+   * @param session
    * @param options @see https://github.com/pladaria/reconnecting-websocket#available-options
    */
   constructor({
@@ -138,12 +144,14 @@ class WebSocketClient extends Emitter {
     version,
     events,
     heartbeat,
+    session,
   }: Arguments, options: Record<string, any> = {
     host,
     token,
     version: 1,
     events: [],
     heartbeat: {},
+    session: null,
   }) {
     super();
     this.initialized = false;
@@ -153,6 +161,7 @@ class WebSocketClient extends Emitter {
     this.events = events;
     this.options = options;
     this.version = version;
+    this.session = session;
     this._boundOnHeartbeat = this._onHeartbeat.bind(this);
     const {
       delay,
@@ -424,7 +433,11 @@ class WebSocketClient extends Emitter {
       this.close();
     }
 
-    const url = `wss://${this.host || ''}/api/websocketd/?token=${this.token || ''}&version=${this.version}`;
+    let url = `wss://${this.host || ''}/api/websocketd/?token=${this.token || ''}&version=${this.version}`;
+    if (this.session) {
+      url += `&userUuid=${this.session.uuid}`;
+    }
+
     logger.info('Wazo WS url computed to reconnect', {
       url,
     });

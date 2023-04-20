@@ -19,7 +19,7 @@ type ConstructorParams = {
   token?: string | null;
   fetchOptions: Record<string, any> | null | undefined;
 };
-const methods = ['head', 'get', 'post', 'put', 'delete'];
+const methods = ['head', 'get', 'post', 'put', 'delete', 'options'];
 const logger = IssueReporter ? IssueReporter.loggerFor('api') : console;
 // Use a function here to be able to mock it in tests
 export const realFetch = () => {
@@ -75,6 +75,8 @@ export default class ApiRequester {
   put: (...args: Array<any>) => any;
 
   delete: (...args: Array<any>) => any;
+
+  options: (...args: Array<any>) => any;
 
   static successResponseParser(response: Record<string, any>): boolean {
     return response.status === 204 || response.status === 201 || response.status === 200;
@@ -163,7 +165,8 @@ export default class ApiRequester {
     const options = {
       method,
       body: newBody,
-      headers: { ...this.getHeaders(headers),
+      headers: {
+        ...this.getHeaders(headers),
         ...extraHeaders,
       },
       agent: this.agent,

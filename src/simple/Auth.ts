@@ -1,7 +1,19 @@
 /* eslint-disable max-classes-per-file */
 import Session from '../domain/Session';
 import { BACKEND_LDAP_USER, DEFAULT_BACKEND_USER, DETAULT_EXPIRATION } from '../api/auth';
-import getApiClient, { setCurrentServer, setApiToken, setRefreshToken, setApiClientId, setRefreshExpiration, setOnRefreshToken, setFetchOptions, setRefreshTenantId, setRefreshDomainName, setOnRefreshTokenError } from '../service/getApiClient';
+import getApiClient, {
+  setCurrentServer,
+  setApiToken,
+  setRefreshToken,
+  setApiClientId,
+  setRefreshExpiration,
+  setOnRefreshToken,
+  setFetchOptions,
+  setRefreshTenantId,
+  setRefreshDomainName,
+  setOnRefreshTokenError,
+  getFetchOptions,
+} from '../service/getApiClient';
 import IssueReporter from '../service/IssueReporter';
 import Wazo from './index';
 import SipLine from '../domain/SipLine';
@@ -203,18 +215,23 @@ class Auth implements IAuth {
       if (this.clientId && deleteRefreshToken) {
         await getApiClient().auth.deleteRefreshToken(this.clientId);
       }
-    } catch (e: any) { // Nothing to
+    } catch (e: any) {
+      // Nothing to
     }
 
     try {
-      await getApiClient().auth.logOut(this.session?.token || '');
-    } catch (e: any) { // Nothing to
+      if (this.session?.token) {
+        await getApiClient().auth.logOut(this.session.token);
+      }
+    } catch (e: any) {
+      // Nothing to
     }
 
     setApiToken(null);
     setRefreshToken(null);
     this.session = null;
     this.authenticated = false;
+    setFetchOptions({});
   }
 
   setOnRefreshToken(callback: (...args: Array<any>) => any) {
@@ -313,12 +330,35 @@ class Auth implements IAuth {
     return `${this.getFirstName()} ${this.getLastName()}`;
   }
 
+  async setHttpUserUuidHeader(uuid: string | null | undefined) {
+    if (!uuid) {
+      return;
+    }
+    const headers = {
+      ...(getFetchOptions()?.headers || {}),
+      'X-User-UUID': uuid,
+    };
+
+    try {
+      await getApiClient().client.head('auth/0.1/status', null, headers);
+
+      // If the previous request went well, it means that the header is accepted
+      setFetchOptions({
+        ...getFetchOptions(),
+        headers,
+      });
+    } catch (_) {
+      // Nothing to do
+    }
+  }
+
   async _onAuthenticated(rawSession: Session): Promise<Session | null> {
     if (this.authenticated && this.session) {
       return this.session;
     }
 
     const session = rawSession;
+    await this.setHttpUserUuidHeader(session.uuid);
 
     if (!session) {
       return null;
