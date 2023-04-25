@@ -222,6 +222,7 @@ export default class Session {
       state: state || '',
       status,
       backend: 'wazo',
+      source: 'default',
     });
   }
 
