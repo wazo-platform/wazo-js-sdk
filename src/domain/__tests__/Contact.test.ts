@@ -376,4 +376,13 @@ describe('Contact domain', () => {
     const contacts = Contact.parseMany(response, -1);
     expect(contacts).toEqual([parsedContact1, parsedContact2]);
   });
+  it('returns all contacts when parsing many contacts with a null limit', () => {
+    const response = {
+      ...genericContactResponse,
+      results: [contact1, contact2],
+    };
+
+    const contacts = Contact.parseMany(response, null);
+    expect(contacts).toEqual([parsedContact1, parsedContact2]);
+  });
 });

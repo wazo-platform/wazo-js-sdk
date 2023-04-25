@@ -52,7 +52,7 @@ type ContactSearchQueryParams = {
   uuid?: string;
 } | null;
 export default ((client: ApiRequester, baseUrl: string): DirD => ({
-  search: (context: string, term: string, limit = -1): Promise<Array<Contact>> => client.get(`${baseUrl}/directories/lookup/${context}`, {
+  search: (context: string, term: string, limit: (number | null) = null): Promise<Array<Contact>> => client.get(`${baseUrl}/directories/lookup/${context}`, {
     term,
   }).then((response: ContactsResponse) => Contact.parseMany(response, limit)),
   listPersonalContacts: (queryParams: ContactSearchQueryParams = null): Promise<Array<Contact>> => client.get(`${baseUrl}/personal`, queryParams).then((response: any) => Contact.parseManyPersonal(response.items)),
