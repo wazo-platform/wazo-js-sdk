@@ -331,7 +331,7 @@ export default class Contact {
       return [];
     }
 
-    const results = limit !== null && limit > 0 ? response.results.slice(offset, limit) : response.results.slice(offset);
+    const results = limit !== null && limit > 0 ? response.results.slice(offset, limit) : offset > 0 ? response.results.slice(offset) : response.results;
     return results.map(r => Contact.parse(r, response.column_types));
   }
 
