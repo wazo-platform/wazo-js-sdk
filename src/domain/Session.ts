@@ -72,6 +72,8 @@ type SessionArguments = {
 export default class Session {
   acl: string[];
 
+  contact?: Contact;
+
   token: string;
 
   refreshToken: string | null | undefined;
@@ -196,6 +198,31 @@ export default class Session {
 
   primaryCtiLine(): SipLine | null | undefined {
     return this.profile && (this.profile.sipLines || []).find(sipLine => sipLine && !sipLine.isWebRtc());
+  }
+
+  getContact(): Contact {
+    if (this.contact) {
+      return this.contact;
+    }
+
+    const { email, firstName, lastName, mobileNumber, state, status } = this.profile || {};
+    const number = this.primaryNumber() || '';
+    const numbers = [{ label: 'primary', number }];
+
+    if (mobileNumber) {
+      numbers.push({ label: 'mobile', number: mobileNumber });
+    }
+
+    return new Contact({
+      uuid: this.uuid || '',
+      email,
+      name: `${firstName} ${lastName}`,
+      number,
+      numbers,
+      state: state || '',
+      status,
+      backend: 'wazo',
+    });
   }
 
   primaryContext(): string {
