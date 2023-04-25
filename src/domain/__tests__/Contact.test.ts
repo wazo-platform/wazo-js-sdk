@@ -337,7 +337,7 @@ describe('Contact domain', () => {
       results: [contact1, contact2],
     };
 
-    const contacts = Contact.parseMany(response, 1000);
+    const contacts = Contact.parseMany(response, 0, 1000);
     expect(contacts).toEqual([parsedContact1, parsedContact2]);
   });
   it('returns limited contacts when parsing many contacts with a smaller limit than number of results', () => {
@@ -346,7 +346,7 @@ describe('Contact domain', () => {
       results: [contact1],
     };
 
-    const contacts = Contact.parseMany(response, 1);
+    const contacts = Contact.parseMany(response, 0, 1);
     expect(contacts).toEqual([parsedContact1]);
   });
   it('returns all contacts when parsing many contacts with same limit than number of results', () => {
@@ -355,7 +355,7 @@ describe('Contact domain', () => {
       results: [contact1, contact2],
     };
 
-    const contacts = Contact.parseMany(response, 2);
+    const contacts = Contact.parseMany(response, 0, 2);
     expect(contacts).toEqual([parsedContact1, parsedContact2]);
   });
   it('returns an empty array when parsing many contact with limit of 0', () => {
@@ -364,7 +364,7 @@ describe('Contact domain', () => {
       results: [contact1, contact2],
     };
 
-    const contacts = Contact.parseMany(response, 0);
+    const contacts = Contact.parseMany(response, 0, 0);
     expect(contacts).toEqual([]);
   });
   it('returns all contacts when parsing many contacts with a negative limit', () => {
@@ -373,7 +373,7 @@ describe('Contact domain', () => {
       results: [contact1, contact2],
     };
 
-    const contacts = Contact.parseMany(response, -1);
+    const contacts = Contact.parseMany(response, 0, -1);
     expect(contacts).toEqual([parsedContact1, parsedContact2]);
   });
   it('returns all contacts when parsing many contacts with a null limit', () => {
@@ -382,7 +382,16 @@ describe('Contact domain', () => {
       results: [contact1, contact2],
     };
 
-    const contacts = Contact.parseMany(response, null);
+    const contacts = Contact.parseMany(response, 0, null);
     expect(contacts).toEqual([parsedContact1, parsedContact2]);
+  });
+  it('returns all contacts after the first one when parsing many contacts with an offset of 1', () => {
+    const response = {
+      ...genericContactResponse,
+      results: [contact1, contact2],
+    };
+
+    const contacts = Contact.parseMany(response, 1, null);
+    expect(contacts).toEqual([parsedContact2]);
   });
 });

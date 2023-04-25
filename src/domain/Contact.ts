@@ -326,12 +326,12 @@ export default class Contact {
     return aLastName.localeCompare(bLastName);
   }
 
-  static parseMany(response: ContactsResponse, limit: (number | null) = null): Array<Contact> {
+  static parseMany(response: ContactsResponse, offset = 0, limit: (number | null) = null): Array<Contact> {
     if (!response || !response.results || limit === 0) {
       return [];
     }
 
-    const results = limit !== null && limit > 0 ? response.results.slice(0, limit) : response.results;
+    const results = limit !== null && limit > 0 ? response.results.slice(offset, limit) : response.results.slice(offset);
     return results.map(r => Contact.parse(r, response.column_types));
   }
 
