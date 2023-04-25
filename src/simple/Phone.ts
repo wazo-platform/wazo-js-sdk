@@ -12,6 +12,7 @@ import IssueReporter from '../service/IssueReporter';
 import Emitter, { IEmitter } from '../utils/Emitter';
 import Wazo from './index';
 import SFUNotAvailableError from '../domain/SFUNotAvailableError';
+import { ConnectionOptions } from '../domain/types';
 
 const logger = IssueReporter.loggerFor('simple-phone');
 const sipLogger = IssueReporter.loggerFor('sip.js');
@@ -70,8 +71,8 @@ export interface IPhone extends IEmitter {
   MESSAGE_TYPE_CHAT: string;
   MESSAGE_TYPE_SIGNAL: string;
 
-  connect: (options: Record<string, any>, sipLine?: SipLine | null | undefined) => Promise<void>;
-  connectWithCredentials: (server: string, sipLine: SipLine, displayName: string, rawOptions: Record<string, any>) => void;
+  connect: (options: Partial<ConnectionOptions>, sipLine?: SipLine | null | undefined) => Promise<void>;
+  connectWithCredentials: (server: string, sipLine: SipLine, displayName: string, rawOptions: Partial<ConnectionOptions>) => void;
   disconnect: () => Promise<void>;
   call: (extension: string, withCamera: boolean, rawSipLine: SipLine | null | undefined, audioOnly: boolean, conference: boolean) => Promise<CallSession | null | undefined>;
   hangup: (callSession: CallSession) => Promise<boolean> ;
@@ -233,7 +234,7 @@ class Phone extends Emitter implements IPhone {
     this.SessionState = SessionState;
   }
 
-  async connect(options: Record<string, any> = {}, sipLine: SipLine | null | undefined = null): Promise<void> {
+  async connect(options: Partial<ConnectionOptions> = {}, sipLine: SipLine | null | undefined = null): Promise<void> {
     if (this.phone) {
       // Already connected
       // let's update media constraints if they're being fed
@@ -261,7 +262,12 @@ class Phone extends Emitter implements IPhone {
     this.connectWithCredentials(server, this.sipLine, session.displayName(), options);
   }
 
-  connectWithCredentials(server: string, sipLine: SipLine, displayName: string, rawOptions: Record<string, any> = {}): void {
+  connectWithCredentials(
+    server: string,
+    sipLine: SipLine,
+    displayName: string,
+    rawOptions: Partial<ConnectionOptions> = {},
+  ): void {
     if (this.phone) {
       // Already connected
       return;
