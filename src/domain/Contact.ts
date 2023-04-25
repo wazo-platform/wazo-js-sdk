@@ -326,12 +326,13 @@ export default class Contact {
     return aLastName.localeCompare(bLastName);
   }
 
-  static parseMany(response: ContactsResponse): Array<Contact> {
-    if (!response || !response.results) {
+  static parseMany(response: ContactsResponse, limit = -1): Array<Contact> {
+    if (!response || !response.results || limit === 0) {
       return [];
     }
 
-    return response.results.map(r => Contact.parse(r, response.column_types));
+    const results = limit > 0 ? response.results.slice(0, limit) : response.results;
+    return results.map(r => Contact.parse(r, response.column_types));
   }
 
   static manyGraphQlWithNumbersParser(numbers: string[]): (...args: Array<any>) => any {
