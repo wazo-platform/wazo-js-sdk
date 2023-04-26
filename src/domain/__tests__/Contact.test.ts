@@ -1,5 +1,138 @@
 import Contact from '../Contact';
 
+const genericContactResponse = {
+  column_types: [
+    'name',
+    'number',
+    'callable',
+    'voicemail',
+    'favorite',
+    'email',
+    'personal',
+  ],
+  term: 'a',
+  column_headers: [
+    'Nom',
+    'Num\u00e9ro',
+    'Mobile',
+    'Bo\u00eete vocale',
+    'Favoris',
+    'E-mail',
+    'Personnel',
+  ],
+  results: [],
+};
+
+const contact1 = {
+  source: 'internal',
+  column_values: [
+    'Jonathan Lessard',
+    '8020',
+    '06800880',
+    null,
+    false,
+    'jonathan@example.com',
+    false,
+  ],
+  backend: 'wazo',
+  relations: {
+    user_id: 8,
+    xivo_id: '6cd695d2-cdb9-4444-8b2d-27425ab85fa8',
+    agent_id: null,
+    endpoint_id: 8,
+    user_uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54',
+    source_entry_id: '8',
+  },
+};
+
+const contact2 = {
+  source: 'internal',
+  column_values: [
+    'John Doe',
+    '8021',
+    '06800881',
+    null,
+    false,
+    'john@example.com',
+    false,
+  ],
+  backend: 'wazo',
+  relations: {
+    user_id: 9,
+    xivo_id: '6cd695d2-cdb9-4444-8b2d-27425ab85fa9',
+    agent_id: null,
+    endpoint_id: 9,
+    user_uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b55',
+    source_entry_id: '9',
+  },
+};
+
+const parsedContact1 = new Contact({
+  name: 'Jonathan Lessard',
+  number: '8020',
+  numbers: [
+    {
+      label: 'primary',
+      number: '8020',
+    },
+    {
+      label: 'secondary',
+      number: '06800880',
+    },
+  ],
+  favorited: false,
+  email: 'jonathan@example.com',
+  emails: [
+    {
+      label: 'primary',
+      email: 'jonathan@example.com',
+    },
+  ],
+  address: '',
+  entreprise: '',
+  birthday: '',
+  note: '',
+  endpointId: 8,
+  personal: false,
+  source: 'internal',
+  sourceId: '8',
+  uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54',
+  backend: 'wazo',
+});
+
+const parsedContact2 = new Contact({
+  name: 'John Doe',
+  number: '8021',
+  numbers: [
+    {
+      label: 'primary',
+      number: '8021',
+    },
+    {
+      label: 'secondary',
+      number: '06800881',
+    },
+  ],
+  favorited: false,
+  email: 'john@example.com',
+  emails: [
+    {
+      label: 'primary',
+      email: 'john@example.com',
+    },
+  ],
+  address: '',
+  entreprise: '',
+  birthday: '',
+  note: '',
+  endpointId: 9,
+  personal: false,
+  source: 'internal',
+  sourceId: '9',
+  uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b55',
+  backend: 'wazo',
+});
+
 describe('Contact domain', () => {
   it('is extern when given no uuid', () => {
     const boba = new Contact({});
@@ -132,10 +265,7 @@ describe('Contact domain', () => {
     const contact = new Contact({
       name: 'John Smith',
     });
-    const {
-      firstName,
-      lastName,
-    } = contact.separateName();
+    const { firstName, lastName } = contact.separateName();
     expect(firstName).toBe('John');
     expect(lastName).toBe('Smith');
   });
@@ -143,10 +273,7 @@ describe('Contact domain', () => {
     const contact = new Contact({
       name: 'John  Smith',
     });
-    const {
-      firstName,
-      lastName,
-    } = contact.separateName();
+    const { firstName, lastName } = contact.separateName();
     expect(firstName).toBe('John');
     expect(lastName).toBe('Smith');
   });
@@ -172,67 +299,99 @@ describe('Contact domain', () => {
   });
   it('can parse a plain contact to domain', () => {
     const response = {
-      column_types: ['name', 'number', 'callable', 'voicemail', 'favorite', 'email', 'personal'],
-      term: 'a',
-      column_headers: ['Nom', 'Num\u00e9ro', 'Mobile', 'Bo\u00eete vocale', 'Favoris', 'E-mail', 'Personnel'],
-      results: [{
-        source: 'internal',
-        column_values: ['Jonathan Lessard', '8020', '06800880', null, false, 'contact@nexapp.ca', false],
-        backend: 'wazo',
-        relations: {
-          user_id: 8,
-          xivo_id: '6cd695d2-cdb9-4444-8b2d-27425ab85fa8',
-          agent_id: null,
-          endpoint_id: 8,
-          user_uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54',
-          source_entry_id: '8',
-        },
-      }],
+      ...genericContactResponse,
+      results: [contact1],
     };
     const contact = Contact.parse(response.results[0], response.column_types);
-    expect(contact).toEqual(new Contact({
-      name: 'Jonathan Lessard',
-      number: '8020',
-      numbers: [{
-        label: 'primary',
-        number: '8020',
-      }, {
-        label: 'secondary',
-        number: '06800880',
-      }],
-      favorited: false,
-      email: 'contact@nexapp.ca',
-      emails: [{
-        label: 'primary',
-        email: 'contact@nexapp.ca',
-      }],
-      address: '',
-      entreprise: '',
-      birthday: '',
-      note: '',
-      endpointId: 8,
-      personal: false,
-      source: 'internal',
-      sourceId: '8',
-      uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54',
-      backend: 'wazo',
-    }));
+    expect(contact).toEqual(parsedContact1);
   });
   it('should merge 2 contact', () => {
-    const contact = new Contact({
+    const noBirthdayContact = new Contact({
       uuid: 'uuid-12345',
       lastActivity: 'yesterday',
       // @ts-expect-error
       birthday: null,
     });
-    const contact2 = new Contact({
+    const noLastActivityContact = new Contact({
       uuid: 'uuid-12345',
       // @ts-expect-error
       lastActivity: null,
       birthday: 'tomorrow',
     });
-    const result = contact.merge(contact2);
+    const result = noBirthdayContact.merge(noLastActivityContact);
     expect(result.lastActivity).toBe('yesterday');
     expect(result.birthday).toBe('tomorrow');
+  });
+  it('returns all contacts when parsing many contacts with no limit', () => {
+    const response = {
+      ...genericContactResponse,
+      results: [contact1, contact2],
+    };
+
+    const contacts = Contact.parseMany(response);
+    expect(contacts).toEqual([parsedContact1, parsedContact2]);
+  });
+  it('returns all contacts when parsing many contacts with a higher limit than number of results', () => {
+    const response = {
+      ...genericContactResponse,
+      results: [contact1, contact2],
+    };
+
+    const contacts = Contact.parseMany(response, 0, 1000);
+    expect(contacts).toEqual([parsedContact1, parsedContact2]);
+  });
+  it('returns limited contacts when parsing many contacts with a smaller limit than number of results', () => {
+    const response = {
+      ...genericContactResponse,
+      results: [contact1],
+    };
+
+    const contacts = Contact.parseMany(response, 0, 1);
+    expect(contacts).toEqual([parsedContact1]);
+  });
+  it('returns all contacts when parsing many contacts with same limit than number of results', () => {
+    const response = {
+      ...genericContactResponse,
+      results: [contact1, contact2],
+    };
+
+    const contacts = Contact.parseMany(response, 0, 2);
+    expect(contacts).toEqual([parsedContact1, parsedContact2]);
+  });
+  it('returns an empty array when parsing many contact with limit of 0', () => {
+    const response = {
+      ...genericContactResponse,
+      results: [contact1, contact2],
+    };
+
+    const contacts = Contact.parseMany(response, 0, 0);
+    expect(contacts).toEqual([]);
+  });
+  it('returns all contacts when parsing many contacts with a negative limit', () => {
+    const response = {
+      ...genericContactResponse,
+      results: [contact1, contact2],
+    };
+
+    const contacts = Contact.parseMany(response, 0, -1);
+    expect(contacts).toEqual([parsedContact1, parsedContact2]);
+  });
+  it('returns all contacts when parsing many contacts with a null limit', () => {
+    const response = {
+      ...genericContactResponse,
+      results: [contact1, contact2],
+    };
+
+    const contacts = Contact.parseMany(response, 0, null);
+    expect(contacts).toEqual([parsedContact1, parsedContact2]);
+  });
+  it('returns all contacts after the first one when parsing many contacts with an offset of 1', () => {
+    const response = {
+      ...genericContactResponse,
+      results: [contact1, contact2],
+    };
+
+    const contacts = Contact.parseMany(response, 1, null);
+    expect(contacts).toEqual([parsedContact2]);
   });
 });

@@ -833,14 +833,14 @@ client.confd.listApplications();
 
 Use Dird to interact with directories.
 ```js
-client.dird.search(context, term);
+client.dird.search(context: string, term: string, offset: number, limit: number);
 client.dird.listPersonalContacts();
-client.dird.addContact(newContact);
-client.dird.editContact(contact);
-client.dird.deleteContact(contactUuid);
-client.dird.listFavorites(context);
-client.dird.markAsFavorite(source, sourceId);
-client.dird.removeFavorite(source, sourceId);
+client.dird.addContact(newContact: NewContact);
+client.dird.editContact(contact: Contact);
+client.dird.deleteContact(contactUuid: UUID);
+client.dird.listFavorites(context: string);
+client.dird.markAsFavorite(source: string, sourceId: string);
+client.dird.removeFavorite(source: string, sourceId: string);
 ```
 
 #### Agentd
