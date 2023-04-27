@@ -50,7 +50,8 @@
         "default": "./lib/index.js"
       }
     },
-    "./lib/simple": "./lib/simple/index.js"
+    "./lib/simple": "./lib/simple/index.js",
+    "./dist/wazo-sdk": "./dist/wazo-sdk.js"
   },
   "dependencies": {
     "events": "^3.3.0",
