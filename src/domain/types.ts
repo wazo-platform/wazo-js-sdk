@@ -245,6 +245,7 @@ export type WebRtcConfig = {
   heartbeatTimeout?: number;
   maxHeartbeats?: number;
   skipRegister?: boolean;
+  userUuid?: string,
 }; // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
 
 export type ConnectionOptions = WebRtcConfig & {

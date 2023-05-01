@@ -234,7 +234,8 @@ class Phone extends Emitter implements IPhone {
     this.SessionState = SessionState;
   }
 
-  async connect(options: Partial<ConnectionOptions> = {}, sipLine: SipLine | null | undefined = null): Promise<void> {
+  async connect(rawOptions: Partial<ConnectionOptions> = {}, sipLine: SipLine | null | undefined = null): Promise<void> {
+    const options = rawOptions;
     if (this.phone) {
       // Already connected
       // let's update media constraints if they're being fed
@@ -258,6 +259,8 @@ class Phone extends Emitter implements IPhone {
     if (!this.sipLine) {
       throw new Error('Sorry, no sip lines found for this user');
     }
+
+    options.userUuid = session.uuid || '';
 
     this.connectWithCredentials(server, this.sipLine, session.displayName(), options);
   }
