@@ -2001,6 +2001,7 @@ export default class WebRTCClient extends Emitter {
       [host] = webSocketSip;
       port = Number(webSocketSip[1]);
     }
+    const { userUuid } = this.config;
 
     const uaOptions: UserAgentOptions = {
       noAnswerTimeout: NO_ANSWER_TIMEOUT,
@@ -2037,7 +2038,7 @@ export default class WebRTCClient extends Emitter {
       },
       transportOptions: {
         traceSip: uaOptionsOverrides?.traceSip || false,
-        wsServers: `wss://${host}:${port}/api/asterisk/ws`,
+        wsServers: `wss://${host}:${port}/api/asterisk/ws${userUuid ? `?userUuid=${userUuid}` : ''}`,
       },
       sessionDescriptionHandlerFactoryOptions: {
         modifiers: [replaceLocalIpModifier],
