@@ -490,19 +490,32 @@ export default class WebRTCClient extends Emitter {
       registerer: !!this.registerer,
     });
 
-    if (!this.registerer) {
-      return Promise.resolve();
-    }
-
     try {
-      return this.registerer.unregister().then(() => {
-        logger.info('sdk webrtc unregistered', { clientId: this.clientId });
+      return new Promise((resolve, reject) => {
+        if (!this.registerer) {
+          return resolve();
+        }
 
-        this._cleanupRegister();
-      }).catch(e => {
-        logger.error('sdk webrtc unregistering, promise error', e);
+        const onRegisterStateChange = (state: string) => {
+          if (state === RegistererState.Unregistered) {
+            logger.info('sdk webrtc unregistered', { clientId: this.clientId });
+            if (this.registerer) {
+              this.registerer.stateChange.addListener(onRegisterStateChange);
+            }
+            this._cleanupRegister();
 
-        this._cleanupRegister();
+            resolve();
+          }
+        };
+
+        this.registerer.stateChange.addListener(onRegisterStateChange);
+
+        this.registerer.unregister().then().catch(e => {
+          logger.error('sdk webrtc unregistering, promise error', e);
+
+          this._cleanupRegister();
+          reject();
+        });
       });
     } catch (e: any) {
       logger.error('sdk webrtc unregistering, error', e);

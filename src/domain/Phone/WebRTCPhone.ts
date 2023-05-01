@@ -1371,12 +1371,15 @@ export default class WebRTCPhone extends Emitter implements Phone {
     logger.info('WebRTC close');
 
     try {
-      await Promise.race([this.unregister(), new Promise((resolve, reject) => setTimeout(() => reject(new Error('Unregister, timed out')), 3000))]);
+      await Promise.race([
+        this.unregister(),
+        new Promise((resolve, reject) => setTimeout(() => reject(new Error('Unregister, timed out')), 3000)),
+      ]);
     } catch (e: any) {
       logger.error('WebRTC close, unregister error', e);
     }
 
-    this.client.close(force);
+    await this.client.close(force);
     this.unbind();
     this.incomingSessions = [];
     this.currentSipSession = undefined;
