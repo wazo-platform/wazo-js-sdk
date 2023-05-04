@@ -14,7 +14,7 @@ const ERROR = 'error';
 const CONSOLE_METHODS = [INFO, LOG, WARN, ERROR];
 const LOG_LEVELS = [TRACE, DEBUG, INFO, LOG, WARN, ERROR];
 const CATEGORY_PREFIX = 'logger-category=';
-const MAX_REMOTE_RETRY = 100;
+const MAX_REMOTE_RETRY = 10;
 
 const addLevelsTo = (instance: Record<string, any>, withMethods = false) => {
   instance.TRACE = TRACE;
@@ -364,6 +364,14 @@ class IssueReporter {
     const isSecure = +port === 443;
     const url = `http${isSecure ? 's' : ''}://${host}${isSecure ? '' : `:${port}`}/${tag}`;
     const body = Array.isArray(payload) ? `[${payload.map(this._boundParseLoggerBody).join(',')}]` : this._parseLoggerBody(payload as Record<string, any>);
+    const waitfn = (attempt: number, initial = 5000, maxWait = 50000) => {
+      // min wait is initial(attempt = 0)
+      // later retries are randomly distributed between initial wait and exponential
+      const base = 1.5;
+      const wait = Math.min( initial * base ** attempt, maxWait);
+      const jitterWait = Math.max(initial, Math.random() * wait);
+      return jitterWait;
+    };
 
     realFetch()(url, {
       method: 'POST',
@@ -376,6 +384,7 @@ class IssueReporter {
       // @ts-ignore
       e.skipSendToRemote = true;
       this.log('error', this._makeCategory('grafana'), 'Sending log to grafana, error', e);
+      const wait = waitfn(retry);
       setTimeout(() => {
         if (Array.isArray(payload)) {
           payload = payload.map(message => this._writeRetryCount(message, retry + 1));
@@ -384,7 +393,7 @@ class IssueReporter {
         }
 
         this._sendDebugToGrafana(payload, retry + 1);
-      }, 5000 + retry * 1000);
+      }, wait);
     });
   }
 
