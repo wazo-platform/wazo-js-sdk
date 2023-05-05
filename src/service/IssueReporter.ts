@@ -350,6 +350,15 @@ class IssueReporter {
     }
   }
 
+  _computeRetryDelay(attempt: number, initial = 5000, maxWait = 50000){
+    // min wait is initial(attempt = 0)
+    // later retries are randomly distributed between initial wait and exponential
+    const base = 1.5;
+    const wait = Math.min( initial * base ** attempt, maxWait);
+    const jitterWait = Math.max(initial, Math.random() * wait);
+    return jitterWait;
+  }
+
   _sendDebugToGrafana(payload: string | Record<string, any> | Record<string, any>[], retry = 0) {
     if (!this.remoteClientConfiguration || retry >= MAX_REMOTE_RETRY) {
       return;
@@ -364,14 +373,7 @@ class IssueReporter {
     const isSecure = +port === 443;
     const url = `http${isSecure ? 's' : ''}://${host}${isSecure ? '' : `:${port}`}/${tag}`;
     const body = Array.isArray(payload) ? `[${payload.map(this._boundParseLoggerBody).join(',')}]` : this._parseLoggerBody(payload as Record<string, any>);
-    const waitfn = (attempt: number, initial = 5000, maxWait = 50000) => {
-      // min wait is initial(attempt = 0)
-      // later retries are randomly distributed between initial wait and exponential
-      const base = 1.5;
-      const wait = Math.min( initial * base ** attempt, maxWait);
-      const jitterWait = Math.max(initial, Math.random() * wait);
-      return jitterWait;
-    };
+    
 
     realFetch()(url, {
       method: 'POST',
@@ -384,7 +386,7 @@ class IssueReporter {
       // @ts-ignore
       e.skipSendToRemote = true;
       this.log('error', this._makeCategory('grafana'), 'Sending log to grafana, error', e);
-      const wait = waitfn(retry);
+      const wait = this._computeRetryDelay(retry);
       setTimeout(() => {
         if (Array.isArray(payload)) {
           payload = payload.map(message => this._writeRetryCount(message, retry + 1));
