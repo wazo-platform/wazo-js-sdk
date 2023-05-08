@@ -14,7 +14,7 @@ const ERROR = 'error';
 const CONSOLE_METHODS = [INFO, LOG, WARN, ERROR];
 const LOG_LEVELS = [TRACE, DEBUG, INFO, LOG, WARN, ERROR];
 const CATEGORY_PREFIX = 'logger-category=';
-const MAX_REMOTE_RETRY = 100;
+const MAX_REMOTE_RETRY = 10;
 
 const addLevelsTo = (instance: Record<string, any>, withMethods = false) => {
   instance.TRACE = TRACE;
@@ -350,6 +350,15 @@ class IssueReporter {
     }
   }
 
+  _computeRetryDelay(attempt: number, initial = 1000, maxWait = 50000) {
+    // min wait is initial(attempt = 0)
+    // later retries are randomly distributed between initial wait and exponential
+    const base = 1.5;
+    const wait = Math.min(initial * base ** attempt, maxWait);
+    const jitterWait = Math.max(initial, Math.random() * wait);
+    return jitterWait;
+  }
+
   _sendDebugToGrafana(payload: string | Record<string, any> | Record<string, any>[], retry = 0) {
     if (!this.remoteClientConfiguration || retry >= MAX_REMOTE_RETRY) {
       return;
@@ -376,6 +385,8 @@ class IssueReporter {
       // @ts-ignore
       e.skipSendToRemote = true;
       this.log('error', this._makeCategory('grafana'), 'Sending log to grafana, error', e);
+      // wait at least 1 second, at most 50 seconds
+      const wait = this._computeRetryDelay(retry, 1000, 50000);
       setTimeout(() => {
         if (Array.isArray(payload)) {
           payload = payload.map(message => this._writeRetryCount(message, retry + 1));
@@ -384,7 +395,7 @@ class IssueReporter {
         }
 
         this._sendDebugToGrafana(payload, retry + 1);
-      }, 5000 + retry * 1000);
+      }, wait);
     });
   }
 

@@ -110,4 +110,18 @@ describe('IssueReporter', () => {
       _retry: 1,
     });
   });
+
+  it('retry delay', () => {
+    expect(IssueReporter._computeRetryDelay(0, 1000, 50000)).toBe(1000);
+    expect(IssueReporter._computeRetryDelay(1, 1000, 50000)).toBeGreaterThanOrEqual(1000);
+    const samples = [];
+    for (let i = 0; i <= 10; i++) {
+      samples.push(IssueReporter._computeRetryDelay(i, 1000, 50000));
+    }
+    const min = Math.min(...samples);
+    expect(min).toBe(1000);
+    const max = Math.max(...samples);
+    expect(max).toBeLessThanOrEqual(50000);
+  });
+
 });
