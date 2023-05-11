@@ -453,11 +453,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
         return this.eventEmitter.emit(ON_AUDIO_STREAM, stream);
       }
 
-      // not sure this does anything
-      if (kind === 'video') {
-        event.track.enabled = false;
-      }
-
       return this.eventEmitter.emit(ON_VIDEO_STREAM, stream, event.track.id, event, sipSession);
     };
 
