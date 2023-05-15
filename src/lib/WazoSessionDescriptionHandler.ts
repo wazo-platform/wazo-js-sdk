@@ -208,20 +208,24 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       return;
     }
 
-    // Closing senders via getLocalStreams
+    // Closing senders via getLocalStreams, `getLocalStreams` is deprecated, we have to check if it exists.
     // @ts-ignore
-    this.peerConnection?.getLocalStreams().forEach(stream => {
-      stream.getTracks()
-        .filter((track: MediaStreamTrack) => track.enabled)
-        .forEach((track: MediaStreamTrack) => track.stop());
-    });
-    // Closing receivers via getRemoteStreams
-    // @ts-ignore
-    this.peerConnection?.getRemoteStreams().forEach(stream => {
-      stream.getTracks()
-        .filter((track: MediaStreamTrack) => track.enabled)
-        .forEach((track: MediaStreamTrack) => track.stop());
-    });
+    if (this.peerConnection?.getLocalStreams) {
+      // @ts-ignore
+      this.peerConnection?.getLocalStreams().forEach(stream => {
+        stream.getTracks()
+          .filter((track: MediaStreamTrack) => track.enabled)
+          .forEach((track: MediaStreamTrack) => track.stop());
+      });
+
+      // Closing receivers via getRemoteStreams
+      // @ts-ignore
+      this.peerConnection?.getRemoteStreams().forEach(stream => {
+        stream.getTracks()
+          .filter((track: MediaStreamTrack) => track.enabled)
+          .forEach((track: MediaStreamTrack) => track.stop());
+      });
+    }
 
     if (this._dataChannel) {
       this._dataChannel.close();
