@@ -1789,7 +1789,7 @@ export default class WebRTCClient extends Emitter {
       return;
     }
 
-    remoteStream.getTracks().forEach(track => {
+    remoteStream.getVideoTracks().forEach(track => {
       remoteStream.removeTrack(track);
     });
 
