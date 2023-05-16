@@ -5,6 +5,8 @@
 
 /* eslint-disable import/no-dynamic-require */
 import { Base64 } from 'js-base64';
+import { AbortController } from 'node-abort-controller';
+
 import BadResponse from '../domain/BadResponse';
 import ServerError from '../domain/ServerError';
 import isMobile from './isMobile';
@@ -18,9 +20,12 @@ type ConstructorParams = {
   refreshTokenCallback: (...args: Array<any>) => any;
   token?: string | null;
   fetchOptions: Record<string, any> | null | undefined;
+  requestTimeout?: number | null;
 };
 const methods = ['head', 'get', 'post', 'put', 'delete', 'options'];
 const logger = IssueReporter ? IssueReporter.loggerFor('api') : console;
+const REQUEST_TIMEOUT_MS = 300 * 1000; // 300s like the Chrome engine default value.
+
 // Use a function here to be able to mock it in tests
 export const realFetch = () => {
   if (typeof fetch !== 'undefined') {
@@ -38,7 +43,7 @@ export const realFetch = () => {
   }
 
   // nodejs
-  // this package is disable for react-native in package.json because it requires nodejs modules
+  // this package is disabled for react-native in package.json because it requires nodejs modules
   // Used to trick the optimizer to avoid requiring `node-fetch/lib/index` directly
   // It causes to require it on browsers when delivered by a nodejs engine (cf: vitejs).
   try {
@@ -65,6 +70,8 @@ export default class ApiRequester {
   refreshTokenPromise: Promise<any> | null | undefined;
 
   shouldLogErrors: boolean;
+
+  requestTimeout: number;
 
   head: (...args: Array<any>) => any;
 
@@ -102,6 +109,7 @@ export default class ApiRequester {
     agent = null,
     token = null,
     fetchOptions,
+    requestTimeout = REQUEST_TIMEOUT_MS,
   }: ConstructorParams) {
     this.server = server;
     this.agent = agent;
@@ -109,6 +117,7 @@ export default class ApiRequester {
     this.refreshTokenCallback = refreshTokenCallback;
     this.refreshTokenPromise = null;
     this.fetchOptions = fetchOptions || {};
+    this.requestTimeout = requestTimeout || REQUEST_TIMEOUT_MS;
 
     if (token) {
       this.token = token;
@@ -124,6 +133,10 @@ export default class ApiRequester {
         return this.call.call(this, ...args);
       };
     });
+  }
+
+  setRequestTimeout(requestTimeout: number) {
+    this.requestTimeout = requestTimeout;
   }
 
   setTenant(tenant: string | null | undefined) {
@@ -160,11 +173,13 @@ export default class ApiRequester {
     const newParse = hasEmptyResponse ? ApiRequester.successResponseParser : parse;
     const fetchOptions = { ...(this.fetchOptions || {}),
     };
+    const controller = new AbortController();
     const extraHeaders = fetchOptions.headers || {};
     delete fetchOptions.headers;
     const options = {
       method,
       body: newBody,
+      signal: controller ? controller.signal : null,
       headers: {
         ...this.getHeaders(headers),
         ...extraHeaders,
@@ -181,7 +196,7 @@ export default class ApiRequester {
     }
 
     const start = new Date();
-    return realFetch()(url, options).then((response: any) => {
+    const requestPromise = realFetch()(url, options).then((response: any) => {
       const contentType = response.headers.get('content-type') || '';
       const isJson = contentType.indexOf('application/json') !== -1;
       IssueReporter.logRequest(url, options, response, start);
@@ -223,6 +238,15 @@ export default class ApiRequester {
 
       throw error;
     });
+
+    const requestTimeout = new Promise((resolve, reject) => {
+      setTimeout(() => {
+        controller.abort();
+        reject(new Error(`Request timed out after ${this.requestTimeout} ms`));
+      }, this.requestTimeout);
+    });
+
+    return Promise.race([requestPromise, requestTimeout]);
   }
 
   _checkTokenExpired(response: Record<string, any>, err: Record<string, any>) {

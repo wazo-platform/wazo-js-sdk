@@ -15,6 +15,7 @@ global.wazoOnRefreshTokenError = global.wazoOnRefreshTokenError || {};
 global.wazoRefreshExpiration = global.wazoRefreshExpiration || {};
 global.wazoRefreshBackend = global.wazoRefreshBackend || {};
 global.wazoIsMobile = global.wazoIsMobile || {};
+global.wazoRequestApiTimeout = global.wazoRequestApiTimeout || {};
 global.wazoFetchOptions = global.wazoFetchOptions || {};
 export const setApiClientId = (clientId: string, forServer: string | null | undefined = null) => {
   global.wazoClientId[String(forServer)] = clientId;
@@ -50,6 +51,9 @@ export const setRefreshBackend = (refreshBackend: number, forServer: string | nu
 export const setIsMobile = (isMobile: boolean, forServer: string | null | undefined = null) => {
   global.wazoIsMobile[String(forServer)] = isMobile;
 };
+export const setRequestTimeout = (requestTimeout: number, forServer: string | null | undefined = null) => {
+  global.wazoRequestApiTimeout[String(forServer)] = requestTimeout;
+};
 export const setFetchOptions = (fetchOptions: Record<string, any>, forServer: string | null | undefined = null) => {
   global.wazoFetchOptions[String(forServer)] = fetchOptions;
 };
@@ -63,6 +67,7 @@ const fillClient = (apiClient: WazoApiClient) => {
     clientId,
   } = apiClient.client;
   const tenantId = global.wazoRefreshTenantId[server] || global.wazoRefreshTenantId.null || apiClient.refreshTenantId;
+  const requestTimeout = global.wazoRequestApiTimeout[server] || global.wazoRequestApiTimeout.null;
   //  try with null server when dealing with non-related server info
   apiClient.setToken(global.wazoClientToken[server] || global.wazoClientToken.null || token);
   apiClient.setClientId(global.wazoClientId[server] || global.wazoClientId.null || clientId);
@@ -79,6 +84,11 @@ const fillClient = (apiClient: WazoApiClient) => {
   apiClient.setRefreshExpiration(global.wazoRefreshExpiration[server] || global.wazoRefreshExpiration.null || apiClient.refreshExpiration);
   apiClient.setRefreshBackend(global.wazoRefreshBackend[server] || global.wazoRefreshBackend.null || apiClient.refreshBackend);
   apiClient.setIsMobile(global.wazoIsMobile[server] || global.wazoIsMobile.null || apiClient.isMobile);
+
+  if (requestTimeout) {
+    apiClient.setRequestTimeout(requestTimeout);
+  }
+
   return apiClient;
 };
 

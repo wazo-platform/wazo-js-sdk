@@ -13,6 +13,7 @@ import getApiClient, {
   setRefreshDomainName,
   setOnRefreshTokenError,
   getFetchOptions,
+  setRequestTimeout,
 } from '../service/getApiClient';
 import IssueReporter from '../service/IssueReporter';
 import Wazo from './index';
@@ -291,6 +292,11 @@ class Auth implements IAuth {
   setRefreshDomainName(domainName: string): void {
     setRefreshDomainName(domainName);
     getApiClient().setRefreshDomainName(domainName);
+  }
+
+  setRequestTimeout(requestTimeout: number): void {
+    setRequestTimeout(requestTimeout);
+    getApiClient().setRequestTimeout(requestTimeout);
   }
 
   forceRefreshToken(): Promise<string | null> {
