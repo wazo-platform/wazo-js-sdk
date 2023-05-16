@@ -89,12 +89,16 @@ class Auth implements IAuth {
 
   BACKEND_LDAP: string;
 
+  // Useful to avoid the check of the header by doing an extra request to the stack
+  shouldCheckUserUuidHeader: boolean;
+
   constructor() {
     this.expiration = DETAULT_EXPIRATION;
     this.authenticated = false;
     this.minSubscriptionType = null;
     this.BACKEND_WAZO = DEFAULT_BACKEND_USER;
     this.BACKEND_LDAP = BACKEND_LDAP_USER;
+    this.shouldCheckUserUuidHeader = true;
   }
 
   init(clientId: string, expiration: number, minSubscriptionType: number | null | undefined, authorizationName: string | null, mobile: boolean): void {
@@ -340,7 +344,9 @@ class Auth implements IAuth {
     };
 
     try {
-      await getApiClient().client.head('auth/0.1/status', null, headers);
+      if (this.shouldCheckUserUuidHeader) {
+        await getApiClient().client.head('auth/0.1/status', null, headers);
+      }
 
       // If the previous request went well, it means that the header is accepted
       setFetchOptions({
