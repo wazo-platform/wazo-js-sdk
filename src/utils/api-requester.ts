@@ -5,6 +5,8 @@
 
 /* eslint-disable import/no-dynamic-require */
 import { Base64 } from 'js-base64';
+import { AbortController } from 'node-abort-controller';
+
 import BadResponse from '../domain/BadResponse';
 import ServerError from '../domain/ServerError';
 import isMobile from './isMobile';
@@ -18,10 +20,11 @@ type ConstructorParams = {
   refreshTokenCallback: (...args: Array<any>) => any;
   token?: string | null;
   fetchOptions: Record<string, any> | null | undefined;
+  requestTimeout?: number | null;
 };
 const methods = ['head', 'get', 'post', 'put', 'delete', 'options'];
 const logger = IssueReporter ? IssueReporter.loggerFor('api') : console;
-const REQUEST_TIMEOUT_MS = 10 * 1000;
+const REQUEST_TIMEOUT_MS = 300 * 1000; // 300s like the Chrome engine default value.
 
 // Use a function here to be able to mock it in tests
 export const realFetch = () => {
@@ -68,6 +71,8 @@ export default class ApiRequester {
 
   shouldLogErrors: boolean;
 
+  requestTimeout: number;
+
   head: (...args: Array<any>) => any;
 
   get: (...args: Array<any>) => any;
@@ -104,6 +109,7 @@ export default class ApiRequester {
     agent = null,
     token = null,
     fetchOptions,
+    requestTimeout = REQUEST_TIMEOUT_MS,
   }: ConstructorParams) {
     this.server = server;
     this.agent = agent;
@@ -111,6 +117,7 @@ export default class ApiRequester {
     this.refreshTokenCallback = refreshTokenCallback;
     this.refreshTokenPromise = null;
     this.fetchOptions = fetchOptions || {};
+    this.requestTimeout = requestTimeout || REQUEST_TIMEOUT_MS;
 
     if (token) {
       this.token = token;
@@ -126,6 +133,10 @@ export default class ApiRequester {
         return this.call.call(this, ...args);
       };
     });
+  }
+
+  setRequestTimeout(requestTimeout: number) {
+    this.requestTimeout = requestTimeout;
   }
 
   setTenant(tenant: string | null | undefined) {
@@ -162,11 +173,13 @@ export default class ApiRequester {
     const newParse = hasEmptyResponse ? ApiRequester.successResponseParser : parse;
     const fetchOptions = { ...(this.fetchOptions || {}),
     };
+    const controller = new AbortController();
     const extraHeaders = fetchOptions.headers || {};
     delete fetchOptions.headers;
     const options = {
       method,
       body: newBody,
+      signal: controller ? controller.signal : null,
       headers: {
         ...this.getHeaders(headers),
         ...extraHeaders,
@@ -227,7 +240,10 @@ export default class ApiRequester {
     });
 
     const requestTimeout = new Promise((resolve, reject) => {
-      setTimeout(() => reject(new Error('Request timeout')), REQUEST_TIMEOUT_MS);
+      setTimeout(() => {
+        controller.abort();
+        reject(new Error(`Request timed out after ${this.requestTimeout} ms`));
+      }, this.requestTimeout);
     });
 
     return Promise.race([requestPromise, requestTimeout]);

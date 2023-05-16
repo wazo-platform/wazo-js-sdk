@@ -14,6 +14,7 @@ declare global {
   var wazoRefreshExpiration;
   var wazoRefreshBackend;
   var wazoIsMobile;
+  var wazoRequestApiTimeout;
   var wazoFetchOptions;
   var wazoCurrentServer;
   var wazoAuthInstance;

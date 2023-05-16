@@ -1,8 +1,12 @@
+import { AbortController } from 'node-abort-controller';
 import { Base64 } from 'js-base64';
+
 import WazoApiClient from '../api-client';
 import ServerError from '../domain/ServerError';
 import BadResponse from '../domain/BadResponse';
 import Session from '../domain/Session';
+
+const controller = new AbortController();
 
 const mockedResponse = {
   data: {
@@ -112,6 +116,7 @@ describe('With correct API results', () => {
       expect(global.fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token`, {
         method: 'post',
         body: JSON.stringify(data),
+        signal: controller.signal,
         headers,
         agent: null,
       });
@@ -126,6 +131,7 @@ describe('With correct API results', () => {
       expect(global.fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token/${oldToken}`, {
         method: 'delete',
         body: null,
+        signal: controller.signal,
         headers: {},
         agent: null,
       });
@@ -148,6 +154,7 @@ describe('With unAuthorized API results', () => {
       expect(global.fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token/${tokenToCheck}`, {
         method: 'head',
         body: null,
+        signal: controller.signal,
         headers: {},
         agent: null,
       });
@@ -179,6 +186,7 @@ describe('With not found API results', () => {
       expect(global.fetch).toBeCalledWith(`https://${server}/api/calld/1.0/users/me/voicemails`, {
         method: 'get',
         body: null,
+        signal: controller.signal,
         headers: {
           'X-Auth-Token': token,
           'Content-Type': 'application/json',

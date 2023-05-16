@@ -183,6 +183,10 @@ export default class ApiClient {
     this.refreshToken = refreshToken;
   }
 
+  setRequestTimeout(requestTimeout: number) {
+    this.client.setRequestTimeout(requestTimeout);
+  }
+
   setClientId(clientId: string | null | undefined) {
     this.client.clientId = clientId;
   }
