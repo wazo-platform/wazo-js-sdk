@@ -21,7 +21,7 @@
 - project:
     check:
       jobs:
-        - yzuul-check-job:
+        - zuul-check-job:
             nodeset: vm-debian-11-m1s
     gate:
       jobs:
