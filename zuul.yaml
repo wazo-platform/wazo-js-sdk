@@ -1,3 +1,40 @@
+- job:
+    name: zuul-check-job
+    description: Build and copy
+    run: zuul.d/zuul_check_job.yaml
+
+- job:
+    name: zuul-gate-job
+    description: Build with search and copy
+    run: zuul.d/zuul_gate_job.yaml
+
+- job:
+    name: zuul-post-job
+    description: Build with search and publish
+    run: zuul.d/zuul_post_job.yaml
+
+- job:
+    name: zuul-periodic-job
+    description: Build and test
+    run: zuul.d/zuul_periodic_job.yaml
+
 - project:
-    templates:
-      - yarn-test
+    check:
+      jobs:
+        - yzuul-check-job:
+            nodeset: vm-debian-11-m1s
+    gate:
+      jobs:
+        - zuul-gate-job:
+            nodeset: vm-debian-11-m1s
+    auto-merge:
+      jobs:
+        - noop
+    post:
+      jobs:
+        - zuul-post-job:
+            nodeset: vm-debian-11-m1s
+    periodic:
+      jobs:
+        - zuul-periodic-job:
+            nodeset: vm-debian-11-m1s

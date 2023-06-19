@@ -1,0 +1,6 @@
+---
+- hosts: all
+  tasks:
+    - name: Gate job placeholder for testing
+      debug:
+        msg: "Zuul gate job successfully triggered"

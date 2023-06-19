@@ -1,0 +1,6 @@
+---
+- hosts: all
+  tasks:
+    - name: Post job placeholder for testing
+      debug:
+        msg: "Zuul post job successfully triggered"

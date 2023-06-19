@@ -1,0 +1,6 @@
+---
+- hosts: all
+  tasks:
+    - name: Periodic job placeholder for testing
+      debug:
+        msg: "Zuul periodic job successfully triggered"
