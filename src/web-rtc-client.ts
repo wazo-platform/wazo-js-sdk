@@ -2589,8 +2589,11 @@ export default class WebRTCClient extends Emitter {
     networkStats.totalTransportReceived = transportReceived;
     networkStats.transportReceived = transportReceived - lastTransportReceived;
     networkStats.bandwidth = networkStats.audioBytesSent + networkStats.audioBytesReceived + networkStats.videoBytesSent + networkStats.videoBytesReceived + networkStats.transportReceived + networkStats.transportSent;
-    this.eventEmitter.emit(ON_NETWORK_STATS, session, networkStats, this.sessionNetworkStats[sessionId]);
-    this.sessionNetworkStats[sessionId].push(networkStats);
+
+    if (this.sessionNetworkStats[sessionId]) {
+      this.eventEmitter.emit(ON_NETWORK_STATS, session, networkStats, this.sessionNetworkStats[sessionId]);
+      this.sessionNetworkStats[sessionId].push(networkStats);
+    }
   }
 
   async _accept(session: Invitation, options: InvitationAcceptOptions = {}) {
