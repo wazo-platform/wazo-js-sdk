@@ -454,10 +454,11 @@ export default class Contact {
     return new Contact({
       name,
       number: plain.phoneNumbers.length ? plain.phoneNumbers[0].number : '',
-      numbers: plain.phoneNumbers.length ? [{
-        label: 'primary',
-        number: plain.phoneNumbers[0].number,
-      }] : [],
+      // Make numbers unique
+      numbers: [...new Map(plain.phoneNumbers.map(item => [item.number, item])).values()].map((item, idx) => ({
+        label: idx === 0 ? 'primary' : 'secondary',
+        number: item.number,
+      })),
       email: plain.emailAddresses.length ? plain.emailAddresses[0].email : '',
       emails: plain.emailAddresses.length ? [{
         label: 'primary',
