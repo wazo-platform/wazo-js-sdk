@@ -908,9 +908,9 @@ export default class WebRTCClient extends Emitter {
       isConference,
     };
 
-    if (isConference) {
-      this.mute(session);
-    }
+    // We should also mute the call, because when holding a call during a voicemail, the audio is still sent with the
+    // `sendonly` direction
+    this.mute(session);
 
     session.sessionDescriptionHandlerOptionsReInvite = {
       // @ts-ignore
@@ -958,9 +958,7 @@ export default class WebRTCClient extends Emitter {
       return Promise.resolve();
     }
 
-    if (isConference) {
-      this.unmute(session);
-    }
+    this.unmute(session);
 
     delete this.heldSessions[this.getSipSessionId(session)];
     session.sessionDescriptionHandlerOptionsReInvite = {
