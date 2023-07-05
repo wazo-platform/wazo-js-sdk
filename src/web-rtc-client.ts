@@ -2280,6 +2280,20 @@ export default class WebRTCClient extends Emitter {
     // @ts-ignore
     const earlyStream = sipSession && sipSession.sessionDescriptionHandler ? sipSession.sessionDescriptionHandler.remoteMediaStream : null;
     const stream = newStream || removeStream || earlyStream;
+    const shouldPause = audioElement.currentTime > 0 && !audioElement.paused && !audioElement.ended && audioElement.readyState > 2;
+
+    logger.info('setting up media', {
+      sessionId,
+      streams: {
+        new: !!newStream,
+        remove: !!removeStream,
+        early: !!earlyStream,
+      },
+      isWeb: this._isWeb(),
+      hasAudio: this._hasAudio(),
+      isConference,
+      shouldPause,
+    });
 
     if (!this._isWeb() || !stream) {
       return;
@@ -2290,7 +2304,7 @@ export default class WebRTCClient extends Emitter {
       return;
     }
 
-    if (audioElement.currentTime > 0 && !audioElement.paused && !audioElement.ended && audioElement.readyState > 2) {
+    if (shouldPause) {
       audioElement.pause();
     }
 
