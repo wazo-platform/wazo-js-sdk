@@ -1847,6 +1847,8 @@ export default class WebRTCClient extends Emitter {
     const audio: HTMLAudioElement = document.createElement('audio');
     audio.setAttribute('id', `audio-${sessionId}`);
 
+    logger.info('creating audio element', { sessionId, audioOutputDeviceId: this.audioOutputDeviceId });
+
     if ((audio as any).setSinkId && this.audioOutputDeviceId) {
       (audio as any).setSinkId(this.audioOutputDeviceId);
     }
