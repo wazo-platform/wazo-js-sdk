@@ -2258,6 +2258,11 @@ export default class WebRTCClient extends Emitter {
   }
 
   _setupMedias(session: Inviter | Invitation, newStream: MediaStream | null | undefined = null): void {
+    if (!this._isWeb()) {
+      logger.info('Setup media on mobile, no need to setup html element, bailing');
+      return;
+    }
+
     // Safari hack, because you cannot call .play() from a non user action
     const sessionId = this.getSipSessionId(session);
     const isConference = this.isConference(sessionId);
@@ -2280,6 +2285,12 @@ export default class WebRTCClient extends Emitter {
     // @ts-ignore
     const earlyStream = sipSession && sipSession.sessionDescriptionHandler ? sipSession.sessionDescriptionHandler.remoteMediaStream : null;
     const stream = newStream || removeStream || earlyStream;
+
+    if (!stream) {
+      logger.info('Setup media no stream to attach, bailing');
+      return;
+    }
+
     const shouldPause = audioElement.currentTime > 0 && !audioElement.paused && !audioElement.ended && audioElement.readyState > 2;
 
     logger.info('setting up media', {
@@ -2289,15 +2300,10 @@ export default class WebRTCClient extends Emitter {
         remove: !!removeStream,
         early: !!earlyStream,
       },
-      isWeb: this._isWeb(),
       hasAudio: this._hasAudio(),
       isConference,
       shouldPause,
     });
-
-    if (!this._isWeb() || !stream) {
-      return;
-    }
 
     if (isConference) {
       // Conference local stream is handled in Room
