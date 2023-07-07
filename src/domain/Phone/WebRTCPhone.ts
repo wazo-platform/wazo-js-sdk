@@ -382,8 +382,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
         delete this.callSessions[sipSessionId];
         this.eventEmitter.emit(ON_CALL_CANCELED, callSession, elsewhere);
       };
-    } else if (sipSession instanceof Invitation) {
-      console.warn('sipSession._onCancel not found, please update the wazo SDK accordingly');
     }
 
     sipSession.stateChange.addListener((newState: SessionState) => {
@@ -504,7 +502,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return screenShareStream;
   }
 
-  async stopScreenSharing(restoreLocalStream = true, callSession?: CallSession | null | undefined): Promise<OutgoingInviteRequest | void> {
+  async stopScreenSharing(restoreLocalStream = true, callSession?: CallSession | null | undefined): Promise<OutgoingInviteRequest | void | null> {
     if (!this.currentScreenShare) {
       return;
     }
@@ -512,7 +510,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     logger.info('WebRTC phone - stop screen sharing', {
       restoreLocalStream,
     });
-    let reinvited: OutgoingInviteRequest | void;
+    let reinvited: OutgoingInviteRequest | null | void = null;
 
     try {
       if (this.currentScreenShare.stream) {
@@ -549,6 +547,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       screensharing: false,
     }) : null);
     this.currentScreenShare = null;
+
     return reinvited;
   }
 

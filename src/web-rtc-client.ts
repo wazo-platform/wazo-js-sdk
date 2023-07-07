@@ -2019,7 +2019,6 @@ export default class WebRTCClient extends Emitter {
       authorizationUsername: this.config.authorizationUser,
       authorizationPassword: this.config.password,
       displayName: this.config.displayName,
-      autoStart: true,
       hackIpInContact: true,
       contactParams: {
         transport: 'wss',

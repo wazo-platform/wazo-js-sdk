@@ -62,6 +62,7 @@
     "no-nested-ternary": 0,
     "import/prefer-default-export": 0,
     "@typescript-eslint/no-explicit-any": 0,
+    "no-promise-executor-return": 0,
     "import/extensions": [
       "error",
       "ignorePackages",
