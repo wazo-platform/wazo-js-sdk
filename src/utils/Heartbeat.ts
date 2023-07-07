@@ -11,9 +11,9 @@ class Heartbeat {
 
   hasHeartbeat: boolean;
 
-  _heartbeatDelayTimeout: ReturnType<typeof setTimeout> | undefined;
+  _heartbeatDelayTimeout: NodeJS.Timeout | string | number | undefined;
 
-  _heartbeatNotReceivedTimeout: ReturnType<typeof setTimeout> | undefined;
+  _heartbeatNotReceivedTimeout: NodeJS.Timeout | string | number | undefined;
 
   _heartbeatTries: number;
 

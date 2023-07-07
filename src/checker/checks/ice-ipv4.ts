@@ -16,7 +16,8 @@ export default {
   name: 'Non IP v4 ice',
   check: (server: string, session: any, externalAppConfig: Record<string, any>) => new Promise((resolve, reject) => {
     if (typeof MediaStream === 'undefined') {
-      return resolve('Skipped on node');
+      resolve('Skipped on node');
+      return;
     }
 
     const mobile = isMobile();

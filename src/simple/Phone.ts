@@ -98,7 +98,7 @@ export interface IPhone extends IEmitter {
   turnCameraOff: (callSession: CallSession) => void;
   turnCameraOn: (callSession: CallSession) => void;
   startScreenSharing: (constraints: Record<string, any>, callSession?: CallSession) => Promise<MediaStream | null>;
-  stopScreenSharing: (callSession?: CallSession, restoreLocalStream?: boolean) => Promise<OutgoingInviteRequest | void>;
+  stopScreenSharing: (callSession?: CallSession, restoreLocalStream?: boolean) => Promise<OutgoingInviteRequest | void | null>;
   sendDTMF: (tone: string, callSession: CallSession) => void;
   getLocalStream: (callSession: CallSession) => MediaStream | null | undefined ;
   hasLocalVideo: (callSession: CallSession) => boolean;
@@ -493,7 +493,7 @@ class Phone extends Emitter implements IPhone {
     return this.phone?.startScreenSharing(constraints, callSession) || null;
   }
 
-  stopScreenSharing(callSession?: CallSession, restoreLocalStream = true): Promise<OutgoingInviteRequest | void> {
+  stopScreenSharing(callSession?: CallSession, restoreLocalStream = true): Promise<OutgoingInviteRequest | void | null> {
     return this.phone ? this.phone.stopScreenSharing(restoreLocalStream, callSession) : Promise.resolve();
   }
 
