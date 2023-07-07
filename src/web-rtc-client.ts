@@ -273,6 +273,7 @@ export default class WebRTCClient extends Emitter {
       },
     };
     const ua: any = new UserAgent(uaOptions);
+    ua.start();
 
     if (ua.transport && ua.transport.connectPromise) {
       ua.transport.connectPromise.catch((e: any) => {

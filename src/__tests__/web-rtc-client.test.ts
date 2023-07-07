@@ -1,6 +1,18 @@
 import WebRTCClient from '../web-rtc-client';
 
 jest.mock('sip.js/lib/platform/web/transport');
+jest.mock('sip.js/lib/api/user-agent', () => ({
+  start: () => {},
+  UserAgent: class UserAgent {
+    // @ts-ignore
+    static makeURI = () => {};
+
+    // @ts-ignore
+    start = () => {};
+
+    transport = {};
+  },
+}));
 
 // @ts-expect-error
 const client = new WebRTCClient({});
