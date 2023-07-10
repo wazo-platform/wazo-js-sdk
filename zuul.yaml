@@ -19,11 +19,11 @@
     run: zuul.d/zuul_periodic_job.yaml
 
 - project:
-    check:
+    wazo-wazo-check:
       jobs:
         - zuul-check-job:
             nodeset: vm-debian-11-m1s
-    gate:
+    wazo-wazo-gate:
       jobs:
         - zuul-gate-job:
             nodeset: vm-debian-11-m1s
