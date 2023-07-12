@@ -230,7 +230,7 @@ export type MediaConfig = {
 export type WebRtcConfig = {
   displayName?: string;
   host: string;
-  port?: number;
+  port?: number | string;
   websocketSip?: string;
   authorizationUser?: string;
   password?: string;
