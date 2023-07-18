@@ -4,8 +4,11 @@ import WebRTCClient from '../../web-rtc-client';
 export default {
   name: 'WebRTC Transport (WS) ~30s',
   check: (server: string, session: Inviter | Invitation): Promise<void> => new Promise((resolve, reject) => {
+    const [host, port = 443] = server.split(':');
+
     const client = new WebRTCClient({
-      host: server,
+      host,
+      port,
       media: {
         audio: true,
       },
