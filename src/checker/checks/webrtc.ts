@@ -8,8 +8,11 @@ export default {
       return resolve('Skipped on node');
     }
 
+    const [host, port = 443] = server.split(':');
+
     const client = new WebRTCClient({
-      host: server,
+      host,
+      port,
       media: {
         audio: true,
       },

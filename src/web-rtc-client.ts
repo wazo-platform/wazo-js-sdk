@@ -1988,7 +1988,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     const client = new ApiClient({
-      server: config.host,
+      server: `${config.host}:${String(config.port || 443)}`,
     });
     // @ts-ignore
     client.setToken(session.token);
@@ -2008,7 +2008,7 @@ export default class WebRTCClient extends Emitter {
     let {
       host,
     } = this.config;
-    let port: number = this.config.port || 443;
+    let port: number | string = this.config.port || 443;
 
     if (this.config.websocketSip) {
       const webSocketSip = this.config.websocketSip.split(':');
