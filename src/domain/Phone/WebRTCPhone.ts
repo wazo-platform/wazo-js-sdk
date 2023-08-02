@@ -819,7 +819,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       cameraEnabled,
     });
 
-    if (this.currentSipSession) {
+    if (this.currentSipSession && !this.isCurrentCallSipSession(callSession)) {
       this.holdSipSession(this.currentSipSession, this.currentCallSession, true);
     }
 
