@@ -8,6 +8,8 @@ export const BACKEND = {
   PERSONAL: 'personal',
   GOOGLE: 'google',
   WAZO: 'wazo',
+  CONFERENCE: 'conference',
+  PHONEBOOK: 'phonebook',
 };
 export interface NewContact {
   firstName: string;
@@ -646,7 +648,7 @@ export default class Contact {
       number: firstNumber,
       numbers,
       source: source.name,
-      backend: 'conference',
+      backend: BACKEND.CONFERENCE,
     });
   }
 
@@ -659,16 +661,16 @@ export default class Contact {
       id: single.id,
       sourceId: single.id,
       name: `${single.firstname}${single.lastname ? ` ${single.lastname}` : ''}`,
-      email: single.email,
+      email: single.email || '',
       emails: [{ label: 'primary', email: single.email }],
-      number: single.number,
+      number: single.number || '',
       numbers: [{ label: 'primary', number: single.number }],
-      address: single.address,
-      birthday: single.birthday,
-      entreprise: single.enterprise,
-      note: single.note,
+      address: single.address || '',
+      birthday: single.birthday || '',
+      entreprise: single.enterprise || '',
+      note: single.note || '',
       source: source.name,
-      backend: 'phonebook',
+      backend: BACKEND.PHONEBOOK,
     });
   }
 
