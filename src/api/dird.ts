@@ -35,11 +35,13 @@ export interface DirD {
   fetchOffice365Source: (context: string) => Promise<DirectorySources>;
   fetchOffice365Contacts: (source: DirectorySource, queryParams: ContactSearchQueryParams) => Promise<Contact[]> | null | undefined;
   fetchWazoSource: (context: string) => Promise<Sources>;
+  fetchSourcesFor: (context: string, backend: string) => Promise<Sources[]>;
   fetchWazoContacts: (source: DirectorySource, queryParams: ContactSearchQueryParams) => Promise<Contact[]> | null | undefined;
   fetchGoogleSource: (context: string) => Promise<Sources>;
   fetchGoogleContacts: (source: DirectorySource, queryParams: ContactSearchQueryParams) => Promise<Contact[]> | null | undefined;
   fetchConferenceSource: (context: string) => Promise<Sources>;
   fetchConferenceContacts: (source: DirectorySource) => Promise<Contact[]> | null | undefined;
+  fetchPhonebookContacts: (source: DirectorySource) => Promise<Contact[]> | null | undefined;
   findMultipleContactsByNumber: (numbers: string[], fields?: Record<string, any>) => Promise<Contact[]>;
 }
 
@@ -107,6 +109,14 @@ export default ((client: ApiRequester, baseUrl: string): DirD => ({
   fetchConferenceSource: (context: string): Promise<Sources> => client.get(`${baseUrl}/directories/${context}/sources`, {
     backend: 'conference',
   }),
+  fetchSourcesFor: (context: string, backend: string): Promise<Sources[]> => client.get(`${baseUrl}/directories/${context}/sources`, { backend }),
+  fetchPhonebookContacts: (source: DirectorySource): Promise<Contact[]> | null | undefined => {
+    if (!source) {
+      return null;
+    }
+
+    return client.get(`${baseUrl}/backends/phonebook/sources/${source.uuid}/contacts`).then((response: any) => Contact.parseManyPhonebook(response.items, source));
+  },
   fetchConferenceContacts: (source: DirectorySource): Promise<Contact[]> | null | undefined => {
     if (!source) {
       return null;
