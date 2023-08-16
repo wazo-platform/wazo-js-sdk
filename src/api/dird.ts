@@ -7,6 +7,13 @@ import type { DirectorySource, DirectorySources } from '../domain/DirectorySourc
 import type { Sources } from '../index';
 import { ContactsResponse } from '../index';
 
+type PhoneBookSearchQueryParams = {
+  order: string | null;
+  direction: 'asc' | 'desc' | null;
+  limit: number | null;
+  offset: number | null;
+};
+
 const getContactPayload = (contact: NewContact | Contact) => ({
   email: contact.email,
   // @ts-ignore
@@ -41,7 +48,7 @@ export interface DirD {
   fetchGoogleContacts: (source: DirectorySource, queryParams: ContactSearchQueryParams) => Promise<Contact[]> | null | undefined;
   fetchConferenceSource: (context: string) => Promise<Sources>;
   fetchConferenceContacts: (source: DirectorySource) => Promise<Contact[]> | null | undefined;
-  fetchPhonebookContacts: (source: DirectorySource) => Promise<Contact[]> | null | undefined;
+  fetchPhonebookContacts: (source: DirectorySource) => Promise<object[]> | null | undefined;
   findMultipleContactsByNumber: (numbers: string[], fields?: Record<string, any>) => Promise<Contact[]>;
 }
 
@@ -110,12 +117,12 @@ export default ((client: ApiRequester, baseUrl: string): DirD => ({
     backend: 'conference',
   }),
   fetchSourcesFor: (context: string, backend: string): Promise<Sources[]> => client.get(`${baseUrl}/directories/${context}/sources`, { backend }),
-  fetchPhonebookContacts: (source: DirectorySource): Promise<Contact[]> | null | undefined => {
+  fetchPhonebookContacts: (source: DirectorySource, params: PhoneBookSearchQueryParams | null = null): Promise<object[]> | null | undefined => {
     if (!source) {
       return null;
     }
 
-    return client.get(`${baseUrl}/backends/phonebook/sources/${source.uuid}/contacts`).then((response: any) => Contact.parseManyPhonebook(response.items, source));
+    return client.get(`${baseUrl}/backends/phonebook/sources/${source.uuid}/contacts`, params);
   },
   fetchConferenceContacts: (source: DirectorySource): Promise<Contact[]> | null | undefined => {
     if (!source) {

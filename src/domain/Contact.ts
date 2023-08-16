@@ -236,18 +236,7 @@ type GoogleResponse = {
   numbers: string[];
   numbers_by_label: any;
 };
-type PhonebookResponse = {
-  phonebook_uuid: number;
-  firstname: string;
-  lastname: string;
-  number: string;
-  email: string;
-  address: string;
-  enterprise: string;
-  birthday: string;
-  note: string;
-  id: string;
-};
+
 const SOURCE_MOBILE = 'mobile';
 export default class Contact {
   type: string;
@@ -649,28 +638,6 @@ export default class Contact {
       numbers,
       source: source.name,
       backend: BACKEND.CONFERENCE,
-    });
-  }
-
-  static parseManyPhonebook(response: PhonebookResponse[], source: DirectorySource): Array<Contact> {
-    return response.map(r => Contact.parsePhonebook(r, source));
-  }
-
-  static parsePhonebook(single: PhonebookResponse, source: DirectorySource): Contact {
-    return new Contact({
-      id: single.id,
-      sourceId: single.id,
-      name: `${single.firstname}${single.lastname ? ` ${single.lastname}` : ''}`,
-      email: single.email || '',
-      emails: [{ label: 'primary', email: single.email }],
-      number: single.number || '',
-      numbers: [{ label: 'primary', number: single.number }],
-      address: single.address || '',
-      birthday: single.birthday || '',
-      entreprise: single.enterprise || '',
-      note: single.note || '',
-      source: source.name,
-      backend: BACKEND.PHONEBOOK,
     });
   }
 
