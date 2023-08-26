@@ -1493,14 +1493,14 @@ export default class WebRTCClient extends Emitter {
             wasMuted,
             shouldDoScreenSharing,
           });
-          this.updateRemoteStream(this.getSipSessionId(sipSession));
+          this.updateRemoteStream(this.getSipSessionId(sipSession), false);
 
           if (wasMuted) {
             this.mute(sipSession);
           }
 
           // @ts-ignore
-          this._onAccepted(sipSession, response.session, false);
+          this._onAccepted(sipSession, response.session, false, false);
 
           if (shouldDoScreenSharing) {
             this.eventEmitter.emit(ON_SCREEN_SHARING_REINVITE, sipSession, response, desktop);
@@ -1775,7 +1775,7 @@ export default class WebRTCClient extends Emitter {
     this._setupMedias(sipSession, newStream);
   }
 
-  updateRemoteStream(sessionId: string): void {
+  updateRemoteStream(sessionId: string, allTracks = true): void {
     const remoteStream = this.getRemoteStream(sessionId);
     const pc = this.getPeerConnection(sessionId);
     logger.info('Updating remote stream', {
@@ -1788,13 +1788,17 @@ export default class WebRTCClient extends Emitter {
       return;
     }
 
-    remoteStream.getVideoTracks().forEach(track => {
-      remoteStream.removeTrack(track);
+    remoteStream.getTracks().forEach(track => {
+      if (allTracks || track.kind === 'video') {
+        remoteStream.removeTrack(track);
+      }
     });
 
     if (pc.getReceivers) {
       pc.getReceivers().forEach((receiver: any) => {
-        remoteStream.addTrack(receiver.track);
+        if (allTracks || receiver.track.kind === 'video') {
+          remoteStream.addTrack(receiver.track);
+        }
       });
     }
   }
@@ -2164,7 +2168,7 @@ export default class WebRTCClient extends Emitter {
         session.outgoingInviteRequest.message.body.body = request.body;
       }
 
-      this.updateRemoteStream(sipSessionId);
+      this.updateRemoteStream(sipSessionId, false);
 
       this._setupMedias(session);
 
@@ -2183,7 +2187,7 @@ export default class WebRTCClient extends Emitter {
     this.eventEmitter.emit(ON_EARLY_MEDIA, session);
   }
 
-  _onAccepted(session: Inviter | Invitation, sessionDialog?: SessionDialog, withEvent = true): void {
+  _onAccepted(session: Inviter | Invitation, sessionDialog?: SessionDialog, withEvent = true, initAllTracks = true): void {
     logger.info('on call accepted', {
       id: session.id,
       clientId: this.clientId,
@@ -2194,7 +2198,7 @@ export default class WebRTCClient extends Emitter {
 
     this._setupMedias(session);
 
-    this.updateRemoteStream(this.getSipSessionId(session));
+    this.updateRemoteStream(this.getSipSessionId(session), initAllTracks);
     // @ts-ignore
     const pc = session.sessionDescriptionHandler?.peerConnection;
 
