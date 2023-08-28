@@ -5,7 +5,7 @@
 
 /* eslint-disable import/no-dynamic-require */
 import { Base64 } from 'js-base64';
-import { AbortController } from 'node-abort-controller';
+import { AbortController as NodeAbortController } from 'node-abort-controller';
 
 import BadResponse from '../domain/BadResponse';
 import ServerError from '../domain/ServerError';
@@ -171,9 +171,8 @@ export default class ApiRequester {
     const isHead = method === 'head';
     const hasEmptyResponse = method === 'delete' || isHead;
     const newParse = hasEmptyResponse ? ApiRequester.successResponseParser : parse;
-    const fetchOptions = { ...(this.fetchOptions || {}),
-    };
-    const controller = new AbortController();
+    const fetchOptions = { ...(this.fetchOptions || {}) };
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : new NodeAbortController();
     const extraHeaders = fetchOptions.headers || {};
     delete fetchOptions.headers;
     const options = {

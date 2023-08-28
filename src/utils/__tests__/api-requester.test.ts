@@ -1,5 +1,3 @@
-import { AbortController } from 'node-abort-controller';
-
 import ApiRequester from '../api-requester';
 
 const server = 'localhost';
@@ -16,7 +14,6 @@ const headers = {
   'Content-Type': 'application/json',
   'X-Auth-Token': token,
 };
-const controller = new AbortController();
 
 describe('Generating query string', () => {
   it('should generate a simple query string from an object', () => {
@@ -103,7 +100,7 @@ describe('Calling fetch', () => {
     expect(global.fetch).toBeCalledWith(url, {
       method: 'get',
       body: null,
-      signal: controller.signal,
+      signal: expect.any(Object),
       headers: {},
       agent: null,
     });
@@ -148,14 +145,14 @@ describe('With a refresh token', () => {
     expect(global.fetch).toHaveBeenNthCalledWith(1, url, {
       method: 'get',
       body: null,
-      signal: controller.signal,
+      signal: expect.any(Object),
       headers,
       agent: null,
     });
     expect(global.fetch).toHaveBeenNthCalledWith(2, url, {
       method: 'get',
       body: null,
-      signal: controller.signal,
+      signal: expect.any(Object),
       headers: updatedHeaders,
       agent: null,
     });
