@@ -66,7 +66,9 @@ type SessionArguments = {
   expiresAt: Date;
   authorizations?: Array<Authorization>;
   engineVersion?: string | null | undefined;
+  // Deprecated, use `stackUuid`
   engineUuid?: string | null | undefined;
+  stackUuid?: string | null | undefined;
 };
 
 export default class Session {
@@ -82,7 +84,7 @@ export default class Session {
 
   tenantUuid: string | null | undefined;
 
-  engineUuid: string | null | undefined;
+  stackUuid: string | null | undefined;
 
   sessionUuid: string | null | undefined;
 
@@ -121,7 +123,7 @@ export default class Session {
       acl: plain.data.acls ? plain.data.acls : plain.data.acl ? plain.data.acl : [],
       tenantUuid: plain.data.metadata ? plain.data.metadata.tenant_uuid : undefined,
       expiresAt: new Date(`${plain.data.utc_expires_at}z`),
-      engineUuid: plain.data.xivo_uuid,
+      stackUuid: plain.data.xivo_uuid,
     });
   }
 
@@ -140,7 +142,7 @@ export default class Session {
     engineVersion,
     refreshToken,
     sessionUuid,
-    engineUuid,
+    stackUuid,
   }: SessionArguments) {
     this.token = token;
     this.uuid = uuid;
@@ -152,7 +154,7 @@ export default class Session {
     this.engineVersion = engineVersion;
     this.refreshToken = refreshToken;
     this.sessionUuid = sessionUuid;
-    this.engineUuid = engineUuid;
+    this.stackUuid = stackUuid;
   }
 
   hasExpired(date: Date = new Date()): boolean {
@@ -267,6 +269,11 @@ export default class Session {
   get acls(): Array<string> | null | undefined {
     console.warn('`acls` property of Session has been removed in Wazo\'s SDK, please use `acl` instead.');
     return this.acl;
+  }
+
+  get engineUuid(): string | null | undefined {
+    console.warn('`engineUuid` property of Session has been removed in Wazo\'s SDK, please use `stackUuid` instead.');
+    return this.stackUuid;
   }
 
 }
