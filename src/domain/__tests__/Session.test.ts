@@ -30,6 +30,7 @@ describe('Session domain', () => {
       expiresAt: new Date('2017-07-19T21:27:53.086990z'),
       sessionUuid: 'f14dd6d6-547c-434d-bd5c-e882b5b83b32',
       engineUuid: '6cd695d2-cdb9-4444-8b2d-27425ab85fa8',
+      stackUuid: '6cd695d2-cdb9-4444-8b2d-27425ab85fa8',
     }));
   });
   describe('about voicemails', () => {
