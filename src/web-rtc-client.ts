@@ -1788,18 +1788,22 @@ export default class WebRTCClient extends Emitter {
       return;
     }
 
-    remoteStream.getTracks().forEach(track => {
-      if (allTracks || track.kind === 'video') {
-        remoteStream.removeTrack(track);
-      }
-    });
-
-    if (pc.getReceivers) {
-      pc.getReceivers().forEach((receiver: any) => {
-        if (allTracks || receiver.track.kind === 'video') {
-          remoteStream.addTrack(receiver.track);
+    try {
+      remoteStream.getTracks().forEach(track => {
+        if (allTracks || track.kind === 'video') {
+          remoteStream.removeTrack(track);
         }
       });
+
+      if (pc.getReceivers) {
+        pc.getReceivers().forEach((receiver: any) => {
+          if (allTracks || receiver.track.kind === 'video') {
+            remoteStream.addTrack(receiver.track);
+          }
+        });
+      }
+    } catch (e) {
+      logger.error('Unable to update remote stream', e);
     }
   }
 
@@ -2417,9 +2421,7 @@ export default class WebRTCClient extends Emitter {
       remoteStream = typeof global !== 'undefined' && global.window && global.window.MediaStream ? new global.window.MediaStream() : new window.MediaStream();
 
       pc.getReceivers().forEach((receiver: any) => {
-        const {
-          track,
-        } = receiver;
+        const { track } = receiver;
 
         if (track && remoteStream) {
           remoteStream.addTrack(track);

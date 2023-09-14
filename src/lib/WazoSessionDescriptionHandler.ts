@@ -449,7 +449,11 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
             SessionDescriptionHandler.dispatchRemoveTrackEvent(localStream, oldTrack);
           }
 
-          localStream.addTrack(newTrack);
+          try {
+            localStream.addTrack(newTrack);
+          } catch (e) {
+            this.logger.error(`SessionDescriptionHandler.setLocalMediaStream - failed to add track: ${e.message}`);
+          }
           // @ts-ignore
           SessionDescriptionHandler.dispatchAddTrackEvent(localStream, newTrack);
         }).catch((error: Error) => {
@@ -469,12 +473,13 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
             } else {
               pc.addStream(localStream);
             }
+
+            localStream.addTrack(newTrack);
           } catch (error) {
             this.logger.error(`SessionDescriptionHandler.setLocalMediaStream - failed to add sender ${kind} track`);
             throw error;
           }
 
-          localStream.addTrack(newTrack);
           // @ts-ignore
           SessionDescriptionHandler.dispatchAddTrackEvent(localStream, newTrack);
         }));
