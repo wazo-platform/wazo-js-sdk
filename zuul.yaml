@@ -21,7 +21,6 @@
 - project:
     templates:
       - wazo-tox-py39
-      - wazo-tox-linters-310
     wazo-check:
       jobs:
         - zuul-check-job:
