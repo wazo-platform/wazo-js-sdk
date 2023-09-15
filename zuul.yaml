@@ -19,6 +19,8 @@
     run: zuul.d/zuul_periodic_job.yaml
 
 - project:
+    templates:
+      - wazo-tox-py39
     wazo-check:
       jobs:
         - zuul-check-job:

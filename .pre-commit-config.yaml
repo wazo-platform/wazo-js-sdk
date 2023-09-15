@@ -1,0 +1,19 @@
+# See https://pre-commit.com for more information
+exclude: 'alembic'  # For now exclude migrations and just check standard code
+repos:
+  - repo: https://github.com/PyCQA/flake8
+    rev: '6.0.0'
+    hooks:
+      - id: flake8
+        # Required to make flake8 read fdrom pyproject.toml for now :(
+        additional_dependencies: ["flake8-pyproject"]
+  - repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+      - id: black
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.1.1
+    hooks:
+      - id: mypy
+        language_version: "3.10"
+
