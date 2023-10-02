@@ -276,4 +276,11 @@ export default class Session {
     return this.stackUuid;
   }
 
+  toJSON() {
+    return {
+      ...this,
+      // Added `engineUuid` because of the getter, it won't be included in `JSON.stringify()` methods.
+      engineUuid: this.engineUuid,
+    };
+  }
 }
