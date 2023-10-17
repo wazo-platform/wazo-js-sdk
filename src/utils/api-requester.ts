@@ -90,7 +90,7 @@ export default class ApiRequester {
   }
 
   static defaultParser(response: Record<string, any>) {
-    return response.json().then((data: Record<string, any>) => data);
+    return response.json().then((data: Record<string, any>) => ({ ...data, _headers: response.headers }));
   }
 
   static getQueryString(obj: Record<string, any>): string {
