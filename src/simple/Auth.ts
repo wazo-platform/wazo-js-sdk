@@ -173,12 +173,14 @@ class Auth implements IAuth {
     });
 
     // Used for Proxy Authentication
-    const stackHostFromHeaders = rawSession.getHostFromHeader();
-    if (stackHostFromHeaders) {
-      this.setHost(stackHostFromHeaders);
+    if (rawSession) {
+      const stackHostFromHeaders = rawSession.getHostFromHeader();
+      if (stackHostFromHeaders) {
+        this.setHost(stackHostFromHeaders);
 
-      if (this.onHostFromHeadersCallback) {
-        this.onHostFromHeadersCallback(stackHostFromHeaders);
+        if (this.onHostFromHeadersCallback) {
+          this.onHostFromHeadersCallback(stackHostFromHeaders);
+        }
       }
     }
 
