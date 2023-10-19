@@ -4,9 +4,10 @@ import Line from '../Line';
 
 describe('Session domain', () => {
   it('can parse a plain session to domain', () => {
-    const headers = new Headers({
-      'wazo-stack-host': 'new-stack',
-    });
+    // Can't use `new Headers` because it's not supported on node 16.
+    const headers = {
+      get: () => 'new-stack',
+    };
 
     const plain = {
       _headers: headers,
@@ -26,6 +27,7 @@ describe('Session domain', () => {
         xivo_user_uuid: null,
       },
     };
+    // @ts-ignore
     const session = Session.parse(plain);
     expect(session).toEqual(new Session({
       token: 'b93ae6bd-08d7-4001-9e61-057e72bbc4b3',
