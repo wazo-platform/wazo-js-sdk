@@ -15,9 +15,7 @@ const swarmKey = <unknown>(KEYUTIL.getKey(swarmPublicKey)) as string;
 const MINIMUM_WAZO_ENGINE_VERSION_FOR_DEFAULT_CONTEXT = '19.08';
 
 export type Response = {
-  _headers: {
-    'wazo-stack-host': string,
-  },
+  _headers: Headers,
   data: {
     token: Token;
     refresh_token?: Token;
@@ -72,7 +70,7 @@ type SessionArguments = {
   // Deprecated, use `stackUuid`
   engineUuid?: string | null | undefined;
   stackUuid?: string | null | undefined;
-  stackHostFromHeader?: string;
+  stackHostFromHeader?: string | null | undefined;
 };
 
 export default class Session {
@@ -94,7 +92,7 @@ export default class Session {
 
   engineVersion: string | null | undefined;
 
-  _stackHostFromHeader: string | undefined;
+  _stackHostFromHeader: string | undefined | null;
 
   profile: Profile | null | undefined;
 
@@ -131,7 +129,7 @@ export default class Session {
       expiresAt: new Date(`${plain.data.utc_expires_at}z`),
       stackUuid: plain.data.xivo_uuid,
       // eslint-disable-next-line
-      stackHostFromHeader: plain._headers?.['wazo-stack-host'],
+      stackHostFromHeader: plain._headers?.get?.('wazo-stack-host'),
     });
   }
 

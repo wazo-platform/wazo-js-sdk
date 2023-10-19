@@ -4,10 +4,13 @@ import Line from '../Line';
 
 describe('Session domain', () => {
   it('can parse a plain session to domain', () => {
+    // Can't use `new Headers` because it's not supported on node 16.
+    const headers = {
+      get: () => 'new-stack',
+    };
+
     const plain = {
-      _headers: {
-        'wazo-stack-host': 'new-stack',
-      },
+      _headers: headers,
       data: {
         token: 'b93ae6bd-08d7-4001-9e61-057e72bbc4b3',
         acl: ['calld.lines.*.presences.read', 'calld.switchboards.#', 'calld.transfers.*.complete.update', 'calld.transfers.*.delete', 'calld.transfers.*.read', 'calld.users.*.presences.read', 'calld.users.me.#', 'confd.infos.read', 'confd.users.me.#.read', 'confd.users.me.forwards.*.*', 'confd.users.me.funckeys.*', 'confd.users.me.funckeys.*.*', 'confd.users.me.read', 'confd.users.me.services.*.*', 'confd.users.me.update', 'dird.#.me.read', 'dird.directories.favorites.#', 'dird.directories.lookup.*.headers.read', 'dird.directories.lookup.*.read', 'dird.directories.personal.*.read', 'dird.personal.#', 'events.calls.me', 'events.chat.message.*.me', 'events.config.users.me.#', 'events.statuses.*', 'events.switchboards.#', 'events.transfers.me', 'events.users.me.#', 'events.directory.me.#', 'websocketd', 'call-logd.users.me.cdr.read'],
@@ -24,6 +27,7 @@ describe('Session domain', () => {
         xivo_user_uuid: null,
       },
     };
+    // @ts-ignore
     const session = Session.parse(plain);
     expect(session).toEqual(new Session({
       token: 'b93ae6bd-08d7-4001-9e61-057e72bbc4b3',
