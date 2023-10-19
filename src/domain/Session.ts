@@ -131,7 +131,7 @@ export default class Session {
       expiresAt: new Date(`${plain.data.utc_expires_at}z`),
       stackUuid: plain.data.xivo_uuid,
       // eslint-disable-next-line
-      stackHostFromHeader: plain._headers?.['wazo-stack-host'],
+      stackHostFromHeader: plain._headers?.get?.('wazo-stack-host'),
     });
   }
 
