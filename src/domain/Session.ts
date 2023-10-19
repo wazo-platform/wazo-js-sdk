@@ -15,6 +15,9 @@ const swarmKey = <unknown>(KEYUTIL.getKey(swarmPublicKey)) as string;
 const MINIMUM_WAZO_ENGINE_VERSION_FOR_DEFAULT_CONTEXT = '19.08';
 
 export type Response = {
+  _headers: {
+    'wazo-stack-host': string,
+  },
   data: {
     token: Token;
     refresh_token?: Token;
@@ -69,6 +72,7 @@ type SessionArguments = {
   // Deprecated, use `stackUuid`
   engineUuid?: string | null | undefined;
   stackUuid?: string | null | undefined;
+  stackHostFromHeader?: string;
 };
 
 export default class Session {
@@ -89,6 +93,8 @@ export default class Session {
   sessionUuid: string | null | undefined;
 
   engineVersion: string | null | undefined;
+
+  _stackHostFromHeader: string | undefined;
 
   profile: Profile | null | undefined;
 
@@ -124,6 +130,8 @@ export default class Session {
       tenantUuid: plain.data.metadata ? plain.data.metadata.tenant_uuid : undefined,
       expiresAt: new Date(`${plain.data.utc_expires_at}z`),
       stackUuid: plain.data.xivo_uuid,
+      // eslint-disable-next-line
+      stackHostFromHeader: plain._headers?.['wazo-stack-host'],
     });
   }
 
@@ -143,6 +151,7 @@ export default class Session {
     refreshToken,
     sessionUuid,
     stackUuid,
+    stackHostFromHeader = undefined,
   }: SessionArguments) {
     this.token = token;
     this.uuid = uuid;
@@ -155,6 +164,7 @@ export default class Session {
     this.refreshToken = refreshToken;
     this.sessionUuid = sessionUuid;
     this.stackUuid = stackUuid;
+    this._stackHostFromHeader = stackHostFromHeader;
   }
 
   hasExpired(date: Date = new Date()): boolean {
@@ -264,6 +274,10 @@ export default class Session {
 
   hasExtension(extension: string): boolean {
     return this.allNumbers().some(number => number === extension);
+  }
+
+  getHostFromHeader() {
+    return this._stackHostFromHeader;
   }
 
   get acls(): Array<string> | null | undefined {

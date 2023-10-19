@@ -82,6 +82,8 @@ class Auth implements IAuth {
 
   onRefreshTokenCallbackError: ((...args: Array<any>) => any) | null;
 
+  onHostFromHeadersCallback: ((...args: Array<any>) => any) | null;
+
   authenticated: boolean;
 
   mobile: boolean;
@@ -170,6 +172,18 @@ class Auth implements IAuth {
       mobile: this.mobile,
     });
 
+    // Used for Proxy Authentication
+    if (rawSession) {
+      const stackHostFromHeaders = rawSession.getHostFromHeader();
+      if (stackHostFromHeaders) {
+        this.setHost(stackHostFromHeaders);
+
+        if (this.onHostFromHeadersCallback) {
+          this.onHostFromHeadersCallback(stackHostFromHeaders);
+        }
+      }
+    }
+
     if (backend) {
       getApiClient().setRefreshBackend(backend);
     }
@@ -237,6 +251,10 @@ class Auth implements IAuth {
     this.session = null;
     this.authenticated = false;
     setFetchOptions({});
+  }
+
+  setOnHostFromHeaders(callback: (...args: Array<any>) => any) {
+    this.onHostFromHeadersCallback = callback;
   }
 
   setOnRefreshToken(callback: (...args: Array<any>) => any) {
