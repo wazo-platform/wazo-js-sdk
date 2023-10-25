@@ -41,6 +41,10 @@ import ApiRequester from './utils/api-requester';
 import type { DirectorySource as DirectorySourceType, DirectorySources as DirectorySourcesType } from './domain/DirectorySource';
 import type { SwitchboardAnwseredQueuedCall as SwitchboardAnwseredQueuedCallType, SwitchboardAnwseredHeldCall as SwitchboardAnwseredHeldCallType, SwitchboardCallItem as SwitchboardCallItemType, SwitchboardCallItems as SwitchboardCallItemsType } from './domain/SwitchboardCall';
 import Wazo from './simple/index';
+import MeetingStatus from './domain/MeetingStatus';
+import MeetingAuthorization from './domain/MeetingAuthorization';
+import SipLine from './domain/SipLine';
+import getApiClient from './service/getApiClient';
 
 export type NewContact = NewContactType;
 export type ContactResponse = ContactResponseType;
@@ -102,4 +106,8 @@ export default {
   Wazo,
   WebRTCPhone,
   Meeting,
+  MeetingAuthorization,
+  MeetingStatus,
+  SipLine,
+  getApiClient,
 };
