@@ -50,6 +50,7 @@
         "default": "./lib/index.js"
       }
     },
+    "./lib/": "./lib/",
     "./lib/simple": "./lib/simple/index.js",
     "./dist/wazo-sdk": "./dist/wazo-sdk.js"
   },
