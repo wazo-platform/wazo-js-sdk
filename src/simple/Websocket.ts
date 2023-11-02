@@ -102,7 +102,7 @@ class Websocket extends Emitter implements IWebsocket {
   }
 
   close(force = false) {
-    logger.info('Closing Wazo websocket', { force, ws: !!this.ws });
+    logger.info('Closing event transport websocket', { force, ws: !!this.ws });
 
     if (this.ws) {
       this.ws.close(force);
