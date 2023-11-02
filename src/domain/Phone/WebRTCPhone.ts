@@ -276,7 +276,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return false;
     }
 
-    logger.info('Downgrade to video', {
+    logger.info('Downgrade to audio', {
       id: callSession ? callSession.getId() : null,
       withMessage,
     });
