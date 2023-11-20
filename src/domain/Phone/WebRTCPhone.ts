@@ -1044,7 +1044,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     };
 
     if (withEvent) {
-      // resuming a call will dismiss its mute state; let's make sure the call session reflects that state
+      // Calling webRtcClient.unhold will unmute the call; let's make sure the call session reflects that state
       if (callSession) {
         callSession.muted = false;
       }
