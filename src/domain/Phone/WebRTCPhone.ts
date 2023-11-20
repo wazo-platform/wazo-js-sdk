@@ -1044,6 +1044,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
     };
 
     if (withEvent) {
+      // Calling webRtcClient.unhold will unmute the call; let's make sure the call session reflects that state
+      if (callSession) {
+        callSession.muted = false;
+      }
       const updatedCallSession = this._createCallSession(sipSession, callSession);
 
       // Deprecated event
