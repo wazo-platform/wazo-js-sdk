@@ -1,7 +1,7 @@
 import WebSocketClient, { SOCKET_EVENTS, HEARTBEAT_ENGINE_VERSION } from '../../websocket-client';
 
 export default {
-  name: 'Wazo Websocket',
+  name: 'Event transport (WS)',
   check: (server: string, session: any) => new Promise<void>((resolve, reject) => {
     const client = new WebSocketClient({
       host: server,

@@ -10,7 +10,7 @@ export default ((client: ApiRequester, baseUrl: string): AmiD => ({
   getAors: async (endpoint: string) => {
     const rawEvents = await client.post(`${baseUrl}/action/PJSIPShowEndpoint`, {
       Endpoint: endpoint,
-    });
+    }) || [];
     return rawEvents.filter((event: Record<string, any>) => event.Event === 'ContactStatusDetail');
   },
 }));
