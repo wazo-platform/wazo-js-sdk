@@ -57,7 +57,7 @@
   "dependencies": {
     "events": "^3.3.0",
     "fstream": "^1.0.12",
-    "getstats": "manuquentin/getStats#fix_stats_mobile",
+    "getstats": "wazo-platform/getStats#fix_stats_mobile",
     "google-libphonenumber": "^3.2.32",
     "js-base64": "^3.7.5",
     "json-to-graphql-query": "^2.2.5",

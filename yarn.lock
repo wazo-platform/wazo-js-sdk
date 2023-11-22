@@ -3214,9 +3214,9 @@ get-symbol-description@^1.0.0:
     call-bind "^1.0.2"
     get-intrinsic "^1.1.1"
 
-getstats@manuquentin/getStats#fix_stats_mobile:
+getstats@wazo-platform/getStats#fix_stats_mobile:
   version "1.2.0"
-  resolved "https://codeload.github.com/manuquentin/getStats/tar.gz/664ad959bad42ca794b12dcee3f936e9eac0d88d"
+  resolved "https://codeload.github.com/wazo-platform/getStats/tar.gz/a7f41af68965a19744ffef6c37b6b1fe3e115717"
 
 glob-parent@^5.1.2:
   version "5.1.2"
