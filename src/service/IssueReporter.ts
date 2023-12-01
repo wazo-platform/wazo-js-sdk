@@ -133,6 +133,16 @@ class IssueReporter {
     return str.replace(/"/g, "'").replace(/\\/g, '');
   }
 
+  obfuscateToken(headers: object): object {
+    const newHeaders: object = { ...headers };
+    if ('X-Auth-Token' in newHeaders) {
+      const parts = (newHeaders['X-Auth-Token'] as string).split('-');
+      newHeaders['X-Auth-Token'] = `${parts[0]}-xxxxxx`;
+    }
+
+    return newHeaders;
+  }
+
   log(level: string, ...args: any) {
     if (!this.enabled) {
       return;
@@ -229,7 +239,7 @@ class IssueReporter {
       status,
       body: this.removeSlashes(JSON.stringify(options.body)),
       method: options.method,
-      headers: options.headers,
+      headers: this.obfuscateToken(options.headers),
       duration,
     });
   }

@@ -253,7 +253,11 @@ export default class WebRTCClient extends Emitter {
   createUserAgent(uaConfigOverrides?: UserAgentConfigOverrides): UserAgent {
     const uaOptions = this._createUaOptions(uaConfigOverrides);
 
-    logger.info('sdk webrtc, creating UA', { uaOptions, clientId: this.clientId });
+    logger.info('sdk webrtc, creating UA', {
+      uaOptions: { ...uaOptions, authorizationPassword: `${uaOptions?.authorizationPassword?.slice(0, 5)}xxxx` },
+      clientId: this.clientId,
+    });
+
     uaOptions.delegate = {
       onConnect: this.onConnect.bind(this),
       onDisconnect: this.onDisconnect.bind(this),
