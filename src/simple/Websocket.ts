@@ -2,6 +2,7 @@ import type Session from '../domain/Session';
 import WazoWebSocketClient, * as WebSocketClient from '../websocket-client';
 import Emitter, { IEmitter } from '../utils/Emitter';
 import IssueReporter from '../service/IssueReporter';
+import { obfuscateToken } from '../utils/string';
 
 const {
   SOCKET_EVENTS,
@@ -59,7 +60,7 @@ class Websocket extends Emitter implements IWebsocket {
   open(host: string, session: Session) {
     logger.info('open simple WebSocket', {
       host,
-      token: session.token,
+      token: obfuscateToken(session.token),
     });
     this.ws = new WazoWebSocketClient({
       host,

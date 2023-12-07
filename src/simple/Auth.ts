@@ -18,6 +18,7 @@ import getApiClient, {
 import IssueReporter from '../service/IssueReporter';
 import Wazo from './index';
 import SipLine from '../domain/SipLine';
+import { obfuscateToken } from '../utils/string';
 
 export class InvalidSubscription extends Error {}
 export class InvalidAuthorization extends Error {}
@@ -115,9 +116,8 @@ class Auth implements IAuth {
     setApiClientId(this.clientId);
     setRefreshExpiration(this.expiration);
     setOnRefreshToken((token: string, session: Session) => {
-      logger.info('on refresh token done', {
-        token,
-      });
+      logger.info('on refresh token done', { token: obfuscateToken(token) });
+
       setApiToken(token);
       Wazo.Websocket.updateToken(token);
 
