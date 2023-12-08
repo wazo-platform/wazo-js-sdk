@@ -1878,7 +1878,7 @@ export default class WebRTCClient extends Emitter {
     this.attemptReconnection();
   }
 
-  enableLogger(logConnector: Function): void {
+  enableLogger(logConnector: (level: any, className: string, label: any, content: string) => void): void {
     if (!this.userAgent) {
       return;
     }

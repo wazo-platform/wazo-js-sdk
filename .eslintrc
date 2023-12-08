@@ -74,7 +74,8 @@
       }
     ],
     "@typescript-eslint/ban-ts-comment": 0,
-    "@typescript-eslint/return-await": 0
+    "@typescript-eslint/return-await": 0,
+    "@typescript-eslint/no-non-null-assertion": 0
   },
   "settings": {
     "import/resolver": {
