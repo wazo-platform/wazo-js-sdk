@@ -4,6 +4,7 @@
 import moment from 'moment';
 import { realFetch } from '../utils/api-requester';
 import isMobile from '../utils/isMobile';
+import { obfuscateToken } from '../utils/string';
 
 const TRACE = 'trace';
 const DEBUG = 'debug';
@@ -133,6 +134,15 @@ class IssueReporter {
     return str.replace(/"/g, "'").replace(/\\/g, '');
   }
 
+  obfuscateHeaderToken(headers: object): object {
+    const newHeaders: object = { ...headers };
+    if ('X-Auth-Token' in newHeaders) {
+      newHeaders['X-Auth-Token'] = obfuscateToken(newHeaders['X-Auth-Token'] as string);
+    }
+
+    return newHeaders;
+  }
+
   log(level: string, ...args: any) {
     if (!this.enabled) {
       return;
@@ -229,7 +239,7 @@ class IssueReporter {
       status,
       body: this.removeSlashes(JSON.stringify(options.body)),
       method: options.method,
-      headers: options.headers,
+      headers: this.obfuscateHeaderToken(options.headers),
       duration,
     });
   }

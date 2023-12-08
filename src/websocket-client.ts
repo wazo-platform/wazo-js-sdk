@@ -6,6 +6,7 @@ import Emitter from './utils/Emitter';
 import type { WebSocketMessage } from './types/WebSocketMessage';
 import IssueReporter from './service/IssueReporter';
 import Heartbeat from './utils/Heartbeat';
+import { obfuscateToken } from './utils/string';
 
 export const SOCKET_EVENTS = {
   ON_OPEN: 'onopen',
@@ -177,7 +178,7 @@ class WebSocketClient extends Emitter {
   connect() {
     logger.info('connect method started', {
       host: this.host,
-      token: this.token,
+      token: obfuscateToken(this.token),
     });
     this.socket = new ReconnectingWebSocket(this._getUrl.bind(this), [], this.options);
 
@@ -234,7 +235,7 @@ class WebSocketClient extends Emitter {
         code: event.code,
         readyState: event.target.readyState,
         host: this.host,
-        token: this.token,
+        token: obfuscateToken(this.token),
       });
       this.initialized = false;
       this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE, event);
@@ -265,7 +266,7 @@ class WebSocketClient extends Emitter {
     logger.info('Wazo WS close', {
       socket: !!this.socket,
       host: this.host,
-      token: this.token,
+      token: obfuscateToken(this.token),
     });
 
     if (!this.socket) {
@@ -286,7 +287,7 @@ class WebSocketClient extends Emitter {
     this.token = token;
     logger.info('Wazo WS updating token', {
       url: this._getUrl(),
-      token,
+      token: obfuscateToken(token),
       socket: !!this.socket,
     });
 
@@ -312,7 +313,7 @@ class WebSocketClient extends Emitter {
   startHeartbeat() {
     logger.info('Wazo WS start heartbeat', {
       host: this.host,
-      token: this.token,
+      token: obfuscateToken(this.token),
     });
 
     if (!this.socket) {
@@ -328,7 +329,7 @@ class WebSocketClient extends Emitter {
   stopHeartbeat() {
     logger.info('Wazo WS stop heartbeat', {
       host: this.host,
-      token: this.token,
+      token: obfuscateToken(this.token),
     });
     this.heartbeat.stop();
   }
@@ -366,7 +367,7 @@ class WebSocketClient extends Emitter {
       reason,
       socket: !!this.socket,
       host: this.host,
-      token: this.token,
+      token: obfuscateToken(this.token),
     });
 
     if (!this.socket) {
@@ -439,7 +440,7 @@ class WebSocketClient extends Emitter {
     }
 
     logger.info('Wazo WS url computed to reconnect', {
-      url,
+      url: url.replace(this.token!, obfuscateToken(this.token) as string),
     });
     return url;
   }
@@ -454,7 +455,7 @@ class WebSocketClient extends Emitter {
   async _onHeartbeatTimeout() {
     logger.log('heartbeat timed out', {
       host: this.host,
-      token: this.token,
+      token: obfuscateToken(this.token),
     });
     this.close();
     this.eventEmitter.emit(SOCKET_EVENTS.ON_CLOSE, new Error('Websocket ping failure.'));

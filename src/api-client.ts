@@ -11,6 +11,7 @@ import webhookdMethods, { WebhookD } from './api/webhookd';
 import amidMethods, { AmiD } from './api/amid';
 import ApiRequester from './utils/api-requester';
 import IssueReporter from './service/IssueReporter';
+import { obfuscateToken } from './utils/string';
 
 type ConstructorParams = {
   server: string;
@@ -132,7 +133,7 @@ export default class ApiClient {
 
   async refreshTokenCallback(): Promise<string | null> {
     logger.info('refresh token callback called', {
-      refreshToken: this.refreshToken,
+      refreshToken: obfuscateToken(this.refreshToken),
       refreshBackend: this.refreshBackend,
       refreshTenantId: this.refreshTenantId,
       refreshDomainName: this.refreshDomainName,
@@ -151,7 +152,7 @@ export default class ApiClient {
       }
 
       logger.info('token refreshed', {
-        token: session.token,
+        token: obfuscateToken(session.token),
       });
 
       if (this.onRefreshToken) {
