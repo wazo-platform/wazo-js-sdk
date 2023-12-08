@@ -290,22 +290,7 @@ class Phone extends Emitter implements IPhone {
       options.log.builtinEnabled = false;
       options.log.logLevel = 'debug';
 
-      options.log.connector = (level: any, className: string, label: any, content: string) => {
-        const protocolIndex = content && content.indexOf ? protocolDebugMessages.findIndex(prefix => content.indexOf(prefix) !== -1) : -1;
-
-        if (className === 'sip.Transport' && protocolIndex !== -1) {
-          const direction = protocolIndex === 0 ? 'receiving' : 'sending';
-          const message = content.replace(`${protocolDebugMessages[protocolIndex]}\n\n`, '').replace('\r\n', '\n');
-          protocolLogger.trace(message, {
-            className,
-            direction,
-          });
-        } else {
-          sipLogger.trace(content, {
-            className,
-          });
-        }
-      };
+      options.log.connector = this._logConnector;
     }
 
     this.client = new WazoWebRTCClient({
@@ -609,6 +594,10 @@ class Phone extends Emitter implements IPhone {
     }
   }
 
+  enableLogger(): void {
+    this.client.enableLogger(this._logConnector);
+  }
+
   _transferEvents() {
     this.unbind();
     [...clientEvents, ...transportEvents].forEach(event => {
@@ -623,6 +612,22 @@ class Phone extends Emitter implements IPhone {
     });
   }
 
+  _logConnector(level: any, className: string, label: any, content: string): void {
+    const protocolIndex = content && content.indexOf ? protocolDebugMessages.findIndex(prefix => content.indexOf(prefix) !== -1) : -1;
+
+    if (className === 'sip.Transport' && protocolIndex !== -1) {
+      const direction = protocolIndex === 0 ? 'receiving' : 'sending';
+      const message = content.replace(`${protocolDebugMessages[protocolIndex]}\n\n`, '').replace('\r\n', '\n');
+      protocolLogger.trace(message, {
+        className,
+        direction,
+      });
+    } else {
+      sipLogger.trace(content, {
+        className,
+      });
+    }
+  }
 }
 
 if (!global.wazoTelephonyInstance) {

@@ -416,7 +416,7 @@ export default class WebRTCClient extends Emitter {
 
     return this._connectIfNeeded().then(() => {
       // Avoid race condition with the close method called just before register and setting userAgent to null
-      // during the resolution of the primise.
+      // during the resolution of the promise.
       if (!this.userAgent) {
         logger.info('sdk webrtc recreating User Agent after connection');
         this.userAgent = this.createUserAgent(this.uaConfigOverrides);
@@ -1876,6 +1876,24 @@ export default class WebRTCClient extends Emitter {
     logger.error('on transport error');
     this.eventEmitter.emit(TRANSPORT_ERROR);
     this.attemptReconnection();
+  }
+
+  enableLogger(logConnector: (level: any, className: string, label: any, content: string) => void): void {
+    if (!this.userAgent) {
+      return;
+    }
+
+    if (this.userAgent?.transport) {
+      // @ts-ignore
+      this.userAgent.transport.configuration.traceSip = true;
+    }
+
+    // @ts-ignore
+    this.userAgent.loggerFactory.builtinEnabled = true;
+    // @ts-ignore
+    this.userAgent.loggerFactory.level = 3; // debug
+    // @ts-ignore
+    this.userAgent.loggerFactory.connector = logConnector;
   }
 
   _onHeartbeat(message: string | Record<string, any>): void {
