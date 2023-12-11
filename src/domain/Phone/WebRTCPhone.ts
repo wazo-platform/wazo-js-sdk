@@ -594,6 +594,15 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     const callSession = this._createAcceptedCallSession(sipSession, cameraEnabled);
 
+    if (this.currentSipSession && !this.isCurrentCallSipSession(callSession)) {
+      logger.info('WebRTC phone - on call accepted with another ongoing call, holding it', {
+        sipId: sipSession.id,
+        cameraEnabled,
+      });
+
+      this.holdSipSession(this.currentSipSession, this.currentCallSession, true);
+    }
+
     this.currentSipSession = sipSession;
     this.currentCallSession = callSession;
     this.eventEmitter.emit(ON_TERMINATE_SOUND, callSession, 'call accepted');
