@@ -8,9 +8,18 @@ export interface AmiD {
 export default ((client: ApiRequester, baseUrl: string): AmiD => ({
   action: (action: string, args: Record<string, any> = {}): Promise<string> => client.post(`${baseUrl}/action/${action}`, args),
   getAors: async (endpoint: string) => {
-    const rawEvents = await client.post(`${baseUrl}/action/PJSIPShowEndpoint`, {
-      Endpoint: endpoint,
-    }) || [];
-    return rawEvents.filter((event: Record<string, any>) => event.Event === 'ContactStatusDetail');
+    try {
+      const rawEvents = await client.post(`${baseUrl}/action/PJSIPShowEndpoint`, {
+        Endpoint: endpoint,
+      }) || [];
+
+      if (!rawEvents) {
+        return [];
+      }
+
+      return rawEvents.filter((event: Record<string, any>) => event.Event === 'ContactStatusDetail');
+    } catch {
+      return [];
+    }
   },
 }));
