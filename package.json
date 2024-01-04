@@ -2,7 +2,7 @@
   "name": "@wazo/sdk",
   "version": "0.39.15",
   "description": "Wazo's JavaScript Software Development Kit.",
-  "main": "dist/wazo-sdk.js",
+  "main": "index.js",
   "author": "Wazo (http://wazo.io)",
   "maintainers": [
     "Wazo Team <dev@wazo.io> (https://github.com/wazo-platform)"
@@ -13,6 +13,7 @@
   "license": "MIT",
   "homepage": "https://github.com/wazo-platform/wazo-js-sdk",
   "files": [
+    "index.js",
     "dist/*.js",
     "src/**/*",
     "esm/**/*",
@@ -38,21 +39,6 @@
     "format": "./node_modules/.bin/prettier-eslint --write \"src/**/*.js\" \"__tests__/**/*.js\" --single-quote --trailing-comma es5",
     "typecheck": "./node_modules/.bin/tsc --noEmit",
     "prepublishOnly": "yarn build"
-  },
-  "exports": {
-    ".": {
-      "import": {
-        "types": "./esm/types/index.d.ts",
-        "default": "./esm/index.mjs"
-      },
-      "require": {
-        "types": "./lib/types/index.d.ts",
-        "default": "./lib/index.js"
-      }
-    },
-    "./lib/": "./lib/",
-    "./lib/simple": "./lib/simple/index.js",
-    "./dist/wazo-sdk": "./dist/wazo-sdk.js"
   },
   "dependencies": {
     "events": "^3.3.0",

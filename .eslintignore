@@ -2,3 +2,4 @@ dist/*
 docs/*
 esm/*
 lib/*
+./index.js
