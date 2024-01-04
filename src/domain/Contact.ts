@@ -239,6 +239,8 @@ type GoogleResponse = {
 
 const SOURCE_MOBILE = 'mobile';
 export default class Contact {
+  static BACKEND = BACKEND;
+
   type: string;
 
   id: string | null | undefined;

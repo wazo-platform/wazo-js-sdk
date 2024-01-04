@@ -1,50 +1,57 @@
 import ApiClient from './api-client';
 import WebRTCClient from './web-rtc-client';
-import WebSocketClient, { SOCKET_EVENTS } from './websocket-client';
-import Emitter from './utils/Emitter';
-import IssueReporter from './service/IssueReporter';
+import WebSocketClient, { SOCKET_EVENTS as SOCKET_EVENTS_IMPORT } from './websocket-client';
+import EmitterImport from './utils/Emitter';
+import IssueReporterImport from './service/IssueReporter';
 // Domain
-import BadResponse from './domain/BadResponse';
-import ServerError from './domain/ServerError';
-import SFUNotAvailableError from './domain/SFUNotAvailableError';
-import Call from './domain/Call';
-import CallLog from './domain/CallLog';
-import Recording from './domain/Recording';
-import ChatMessage from './domain/ChatMessage';
-import ChatRoom from './domain/ChatRoom';
-import Contact from './domain/Contact';
-import COUNTRIES from './domain/Country';
-import Features from './domain/Features';
-import ForwardOption, { FORWARD_KEYS } from './domain/ForwardOption';
-import Line from './domain/Line';
-import NotificationOptions from './domain/NotificationOptions';
-import Profile, { STATE as PROFILE_STATE, LINE_STATE } from './domain/Profile';
-import Session from './domain/Session';
-import Voicemail from './domain/Voicemail';
-import Relocation from './domain/Relocation';
-import Room from './domain/Room';
-import CallSession from './domain/CallSession';
-import IndirectTransfer from './domain/IndirectTransfer';
-import SwitchboardCall from './domain/SwitchboardCall';
-import WebRTCPhone from './domain/Phone/WebRTCPhone';
-import CTIPhone from './domain/Phone/CTIPhone';
-import Meeting from './domain/Meeting';
+import BadResponseImport from './domain/BadResponse';
+import ServerErrorImport from './domain/ServerError';
+import SFUNotAvailableErrorImport from './domain/SFUNotAvailableError';
+import CallImport from './domain/Call';
+import CallLogImport from './domain/CallLog';
+import RecordingImport from './domain/Recording';
+import ChatMessageImport from './domain/ChatMessage';
+import ChatRoomImport from './domain/ChatRoom';
+import ContactImport from './domain/Contact';
+import COUNTRIES_IMPORT from './domain/Country';
+import FeaturesImport from './domain/Features';
+import ForwardOptionImport, { FORWARD_KEYS as FORWARD_KEYS_IMPORT } from './domain/ForwardOption';
+import LineImport from './domain/Line';
+import NotificationOptionsImport from './domain/NotificationOptions';
+import ProfileImport, { STATE as PROFILE_STATE_IMPORT, LINE_STATE as LINE_STATE_IMPORT } from './domain/Profile';
+import SessionImport from './domain/Session';
+import VoicemailImport from './domain/Voicemail';
+import RelocationImport from './domain/Relocation';
+import RoomImport from './domain/Room';
+import CallSessionImport from './domain/CallSession';
+import IndirectTransferImport from './domain/IndirectTransfer';
+import SwitchboardCallImport from './domain/SwitchboardCall';
+import WebRTCPhoneImport from './domain/Phone/WebRTCPhone';
+import CTIPhoneImport from './domain/Phone/CTIPhone';
+import MeetingImport, { MeetingCreateArguments as MeetingCreateArgumentsImport, MeetingUpdateArguments as MeetingUpdateArgumentsImport } from './domain/Meeting';
 import type { NewContact as NewContactType, ContactResponse as ContactResponseType, ContactsResponse as ContactsResponseType, ContactPersonalResponse as ContactPersonalResponseType, ContactMobileResponse as ContactMobileResponseType } from './domain/Contact';
 import type { Phone as PhoneType, PhoneEventCallbacks as PhoneEventCallbacksType } from './domain/Phone/Phone';
 import type { ChatUser as ChatUserType } from './domain/ChatMessage';
 import type { Device as DeviceType } from './domain/Device/Device';
 import type { WebSocketMessage as WebSocketMessageType } from './types/WebSocketMessage';
-import DebugDevice from './domain/Device/DebugDevice';
-import Checker from './checker/Checker';
-import { PhoneNumberUtil, PhoneNumberFormat, AsYouTypeFormatter, getDisplayableNumber, getCallableNumber } from './utils/PhoneNumberUtil';
-import ApiRequester from './utils/api-requester';
+import DebugDeviceImport from './domain/Device/DebugDevice';
+import CheckerImport from './checker/Checker';
+import {
+  PhoneNumberUtil as PhoneNumberUtilImport,
+  PhoneNumberFormat as PhoneNumberFormatImport,
+  AsYouTypeFormatter as AsYouTypeFormatterImport,
+  getDisplayableNumber as getDisplayableNumberImport,
+  getCallableNumber as getCallableNumberImport,
+} from './utils/PhoneNumberUtil';
+import ApiRequesterImport from './utils/api-requester';
 import type { DirectorySource as DirectorySourceType, DirectorySources as DirectorySourcesType } from './domain/DirectorySource';
 import type { SwitchboardAnwseredQueuedCall as SwitchboardAnwseredQueuedCallType, SwitchboardAnwseredHeldCall as SwitchboardAnwseredHeldCallType, SwitchboardCallItem as SwitchboardCallItemType, SwitchboardCallItems as SwitchboardCallItemsType } from './domain/SwitchboardCall';
 import Wazo from './simple/index';
-import MeetingStatus from './domain/MeetingStatus';
-import MeetingAuthorization from './domain/MeetingAuthorization';
-import SipLine from './domain/SipLine';
-import getApiClient from './service/getApiClient';
+import MeetingStatusImport from './domain/MeetingStatus';
+import MeetingAuthorizationImport, { RawMeetingAuthorization as RawMeetingAuthorizationImport } from './domain/MeetingAuthorization';
+import SipLineImport from './domain/SipLine';
+import getApiClientImport from './service/getApiClient';
+import CallApiImport from './service/CallApi';
 
 export type NewContact = NewContactType;
 export type ContactResponse = ContactResponseType;
@@ -62,52 +69,56 @@ export type SwitchboardAnwseredHeldCall = SwitchboardAnwseredHeldCallType;
 export type SwitchboardCallItem = SwitchboardCallItemType;
 export type SwitchboardCallItems = SwitchboardCallItemsType;
 export type WebSocketMessage = WebSocketMessageType;
-export default {
-  ApiRequester,
-  Checker,
-  Emitter,
-  PhoneNumberUtil,
-  PhoneNumberFormat,
-  AsYouTypeFormatter,
-  getDisplayableNumber,
-  getCallableNumber,
-  WazoApiClient: ApiClient,
-  WazoWebRTCClient: WebRTCClient,
-  WazoWebSocketClient: WebSocketClient,
-  BadResponse,
-  ServerError,
-  SFUNotAvailableError,
-  Call,
-  CallSession,
-  CTIPhone,
-  Features,
-  IndirectTransfer,
-  SwitchboardCall,
-  CallLog,
-  Recording,
-  ChatMessage,
-  ChatRoom,
-  Contact,
-  COUNTRIES,
-  ForwardOption,
-  Line,
-  NotificationOptions,
-  Profile,
-  Session,
-  Voicemail,
-  Relocation,
-  Room,
-  IssueReporter,
-  DebugDevice,
-  PROFILE_STATE,
-  FORWARD_KEYS,
-  LINE_STATE,
-  SOCKET_EVENTS,
-  Wazo,
-  WebRTCPhone,
-  Meeting,
-  MeetingAuthorization,
-  MeetingStatus,
-  SipLine,
-  getApiClient,
-};
+export type MeetingCreateArguments = MeetingCreateArgumentsImport;
+export type MeetingUpdateArguments = MeetingUpdateArgumentsImport;
+export type RawMeetingAuthorization = RawMeetingAuthorizationImport;
+
+export const Contact = ContactImport;
+export const ApiRequester = ApiRequesterImport;
+export const Checker = CheckerImport;
+export const Emitter = EmitterImport;
+export const PhoneNumberUtil = PhoneNumberUtilImport;
+export const PhoneNumberFormat = PhoneNumberFormatImport;
+export const AsYouTypeFormatter = AsYouTypeFormatterImport;
+export const getDisplayableNumber = getDisplayableNumberImport;
+export const getCallableNumber = getCallableNumberImport;
+export const WazoApiClient = ApiClient;
+export const WazoWebRTCClient = WebRTCClient;
+export const WazoWebSocketClient = WebSocketClient;
+export const BadResponse = BadResponseImport;
+export const ServerError = ServerErrorImport;
+export const SFUNotAvailableError = SFUNotAvailableErrorImport;
+export const Call = CallImport;
+export const CallSession = CallSessionImport;
+export const CTIPhone = CTIPhoneImport;
+export const Features = FeaturesImport;
+export const IndirectTransfer = IndirectTransferImport;
+export const SwitchboardCall = SwitchboardCallImport;
+export const CallLog = CallLogImport;
+export const Recording = RecordingImport;
+export const ChatMessage = ChatMessageImport;
+export const ChatRoom = ChatRoomImport;
+export const COUNTRIES = COUNTRIES_IMPORT;
+export const ForwardOption = ForwardOptionImport;
+export const Line = LineImport;
+export const NotificationOptions = NotificationOptionsImport;
+export const Profile = ProfileImport;
+export const Session = SessionImport;
+export const Voicemail = VoicemailImport;
+export const Relocation = RelocationImport;
+export const Room = RoomImport;
+export const IssueReporter = IssueReporterImport;
+export const DebugDevice = DebugDeviceImport;
+export const PROFILE_STATE = PROFILE_STATE_IMPORT;
+export const FORWARD_KEYS = FORWARD_KEYS_IMPORT;
+export const LINE_STATE = LINE_STATE_IMPORT;
+export const SOCKET_EVENTS = SOCKET_EVENTS_IMPORT;
+export const WebRTCPhone = WebRTCPhoneImport;
+export const Meeting = MeetingImport;
+export const MeetingAuthorization = MeetingAuthorizationImport;
+export const MeetingStatus = MeetingStatusImport;
+export const SipLine = SipLineImport;
+export const getApiClient = getApiClientImport;
+export const CallApi = CallApiImport;
+
+export default Wazo;

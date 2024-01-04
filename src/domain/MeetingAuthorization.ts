@@ -11,7 +11,20 @@ export const REJECTED = 'rejected';
 export const POST_PROCESSING = 'post_processing';
 export const POST_PROCESSED_SUCCESS = 'post_processed_success';
 export const POST_PROCESSED_ERROR = 'post_processed_error';
+
 export default class MeetingAuthorization {
+  static PENDING = PENDING;
+
+  static ACCEPTED = ACCEPTED;
+
+  static REJECTED = REJECTED;
+
+  static POST_PROCESSING = POST_PROCESSING;
+
+  static POST_PROCESSED_SUCCESS = POST_PROCESSED_SUCCESS;
+
+  static POST_PROCESSED_ERROR = POST_PROCESSED_ERROR;
+
   meetingUuid: string;
 
   uuid: string;

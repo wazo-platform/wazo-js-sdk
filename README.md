@@ -175,7 +175,7 @@ Alternatively, you may load the Wazo SDK from a CDN. Use one of the following Co
 ### Importing the Simple API
 ```js
 // For Node / packaged app
-import Wazo from '@wazo/sdk/lib/simple';
+import Wazo from '@wazo/sdk';
 
 // Browser
 // You can access the `Wazo` object directly on the browser, simply include it in the html :
@@ -747,7 +747,7 @@ client.auth.listPolicies();
 **`Log`**
 
 ```
-import Wazo from '@wazo/sdk/lib/simple';
+import Wazo from '@wazo/sdk';
 
 Wazo.IssueReporter.enable();
 Wazo.IssueReporter.configureRemoteClient({
