@@ -28,12 +28,12 @@ import IndirectTransferImport from './domain/IndirectTransfer';
 import SwitchboardCallImport from './domain/SwitchboardCall';
 import WebRTCPhoneImport from './domain/Phone/WebRTCPhone';
 import CTIPhoneImport from './domain/Phone/CTIPhone';
-import MeetingImport, { MeetingCreateArguments as MeetingCreateArgumentsImport, MeetingUpdateArguments as MeetingUpdateArgumentsImport } from './domain/Meeting';
+import MeetingImport, { MeetingCreateArguments as MeetingCreateArgumentsType, MeetingUpdateArguments as MeetingUpdateArgumentsType } from './domain/Meeting';
 import type { NewContact as NewContactType, ContactResponse as ContactResponseType, ContactsResponse as ContactsResponseType, ContactPersonalResponse as ContactPersonalResponseType, ContactMobileResponse as ContactMobileResponseType } from './domain/Contact';
 import type { Phone as PhoneType, PhoneEventCallbacks as PhoneEventCallbacksType } from './domain/Phone/Phone';
-import type { ChatUser as ChatUserType } from './domain/ChatMessage';
+import type { ChatUser as ChatUserType, ChatMessageResponse as ChatMessageResponseType } from './domain/ChatMessage';
 import type { Device as DeviceType } from './domain/Device/Device';
-import type { WebSocketMessage as WebSocketMessageType } from './types/WebSocketMessage';
+import type { WebSocketMessage as WebSocketMessageType, PresencesReadEvent as PresencesReadEventType } from './types/WebSocketMessage';
 import DebugDeviceImport from './domain/Device/DebugDevice';
 import CheckerImport from './checker/Checker';
 import {
@@ -42,16 +42,18 @@ import {
   AsYouTypeFormatter as AsYouTypeFormatterImport,
   getDisplayableNumber as getDisplayableNumberImport,
   getCallableNumber as getCallableNumberImport,
+  parsePhoneNumber as parsePhoneNumberImport,
 } from './utils/PhoneNumberUtil';
 import ApiRequesterImport from './utils/api-requester';
 import type { DirectorySource as DirectorySourceType, DirectorySources as DirectorySourcesType } from './domain/DirectorySource';
 import type { SwitchboardAnwseredQueuedCall as SwitchboardAnwseredQueuedCallType, SwitchboardAnwseredHeldCall as SwitchboardAnwseredHeldCallType, SwitchboardCallItem as SwitchboardCallItemType, SwitchboardCallItems as SwitchboardCallItemsType } from './domain/SwitchboardCall';
 import Wazo from './simple/index';
 import MeetingStatusImport from './domain/MeetingStatus';
-import MeetingAuthorizationImport, { RawMeetingAuthorization as RawMeetingAuthorizationImport } from './domain/MeetingAuthorization';
+import MeetingAuthorizationImport, { RawMeetingAuthorization as RawMeetingAuthorizationType } from './domain/MeetingAuthorization';
 import SipLineImport from './domain/SipLine';
-import getApiClientImport from './service/getApiClient';
+import getApiClientImport, { setApiToken as setApiTokenImport, setCurrentServer as setCurrentServerImport, setOnRefreshToken as setOnRefreshTokenImport, setOnRefreshTokenError as setOnRefreshTokenErrorImport, setIsMobile as setIsMobileImport } from './service/getApiClient';
 import CallApiImport from './service/CallApi';
+import AdHocAPIConferenceImport from './domain/AdHocAPIConference';
 
 export type NewContact = NewContactType;
 export type ContactResponse = ContactResponseType;
@@ -69,9 +71,11 @@ export type SwitchboardAnwseredHeldCall = SwitchboardAnwseredHeldCallType;
 export type SwitchboardCallItem = SwitchboardCallItemType;
 export type SwitchboardCallItems = SwitchboardCallItemsType;
 export type WebSocketMessage = WebSocketMessageType;
-export type MeetingCreateArguments = MeetingCreateArgumentsImport;
-export type MeetingUpdateArguments = MeetingUpdateArgumentsImport;
-export type RawMeetingAuthorization = RawMeetingAuthorizationImport;
+export type MeetingCreateArguments = MeetingCreateArgumentsType;
+export type MeetingUpdateArguments = MeetingUpdateArgumentsType;
+export type RawMeetingAuthorization = RawMeetingAuthorizationType;
+export type PresencesReadEvent = PresencesReadEventType;
+export type ChatMessageResponse = ChatMessageResponseType;
 
 export const Contact = ContactImport;
 export const ApiRequester = ApiRequesterImport;
@@ -120,5 +124,12 @@ export const MeetingStatus = MeetingStatusImport;
 export const SipLine = SipLineImport;
 export const getApiClient = getApiClientImport;
 export const CallApi = CallApiImport;
+export const setApiToken = setApiTokenImport;
+export const setCurrentServer = setCurrentServerImport;
+export const parsePhoneNumber = parsePhoneNumberImport;
+export const setOnRefreshToken = setOnRefreshTokenImport;
+export const setOnRefreshTokenError = setOnRefreshTokenErrorImport;
+export const setIsMobile = setIsMobileImport;
+export const AdHocAPIConference = AdHocAPIConferenceImport;
 
 export default Wazo;
