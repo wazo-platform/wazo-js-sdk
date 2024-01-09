@@ -35,7 +35,7 @@ import IssueReporter from './service/IssueReporter';
 import Heartbeat from './utils/Heartbeat';
 import { getVideoDirection, hasAnActiveVideo } from './utils/sdp';
 import { lastIndexOf } from './utils/array';
-import type { MediaConfig, UserAgentConfigOverrides, WebRtcConfig, UserAgentOptions, IncomingResponse, PeerConnection, Session as WazoSession, WazoTransport } from './domain/types';
+import type { MediaConfig, UserAgentConfigOverrides, WebRtcConfig, UserAgentOptions, IncomingResponse, PeerConnection, WazoSession, WazoTransport } from './domain/types';
 
 // We need to replace 0.0.0.0 to 127.0.0.1 in the sdp to avoid MOH during a createOffer.
 export const replaceLocalIpModifier = (description: Record<string, any>) => Promise.resolve({ // description is immutable... so we have to clone it or the `type` attribute won't be returned.

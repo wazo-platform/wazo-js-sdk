@@ -9,7 +9,7 @@ import Participant, { RawParticipant } from './Participant';
 import RemoteParticipant from './RemoteParticipant';
 import IssueReporter from '../../service/IssueReporter';
 import LocalParticipant from './LocalParticipant';
-import { PeerConnection, Session } from '../../domain/types';
+import { PeerConnection, WazoSession } from '../../domain/types';
 
 export const SIGNAL_TYPE_PARTICIPANT_UPDATE = 'signal/PARTICIPANT_UPDATE';
 export const SIGNAL_TYPE_PARTICIPANT_REQUEST = 'signal/PARTICIPANT_REQUEST';
@@ -486,7 +486,7 @@ class Room extends Emitter {
       this.audioStream = stream;
 
       if (!this.roomAudioElement) {
-        const sessionId = Wazo.Phone.phone?.getSipSessionId(Wazo.Phone.phone?.currentSipSession as Session);
+        const sessionId = Wazo.Phone.phone?.getSipSessionId(Wazo.Phone.phone?.currentSipSession as WazoSession);
         this.roomAudioElement = Wazo.Phone.phone?.createAudioElementFor(sessionId as string);
         this.roomAudioElement.srcObject = stream;
       } else {

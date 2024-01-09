@@ -11,7 +11,7 @@ import IssueReporter from '../service/IssueReporter';
 import Emitter, { IEmitter } from '../utils/Emitter';
 import Wazo from './index';
 import SFUNotAvailableError from '../domain/SFUNotAvailableError';
-import { ConnectionOptions, Session as WazoSession } from '../domain/types';
+import { ConnectionOptions, WazoSession } from '../domain/types';
 
 const logger = IssueReporter.loggerFor('simple-phone');
 const sipLogger = IssueReporter.loggerFor('sip.js');

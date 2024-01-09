@@ -1,5 +1,5 @@
 import WebRTCClient from '../../web-rtc-client';
-import { Session as WazoSession } from '../../domain/types';
+import { WazoSession } from '../../domain/types';
 
 export default {
   name: 'WebRTC Transport (WS) ~30s',

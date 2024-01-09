@@ -3,6 +3,7 @@
   "version": "0.39.15",
   "description": "Wazo's JavaScript Software Development Kit.",
   "main": "index.js",
+  "types": "lib/types/index.d.ts",
   "author": "Wazo (http://wazo.io)",
   "maintainers": [
     "Wazo Team <dev@wazo.io> (https://github.com/wazo-platform)"

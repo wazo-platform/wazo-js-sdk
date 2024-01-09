@@ -11,7 +11,7 @@ import type { Phone, AvailablePhoneOptions } from './Phone';
 import WazoWebRTCClient from '../../web-rtc-client';
 import Emitter from '../../utils/Emitter';
 import IssueReporter from '../../service/IssueReporter';
-import { PeerConnection, Session as WazoSession } from '../types';
+import { PeerConnection, WazoSession } from '../types';
 
 export const ON_USER_AGENT = 'onUserAgent';
 export const ON_REGISTERED = 'onRegistered';

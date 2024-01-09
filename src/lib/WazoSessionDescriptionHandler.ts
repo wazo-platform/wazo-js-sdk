@@ -5,7 +5,7 @@ import type { MediaStreamFactory } from 'sip.js/lib/platform/web/session-descrip
 import type { SessionDescriptionHandlerConfiguration } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-configuration';
 import { SessionDescriptionHandler } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler';
 import { SessionDescriptionHandlerOptions } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-options';
-import { PeerConnection, Session as WazoSession } from '../domain/types';
+import { PeerConnection, WazoSession } from '../domain/types';
 import IssueReporter from '../service/IssueReporter';
 import { addIcesInAllBundles, fixSdp, parseCandidate } from '../utils/sdp';
 

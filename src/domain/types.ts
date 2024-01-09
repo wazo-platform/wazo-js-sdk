@@ -4,8 +4,7 @@ import type { IncomingResponse as SipIncomingResponse } from 'sip.js/lib/core/me
 import { Transport } from 'sip.js/lib/api';
 import WazoSessionDescriptionHandler from '../lib/WazoSessionDescriptionHandler';
 
-// @TODO: stand-in for empty object types. Was `type Something = {};` in JS
-type TodoObject = object;
+type GenericObject = Record<string, any>;
 
 export type Token = string;
 export type UUID = string;
@@ -48,7 +47,7 @@ export type Tenant = {
   }>;
   parent_uuid: UUID;
 };
-export type Group = TodoObject;
+export type Group = GenericObject;
 export type Policy = {
   acl_templates: Array<string>;
   // Deprecated
@@ -77,12 +76,12 @@ export type ListPoliciesResponse = {
   total: number;
   items: Array<Policy>;
 };
-export type AccessdGroup = TodoObject;
+export type AccessdGroup = GenericObject;
 export type Link = {
   href: string;
   rel: string;
 };
-export type Line = {
+type LocalLine = {
   id: number;
   endpoint_sip: {
     id: number;
@@ -143,7 +142,7 @@ export type ConfdUser = {
   groups: Array<AccessdGroup>;
   incalls: Array<Record<string, any>>;
   // @TODO
-  lines: Array<Line>;
+  lines: Array<LocalLine>;
   forwards: {
     busy: {
       enable: boolean;
@@ -198,7 +197,7 @@ export type Node = {
   calls: Array<Record<string, any>>; // @TODO
 
 };
-export type CallNode = TodoObject;
+export type CallNode = GenericObject;
 export type ListNodesResponse = {
   items: Array<Node>;
 };
@@ -206,8 +205,8 @@ export type ListCallNodesResponse = {
   uuid: UUID;
   items: Array<CallNode>;
 };
-export type GetTenantResponse = TodoObject;
-export type GetUserResponse = TodoObject;
+export type GetTenantResponse = GenericObject;
+export type GetUserResponse = GenericObject;
 export type CTITransfer = {
   'flow': string;
   'id': string;
@@ -264,7 +263,7 @@ export type PeerConnection = RTCPeerConnection & {
   sfu: any
 };
 
-export type Session = (Invitation | Inviter) & { remoteTag?: any, callId?: string };
+export type WazoSession = (Invitation | Inviter) & { remoteTag?: any, callId?: string };
 
 export type WazoTransport = Transport & {
   configuration: Record<string, any>,

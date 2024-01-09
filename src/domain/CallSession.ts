@@ -2,7 +2,7 @@ import { SessionState } from 'sip.js/lib/api/session-state';
 import Call from './Call';
 import newFrom from '../utils/new-from';
 import updateFrom from '../utils/update-from';
-import { Session as WazoSession } from './types';
+import { WazoSession } from './types';
 
 type CallSessionArguments = {
   answered: boolean;
