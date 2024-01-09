@@ -317,7 +317,9 @@ export default class WebRTCClient extends Emitter {
     logger.info('sdk webrtc connected', { method: 'delegate.onConnect', clientId: this.clientId });
     this.eventEmitter.emit(CONNECTED);
 
+    // @ts-ignore: private
     if (!this.isRegistered() && this.registerer?.waiting) {
+      // @ts-ignore: private
       this.registerer.waitingToggle(false);
     }
 
@@ -332,8 +334,9 @@ export default class WebRTCClient extends Emitter {
 
     if (this.isRegistered()) {
       await this.unregister();
-
+      // @ts-ignore: private
       if (this.registerer?.waiting) {
+        // @ts-ignore: private
         this.registerer.waitingToggle(false);
       }
 
@@ -348,6 +351,7 @@ export default class WebRTCClient extends Emitter {
       registered: this.isRegistered(),
       connectionPromise: !!this.connectionPromise,
       registerer: !!this.registerer,
+      // @ts-ignore: private
       waiting: this.registerer && this.registerer.waiting,
       tries,
       skipRegister: this.skipRegister,
@@ -371,6 +375,7 @@ export default class WebRTCClient extends Emitter {
       return Promise.resolve();
     }
 
+    // @ts-ignore: private
     if (this.connectionPromise || this.registerer?.waiting) {
       logger.info('sdk webrtc registering aborted due to a registration in progress.', { clientId: this.clientId });
       return Promise.resolve();
@@ -394,7 +399,9 @@ export default class WebRTCClient extends Emitter {
 
       this.connectionPromise = null;
 
+      // @ts-ignore: private
       if (this.registerer && this.registerer.waiting) {
+        // @ts-ignore: private
         this.registerer.waitingToggle(false);
       }
 
@@ -453,10 +460,14 @@ export default class WebRTCClient extends Emitter {
       return;
     }
 
+    // @ts-ignore: private
     const oldWaitingToggle = registerer.waitingToggle.bind(registerer);
+    // @ts-ignore: private
     const oldUnregistered = registerer.unregistered.bind(registerer);
 
+    // @ts-ignore: private
     registerer.waitingToggle = (waiting: boolean) => {
+      // @ts-ignore: private
       if (!registerer || registerer.waiting === waiting) {
         return;
       }
@@ -464,6 +475,7 @@ export default class WebRTCClient extends Emitter {
       oldWaitingToggle(waiting);
     };
 
+    // @ts-ignore: private
     registerer.unregistered = () => {
       if (!registerer || registerer.state === RegistererState.Terminated) {
         return;
