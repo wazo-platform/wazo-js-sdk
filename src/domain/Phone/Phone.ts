@@ -67,4 +67,5 @@ export interface Phone {
   isRegistered(): boolean;
   hasIncomingCallSession(): boolean;
   setMediaConstraints(media: MediaStreamConstraints): PhoneVoid;
+  getCurrentCallSession(): CallSession | null | undefined;
 }
