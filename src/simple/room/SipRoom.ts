@@ -1,9 +1,9 @@
-import { Invitation, Inviter } from 'sip.js';
 import type { Message } from 'sip.js/lib/api/message';
 import CallSession from '../../domain/CallSession';
 import IssueReporter from '../../service/IssueReporter';
 import Wazo from '../index';
 import Room from './Room';
+import { Session } from '../../domain/types';
 
 const logger = IssueReporter.loggerFor('sdk-sip-room');
 
@@ -54,7 +54,7 @@ class SipRoom extends Room {
   }
 
   getLocalGuestName(): string | null {
-    // @ts-ignore
+    // @ts-ignore: private
     return Wazo.Phone.phone?.client.userAgent?.options.displayName || null;
   }
 
@@ -156,7 +156,7 @@ class SipRoom extends Room {
   }
 
   _getCurrentSipCallIs() {
-    return Wazo.Phone.getSipSessionId(Wazo.Phone.phone?.currentSipSession as Invitation | Inviter);
+    return Wazo.Phone.getSipSessionId(Wazo.Phone.phone?.currentSipSession as Session);
   }
 
 }

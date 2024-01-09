@@ -88,8 +88,7 @@ client.setToken(token);
 describe('With correct API results', () => {
   beforeEach(() => {
     jest.resetModules();
-    // @ts-expect-error
-    global.fetch = jest.fn(() => Promise.resolve(mockedJson));
+    global.fetch = jest.fn(() => Promise.resolve(mockedJson)) as any;
   });
 
   describe('logIn test', () => {
@@ -102,13 +101,12 @@ describe('With correct API results', () => {
         Authorization: `Basic ${Base64.encode(`${username}:${password}`)}`,
         'Content-Type': 'application/json',
       };
-      // @ts-expect-error
+
       const result = await client.auth.logIn({
         username,
         password,
-      });
+      } as any) as any;
       expect(result).toBeInstanceOf(Session);
-      // @ts-expect-error
       expect(result.token).toBe(1);
       expect(global.fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token`, {
         method: 'post',
@@ -123,8 +121,7 @@ describe('With correct API results', () => {
   describe('logOut test', () => {
     it('should delete the specified token', async () => {
       const oldToken = 123;
-      // @ts-expect-error
-      await client.auth.logOut(oldToken);
+      await client.auth.logOut(oldToken as any);
       expect(global.fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token/${oldToken}`, {
         method: 'delete',
         body: null,
@@ -139,8 +136,7 @@ describe('With correct API results', () => {
 describe('With unAuthorized API results', () => {
   beforeEach(() => {
     jest.resetModules();
-    // @ts-expect-error
-    global.fetch = jest.fn(() => Promise.resolve(mockedUnAuthorized));
+    global.fetch = jest.fn(() => Promise.resolve(mockedUnAuthorized)) as any;
   });
 
   describe('checkLogin test', () => {
@@ -162,8 +158,7 @@ describe('With unAuthorized API results', () => {
 describe('With not found API results', () => {
   beforeEach(() => {
     jest.resetModules();
-    // @ts-expect-error
-    global.fetch = jest.fn(() => Promise.resolve(mockedNotFound));
+    global.fetch = jest.fn(() => Promise.resolve(mockedNotFound)) as any;
   });
 
   describe('fetchVoicemail test', () => {
@@ -198,19 +193,17 @@ describe('With not found API results', () => {
 describe('With erroneous text API results', () => {
   beforeEach(() => {
     jest.resetModules();
-    // @ts-expect-error
-    global.fetch = jest.fn(() => Promise.resolve(mockedTextError));
+    global.fetch = jest.fn(() => Promise.resolve(mockedTextError)) as any;
   });
 
   it('throw an exception when the response is >= 500', async () => {
     let error = null;
 
     try {
-      // @ts-expect-error
       await client.auth.logIn({
         username,
         password,
-      });
+      } as any);
     } catch (e: any) {
       error = e;
     }
@@ -225,19 +218,17 @@ describe('With erroneous text API results', () => {
 describe('With erroneous json API results', () => {
   beforeEach(() => {
     jest.resetModules();
-    // @ts-expect-error
-    global.fetch = jest.fn(() => Promise.resolve(mockedJsonError));
+    global.fetch = jest.fn(() => Promise.resolve(mockedJsonError)) as any;
   });
 
   it('throw an exception when the response is >= 500', async () => {
     let error = null;
 
     try {
-      // @ts-expect-error
       await client.auth.logIn({
         username,
         password,
-      });
+      } as any);
     } catch (e: any) {
       error = e;
     }

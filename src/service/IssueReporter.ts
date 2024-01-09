@@ -168,8 +168,7 @@ class IssueReporter {
           errorMessage: lastArg.message,
           errorStack: lastArg.stack,
           errorType: lastArg.constructor.name,
-          // @ts-ignore
-          skipSendToRemote: lastArg.skipSendToRemote,
+          skipSendToRemote: (lastArg as Error & { skipSendToRemote: boolean }).skipSendToRemote,
         };
       } else {
         extra = lastArg;
@@ -263,7 +262,7 @@ class IssueReporter {
     this.oldConsoleMethods = {};
     CONSOLE_METHODS.forEach((methodName: string) => {
       if (this.oldConsoleMethods) {
-        // @ts-ignore
+        // @ts-ignore: keys
         // eslint-disable-next-line
         this.oldConsoleMethods[methodName] = console[methodName];
       }
@@ -391,8 +390,7 @@ class IssueReporter {
         'Content-Type': 'application/json',
       },
       body,
-    }).catch((e: Error) => {
-      // @ts-ignore
+    }).catch((e: Error & { skipSendToRemote?: boolean }) => {
       e.skipSendToRemote = true;
       this.log('error', this._makeCategory('grafana'), 'Sending log to grafana, error', e);
       // wait at least 1 second, at most 50 seconds

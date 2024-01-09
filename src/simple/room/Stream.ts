@@ -34,9 +34,8 @@ class Stream {
 
     element.onloadedmetadata = () => {
       const tracks = this.htmlStream ? this.htmlStream.getVideoTracks() : [];
-      tracks.forEach(track => {
+      tracks.forEach((track: MediaStreamTrack & { loaded?: boolean }) => {
         track.enabled = true;
-        // @ts-ignore
         track.loaded = true;
       });
     };

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import Profile from '../Profile';
 import Line from '../Line';
 import ForwardOption, { FORWARD_KEYS } from '../ForwardOption';
@@ -18,12 +17,12 @@ describe('Profile domain', () => {
           context: 'default',
         }],
         endpoint_custom: null,
-      })],
+      } as any)],
       username: 'john.doe',
       forwards: [],
       mobileNumber: '123',
     };
-    const oldProfile = new Profile(attributes);
+    const oldProfile = new Profile(attributes as any);
     const newProfile = Profile.newFrom(oldProfile);
     expect(newProfile).toBeInstanceOf(Profile);
     expect(newProfile.firstName).toBe(attributes.firstName);
@@ -88,7 +87,7 @@ describe('Profile domain', () => {
       }],
       online_call_record_enabled: true,
     };
-    const profile = Profile.parse(plain);
+    const profile = Profile.parse(plain as any);
     expect(profile).toEqual(new Profile({
       id: 'xxx-xxx-xxx-xx',
       firstName: 'John',

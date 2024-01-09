@@ -108,7 +108,7 @@ export default class Session {
     if (token) {
       const isValid = jws.JWS.verifyJWT(token, swarmKey, {
         alg: ['RS256'],
-        // @ts-ignore
+        // @ts-ignore: date / number
         verifyAt: new Date(),
       });
 

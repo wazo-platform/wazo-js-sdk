@@ -1,5 +1,4 @@
 import { SessionState } from 'sip.js/lib/api/session-state';
-import { Inviter, Invitation } from 'sip.js/lib/api';
 import { OutgoingInviteRequest } from 'sip.js/lib/core';
 import type SipLine from '../domain/SipLine';
 import type Session from '../domain/Session';
@@ -12,7 +11,7 @@ import IssueReporter from '../service/IssueReporter';
 import Emitter, { IEmitter } from '../utils/Emitter';
 import Wazo from './index';
 import SFUNotAvailableError from '../domain/SFUNotAvailableError';
-import { ConnectionOptions } from '../domain/types';
+import { ConnectionOptions, Session as WazoSession } from '../domain/types';
 
 const logger = IssueReporter.loggerFor('simple-phone');
 const sipLogger = IssueReporter.loggerFor('sip.js');
@@ -91,10 +90,10 @@ export interface IPhone extends IEmitter {
   getStats: (callSession: CallSession) => Promise<RTCStatsReport | null | undefined>;
   startNetworkMonitoring: (callSession: CallSession, interval: number) => void;
   stopNetworkMonitoring: (callSession: CallSession) => void;
-  getSipSessionId: (sipSession: Invitation | Inviter) => string | null | undefined;
-  sendMessage: (body: string, sipSession?: Inviter | Invitation, contentType?: string) => void;
-  sendChat: (content: string, sipSession?: Inviter | Invitation) => void;
-  sendSignal: (content: any, sipSession?: Inviter | Invitation) => void ;
+  getSipSessionId: (sipSession: WazoSession) => string | null | undefined;
+  sendMessage: (body: string, sipSession?: WazoSession, contentType?: string) => void;
+  sendChat: (content: string, sipSession?: WazoSession) => void;
+  sendSignal: (content: any, sipSession?: WazoSession) => void ;
   turnCameraOff: (callSession: CallSession) => void;
   turnCameraOn: (callSession: CallSession) => void;
   startScreenSharing: (constraints: Record<string, any>, callSession?: CallSession) => Promise<MediaStream | null>;
@@ -114,7 +113,7 @@ export interface IPhone extends IEmitter {
   getRemoteVideoStreamFromPc: (callSession: CallSession) => MediaStream | null;
   hasVideo: (callSession: CallSession) => boolean;
   hasAVideoTrack: (callSession: CallSession) => boolean;
-  getCurrentSipSession: () => Invitation | Inviter | null;
+  getCurrentSipSession: () => WazoSession | null;
   getPrimaryWebRtcLine: () => SipLine | null;
   getOutputDevice: () => string | null ;
   getPrimaryLine: () => SipLine | null;
@@ -228,7 +227,7 @@ class Phone extends Emitter implements IPhone {
     super();
     // Sugar syntax for `Wazo.Phone.EVENT_NAME`
     Object.keys(PHONE_EVENTS).forEach((key: string) => {
-      // @ts-ignore
+      // @ts-ignore: keys
       this[key] = PHONE_EVENTS[key];
     });
     this.SessionState = SessionState;
@@ -435,14 +434,14 @@ class Phone extends Emitter implements IPhone {
     return this.phone ? this.phone.stopNetworkMonitoring(callSession) : null;
   }
 
-  getSipSessionId(sipSession: Invitation | Inviter): string | null | undefined {
+  getSipSessionId(sipSession: WazoSession): string | null | undefined {
     if (!sipSession || !this.phone) {
       return null;
     }
     return this.phone.getSipSessionId(sipSession);
   }
 
-  sendMessage(body: string, sipSession?: Inviter | Invitation, contentType = 'text/plain'): void {
+  sendMessage(body: string, sipSession?: WazoSession, contentType = 'text/plain'): void {
     const toSipSession = sipSession || this.getCurrentSipSession();
 
     if (!toSipSession || !this.phone) {
@@ -452,14 +451,14 @@ class Phone extends Emitter implements IPhone {
     this.phone.sendMessage(toSipSession, body, contentType);
   }
 
-  sendChat(content: string, sipSession?: Inviter | Invitation): void {
+  sendChat(content: string, sipSession?: WazoSession): void {
     this.sendMessage(JSON.stringify({
       type: MESSAGE_TYPE_CHAT,
       content,
     }), sipSession, 'application/json');
   }
 
-  sendSignal(content: any, sipSession?: Inviter | Invitation): void {
+  sendSignal(content: any, sipSession?: WazoSession): void {
     this.sendMessage(JSON.stringify({
       type: MESSAGE_TYPE_SIGNAL,
       content,
@@ -552,7 +551,7 @@ class Phone extends Emitter implements IPhone {
     return this.phone ? this.phone.hasAVideoTrack(callSession) : false;
   }
 
-  getCurrentSipSession(): Invitation | Inviter | null {
+  getCurrentSipSession(): WazoSession | null {
     return this.phone?.currentSipSession || null;
   }
 

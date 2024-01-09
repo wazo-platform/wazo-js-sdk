@@ -4,18 +4,15 @@ jest.mock('sip.js/lib/platform/web/transport');
 jest.mock('sip.js/lib/api/user-agent', () => ({
   start: () => {},
   UserAgent: class UserAgent {
-    // @ts-ignore
-    static makeURI = () => {};
+    static makeURI: () => null = () => null;
 
-    // @ts-ignore
     start = () => {};
 
     transport = {};
   },
 }));
 
-// @ts-expect-error
-const client = new WebRTCClient({});
+const client = new WebRTCClient({} as any, null, undefined);
 
 describe('WebRTC client', () => {
   it('should compute muted/unmuted state', async () => {
@@ -65,14 +62,11 @@ describe('WebRTC client', () => {
         },
       },
     };
-    // @ts-expect-error
-    expect(client.isAudioMuted(mutedSession)).toBeTruthy();
-    // @ts-expect-error
-    expect(client.isAudioMuted(oldKindMuted)).toBeTruthy();
-    // @ts-expect-error
-    expect(client.isAudioMuted(unMutedSession)).toBeFalsy();
-    // @ts-expect-error
-    expect(client.isAudioMuted(oldKindUnmuted)).toBeFalsy();
+
+    expect(client.isAudioMuted(mutedSession as any)).toBeTruthy();
+    expect(client.isAudioMuted(oldKindMuted as any)).toBeTruthy();
+    expect(client.isAudioMuted(unMutedSession as any)).toBeFalsy();
+    expect(client.isAudioMuted(oldKindUnmuted as any)).toBeFalsy();
   });
 });
 describe('changeAudioInputDevice', () => {
@@ -131,27 +125,21 @@ describe('changeAudioInputDevice', () => {
     },
   });
   it('should change the audio input track if the provided id is different', async () => {
-    // @ts-expect-error
-    client.setMediaConstraints(constraints);
+    client.setMediaConstraints(constraints as any);
     expect(client.getAudioDeviceId()).toBe(defaultId);
-    // @ts-expect-error
-    const result = await client.changeAudioInputDevice(deviceId, session);
+    const result = await client.changeAudioInputDevice(deviceId, session as any);
     expect(result).toBeTruthy();
   });
   it('should NOT change the audio input track if the provided id is the same', async () => {
-    // @ts-expect-error
-    client.setMediaConstraints(constraints);
+    client.setMediaConstraints(constraints as any);
     expect(client.getAudioDeviceId()).toBe(defaultId);
-    // @ts-expect-error
-    const result = await client.changeAudioInputDevice(defaultId, session);
+    const result = await client.changeAudioInputDevice(defaultId, session as any);
     expect(result).toBeFalsy();
   });
   it('should change the audio input track if the provided id is the same and force param is TRUE', async () => {
-    // @ts-expect-error
-    client.setMediaConstraints(constraints);
+    client.setMediaConstraints(constraints as any);
     expect(client.getAudioDeviceId()).toBe(defaultId);
-    // @ts-expect-error
-    const result = await client.changeAudioInputDevice(defaultId, session, true);
+    const result = await client.changeAudioInputDevice(defaultId, session as any, true);
     expect(result).toBeTruthy();
   });
   describe('setVideoInputDevice', () => {

@@ -1,6 +1,6 @@
 import type { Message } from 'sip.js/lib/api/message';
 import sdpParser from 'sdp-transform';
-import { Invitation, Inviter } from 'sip.js';
+import { SessionDescriptionHandler } from 'sip.js/lib/platform/web';
 import type CallSession from '../../domain/CallSession';
 import getApiClient from '../../service/getApiClient';
 import Emitter from '../../utils/Emitter';
@@ -9,6 +9,7 @@ import Participant, { RawParticipant } from './Participant';
 import RemoteParticipant from './RemoteParticipant';
 import IssueReporter from '../../service/IssueReporter';
 import LocalParticipant from './LocalParticipant';
+import { PeerConnection, Session } from '../../domain/types';
 
 export const SIGNAL_TYPE_PARTICIPANT_UPDATE = 'signal/PARTICIPANT_UPDATE';
 export const SIGNAL_TYPE_PARTICIPANT_REQUEST = 'signal/PARTICIPANT_REQUEST';
@@ -467,8 +468,7 @@ class Room extends Emitter {
     }
 
     // Retrieve mapping
-    // @ts-ignore
-    Wazo.Phone.phone.currentSipSession.sessionDescriptionHandler.on('setDescription', ({
+    (Wazo.Phone.phone.currentSipSession.sessionDescriptionHandler as SessionDescriptionHandler & { on: (input: string, options?: Record<string, any>) => void })?.on('setDescription', ({
       type,
       sdp: rawSdp,
     }: any) => {
@@ -486,7 +486,7 @@ class Room extends Emitter {
       this.audioStream = stream;
 
       if (!this.roomAudioElement) {
-        const sessionId = Wazo.Phone.phone?.getSipSessionId(Wazo.Phone.phone?.currentSipSession as Inviter | Invitation);
+        const sessionId = Wazo.Phone.phone?.getSipSessionId(Wazo.Phone.phone?.currentSipSession as Session);
         this.roomAudioElement = Wazo.Phone.phone?.createAudioElementFor(sessionId as string);
         this.roomAudioElement.srcObject = stream;
       } else {
@@ -586,8 +586,7 @@ class Room extends Emitter {
     [this.ON_AUDIO_STREAM, this.ON_VIDEO_STREAM, this.ON_REMOVE_STREAM].forEach(event => Wazo.Phone.on(event, (...args) => this.eventEmitter.emit.apply(this.eventEmitter, [event, ...args])));
   }
 
-  _onMessage(message: Message): Record<string, any> | null | undefined {
-    // @ts-ignore
+  _onMessage(message: Message & { method?: string, body?: string }): Record<string, any> | null | undefined {
     if (message.method !== 'MESSAGE') {
       return null;
     }
@@ -595,8 +594,7 @@ class Room extends Emitter {
     let body: any;
 
     try {
-      // @ts-ignore
-      body = JSON.parse(message.body);
+      body = JSON.parse(message.body as string);
     } catch (e: any) {
       return null;
     }
@@ -839,8 +837,8 @@ class Room extends Emitter {
       trackId,
       streamId,
     } = this._callIdStreamIdMap[newParticipant.callId] || {};
-    // @ts-ignore
-    const pc = Wazo.Phone.phone.currentSipSession.sessionDescriptionHandler.peerConnection;
+
+    const pc = (Wazo.Phone.phone?.currentSipSession?.sessionDescriptionHandler as SessionDescriptionHandler)?.peerConnection as PeerConnection;
     // Can't use `getReceivers` here because on FF we make the mapping based on the streamId
     const stream = pc.getRemoteStreams().find((someStream: any) => someStream.id === streamId || someStream.getTracks().some((track: any) => track.id === trackId));
 

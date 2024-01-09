@@ -46,11 +46,11 @@ class Websocket extends Emitter implements IWebsocket {
     super();
     // Sugar syntax for `Wazo.WebSocket.EVENT_NAME`
     Object.keys(OTHER_EVENTS).forEach(key => {
-      // @ts-ignore
+      // @ts-ignore: keys
       this[key] = OTHER_EVENTS[key];
     });
     Object.keys(SOCKET_EVENTS).forEach(key => {
-      // @ts-ignore
+      // @ts-ignore: keys
       this[key] = SOCKET_EVENTS[key];
     });
     this.eventLists = WazoWebSocketClient.eventLists;

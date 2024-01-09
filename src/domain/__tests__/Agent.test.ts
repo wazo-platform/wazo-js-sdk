@@ -1,4 +1,4 @@
-import Agent, { AgentResponse } from '../Agent';
+import Agent, { AgentArguments, AgentResponse } from '../Agent';
 
 const fieldMap: Record<string, any> = {
   context: 'context',
@@ -27,14 +27,12 @@ Object.keys(fieldMap).forEach((field: string) => {
 });
 describe('Call Center Agent domain', () => {
   it('should keep its values', () => {
-    // @ts-expect-error
-    const agent = new Agent(formatted) as any;
+    const agent = new Agent(formatted as AgentArguments) as any;
     expect(agent).toBeInstanceOf(Agent);
     Object.keys(fieldMap).map(key => expect(agent[key]).toBe(formatted[key]));
   });
   it('can parse a plain call center agent to domain', () => {
     const agent = Agent.parse(plain as AgentResponse);
-    // @ts-expect-error
-    expect(agent).toEqual(new Agent(formatted));
+    expect(agent).toEqual(new Agent(formatted as AgentArguments));
   });
 });

@@ -26,8 +26,7 @@ describe('Participant', () => {
       const room = new Room();
       room.setMeetingUuid(meetingUuid);
       const banMeetingParticipant = jest.fn();
-      // @ts-expect-error
-      getApiClient.mockImplementation(() => ({
+      (getApiClient as any).mockImplementation(() => ({
         calld: {
           banMeetingParticipant,
         },
@@ -52,8 +51,7 @@ describe('Participant', () => {
       const room = new Room();
       room.setMeetingUuid(meetingUuid);
       const banMeetingParticipant = jest.fn();
-      // @ts-expect-error
-      getApiClient.mockImplementation(() => ({
+      (getApiClient as any).mockImplementation(() => ({
         calld: {
           banMeetingParticipant,
         },

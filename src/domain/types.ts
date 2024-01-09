@@ -1,5 +1,7 @@
-import type { Session, UserAgentOptions as sipJsUserAgentOptions } from 'sip.js';
+import type { Invitation, Inviter, Session as SipSession, UserAgentOptions as sipJsUserAgentOptions } from 'sip.js';
 import { SessionDescriptionHandlerFactoryOptions } from 'sip.js/lib/platform/web';
+import type { IncomingResponse as SipIncomingResponse } from 'sip.js/lib/core/messages/incoming-response';
+import { Transport } from 'sip.js/lib/api';
 import WazoSessionDescriptionHandler from '../lib/WazoSessionDescriptionHandler';
 
 // @TODO: stand-in for empty object types. Was `type Something = {};` in JS
@@ -217,7 +219,7 @@ export type CTITransfer = {
 };
 export type UserAgentOptions = sipJsUserAgentOptions & {
   peerConnectionOptions?: Record<string, any>,
-  sessionDescriptionHandlerFactory: (session: Session, options: SessionDescriptionHandlerFactoryOptions) => WazoSessionDescriptionHandler,
+  sessionDescriptionHandlerFactory: (session: SipSession, options: SessionDescriptionHandlerFactoryOptions) => WazoSessionDescriptionHandler,
 };
 export type UserAgentConfigOverrides = Partial<UserAgentOptions & {
   traceSip: any,
@@ -252,4 +254,24 @@ export type ConnectionOptions = WebRtcConfig & {
   uaConfigOverrides: UserAgentConfigOverrides,
   audioDeviceOutput: string,
   audioDeviceRing: string
+};
+export type IncomingResponse = SipIncomingResponse & { session: any };
+
+export type PeerConnection = RTCPeerConnection & {
+  getRemoteStreams: () => MediaStream[],
+  getLocalStreams: () => MediaStream[],
+  onremovestream: (func: any) => void,
+  sfu: any
+};
+
+export type Session = (Invitation | Inviter) & { remoteTag?: any, callId?: string };
+
+export type WazoTransport = Transport & {
+  configuration: Record<string, any>,
+  connectPromise: Promise<any>,
+  disconnectPromise: Promise<any>,
+  disconnectResolve: any,
+  transitionState: any,
+  transitioningState: any;
+  _ws: any;
 };

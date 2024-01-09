@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import moment from 'moment';
 import CallLog from '../CallLog';
 import Recording from '../Recording';
@@ -34,7 +32,7 @@ describe('CallLog domain', () => {
       }],
       total: 233,
     };
-    const logs = CallLog.parseMany(response);
+    const logs = CallLog.parseMany(response as any);
     expect(logs).toEqual([new CallLog({
       answer: moment('2017-08-07T13:51:18.892002+00:00').toDate(),
       answered: true,

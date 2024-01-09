@@ -66,8 +66,7 @@ export default {
         }
 
         if (ips.every(checkIsIPV4)) {
-          // @ts-ignore
-          resolve();
+          resolve(null);
         } else {
           const nonIPV4 = ips.find(ip => !checkIsIPV4(ip));
           reject(new Error(`Non IPv4 ice candidate found : ${nonIPV4}.`));

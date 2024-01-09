@@ -5,7 +5,7 @@ import type { MediaStreamFactory } from 'sip.js/lib/platform/web/session-descrip
 import type { SessionDescriptionHandlerConfiguration } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-configuration';
 import { SessionDescriptionHandler } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler';
 import { SessionDescriptionHandlerOptions } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-options';
-import { Inviter, Invitation } from 'sip.js/lib/api';
+import { PeerConnection, Session as WazoSession } from '../domain/types';
 import IssueReporter from '../service/IssueReporter';
 import { addIcesInAllBundles, fixSdp, parseCandidate } from '../utils/sdp';
 
@@ -30,16 +30,16 @@ export const wazoMediaStreamFactory = (constraints: Record<string, any>): Promis
 };
 
 class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
-  gatheredCandidates: Array<string | null | undefined>;
+  gatheredCandidates: Array<Record<string, any> | string | null | undefined>;
 
   eventEmitter: EventEmitter;
 
   isWeb: boolean;
 
-  session: Inviter | Invitation;
+  session: WazoSession;
 
   // eslint-disable-next-line @typescript-eslint/default-param-last
-  constructor(logger: Logger, mediaStreamFactory: MediaStreamFactory, sessionDescriptionHandlerConfiguration: SessionDescriptionHandlerConfiguration, isWeb: boolean, session: Inviter | Invitation) {
+  constructor(logger: Logger, mediaStreamFactory: MediaStreamFactory, sessionDescriptionHandlerConfiguration: SessionDescriptionHandlerConfiguration, isWeb: boolean, session: WazoSession) {
     super(logger, mediaStreamFactory, sessionDescriptionHandlerConfiguration);
     this.eventEmitter = new EventEmitter();
     this.isWeb = isWeb;
@@ -74,7 +74,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     }
 
     // Callback on data channel creation
-    // @ts-ignore
+    // @ts-ignore: private
     this.onDataChannel = options.onDataChannel;
     // ICE will restart upon applying an offer created with the iceRestart option
     const iceRestart = options.offerOptions ? options.offerOptions.iceRestart : false;
@@ -83,7 +83,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     // We should wait for ice when iceRestart (reinvite) or for the first invite
     // We shouldn't wait for ice when holding or resuming the call
     // We shouldn't wait for ice when receiving a reinvite (eg: pendingReinviteAck = true)
-    // @ts-ignore
+    // @ts-ignore: private
     const shouldWaitForIce = !this.session.pendingReinviteAck && (iceRestart || 'constraints' in options);
     // ICE gathering timeout may be set on a per call basis, otherwise the configured default is used
     const iceTimeout = options.iceGatheringTimeout === undefined ? this.sessionDescriptionHandlerConfiguration?.iceGatheringTimeout : options.iceGatheringTimeout;
@@ -105,7 +105,6 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       });
 
       if (event.candidate) {
-        // @ts-ignore @REEVALUATE
         this.gatheredCandidates.push(parseCandidate(event.candidate.candidate));
 
         // When receiving a `srflx` or a `relay` candidate, consider the negotiation done.
@@ -153,8 +152,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         return {
           type: description.type,
           // Fix sdp only when no candidates
-          // @ts-ignore
-          sdp: fixSdp(sdp, this.gatheredCandidates, options && options.constraints ? options.constraints.video : false),
+          sdp: fixSdp(sdp, this.gatheredCandidates as Record<string, any>[], options && options.constraints ? options.constraints.video : false),
         };
       })
       .then((sessionDescription: any) => this.applyModifiers(sessionDescription, modifiers))
@@ -209,18 +207,15 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     }
 
     // Closing senders via getLocalStreams, `getLocalStreams` is deprecated, we have to check if it exists.
-    // @ts-ignore
-    if (this.peerConnection?.getLocalStreams) {
-      // @ts-ignore
-      this.peerConnection?.getLocalStreams().forEach(stream => {
+    if ((this.peerConnection as PeerConnection)?.getLocalStreams) {
+      (this.peerConnection as PeerConnection)?.getLocalStreams().forEach(stream => {
         stream.getTracks()
           .filter((track: MediaStreamTrack) => track.enabled)
           .forEach((track: MediaStreamTrack) => track.stop());
       });
 
       // Closing receivers via getRemoteStreams
-      // @ts-ignore
-      this.peerConnection?.getRemoteStreams().forEach(stream => {
+      (this.peerConnection as PeerConnection)?.getRemoteStreams().forEach(stream => {
         stream.getTracks()
           .filter((track: MediaStreamTrack) => track.enabled)
           .forEach((track: MediaStreamTrack) => track.stop());
@@ -365,8 +360,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
 
           // set the transceiver direction to the answer direction
           this._peerConnection.getTransceivers().forEach(transceiver => {
-            // @ts-ignore
-            if (transceiver.stopped) {
+            if ((transceiver as RTCRtpTransceiver & { stopped: boolean }).stopped) {
               return;
             }
 
@@ -445,12 +439,12 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
           if (oldTrack) {
             oldTrack.stop();
             localStream.removeTrack(oldTrack);
-            // @ts-ignore
+            // @ts-ignore: private
             SessionDescriptionHandler.dispatchRemoveTrackEvent(localStream, oldTrack);
           }
 
           localStream.addTrack(newTrack);
-          // @ts-ignore
+          // @ts-ignore: private
           SessionDescriptionHandler.dispatchAddTrackEvent(localStream, newTrack);
         }).catch((error: Error) => {
           this.logger.error(`SessionDescriptionHandler.setLocalMediaStream - failed to replace sender ${kind} track`);
@@ -475,7 +469,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
           }
 
           localStream.addTrack(newTrack);
-          // @ts-ignore
+          // @ts-ignore: private
           SessionDescriptionHandler.dispatchAddTrackEvent(localStream, newTrack);
         }));
       }
@@ -510,10 +504,10 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     } : {};
 
     // if we already have a local media stream...
-    // @ts-ignore
+    // @ts-ignore: private
     if (this.localMediaStreamConstraints) {
       // if constraints have not changed, do not get a new media stream
-      // @ts-ignore
+      // @ts-ignore: private
       if (JSON.stringify(this.localMediaStreamConstraints.audio) === JSON.stringify(constraints.audio) && JSON.stringify(this.localMediaStreamConstraints.video) === JSON.stringify(constraints.video)) {
         return Promise.resolve();
       }
@@ -524,9 +518,8 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       };
     }
 
-    // @ts-ignore
+    // @ts-ignore: private
     this.localMediaStreamConstraints = constraints;
-    // @ts-ignore
     return this.mediaStreamFactory(constraints, this).then(mediaStream => {
       this.setLocalMediaStream(mediaStream);
       return mediaStream;

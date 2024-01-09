@@ -16,12 +16,9 @@ type PhoneBookSearchQueryParams = {
 
 const getContactPayload = (contact: NewContact | Contact) => ({
   email: contact.email,
-  // @ts-ignore
-  firstname: contact.firstName ? contact.firstName : '',
-  // @ts-ignore
-  lastname: contact.lastName ? contact.lastName : '',
-  // @ts-ignore
-  number: contact.phoneNumber ? contact.phoneNumber : '',
+  firstname: (contact as any).firstName ? (contact as any).firstName : '',
+  lastname: (contact as any).lastName ? (contact as any).lastName : '',
+  number: (contact as any).phoneNumber ? (contact as any).phoneNumber : '',
   entreprise: contact.entreprise ? contact.entreprise : '',
   birthday: contact.birthday ? contact.birthday : '',
   address: contact.address ? contact.address : '',

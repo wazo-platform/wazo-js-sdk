@@ -138,7 +138,6 @@ const Wazo = {
 };
 
 if (window) {
-  // @ts-ignore
   window.Wazo = Wazo;
 }
 

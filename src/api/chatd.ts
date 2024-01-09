@@ -68,9 +68,8 @@ export default ((client: ApiRequester, baseUrl: string): ChatD => ({
     const uuids: Array<UUID> = contactUuids || [];
 
     if (uuids.length > MAX_PRESENCE_FETCHED) {
-      const requests = uuids.reduce((acc, _, i) => {
+      const requests = uuids.reduce((acc: Promise<PresenceResponse[]>[], _, i) => {
         if (i % MAX_PRESENCE_FETCHED === 0) {
-          // @ts-ignore
           acc.push(this.getMultipleLineState(uuids.slice(i, i + MAX_PRESENCE_FETCHED)));
         }
         return acc;
