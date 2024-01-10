@@ -37,6 +37,7 @@ export { default as Checker } from './checker/Checker';
 export * from './utils/PhoneNumberUtil';
 export { default as ApiRequester } from './utils/api-requester';
 export { DirectorySource as Source, DirectorySources as Sources } from './domain/DirectorySource';
+export { DirectorySource, DirectorySources } from './domain/DirectorySource';
 export { SwitchboardAnwseredQueuedCall, SwitchboardAnwseredHeldCall, SwitchboardCallItem, SwitchboardCallItems } from './domain/SwitchboardCall';
 export { default as MeetingStatus } from './domain/MeetingStatus';
 export { default as MeetingAuthorization, RawMeetingAuthorization } from './domain/MeetingAuthorization';

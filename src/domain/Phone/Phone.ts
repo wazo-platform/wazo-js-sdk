@@ -1,5 +1,8 @@
+import EventEmitter from 'events';
 import Line from '../Line';
 import CallSession from '../CallSession';
+import type WebRTCClient from '../../web-rtc-client';
+import { IEmitter } from '../../utils/Emitter';
 
 export type PhoneEventCallbacks = {
   onCallIncoming?: (number: string) => void;
@@ -25,7 +28,7 @@ export type AvailablePhoneOptions = {
   sendKey: boolean;
   transfer: boolean;
 };
-export interface Phone {
+export interface Phone extends IEmitter {
   accept(callSession: CallSession, enableVideo: boolean): Promise<string | null>;
   changeAudioDevice(id: string): PhoneVoid;
   changeRingDevice(id: string): PhoneVoid;
@@ -54,7 +57,7 @@ export interface Phone {
   hasAVideoTrack(callSession: CallSession): boolean;
   isWebRTC(): boolean;
   getUserAgent(): string;
-  makeCall(number: string, line: Line, enableVideo?: boolean, audioOnly?: boolean): (CallSession | null | undefined) | Promise<CallSession | null | undefined>;
+  makeCall(number: string, line: Line, enableVideo?: boolean, audioOnly?: boolean): Promise<CallSession | null | undefined>;
   mute(callSession: CallSession): PhoneVoid;
   reject(callSession: CallSession): PhoneVoid;
   resume(callSession: CallSession): Promise<any> | null | undefined;
@@ -68,4 +71,9 @@ export interface Phone {
   hasIncomingCallSession(): boolean;
   setMediaConstraints(media: MediaStreamConstraints): PhoneVoid;
   getCurrentCallSession(): CallSession | null | undefined;
+  getRemoteVideoStream(callSession: CallSession): MediaStream | null | undefined;
+  hasLocalVideo(callSession: CallSession): boolean;
+  eventEmitter: EventEmitter;
+  client: WebRTCClient | null;
+  register(): Promise<null | void>;
 }

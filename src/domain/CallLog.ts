@@ -8,46 +8,47 @@ type CallLogResponse = {
   answer: string | null | undefined;
   answered: boolean;
   call_direction: string;
-  destination_extension: string;
-  destination_name: string | null | undefined;
-  destination_user_uuid: string | null | undefined;
+  destination_extension?: string;
+  destination_name?: string;
+  destination_user_uuid?: string;
   duration: number;
   end: string | null | undefined;
   id: number;
   source_extension: string;
   source_name: string;
-  source_user_uuid: string | null | undefined;
+  source_user_uuid?: string;
   recordings: RecordingResponse[];
   requested_extension: string;
   requested_name: string;
   start: string;
 };
+
 type Response = {
   filtered: number;
   items: Array<CallLogResponse>;
   total: number;
 };
+
+type LogOrigin = {
+  extension: string;
+  name: string;
+  uuid?: string;
+};
+
 type CallLogArguments = {
   answer: Date | null | undefined;
   answered: boolean;
   newMissedCall?: boolean;
   callDirection: string;
-  destination: {
-    extension: string;
-    name: string;
-    uuid: string | null | undefined;
-  };
-  source: {
-    extension: string;
-    name: string;
-    uuid: string | null | undefined;
-  };
+  destination: LogOrigin;
+  source: LogOrigin;
   id: number;
   duration: number;
   start: Date;
   end: Date | null | undefined;
   recordings: Recording[];
 };
+
 export default class CallLog {
   type: string;
 
@@ -59,17 +60,11 @@ export default class CallLog {
 
   callDirection: string;
 
-  destination: {
-    extension: string;
-    name: string;
-  };
+  destination: LogOrigin;
 
   recordings: Recording[];
 
-  source: {
-    extension: string;
-    name: string;
-  };
+  source: LogOrigin;
 
   id: number;
 
@@ -124,7 +119,7 @@ export default class CallLog {
   static parseNew(plain: CallLogResponse, session: Session): CallLog {
     const callLog: CallLog = CallLog.parse(plain);
     // @TODO: FIXME add verification declined vs missed call
-    callLog.newMissedCall = session && session.hasExtension(plain.requested_extension || plain.destination_extension) && !plain.answered;
+    callLog.newMissedCall = session && session.hasExtension((plain.requested_extension || plain.destination_extension) as string) && !plain.answered;
     return callLog;
   }
 
@@ -162,10 +157,7 @@ export default class CallLog {
     return this.theOtherParty(session).extension === other.theOtherParty(session).extension;
   }
 
-  theOtherParty(session: Session): {
-    extension: string;
-    name: string;
-  } {
+  theOtherParty(session: Session): LogOrigin {
     if (this.callDirection === 'inbound') {
       return this.source;
     }

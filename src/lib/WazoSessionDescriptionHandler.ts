@@ -7,7 +7,7 @@ import { SessionDescriptionHandler } from 'sip.js/lib/platform/web/session-descr
 import { SessionDescriptionHandlerOptions } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-options';
 import { PeerConnection, WazoSession } from '../domain/types';
 import IssueReporter from '../service/IssueReporter';
-import { addIcesInAllBundles, fixSdp, parseCandidate } from '../utils/sdp';
+import { type Candidate, addIcesInAllBundles, fixSdp, parseCandidate } from '../utils/sdp';
 
 const wazoLogger = IssueReporter ? IssueReporter.loggerFor('webrtc-sdh') : console;
 // Customized mediaStreamFactory allowing to send screensharing stream directory when upgrading
@@ -30,7 +30,7 @@ export const wazoMediaStreamFactory = (constraints: Record<string, any>): Promis
 };
 
 class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
-  gatheredCandidates: Array<Record<string, any> | string | null | undefined>;
+  gatheredCandidates: Candidate[];
 
   eventEmitter: EventEmitter;
 
@@ -105,6 +105,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       });
 
       if (event.candidate) {
+        // @ts-ignore: we're possibly inject null candidates
         this.gatheredCandidates.push(parseCandidate(event.candidate.candidate));
 
         // When receiving a `srflx` or a `relay` candidate, consider the negotiation done.
@@ -152,7 +153,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         return {
           type: description.type,
           // Fix sdp only when no candidates
-          sdp: fixSdp(sdp, this.gatheredCandidates as Record<string, any>[], options && options.constraints ? options.constraints.video : false),
+          sdp: fixSdp(sdp, this.gatheredCandidates, options && options.constraints ? options.constraints.video : false),
         };
       })
       .then((sessionDescription: any) => this.applyModifiers(sessionDescription, modifiers))

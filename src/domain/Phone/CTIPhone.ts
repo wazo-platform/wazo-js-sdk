@@ -20,6 +20,8 @@ export default class CTIPhone extends Emitter implements Phone {
 
   currentCall: Call | null | undefined;
 
+  client = null;
+
   constructor(session: Session, isMobile = false, callbackAllLines = false) {
     super();
     logger.info('CTI Phone created');
@@ -372,5 +374,7 @@ export default class CTIPhone extends Emitter implements Phone {
   useLocalVideoElement() {}
 
   setMediaConstraints() {}
+
+  register() { return Promise.resolve(null); }
 
 }

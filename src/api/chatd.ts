@@ -24,12 +24,12 @@ type PresenceListResponse = {
   items: Array<PresenceResponse>;
 };
 type GetMessagesOptions = {
-  direction: string | null | undefined;
-  limit: number | null | undefined;
-  order: string | null | undefined;
-  offset: string | null | undefined;
-  search: string | null | undefined;
-  distinct: string | null | undefined;
+  direction?: string;
+  limit?: number;
+  order?: string;
+  offset?: string;
+  search?: string;
+  distinct?: string;
 };
 
 export interface ChatD {
@@ -43,7 +43,7 @@ export interface ChatD {
   createRoom: (name: string, users: Array<ChatUser>) => Promise<ChatRoom>;
   getRoomMessages: (roomUuid: string, params?: GetMessagesOptions) => Promise<Array<ChatMessage>>;
   sendRoomMessage: (roomUuid: string, message: ChatMessage) => Promise<ChatMessage>;
-  getMessages: (options: GetMessagesOptions) => Promise<ChatMessage>;
+  getMessages: (options: GetMessagesOptions) => Promise<ChatMessageListResponse>;
 }
 
 // split contact status retrieval to avoid `414 Request-URI Too Large`.
@@ -96,5 +96,5 @@ export default ((client: ApiRequester, baseUrl: string): ChatD => ({
     return client.get(`${baseUrl}/users/me/rooms/${roomUuid}/messages${qs.length ? `?${qs}` : ''}`).then((response: ChatMessageListResponse) => ChatMessage.parseMany(response));
   },
   sendRoomMessage: async (roomUuid: string, message: ChatMessage): Promise<ChatMessage> => client.post(`${baseUrl}/users/me/rooms/${roomUuid}/messages`, message).then(ChatMessage.parse),
-  getMessages: async (options: GetMessagesOptions): Promise<ChatMessage> => client.get(`${baseUrl}/users/me/rooms/messages`, options),
+  getMessages: async (options: GetMessagesOptions): Promise<ChatMessageListResponse> => client.get(`${baseUrl}/users/me/rooms/messages`, options),
 }));

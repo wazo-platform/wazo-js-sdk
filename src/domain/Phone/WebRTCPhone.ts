@@ -1187,7 +1187,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   // Should be async to match CTIPhone definition
   // @TODO: line is not used here
-  async makeCall(number: string, line: any, cameraEnabled?: boolean, audioOnly = false, conference = false): Promise<CallSession | null | undefined> {
+  async makeCall(number: string, line: any, cameraEnabled?: boolean, audioOnly = false, conference = false): Promise<CallSession | null> {
     logger.info('make WebRTC call', {
       number,
       lineId: line ? line.id : null,
