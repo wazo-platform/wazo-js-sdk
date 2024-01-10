@@ -130,10 +130,10 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       }
     })
       .then(() => this.createLocalOfferOrAnswer(options))
-      .then((sessionDescription: any) => this.setLocalSessionDescription(sessionDescription))
+      .then((sessionDescription) => this.setLocalSessionDescription(sessionDescription))
       .then(() => this.waitForIceGatheringComplete(iceRestart, iceTimeout))
       .then(() => this.getLocalSessionDescription())
-      .then((description: any) => {
+      .then((description) => {
         const {
           sdp,
         } = description;
@@ -156,8 +156,8 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
           sdp: fixSdp(sdp, this.gatheredCandidates, options && options.constraints ? options.constraints.video : false),
         };
       })
-      .then((sessionDescription: any) => this.applyModifiers(sessionDescription, modifiers))
-      .then((sessionDescription: any) => ({
+      .then((sessionDescription) => this.applyModifiers(sessionDescription, modifiers))
+      .then((sessionDescription) => ({
         body: sessionDescription.sdp,
         contentType: 'application/sdp',
       }))
@@ -406,7 +406,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       throw new Error('Peer connection undefined.');
     }
 
-    const pc: any = this._peerConnection;
+    const pc = this._peerConnection as PeerConnection;
     const {
       sfu,
     } = pc;
@@ -422,7 +422,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
         throw new Error(`Unknown new track kind ${kind}.`);
       }
 
-      const sender = pc.getSenders && pc.getSenders().find((otherSender: any) => otherSender.track && otherSender.track.kind === kind);
+      const sender = pc.getSenders && pc.getSenders().find((otherSender) => otherSender.track && otherSender.track.kind === kind);
 
       // Do not reuse sender video tracks in SFU
       if (sender && (!sfu || newTrack.kind === 'audio')) {

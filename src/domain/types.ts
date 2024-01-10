@@ -260,6 +260,7 @@ export type PeerConnection = RTCPeerConnection & {
   getRemoteStreams: () => MediaStream[],
   getLocalStreams: () => MediaStream[],
   onremovestream: (func: any) => void,
+  addStream: (stream: MediaStream) => void,
   sfu: any
 };
 

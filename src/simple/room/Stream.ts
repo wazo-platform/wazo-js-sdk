@@ -9,7 +9,7 @@ class Stream {
 
   participant: Participant | undefined;
 
-  static detachStream(stream: any) {
+  static detachStream(stream: MediaStream) {
     stream.getTracks()
       .filter((track: MediaStreamTrack) => track.enabled)
       .forEach((track: MediaStreamTrack) => track.stop());

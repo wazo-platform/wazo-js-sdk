@@ -138,7 +138,7 @@ describe('Room', () => {
       expect(room.participants[0].talking).toBeTruthy();
       const updatedRoom = room.updateParticipant(uuid, {
         talking: false,
-      });
+      } as any);
       expect(updatedRoom.participants[0].talking).toBeFalsy();
     });
     it('should add participant when not found', async () => {
@@ -148,7 +148,7 @@ describe('Room', () => {
       } as any);
       const updatedRoom = room.updateParticipant(uuid, {
         talking: false,
-      }, true);
+      } as any, true);
       expect(updatedRoom.participants[0].talking).toBeFalsy();
     });
   });
@@ -164,7 +164,7 @@ describe('Room', () => {
       expect(room.participants[0].talking).toBeFalsy();
       const updatedRoom = room.updateParticipantByExtension(extension, {
         talking: true,
-      });
+      } as any);
       expect(updatedRoom.participants[0].talking).toBeTruthy();
     });
   });

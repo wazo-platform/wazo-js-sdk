@@ -10,8 +10,8 @@ export default {
       return resolve('Skipped on node');
     }
 
-    const candidates: any = {};
-    const rawCandidates: any = [];
+    const candidates: Record<string, any> = {};
+    const rawCandidates: any[] = [];
     let nbCandidates = 0;
     const pc = new RTCPeerConnection({
       iceServers: [{
@@ -22,7 +22,7 @@ export default {
         urls: 'stun:stun2.l.google.com:19302',
       }],
     });
-    let timeout: any;
+    let timeout: string | number | NodeJS.Timeout | undefined;
 
     const onEnded = () => {
       clearTimeout(timeout);
@@ -44,7 +44,7 @@ export default {
     timeout = setTimeout(onEnded, timeoutDuration);
     pc.createDataChannel('wazo-check-nat');
 
-    pc.onicecandidate = e => {
+    pc.onicecandidate = (e: RTCPeerConnectionIceEvent) => {
       nbCandidates++;
 
       if (e.candidate) {
@@ -52,9 +52,13 @@ export default {
       }
 
       if (e.candidate && e.candidate.candidate.indexOf('srflx') !== -1) {
-        const cand: any = parseCandidate(e.candidate.candidate);
-        if (!candidates[cand.relatedPort]) candidates[cand.relatedPort] = [];
-        candidates[cand.relatedPort].push(cand.port);
+        const cand = parseCandidate(e.candidate.candidate);
+        if (cand.relatedPort) {
+          if (!candidates[cand.relatedPort]) {
+            candidates[cand.relatedPort] = [];
+          }
+          candidates[cand.relatedPort].push(cand.port);
+        }
       } else if (!e.candidate) {
         onEnded();
       }
