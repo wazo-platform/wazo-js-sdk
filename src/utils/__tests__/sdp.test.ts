@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 import sdpParser from 'sdp-transform';
-import { getCandidates, isSdpValid, parseCandidate, areCandidateValid, fixSdp, fixBundle, toggleVideoDirection, hasAnActiveVideo, addIcesInAllBundles } from '../sdp';
+import { getCandidates, isSdpValid, parseCandidate, areCandidateValid, fixSdp, fixBundle, toggleVideoDirection, hasAnActiveVideo, addIcesInAllBundles, Candidate } from '../sdp';
 
 const goodSdp = `
 c=IN IP4 203.0.113.1
@@ -85,7 +85,7 @@ describe('SDP utils', () => {
       expect(candidates[1].type).toBe('relay');
       expect(isSdpValid(goodSdp)).toBeTruthy();
       expect(getCandidates(badMobileSdp).length).toBe(0);
-      expect(getCandidates(null).length).toBe(0);
+      expect(getCandidates(null as any).length).toBe(0);
       expect(getCandidates('').length).toBe(0);
       expect(getCandidates('nothing!').length).toBe(0);
     });
@@ -100,7 +100,7 @@ describe('SDP utils', () => {
   describe('Validating candidates', () => {
     it('should parse a single candidate', () => {
       expect(areCandidateValid([])).toBeFalsy();
-      expect(areCandidateValid([parseCandidate(candidate) as Record<string, any>])).toBeTruthy();
+      expect(areCandidateValid([parseCandidate(candidate) as any])).toBeTruthy();
     });
   });
   describe('Validating sdp', () => {
@@ -112,8 +112,8 @@ describe('SDP utils', () => {
   });
   describe('Fixing sdp', () => {
     it('should fix a SDP without candidate or IN ip', () => {
-      const candidates = [parseCandidate(candidate)] as Record<string, any>[];
-      const fixedSdp = fixSdp(badMobileSdp, candidates);
+      const candidates = [parseCandidate(candidate)];
+      const fixedSdp = fixSdp(badMobileSdp, candidates as Candidate[]);
       const parsed = sdpParser.parse(fixedSdp);
       expect((parsed.media[0] as any).candidates.length).toBe(1);
       expect((parsed.media[0] as any).port).toBe(57021);

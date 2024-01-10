@@ -1,47 +1,67 @@
 import sdpParser from 'sdp-transform';
 
-export const getCandidates = (rawSdp: string | null | undefined): Record<string, any>[] => {
+export type Candidate = {
+  foundation: string;
+  component: number;
+  transport: string;
+  priority: number | string;
+  ip: string;
+  port: number;
+  type: string;
+  raddr?: string | undefined;
+  rport?: number | undefined;
+  tcptype?: string | undefined;
+  generation?: number | undefined;
+  'network-id'?: number | undefined;
+  'network-cost'?: number | undefined;
+};
+
+export const getCandidates = (rawSdp?: string): Candidate[] => {
   if (!rawSdp) {
     return [];
   }
 
-  const sdp: any = sdpParser.parse(rawSdp);
+  const sdp = sdpParser.parse(rawSdp);
 
   if (!sdp || !sdp.media) {
     return [];
   }
 
-  return sdp.media.map((media: any) => media.candidates).flat().filter((candidate: any) => !!candidate);
+  // @ts-ignore: Type 'undefined' is not assignable to type 'Candidate'
+  return sdp.media.map((media) => media.candidates).flat().filter((candidate) => !!candidate);
 };
-export const parseCandidate = (candidate?: string): Record<string, any> | null => {
+export const parseCandidate = (candidate?: string): Candidate | null => {
   if (!candidate) {
     return null;
   }
 
-  const result: any = sdpParser.parse(candidate.indexOf('a=') === 0 ? candidate : `a=${candidate}`);
+  const result = sdpParser.parse(candidate.indexOf('a=') === 0 ? candidate : `a=${candidate}`);
+  // @ts-ignore: heads up -- Property 'candidates' does not exist on type 'SessionDescription'
   return result.candidates ? result.candidates[0] : null;
 };
 
-const getSrflxOrRelay = (candidates: Record<string, any>[]): Record<string, any>[] => candidates.filter(candidate => candidate && (candidate.type === 'srflx' || candidate.type === 'relay'));
+const getSrflxOrRelay = (candidates: Candidate[]): Candidate[] => candidates.filter(candidate => candidate && (candidate.type === 'srflx' || candidate.type === 'relay'));
 
-export const areCandidateValid = (candidates: Record<string, any>[]): boolean => getSrflxOrRelay(candidates).length > 0;
-export const isSdpValid = (sdp: string | null | undefined): boolean => {
+export const areCandidateValid = (candidates: Candidate[]): boolean => (candidates ? getSrflxOrRelay(candidates).length > 0 : false);
+export const isSdpValid = (sdp: string): boolean => {
   const candidates = getCandidates(sdp);
   return areCandidateValid(candidates);
 };
 export const fixBundle = (sdp: string): string => {
-  const parsedSdp: any = sdpParser.parse(sdp);
-  const bundleIndex = parsedSdp.groups.findIndex((group: any) => group.type === 'BUNDLE');
+  const parsedSdp = sdpParser.parse(sdp);
+  const bundleIndex = parsedSdp.groups?.findIndex((group) => group.type === 'BUNDLE');
 
   if (bundleIndex !== -1) {
-    parsedSdp.groups[bundleIndex].mids = parsedSdp.media.map((media: any, index: any) => ('mid' in media ? media.mid : index)).join(' ');
+    // @ts-ignore
+    parsedSdp.groups[bundleIndex].mids = parsedSdp.media.map((media, index) => ('mid' in media ? media.mid : index)).join(' ');
   }
 
   return sdpParser.write(parsedSdp);
 };
 export const toggleVideoDirection = (sdp: string, direction: string | null | undefined): string => {
-  const parsedSdp: any = sdpParser.parse(sdp);
-  parsedSdp.media = parsedSdp.media.map((media: any) => ({ ...media,
+  const parsedSdp = sdpParser.parse(sdp);
+  // @ts-ignore: heads up -- odd rewriting of sdp.media
+  parsedSdp.media = parsedSdp.media.map(media => ({ ...media,
     ...(media.type === 'video' ? {
       direction,
     } : {}),
@@ -76,16 +96,17 @@ export const hasAnActiveVideo = (sdp: string | null | undefined): boolean => {
   const parsedSdp = sdpParser.parse(sdp);
   return !!parsedSdp.media.find(media => media.type === 'video' && media.port > 10 && (!media.direction || media.direction !== 'inactive'));
 };
-export const fixSdp = (sdp: string, candidates: Record<string, any>[], forcePort = true): string => {
-  const parsedSdp: any = sdpParser.parse(sdp);
-  const mainCandidate = getSrflxOrRelay(candidates)[0];
+export const fixSdp = (sdp: string, candidates: Candidate[], forcePort = true): string => {
+  const parsedSdp = sdpParser.parse(sdp);
+  const mainCandidate = getSrflxOrRelay(candidates as Candidate[])[0];
   const ip = mainCandidate ? mainCandidate.ip : null;
 
   if (ip) {
+    // @ts-ignore
     parsedSdp.origin.address = ip;
   }
 
-  parsedSdp.media = parsedSdp.media.map((media: any) => {
+  parsedSdp.media = parsedSdp.media.map((media) => {
     const port = forcePort ? mainCandidate ? mainCandidate.port : media.port : media.port;
     return { ...media,
       port,
