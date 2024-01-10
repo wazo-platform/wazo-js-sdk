@@ -274,25 +274,26 @@ export default class WebRTCClient extends Emitter {
         this.eventEmitter.emit(INVITE, invitation, this.sessionWantsToDoVideo(invitation), shouldAutoAnswer);
       },
     };
-    const ua: any = new UserAgent(uaOptions);
+    const ua = new UserAgent(uaOptions);
     ua.start();
 
-    if (ua.transport && ua.transport.connectPromise) {
-      ua.transport.connectPromise.catch((e: any) => {
+    if (ua.transport && (ua.transport as WazoTransport).connectPromise) {
+      (ua.transport as WazoTransport).connectPromise.catch((e: any) => {
         logger.warn('Transport connect error', e);
       });
     }
 
     ua.transport.onMessage = (rawMessage: string) => {
-      const message = Parser.parseMessage(rawMessage, ua.transport.logger);
+      const message = Parser.parseMessage(rawMessage, (ua.transport as any).logger);
       // We have to re-sent the message to the UA ...
+      // @ts-ignore: private
       ua.onTransportMessage(rawMessage);
       // And now do what we want with the message
       this.eventEmitter.emit(MESSAGE, message);
 
       if (message && message.method === C.MESSAGE) {
         // We have to manually reply to MESSAGE with a 200 OK or Asterisk will hangup.
-        ua.userAgentCore.replyStateless(message, {
+        ua.userAgentCore.replyStateless(message as any, {
           statusCode: 200,
         });
       }
@@ -545,7 +546,7 @@ export default class WebRTCClient extends Emitter {
     });
   }
 
-  call(number: string, enableVideo?: boolean, audioOnly = false, conference = false): WazoSession {
+  call(number: string, enableVideo?: boolean, audioOnly = false, conference = false): WazoSession | null {
     logger.info('sdk webrtc creating call', {
       clientId: this.clientId,
       number,
@@ -566,7 +567,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     const uri = this._makeURI(number);
-    let session: any;
+    let session: WazoSession | null = null;
 
     if (uri) {
       session = this.userAgent ? new Inviter(this.userAgent, uri, inviterOptions) : null;
@@ -587,10 +588,10 @@ export default class WebRTCClient extends Emitter {
     const inviteOptions: InviterInviteOptions = {
       requestDelegate: {
         onAccept: (response: IncomingResponse) => {
-          if (session.sessionDescriptionHandler?.peerConnection) {
-            session.sessionDescriptionHandler.peerConnection.sfu = conference;
+          if ((session?.sessionDescriptionHandler as any)?.peerConnection) {
+            (session?.sessionDescriptionHandler as any).peerConnection.sfu = conference;
           }
-          this._onAccepted(session, response.session, true);
+          this._onAccepted(session as WazoSession, response.session, true);
         },
         onProgress: (payload: IncomingResponse) => {
           if (payload.message.statusCode === 183) {
@@ -599,13 +600,14 @@ export default class WebRTCClient extends Emitter {
         },
         onReject: (response: IncomingResponse) => {
           logger.info('on call rejected', {
-            id: session.id,
-            fromTag: session.fromTag,
+            id: session?.id,
+            // @ts-ignore: fromTag does not exist
+            fromTag: session?.fromTag,
           });
 
-          this._stopSendingStats(session);
+          this._stopSendingStats(session as WazoSession);
 
-          this.stopNetworkMonitoring(session);
+          this.stopNetworkMonitoring(session as WazoSession);
           this.eventEmitter.emit(REJECTED, session, response);
         },
       },
@@ -621,10 +623,13 @@ export default class WebRTCClient extends Emitter {
       inviteOptions.sessionDescriptionHandlerModifiers.push(stripVideo);
     }
 
-    // Do not await invite here or we'll miss the Establishing state transition
-    session.invitePromise = session.invite(inviteOptions).catch((e: Error) => {
-      logger.warn('sdk webrtc creating call, error', e);
-    });
+    if (session) {
+      // Do not await invite here or we'll miss the Establishing state transition
+      // @ts-ignore: Property 'invitePromise' does not exist
+      session.invitePromise = session.invite(inviteOptions).catch((e: Error) => {
+        logger.warn('sdk webrtc creating call, error', e);
+      });
+    }
 
     return session;
   }
@@ -666,7 +671,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   async hangup(session: WazoSession): Promise<OutgoingByeRequest | null> {
-    const { state, id }: any = session;
+    const { state, id } = session;
     logger.info('sdk webrtc hangup call', { clientId: this.clientId, id, state });
 
     try {
@@ -830,7 +835,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     let muted = true;
-    const pc = (session.sessionDescriptionHandler as any).peerConnection;
+    const pc = (session.sessionDescriptionHandler as SessionDescriptionHandler).peerConnection as PeerConnection;
 
     if (!pc) {
       return false;
@@ -841,7 +846,7 @@ export default class WebRTCClient extends Emitter {
         return false;
       }
 
-      pc.getSenders().forEach((sender: any) => {
+      pc.getSenders().forEach((sender) => {
         if (sender && sender.track && sender.track.kind === 'audio') {
           muted = muted && !sender.track.enabled;
         }
@@ -990,7 +995,7 @@ export default class WebRTCClient extends Emitter {
       const transceiverIdx = lastIndexOf(transceivers, transceiver => transceiver.sender.track === null && transceiver.mid && transceiver.mid.indexOf('video') === -1);
       videoSender = transceiverIdx !== -1 ? transceivers[transceiverIdx].sender : null;
     } else {
-      videoSender = pc && pc.getSenders && pc.getSenders().find((sender: any) => sender.track === null);
+      videoSender = pc && pc.getSenders && pc.getSenders().find((sender) => sender.track === null);
     }
 
     if (!videoSender) {
@@ -1035,7 +1040,7 @@ export default class WebRTCClient extends Emitter {
 
     // Remove video senders
     if (pc?.getSenders) {
-      pc.getSenders().filter((sender: any) => sender.track && sender.track.kind === 'video').forEach((videoSender: any) => {
+      pc.getSenders().filter((sender) => sender.track && sender.track.kind === 'video').forEach((videoSender) => {
         videoSender.replaceTrack(null);
       });
     }
@@ -1308,7 +1313,7 @@ export default class WebRTCClient extends Emitter {
       };
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       const audioTrack = stream.getAudioTracks()[0];
-      const sender = pc && pc.getSenders && pc.getSenders().find((s: any) => audioTrack && s && s.track && s.track.kind === audioTrack.kind);
+      const sender = pc && pc.getSenders && pc.getSenders().find((s) => audioTrack && s && s.track && s.track.kind === audioTrack.kind);
 
       if (sender) {
         if (sender.track) {
@@ -1382,7 +1387,7 @@ export default class WebRTCClient extends Emitter {
     };
     return navigator.mediaDevices.getUserMedia(constraints).then(async stream => {
       const videoTrack = stream.getVideoTracks()[0];
-      let sender = pc && pc.getSenders && pc.getSenders().find((s: any) => videoTrack && s && s.track && s.track.kind === videoTrack.kind);
+      let sender = pc && pc.getSenders && pc.getSenders().find((s) => videoTrack && s && s.track && s.track.kind === videoTrack.kind);
       let wasTrackEnabled = false;
 
       if (!sender) {
@@ -1756,7 +1761,7 @@ export default class WebRTCClient extends Emitter {
     logger.info('Updating remote stream', {
       sessionId,
       tracks: remoteStream ? remoteStream.getTracks() : null,
-      receiverTracks: pc && pc.getReceivers ? pc.getReceivers().map((receiver: any) => receiver.track) : null,
+      receiverTracks: pc && pc.getReceivers ? pc.getReceivers().map((receiver) => receiver.track) : null,
     });
 
     if (!pc || !remoteStream) {
@@ -1770,7 +1775,7 @@ export default class WebRTCClient extends Emitter {
     });
 
     if (pc.getReceivers) {
-      pc.getReceivers().forEach((receiver: any) => {
+      pc.getReceivers().forEach((receiver) => {
         if (allTracks || receiver.track.kind === 'video') {
           remoteStream.addTrack(receiver.track);
         }
@@ -2162,7 +2167,7 @@ export default class WebRTCClient extends Emitter {
     };
   }
 
-  _onEarlyProgress(session: any): void {
+  _onEarlyProgress(session: WazoSession): void {
     this._setupMedias(session);
 
     const sessionId = this.getSipSessionId(session).substr(0, 20);
@@ -2186,7 +2191,7 @@ export default class WebRTCClient extends Emitter {
     this.updateRemoteStream(this.getSipSessionId(session), initAllTracks);
     const pc = (session.sessionDescriptionHandler as SessionDescriptionHandler)?.peerConnection;
 
-    const onTrack = (event: any) => {
+    const onTrack = (event: RTCTrackEvent | MediaStreamTrackEvent) => {
       const isAudioOnly = this._isAudioOnly(session);
 
       const {
@@ -2351,7 +2356,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     if (pc.getSenders) {
-      pc.getSenders().forEach((sender: any) => {
+      pc.getSenders().forEach((sender) => {
         if (sender && sender.track && sender.track.kind === 'audio') {
           // eslint-disable-next-line
           sender.track.enabled = !muteAudio;
@@ -2372,7 +2377,7 @@ export default class WebRTCClient extends Emitter {
     const pc = sdh?.peerConnection as PeerConnection;
 
     if (pc?.getSenders) {
-      pc.getSenders().forEach((sender: any) => {
+      pc.getSenders().forEach((sender) => {
         if (sender && sender.track && sender.track.kind === 'video') {
           // eslint-disable-next-line
           sender.track.enabled = !muteCamera;
@@ -2391,13 +2396,13 @@ export default class WebRTCClient extends Emitter {
   /**
    * @param pc RTCPeerConnection
    */
-  _getRemoteStream(pc: any): MediaStream | null {
+  _getRemoteStream(pc: PeerConnection): MediaStream | null {
     let remoteStream: MediaStream | null = null;
 
     if (pc && pc.getReceivers) {
       remoteStream = typeof global !== 'undefined' && global.window && global.window.MediaStream ? new global.window.MediaStream() : new window.MediaStream();
 
-      pc.getReceivers().forEach((receiver: any) => {
+      pc.getReceivers().forEach((receiver) => {
         const {
           track,
         } = receiver;

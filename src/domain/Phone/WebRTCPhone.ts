@@ -440,7 +440,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return;
     }
 
-    peerConnection.ontrack = (rawEvent: any) => {
+    peerConnection.ontrack = (rawEvent: RTCTrackEvent) => {
       const event = rawEvent;
       const [stream] = event.streams;
       const kind = event && event.track && event.track.kind;
@@ -481,7 +481,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const screenTrack = screenShareStream.getVideoTracks()[0];
     const sipSession = this.currentSipSession;
     const pc = sipSession && this.client.getPeerConnection(this.getSipSessionId(sipSession));
-    const sender = pc && pc.getSenders && pc.getSenders().find((s: any) => s && s.track && s.track.kind === 'video');
+    const sender = pc && pc.getSenders && pc.getSenders().find((s) => s && s.track && s.track.kind === 'video');
     const localStream = sipSession && this.client.getLocalStream(this.getSipSessionId(sipSession));
     const videoTrack = localStream ? localStream.getTracks().find(track => track.kind === 'video') : null;
     const hadVideo = !!videoTrack;
@@ -559,7 +559,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const screenTrack = screenStream.getVideoTracks()[0];
     const sipSessionId = this.getSipSessionId(sipSession);
     const pc = this.client.getPeerConnection(sipSessionId);
-    const sender = pc && pc.getSenders && pc.getSenders().find((s: any) => s && s.track && s.track.kind === 'video');
+    const sender = pc && pc.getSenders && pc.getSenders().find((s) => s && s.track && s.track.kind === 'video');
     logger.info('WebRTC phone - on screensharing', {
       hadVideo,
       id: this.getSipSessionId(sipSession),
@@ -1187,7 +1187,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   // Should be async to match CTIPhone definition
   // @TODO: line is not used here
-  async makeCall(number: string, line: any, cameraEnabled?: boolean, audioOnly = false, conference = false): Promise<CallSession | null> {
+  async makeCall(number: string, line: any, cameraEnabled?: boolean, audioOnly = false, conference = false): Promise<CallSession | null | undefined> {
     logger.info('make WebRTC call', {
       number,
       lineId: line ? line.id : null,
@@ -1213,7 +1213,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     let sipSession: WazoSession;
 
     try {
-      sipSession = this.client.call(number, this.allowVideo ? cameraEnabled : false, audioOnly, conference);
+      sipSession = this.client.call(number, this.allowVideo ? cameraEnabled : false, audioOnly, conference) as WazoSession;
 
       this._bindEvents(sipSession);
     } catch (error: any) {

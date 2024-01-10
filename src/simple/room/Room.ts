@@ -15,6 +15,15 @@ export const SIGNAL_TYPE_PARTICIPANT_UPDATE = 'signal/PARTICIPANT_UPDATE';
 export const SIGNAL_TYPE_PARTICIPANT_REQUEST = 'signal/PARTICIPANT_REQUEST';
 const logger = IssueReporter.loggerFor('sdk-room');
 
+type ConnectArgs = {
+  extension: string;
+  constraints: Record<string, any>;
+  audioOnly?: boolean;
+  extra?: Record<string, any>;
+  room: Room;
+  meeting: any;
+};
+
 class Room extends Emitter {
   callSession: CallSession | null | undefined;
 
@@ -32,13 +41,13 @@ class Room extends Emitter {
 
   connected: boolean;
 
-  localParticipant: Participant | null | undefined;
+  localParticipant: LocalParticipant | null | undefined;
 
   _callIdStreamIdMap: Record<string, any>;
 
-  _unassociatedVideoStreams: Record<string, any>;
+  _unassociatedVideoStreams: Record<string, MediaStream>;
 
-  _unassociatedParticipants: Record<string, any>;
+  _unassociatedParticipants: Record<string, Participant>;
 
   _boundOnParticipantJoined: (...args: Array<any>) => any;
 
@@ -54,12 +63,12 @@ class Room extends Emitter {
 
   _boundOnReinvite: (...args: Array<any>) => any;
 
-  audioStream: any | null | undefined;
+  audioStream: MediaStream | null | undefined;
 
   extra: Record<string, any>;
 
   // video tag representing the room audio stream
-  roomAudioElement: any;
+  roomAudioElement: HTMLAudioElement;
 
   CONFERENCE_USER_PARTICIPANT_JOINED: string;
 
@@ -171,7 +180,7 @@ class Room extends Emitter {
     extra,
     room,
     meeting,
-  }: Record<string, any>) {
+  }: ConnectArgs) {
     logger.info('connecting to room', {
       extension,
       audioOnly,
@@ -201,8 +210,9 @@ class Room extends Emitter {
         }
       });
       const callSession = await Wazo.Phone.call(extension, withCamera, null, audioOnly, true);
+      // @ts-fix: heads up: added an extra `null` here
       // eslint-disable-next-line no-param-reassign
-      room = new Room(callSession as CallSession, extension, null, null, extra);
+      room = new Room(callSession as CallSession, extension, null, null, null, extra);
       // Wait for the call to be accepted
       await new Promise((resolve, reject) => {
         Wazo.Phone.once(Wazo.Phone.ON_CALL_ACCEPTED, resolve);
@@ -227,8 +237,8 @@ class Room extends Emitter {
       });
 
       if (conference) {
-        room.setSourceId(conference.sourceId);
-        room.setName(conference.name);
+        room.setSourceId(parseInt(`${conference.sourceId}`, 10));
+        room.setName(`${conference.name}`);
       }
     } else if (meeting) {
       logger.info('Already connected to meeting', {
@@ -546,13 +556,11 @@ class Room extends Emitter {
 
   _mapMsid(rawSdp: string) {
     const sdp = sdpParser.parse(rawSdp);
-    const labelMsidArray = sdp.media.filter((media: any) => !!media.label).map(({
-      label,
-      msid,
-    }: any) => ({
+    // @ts-ignore: Property 'label' does not exist
+    const labelMsidArray = sdp.media.filter((media) => !!media.label).map(({ label, msid }) => ({
       label: String(label),
-      streamId: msid.split(' ')[0],
-      trackId: msid.split(' ')[1],
+      streamId: msid?.split(' ')[0],
+      trackId: msid?.split(' ')[1],
     }));
     labelMsidArray.forEach(({
       label,
@@ -591,11 +599,11 @@ class Room extends Emitter {
       return null;
     }
 
-    let body: any;
+    let body;
 
     try {
       body = JSON.parse(message.body as string);
-    } catch (e: any) {
+    } catch (e) {
       return null;
     }
 
@@ -729,7 +737,7 @@ class Room extends Emitter {
           });
           response = await getApiClient().calld.getConferenceParticipantsAsUser(conferenceId);
         }
-      } catch (e: any) {
+      } catch (e) {
         logger.error('room participants fetching, error', e);
       }
 
@@ -742,7 +750,7 @@ class Room extends Emitter {
           return isMe && item.call_id ? new Wazo.LocalParticipant(this, item, this.extra) : new Wazo.RemoteParticipant(this, item);
         });
         this.participants = participants;
-        const localParticipant = participants.find((someParticipant: any) => someParticipant instanceof Wazo.LocalParticipant);
+        const localParticipant = participants.find((someParticipant: Participant) => someParticipant instanceof Wazo.LocalParticipant);
 
         if (!this.localParticipant && localParticipant) {
           this._onLocalParticipantJoined(localParticipant);
@@ -840,7 +848,7 @@ class Room extends Emitter {
 
     const pc = (Wazo.Phone.phone?.currentSipSession?.sessionDescriptionHandler as SessionDescriptionHandler)?.peerConnection as PeerConnection;
     // Can't use `getReceivers` here because on FF we make the mapping based on the streamId
-    const stream = pc.getRemoteStreams().find((someStream: any) => someStream.id === streamId || someStream.getTracks().some((track: any) => track.id === trackId));
+    const stream = pc.getRemoteStreams().find(someStream => someStream.id === streamId || someStream.getTracks().some(track => track.id === trackId));
 
     if (update === 'downgrade') {
       newParticipant.resetStreams([]);
@@ -873,15 +881,17 @@ class Room extends Emitter {
 
     const streamId = this._getStreamIdFrTrackId(trackId);
 
-    const key: any = this._getUnassociatedMapIdFromTrackIdOrStreamId(trackId, streamId);
+    const key = this._getUnassociatedMapIdFromTrackIdOrStreamId(trackId, streamId);
 
-    const stream = this._unassociatedVideoStreams[key];
+    const stream = key ? this._unassociatedVideoStreams[key] : null;
 
     if (stream) {
       // Try to associate stream
       this._associateStreamTo(stream, participant);
 
-      delete this._unassociatedVideoStreams[key];
+      if (key) {
+        delete this._unassociatedVideoStreams[key];
+      }
       delete this._unassociatedParticipants[participant.callId];
     }
   }
@@ -907,7 +917,7 @@ class Room extends Emitter {
     return mapping ? mapping.streamId : null;
   }
 
-  _associateStreamTo(rawStream: any, participant: Participant) {
+  _associateStreamTo(rawStream: MediaStream, participant: Participant) {
     const stream = new Wazo.Stream(rawStream, participant);
     participant.streams.push(stream);
     participant.videoStreams.push(stream);
