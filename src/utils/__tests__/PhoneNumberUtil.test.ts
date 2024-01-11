@@ -44,17 +44,11 @@ describe('getCallableNumber', () => {
     expect(getCallableNumber('9000', 'US')).toBe('9000');
   });
   it('works without a country', () => {
-    // @ts-expect-error
     expect(getCallableNumber('06 75 45')).toBe('067545');
-    // @ts-expect-error
     expect(getCallableNumber('067-545')).toBe('067545');
-    // @ts-expect-error
     expect(getCallableNumber('8008')).toBe('8008');
-    // @ts-expect-error
     expect(getCallableNumber('80.08')).toBe('8008');
-    // @ts-expect-error
     expect(getCallableNumber('*10')).toBe('*10');
-    // @ts-expect-error
     expect(getCallableNumber('9000')).toBe('9000');
   });
 });

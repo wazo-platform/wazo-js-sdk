@@ -1,113 +1,53 @@
-import ApiClient from './api-client';
-import WebRTCClient from './web-rtc-client';
-import WebSocketClient, { SOCKET_EVENTS } from './websocket-client';
-import Emitter from './utils/Emitter';
-import IssueReporter from './service/IssueReporter';
-// Domain
-import BadResponse from './domain/BadResponse';
-import ServerError from './domain/ServerError';
-import SFUNotAvailableError from './domain/SFUNotAvailableError';
-import Call from './domain/Call';
-import CallLog from './domain/CallLog';
-import Recording from './domain/Recording';
-import ChatMessage from './domain/ChatMessage';
-import ChatRoom from './domain/ChatRoom';
-import Contact from './domain/Contact';
-import COUNTRIES from './domain/Country';
-import Features from './domain/Features';
-import ForwardOption, { FORWARD_KEYS } from './domain/ForwardOption';
-import Line from './domain/Line';
-import NotificationOptions from './domain/NotificationOptions';
-import Profile, { STATE as PROFILE_STATE, LINE_STATE } from './domain/Profile';
-import Session from './domain/Session';
-import Voicemail from './domain/Voicemail';
-import Relocation from './domain/Relocation';
-import Room from './domain/Room';
-import CallSession from './domain/CallSession';
-import IndirectTransfer from './domain/IndirectTransfer';
-import SwitchboardCall from './domain/SwitchboardCall';
-import WebRTCPhone from './domain/Phone/WebRTCPhone';
-import CTIPhone from './domain/Phone/CTIPhone';
-import Meeting from './domain/Meeting';
-import type { NewContact as NewContactType, ContactResponse as ContactResponseType, ContactsResponse as ContactsResponseType, ContactPersonalResponse as ContactPersonalResponseType, ContactMobileResponse as ContactMobileResponseType } from './domain/Contact';
-import type { Phone as PhoneType, PhoneEventCallbacks as PhoneEventCallbacksType } from './domain/Phone/Phone';
-import type { ChatUser as ChatUserType } from './domain/ChatMessage';
-import type { Device as DeviceType } from './domain/Device/Device';
-import type { WebSocketMessage as WebSocketMessageType } from './types/WebSocketMessage';
-import DebugDevice from './domain/Device/DebugDevice';
-import Checker from './checker/Checker';
-import { PhoneNumberUtil, PhoneNumberFormat, AsYouTypeFormatter, getDisplayableNumber, getCallableNumber } from './utils/PhoneNumberUtil';
-import ApiRequester from './utils/api-requester';
-import type { DirectorySource as DirectorySourceType, DirectorySources as DirectorySourcesType } from './domain/DirectorySource';
-import type { SwitchboardAnwseredQueuedCall as SwitchboardAnwseredQueuedCallType, SwitchboardAnwseredHeldCall as SwitchboardAnwseredHeldCallType, SwitchboardCallItem as SwitchboardCallItemType, SwitchboardCallItems as SwitchboardCallItemsType } from './domain/SwitchboardCall';
 import Wazo from './simple/index';
-import MeetingStatus from './domain/MeetingStatus';
-import MeetingAuthorization from './domain/MeetingAuthorization';
-import SipLine from './domain/SipLine';
-import getApiClient from './service/getApiClient';
 
-export type NewContact = NewContactType;
-export type ContactResponse = ContactResponseType;
-export type ContactsResponse = ContactsResponseType;
-export type ContactPersonalResponse = ContactPersonalResponseType;
-export type ContactMobileResponse = ContactMobileResponseType;
-export type Phone = PhoneType;
-export type PhoneEventCallbacks = PhoneEventCallbacksType;
-export type Device = DeviceType;
-export type ChatUser = ChatUserType;
-export type Source = DirectorySourceType;
-export type Sources = DirectorySourcesType;
-export type SwitchboardAnwseredQueuedCall = SwitchboardAnwseredQueuedCallType;
-export type SwitchboardAnwseredHeldCall = SwitchboardAnwseredHeldCallType;
-export type SwitchboardCallItem = SwitchboardCallItemType;
-export type SwitchboardCallItems = SwitchboardCallItemsType;
-export type WebSocketMessage = WebSocketMessageType;
-export default {
-  ApiRequester,
-  Checker,
-  Emitter,
-  PhoneNumberUtil,
-  PhoneNumberFormat,
-  AsYouTypeFormatter,
-  getDisplayableNumber,
-  getCallableNumber,
-  WazoApiClient: ApiClient,
-  WazoWebRTCClient: WebRTCClient,
-  WazoWebSocketClient: WebSocketClient,
-  BadResponse,
-  ServerError,
-  SFUNotAvailableError,
-  Call,
-  CallSession,
-  CTIPhone,
-  Features,
-  IndirectTransfer,
-  SwitchboardCall,
-  CallLog,
-  Recording,
-  ChatMessage,
-  ChatRoom,
-  Contact,
-  COUNTRIES,
-  ForwardOption,
-  Line,
-  NotificationOptions,
-  Profile,
-  Session,
-  Voicemail,
-  Relocation,
-  Room,
-  IssueReporter,
-  DebugDevice,
-  PROFILE_STATE,
-  FORWARD_KEYS,
-  LINE_STATE,
-  SOCKET_EVENTS,
-  Wazo,
-  WebRTCPhone,
-  Meeting,
-  MeetingAuthorization,
-  MeetingStatus,
-  SipLine,
-  getApiClient,
-};
+export { default as Emitter } from './utils/Emitter';
+export { default as IssueReporter } from './service/IssueReporter';
+export { default as BadResponse } from './domain/BadResponse';
+export { default as ServerError } from './domain/ServerError';
+export { default as SFUNotAvailableError } from './domain/SFUNotAvailableError';
+export { default as Call } from './domain/Call';
+export { default as CallLog } from './domain/CallLog';
+export { default as Recording } from './domain/Recording';
+export { default as ChatMessage } from './domain/ChatMessage';
+export { default as ChatRoom, RoomResponse } from './domain/ChatRoom';
+export { default as Contact } from './domain/Contact';
+export { default as COUNTRIES } from './domain/Country';
+export { default as Features } from './domain/Features';
+export { default as ForwardOption, FORWARD_KEYS } from './domain/ForwardOption';
+export { default as Line } from './domain/Line';
+export { default as NotificationOptions } from './domain/NotificationOptions';
+export { default as Profile, STATE as PROFILE_STATE, LINE_STATE } from './domain/Profile';
+export { default as Session } from './domain/Session';
+export { default as Voicemail } from './domain/Voicemail';
+export { default as Relocation } from './domain/Relocation';
+export { default as Room } from './domain/Room';
+export { default as CallSession } from './domain/CallSession';
+export { default as IndirectTransfer } from './domain/IndirectTransfer';
+export { default as SwitchboardCall } from './domain/SwitchboardCall';
+export { default as WebRTCPhone } from './domain/Phone/WebRTCPhone';
+export { default as CTIPhone } from './domain/Phone/CTIPhone';
+export { default as Meeting, MeetingCreateArguments, MeetingUpdateArguments } from './domain/Meeting';
+export { NewContact, ContactResponse, ContactsResponse, ContactPersonalResponse, ContactMobileResponse } from './domain/Contact';
+export { Phone, PhoneEventCallbacks } from './domain/Phone/Phone';
+export { ChatUser, ChatMessageResponse } from './domain/ChatMessage';
+export { Device } from './domain/Device/Device';
+export { WebSocketMessage, PresencesReadEvent } from './types/WebSocketMessage';
+export { default as DebugDevice } from './domain/Device/DebugDevice';
+export { default as Checker } from './checker/Checker';
+export * from './utils/PhoneNumberUtil';
+export { default as ApiRequester } from './utils/api-requester';
+export { DirectorySource as Source, DirectorySources as Sources } from './domain/DirectorySource';
+export { DirectorySource, DirectorySources } from './domain/DirectorySource';
+export { SwitchboardAnwseredQueuedCall, SwitchboardAnwseredHeldCall, SwitchboardCallItem, SwitchboardCallItems } from './domain/SwitchboardCall';
+export { default as MeetingStatus } from './domain/MeetingStatus';
+export { default as MeetingAuthorization, RawMeetingAuthorization } from './domain/MeetingAuthorization';
+export { default as SipLine } from './domain/SipLine';
+export { default as getApiClient, setApiToken, setCurrentServer, setOnRefreshToken, setOnRefreshTokenError, setIsMobile } from './service/getApiClient';
+export { default as CallApi } from './service/CallApi';
+export { default as AdHocAPIConference } from './domain/AdHocAPIConference';
+export { default as WebSocketClient, SOCKET_EVENTS } from './websocket-client';
+export { default as WebRTCClient } from './web-rtc-client';
+export { default as WazoApiClient } from './api-client';
+export * from './domain/types';
+
+export default Wazo;

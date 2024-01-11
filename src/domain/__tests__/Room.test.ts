@@ -8,10 +8,9 @@ describe('Room', () => {
         const number = 'some-number';
         const room = new Room({
           id: 'some-id',
-          // @ts-expect-error
           connectedCallSession: new CallSession({
             number,
-          }),
+          } as any),
           participants: [],
         });
         const extension = room.getExtension();
@@ -32,14 +31,12 @@ describe('Room', () => {
   });
   describe('on connect call', () => {
     it('should add call to room', async () => {
-      // @ts-expect-error
       const room = new Room({
         id: 'some-id',
-      });
-      // @ts-expect-error
+      } as any);
       const callSession = new CallSession({
         callId: 'some-call-id',
-      });
+      } as any);
       const connectedRoom = room.connect(callSession);
       expect(connectedRoom.connectedCallSession).toBe(callSession);
     });
@@ -47,42 +44,35 @@ describe('Room', () => {
   describe('on room has call', () => {
     describe('given no connected call', () => {
       it('should be false', async () => {
-        // @ts-expect-error
         const room = new Room({
           connectedCallSession: null,
-        });
-        // @ts-expect-error
-        const callSession = new CallSession({});
+        } as any);
+        const callSession = new CallSession({} as any);
         const roomHasCall = room.has(callSession);
         expect(roomHasCall).toBeFalsy();
       });
     });
     describe('given a connected call', () => {
       it('should be true if same calls', async () => {
-        // @ts-expect-error
         const callSession = new CallSession({
           callId: 'some-call-id',
-        });
-        // @ts-expect-error
+        } as any);
         const room = new Room({
           connectedCallSession: callSession,
-        });
+        } as any);
         const roomHasCall = room.has(callSession);
         expect(roomHasCall).toBeTruthy();
       });
       it('should be false if different calls', async () => {
-        // @ts-expect-error
         const call1 = new CallSession({
           callId: 'some-call-id',
-        });
-        // @ts-expect-error
+        } as any);
         const call2 = new CallSession({
           callId: 'some-other-call-id',
-        });
-        // @ts-expect-error
+        } as any);
         const room = new Room({
           connectedCallSession: call1,
-        });
+        } as any);
         const roomHasCall = room.has(call2);
         expect(roomHasCall).toBeFalsy();
       });
@@ -93,9 +83,8 @@ describe('Room', () => {
       const participants = [{}];
       const room = new Room({
         connectedCallSession: null,
-        // @ts-expect-error
         participants,
-      });
+      } as any);
       const participantUuid = 'some-uuid';
       const participantExtension = 'some-extension';
       const updatedRoom = room.addParticipant(participantUuid, participantExtension);
@@ -106,10 +95,9 @@ describe('Room', () => {
   describe('on room has call with id', () => {
     describe('given no connected call', () => {
       it('should be false', async () => {
-        // @ts-expect-error
         const room = new Room({
           connectedCallSession: null,
-        });
+        } as any);
         const callId = 'some-call-id';
         const roomHasCall = room.hasCallWithId(callId);
         expect(roomHasCall).toBeFalsy();
@@ -118,25 +106,21 @@ describe('Room', () => {
     describe('given a connected call', () => {
       it('should be true if same calls', async () => {
         const callId = 'some-call-id';
-        // @ts-expect-error
         const room = new Room({
-          // @ts-expect-error
           connectedCallSession: new CallSession({
             callId,
-          }),
-        });
+          } as any),
+        } as any);
         const roomHasCall = room.hasCallWithId(callId);
         expect(roomHasCall).toBeTruthy();
       });
       it('should be false if different calls', async () => {
         const callId = 'some-call-id';
-        // @ts-expect-error
         const room = new Room({
-          // @ts-expect-error
           connectedCallSession: new CallSession({
             callId: 'some-other-call-id',
-          }),
-        });
+          } as any),
+        } as any);
         const roomHasCall = room.hasCallWithId(callId);
         expect(roomHasCall).toBeFalsy();
       });
@@ -146,55 +130,49 @@ describe('Room', () => {
     it('should updated participant with corresponding UUID', async () => {
       const uuid = 'some-uuid';
       const room = new Room({
-        // @ts-expect-error
         participants: [{
           uuid,
           talking: true,
         }],
-      });
+      } as any);
       expect(room.participants[0].talking).toBeTruthy();
       const updatedRoom = room.updateParticipant(uuid, {
         talking: false,
-      });
+      } as any);
       expect(updatedRoom.participants[0].talking).toBeFalsy();
     });
     it('should add participant when not found', async () => {
       const uuid = 'some-uuid';
-      // @ts-expect-error
       const room = new Room({
         participants: [],
-      });
+      } as any);
       const updatedRoom = room.updateParticipant(uuid, {
         talking: false,
-      }, true);
+      } as any, true);
       expect(updatedRoom.participants[0].talking).toBeFalsy();
     });
   });
   describe('on updated participant by extension', () => {
     it('should updated participant with corresponding extension', async () => {
-      const extension = 1234;
+      const extension = '1234';
       const room = new Room({
         participants: [{
-          // @ts-expect-error
           extension,
           talking: false,
         }],
-      });
+      } as any);
       expect(room.participants[0].talking).toBeFalsy();
-      // @ts-expect-error
       const updatedRoom = room.updateParticipantByExtension(extension, {
         talking: true,
-      });
+      } as any);
       expect(updatedRoom.participants[0].talking).toBeTruthy();
     });
   });
   describe('on disconnect', () => {
     it('should destroy connected call', async () => {
-      // @ts-expect-error
       const room = new Room({
-        // @ts-expect-error
-        connectedCallSession: new CallSession({}),
-      });
+        connectedCallSession: new CallSession({} as any),
+      } as any);
       expect(room.connectedCallSession).not.toBeNull();
       const updatedRoom = room.disconnect();
       expect(updatedRoom.connectedCallSession).toBeNull();
@@ -204,11 +182,10 @@ describe('Room', () => {
     it('should remove participant with corresponding UUID', async () => {
       const uuid = 'some-uuid';
       const room = new Room({
-        // @ts-expect-error
         participants: [{
           uuid,
         }],
-      });
+      } as any);
       expect(room.participants.some(participant => participant.uuid === uuid)).toBeTruthy();
       const updatedRoom = room.removeParticipantWithUUID(uuid);
       expect(updatedRoom.participants.some(participant => participant.uuid === uuid)).toBeFalsy();
@@ -218,11 +195,10 @@ describe('Room', () => {
     it('should remove participant with corresponding UUID', async () => {
       const extension = 'some-extension';
       const room = new Room({
-        // @ts-expect-error
         participants: [{
           extension,
         }],
-      });
+      } as any);
       expect(room.participants.some(participant => participant.extension === extension)).toBeTruthy();
       const updatedRoom = room.removeParticipantWithExtension(extension);
       expect(updatedRoom.participants.some(participant => participant.extension === extension)).toBeFalsy();

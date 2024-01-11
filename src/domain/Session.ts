@@ -108,7 +108,7 @@ export default class Session {
     if (token) {
       const isValid = jws.JWS.verifyJWT(token, swarmKey, {
         alg: ['RS256'],
-        // @ts-ignore
+        // @ts-ignore: date / number
         verifyAt: new Date(),
       });
 
@@ -247,8 +247,8 @@ export default class Session {
     return line && Array.isArray(line.extensions) && line.extensions.length > 0 ? line.extensions[0].context : 'default';
   }
 
-  hasEngineVersionGte(version: string) {
-    return this.engineVersion && compareVersions(String(this.engineVersion), String(version)) >= 0;
+  hasEngineVersionGte(version: string): boolean {
+    return !!this.engineVersion && compareVersions(String(this.engineVersion), String(version)) >= 0;
   }
 
   primaryNumber(): string | null | undefined {

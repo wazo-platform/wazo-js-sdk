@@ -1,4 +1,3 @@
-// @ts-nocheck
 import CallSession from '../CallSession';
 import IndirectTransfer from '../IndirectTransfer';
 
@@ -9,9 +8,9 @@ describe('Indirect transfer', () => {
       const destinationId = 'destination-id';
       const indirectTransfer = IndirectTransfer.parseFromCallSession(new CallSession({
         callId: sourceId,
-      }), new CallSession({
+      } as any), new CallSession({
         callId: destinationId,
-      }));
+      } as any));
       expect(indirectTransfer).toEqual({
         sourceId,
         destinationId,
@@ -27,7 +26,7 @@ describe('Indirect transfer', () => {
       });
       const isDestination = indirectTransfer.destinationIs(new CallSession({
         callId: destinationId,
-      }));
+      } as any));
       expect(isDestination).toBeTruthy();
     });
     it('should NOT match when destination is the different', async () => {
@@ -38,7 +37,7 @@ describe('Indirect transfer', () => {
       });
       const isDestination = indirectTransfer.destinationIs(new CallSession({
         callId: destinationId,
-      }));
+      } as any));
       expect(isDestination).toBeFalsy();
     });
   });
@@ -51,7 +50,7 @@ describe('Indirect transfer', () => {
       });
       const isSource = indirectTransfer.sourceIs(new CallSession({
         callId: sourceId,
-      }));
+      } as any));
       expect(isSource).toBeTruthy();
     });
     it('should NOT match when source is the different', async () => {
@@ -62,7 +61,7 @@ describe('Indirect transfer', () => {
       });
       const isSource = indirectTransfer.sourceIs(new CallSession({
         callId: sourceId,
-      }));
+      } as any));
       expect(isSource).toBeFalsy();
     });
   });

@@ -101,9 +101,11 @@
     "./src/types/global.d.ts"
   ],
   "include": [
+    "./index.js",
     "./src/**/*"
   ],
   "exclude": [
+    "./index.js",
     "./lib/**/*",
     "./esm/**/*"
   ]

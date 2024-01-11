@@ -1,8 +1,5 @@
-/* eslint-disable @typescript-eslint/default-param-last */
 /* global window */
-
 /* eslint-disable global-require */
-
 /* eslint-disable import/no-dynamic-require */
 import { Base64 } from 'js-base64';
 import { AbortController as NodeAbortController } from 'node-abort-controller';
@@ -265,7 +262,7 @@ export default class ApiRequester {
     method: string,
     body: Record<string, any> | null | undefined = null,
     headers: (string | null | undefined) | (Record<string, any> | null | undefined) = null,
-    parse: ((...args: Array<any>) => any),
+    parse: ((...args: Array<any>) => any) | undefined = undefined,
   ) {
     const isTokenNotFound = this._isTokenNotFound(err);
 

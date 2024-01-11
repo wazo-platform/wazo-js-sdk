@@ -2,15 +2,17 @@ import CallSession from './CallSession';
 import newFrom from '../utils/new-from';
 import updateFrom from '../utils/update-from';
 
+type RoomParticipant = {
+  extension: string;
+  uuid: string;
+  talking?: boolean;
+};
+
 export type RoomArguments = {
   connectedCallSession: CallSession | null;
   id: string;
   name?: string;
-  participants: Array<{
-    extension: string;
-    uuid: string;
-    talking: boolean | null | undefined;
-  }>;
+  participants: RoomParticipant[];
 }; // Represents a conference room, like `9000`.
 
 export default class Room {
@@ -20,11 +22,7 @@ export default class Room {
 
   connectedCallSession: CallSession | null;
 
-  participants: Array<{
-    extension: string;
-    uuid: string;
-    talking: boolean | null | undefined;
-  }>;
+  participants: RoomParticipant[];
 
   constructor({
     id,
@@ -66,14 +64,14 @@ export default class Room {
     return this;
   }
 
-  updateParticipant(uuid: string, participant: Record<string, any>, shouldAdd = false) {
+  updateParticipant(uuid: string, participant: RoomParticipant, shouldAdd = false) {
     const idx = this.participants.findIndex(someParticipant => someParticipant.uuid === uuid);
 
     if (idx === -1 && !shouldAdd) {
       return this;
     }
 
-    const updatedParticipants: any = [...this.participants];
+    const updatedParticipants = [...this.participants];
 
     if (idx !== -1) {
       updatedParticipants[idx] = { ...updatedParticipants[idx],
@@ -88,14 +86,14 @@ export default class Room {
     });
   }
 
-  updateParticipantByExtension(extension: string, participant: Record<string, any>, shouldAdd = false) {
+  updateParticipantByExtension(extension: string, participant: RoomParticipant, shouldAdd = false) {
     const idx = this.participants.findIndex(someParticipant => someParticipant.extension === extension);
 
     if (idx === -1 && !shouldAdd) {
       return this;
     }
 
-    const updatedParticipants: any = [...this.participants];
+    const updatedParticipants = [...this.participants];
 
     if (idx !== -1) {
       updatedParticipants[idx] = { ...updatedParticipants[idx],

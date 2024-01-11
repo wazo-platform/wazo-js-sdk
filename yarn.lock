@@ -1876,10 +1876,10 @@
   resolved "https://registry.yarnpkg.com/@types/resolve/-/resolve-1.20.2.tgz#97d26e00cd4a0423b4af620abecf3e6f442b7975"
   integrity sha512-60BCwRFOZCQhDncwQdxxeOEEkbc5dIMccYLwbxsS4TUNeVECQ/pBJ0j09mrHOl/JJvpRPGwO9SvE4nR2Nb/a4Q==
 
-"@types/sdp-transform@^2.4.6":
-  version "2.4.6"
-  resolved "https://registry.yarnpkg.com/@types/sdp-transform/-/sdp-transform-2.4.6.tgz#f9cdba2b95c046bb155e5cd20bc96c5ca24597be"
-  integrity sha512-k3Nw6iaLoJbTjjY1tFT4L4IHNnLGJ52YacJNlNi6yqo76EYN1DiSPtuzzB7XnorZgrreUzCvzHDLklopmFdm7g==
+"@types/sdp-transform@^2.4.9":
+  version "2.4.9"
+  resolved "https://registry.yarnpkg.com/@types/sdp-transform/-/sdp-transform-2.4.9.tgz#26ef39f487a6909b0512f580b80920a366b27f52"
+  integrity sha512-bVr+/OoZZy7wrHlNcEAAa6PAgKA4BoXPYVN2EijMC5WnGgQ4ZEuixmKnVs2roiAvr7RhIFVH17QD27cojgIZCg==
 
 "@types/semver@^7.3.12":
   version "7.3.13"

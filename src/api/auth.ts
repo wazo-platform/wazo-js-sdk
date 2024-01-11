@@ -17,8 +17,8 @@ type LoginParams = {
 };
 
 type SendResetPasswordArgs = {
-  username: string,
-  email: string,
+  username?: string,
+  email?: string,
 };
 
 export interface AuthD {
@@ -166,9 +166,6 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
   sendResetPasswordEmail: ({
     username,
     email,
-  }: {
-    username: string | null | undefined;
-    email: string | null | undefined;
   }) => {
     const body: any = {};
 

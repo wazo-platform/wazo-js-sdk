@@ -3,7 +3,7 @@ import type { Endpoint } from './Line';
 
 const availableCodecs = ['vp8', 'vp9', 'h264'];
 type SipLineResponse = {
-  id: number;
+  id: string;
   uuid: string;
   tenant_uuid: string;
   username: string;
@@ -18,7 +18,7 @@ type SipLineResponse = {
   line: Endpoint;
 };
 type SipLineArguments = {
-  id: number;
+  id: string;
   uuid: string;
   tenantUuid: string;
   username: string;
@@ -32,7 +32,7 @@ type SipLineArguments = {
   line: Endpoint;
 };
 export default class SipLine {
-  id: any;
+  id: string;
 
   uuid: string;
 

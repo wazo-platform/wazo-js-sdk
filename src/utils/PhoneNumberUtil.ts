@@ -59,7 +59,7 @@ const getDisplayableNumber = (rawNumber: string, country: string, asYouType = fa
 
 const parsePhoneNumber = (phoneNumber: string): string => phoneNumber.replace(EXTRA_CHAR_REGEXP, '');
 
-const getCallableNumber = (number: string, country: string | null | undefined): string | null | undefined => {
+const getCallableNumber = (number: string, country?: string | null): string | null | undefined => {
   try {
     if (country) {
       return getDisplayableNumber(number, country).replace(EXTRA_CHAR_REGEXP, '');

@@ -8,7 +8,7 @@ export type AgentResponse = {
   paused_reason: string;
 };
 
-type AgentArguments = {
+export type AgentArguments = {
   context: string;
   extension: string;
   id: number;

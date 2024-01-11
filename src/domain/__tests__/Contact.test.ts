@@ -309,13 +309,11 @@ describe('Contact domain', () => {
     const noBirthdayContact = new Contact({
       uuid: 'uuid-12345',
       lastActivity: 'yesterday',
-      // @ts-expect-error
-      birthday: null,
+      birthday: undefined,
     });
     const noLastActivityContact = new Contact({
       uuid: 'uuid-12345',
-      // @ts-expect-error
-      lastActivity: null,
+      lastActivity: undefined,
       birthday: 'tomorrow',
     });
     const result = noBirthdayContact.merge(noLastActivityContact);

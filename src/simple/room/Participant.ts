@@ -4,6 +4,7 @@ import Phone from '../Phone';
 import Room, { SIGNAL_TYPE_PARTICIPANT_UPDATE } from './Room';
 import Contact from '../../domain/Contact';
 import getApiClient from '../../service/getApiClient';
+import Stream from './Stream';
 
 const logger = IssueReporter.loggerFor('room');
 
@@ -27,9 +28,9 @@ class Participant extends Emitter {
 
   isTalking: boolean;
 
-  streams: any[];
+  streams: Stream[];
 
-  videoStreams: any[];
+  videoStreams: Stream[];
 
   audioMuted: boolean;
 
@@ -371,7 +372,7 @@ class Participant extends Emitter {
     });
   }
 
-  resetStreams(streams: any[]) {
+  resetStreams(streams: Stream[]) {
     this.streams = streams;
     this.videoStreams = streams;
   }

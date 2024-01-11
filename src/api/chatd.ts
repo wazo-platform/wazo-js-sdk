@@ -1,35 +1,22 @@
 import ApiRequester from '../utils/api-requester';
-import type { UUID } from '../domain/types';
+import type { PresenceResponse, UUID } from '../domain/types';
 import Profile from '../domain/Profile';
 import ChatRoom from '../domain/ChatRoom';
 import type { ChatUser, ChatMessageListResponse } from '../domain/ChatMessage';
 import ChatMessage from '../domain/ChatMessage';
 
-export type PresenceResponse = {
-  lines: Array<{
-    id: number;
-    state: string;
-  }>;
-  sessions: Array<{
-    mobile: boolean;
-    uuid: string;
-  }>;
-  state: string;
-  status: string;
-  user_uuid: string;
-};
 type PresenceListResponse = {
   filtered: number;
   total: number;
   items: Array<PresenceResponse>;
 };
 type GetMessagesOptions = {
-  direction: string | null | undefined;
-  limit: number | null | undefined;
-  order: string | null | undefined;
-  offset: string | null | undefined;
-  search: string | null | undefined;
-  distinct: string | null | undefined;
+  direction?: string;
+  limit?: number;
+  order?: string;
+  offset?: string;
+  search?: string;
+  distinct?: string;
 };
 
 export interface ChatD {
@@ -43,7 +30,7 @@ export interface ChatD {
   createRoom: (name: string, users: Array<ChatUser>) => Promise<ChatRoom>;
   getRoomMessages: (roomUuid: string, params?: GetMessagesOptions) => Promise<Array<ChatMessage>>;
   sendRoomMessage: (roomUuid: string, message: ChatMessage) => Promise<ChatMessage>;
-  getMessages: (options: GetMessagesOptions) => Promise<ChatMessage>;
+  getMessages: (options: GetMessagesOptions) => Promise<ChatMessageListResponse>;
 }
 
 // split contact status retrieval to avoid `414 Request-URI Too Large`.
@@ -68,9 +55,8 @@ export default ((client: ApiRequester, baseUrl: string): ChatD => ({
     const uuids: Array<UUID> = contactUuids || [];
 
     if (uuids.length > MAX_PRESENCE_FETCHED) {
-      const requests = uuids.reduce((acc, _, i) => {
+      const requests = uuids.reduce((acc: Promise<PresenceResponse[]>[], _, i) => {
         if (i % MAX_PRESENCE_FETCHED === 0) {
-          // @ts-ignore
           acc.push(this.getMultipleLineState(uuids.slice(i, i + MAX_PRESENCE_FETCHED)));
         }
         return acc;
@@ -97,5 +83,5 @@ export default ((client: ApiRequester, baseUrl: string): ChatD => ({
     return client.get(`${baseUrl}/users/me/rooms/${roomUuid}/messages${qs.length ? `?${qs}` : ''}`).then((response: ChatMessageListResponse) => ChatMessage.parseMany(response));
   },
   sendRoomMessage: async (roomUuid: string, message: ChatMessage): Promise<ChatMessage> => client.post(`${baseUrl}/users/me/rooms/${roomUuid}/messages`, message).then(ChatMessage.parse),
-  getMessages: async (options: GetMessagesOptions): Promise<ChatMessage> => client.get(`${baseUrl}/users/me/rooms/messages`, options),
+  getMessages: async (options: GetMessagesOptions): Promise<ChatMessageListResponse> => client.get(`${baseUrl}/users/me/rooms/messages`, options),
 }));

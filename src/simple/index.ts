@@ -1,11 +1,12 @@
 /* global window */
-import Auth, { IAuth, InvalidSubscription, InvalidAuthorization, NoTenantIdError, NoDomainNameError } from './Auth';
-import Phone, { IPhone } from './Phone';
-import Websocket, { IWebsocket } from './Websocket';
+import Auth, { InvalidSubscription, InvalidAuthorization, NoTenantIdError, NoDomainNameError } from './Auth';
+import Phone from './Phone';
+import Websocket from './Websocket';
 import Room from './room/Room';
 import SipRoom from './room/SipRoom';
 import RemoteParticipant from './room/RemoteParticipant';
 import LocalParticipant from './room/LocalParticipant';
+import Participant from './room/Participant';
 import Stream from './room/Stream';
 import Directory from './Directory';
 import Configuration from './Configuration';
@@ -40,13 +41,14 @@ import Meeting from '../domain/Meeting';
 import Checker from '../checker/Checker';
 
 const Wazo = {
-  Auth: Auth as IAuth,
-  Phone: Phone as IPhone,
-  Websocket: Websocket as IWebsocket,
+  Auth,
+  Phone,
+  Websocket,
   Room,
   SipRoom,
   RemoteParticipant,
   LocalParticipant,
+  Participant,
   Stream,
   createLocalVideoStream,
   createLocalAudioStream,
@@ -138,7 +140,6 @@ const Wazo = {
 };
 
 if (window) {
-  // @ts-ignore
   window.Wazo = Wazo;
 }
 

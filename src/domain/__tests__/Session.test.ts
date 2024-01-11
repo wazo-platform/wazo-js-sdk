@@ -27,8 +27,7 @@ describe('Session domain', () => {
         xivo_user_uuid: null,
       },
     };
-    // @ts-ignore
-    const session = Session.parse(plain);
+    const session = Session.parse(plain as any);
     expect(session).toEqual(new Session({
       token: 'b93ae6bd-08d7-4001-9e61-057e72bbc4b3',
       refreshToken: null,
@@ -47,13 +46,13 @@ describe('Session domain', () => {
       const session = new Session({
         token: 'ref-12345',
         uuid: '1234',
-        // @ts-expect-error
+        //
         profile: new Profile({
           voicemail: {
             id: 1234,
             name: 'inbox',
           },
-        }),
+        } as any),
         expiresAt: A_DATE,
       });
       expect(session.hasAccessToVoicemail()).toBeTruthy();
@@ -64,7 +63,7 @@ describe('Session domain', () => {
           const session = new Session({
             token: 'ref-12345',
             uuid: '1234',
-            // @ts-expect-error
+            //
             profile: new Profile({
               lines: [new Line({
                 id: 9012,
@@ -81,7 +80,7 @@ describe('Session domain', () => {
                   context: 'internal',
                 }],
               })],
-            }),
+            } as any),
             expiresAt: A_DATE,
           });
           expect(session.allNumbers().length).toBeGreaterThan(1);
@@ -92,7 +91,7 @@ describe('Session domain', () => {
           const session = new Session({
             token: 'ref-12345',
             uuid: '1234',
-            // @ts-expect-error
+            //
             profile: new Profile({
               lines: [new Line({
                 id: 9012,
@@ -102,7 +101,7 @@ describe('Session domain', () => {
                   context: 'default',
                 }],
               })],
-            }),
+            } as any),
             expiresAt: A_DATE,
           });
           expect(session.allNumbers().length).toEqual(1);
@@ -113,10 +112,10 @@ describe('Session domain', () => {
       const session = new Session({
         token: 'ref-12345',
         uuid: '1234',
-        // @ts-expect-error
+        //
         profile: new Profile({
           voicemail: undefined,
-        }),
+        } as any),
         expiresAt: A_DATE,
       });
       expect(session.hasAccessToVoicemail()).toBeFalsy();
@@ -164,7 +163,7 @@ describe('Session domain', () => {
     const session = new Session({
       token: 'ref-12345',
       uuid: '1234',
-      // @ts-expect-error
+      //
       profile: new Profile({
         lines: [new Line({
           id: 9012,
@@ -181,7 +180,7 @@ describe('Session domain', () => {
             context: 'internal',
           }],
         })],
-      }),
+      } as any),
       expiresAt: new Date(9999, 0, 1),
     });
     it('should return true given it owns the extension', () => {
@@ -226,10 +225,10 @@ describe('Session domain', () => {
       describe('and NO lines', () => {
         beforeEach(() => {
           A_SESSION = new Session({ ...A_SESSION,
-            // @ts-expect-error
+            //
             profile: new Profile({
               lines: [],
-            }),
+            } as any),
           });
         });
         it('should return default context', async () => {
@@ -246,13 +245,13 @@ describe('Session domain', () => {
               exten: '1',
             }],
             id: 1,
-            // @ts-expect-error
+            //
             exten: 1,
-          });
-          // @ts-expect-error
+          } as any);
+          //
           const profile = new Profile({
             lines: [line],
-          });
+          } as any);
           A_SESSION = new Session({ ...A_SESSION,
             profile,
           });
@@ -272,10 +271,10 @@ describe('Session domain', () => {
         });
         describe('and NO lines', () => {
           beforeEach(() => {
-            // @ts-expect-error
+            //
             const profile = new Profile({
               lines: [],
-            });
+            } as any);
             A_SESSION = new Session({ ...A_SESSION,
               profile,
             });
@@ -294,13 +293,13 @@ describe('Session domain', () => {
                 exten: '1',
               }],
               id: 1,
-              // @ts-expect-error
+              //
               exten: 1,
-            });
-            // @ts-expect-error
+            } as any);
+            //
             const profile = new Profile({
               lines: [line],
-            });
+            } as any);
             A_SESSION = new Session({ ...A_SESSION,
               profile,
               engineVersion: '18.08',
@@ -329,13 +328,13 @@ describe('Session domain', () => {
                   exten: '1',
                 }],
                 id: 1,
-                // @ts-expect-error
+                //
                 exten: 1,
-              });
-              // @ts-expect-error
+              } as any);
+              //
               const profile = new Profile({
                 lines: [line],
-              });
+              } as any);
               A_SESSION = new Session({ ...A_SESSION,
                 profile,
               });

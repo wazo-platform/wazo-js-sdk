@@ -8,7 +8,7 @@ import getApiClient from './getApiClient';
 import Transfer from '../domain/IndirectTransfer';
 
 export default class CallApi {
-  static async fetchCallLogs(offset: number, limit: number): Promise<CallLog[]> {
+  static async fetchCallLogs(offset: number, limit?: number): Promise<CallLog[]> {
     return getApiClient().callLogd.listCallLogs(offset, limit);
   }
 
@@ -24,11 +24,11 @@ export default class CallApi {
     return getApiClient().callLogd.listCallLogsFromDate(from, number);
   }
 
-  static async search(query: string, limit: number): Promise<CallLog[]> {
+  static async search(query: string, limit?: number): Promise<CallLog[]> {
     return getApiClient().callLogd.search(query, limit);
   }
 
-  static async searchBy(field: string, value: string, limit: number): Promise<CallLog[]> {
+  static async searchBy(field: string, value: string, limit?: number): Promise<CallLog[]> {
     return getApiClient().callLogd.searchBy(field, value, limit);
   }
 

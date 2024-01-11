@@ -21,11 +21,11 @@ export default {
     }
 
     const mobile = isMobile();
-    const offerOptions: any = {
+    const offerOptions = {
       offerToReceiveAudio: 1,
     };
     const ips: string[] = [];
-    const config: any = {
+    const config: RTCConfiguration = {
       iceServers: [{
         urls: 'stun:stun1.l.google.com:19302',
       }, {
@@ -43,7 +43,7 @@ export default {
     }
 
     if (externalAppConfig && externalAppConfig.turn_servers) {
-      config.iceServers = [...JSON.parse(externalAppConfig.turn_servers), ...config.iceServers];
+      config.iceServers = [...JSON.parse(externalAppConfig.turn_servers), ...(config.iceServers || [])];
       // Force to use TURN when defined in config
       config.iceTransportPolicy = 'relay';
     }
@@ -66,8 +66,7 @@ export default {
         }
 
         if (ips.every(checkIsIPV4)) {
-          // @ts-ignore
-          resolve();
+          resolve(null);
         } else {
           const nonIPV4 = ips.find(ip => !checkIsIPV4(ip));
           reject(new Error(`Non IPv4 ice candidate found : ${nonIPV4}.`));

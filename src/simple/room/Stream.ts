@@ -9,7 +9,7 @@ class Stream {
 
   participant: Participant | undefined;
 
-  static detachStream(stream: any) {
+  static detachStream(stream: MediaStream) {
     stream.getTracks()
       .filter((track: MediaStreamTrack) => track.enabled)
       .forEach((track: MediaStreamTrack) => track.stop());
@@ -34,9 +34,8 @@ class Stream {
 
     element.onloadedmetadata = () => {
       const tracks = this.htmlStream ? this.htmlStream.getVideoTracks() : [];
-      tracks.forEach(track => {
+      tracks.forEach((track: MediaStreamTrack & { loaded?: boolean }) => {
         track.enabled = true;
-        // @ts-ignore
         track.loaded = true;
       });
     };

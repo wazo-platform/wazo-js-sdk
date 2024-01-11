@@ -1,6 +1,6 @@
 import type Session from '../domain/Session';
 import WazoWebSocketClient, * as WebSocketClient from '../websocket-client';
-import Emitter, { IEmitter } from '../utils/Emitter';
+import Emitter from '../utils/Emitter';
 import IssueReporter from '../service/IssueReporter';
 import { obfuscateToken } from '../utils/string';
 
@@ -11,23 +11,7 @@ const {
 const ALL_EVENTS = [...Object.values(SOCKET_EVENTS), ...Object.values(OTHER_EVENTS)];
 const logger = IssueReporter.loggerFor('simple-ws-client');
 
-export interface IWebsocket extends IEmitter {
-  ws: WazoWebSocketClient | null | undefined;
-  eventLists: string[];
-
-  CONFERENCE_USER_PARTICIPANT_JOINED: string;
-  CONFERENCE_USER_PARTICIPANT_LEFT: string;
-  MEETING_USER_PARTICIPANT_JOINED: string;
-  MEETING_USER_PARTICIPANT_LEFT: string;
-  CALL_CREATED: string;
-
-  open: (host: string, session: Session) => void;
-  updateToken: (token: string) => void;
-  isOpen: () => boolean;
-  close: (force?: boolean) => void;
-}
-
-class Websocket extends Emitter implements IWebsocket {
+class Websocket extends Emitter {
   ws: WazoWebSocketClient | null | undefined;
 
   eventLists: string[];
@@ -46,11 +30,11 @@ class Websocket extends Emitter implements IWebsocket {
     super();
     // Sugar syntax for `Wazo.WebSocket.EVENT_NAME`
     Object.keys(OTHER_EVENTS).forEach(key => {
-      // @ts-ignore
+      // @ts-ignore: keys
       this[key] = OTHER_EVENTS[key];
     });
     Object.keys(SOCKET_EVENTS).forEach(key => {
-      // @ts-ignore
+      // @ts-ignore: keys
       this[key] = SOCKET_EVENTS[key];
     });
     this.eventLists = WazoWebSocketClient.eventLists;

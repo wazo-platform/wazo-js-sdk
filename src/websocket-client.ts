@@ -1,5 +1,5 @@
 /* eslint-disable no-underscore-dangle */
-import ReconnectingWebSocket from 'reconnecting-websocket';
+import ReconnectingWebSocket, { ErrorEvent } from 'reconnecting-websocket';
 
 import Session from './domain/Session';
 import Emitter from './utils/Emitter';
@@ -252,10 +252,9 @@ class WebSocketClient extends Emitter {
       }
     };
 
-    this.socket.onerror = event => {
+    this.socket.onerror = (event: ErrorEvent & { code?: any }) => {
       logger.info('Wazo WS error', {
         message: event.message,
-        // @ts-ignore
         code: event.code,
         readyState: event.target.readyState,
       });

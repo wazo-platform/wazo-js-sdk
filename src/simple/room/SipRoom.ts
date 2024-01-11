@@ -1,9 +1,9 @@
-import { Invitation, Inviter } from 'sip.js';
 import type { Message } from 'sip.js/lib/api/message';
 import CallSession from '../../domain/CallSession';
 import IssueReporter from '../../service/IssueReporter';
 import Wazo from '../index';
 import Room from './Room';
+import { WazoSession } from '../../domain/types';
 
 const logger = IssueReporter.loggerFor('sdk-sip-room');
 
@@ -54,7 +54,7 @@ class SipRoom extends Room {
   }
 
   getLocalGuestName(): string | null {
-    // @ts-ignore
+    // @ts-ignore: private
     return Wazo.Phone.phone?.client.userAgent?.options.displayName || null;
   }
 
@@ -65,7 +65,7 @@ class SipRoom extends Room {
     Wazo.Phone.on(this.ON_CHAT, this._boundOnChat);
     Wazo.Phone.on(this.ON_SIGNAL, this._boundOnSignal);
     Wazo.Phone.on(this.ON_VIDEO_INPUT_CHANGE, this._boundSaveLocalVideoStream);
-    [this.ON_AUDIO_STREAM, this.ON_VIDEO_STREAM, this.ON_REMOVE_STREAM].forEach(event => Wazo.Phone.on(event, (...args) => this.eventEmitter.emit.apply(this.eventEmitter, [event, ...args])));
+    [this.ON_AUDIO_STREAM, this.ON_VIDEO_STREAM, this.ON_REMOVE_STREAM].forEach(event => Wazo.Phone.on(event, (...args: any[]) => this.eventEmitter.emit.apply(this.eventEmitter, [event, ...args])));
   }
 
   _onMessage(message: Message): Record<string, any> | null | undefined {
@@ -156,7 +156,7 @@ class SipRoom extends Room {
   }
 
   _getCurrentSipCallIs() {
-    return Wazo.Phone.getSipSessionId(Wazo.Phone.phone?.currentSipSession as Invitation | Inviter);
+    return Wazo.Phone.getSipSessionId(Wazo.Phone.phone?.currentSipSession as WazoSession);
   }
 
 }
