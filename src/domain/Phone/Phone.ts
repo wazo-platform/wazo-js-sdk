@@ -76,4 +76,5 @@ export interface Phone extends IEmitter {
   eventEmitter: EventEmitter;
   client: WebRTCClient | null;
   register(): Promise<null | void>;
+  onConnect(): Promise<void>;
 }

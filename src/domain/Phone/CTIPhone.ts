@@ -72,7 +72,7 @@ export default class CTIPhone extends Emitter implements Phone {
 
   bindClientEvents() {}
 
-  onConnect() {}
+  onConnect() { return Promise.resolve(); }
 
   onDisconnect() {}
 
