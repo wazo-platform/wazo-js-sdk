@@ -275,3 +275,19 @@ export type WazoTransport = Transport & {
   transitioningState: any;
   _ws: any;
 };
+
+export type PhonebookResponseItem = {
+  phonebook_uuid: number;
+  firstname: string;
+  lastname: string;
+  number: string;
+  mobile?: string;
+  extension?: string;
+  number_other?: string;
+  email: string;
+  address: string;
+  enterprise: string;
+  birthday: string;
+  note: string;
+  id: string;
+};

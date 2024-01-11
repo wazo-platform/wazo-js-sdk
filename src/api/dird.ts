@@ -1,6 +1,6 @@
 import { jsonToGraphQLQuery } from 'json-to-graphql-query/lib/jsonToGraphQLQuery';
 import ApiRequester from '../utils/api-requester';
-import type { UUID } from '../domain/types';
+import type { PhonebookResponseItem, UUID } from '../domain/types';
 import { Contact, ContactsResponse } from '../index';
 import type { NewContact, DirectorySource, DirectorySources } from '../index';
 
@@ -42,7 +42,7 @@ export interface DirD {
   fetchGoogleContacts: (source: DirectorySource, queryParams: ContactSearchQueryParams) => Promise<Contact[]>;
   fetchConferenceSource: (context: string) => Promise<DirectorySources>;
   fetchConferenceContacts: (source: DirectorySource) => Promise<Contact[]>;
-  fetchPhonebookContacts: (source: DirectorySource, params?: PhoneBookSearchQueryParams) => Promise<object[]>;
+  fetchPhonebookContacts: (source: DirectorySource, params?: PhoneBookSearchQueryParams) => Promise<{ items: PhonebookResponseItem[], total: number }>;
   findMultipleContactsByNumber: (numbers: string[], fields?: Record<string, any>) => Promise<Contact[]>;
 }
 
@@ -111,9 +111,9 @@ export default ((client: ApiRequester, baseUrl: string): DirD => ({
     backend: 'conference',
   }),
   fetchSourcesFor: (context: string, backend: string): Promise<DirectorySources> => client.get(`${baseUrl}/directories/${context}/sources`, { backend }),
-  fetchPhonebookContacts: (source: DirectorySource, params?: PhoneBookSearchQueryParams): Promise<object[]> => {
+  fetchPhonebookContacts: (source: DirectorySource, params?: PhoneBookSearchQueryParams): Promise<{ items: PhonebookResponseItem[], total: number }> => {
     if (!source) {
-      return Promise.resolve([]);
+      return Promise.resolve({ items: [], total: 0 });
     }
 
     return client.get(`${baseUrl}/backends/phonebook/sources/${source.uuid}/contacts`, params);

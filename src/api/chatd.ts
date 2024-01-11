@@ -17,6 +17,7 @@ export type PresenceResponse = {
   state: string;
   status: string;
   user_uuid: string;
+  last_activity?: string,
 };
 type PresenceListResponse = {
   filtered: number;
