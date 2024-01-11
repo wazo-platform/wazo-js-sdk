@@ -6,6 +6,7 @@ import Room from './room/Room';
 import SipRoom from './room/SipRoom';
 import RemoteParticipant from './room/RemoteParticipant';
 import LocalParticipant from './room/LocalParticipant';
+import Participant from './room/Participant';
 import Stream from './room/Stream';
 import Directory from './Directory';
 import Configuration from './Configuration';
@@ -47,6 +48,7 @@ const Wazo = {
   SipRoom,
   RemoteParticipant,
   LocalParticipant,
+  Participant,
   Stream,
   createLocalVideoStream,
   createLocalAudioStream,
