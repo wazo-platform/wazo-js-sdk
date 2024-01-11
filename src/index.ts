@@ -9,7 +9,7 @@ export { default as Call } from './domain/Call';
 export { default as CallLog } from './domain/CallLog';
 export { default as Recording } from './domain/Recording';
 export { default as ChatMessage } from './domain/ChatMessage';
-export { default as ChatRoom } from './domain/ChatRoom';
+export { default as ChatRoom, RoomResponse } from './domain/ChatRoom';
 export { default as Contact } from './domain/Contact';
 export { default as COUNTRIES } from './domain/Country';
 export { default as Features } from './domain/Features';
@@ -48,5 +48,6 @@ export { default as AdHocAPIConference } from './domain/AdHocAPIConference';
 export { default as WebSocketClient, SOCKET_EVENTS } from './websocket-client';
 export { default as WebRTCClient } from './web-rtc-client';
 export { default as WazoApiClient } from './api-client';
+export * from './domain/types';
 
 export default Wazo;

@@ -291,3 +291,18 @@ export type PhonebookResponseItem = {
   note: string;
   id: string;
 };
+
+export type PresenceResponse = {
+  lines: Array<{
+    id: number;
+    state: string;
+  }>;
+  sessions: Array<{
+    mobile: boolean;
+    uuid: string;
+  }>;
+  state: string;
+  status: string;
+  user_uuid: string;
+  last_activity?: string,
+};

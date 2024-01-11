@@ -1,24 +1,10 @@
 import ApiRequester from '../utils/api-requester';
-import type { UUID } from '../domain/types';
+import type { PresenceResponse, UUID } from '../domain/types';
 import Profile from '../domain/Profile';
 import ChatRoom from '../domain/ChatRoom';
 import type { ChatUser, ChatMessageListResponse } from '../domain/ChatMessage';
 import ChatMessage from '../domain/ChatMessage';
 
-export type PresenceResponse = {
-  lines: Array<{
-    id: number;
-    state: string;
-  }>;
-  sessions: Array<{
-    mobile: boolean;
-    uuid: string;
-  }>;
-  state: string;
-  status: string;
-  user_uuid: string;
-  last_activity?: string,
-};
 type PresenceListResponse = {
   filtered: number;
   total: number;
