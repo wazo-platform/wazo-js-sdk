@@ -139,11 +139,11 @@ const Wazo = {
   NoDomainNameError,
 };
 
-if (window) {
+if (typeof window !== 'undefined') {
   window.Wazo = Wazo;
 }
 
-if (global) {
+if (typeof global !== 'undefined') {
   global.Wazo = Wazo;
 }
 
