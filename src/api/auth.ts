@@ -9,7 +9,7 @@ export const DETAULT_EXPIRATION = 3600;
 type LoginParams = {
   username: string;
   password: string;
-  backend: string;
+  backend?: string;
   expiration: number;
   mobile?: boolean;
   tenantId?: string;
