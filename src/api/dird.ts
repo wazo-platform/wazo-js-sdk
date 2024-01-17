@@ -29,7 +29,7 @@ export interface DirD {
   addContact: (contact: NewContact) => Promise<Contact>;
   editContact: (contact: Contact) => Promise<Contact>;
   importContacts: (csv: string) => Promise<Contact[]>;
-  deleteContact: (contactUuid: UUID) => void,
+  deleteContact: (contactUuid: UUID) => Promise<void>,
   listFavorites: (context: string) => Promise<Array<Contact>>;
   markAsFavorite: (source: string, sourceId: string) => Promise<boolean>;
   removeFavorite: (source: string, sourceId: string) => Promise<void>;
