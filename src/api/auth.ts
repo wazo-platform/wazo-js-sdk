@@ -1,5 +1,5 @@
 import ApiRequester from '../utils/api-requester';
-import type { User, Tenant, Token, UUID, LogoutResponse, ListTenantsResponse, RequestError, ListUsersResponse, ListGroupsResponse, ListPoliciesResponse, GetTenantResponse, GetUserResponse } from '../domain/types';
+import type { User, Tenant, Token, UUID, LogoutResponse, ListTenantsResponse, ListUsersResponse, ListGroupsResponse, ListPoliciesResponse, GetTenantResponse, GetUserResponse } from '../domain/types';
 import Session, { Response } from '../domain/Session';
 
 export const DEFAULT_BACKEND_USER = 'wazo_user';
@@ -34,7 +34,7 @@ export interface AuthD {
   sendResetPasswordEmail: (params: SendResetPasswordArgs) => Promise<boolean>;
   resetPassword: (userUuid: string, password: string) => Promise<boolean>;
   removeDeviceToken: (userUuid: UUID) => Promise<void>;
-  createUser: (username: string, password: string, firstname: string, lastname: string) => Promise<User | RequestError>;
+  createUser: (username: string, password: string, firstname: string, lastname: string) => Promise<User>;
   addUserEmail: (userUuid: UUID, email: string, main?: boolean) => Promise<void>;
   addUserPolicy: (userUuid: UUID, policyUuid: UUID) => Promise<void>;
   getRestrictionPolicies: (scopes: string[]) => Promise<any>;
@@ -46,18 +46,18 @@ export interface AuthD {
   getUserSession: (userUuid: UUID) => Promise<any>; // @TODO
   deleteUserSession: (userUuid: UUID, sessionUuids: UUID) => Promise<void>;
   listUsers: () => Promise<ListUsersResponse>;
-  deleteUser: (userUuid: UUID) => Promise<boolean | RequestError>;
+  deleteUser: (userUuid: UUID) => Promise<boolean>;
   listTenants: () => Promise<ListTenantsResponse>;
   getTenant: (tenantUuid: UUID) => Promise<GetTenantResponse>;
-  createTenant: (name: string) => Promise<Tenant | RequestError>;
-  updateTenant: (uuid: UUID, name: string, contact: string, phone: string, address: Array<Record<string, any>>) => Promise<Tenant | RequestError>;
-  deleteTenant: (uuid: UUID) => Promise<boolean | RequestError>;
+  createTenant: (name: string) => Promise<Tenant>;
+  updateTenant: (uuid: UUID, name: string, contact: string, phone: string, address: Array<Record<string, any>>) => Promise<Tenant>;
+  deleteTenant: (uuid: UUID) => Promise<boolean>;
   createGroup: (name: string) => Promise<void>;
   listGroups: () => Promise<ListGroupsResponse>;
-  deleteGroup: (uuid: UUID) => Promise<boolean | RequestError>;
+  deleteGroup: (uuid: UUID) => Promise<boolean>;
   createPolicy: (name: string, description: string, aclTemplates: Array<Record<string, any>>) => Promise<void>;
   listPolicies: () => Promise<ListPoliciesResponse>;
-  deletePolicy: (policyUuid: UUID) => Promise<boolean | RequestError>;
+  deletePolicy: (policyUuid: UUID) => Promise<boolean>;
   getProviders: (userUuid: UUID) => Promise<any>; // @TODO
   getProviderToken: (userUuid: UUID, provider: string) => Promise<string>; // @TODO; validate
   getProviderAuthUrl: (userUuid: UUID, provider: string) => Promise<string>;
@@ -186,7 +186,7 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
     return client.post(`${baseUrl}/users/password/reset?user_uuid=${userUuid}`, body, null, ApiRequester.successResponseParser);
   },
   removeDeviceToken: (userUuid: UUID) => client.delete(`${baseUrl}/users/${userUuid}/external/mobile`),
-  createUser: (username: string, password: string, firstname: string, lastname: string): Promise<User | RequestError> => {
+  createUser: (username: string, password: string, firstname: string, lastname: string): Promise<User> => {
     const body = {
       username,
       password,
@@ -216,13 +216,13 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
   getUserSession: (userUuid: UUID) => client.get(`${baseUrl}/users/${userUuid}/sessions`),
   deleteUserSession: (userUuid: UUID, sessionUuids: UUID) => client.delete(`${baseUrl}/users/${userUuid}/sessions/${sessionUuids}`),
   listUsers: (): Promise<ListUsersResponse> => client.get(`${baseUrl}/users`),
-  deleteUser: (userUuid: UUID): Promise<boolean | RequestError> => client.delete(`${baseUrl}/users/${userUuid}`),
+  deleteUser: (userUuid: UUID): Promise<boolean> => client.delete(`${baseUrl}/users/${userUuid}`),
   listTenants: (): Promise<ListTenantsResponse> => client.get(`${baseUrl}/tenants`),
   getTenant: (tenantUuid: UUID): Promise<GetTenantResponse> => client.get(`${baseUrl}/tenants/${tenantUuid}`),
-  createTenant: (name: string): Promise<Tenant | RequestError> => client.post(`${baseUrl}/tenants`, {
+  createTenant: (name: string): Promise<Tenant> => client.post(`${baseUrl}/tenants`, {
     name,
   }),
-  updateTenant: (uuid: UUID, name: string, contact: string, phone: string, address: Array<Record<string, any>>): Promise<Tenant | RequestError> => {
+  updateTenant: (uuid: UUID, name: string, contact: string, phone: string, address: Array<Record<string, any>>): Promise<Tenant> => {
     const body = {
       name,
       contact,
@@ -231,12 +231,12 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
     };
     return client.put(`${baseUrl}/tenants/${uuid}`, body);
   },
-  deleteTenant: (uuid: UUID): Promise<boolean | RequestError> => client.delete(`${baseUrl}/tenants/${uuid}`),
+  deleteTenant: (uuid: UUID): Promise<boolean> => client.delete(`${baseUrl}/tenants/${uuid}`),
   createGroup: (name: string) => client.post(`${baseUrl}/groups`, {
     name,
   }),
   listGroups: (): Promise<ListGroupsResponse> => client.get(`${baseUrl}/groups`),
-  deleteGroup: (uuid: UUID): Promise<boolean | RequestError> => client.delete(`${baseUrl}/groups/${uuid}`),
+  deleteGroup: (uuid: UUID): Promise<boolean> => client.delete(`${baseUrl}/groups/${uuid}`),
   createPolicy: (name: string, description: string, aclTemplates: Array<Record<string, any>>) => {
     const body = {
       name,
@@ -248,7 +248,7 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
     return client.post(`${baseUrl}/policies`, body);
   },
   listPolicies: (): Promise<ListPoliciesResponse> => client.get(`${baseUrl}/policies`),
-  deletePolicy: (policyUuid: UUID): Promise<boolean | RequestError> => client.delete(`${baseUrl}/policies/${policyUuid}`),
+  deletePolicy: (policyUuid: UUID): Promise<boolean> => client.delete(`${baseUrl}/policies/${policyUuid}`),
   getProviders: (userUuid: UUID) => client.get(`${baseUrl}/users/${userUuid}/external`),
   getProviderToken: (userUuid: UUID, provider: string) => client.get(`${baseUrl}/users/${userUuid}/external/${provider}`),
   getProviderAuthUrl: (userUuid: UUID, provider: string) => client.post(`${baseUrl}/users/${userUuid}/external/${provider}`, {}),

@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import ApiRequester from '../utils/api-requester';
-import type { UUID, RequestError } from '../domain/types';
+import type { UUID } from '../domain/types';
 import Relocation, { RelocationResponse } from '../domain/Relocation';
 import ChatMessage, { ChatMessageListResponse } from '../domain/ChatMessage';
 import Voicemail from '../domain/Voicemail';
@@ -23,7 +23,7 @@ export interface CallD {
   cancelCall: (callId: string) => Promise<boolean>;
   listCalls: () => Promise<Array<Call>>;
   relocateCall: (callId: string, destination: string, lineId: number | null | undefined, contact?: string | null | undefined) => Promise<Relocation>;
-  listVoicemails: () => Promise<RequestError | Array<Voicemail>>;
+  listVoicemails: () => Promise<Array<Voicemail>>;
   deleteVoicemail: (voicemailId: number) => Promise<boolean>;
   getVoicemailUrl: (voicemail: Voicemail) => string;
   fetchSwitchboardHeldCalls: (switchboardUuid: UUID) => Promise<any>; // @TODO: replace `any`
@@ -125,7 +125,7 @@ export default ((client: ApiRequester, baseUrl: string): CallD => ({
     return client.post(`${baseUrl}/users/me/relocates`, body).then((response: RelocationResponse) => Relocation.parse(response));
   },
 
-  listVoicemails: (): Promise<RequestError | Array<Voicemail>> => client.get(`${baseUrl}/users/me/voicemails`).then((response: any) => Voicemail.parseMany(response)),
+  listVoicemails: (): Promise<Array<Voicemail>> => client.get(`${baseUrl}/users/me/voicemails`).then((response: any) => Voicemail.parseMany(response)),
   deleteVoicemail: (voicemailId: number): Promise<boolean> => client.delete(`${baseUrl}/users/me/voicemails/messages/${voicemailId}`),
   getVoicemailUrl: (voicemail: Voicemail): string => {
     const body = {

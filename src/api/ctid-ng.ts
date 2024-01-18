@@ -2,7 +2,7 @@
 
 /* DEPRECATED: USE CALLD INSTEAD CTID-NG */
 import ApiRequester from '../utils/api-requester';
-import type { UUID, RequestError, CTITransfer } from '../domain/types';
+import type { UUID, CTITransfer } from '../domain/types';
 import Relocation from '../domain/Relocation';
 import ChatMessage from '../domain/ChatMessage';
 import Voicemail, { Response } from '../domain/Voicemail';
@@ -30,10 +30,10 @@ export interface CtidNg {
   cancelCall: (callId: number) => Promise<boolean>;
   listCalls: () => Promise<Array<Call>>;
   relocateCall: (callId: number, destination: string, lineId: number | null | undefined, contact?: string | null | undefined) => Promise<Relocation>;
-  transferCall: (callId: number, number: string, flow: string) => Promise<RequestError | CTITransfer>;
-  cancelCallTransfer: (transferId: string) => Promise<RequestError | void>;
-  confirmCallTransfer: (transferId: string) => Promise<RequestError | void>;
-  listVoicemails: () => Promise<RequestError | Array<Voicemail>>;
+  transferCall: (callId: number, number: string, flow: string) => Promise<CTITransfer>;
+  cancelCallTransfer: (transferId: string) => Promise<void>;
+  confirmCallTransfer: (transferId: string) => Promise<void>;
+  listVoicemails: () => Promise<Array<Voicemail>>;
   deleteVoicemail: (voicemailId: number) => Promise<boolean>;
   getPresence: (contactUuid: UUID) => Promise<GetPresenceResponse>;
   getStatus: (lineUuid: UUID) => Promise<string>;
@@ -112,7 +112,7 @@ export default ((client: ApiRequester, baseUrl: string): CtidNg => ({
     return client.post(`${baseUrl}/users/me/relocates`, body).then(Relocation.parse);
   },
 
-  transferCall(callId: number, number: string, flow: string = TRANSFER_FLOW_BLIND): Promise<RequestError | CTITransfer> {
+  transferCall(callId: number, number: string, flow: string = TRANSFER_FLOW_BLIND): Promise<CTITransfer> {
     const body: Record<string, any> = {
       exten: number,
       flow,
@@ -122,10 +122,10 @@ export default ((client: ApiRequester, baseUrl: string): CtidNg => ({
   },
 
   // @TODO: fix response type
-  cancelCallTransfer: (transferId: string): Promise<RequestError | void> => client.delete(`${baseUrl}/users/me/transfers/${transferId}`),
+  cancelCallTransfer: (transferId: string): Promise<void> => client.delete(`${baseUrl}/users/me/transfers/${transferId}`),
   // @TODO: fix response type
-  confirmCallTransfer: (transferId: string): Promise<RequestError | void> => client.put(`${baseUrl}/users/me/transfers/${transferId}/complete`),
-  listVoicemails: (): Promise<RequestError | Array<Voicemail>> => client.get(`${baseUrl}/users/me/voicemails`, null).then((response: Response) => Voicemail.parseMany(response)),
+  confirmCallTransfer: (transferId: string): Promise<void> => client.put(`${baseUrl}/users/me/transfers/${transferId}/complete`),
+  listVoicemails: (): Promise<Array<Voicemail>> => client.get(`${baseUrl}/users/me/voicemails`, null).then((response: Response) => Voicemail.parseMany(response)),
   deleteVoicemail: (voicemailId: number): Promise<boolean> => client.delete(`${baseUrl}/users/me/voicemails/messages/${voicemailId}`, null),
   getPresence: (contactUuid: UUID): Promise<{
     presence: string;

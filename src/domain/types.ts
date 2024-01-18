@@ -9,15 +9,6 @@ type GenericObject = Record<string, any>;
 export type Token = string;
 export type UUID = string;
 export type DateString = string;
-export type RequestError = {
-  timestamp: number;
-  message: string;
-  resource: string;
-  error_id: string;
-  details: {
-    uuid: string;
-  };
-};
 export type LogoutResponse = {
   data: {
     message: string;
