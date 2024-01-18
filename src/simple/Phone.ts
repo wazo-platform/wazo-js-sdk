@@ -204,7 +204,7 @@ class Phone extends Emitter {
     if (this.phone) {
       if (this.phone.hasAnActiveCall()) {
         logger.info('hangup call on disconnect');
-        await this.phone.hangup(null);
+        await this.phone.hangup();
       }
 
       await this.phone.close();
