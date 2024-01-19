@@ -68,13 +68,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   incomingSessions: string[];
 
-  currentSipSession: WazoSession | undefined;
+  currentSipSession?: WazoSession;
 
-  currentCallSession: CallSession | null | undefined;
+  currentCallSession?: CallSession;
 
-  audioOutputDeviceId: string | null | undefined;
+  audioOutputDeviceId?: string;
 
-  audioRingDeviceId: string | null | undefined;
+  audioRingDeviceId?: string;
 
   audioOutputVolume: number;
 
@@ -94,7 +94,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   shouldSendReinvite: boolean;
 
-  constructor(client: WazoWebRTCClient, audioOutputDeviceId: string | null | undefined, allowVideo = false, audioRingDeviceId?: string) {
+  constructor(client: WazoWebRTCClient, audioOutputDeviceId: string | undefined, allowVideo = false, audioRingDeviceId?: string) {
     super();
     this.client = client;
     this.allowVideo = allowVideo;
@@ -156,7 +156,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return true;
   }
 
-  async sendReinvite(callSession: CallSession | null | undefined, constraints: Record<string, any> | null | undefined = null, conference = false, audioOnly = false, iceRestart = false): Promise<OutgoingInviteRequest | void> {
+  async sendReinvite(callSession?: CallSession, constraints: Record<string, any> | null | undefined = null, conference = false, audioOnly = false, iceRestart = false): Promise<OutgoingInviteRequest | void> {
     const sipSession = this.findSipSession(callSession);
     logger.info('WebRTC phone - send reinvite', {
       sessionId: sipSession ? sipSession.id : null,
@@ -271,7 +271,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return this.client.onDisconnect();
   }
 
-  _downgradeToAudio(callSession: CallSession | null | undefined, withMessage = true) {
+  _downgradeToAudio(callSession?: CallSession, withMessage = true) {
     const sipSession = this.findSipSession(callSession);
 
     if (!sipSession) {
@@ -298,7 +298,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   // Returns true if we need to send a re-INVITE request
-  async _upgradeToVideo(callSession: CallSession | null | undefined, constraints: Record<string, any>, isConference: boolean): Promise<boolean> {
+  async _upgradeToVideo(callSession: CallSession | undefined, constraints: Record<string, any>, isConference: boolean): Promise<boolean> {
     const sipSession = this.findSipSession(callSession);
 
     if (!sipSession) {
@@ -342,7 +342,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return false;
   }
 
-  _sendReinviteMessage(callSession: CallSession | null | undefined, isUpgrade: boolean) {
+  _sendReinviteMessage(callSession: CallSession | undefined, isUpgrade: boolean) {
     const sipSession = this.findSipSession(callSession);
     logger.info('Sending reinvite message', {
       id: callSession ? callSession.getId() : null,
@@ -506,7 +506,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return screenShareStream;
   }
 
-  async stopScreenSharing(restoreLocalStream = true, callSession?: CallSession | null | undefined): Promise<OutgoingInviteRequest | void | null> {
+  async stopScreenSharing(restoreLocalStream = true, callSession?: CallSession): Promise<OutgoingInviteRequest | void | null> {
     if (!this.currentScreenShare) {
       return;
     }
@@ -983,7 +983,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return promise;
   }
 
-  async holdSipSession(sipSession: WazoSession, callSession: CallSession | null | undefined, withEvent = true): Promise<OutgoingInviteRequest | void> {
+  async holdSipSession(sipSession: WazoSession, callSession?: CallSession, withEvent = true): Promise<OutgoingInviteRequest | void> {
     if (!sipSession) {
       return new Promise((resolve, reject) => reject(new Error('No session to hold')));
     }
@@ -1077,7 +1077,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     });
   }
 
-  mute(callSession: CallSession | null | undefined, withEvent = true): void {
+  mute(callSession?: CallSession, withEvent = true): void {
     logger.info('WebRTC mute called', {
       id: callSession ? callSession.getId() : null,
     });
@@ -1105,7 +1105,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
   }
 
-  unmute(callSession: CallSession | null | undefined, withEvent = true): void {
+  unmute(callSession?: CallSession, withEvent = true): void {
     logger.info('WebRTC unmute called', {
       id: callSession ? callSession.getId() : null,
     });
@@ -1171,7 +1171,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.eventEmitter.emit(ON_CAMERA_DISABLED, this._createCameraDisabledCallSession(sipSession, callSession));
   }
 
-  sendKey(callSession: CallSession | null | undefined, tone: string): void {
+  sendKey(callSession: CallSession | undefined, tone: string): void {
     const sipSession = this.findSipSession(callSession);
 
     if (!sipSession) {
@@ -1248,7 +1248,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return Promise.resolve(callSession);
   }
 
-  transfer(callSession: CallSession | null | undefined, target: string): void {
+  transfer(callSession: CallSession, target: string): void {
     const sipSession = this.findSipSession(callSession);
 
     if (!sipSession) {
@@ -1296,7 +1296,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   confirmCTIIndirectTransfer() {}
 
-  async hangup(callSession?: CallSession | null): Promise<boolean> {
+  async hangup(callSession?: CallSession): Promise<boolean> {
     const sipSession = this.findSipSession(callSession);
 
     if (!sipSession) {
@@ -1322,17 +1322,17 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return true;
   }
 
-  async getStats(callSession: CallSession | null | undefined): Promise<RTCStatsReport | null | undefined> {
+  async getStats(callSession?: CallSession): Promise<RTCStatsReport | null | undefined> {
     const sipSession = this.findSipSession(callSession);
     return sipSession ? this.client.getStats(sipSession) : null;
   }
 
-  startNetworkMonitoring(callSession: CallSession | null | undefined, interval = 1000) {
+  startNetworkMonitoring(callSession?: CallSession, interval = 1000) {
     const sipSession = this.findSipSession(callSession);
     return sipSession ? this.client.startNetworkMonitoring(sipSession, interval) : null;
   }
 
-  stopNetworkMonitoring(callSession: CallSession | null | undefined) {
+  stopNetworkMonitoring(callSession?: CallSession) {
     const sipSession = this.findSipSession(callSession);
     return sipSession ? this.client.stopNetworkMonitoring(sipSession) : null;
   }
@@ -1360,7 +1360,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     if (isCurrent) {
       this.currentSipSession = undefined;
-      this.currentCallSession = null;
+      this.currentCallSession = undefined;
     }
 
     this.eventEmitter.emit(ON_TERMINATE_SOUND, callSession, 'locally ended');
@@ -1392,7 +1392,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.unbind();
     this.incomingSessions = [];
     this.currentSipSession = undefined;
-    this.currentCallSession = null;
+    this.currentCallSession = undefined;
     this.shouldSendReinvite = false;
     this.rejectedSessions = {};
   }
@@ -1667,7 +1667,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   // Find a corresponding sipSession from a CallSession
-  findSipSession(callSession: CallSession | null | undefined): WazoSession | null | undefined {
+  findSipSession(callSession?: CallSession): WazoSession | null | undefined {
     const keys = this.client.getSipSessionIds();
     const keyIndex = keys.findIndex(sessionId => callSession && callSession.isId(sessionId));
 

@@ -29,7 +29,7 @@ export type AvailablePhoneOptions = {
   transfer: boolean;
 };
 export interface Phone extends IEmitter {
-  accept(callSession: CallSession, enableVideo: boolean): Promise<string | null>;
+  accept(callSession: CallSession, enableVideo?: boolean): Promise<string | null>;
   changeAudioDevice(id: string): PhoneVoid;
   changeRingDevice(id: string): PhoneVoid;
   changeAudioVolume(volume: number): PhoneVoid;
@@ -46,7 +46,7 @@ export interface Phone extends IEmitter {
   getOptions(): AvailablePhoneOptions;
   getRemoteStreamForCall(callSession: CallSession): MediaStream | null | undefined;
   ignore(callSession: CallSession): PhoneVoid;
-  hangup(callSession: CallSession): Promise<boolean>;
+  hangup(callSession?: CallSession): Promise<boolean>;
   hasAnActiveCall(): boolean;
   hold(callSession: CallSession): Promise<any> | null | undefined;
   indirectTransfer(source: CallSession, destination: CallSession): Promise<boolean>;
