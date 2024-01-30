@@ -47,6 +47,7 @@ export { default as WebSocketClient, SOCKET_EVENTS } from './websocket-client';
 export { default as WebRTCClient } from './web-rtc-client';
 export { default as WazoApiClient } from './api-client';
 export { default as Agent, AgentResponse, AgentArguments } from './domain/Agent';
+export { default as ExternalApp } from './domain/ExternalApp';
 export * from './types/WebSocketMessage';
 export * from './utils/PhoneNumberUtil';
 export * from './domain/types';

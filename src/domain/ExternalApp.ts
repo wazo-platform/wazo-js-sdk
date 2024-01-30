@@ -16,7 +16,7 @@ export default class ExternalApp {
 
   type: string;
 
-  configuration: Record<string, any> | undefined;
+  configuration?: Record<string, any>;
 
   static parse(plain: Response): ExternalApp {
     return new ExternalApp({
