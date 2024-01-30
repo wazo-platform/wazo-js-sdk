@@ -297,3 +297,18 @@ export type PresenceResponse = {
   user_uuid: string;
   last_activity?: string,
 };
+
+export type QueryParams = {
+  order?: string;
+  direction?: 'asc' | 'desc';
+  limit?: number;
+  offset?: number;
+};
+
+export type SearchableQueryParams = QueryParams & {
+  search?: string;
+};
+
+export type UuidSearchableQueryParams = SearchableQueryParams & {
+  uuid?: string;
+};
