@@ -19,6 +19,7 @@ import IssueReporter from '../service/IssueReporter';
 import Wazo from './index';
 import SipLine from '../domain/SipLine';
 import { obfuscateToken } from '../utils/string';
+import { FetchOptions } from '../domain/types';
 
 export class InvalidSubscription extends Error {}
 export class InvalidAuthorization extends Error {}
@@ -94,7 +95,7 @@ class Auth {
     });
   }
 
-  setFetchOptions(options: Record<string, any>) {
+  setFetchOptions(options: FetchOptions) {
     setFetchOptions(options);
   }
 
@@ -164,7 +165,7 @@ class Auth {
     return this._onAuthenticated(rawSession as Session);
   }
 
-  async validateToken(token: string, refreshToken: string): Promise<Session | undefined | null> {
+  async validateToken(token: string, refreshToken?: string): Promise<Session | undefined | null> {
     if (!token) {
       return;
     }
@@ -404,4 +405,4 @@ if (!global.wazoAuthInstance) {
   global.wazoAuthInstance = new Auth();
 }
 
-export default global.wazoAuthInstance;
+export default global.wazoAuthInstance as Auth;

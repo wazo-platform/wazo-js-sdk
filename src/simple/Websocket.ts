@@ -1,5 +1,5 @@
 import type Session from '../domain/Session';
-import WazoWebSocketClient, * as WebSocketClient from '../websocket-client';
+import WebSocketClient, * as WebSocketEvents from '../websocket-client';
 import Emitter from '../utils/Emitter';
 import IssueReporter from '../service/IssueReporter';
 import { obfuscateToken } from '../utils/string';
@@ -7,12 +7,12 @@ import { obfuscateToken } from '../utils/string';
 const {
   SOCKET_EVENTS,
   ...OTHER_EVENTS
-} = WebSocketClient;
+} = WebSocketEvents;
 const ALL_EVENTS = [...Object.values(SOCKET_EVENTS), ...Object.values(OTHER_EVENTS)];
 const logger = IssueReporter.loggerFor('simple-ws-client');
 
 class Websocket extends Emitter {
-  ws: WazoWebSocketClient | null | undefined;
+  ws?: WebSocketClient;
 
   eventLists: string[];
 
@@ -37,8 +37,8 @@ class Websocket extends Emitter {
       // @ts-ignore: keys
       this[key] = SOCKET_EVENTS[key];
     });
-    this.eventLists = WazoWebSocketClient.eventLists;
-    this.ws = null;
+    this.eventLists = WebSocketClient.eventLists;
+    this.ws = undefined;
   }
 
   open(host: string, session: Session) {
@@ -46,7 +46,7 @@ class Websocket extends Emitter {
       host,
       token: obfuscateToken(session.token),
     });
-    this.ws = new WazoWebSocketClient({
+    this.ws = new WebSocketClient({
       host,
       token: session.token,
       events: ['*'],
@@ -102,4 +102,4 @@ if (!global.wazoWebsocketInstance) {
   global.wazoWebsocketInstance = new Websocket();
 }
 
-export default global.wazoWebsocketInstance;
+export default global.wazoWebsocketInstance as Websocket;

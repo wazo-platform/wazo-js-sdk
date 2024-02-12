@@ -1,6 +1,8 @@
 /* eslint-disable vars-on-top */
 /* eslint-disable no-var */
 
+import { type FetchOptions } from '../domain/types';
+
 declare global {
   var Wazo;
   var wazoClients;
@@ -15,7 +17,7 @@ declare global {
   var wazoRefreshBackend;
   var wazoIsMobile;
   var wazoRequestApiTimeout;
-  var wazoFetchOptions;
+  var wazoFetchOptions: Record<string, FetchOptions>;
   var wazoCurrentServer;
   var wazoAuthInstance;
   var wazoConfigurationInstance;

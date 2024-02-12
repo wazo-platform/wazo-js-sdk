@@ -7,7 +7,7 @@ import { AbortController as NodeAbortController } from 'node-abort-controller';
 import BadResponse from '../domain/BadResponse';
 import ServerError from '../domain/ServerError';
 import isMobile from './isMobile';
-import type { Token } from '../domain/types';
+import type { FetchOptions, Token } from '../domain/types';
 import IssueReporter from '../service/IssueReporter';
 
 type ConstructorParams = {
@@ -16,7 +16,7 @@ type ConstructorParams = {
   clientId: string | null | undefined;
   refreshTokenCallback: (...args: Array<any>) => any;
   token?: string | null;
-  fetchOptions: Record<string, any> | null | undefined;
+  fetchOptions?: FetchOptions;
   requestTimeout?: number | null;
 };
 const methods = ['head', 'get', 'post', 'put', 'delete', 'options'];
@@ -60,7 +60,7 @@ export default class ApiRequester {
 
   tenant: string | null | undefined;
 
-  fetchOptions: Record<string, any>;
+  fetchOptions: FetchOptions;
 
   refreshTokenCallback: (...args: Array<any>) => any;
 
@@ -144,7 +144,7 @@ export default class ApiRequester {
     this.token = token;
   }
 
-  setFetchOptions(options: Record<string, any>) {
+  setFetchOptions(options: FetchOptions) {
     this.fetchOptions = options;
   }
 

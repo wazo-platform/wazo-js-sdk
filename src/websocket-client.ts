@@ -8,14 +8,16 @@ import IssueReporter from './service/IssueReporter';
 import Heartbeat from './utils/Heartbeat';
 import { obfuscateToken } from './utils/string';
 
-export const SOCKET_EVENTS = {
-  ON_OPEN: 'onopen',
-  ON_MESSAGE: 'onmessage',
-  ON_ERROR: 'onerror',
-  ON_CLOSE: 'onclose',
-  INITIALIZED: 'initialized',
-  ON_AUTH_FAILED: 'on_auth_failed',
-};
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export enum SOCKET_EVENTS {
+  ON_OPEN = 'onopen',
+  ON_MESSAGE = 'onmessage',
+  ON_ERROR = 'onerror',
+  ON_CLOSE = 'onclose',
+  INITIALIZED = 'initialized',
+  ON_AUTH_FAILED = 'on_auth_failed',
+}
+
 type Arguments = {
   host: string;
   token: string;

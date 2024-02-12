@@ -25,7 +25,7 @@ type ConnectArgs = {
 };
 
 class Room extends Emitter {
-  callSession: CallSession | null | undefined;
+  callSession?: CallSession;
 
   name: string;
 
@@ -68,7 +68,7 @@ class Room extends Emitter {
   extra: Record<string, any>;
 
   // video tag representing the room audio stream
-  roomAudioElement: HTMLAudioElement;
+  roomAudioElement?: HTMLAudioElement;
 
   CONFERENCE_USER_PARTICIPANT_JOINED: string;
 
@@ -189,6 +189,7 @@ class Room extends Emitter {
 
     if (!room) {
       await Wazo.Phone.connect({
+        // @ts-ignore
         media: constraints,
       });
       const withCamera = constraints && !!constraints.video;
@@ -260,7 +261,7 @@ class Room extends Emitter {
   async disconnect() {
     logger.info('disconnection to room called');
     await Wazo.Phone.hangup(this.callSession as CallSession);
-    this.callSession = null;
+    this.callSession = undefined;
     this.eventEmitter.emit(this.ON_DISCONNECTED, this);
     this.connected = false;
     this.unbind();
@@ -498,7 +499,9 @@ class Room extends Emitter {
       if (!this.roomAudioElement) {
         const sessionId = Wazo.Phone.phone?.getSipSessionId(Wazo.Phone.phone?.currentSipSession as WazoSession);
         this.roomAudioElement = Wazo.Phone.phone?.createAudioElementFor(sessionId as string);
-        this.roomAudioElement.srcObject = stream;
+        if (this.roomAudioElement) {
+          this.roomAudioElement.srcObject = stream;
+        }
       } else {
         this.roomAudioElement.srcObject = stream;
       }

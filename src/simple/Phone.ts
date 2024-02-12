@@ -527,4 +527,4 @@ if (!global.wazoTelephonyInstance) {
   global.wazoTelephonyInstance = new Phone();
 }
 
-export default global.wazoTelephonyInstance;
+export default global.wazoTelephonyInstance as Phone;

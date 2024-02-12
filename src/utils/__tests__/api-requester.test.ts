@@ -39,7 +39,7 @@ describe('Computing fetch URL', () => {
       agent: null,
       clientId: null,
       refreshTokenCallback: () => null,
-      fetchOptions: null,
+      fetchOptions: undefined,
     });
     expect(client.computeUrl('get', 'auth', {
       a: 1,
@@ -60,7 +60,7 @@ describe('Retrieving headers', () => {
       agent: null,
       clientId: null,
       refreshTokenCallback: () => null,
-      fetchOptions: null,
+      fetchOptions: undefined,
     });
     requester.setTenant(tenant);
     expect(requester.getHeaders(null)['Wazo-Tenant']).toBe(tenant);
@@ -72,7 +72,7 @@ describe('Retrieving headers', () => {
       agent: null,
       clientId: null,
       refreshTokenCallback: () => null,
-      fetchOptions: null,
+      fetchOptions: undefined,
     });
     expect(requester.getHeaders(null)).not.toHaveProperty('Wazo-Tenant');
   });
@@ -93,7 +93,7 @@ describe('Calling fetch', () => {
       agent: null,
       clientId: null,
       refreshTokenCallback: () => null,
-      fetchOptions: null,
+      fetchOptions: undefined,
     }).call(path, method, body, {});
 
     expect(global.fetch).toBeCalledWith(url, {
@@ -126,7 +126,7 @@ describe('With a refresh token', () => {
       agent: null,
       clientId: null,
       refreshTokenCallback: () => null,
-      fetchOptions: null,
+      fetchOptions: undefined,
     });
     requester.token = token;
 

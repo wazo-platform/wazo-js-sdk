@@ -312,3 +312,9 @@ export type SearchableQueryParams = QueryParams & {
 export type UuidSearchableQueryParams = SearchableQueryParams & {
   uuid?: string;
 };
+
+export type FetchOptions = Partial<{
+  headers?: Partial<{
+    'X-User-UUID': string
+  }>
+}>;

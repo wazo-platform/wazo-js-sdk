@@ -1,5 +1,6 @@
 /* eslint-disable dot-notation */
 import WazoApiClient from '../api-client';
+import { FetchOptions } from '../domain/types';
 
 // Can't use node cache mechanism here because when requiring lib/CallApi.js
 // this file will be merge with CallApi.js and the cache will be lost.
@@ -54,10 +55,10 @@ export const setIsMobile = (isMobile: boolean, forServer: string | null | undefi
 export const setRequestTimeout = (requestTimeout: number, forServer: string | null | undefined = null) => {
   global.wazoRequestApiTimeout[String(forServer)] = requestTimeout;
 };
-export const setFetchOptions = (fetchOptions: Record<string, any>, forServer: string | null | undefined = null) => {
+export const setFetchOptions = (fetchOptions: FetchOptions, forServer: string | null | undefined = null) => {
   global.wazoFetchOptions[String(forServer)] = fetchOptions;
 };
-export const getFetchOptions = (forServer: string | null | undefined = null) =>
+export const getFetchOptions = (forServer: string | null | undefined = null): FetchOptions =>
   (forServer ? global.wazoFetchOptions[forServer] : global.wazoFetchOptions.null) || global.wazoFetchOptions.null;
 
 const fillClient = (apiClient: WazoApiClient) => {
