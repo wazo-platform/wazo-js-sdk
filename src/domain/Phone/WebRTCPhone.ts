@@ -367,10 +367,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
   _bindEvents(sipSession: WazoSession) {
     const sipSessionId = this.getSipSessionId(sipSession);
 
-    if (sipSession instanceof Invitation) {
+    if (sipSession) {
       // Monkey patch to know when canceled with the CANCEL message
+      // @ts-ignore
       const onCancel = sipSession._onCancel.bind(sipSession);
 
+      // @ts-ignore
       sipSession._onCancel = (message: IncomingRequestMessage) => {
         logger.trace('on sip session canceled', {
           callId: message.callId,
