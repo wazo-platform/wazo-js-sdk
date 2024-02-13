@@ -1,4 +1,4 @@
-import type { Invitation, Inviter, Session as SipSession, UserAgentOptions as sipJsUserAgentOptions } from 'sip.js';
+import type { Invitation, Inviter, SessionDescriptionHandler, Session as SipSession, UserAgentOptions as sipJsUserAgentOptions } from 'sip.js';
 import { SessionDescriptionHandlerFactoryOptions } from 'sip.js/lib/platform/web';
 import type { IncomingResponse as SipIncomingResponse } from 'sip.js/lib/core/messages/incoming-response';
 import { Transport } from 'sip.js/lib/api';
@@ -255,7 +255,19 @@ export type PeerConnection = RTCPeerConnection & {
   sfu: any
 };
 
-export type WazoSession = (Invitation | Inviter) & { remoteTag?: any, callId?: string };
+export type ExtendedSessionDescriptionHandler = SessionDescriptionHandler & {
+  localMediaStream: MediaStream,
+  remoteMediaStream: MediaStream,
+  peerConnection: PeerConnection,
+  on: (input: string, options?: Record<string, any>) => void,
+};
+
+export type WazoSession = (Invitation | Inviter) & {
+  remoteTag?: any,
+  callId?: string,
+  sessionDescriptionHandler: ExtendedSessionDescriptionHandler,
+  remoteURI?: string,
+};
 
 export type WazoTransport = Transport & {
   configuration: Record<string, any>,

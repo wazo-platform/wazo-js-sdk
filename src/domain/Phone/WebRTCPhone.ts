@@ -5,13 +5,12 @@ import { SessionState } from 'sip.js/lib/api/session-state';
 import type { IncomingRequestMessage } from 'sip.js/lib/core/messages/incoming-request-message';
 import { OutgoingInviteRequest } from 'sip.js/lib/core';
 import { Inviter, Invitation, Session, SessionDescriptionHandlerOptions } from 'sip.js/lib/api';
-import { SessionDescriptionHandler } from 'sip.js/lib/platform/web';
 import CallSession from '../CallSession';
 import type { Phone, AvailablePhoneOptions } from './Phone';
 import WazoWebRTCClient from '../../web-rtc-client';
 import Emitter from '../../utils/Emitter';
 import IssueReporter from '../../service/IssueReporter';
-import { PeerConnection, WazoSession } from '../types';
+import { WazoSession } from '../types';
 
 export const ON_USER_AGENT = 'onUserAgent';
 export const ON_REGISTERED = 'onRegistered';
@@ -434,8 +433,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     // Video events
-    const sdh = sipSession.sessionDescriptionHandler as SessionDescriptionHandler;
-    const peerConnection = sdh.peerConnection as PeerConnection;
+    const sdh = sipSession.sessionDescriptionHandler;
+    const { peerConnection } = sdh;
 
     if (!peerConnection) {
       logger.info('null peer connection');
@@ -783,8 +782,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return false;
     }
 
-    const sdh = sipSession.sessionDescriptionHandler as SessionDescriptionHandler;
-    const peerConnection = sdh.peerConnection as PeerConnection;
+    const sdh = sipSession.sessionDescriptionHandler;
+    const { peerConnection } = sdh;
     const remoteStream: MediaStream = peerConnection.getRemoteStreams().find((stream: MediaStream) => !!stream.getVideoTracks().length) as MediaStream;
     return remoteStream && remoteStream.getVideoTracks().some(track => !track.muted);
   }
@@ -929,7 +928,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   atxfer(callSession: CallSession): Record<string, any> | null | undefined {
-    const sipSession = this.findSipSession(callSession) as Inviter;
+    const sipSession = this.findSipSession(callSession);
 
     if (sipSession) {
       logger.info('WebRTC atxfer', {
@@ -1608,7 +1607,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       // send a reinvite to renegociate ICE with new IP
       if (this.shouldSendReinvite && this.currentSipSession && this.currentSipSession.state === SessionState.Established) {
         this.shouldSendReinvite = false;
-        const pc = (this.currentSipSession?.sessionDescriptionHandler as SessionDescriptionHandler)?.peerConnection as PeerConnection;
+        const pc = this.currentSipSession?.sessionDescriptionHandler.peerConnection;
         const isConference = pc ? pc.sfu : false;
         const hasVideo = this.currentCallSession && this.currentCallSession.cameraEnabled;
 

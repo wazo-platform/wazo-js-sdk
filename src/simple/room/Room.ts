@@ -1,6 +1,5 @@
 import type { Message } from 'sip.js/lib/api/message';
 import sdpParser from 'sdp-transform';
-import { SessionDescriptionHandler } from 'sip.js/lib/platform/web';
 import type CallSession from '../../domain/CallSession';
 import getApiClient from '../../service/getApiClient';
 import Emitter from '../../utils/Emitter';
@@ -9,7 +8,7 @@ import Participant, { RawParticipant } from './Participant';
 import RemoteParticipant from './RemoteParticipant';
 import IssueReporter from '../../service/IssueReporter';
 import LocalParticipant from './LocalParticipant';
-import { PeerConnection, WazoSession } from '../../domain/types';
+import { WazoSession } from '../../domain/types';
 
 export const SIGNAL_TYPE_PARTICIPANT_UPDATE = 'signal/PARTICIPANT_UPDATE';
 export const SIGNAL_TYPE_PARTICIPANT_REQUEST = 'signal/PARTICIPANT_REQUEST';
@@ -479,7 +478,7 @@ class Room extends Emitter {
     }
 
     // Retrieve mapping
-    (Wazo.Phone.phone.currentSipSession.sessionDescriptionHandler as SessionDescriptionHandler & { on: (input: string, options?: Record<string, any>) => void })?.on('setDescription', ({
+    Wazo.Phone.phone.currentSipSession.sessionDescriptionHandler?.on('setDescription', ({
       type,
       sdp: rawSdp,
     }: any) => {
@@ -849,9 +848,9 @@ class Room extends Emitter {
       streamId,
     } = this._callIdStreamIdMap[newParticipant.callId] || {};
 
-    const pc = (Wazo.Phone.phone?.currentSipSession?.sessionDescriptionHandler as SessionDescriptionHandler)?.peerConnection as PeerConnection;
+    const pc = Wazo.Phone.phone?.currentSipSession?.sessionDescriptionHandler?.peerConnection;
     // Can't use `getReceivers` here because on FF we make the mapping based on the streamId
-    const stream = pc.getRemoteStreams().find(someStream => someStream.id === streamId || someStream.getTracks().some(track => track.id === trackId));
+    const stream = pc?.getRemoteStreams().find(someStream => someStream.id === streamId || someStream.getTracks().some(track => track.id === trackId));
 
     if (update === 'downgrade') {
       newParticipant.resetStreams([]);

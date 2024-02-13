@@ -265,13 +265,13 @@ export default class WebRTCClient extends Emitter {
           method: 'delegate.onInvite',
           clientId: this.clientId,
           id: invitation.id,
-          remoteURI: (invitation as any).remoteURI,
+          remoteURI: (invitation as WazoSession).remoteURI,
         });
 
-        this._setupSession(invitation);
+        this._setupSession(invitation as WazoSession);
 
         const shouldAutoAnswer = !!invitation.request.getHeader('alert-info');
-        this.eventEmitter.emit(INVITE, invitation, this.sessionWantsToDoVideo(invitation), shouldAutoAnswer);
+        this.eventEmitter.emit(INVITE, invitation, this.sessionWantsToDoVideo(invitation as WazoSession), shouldAutoAnswer);
       },
     };
     const ua = new UserAgent(uaOptions);
@@ -570,7 +570,7 @@ export default class WebRTCClient extends Emitter {
     let session: WazoSession | null = null;
 
     if (uri) {
-      session = this.userAgent ? new Inviter(this.userAgent, uri, inviterOptions) : null;
+      session = this.userAgent ? (new Inviter(this.userAgent, uri, inviterOptions)) as WazoSession : null;
     } else {
       logger.error('Null URI');
     }
@@ -657,13 +657,13 @@ export default class WebRTCClient extends Emitter {
         logger.error(message, {
           id: session.id,
         });
-        this.onCallEnded(session);
+        this.onCallEnded(session as WazoSession);
         throw new CanceledCallError(message);
       }
 
       logger.info('sdk webrtc answer, accepted.');
 
-      this._onAccepted(session);
+      this._onAccepted(session as WazoSession);
     }).catch(e => {
       logger.error(`answer call error for ${session ? session.id : 'n/a'}`, e);
       throw e;
@@ -704,7 +704,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   async getStats(session: WazoSession): Promise<RTCStatsReport | null> {
-    const pc = (session.sessionDescriptionHandler as SessionDescriptionHandler)?.peerConnection as RTCPeerConnection;
+    const pc = session.sessionDescriptionHandler?.peerConnection;
 
     if (!pc) {
       return null;
@@ -835,7 +835,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     let muted = true;
-    const pc = (session.sessionDescriptionHandler as SessionDescriptionHandler).peerConnection as PeerConnection;
+    const pc = session.sessionDescriptionHandler.peerConnection;
 
     if (!pc) {
       return false;
@@ -931,7 +931,7 @@ export default class WebRTCClient extends Emitter {
     // Avoid sdh to create a new stream
     if (session.sessionDescriptionHandler) {
       // @ts-ignore: private
-      (session.sessionDescriptionHandler as SessionDescriptionHandler).localMediaStreamConstraints = options.constraints;
+      session.sessionDescriptionHandler.localMediaStreamConstraints = options.constraints;
     }
 
     // Send re-INVITE
@@ -985,7 +985,7 @@ export default class WebRTCClient extends Emitter {
 
   // Returns true if a re-INVITE is required
   async upgradeToVideo(session: WazoSession, constraints: Record<string, any>, isConference: boolean): Promise<MediaStream | undefined> {
-    const pc = (session.sessionDescriptionHandler as SessionDescriptionHandler)?.peerConnection;
+    const pc = session.sessionDescriptionHandler?.peerConnection;
     // Check if a video sender already exists
     let videoSender;
 
@@ -1013,7 +1013,7 @@ export default class WebRTCClient extends Emitter {
 
     // Add previous local audio track
     if (constraints && !constraints.audio) {
-      const localVideoStream: MediaStream = (session.sessionDescriptionHandler as SessionDescriptionHandler)?.localMediaStream;
+      const localVideoStream: MediaStream = session.sessionDescriptionHandler?.localMediaStream;
       const localAudioTrack = localVideoStream.getTracks().find(track => track.kind === 'audio');
 
       if (localAudioTrack) {
@@ -1033,7 +1033,7 @@ export default class WebRTCClient extends Emitter {
 
   downgradeToAudio(session: WazoSession): void {
     // Release local video stream when downgrading to audio
-    const sessionDescriptionHandler = session.sessionDescriptionHandler as SessionDescriptionHandler;
+    const { sessionDescriptionHandler } = session;
     const localStream = sessionDescriptionHandler?.localMediaStream;
     const pc = sessionDescriptionHandler?.peerConnection;
     const videoTracks = localStream.getVideoTracks();
@@ -1302,7 +1302,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     if (session && navigator.mediaDevices) {
-      const sdh = session.sessionDescriptionHandler as SessionDescriptionHandler;
+      const sdh = session.sessionDescriptionHandler;
       const pc = sdh?.peerConnection;
       const constraints = {
         audio: {
@@ -1362,7 +1362,7 @@ export default class WebRTCClient extends Emitter {
       return Promise.resolve();
     }
 
-    const sdh = session.sessionDescriptionHandler as SessionDescriptionHandler;
+    const sdh = session.sessionDescriptionHandler;
     const pc = sdh.peerConnection;
     const sessionId = this.getSipSessionId(session);
     const localStream = this.getLocalStream(sessionId);
@@ -1524,13 +1524,13 @@ export default class WebRTCClient extends Emitter {
       return null;
     }
 
-    return sipSession.sessionDescriptionHandler ? (sipSession.sessionDescriptionHandler as SessionDescriptionHandler).peerConnection : null;
+    return sipSession.sessionDescriptionHandler ? sipSession.sessionDescriptionHandler.peerConnection : null;
   }
 
   // Local streams
   getLocalStream(sessionId: string): MediaStream | null {
     const sipSession = this.sipSessions[sessionId];
-    return (sipSession?.sessionDescriptionHandler as SessionDescriptionHandler)?.localMediaStream || null;
+    return sipSession?.sessionDescriptionHandler?.localMediaStream || null;
   }
 
   getLocalTracks(sessionId: string): MediaStreamTrack[] {
@@ -1559,7 +1559,7 @@ export default class WebRTCClient extends Emitter {
   // Remote streams
   getRemoteStream(sessionId: string): MediaStream | null {
     const sipSession = this.sipSessions[sessionId];
-    return (sipSession?.sessionDescriptionHandler as SessionDescriptionHandler)?.remoteMediaStream || null;
+    return sipSession?.sessionDescriptionHandler?.remoteMediaStream || null;
   }
 
   getRemoteTracks(sessionId: string): MediaStreamTrack[] {
@@ -1591,7 +1591,7 @@ export default class WebRTCClient extends Emitter {
 
   //  Useful in a react-native environment when remoteMediaStream is not updated
   getRemoteVideoStreamFromPc(sessionId: string): MediaStream | null | undefined {
-    const pc = this.getPeerConnection(sessionId) as PeerConnection;
+    const pc = this.getPeerConnection(sessionId);
 
     if (!pc) {
       return null;
@@ -2189,7 +2189,7 @@ export default class WebRTCClient extends Emitter {
     this._setupMedias(session);
 
     this.updateRemoteStream(this.getSipSessionId(session), initAllTracks);
-    const pc = (session.sessionDescriptionHandler as SessionDescriptionHandler)?.peerConnection;
+    const pc = session.sessionDescriptionHandler?.peerConnection;
 
     const onTrack = (event: RTCTrackEvent | MediaStreamTrackEvent) => {
       const isAudioOnly = this._isAudioOnly(session);
@@ -2218,7 +2218,7 @@ export default class WebRTCClient extends Emitter {
       this.eventEmitter.emit(ON_TRACK, session, event);
     };
 
-    const sessionDescriptionHandler = session.sessionDescriptionHandler as SessionDescriptionHandler;
+    const { sessionDescriptionHandler } = session;
     if (sessionDescriptionHandler?.peerConnection) {
       sessionDescriptionHandler.peerConnection.addEventListener('track', onTrack);
     }
@@ -2272,7 +2272,7 @@ export default class WebRTCClient extends Emitter {
     const audioElement = this.audioElements[sessionId];
     const sipSession = this.sipSessions[session.callId as string];
     const removeStream = this.getRemoteStream(sessionId);
-    const sdh = sipSession?.sessionDescriptionHandler as SessionDescriptionHandler;
+    const sdh = sipSession?.sessionDescriptionHandler;
     const earlyStream = sdh ? sdh.remoteMediaStream : null;
     const stream = newStream || removeStream || earlyStream;
 
@@ -2348,8 +2348,8 @@ export default class WebRTCClient extends Emitter {
   }
 
   _toggleAudio(session: WazoSession, muteAudio: boolean): void {
-    const sdh = session.sessionDescriptionHandler as SessionDescriptionHandler;
-    const pc = (sdh?.peerConnection || null) as PeerConnection;
+    const sdh = session.sessionDescriptionHandler;
+    const pc = (sdh?.peerConnection || null);
 
     if (!pc) {
       return;
@@ -2373,7 +2373,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   _toggleVideo(session: WazoSession, muteCamera: boolean): void {
-    const sdh = session.sessionDescriptionHandler as SessionDescriptionHandler;
+    const sdh = session.sessionDescriptionHandler;
     const pc = sdh?.peerConnection as PeerConnection;
 
     if (pc?.getSenders) {
@@ -2427,7 +2427,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   _startSendingStats(session: WazoSession): void {
-    const sdh = session.sessionDescriptionHandler as SessionDescriptionHandler;
+    const sdh = session.sessionDescriptionHandler;
     const pc = sdh.peerConnection;
 
     if (!pc) {
