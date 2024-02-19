@@ -1,5 +1,6 @@
 /* eslint-disable no-nested-ternary */
 import { KEYUTIL, KJUR, b64utoutf8 } from 'jsrsasign';
+import moment from 'moment';
 import swarmPublicKey from '../pubkey';
 import Profile from './Profile';
 import Contact from './Contact';
@@ -126,7 +127,7 @@ export default class Session {
       authorizations,
       acl: plain.data.acls ? plain.data.acls : plain.data.acl ? plain.data.acl : [],
       tenantUuid: plain.data.metadata ? plain.data.metadata.tenant_uuid : undefined,
-      expiresAt: new Date(`${plain.data.utc_expires_at}z`),
+      expiresAt: moment.utc(plain.data.utc_expires_at).toDate(),
       stackUuid: plain.data.xivo_uuid,
       // eslint-disable-next-line
       stackHostFromHeader: plain._headers?.get?.('wazo-stack-host'),
