@@ -6,6 +6,7 @@ import type { Phone, AvailablePhoneOptions } from './Phone';
 import Emitter from '../../utils/Emitter';
 import CallApi from '../../service/CallApi';
 import IssueReporter from '../../service/IssueReporter';
+import IndirectTransfer from '../IndirectTransfer';
 
 export const TRANSFER_FLOW_ATTENDED = 'attended';
 export const TRANSFER_FLOW_BLIND = 'blind';
@@ -187,9 +188,9 @@ export default class CTIPhone extends Emitter implements Phone {
     return Promise.resolve(false);
   }
 
-  async initiateCTIIndirectTransfer(callSession: CallSession, number: string): Promise<any> {
+  async initiateCTIIndirectTransfer(callSession: CallSession, number: string): Promise<IndirectTransfer | null> {
     if (!callSession) {
-      return;
+      return Promise.resolve(null);
     }
 
     logger.info('indirect CTI transfer', {

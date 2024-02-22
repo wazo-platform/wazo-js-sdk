@@ -50,7 +50,7 @@ export interface Phone extends IEmitter {
   hasAnActiveCall(): boolean;
   hold(callSession: CallSession): Promise<any> | null | undefined;
   indirectTransfer(source: CallSession, destination: CallSession): Promise<boolean>;
-  initiateCTIIndirectTransfer(callSession: CallSession, number: string): PhoneVoid;
+  initiateCTIIndirectTransfer(callSession: CallSession, number: string): any;
   cancelCTIIndirectTransfer(transferId: string): PhoneVoid;
   confirmCTIIndirectTransfer(transferId: string): PhoneVoid;
   hasVideo(callSession: CallSession): boolean;
