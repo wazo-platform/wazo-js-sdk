@@ -48,7 +48,7 @@
     "google-libphonenumber": "^3.2.32",
     "js-base64": "^3.7.5",
     "json-to-graphql-query": "^2.2.5",
-    "jsrsasign": "^10.8.6",
+    "jsrsasign": "^11.0.0",
     "moment": "^2.29.1",
     "node-abort-controller": "^3.1.1",
     "node-fetch": "^3.3.1",
