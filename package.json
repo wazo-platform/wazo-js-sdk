@@ -20,6 +20,11 @@
     "esm/**/*",
     "lib/**/*"
   ],
+  "exports": {
+    "import": "./esm/index.js",
+    "node": "./dist/wazo-sdk.js",
+    "require": "./lib/index.js"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/wazo-platform/wazo-js-sdk"
