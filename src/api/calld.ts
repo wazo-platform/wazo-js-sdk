@@ -24,7 +24,7 @@ export interface CallD {
   listCalls: () => Promise<Array<Call>>;
   relocateCall: (callId: string, destination: string, lineId: number | null | undefined, contact?: string | null | undefined) => Promise<Relocation>;
   listVoicemails: () => Promise<Array<Voicemail>>;
-  deleteVoicemail: (voicemailId: number) => Promise<boolean>;
+  deleteVoicemail: (voicemailId: string) => Promise<boolean>;
   getVoicemailUrl: (voicemail: Voicemail) => string;
   fetchSwitchboardHeldCalls: (switchboardUuid: UUID) => Promise<any>; // @TODO: replace `any`
   holdSwitchboardCall: (switchboardUuid: UUID, callId: string) => Promise<boolean>;
@@ -126,7 +126,7 @@ export default ((client: ApiRequester, baseUrl: string): CallD => ({
   },
 
   listVoicemails: (): Promise<Array<Voicemail>> => client.get(`${baseUrl}/users/me/voicemails`).then((response: any) => Voicemail.parseMany(response)),
-  deleteVoicemail: (voicemailId: number): Promise<boolean> => client.delete(`${baseUrl}/users/me/voicemails/messages/${voicemailId}`),
+  deleteVoicemail: (voicemailId: string): Promise<boolean> => client.delete(`${baseUrl}/users/me/voicemails/messages/${voicemailId}`),
   getVoicemailUrl: (voicemail: Voicemail): string => {
     const body = {
       token: client.token,
