@@ -1290,7 +1290,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     });
   }
 
-  initiateCTIIndirectTransfer() {}
+  initiateCTIIndirectTransfer() { return Promise.resolve(null); }
 
   cancelCTIIndirectTransfer() {}
 
