@@ -272,6 +272,11 @@ class WebSocketClient extends Emitter {
       return;
     }
 
+    if (this.socket.readyState === 3) {
+      logger.warn('Trying to close an already closed websocket, bailing.', { url: this._getUrl() });
+      return;
+    }
+
     this.socket.close();
     this.initialized = false;
 
