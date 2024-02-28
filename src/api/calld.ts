@@ -31,7 +31,7 @@ export interface CallD {
   answerSwitchboardHeldCall: (switchboardUuid: UUID, callId: string, lineId: string | null | undefined) => Promise<void>;
   fetchSwitchboardQueuedCalls: (switchboardUuid: UUID) => Promise<any>; // @TODO: replace `any`
   answerSwitchboardQueuedCall: (switchboardUuid: UUID, callId: string, lineId: string | null | undefined) => Promise<any>; // @TODO: replace `any`
-  sendFax: (extension: string, fax: string, callerId: string | null | undefined) => Promise<void>;
+  sendFax: (extension: string, fax: string, callerId?: string) => Promise<void>;
   getConferenceParticipantsAsUser: (conferenceId: string) => Promise<Record<string, any>>; // @TODO: replace `any`
   getMeetingParticipantsAsUser: (meetingUuid: string) => Promise<Record<string, any>>; // @TODO: replace `any`
   banMeetingParticipant: (meetingUuid: string, participantUuid: string) => Promise<boolean>;
@@ -138,7 +138,7 @@ export default ((client: ApiRequester, baseUrl: string): CallD => ({
   answerSwitchboardHeldCall: (switchboardUuid: UUID, callId: string, lineId: string | null | undefined = null) => client.put(`${baseUrl}/switchboards/${switchboardUuid}/calls/held/${callId}/answer${lineId ? `?line_id=${lineId}` : ''}`),
   fetchSwitchboardQueuedCalls: (switchboardUuid: UUID) => client.get(`${baseUrl}/switchboards/${switchboardUuid}/calls/queued`),
   answerSwitchboardQueuedCall: (switchboardUuid: UUID, callId: string, lineId: string | null | undefined = null) => client.put(`${baseUrl}/switchboards/${switchboardUuid}/calls/queued/${callId}/answer${lineId ? `?line_id=${lineId}` : ''}`),
-  sendFax: (extension: string, fax: string, callerId: string | null | undefined = null) => {
+  sendFax: (extension: string, fax: string, callerId?: string) => {
     const headers = {
       'Content-type': 'application/pdf',
       'X-Auth-Token': client.token,

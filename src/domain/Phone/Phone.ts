@@ -3,6 +3,7 @@ import Line from '../Line';
 import CallSession from '../CallSession';
 import type WebRTCClient from '../../web-rtc-client';
 import { IEmitter } from '../../utils/Emitter';
+import IndirectTransfer from '../IndirectTransfer';
 
 export type PhoneEventCallbacks = {
   onCallIncoming?: (number: string) => void;
@@ -50,7 +51,7 @@ export interface Phone extends IEmitter {
   hasAnActiveCall(): boolean;
   hold(callSession: CallSession): Promise<any> | null | undefined;
   indirectTransfer(source: CallSession, destination: CallSession): Promise<boolean>;
-  initiateCTIIndirectTransfer(callSession: CallSession, number: string): PhoneVoid;
+  initiateCTIIndirectTransfer(callSession: CallSession, number: string): Promise<IndirectTransfer | null>;
   cancelCTIIndirectTransfer(transferId: string): PhoneVoid;
   confirmCTIIndirectTransfer(transferId: string): PhoneVoid;
   hasVideo(callSession: CallSession): boolean;
