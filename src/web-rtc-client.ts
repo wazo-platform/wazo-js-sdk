@@ -2602,7 +2602,9 @@ export default class WebRTCClient extends Emitter {
 
     if (this.sessionNetworkStats[sessionId]) {
       this.eventEmitter.emit(ON_NETWORK_STATS, session, networkStats, this.sessionNetworkStats[sessionId]);
-      this.sessionNetworkStats[sessionId].push(networkStats);
+      if (sessionId in this.sessionNetworkStats) {
+        this.sessionNetworkStats[sessionId].push(networkStats);
+      }
     }
   }
 

@@ -372,6 +372,8 @@ class Auth {
         this.checkSubscription(session, +this.minSubscriptionType);
       }
     } catch (e: any) {
+      logger.error('on authenticated error', e);
+
       // Destroy tokens when validation fails
       if (this.clientId) {
         await getApiClient().auth.deleteRefreshToken(this.clientId);
