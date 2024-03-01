@@ -60,6 +60,7 @@ const MESSAGE = 'message';
 const ACCEPTED = 'accepted';
 const REJECTED = 'rejected';
 const ON_TRACK = 'onTrack';
+const ON_PROGRESS = 'onProgress';
 const ON_EARLY_MEDIA = 'onEarlyMedia';
 const ON_REINVITE = 'reinvite';
 const ON_ERROR = 'onError';
@@ -160,6 +161,8 @@ export default class WebRTCClient extends Emitter {
 
   ON_EARLY_MEDIA: string;
 
+  ON_PROGRESS: string;
+
   ON_DISCONNECTED: string;
 
   static isAPrivateIp(ip: string): boolean {
@@ -236,6 +239,7 @@ export default class WebRTCClient extends Emitter {
     this.ON_NETWORK_STATS = ON_NETWORK_STATS;
     this.ON_DISCONNECTED = ON_DISCONNECTED;
     this.ON_EARLY_MEDIA = ON_EARLY_MEDIA;
+    this.ON_PROGRESS = ON_PROGRESS;
   }
 
   configureMedia(media: MediaConfig) {
@@ -594,9 +598,7 @@ export default class WebRTCClient extends Emitter {
           this._onAccepted(session as WazoSession, response.session, true);
         },
         onProgress: (payload: IncomingResponse) => {
-          if (payload.message.statusCode === 183) {
-            this._onEarlyProgress(payload.session);
-          }
+          this._onProgress(payload.session, payload.message.statusCode === 183);
         },
         onReject: (response: IncomingResponse) => {
           logger.info('on call rejected', {
@@ -2167,15 +2169,16 @@ export default class WebRTCClient extends Emitter {
     };
   }
 
-  _onEarlyProgress(session: WazoSession): void {
+  _onProgress(session: WazoSession, early = false): void {
     this._setupMedias(session);
 
     const sessionId = this.getSipSessionId(session).substr(0, 20);
     this.updateRemoteStream(sessionId);
-    logger.info('Early media progress progress received', {
+    logger.info('progress received', {
       sessionId,
+      early,
     });
-    this.eventEmitter.emit(ON_EARLY_MEDIA, session);
+    this.eventEmitter.emit(early ? ON_EARLY_MEDIA : ON_PROGRESS, session);
   }
 
   _onAccepted(session: WazoSession, sessionDialog?: SessionDialog, withEvent = true, initAllTracks = true): void {
