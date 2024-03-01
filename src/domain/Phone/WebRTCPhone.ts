@@ -387,18 +387,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     sipSession.stateChange.addListener((newState: SessionState) => {
       switch (newState) {
-        case SessionState.Establishing:
-          if (sipSession instanceof Invitation) {
-            // No need to trigger progress for an invitation (eg: when we answer the call).
-            return;
-          }
-
-          // When receiving a progress event, we know we are the caller so we have to force incoming to false
-          return this.eventEmitter.emit(ON_PROGRESS, this._createCallSession(sipSession, null, {
-            incoming: false,
-            ringing: true,
-          }), this.audioOutputDeviceId, this.audioOutputVolume);
-
         case SessionState.Terminating:
           logger.info('WebRTC phone - call terminating', {
             sipId: sipSession.id,
@@ -1585,6 +1573,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.on(this.client.ON_DISCONNECTED, () => {
       logger.info('WebRTC disconnected');
       this.eventEmitter.emit(ON_DISCONNECTED);
+    });
+    this.client.on(this.client.ON_PROGRESS, session => {
+      logger.info('WebRTC progess (180)');
+
+      this.eventEmitter.emit(ON_PROGRESS, this._createCallSession(session, null, {
+        incoming: false,
+        ringing: true,
+      }), this.audioOutputDeviceId, this.audioOutputVolume);
     });
     this.client.on(this.client.ON_EARLY_MEDIA, session => {
       logger.info('WebRTC early media');
