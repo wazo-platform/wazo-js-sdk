@@ -1577,10 +1577,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.on(this.client.ON_PROGRESS, session => {
       logger.info('WebRTC progress (180)');
 
-      this.eventEmitter.emit(ON_PROGRESS, this._createCallSession(session, null, {
+      const callSession = this._createCallSession(session, null, {
         incoming: false,
         ringing: true,
-      }), this.audioOutputDeviceId, this.audioOutputVolume);
+        callId: this.getSipSessionId(session),
+      });
+
+      this.eventEmitter.emit(ON_PROGRESS, callSession, this.audioOutputDeviceId, this.audioOutputVolume);
     });
     this.client.on(this.client.ON_EARLY_MEDIA, session => {
       logger.info('WebRTC early media');
@@ -1588,6 +1591,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       const callSession = this._createCallSession(session, null, {
         incoming: false,
         ringing: true,
+        callId: this.getSipSessionId(session),
       });
 
       this.eventEmitter.emit(ON_EARLY_MEDIA, callSession, this.audioOutputDeviceId, this.audioOutputVolume);
