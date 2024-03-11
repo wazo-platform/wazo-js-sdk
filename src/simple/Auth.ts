@@ -53,6 +53,8 @@ class Auth {
 
   BACKEND_LDAP: string;
 
+  usingEdgeServer: boolean;
+
   // Useful to avoid the check of the header by doing an extra request to the stack
   shouldCheckUserUuidHeader: boolean;
 
@@ -318,14 +320,32 @@ class Auth {
     return `${this.getFirstName()} ${this.getLastName()}`;
   }
 
-  async setHttpUserUuidHeader(uuid: string | null | undefined) {
-    if (!uuid) {
-      return;
-    }
-    const headers = {
+  _getHttpUserUuidHeaders(uuid:string) {
+    return {
       ...(getFetchOptions()?.headers || {}),
       'X-User-UUID': uuid,
     };
+  }
+
+  setHttpUserUuidHeader(uuid: string) {
+    if (!uuid) {
+      logger.warn('attempting to set a null value to user uuid header');
+      return;
+    }
+
+    const headers = this._getHttpUserUuidHeaders(uuid);
+
+    setFetchOptions({
+      ...getFetchOptions(),
+      headers,
+    });
+  }
+
+  async checkHttpUserUuidHeader(uuid: string | null | undefined) {
+    if (!uuid) {
+      return;
+    }
+    const headers = this._getHttpUserUuidHeaders(uuid);
 
     try {
       if (this.shouldCheckUserUuidHeader) {
@@ -333,10 +353,8 @@ class Auth {
       }
 
       // If the previous request went well, it means that the header is accepted
-      setFetchOptions({
-        ...getFetchOptions(),
-        headers,
-      });
+      this.setHttpUserUuidHeader(uuid);
+      this.usingEdgeServer = true;
     } catch (_) {
       // Nothing to do
     }
@@ -348,10 +366,15 @@ class Auth {
     }
 
     const session = rawSession;
-    await this.setHttpUserUuidHeader(session.uuid);
 
     if (!session) {
       return null;
+    }
+
+    if (this.usingEdgeServer) {
+      this.setHttpUserUuidHeader(session.uuid as string);
+    } else {
+      await this.checkHttpUserUuidHeader(session.uuid);
     }
 
     setApiToken(session.token);
