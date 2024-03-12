@@ -65,7 +65,7 @@ export interface AuthD {
 }
 
 export default ((client: ApiRequester, baseUrl: string): AuthD => ({
-  checkToken: (token: Token): Promise<boolean> => client.head(`${baseUrl}/token/${token}`, null, {}),
+  checkToken: (token: Token): Promise<boolean> => client.head(`${baseUrl}/token/${token}`, null, {}, ApiRequester.successResponseParser),
   authenticate: (token: Token): Promise<Session | null | undefined> => client.get(`${baseUrl}/token/${token}`, null, {}).then((response: Response) => Session.parse(response)),
 
   logIn(params: {

@@ -166,8 +166,7 @@ export default class ApiRequester {
     }
 
     const isHead = method === 'head';
-    const hasEmptyResponse = method === 'delete' || isHead;
-    const newParse = hasEmptyResponse ? ApiRequester.successResponseParser : parse;
+    const newParse = method === 'delete' ? ApiRequester.successResponseParser : parse;
     const fetchOptions = { ...(this.fetchOptions || {}) };
     const controller = typeof AbortController !== 'undefined' ? new AbortController() : new NodeAbortController();
     const extraHeaders = fetchOptions.headers || {};
