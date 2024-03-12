@@ -54,7 +54,7 @@ class Auth {
 
   BACKEND_LDAP: string;
 
-  usingEdgeServer: boolean;
+  usingEdgeServer: boolean | undefined;
 
   constructor() {
     this.expiration = DETAULT_EXPIRATION;
@@ -209,7 +209,7 @@ class Auth {
     setRefreshToken(null);
     this.session = null;
     this.authenticated = false;
-    this.usingEdgeServer = false;
+    this.usingEdgeServer = undefined;
     setFetchOptions({});
   }
 
@@ -382,7 +382,7 @@ class Auth {
 
     if (this.usingEdgeServer) {
       this.setHttpUserUuidHeader(session.uuid as string);
-    } else {
+    } else if (this.usingEdgeServer === undefined) {
       await this.checkHttpUserUuidHeader(session.uuid);
     }
 
