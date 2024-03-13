@@ -1,4 +1,5 @@
 /* eslint-disable max-classes-per-file */
+import type { Response } from 'node-fetch';
 import Session from '../domain/Session';
 import { BACKEND_LDAP_USER, DEFAULT_BACKEND_USER, DETAULT_EXPIRATION } from '../api/auth';
 import getApiClient, {
@@ -53,8 +54,7 @@ class Auth {
 
   BACKEND_LDAP: string;
 
-  // Useful to avoid the check of the header by doing an extra request to the stack
-  shouldCheckUserUuidHeader: boolean;
+  usingEdgeServer: boolean | undefined;
 
   constructor() {
     this.expiration = DETAULT_EXPIRATION;
@@ -62,7 +62,6 @@ class Auth {
     this.minSubscriptionType = null;
     this.BACKEND_WAZO = DEFAULT_BACKEND_USER;
     this.BACKEND_LDAP = BACKEND_LDAP_USER;
-    this.shouldCheckUserUuidHeader = true;
   }
 
   init(clientId: string, expiration: number, minSubscriptionType: number | null | undefined, authorizationName: string | null, mobile: boolean): void {
@@ -210,6 +209,7 @@ class Auth {
     setRefreshToken(null);
     this.session = null;
     this.authenticated = false;
+    this.usingEdgeServer = undefined;
     setFetchOptions({});
   }
 
@@ -318,27 +318,54 @@ class Auth {
     return `${this.getFirstName()} ${this.getLastName()}`;
   }
 
-  async setHttpUserUuidHeader(uuid: string | null | undefined) {
-    if (!uuid) {
-      return;
-    }
-    const headers = {
+  _getHttpUserUuidHeaders(uuid:string) {
+    return {
       ...(getFetchOptions()?.headers || {}),
       'X-User-UUID': uuid,
     };
+  }
+
+  setHttpUserUuidHeader(uuid: string) {
+    logger.info('Setting http header user uuid', { uuid });
+
+    if (!uuid) {
+      logger.warn('attempting to set a null value to user uuid header');
+      return;
+    }
+
+    const headers = this._getHttpUserUuidHeaders(uuid);
+
+    setFetchOptions({
+      ...getFetchOptions(),
+      headers,
+    });
+  }
+
+  async checkHttpUserUuidHeader(uuid: string | null | undefined) {
+    logger.info('Checking user uuid http header', { uuid });
+
+    if (!uuid) {
+      return;
+    }
+
+    const headers = this._getHttpUserUuidHeaders(uuid);
 
     try {
-      if (this.shouldCheckUserUuidHeader) {
-        await getApiClient().client.head('auth/0.1/status', null, headers);
+      const response: Response = await getApiClient().client.head('auth/0.1/status', null, headers, (r: any) => r);
+
+      const allowsUserUuidHeader = response.headers.get('access-control-allow-headers')?.includes('X-User-UUID');
+
+      if (this.mobile && !allowsUserUuidHeader) {
+        throw new Error('Server does not allow user UUID header on mobile');
       }
 
       // If the previous request went well, it means that the header is accepted
-      setFetchOptions({
-        ...getFetchOptions(),
-        headers,
-      });
-    } catch (_) {
-      // Nothing to do
+      this.setHttpUserUuidHeader(uuid);
+      this.usingEdgeServer = true;
+      logger.info('Setting usingEdgeServer value to TRUE', { requestHeaders: headers, responseHeaders: response.headers, allowsUserUuidHeader });
+    } catch (e) {
+      this.usingEdgeServer = false;
+      logger.info('Setting usingEdgeServer to FALSE', { justification: e });
     }
   }
 
@@ -348,10 +375,15 @@ class Auth {
     }
 
     const session = rawSession;
-    await this.setHttpUserUuidHeader(session.uuid);
 
     if (!session) {
       return null;
+    }
+
+    if (this.usingEdgeServer) {
+      this.setHttpUserUuidHeader(session.uuid as string);
+    } else if (typeof this.usingEdgeServer === 'undefined') {
+      await this.checkHttpUserUuidHeader(session.uuid);
     }
 
     setApiToken(session.token);
