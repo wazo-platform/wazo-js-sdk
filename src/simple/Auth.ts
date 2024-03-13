@@ -1,5 +1,5 @@
 /* eslint-disable max-classes-per-file */
-import { Response } from 'node-fetch';
+import type { Response } from 'node-fetch';
 import Session from '../domain/Session';
 import { BACKEND_LDAP_USER, DEFAULT_BACKEND_USER, DETAULT_EXPIRATION } from '../api/auth';
 import getApiClient, {
@@ -382,7 +382,7 @@ class Auth {
 
     if (this.usingEdgeServer) {
       this.setHttpUserUuidHeader(session.uuid as string);
-    } else if (this.usingEdgeServer === undefined) {
+    } else if (typeof this.usingEdgeServer === 'undefined') {
       await this.checkHttpUserUuidHeader(session.uuid);
     }
 
