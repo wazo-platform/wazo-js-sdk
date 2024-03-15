@@ -1496,6 +1496,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
       this.client.storeSipSession(sipSession);
 
+      callSession.creationTime = new Date();
+
+      this._updateCallSession(callSession);
+
+      this.eventEmitter.emit(ON_CALL_INCOMING, callSession, wantsToDoVideo);
+
       if (!this.currentSipSession) {
         if (this.ringingEnabled) {
           this.eventEmitter.emit(ON_PLAY_RING_SOUND, this.audioRingDeviceId, this.audioRingVolume, callSession);
@@ -1503,12 +1509,6 @@ export default class WebRTCPhone extends Emitter implements Phone {
       } else {
         this.eventEmitter.emit(ON_PLAY_INBOUND_CALL_SIGNAL_SOUND, this.audioOutputDeviceId, this.audioOutputVolume, callSession);
       }
-
-      callSession.creationTime = new Date();
-
-      this._updateCallSession(callSession);
-
-      this.eventEmitter.emit(ON_CALL_INCOMING, callSession, wantsToDoVideo);
     });
     this.client.on(this.client.ON_REINVITE, (...args) => {
       logger.info('WebRTC on reinvite', {
