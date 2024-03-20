@@ -1,5 +1,4 @@
 /* eslint-disable max-classes-per-file */
-import type { Response } from 'node-fetch';
 import Session from '../domain/Session';
 import { BACKEND_LDAP_USER, DEFAULT_BACKEND_USER, DETAULT_EXPIRATION } from '../api/auth';
 import getApiClient, {

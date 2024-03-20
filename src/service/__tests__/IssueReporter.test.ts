@@ -4,7 +4,6 @@
 
 /* eslint-disable no-console */
 import IssueReporter from '../IssueReporter';
-import { realFetch } from '../../utils/api-requester';
 
 jest.mock('../../utils/api-requester');
 let oldLog: any;
@@ -25,9 +24,7 @@ describe('IssueReporter', () => {
   });
   beforeEach(() => {
     jest.resetAllMocks();
-    (realFetch as any).mockImplementation(() => () => ({
-      catch: () => {},
-    }));
+    jest.spyOn(global, 'fetch');
   });
   afterAll(() => {
     console.log = oldLog;
@@ -50,7 +47,7 @@ describe('IssueReporter', () => {
 
     IssueReporter._sendToRemoteLogger('info');
 
-    expect(realFetch).toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalled();
   });
   it('should send if verbosity is equal than required', () => {
     // Same level
@@ -60,7 +57,7 @@ describe('IssueReporter', () => {
 
     IssueReporter._sendToRemoteLogger('trace');
 
-    expect(realFetch).toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalled();
   });
   it('should not send if verbosity is lower than required', () => {
     // Lower level
@@ -70,7 +67,7 @@ describe('IssueReporter', () => {
 
     IssueReporter._sendToRemoteLogger('trace');
 
-    expect(realFetch).not.toHaveBeenCalled();
+    expect(fetch).not.toHaveBeenCalled();
   });
   it('should log extra data', () => {
     jest.spyOn(IssueReporter, '_sendToRemoteLogger').mockImplementation(() => {});

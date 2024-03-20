@@ -39,7 +39,6 @@ if (typeof(window) === 'undefined') {
     `,
   },
   plugins,
-  moduleContext: { 'node_modules/node-fetch/lib/index': 'window' },
 }];
 
 export default configs;

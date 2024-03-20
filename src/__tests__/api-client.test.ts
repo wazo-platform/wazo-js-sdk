@@ -76,7 +76,6 @@ const server = 'localhost';
 const authVersion = '0.1';
 const username = 'wazo';
 const password = 'zowa';
-jest.mock('node-fetch/src/index', () => {});
 const token = '1234';
 
 const client = new WazoApiClient({

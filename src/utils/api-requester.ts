@@ -1,12 +1,7 @@
-/* global window */
-/* eslint-disable global-require */
-/* eslint-disable import/no-dynamic-require */
 import { Base64 } from 'js-base64';
-import { AbortController as NodeAbortController } from 'node-abort-controller';
 
 import BadResponse from '../domain/BadResponse';
 import ServerError from '../domain/ServerError';
-import isMobile from './isMobile';
 import type { Token } from '../domain/types';
 import IssueReporter from '../service/IssueReporter';
 
@@ -23,32 +18,6 @@ const methods = ['head', 'get', 'post', 'put', 'delete', 'options'];
 const logger = IssueReporter ? IssueReporter.loggerFor('api') : console;
 const REQUEST_TIMEOUT_MS = 300 * 1000; // 300s like the Chrome engine default value.
 
-// Use a function here to be able to mock it in tests
-export const realFetch = () => {
-  if (typeof fetch !== 'undefined') {
-    return fetch;
-  }
-
-  if (typeof document !== 'undefined' && window.fetch) {
-    // Browser
-    return window.fetch;
-  }
-
-  if (isMobile()) {
-    // React native
-    return fetch;
-  }
-
-  // nodejs
-  // this package is disabled for react-native in package.json because it requires nodejs modules
-  // Used to trick the optimizer to avoid requiring `node-fetch/lib/index` directly
-  // It causes to require it on browsers when delivered by a nodejs engine (cf: vitejs).
-  try {
-    return require(Math.random() >= 0 ? 'node-fetch/lib/index' : '');
-  } catch (e: any) {
-    return fetch;
-  }
-};
 export default class ApiRequester {
   server: string;
 
@@ -169,7 +138,7 @@ export default class ApiRequester {
     const hasEmptyResponse = method === 'delete' || isHead;
     const newParse = hasEmptyResponse && parse === ApiRequester.defaultParser ? ApiRequester.successResponseParser : parse;
     const fetchOptions = { ...(this.fetchOptions || {}) };
-    const controller = typeof AbortController !== 'undefined' ? new AbortController() : new NodeAbortController();
+    const controller = new AbortController();
     const extraHeaders = fetchOptions.headers || {};
     delete fetchOptions.headers;
     const options = {
@@ -192,7 +161,7 @@ export default class ApiRequester {
     }
 
     const start = new Date();
-    const requestPromise = realFetch()(url, options).then((response: any) => {
+    const requestPromise = fetch(url, options).then((response: any) => {
       const contentType = response.headers.get('content-type') || '';
       const isJson = contentType.indexOf('application/json') !== -1;
       IssueReporter.logRequest(url, options, response, start);

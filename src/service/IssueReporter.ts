@@ -2,7 +2,6 @@
 
 /* eslint-disable prefer-destructuring, no-param-reassign, no-underscore-dangle */
 import moment from 'moment';
-import { realFetch } from '../utils/api-requester';
 import isMobile from '../utils/isMobile';
 import { obfuscateToken } from '../utils/string';
 
@@ -383,7 +382,7 @@ class IssueReporter {
     const url = `http${isSecure ? 's' : ''}://${host}${isSecure ? '' : `:${port}`}/${tag}`;
     const body = Array.isArray(payload) ? `[${payload.map(this._boundParseLoggerBody).join(',')}]` : this._parseLoggerBody(payload as Record<string, any>);
 
-    realFetch()(url, {
+    fetch(url, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
