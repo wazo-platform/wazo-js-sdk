@@ -79,8 +79,6 @@ describe('Retrieving headers', () => {
 });
 describe('Calling fetch', () => {
   it('should call fetch without body but query string in get method', async () => {
-    jest.mock('node-fetch/src/index', () => {});
-
     global.fetch = jest.fn(() => Promise.resolve({
       json: () => Promise.resolve({}),
       headers: {
@@ -108,7 +106,6 @@ describe('Calling fetch', () => {
 
 describe('With a refresh token', () => {
   it('should retry the call with a new token', async () => {
-    jest.mock('node-fetch/src/index', () => {});
     let calls = 0;
 
     global.fetch = jest.fn(() => {
