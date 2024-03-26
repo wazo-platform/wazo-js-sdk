@@ -98,8 +98,10 @@ class Websocket extends Emitter {
 
 }
 
+const instance = new Websocket();
+
 if (!global.wazoWebsocketInstance) {
-  global.wazoWebsocketInstance = new Websocket();
+  global.wazoWebsocketInstance = instance;
 }
 
-export default global.wazoWebsocketInstance;
+export default instance;

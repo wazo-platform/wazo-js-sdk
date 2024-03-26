@@ -523,8 +523,10 @@ class Phone extends Emitter {
   }
 }
 
+const instance = new Phone();
+
 if (!global.wazoTelephonyInstance) {
-  global.wazoTelephonyInstance = new Phone();
+  global.wazoTelephonyInstance = instance;
 }
 
-export default global.wazoTelephonyInstance;
+export default instance;

@@ -8,8 +8,10 @@ class Directory {
 
 }
 
+const instance = new Directory();
+
 if (!global.wazoDirectoryInstance) {
-  global.wazoDirectoryInstance = new Directory();
+  global.wazoDirectoryInstance = instance;
 }
 
-export default global.wazoDirectoryInstance;
+export default instance;

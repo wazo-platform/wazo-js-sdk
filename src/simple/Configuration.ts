@@ -5,13 +5,15 @@ import Profile from '../domain/Profile';
 class Configuration {
   async getCurrentUser(): Promise<Profile> {
     const session = Auth.getSession();
-    return getApiClient().confd.getUser(session ? session.uuid : '');
+    return getApiClient().confd.getUser(`${session ? session.uuid : ''}`);
   }
 
 }
 
+const instance = new Configuration();
+
 if (!global.wazoConfigurationInstance) {
-  global.wazoConfigurationInstance = new Configuration();
+  global.wazoConfigurationInstance = instance;
 }
 
-export default global.wazoConfigurationInstance;
+export default instance;
