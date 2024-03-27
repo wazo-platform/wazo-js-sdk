@@ -1,6 +1,7 @@
 import getApiClient, { setRefreshToken } from '../../service/getApiClient';
-import Auth from '../Auth';
+import { Auth as AuthClass } from '../Auth';
 
+const Auth = new AuthClass();
 const TOKEN = 'some-token';
 const REFRESH_TOKEN = 'some-refresh-token';
 const USER_UUID = 'some-user-uuid';
@@ -23,6 +24,7 @@ describe('simple/Auth', () => {
 
   describe('validateToken', () => {
     it('should return undefined if nullish', async () => {
+      // @ts-expect-error
       const result = await Auth.validateToken(null);
       expect(result).toEqual(undefined);
     });

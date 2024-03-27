@@ -3,6 +3,7 @@ import WazoWebSocketClient, * as WebSocketClient from '../websocket-client';
 import Emitter from '../utils/Emitter';
 import IssueReporter from '../service/IssueReporter';
 import { obfuscateToken } from '../utils/string';
+import { WebsocketType } from '../domain/types';
 
 const {
   SOCKET_EVENTS,
@@ -11,7 +12,7 @@ const {
 const ALL_EVENTS = [...Object.values(SOCKET_EVENTS), ...Object.values(OTHER_EVENTS)];
 const logger = IssueReporter.loggerFor('simple-ws-client');
 
-class Websocket extends Emitter {
+export class Websocket extends Emitter {
   ws: WazoWebSocketClient | null | undefined;
 
   eventLists: string[];
@@ -99,7 +100,7 @@ class Websocket extends Emitter {
 }
 
 if (!global.wazoWebsocketInstance) {
-  global.wazoWebsocketInstance = new Websocket() as Websocket & typeof SOCKET_EVENTS & typeof OTHER_EVENTS;
+  global.wazoWebsocketInstance = new Websocket() as WebsocketType;
 }
 
 // @ts-ignore: Circular definition of import alias 'default'.

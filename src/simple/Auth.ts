@@ -27,7 +27,7 @@ export class NoDomainNameError extends Error {}
 
 const logger = IssueReporter.loggerFor('simple-auth');
 
-class Auth {
+export class Auth {
   clientId: string;
 
   expiration: number;

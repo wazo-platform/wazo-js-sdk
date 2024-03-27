@@ -18,7 +18,7 @@ const sipLogger = IssueReporter.loggerFor('sip.js');
 const protocolLogger = IssueReporter.loggerFor('sip');
 const protocolDebugMessages = ['Received WebSocket text message:', 'Sending WebSocket message:'];
 
-class Phone extends Emitter {
+export class Phone extends Emitter {
   client: WazoWebRTCClient;
 
   phone: WebRTCPhone | null | undefined;

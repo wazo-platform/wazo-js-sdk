@@ -1,10 +1,10 @@
-import Auth from './Auth';
+import Wazo from '.';
 import getApiClient from '../service/getApiClient';
 import Profile from '../domain/Profile';
 
-class Configuration {
+export class Configuration {
   async getCurrentUser(): Promise<Profile> {
-    const session = Auth.getSession();
+    const session = Wazo.Auth.getSession();
     return getApiClient().confd.getUser(`${session ? session.uuid : ''}`);
   }
 
