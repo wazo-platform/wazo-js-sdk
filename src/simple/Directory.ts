@@ -8,10 +8,9 @@ class Directory {
 
 }
 
-const instance = new Directory();
-
 if (!global.wazoDirectoryInstance) {
-  global.wazoDirectoryInstance = instance;
+  global.wazoDirectoryInstance = new Directory();
 }
 
-export default instance;
+// @ts-ignore: Circular definition of import alias 'default'.
+export default global.wazoDirectoryInstance;

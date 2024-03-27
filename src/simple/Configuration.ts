@@ -10,10 +10,9 @@ class Configuration {
 
 }
 
-const instance = new Configuration();
-
 if (!global.wazoConfigurationInstance) {
-  global.wazoConfigurationInstance = instance;
+  global.wazoConfigurationInstance = new Configuration();
 }
 
-export default instance;
+// @ts-ignore: Circular definition of import alias 'default'.
+export default global.wazoConfigurationInstance;

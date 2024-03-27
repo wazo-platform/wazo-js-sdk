@@ -23,7 +23,6 @@ describe('simple/Auth', () => {
 
   describe('validateToken', () => {
     it('should return undefined if nullish', async () => {
-      // @ts-expect-error
       const result = await Auth.validateToken(null);
       expect(result).toEqual(undefined);
     });

@@ -523,10 +523,9 @@ class Phone extends Emitter {
   }
 }
 
-const instance = new Phone();
-
 if (!global.wazoTelephonyInstance) {
-  global.wazoTelephonyInstance = instance;
+  global.wazoTelephonyInstance = new Phone();
 }
 
-export default instance;
+// @ts-ignore: Circular definition of import alias 'default'.
+export default global.wazoTelephonyInstance;

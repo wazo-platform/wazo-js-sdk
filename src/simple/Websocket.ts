@@ -98,10 +98,9 @@ class Websocket extends Emitter {
 
 }
 
-const instance = new Websocket() as Websocket & typeof SOCKET_EVENTS & typeof OTHER_EVENTS;
-
 if (!global.wazoWebsocketInstance) {
-  global.wazoWebsocketInstance = instance;
+  global.wazoWebsocketInstance = new Websocket() as Websocket & typeof SOCKET_EVENTS & typeof OTHER_EVENTS;
 }
 
-export default instance;
+// @ts-ignore: Circular definition of import alias 'default'.
+export default global.wazoWebsocketInstance;

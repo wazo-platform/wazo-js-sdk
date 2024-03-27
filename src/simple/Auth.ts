@@ -451,10 +451,9 @@ class Auth {
 
 }
 
-const instance = new Auth();
-
 if (!global.wazoAuthInstance) {
-  global.wazoAuthInstance = instance;
+  global.wazoAuthInstance = new Auth();
 }
 
-export default instance;
+// @ts-ignore: Circular definition of import alias 'default'.
+export default global.wazoAuthInstance;
