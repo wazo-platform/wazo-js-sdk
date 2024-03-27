@@ -550,13 +550,14 @@ export default class WebRTCClient extends Emitter {
     });
   }
 
-  call(number: string, enableVideo?: boolean, audioOnly = false, conference = false): WazoSession | null {
+  call(number: string, enableVideo?: boolean, audioOnly = false, conference = false, options = {}): WazoSession | null {
     logger.info('sdk webrtc creating call', {
       clientId: this.clientId,
       number,
       enableVideo,
       audioOnly,
       conference,
+      options,
     });
     const inviterOptions: Record<string, any> = {
       sessionDescriptionHandlerOptionsReInvite: {
@@ -564,6 +565,7 @@ export default class WebRTCClient extends Emitter {
         audioOnly,
       },
       earlyMedia: true,
+      options,
     };
 
     if (audioOnly) {

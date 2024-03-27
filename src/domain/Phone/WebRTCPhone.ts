@@ -1175,13 +1175,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   // Should be async to match CTIPhone definition
   // @TODO: line is not used here
-  async makeCall(number: string, line: any, cameraEnabled?: boolean, audioOnly = false, conference = false): Promise<CallSession | null | undefined> {
+  async makeCall(number: string, line: any, cameraEnabled?: boolean, audioOnly = false, conference = false, options = {}): Promise<CallSession | null | undefined> {
     logger.info('make WebRTC call', {
       number,
       lineId: line ? line.id : null,
       cameraEnabled,
       audioOnly,
       conference,
+      options,
     });
 
     if (!number) {
@@ -1201,7 +1202,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     let sipSession: WazoSession;
 
     try {
-      sipSession = this.client.call(number, this.allowVideo ? cameraEnabled : false, audioOnly, conference) as WazoSession;
+      sipSession = this.client.call(number, this.allowVideo ? cameraEnabled : false, audioOnly, conference, options) as WazoSession;
 
       this._bindEvents(sipSession);
     } catch (error: any) {
