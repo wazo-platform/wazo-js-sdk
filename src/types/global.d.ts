@@ -6,6 +6,12 @@ import Configuration from '../simple/Configuration';
 import Directory from '../simple/Directory';
 import Phone from '../simple/Phone';
 import Websocket from '../simple/Websocket';
+import * as WebSocketClient from '../websocket-client';
+
+const {
+  SOCKET_EVENTS,
+  ...OTHER_EVENTS
+} = WebSocketClient;
 
 declare global {
   var Wazo;
@@ -27,7 +33,7 @@ declare global {
   var wazoConfigurationInstance: typeof Configuration;
   var wazoDirectoryInstance: typeof Directory;
   var wazoTelephonyInstance: typeof Phone;
-  var wazoWebsocketInstance: typeof Websocket;
+  var wazoWebsocketInstance: typeof Websocket & typeof SOCKET_EVENTS & typeof OTHER_EVENTS;
 }
 
 export {};

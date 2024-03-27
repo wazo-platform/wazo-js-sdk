@@ -98,7 +98,7 @@ class Websocket extends Emitter {
 
 }
 
-const instance = new Websocket();
+const instance = new Websocket() as Websocket & typeof SOCKET_EVENTS & typeof OTHER_EVENTS;
 
 if (!global.wazoWebsocketInstance) {
   global.wazoWebsocketInstance = instance;
