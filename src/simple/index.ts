@@ -1,3 +1,4 @@
+/* eslint-disable import/no-named-as-default */
 /* global window */
 import Auth, { InvalidSubscription, InvalidAuthorization, NoTenantIdError, NoDomainNameError } from './Auth';
 import Phone from './Phone';

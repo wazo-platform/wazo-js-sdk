@@ -3,6 +3,13 @@ import { SessionDescriptionHandlerFactoryOptions } from 'sip.js/lib/platform/web
 import type { IncomingResponse as SipIncomingResponse } from 'sip.js/lib/core/messages/incoming-response';
 import { Transport } from 'sip.js/lib/api';
 import WazoSessionDescriptionHandler from '../lib/WazoSessionDescriptionHandler';
+import { Websocket } from '../simple/Websocket';
+import * as WebSocketClient from '../websocket-client';
+
+const {
+  SOCKET_EVENTS,
+  ...OTHER_EVENTS
+} = WebSocketClient;
 
 type GenericObject = Record<string, any>;
 
@@ -312,3 +319,5 @@ export type SearchableQueryParams = QueryParams & {
 export type UuidSearchableQueryParams = SearchableQueryParams & {
   uuid?: string;
 };
+
+export type WebsocketType = Websocket & typeof SOCKET_EVENTS & typeof OTHER_EVENTS;

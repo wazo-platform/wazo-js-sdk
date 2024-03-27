@@ -24,9 +24,10 @@ export class InvalidSubscription extends Error {}
 export class InvalidAuthorization extends Error {}
 export class NoTenantIdError extends Error {}
 export class NoDomainNameError extends Error {}
+
 const logger = IssueReporter.loggerFor('simple-auth');
 
-class Auth {
+export class Auth {
   clientId: string;
 
   expiration: number;
@@ -39,11 +40,11 @@ class Auth {
 
   session: Session | null;
 
-  onRefreshTokenCallback: ((...args: Array<any>) => any) | null;
+  onRefreshTokenCallback?: (token: string, session: Session) => void;
 
-  onRefreshTokenCallbackError: ((...args: Array<any>) => any) | null;
+  onRefreshTokenCallbackError?: (error: any) => void;
 
-  onHostFromHeadersCallback: ((...args: Array<any>) => any) | null;
+  onHostFromHeadersCallback?: (stackHostFromHeaders: string) => void;
 
   authenticated: boolean;
 
@@ -54,6 +55,8 @@ class Auth {
   BACKEND_LDAP: string;
 
   usingEdgeServer: boolean | undefined;
+
+  onSetUsingEdgeServer?: (usingEdgeServer: boolean) => void;
 
   constructor() {
     this.expiration = DETAULT_EXPIRATION;
@@ -162,9 +165,14 @@ class Auth {
     return this._onAuthenticated(rawSession as Session);
   }
 
-  async validateToken(token: string, refreshToken: string): Promise<Session | undefined | null> {
+  async validateToken(token: string, refreshToken?: string, headerUserUuid?: string): Promise<Session | undefined | null> {
     if (!token) {
       return;
+    }
+
+    if (this.usingEdgeServer && typeof headerUserUuid === 'string') {
+      logger.info('using edge server, setting user UUID header', { headerUserUuid });
+      this.setHttpUserUuidHeader(headerUserUuid);
     }
 
     if (refreshToken) {
@@ -212,8 +220,13 @@ class Auth {
     setFetchOptions({});
   }
 
-  setOnHostFromHeaders(callback: (...args: Array<any>) => any) {
+  setOnHostFromHeaders(callback: (hostFromHeaders: string) => void) {
     this.onHostFromHeadersCallback = callback;
+  }
+
+  setOnSetUsingEdgeServer(callback: (usingEdgeServer: boolean) => void) {
+    logger.info('setting onSetUsingEdgeServer callback', { callback: typeof callback === 'function' });
+    this.onSetUsingEdgeServer = callback;
   }
 
   setOnRefreshToken(callback: (...args: Array<any>) => any) {
@@ -366,6 +379,11 @@ class Auth {
       this.usingEdgeServer = false;
       logger.info('Setting usingEdgeServer to FALSE', { justification: e });
     }
+
+    if (typeof this.onSetUsingEdgeServer === 'function') {
+      logger.info('calling onSetUsingEdgeServer', { usingEdgeServer: this.usingEdgeServer });
+      this.onSetUsingEdgeServer(this.usingEdgeServer);
+    }
   }
 
   async _onAuthenticated(rawSession: Session): Promise<Session | null> {
@@ -437,4 +455,5 @@ if (!global.wazoAuthInstance) {
   global.wazoAuthInstance = new Auth();
 }
 
+// @ts-ignore: Circular definition of import alias 'default'.
 export default global.wazoAuthInstance;

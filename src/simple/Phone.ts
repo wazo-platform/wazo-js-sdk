@@ -18,7 +18,7 @@ const sipLogger = IssueReporter.loggerFor('sip.js');
 const protocolLogger = IssueReporter.loggerFor('sip');
 const protocolDebugMessages = ['Received WebSocket text message:', 'Sending WebSocket message:'];
 
-class Phone extends Emitter {
+export class Phone extends Emitter {
   client: WazoWebRTCClient;
 
   phone: WebRTCPhone | null | undefined;
@@ -527,4 +527,5 @@ if (!global.wazoTelephonyInstance) {
   global.wazoTelephonyInstance = new Phone();
 }
 
+// @ts-ignore: Circular definition of import alias 'default'.
 export default global.wazoTelephonyInstance;
