@@ -1,5 +1,6 @@
 import Emitter from '../../utils/Emitter';
 import IssueReporter from '../../service/IssueReporter';
+// eslint-disable-next-line import/no-named-as-default
 import Phone from '../Phone';
 import Room, { SIGNAL_TYPE_PARTICIPANT_UPDATE } from './Room';
 import Contact from '../../domain/Contact';
