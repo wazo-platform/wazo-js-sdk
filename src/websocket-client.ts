@@ -15,7 +15,7 @@ export const SOCKET_EVENTS = {
   ON_CLOSE: 'onclose',
   INITIALIZED: 'initialized',
   ON_AUTH_FAILED: 'on_auth_failed',
-};
+} as const;
 type Arguments = {
   host: string;
   token: string;

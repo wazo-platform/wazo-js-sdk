@@ -1,10 +1,12 @@
 import Emitter from '../../utils/Emitter';
 import IssueReporter from '../../service/IssueReporter';
+// eslint-disable-next-line import/no-named-as-default
 import Phone from '../Phone';
 import Room, { SIGNAL_TYPE_PARTICIPANT_UPDATE } from './Room';
 import Contact from '../../domain/Contact';
 import getApiClient from '../../service/getApiClient';
 import Stream from './Stream';
+import type CallSession from '../../domain/CallSession';
 
 const logger = IssueReporter.loggerFor('room');
 
@@ -362,7 +364,7 @@ class Participant extends Emitter {
 
     if (sendReinvite && !this.streams.length && Phone.phone) {
       // eslint-disable-next-line no-underscore-dangle
-      Phone.phone._sendReinviteMessage(this.room?.callSession, false);
+      Phone.phone._sendReinviteMessage(this.room?.callSession as CallSession, false);
     }
 
     this.room?.sendSignal({
