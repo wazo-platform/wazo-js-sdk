@@ -7,6 +7,7 @@ module.exports = {
     '\\.js$': 'babel-jest',
   },
   globals: {
+    fetch: global.fetch,
     window: {
       console: {},
     },
