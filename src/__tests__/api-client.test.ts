@@ -87,7 +87,7 @@ client.setToken(token);
 describe('With correct API results', () => {
   beforeEach(() => {
     jest.resetModules();
-    global.fetch = jest.fn(() => Promise.resolve(mockedJson)) as any;
+    jest.spyOn(global, 'fetch').mockImplementation(() => Promise.resolve(mockedJson) as any);
   });
 
   describe('logIn test', () => {
@@ -135,7 +135,7 @@ describe('With correct API results', () => {
 describe('With unAuthorized API results', () => {
   beforeEach(() => {
     jest.resetModules();
-    global.fetch = jest.fn(() => Promise.resolve(mockedUnAuthorized)) as any;
+    jest.spyOn(global, 'fetch').mockImplementation(() => Promise.resolve(mockedUnAuthorized) as any);
   });
 
   describe('checkLogin test', () => {
@@ -157,7 +157,7 @@ describe('With unAuthorized API results', () => {
 describe('With not found API results', () => {
   beforeEach(() => {
     jest.resetModules();
-    global.fetch = jest.fn(() => Promise.resolve(mockedNotFound)) as any;
+    jest.spyOn(global, 'fetch').mockImplementation(() => Promise.resolve(mockedNotFound) as any);
   });
 
   describe('fetchVoicemail test', () => {
@@ -192,7 +192,7 @@ describe('With not found API results', () => {
 describe('With erroneous text API results', () => {
   beforeEach(() => {
     jest.resetModules();
-    global.fetch = jest.fn(() => Promise.resolve(mockedTextError)) as any;
+    jest.spyOn(global, 'fetch').mockImplementation(() => Promise.resolve(mockedTextError) as any);
   });
 
   it('throw an exception when the response is >= 500', async () => {
@@ -217,7 +217,7 @@ describe('With erroneous text API results', () => {
 describe('With erroneous json API results', () => {
   beforeEach(() => {
     jest.resetModules();
-    global.fetch = jest.fn(() => Promise.resolve(mockedJsonError)) as any;
+    jest.spyOn(global, 'fetch').mockImplementation(() => Promise.resolve(mockedJsonError) as any);
   });
 
   it('throw an exception when the response is >= 500', async () => {

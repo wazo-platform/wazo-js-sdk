@@ -79,12 +79,12 @@ describe('Retrieving headers', () => {
 });
 describe('Calling fetch', () => {
   it('should call fetch without body but query string in get method', async () => {
-    global.fetch = jest.fn(() => Promise.resolve({
+    jest.spyOn(global, 'fetch').mockImplementation(() => Promise.resolve({
       json: () => Promise.resolve({}),
       headers: {
         get: () => '',
       },
-    })) as any;
+    }) as any);
 
     await new ApiRequester({
       server,
@@ -107,8 +107,8 @@ describe('Calling fetch', () => {
 describe('With a refresh token', () => {
   it('should retry the call with a new token', async () => {
     let calls = 0;
-
-    global.fetch = jest.fn(() => {
+    jest.resetAllMocks();
+    jest.spyOn(global, 'fetch').mockImplementation(() => {
       calls++;
       return Promise.resolve({
         headers: {
@@ -116,8 +116,9 @@ describe('With a refresh token', () => {
         },
         status: calls === 1 ? 401 : 200,
         json: () => Promise.resolve({}),
-      });
-    }) as any;
+      } as any);
+    });
+
     const requester = new ApiRequester({
       server,
       agent: null,
