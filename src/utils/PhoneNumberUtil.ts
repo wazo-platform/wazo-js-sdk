@@ -1,12 +1,8 @@
-import LibPhoneNumber from 'google-libphonenumber';
+import { AsYouType, parsePhoneNumber as libParsePhoneNumber, CountryCode } from 'libphonenumber-js';
 
-const PhoneNumberUtil = LibPhoneNumber.PhoneNumberUtil.getInstance();
-const {
-  PhoneNumberFormat,
-  AsYouTypeFormatter,
-} = LibPhoneNumber;
 // eslint-disable-next-line
 const EXTRA_CHAR_REGEXP = /[^+*\d]/g;
+const DEFAULT_GUESSING_COUNTRIES: CountryCode[] = ['US', 'FR', 'GB', 'AU'];
 
 const shouldBeFormatted = (number: string | null | undefined) => {
   if (!number || number.length <= 5) {
@@ -24,7 +20,23 @@ const isSameCountry = (country1: string, country2: string) => {
   return country1 === country2;
 };
 
-const getDisplayableNumber = (rawNumber: string, country: string, asYouType = false): string => {
+const guessParsing = (number: string, defaultCountry: CountryCode, guessingCountries: CountryCode[] = DEFAULT_GUESSING_COUNTRIES) => {
+  const mergedCountries: CountryCode[] = [...new Set([defaultCountry, ...guessingCountries])];
+
+  let parsedNumber;
+  for (let i = 0; i < mergedCountries.length; i++) {
+    const country = mergedCountries[i];
+
+    parsedNumber = libParsePhoneNumber(number, country);
+    if (parsedNumber.isValid()) {
+      break;
+    }
+  }
+
+  return parsedNumber;
+};
+
+const getDisplayableNumber = (rawNumber: string, country: CountryCode, asYouType = false, guessingCountries: CountryCode[] | undefined = DEFAULT_GUESSING_COUNTRIES): string => {
   if (!rawNumber) {
     return rawNumber;
   }
@@ -38,18 +50,17 @@ const getDisplayableNumber = (rawNumber: string, country: string, asYouType = fa
   let displayValue = '';
 
   if (asYouType) {
-    const formatter = new AsYouTypeFormatter(country);
-    number.split('').forEach(char => {
-      displayValue = formatter.inputDigit(char);
-    });
+    displayValue = new AsYouType(country).input(number);
   } else {
     try {
-      const parsedNumber = PhoneNumberUtil.parseAndKeepRawInput(number, country);
-      const numberCountry = PhoneNumberUtil.getRegionCodeForNumber(parsedNumber);
-      const format = isSameCountry(String(numberCountry), country) ? PhoneNumberFormat.NATIONAL : PhoneNumberFormat.INTERNATIONAL;
-      displayValue = PhoneNumberUtil.format(parsedNumber, format);
-    } catch (_) {
-      // Avoid to crash when phone number like `0080510` can't be parsed
+      const parsedNumber = guessParsing(number, country, guessingCountries);
+      if (parsedNumber?.isValid()) {
+        displayValue = isSameCountry(String(parsedNumber.country), country) ? parsedNumber.formatNational() : parsedNumber.formatInternational();
+      } else {
+        displayValue = rawNumber;
+      }
+    } catch (error) {
+
       displayValue = rawNumber;
     }
   }
@@ -59,16 +70,13 @@ const getDisplayableNumber = (rawNumber: string, country: string, asYouType = fa
 
 const parsePhoneNumber = (phoneNumber: string): string => phoneNumber.replace(EXTRA_CHAR_REGEXP, '');
 
-const getCallableNumber = (number: string, country?: string | null): string | null | undefined => {
+const getCallableNumber = (number: string, country?: CountryCode | null): string | null | undefined => {
   try {
-    if (country) {
-      return getDisplayableNumber(number, country).replace(EXTRA_CHAR_REGEXP, '');
-    }
-
-    return parsePhoneNumber(number);
+    const callableNumber = country ? getDisplayableNumber(number, country) : number;
+    return parsePhoneNumber(callableNumber);
   } catch (_) {
     return number;
   }
 };
 
-export { PhoneNumberUtil, PhoneNumberFormat, parsePhoneNumber, AsYouTypeFormatter, getDisplayableNumber, getCallableNumber };
+export { parsePhoneNumber, getDisplayableNumber, guessParsing, getCallableNumber };
