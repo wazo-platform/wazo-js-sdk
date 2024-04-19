@@ -565,7 +565,7 @@ export default class WebRTCClient extends Emitter {
         audioOnly,
       },
       earlyMedia: true,
-      options,
+      ...options,
     };
 
     if (audioOnly) {

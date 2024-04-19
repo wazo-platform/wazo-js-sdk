@@ -87,7 +87,9 @@ client.setToken(token);
 describe('With correct API results', () => {
   beforeEach(() => {
     jest.resetModules();
-    global.fetch = jest.fn(() => Promise.resolve(mockedJson)) as any;
+    Object.defineProperty(global, 'fetch', {
+      value: jest.fn(() => Promise.resolve(mockedJson) as any),
+    });
   });
 
   describe('logIn test', () => {
@@ -135,7 +137,9 @@ describe('With correct API results', () => {
 describe('With unAuthorized API results', () => {
   beforeEach(() => {
     jest.resetModules();
-    global.fetch = jest.fn(() => Promise.resolve(mockedUnAuthorized)) as any;
+    Object.defineProperty(global, 'fetch', {
+      value: jest.fn(() => Promise.resolve(mockedUnAuthorized) as any),
+    });
   });
 
   describe('checkLogin test', () => {
@@ -157,7 +161,9 @@ describe('With unAuthorized API results', () => {
 describe('With not found API results', () => {
   beforeEach(() => {
     jest.resetModules();
-    global.fetch = jest.fn(() => Promise.resolve(mockedNotFound)) as any;
+    Object.defineProperty(global, 'fetch', {
+      value: jest.fn(() => Promise.resolve(mockedNotFound) as any),
+    });
   });
 
   describe('fetchVoicemail test', () => {
@@ -192,7 +198,9 @@ describe('With not found API results', () => {
 describe('With erroneous text API results', () => {
   beforeEach(() => {
     jest.resetModules();
-    global.fetch = jest.fn(() => Promise.resolve(mockedTextError)) as any;
+    Object.defineProperty(global, 'fetch', {
+      value: jest.fn(() => Promise.resolve(mockedTextError) as any),
+    });
   });
 
   it('throw an exception when the response is >= 500', async () => {
@@ -217,7 +225,9 @@ describe('With erroneous text API results', () => {
 describe('With erroneous json API results', () => {
   beforeEach(() => {
     jest.resetModules();
-    global.fetch = jest.fn(() => Promise.resolve(mockedJsonError)) as any;
+    Object.defineProperty(global, 'fetch', {
+      value: jest.fn(() => Promise.resolve(mockedJsonError) as any),
+    });
   });
 
   it('throw an exception when the response is >= 500', async () => {

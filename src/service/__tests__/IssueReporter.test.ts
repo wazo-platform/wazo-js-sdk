@@ -24,7 +24,11 @@ describe('IssueReporter', () => {
   });
   beforeEach(() => {
     jest.resetAllMocks();
-    jest.spyOn(global, 'fetch');
+    Object.defineProperty(global, 'fetch', {
+      value: jest.fn(() => ({
+        catch: () => {},
+      })),
+    });
   });
   afterAll(() => {
     console.log = oldLog;
