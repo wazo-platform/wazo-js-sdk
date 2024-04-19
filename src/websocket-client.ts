@@ -277,7 +277,7 @@ class WebSocketClient extends Emitter {
       return;
     }
 
-    this.socket.close();
+    this.socket.close(1000);
     this.initialized = false;
 
     if (force) {
