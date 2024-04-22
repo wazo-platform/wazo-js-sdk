@@ -1,4 +1,4 @@
-import { getDisplayableNumber, getCallableNumber } from '../PhoneNumberUtil';
+import { getDisplayableNumber, getCallableNumber, guessParsePhoneNumber } from '../PhoneNumberUtil';
 
 describe('Formatting phone numbers', () => {
   it('should not format all phone numbers', () => {
@@ -8,6 +8,7 @@ describe('Formatting phone numbers', () => {
     expect(getDisplayableNumber('#23445433', 'DE')).toBe('#23445433');
     expect(getDisplayableNumber('0080510', 'FR')).toBe('0080510');
   });
+
   it('should format real phone numbers', () => {
     expect(getDisplayableNumber('+33675456545', 'FR')).toBe('06 75 45 65 45');
     expect(getDisplayableNumber('0675456545', 'FR')).toBe('06 75 45 65 45');
@@ -15,6 +16,7 @@ describe('Formatting phone numbers', () => {
     expect(getDisplayableNumber('0675456545', 'US')).toBe('+33 6 75 45 65 45');
     expect(getDisplayableNumber('4188884356', 'US')).toBe('(418) 888-4356');
   });
+
   it('should format real phone numbers when typing', () => {
     expect(getDisplayableNumber('+3367545', 'FR', true)).toBe('+33 6 75 45');
     expect(getDisplayableNumber('067545', 'FR', true)).toBe('06 75 45');
@@ -22,6 +24,7 @@ describe('Formatting phone numbers', () => {
     expect(getDisplayableNumber('067545', 'US', true)).toBe('067545');
     expect(getDisplayableNumber('418808', 'US', true)).toBe('(418) 808');
   });
+
   it('should use the international number if the country number is different from the given country', () => {
     expect(getDisplayableNumber('00201005803648', 'FR')).toBe('+20 10 05803648');
     expect(getDisplayableNumber('+14188004554', 'FR')).toBe('+1 418 800 4554');
@@ -32,6 +35,7 @@ describe('Formatting phone numbers', () => {
     expect(getDisplayableNumber('8775863230', 'US')).toBe('(877) 586-3230');
   });
 });
+
 describe('getCallableNumber', () => {
   it('works with a country', () => {
     expect(getCallableNumber('+33 6 75 45 12 34', 'FR')).toBe('0675451234');
@@ -43,6 +47,7 @@ describe('getCallableNumber', () => {
     expect(getCallableNumber('*10', 'US')).toBe('*10');
     expect(getCallableNumber('9000', 'US')).toBe('9000');
   });
+
   it('works without a country', () => {
     expect(getCallableNumber('06 75 45')).toBe('067545');
     expect(getCallableNumber('067-545')).toBe('067545');
@@ -50,5 +55,25 @@ describe('getCallableNumber', () => {
     expect(getCallableNumber('80.08')).toBe('8008');
     expect(getCallableNumber('*10')).toBe('*10');
     expect(getCallableNumber('9000')).toBe('9000');
+  });
+});
+
+describe('guessParsePhoneNumber', () => {
+  it('should guess with default countries', () => {
+    const parsedNumber = guessParsePhoneNumber('0675456545');
+    expect(parsedNumber?.country).toBe('FR');
+    expect(parsedNumber?.isValid()).toBe(true);
+  });
+
+  it('should guess with specified countries', () => {
+    const parsedNumber = guessParsePhoneNumber('752097514', undefined, ['JP']);
+    expect(parsedNumber?.country).toBe('JP');
+    expect(parsedNumber?.isValid()).toBe(true);
+  });
+
+  it('should used use defaultCountry has guesser', () => {
+    const parsedNumber = guessParsePhoneNumber('752097514', 'JP', []);
+    expect(parsedNumber?.country).toBe('JP');
+    expect(parsedNumber?.isValid()).toBe(true);
   });
 });

@@ -1,5 +1,7 @@
 import { AsYouType, parsePhoneNumber as libParsePhoneNumber, CountryCode } from 'libphonenumber-js';
 
+type NullableCountryCode = CountryCode | null | undefined;
+
 // eslint-disable-next-line
 const EXTRA_CHAR_REGEXP = /[^+*\d]/g;
 const DEFAULT_GUESSING_COUNTRIES: CountryCode[] = ['US', 'FR', 'GB', 'AU'];
@@ -20,8 +22,8 @@ const isSameCountry = (country1: string, country2: string) => {
   return country1 === country2;
 };
 
-const guessParsing = (number: string, defaultCountry: CountryCode, guessingCountries: CountryCode[] = DEFAULT_GUESSING_COUNTRIES) => {
-  const mergedCountries: CountryCode[] = [...new Set([defaultCountry, ...guessingCountries])];
+const guessParsePhoneNumber = (number: string, defaultCountry?: NullableCountryCode, guessingCountries: CountryCode[] = DEFAULT_GUESSING_COUNTRIES) => {
+  const mergedCountries = [...new Set([defaultCountry, ...guessingCountries])].filter(Boolean) as CountryCode[];
 
   let parsedNumber;
   for (let i = 0; i < mergedCountries.length; i++) {
@@ -53,14 +55,13 @@ const getDisplayableNumber = (rawNumber: string, country: CountryCode, asYouType
     displayValue = new AsYouType(country).input(number);
   } else {
     try {
-      const parsedNumber = guessParsing(number, country, guessingCountries);
+      const parsedNumber = guessParsePhoneNumber(number, country, guessingCountries);
       if (parsedNumber?.isValid()) {
         displayValue = isSameCountry(String(parsedNumber.country), country) ? parsedNumber.formatNational() : parsedNumber.formatInternational();
       } else {
         displayValue = rawNumber;
       }
     } catch (error) {
-
       displayValue = rawNumber;
     }
   }
@@ -70,7 +71,7 @@ const getDisplayableNumber = (rawNumber: string, country: CountryCode, asYouType
 
 const parsePhoneNumber = (phoneNumber: string): string => phoneNumber.replace(EXTRA_CHAR_REGEXP, '');
 
-const getCallableNumber = (number: string, country?: CountryCode | null): string | null | undefined => {
+const getCallableNumber = (number: string, country?: NullableCountryCode): string | null | undefined => {
   try {
     const callableNumber = country ? getDisplayableNumber(number, country) : number;
     return parsePhoneNumber(callableNumber);
@@ -79,4 +80,4 @@ const getCallableNumber = (number: string, country?: CountryCode | null): string
   }
 };
 
-export { parsePhoneNumber, getDisplayableNumber, guessParsing, getCallableNumber };
+export { parsePhoneNumber, getDisplayableNumber, guessParsePhoneNumber, getCallableNumber, NullableCountryCode };
