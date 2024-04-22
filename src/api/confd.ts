@@ -1,6 +1,7 @@
 import ApiRequester from '../utils/api-requester';
-import type { UUID, ListConfdUsersResponse, ListApplicationsResponse, CallerID } from '../domain/types';
+import type { UUID, ListConfdUsersResponse, ListApplicationsResponse } from '../domain/types';
 import type { MeetingCreateArguments, MeetingUpdateArguments } from '../domain/Meeting';
+import CallerID from '../domain/CallerID';
 import Profile from '../domain/Profile';
 import SipLine from '../domain/SipLine';
 import ExternalApp from '../domain/ExternalApp';
@@ -108,5 +109,5 @@ export default ((client: ApiRequester, baseUrl: string): ConfD => ({
     guest_name: username,
   }).then(MeetingAuthorization.parse),
   guestAuthorizationCheck: (userUuid: string, meetingUuid: string, authorizationUuid: string): Promise<any> => client.get(`${baseUrl}/guests/${userUuid}/meetings/${meetingUuid}/authorizations/${authorizationUuid}`, null),
-  getOutgoingCallerIDs: (userUuid: string): Promise<CallerID[]> => client.get(`${baseUrl}/users/${userUuid}/callerids/outgoing`, null).then(({ items }: { items: CallerID }) => items),
+  getOutgoingCallerIDs: (userUuid: string): Promise<CallerID[]> => client.get(`${baseUrl}/users/${userUuid}/callerids/outgoing`, null).then(CallerID.parseMany),
 }));

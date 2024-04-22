@@ -321,8 +321,3 @@ export type UuidSearchableQueryParams = SearchableQueryParams & {
 };
 
 export type WebsocketType = Websocket & typeof SOCKET_EVENTS & typeof OTHER_EVENTS;
-
-export type CallerID = {
-  number?: string;
-  type: 'main' | 'associated' | 'anonymous';
-};
