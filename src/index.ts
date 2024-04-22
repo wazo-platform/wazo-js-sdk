@@ -24,6 +24,7 @@ export { default as Room } from './domain/Room';
 export { default as CallSession } from './domain/CallSession';
 export { default as IndirectTransfer } from './domain/IndirectTransfer';
 export { default as SwitchboardCall } from './domain/SwitchboardCall';
+export { default as CallerID } from './domain/CallerID';
 export { default as WebRTCPhone } from './domain/Phone/WebRTCPhone';
 export { default as CTIPhone } from './domain/Phone/CTIPhone';
 export { default as Meeting, MeetingCreateArguments, MeetingUpdateArguments } from './domain/Meeting';
