@@ -1,4 +1,5 @@
 export default {
+  AUSTRALIA: 'AU',
   BELGIUM: 'BE',
   CANADA: 'CA',
   FRANCE: 'FR',
