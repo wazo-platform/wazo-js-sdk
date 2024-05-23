@@ -300,7 +300,7 @@ export default class CTIPhone extends Emitter implements Phone {
 
   changeVideoInputDevice() { return Promise.resolve(null); }
 
-  changeAudioDevice() {}
+  changeAudioDevice() { return Promise.resolve(); }
 
   changeRingDevice() {}
 

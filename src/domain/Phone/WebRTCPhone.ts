@@ -612,12 +612,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return callSession;
   }
 
-  changeAudioDevice(id: string) {
+  async changeAudioDevice(id: string) {
     logger.info('WebRTC phone - change audio device', {
       deviceId: id,
     });
     this.audioOutputDeviceId = id;
-    this.client.changeAudioOutputDevice(id);
+    return this.client.changeAudioOutputDevice(id);
   }
 
   createAudioElementFor(sessionId: string) {
@@ -1528,7 +1528,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         this.eventEmitter.emit.apply(this.eventEmitter, [this.client.ON_REINVITE, ...args]);
       }, 2000);
     });
-    this.client.on(this.client.ACCEPTED, (sipSession: WazoSession) => {
+    this.client.on(this.client.ACCEPTED, async (sipSession: WazoSession) => {
       const sessionId = this.getSipSessionId(sipSession);
       const hasSession = (sessionId in this.callSessions);
       logger.info('WebRTC call accepted', {
@@ -1546,7 +1546,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this._onCallAccepted(sipSession, this.client.hasVideo(sessionId));
 
       if (this.audioOutputDeviceId) {
-        this.client.changeAudioOutputDevice(this.audioOutputDeviceId);
+        await this.client.changeAudioOutputDevice(this.audioOutputDeviceId);
       }
     });
     this.client.on('ended', () => {});
