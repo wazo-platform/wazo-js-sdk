@@ -90,7 +90,7 @@ export default class WebRTCClient extends Emitter {
 
   audio: MediaTrackConstraintSet | boolean | undefined;
 
-  audioElements: Record<string, HTMLAudioElement & { setSinkId?: (id: string) => void }>;
+  audioElements: Record<string, HTMLAudioElement>;
 
   video: MediaTrackConstraintSet | boolean | undefined;
 
@@ -1246,20 +1246,14 @@ export default class WebRTCClient extends Emitter {
     this.audioOutputVolume = volume;
   }
 
-  changeAudioOutputDevice(id: string) {
+  async changeAudioOutputDevice(id: string) {
     logger.info('Changing audio output device', {
       id,
     });
     this.audioOutputDeviceId = id;
-    Object.values(this.audioElements).forEach(audioElement => {
-      // `setSinkId` method is not included in any flow type definitions for HTMLAudioElements but is a valid method
-      // audioElement is an array of HTMLAudioElements, and HTMLAudioElement inherits the method from HTMLMediaElement
-      // https://developer.mozilla.org/en-US/docs/Web/API/HTMLAudioElement
-      // https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
-      if (audioElement.setSinkId) {
-        audioElement.setSinkId(id);
-      }
-    });
+    const promises: Promise<void>[] = [];
+    Object.values(this.audioElements).forEach(audioElement => promises.push(audioElement.setSinkId(id)));
+    await Promise.allSettled(promises);
   }
 
   async changeAudioInputDevice(id: string, session: WazoSession | null | undefined, force?: boolean): Promise<MediaStream | null> {
@@ -1735,7 +1729,7 @@ export default class WebRTCClient extends Emitter {
     }
   }
 
-  updateLocalStream(sipSessionId: string, newStream: MediaStream): void {
+  async updateLocalStream(sipSessionId: string, newStream: MediaStream): Promise<void> {
     const sipSession = this.sipSessions[sipSessionId];
 
     if (!sipSession) {
@@ -1756,7 +1750,7 @@ export default class WebRTCClient extends Emitter {
     this.setLocalMediaStream(sipSessionId, newStream);
 
     // Update the local video element
-    this._setupMedias(sipSession, newStream);
+    await this._setupMedias(sipSession, newStream);
   }
 
   updateRemoteStream(sessionId: string, allTracks = true): void {
@@ -1832,14 +1826,14 @@ export default class WebRTCClient extends Emitter {
     return sessionId in this.conferences;
   }
 
-  createAudioElementFor(sessionId: string): HTMLAudioElement {
+  async createAudioElementFor(sessionId: string): Promise<HTMLAudioElement> {
     const audio: HTMLAudioElement = document.createElement('audio');
     audio.setAttribute('id', `audio-${sessionId}`);
 
     logger.info('creating audio element', { sessionId, audioOutputDeviceId: this.audioOutputDeviceId });
 
-    if ((audio as any).setSinkId && this.audioOutputDeviceId) {
-      (audio as any).setSinkId(this.audioOutputDeviceId);
+    if (this.audioOutputDeviceId) {
+      await audio.setSinkId(this.audioOutputDeviceId);
     }
 
     if (document.body) {
@@ -2135,7 +2129,7 @@ export default class WebRTCClient extends Emitter {
       oldInviteRequest(request);
     };
 
-    session.delegate.onInvite = (request: IncomingRequestMessage) => {
+    session.delegate.onInvite = async (request: IncomingRequestMessage) => {
       let updatedCalleeName: string | null = null;
       let updatedNumber = null;
 
@@ -2165,14 +2159,14 @@ export default class WebRTCClient extends Emitter {
 
       this.updateRemoteStream(sipSessionId, false);
 
-      this._setupMedias(session);
+      await this._setupMedias(session);
 
       return this.eventEmitter.emit(ON_REINVITE, session, request, updatedCalleeName, updatedNumber, hadRemoteVideo);
     };
   }
 
-  _onProgress(session: WazoSession, early = false): void {
-    this._setupMedias(session);
+  async _onProgress(session: WazoSession, early = false): Promise<void> {
+    await this._setupMedias(session);
 
     const sessionId = this.getSipSessionId(session).substr(0, 20);
     this.updateRemoteStream(sessionId);
@@ -2183,7 +2177,7 @@ export default class WebRTCClient extends Emitter {
     this.eventEmitter.emit(early ? ON_EARLY_MEDIA : ON_PROGRESS, session);
   }
 
-  _onAccepted(session: WazoSession, sessionDialog?: SessionDialog, withEvent = true, initAllTracks = true): void {
+  async _onAccepted(session: WazoSession, sessionDialog?: SessionDialog, withEvent = true, initAllTracks = true): Promise<void> {
     logger.info('on call accepted', {
       id: session.id,
       clientId: this.clientId,
@@ -2191,7 +2185,7 @@ export default class WebRTCClient extends Emitter {
     });
     this.storeSipSession(session);
 
-    this._setupMedias(session);
+    await this._setupMedias(session);
 
     this.updateRemoteStream(this.getSipSessionId(session), initAllTracks);
     const pc = (session.sessionDescriptionHandler as SessionDescriptionHandler)?.peerConnection;
@@ -2253,7 +2247,7 @@ export default class WebRTCClient extends Emitter {
     return Boolean(session.sessionDescriptionHandlerModifiersReInvite.find(modifier => modifier === stripVideo));
   }
 
-  _setupMedias(session: WazoSession, newStream: MediaStream | null | undefined = null): void {
+  async _setupMedias(session: WazoSession, newStream: MediaStream | null | undefined = null): Promise<void> {
     if (!this._isWeb()) {
       logger.info('Setup media on mobile, no need to setup html element, bailing');
       return;
@@ -2271,7 +2265,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     if (this._hasAudio() && this._isWeb() && !(sessionId in this.audioElements)) {
-      this.createAudioElementFor(sessionId);
+      await this.createAudioElementFor(sessionId);
     }
 
     const audioElement = this.audioElements[sessionId];

@@ -492,13 +492,13 @@ class Room extends Emitter {
     // Listen to REINVITE to ba able to map msid after upgrading to video in a  audio only conference
     // This allow to map msid with the non parsed (eg without the `stripVideo` modifier) SDP
     Wazo.Phone.phone.on(Wazo.Phone.phone.client.ON_REINVITE, this._boundOnReinvite);
-    this.on(this.ON_AUDIO_STREAM, stream => {
+    this.on(this.ON_AUDIO_STREAM, async stream => {
       logger.info('on room audio stream');
       this.audioStream = stream;
 
       if (!this.roomAudioElement) {
         const sessionId = Wazo.Phone.phone?.getSipSessionId(Wazo.Phone.phone?.currentSipSession as WazoSession);
-        this.roomAudioElement = Wazo.Phone.phone?.createAudioElementFor(sessionId as string) as HTMLAudioElement;
+        this.roomAudioElement = await Wazo.Phone.phone?.createAudioElementFor(sessionId as string) as HTMLAudioElement;
         this.roomAudioElement.srcObject = stream;
       } else {
         this.roomAudioElement.srcObject = stream;
