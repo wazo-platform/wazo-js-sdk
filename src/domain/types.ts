@@ -243,7 +243,6 @@ export type WebRtcConfig = {
   media?: MediaConfig;
   iceCheckingTimeout?: number;
   log?: Record<string, any>;
-  audioOutputDeviceId?: string;
   audioOutputVolume?: number;
   userAgentString?: string;
   heartbeatDelay?: number;
