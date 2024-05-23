@@ -12,7 +12,7 @@ jest.mock('sip.js/lib/api/user-agent', () => ({
   },
 }));
 
-const client = new WebRTCClient({} as any, null, undefined);
+const client = new WebRTCClient({} as any, undefined, undefined);
 
 describe('WebRTC client', () => {
   it('should compute muted/unmuted state', async () => {

@@ -244,13 +244,11 @@ export type WebRtcConfig = {
   maxHeartbeats?: number;
   skipRegister?: boolean;
   userUuid?: string,
+  uaConfigOverrides?: UserAgentConfigOverrides,
+  audioDeviceOutput?: string,
+  audioDeviceRing?: string
 }; // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
 
-export type ConnectionOptions = WebRtcConfig & {
-  uaConfigOverrides: UserAgentConfigOverrides,
-  audioDeviceOutput: string,
-  audioDeviceRing: string
-};
 export type IncomingResponse = SipIncomingResponse & { session: any };
 
 export type PeerConnection = RTCPeerConnection & {

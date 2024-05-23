@@ -11,7 +11,7 @@ import IssueReporter from '../service/IssueReporter';
 import Emitter from '../utils/Emitter';
 import Wazo from './index';
 import SFUNotAvailableError from '../domain/SFUNotAvailableError';
-import { ConnectionOptions, WazoSession } from '../domain/types';
+import { WazoSession, WebRtcConfig } from '../domain/types';
 
 const logger = IssueReporter.loggerFor('simple-phone');
 const sipLogger = IssueReporter.loggerFor('sip.js');
@@ -127,7 +127,7 @@ export class Phone extends Emitter {
     this.SessionState = SessionState;
   }
 
-  async connect(rawOptions: Partial<ConnectionOptions> = {}, sipLine: SipLine | null | undefined = null): Promise<void> {
+  async connect(rawOptions: Partial<WebRtcConfig> = {}, sipLine: SipLine | null | undefined = null): Promise<void> {
     const options = rawOptions;
     if (this.phone) {
       // Already connected
@@ -162,7 +162,7 @@ export class Phone extends Emitter {
     server: string,
     sipLine: SipLine,
     displayName: string,
-    rawOptions: Partial<ConnectionOptions> = {},
+    rawOptions: Partial<WebRtcConfig> = {},
   ): void {
     if (this.phone) {
       // Already connected
@@ -194,7 +194,7 @@ export class Phone extends Emitter {
       password: sipLine.secret,
       uri: `${sipLine.username}@${server}`,
       ...options,
-    }, null, options.uaConfigOverrides);
+    }, undefined, options.uaConfigOverrides);
     this.phone = new WebRTCPhone(this.client, options.audioDeviceOutput, true, options.audioDeviceRing);
 
     this._transferEvents();
