@@ -54,6 +54,21 @@ describe('Profile domain', () => {
         }],
         endpoint_custom: null,
       }],
+      incalls: [{
+        id: 1,
+        extensions: [{
+          id: 3,
+          exten: '8001112222',
+          context: 'incall',
+        }],
+      }, {
+        id: 2,
+        extensions: [{
+          id: 4,
+          exten: '8001113333',
+          context: 'incall',
+        }],
+      }],
       username: 'john.doe',
       services: {
         dnd: {
@@ -121,6 +136,21 @@ describe('Profile domain', () => {
           context: 'internal',
         }],
       })],
+      incalls: [{
+        id: 1,
+        extensions: [{
+          id: 3,
+          exten: '8001112222',
+          context: 'incall',
+        }],
+      }, {
+        id: 2,
+        extensions: [{
+          id: 4,
+          exten: '8001113333',
+          context: 'incall',
+        }],
+      }],
       mobileNumber: '',
       username: 'john.doe',
       doNotDisturb: false,
@@ -134,5 +164,7 @@ describe('Profile domain', () => {
       }],
       onlineCallRecordEnabled: true,
     }));
+    expect(profile.incalls[0].extension).toBe(plain.incalls[0].extensions[0].exten);
+    expect(profile.incalls[1].extension).toBe(plain.incalls[1].extensions[0].exten);
   });
 });

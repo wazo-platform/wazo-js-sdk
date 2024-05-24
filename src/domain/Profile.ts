@@ -2,6 +2,7 @@ import Line, { LineResponse } from './Line';
 import ForwardOption, { FORWARD_KEYS } from './ForwardOption';
 import newFrom from '../utils/new-from';
 import SipLine from './SipLine';
+import Incall, { GenericIncall } from './Incall';
 
 export const STATE = {
   AVAILABLE: 'available',
@@ -74,6 +75,7 @@ type ProfileResponse = {
     uuid: string;
   }>;
   online_call_record_enabled: boolean | null | undefined;
+  incalls: GenericIncall[];
 };
 
 type ProfileArguments = {
@@ -108,6 +110,7 @@ type ProfileArguments = {
     uuid: string;
   }>;
   onlineCallRecordEnabled?: boolean | null | undefined;
+  incalls?: GenericIncall[];
 };
 export default class Profile {
   id: string;
@@ -121,6 +124,8 @@ export default class Profile {
   lines: Array<Line>;
 
   sipLines: Array<SipLine>;
+
+  incalls: Array<Incall>;
 
   username: string;
 
@@ -167,6 +172,7 @@ export default class Profile {
       lastName: plain.lastName || plain.lastname || '',
       email: plain.email,
       lines: plain.lines.map(line => Line.parse(line)),
+      incalls: plain.incalls,
       username: plain.username,
       mobileNumber: plain.mobile_phone_number || '',
       ringSeconds: plain.ring_seconds,
@@ -206,6 +212,7 @@ export default class Profile {
     sipLines,
     callPickupTargetUsers,
     onlineCallRecordEnabled,
+    incalls,
   }: ProfileArguments) {
     this.id = id;
     this.firstName = firstName;
@@ -226,6 +233,7 @@ export default class Profile {
     this.onlineCallRecordEnabled = onlineCallRecordEnabled;
     this.ringSeconds = ringSeconds;
     this.sipLines = sipLines || [];
+    this.incalls = incalls?.map(incall => Incall.parse(incall)) || [];
   }
 
   static getLinesState(lines: Array<Record<string, any>>) {
