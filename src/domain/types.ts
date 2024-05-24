@@ -1,4 +1,9 @@
-import type { Invitation, Inviter, Session as SipSession, UserAgentOptions as sipJsUserAgentOptions } from 'sip.js';
+import type {
+  Invitation,
+  Inviter,
+  Session as SipSession,
+  UserAgentOptions as sipJsUserAgentOptions,
+} from 'sip.js';
 import { SessionDescriptionHandlerFactoryOptions } from 'sip.js/lib/platform/web';
 import type { IncomingResponse as SipIncomingResponse } from 'sip.js/lib/core/messages/incoming-response';
 import { Transport } from 'sip.js/lib/api';
@@ -6,10 +11,7 @@ import WazoSessionDescriptionHandler from '../lib/WazoSessionDescriptionHandler'
 import { Websocket } from '../simple/Websocket';
 import * as WebSocketClient from '../websocket-client';
 
-const {
-  SOCKET_EVENTS,
-  ...OTHER_EVENTS
-} = WebSocketClient;
+const { SOCKET_EVENTS, ...OTHER_EVENTS } = WebSocketClient;
 
 type GenericObject = Record<string, any>;
 
@@ -169,7 +171,6 @@ export type ConfdUser = {
   // @TODO
   voicemail: string | null | undefined;
   queues: Array<Record<string, any>>; // @TODO
-
 };
 export type ListConfdUsersResponse = {
   total: number;
@@ -193,7 +194,6 @@ export type ListApplicationsResponse = {
 export type Node = {
   uuid: UUID;
   calls: Array<Record<string, any>>; // @TODO
-
 };
 export type CallNode = GenericObject;
 export type ListNodesResponse = {
@@ -206,21 +206,26 @@ export type ListCallNodesResponse = {
 export type GetTenantResponse = GenericObject;
 export type GetUserResponse = GenericObject;
 export type CTITransfer = {
-  'flow': string;
-  'id': string;
-  'initiator_call': string;
-  'initiator_uuid': string;
-  'recipient_call': string;
-  'status': string;
-  'transferred_call': string;
+  flow: string;
+  id: string;
+  initiator_call: string;
+  initiator_uuid: string;
+  recipient_call: string;
+  status: string;
+  transferred_call: string;
 };
 export type UserAgentOptions = sipJsUserAgentOptions & {
-  peerConnectionOptions?: Record<string, any>,
-  sessionDescriptionHandlerFactory: (session: SipSession, options: SessionDescriptionHandlerFactoryOptions) => WazoSessionDescriptionHandler,
+  peerConnectionOptions?: Record<string, any>;
+  sessionDescriptionHandlerFactory: (
+    session: SipSession,
+    options: SessionDescriptionHandlerFactoryOptions
+  ) => WazoSessionDescriptionHandler;
 };
-export type UserAgentConfigOverrides = Partial<UserAgentOptions & {
-  traceSip: any,
-}>;
+export type UserAgentConfigOverrides = Partial<
+UserAgentOptions & {
+  traceSip: any;
+}
+>;
 export type MediaConfig = {
   audio: Record<string, any> | boolean;
   video?: Record<string, any> | boolean;
@@ -244,32 +249,35 @@ export type WebRtcConfig = {
   heartbeatTimeout?: number;
   maxHeartbeats?: number;
   skipRegister?: boolean;
-  userUuid?: string,
+  userUuid?: string;
 }; // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
 
 export type ConnectionOptions = WebRtcConfig & {
-  uaConfigOverrides: UserAgentConfigOverrides,
-  audioDeviceOutput: string,
-  audioDeviceRing: string
+  uaConfigOverrides: UserAgentConfigOverrides;
+  audioDeviceOutput: string;
+  audioDeviceRing: string;
 };
 export type IncomingResponse = SipIncomingResponse & { session: any };
 
 export type PeerConnection = RTCPeerConnection & {
-  getRemoteStreams: () => MediaStream[],
-  getLocalStreams: () => MediaStream[],
-  onremovestream: (func: any) => void,
-  addStream: (stream: MediaStream) => void,
-  sfu: any
+  getRemoteStreams: () => MediaStream[];
+  getLocalStreams: () => MediaStream[];
+  onremovestream: (func: any) => void;
+  addStream: (stream: MediaStream) => void;
+  sfu: any;
 };
 
-export type WazoSession = (Invitation | Inviter) & { remoteTag?: any, callId?: string };
+export type WazoSession = (Invitation | Inviter) & {
+  remoteTag?: any;
+  callId?: string;
+};
 
 export type WazoTransport = Transport & {
-  configuration: Record<string, any>,
-  connectPromise: Promise<any>,
-  disconnectPromise: Promise<any>,
-  disconnectResolve: any,
-  transitionState: any,
+  configuration: Record<string, any>;
+  connectPromise: Promise<any>;
+  disconnectPromise: Promise<any>;
+  disconnectResolve: any;
+  transitionState: any;
   transitioningState: any;
   _ws: any;
 };
@@ -302,7 +310,7 @@ export type PresenceResponse = {
   state: string;
   status: string;
   user_uuid: string;
-  last_activity?: string,
+  last_activity?: string;
 };
 
 export type QueryParams = {
@@ -320,4 +328,6 @@ export type UuidSearchableQueryParams = SearchableQueryParams & {
   uuid?: string;
 };
 
-export type WebsocketType = Websocket & typeof SOCKET_EVENTS & typeof OTHER_EVENTS;
+export type WebsocketType = Websocket &
+  typeof SOCKET_EVENTS &
+  typeof OTHER_EVENTS;
