@@ -1,20 +1,9 @@
 import newFrom from '../utils/new-from';
+import type { ExtensionRelation, Link } from './types';
 
-type Extension = {
-  context: string;
-  exten: string;
-  id: number;
-  links?: Array<{
-    href: string;
-    rel: string;
-  }>;
-};
 export type Endpoint = {
   id: number;
-  links: Array<{
-    href: string;
-    rel: string;
-  }>;
+  links: Link[];
   username?: string;
 };
 
@@ -22,13 +11,13 @@ export type LineResponse = {
   endpoint_custom: Endpoint | null | undefined;
   endpoint_sccp: Endpoint | null | undefined;
   endpoint_sip: Endpoint | null | undefined;
-  extensions: Array<Extension>;
+  extensions: ExtensionRelation[];
   id: number;
 };
 
 type LineArguments = {
   id?: number;
-  extensions?: Array<Extension>;
+  extensions?: ExtensionRelation[];
   endpointCustom?: Endpoint | null;
   endpointSccp?: Endpoint | null;
   endpointSip?: Endpoint | null;
@@ -38,7 +27,7 @@ export default class Line {
 
   id: number | undefined;
 
-  extensions: Array<Extension> | undefined;
+  extensions: ExtensionRelation[] | undefined;
 
   endpointCustom: Endpoint | null;
 
@@ -87,5 +76,4 @@ export default class Line {
     // Useful to compare instead of instanceof with minified code
     this.type = 'Line';
   }
-
 }

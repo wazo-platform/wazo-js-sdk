@@ -81,6 +81,12 @@ export type Link = {
   href: string;
   rel: string;
 };
+export type ExtensionRelation = {
+  id: number;
+  exten: string;
+  context: string;
+  links?: Link[];
+};
 type LocalLine = {
   id: number;
   endpoint_sip: {
@@ -90,12 +96,7 @@ type LocalLine = {
   };
   endpoint_sccp: string | null | undefined;
   endpoint_custom: string | null | undefined;
-  extensions: Array<{
-    id: number;
-    exten: string;
-    context: string;
-    links: Array<Link>;
-  }>;
+  extensions: ExtensionRelation[];
 };
 export type ConfdUser = {
   id: number;
