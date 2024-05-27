@@ -26,6 +26,7 @@ export interface AuthD {
   authenticate: (token: Token) => Promise<Session | null | undefined>;
   logIn(params: LoginParams): Promise<Session | null | undefined> ;
   logOut: (token: Token) => Promise<LogoutResponse>;
+  samlLogIn: (samlSessionId: string) => Promise<Session | null | undefined>;
   refreshToken: (refreshToken: string, backend: string, expiration: number, isMobile?: boolean, tenantId?: string, domainName?: string) => Promise<Session | null | undefined>;
   deleteRefreshToken: (clientId: string) => Promise<boolean>;
   updatePassword: (userUuid: UUID, oldPassword: string, newPassword: string) => Promise<boolean>;
@@ -108,6 +109,13 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
   },
 
   logOut: (token: Token): Promise<LogoutResponse> => client.delete(`${baseUrl}/token/${token}`, null, {}, ApiRequester.successResponseParser),
+  samlLogIn: async (samlSessionId: string): Promise<Session | null | undefined> => {
+    const body = {
+      saml_session_id: samlSessionId,
+    };
+
+    return client.post(`${baseUrl}/token`, body).then((response: Response) => Session.parse(response));
+  },
   refreshToken: (refreshToken: string, backend: string, expiration: number, isMobile?: boolean, tenantId?: string, domainName?: string): Promise<Session | null | undefined> => {
     const body: Record<string, any> = {
       backend: backend || DEFAULT_BACKEND_USER,

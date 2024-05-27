@@ -160,6 +160,11 @@ export class Auth {
     return this._onAuthenticated(rawSession as Session);
   }
 
+  async samlLogIn(samlSessionId: string): Promise<Session | null> {
+    const rawSession = await getApiClient().auth.samlLogIn(samlSessionId);
+    return this._onAuthenticated(rawSession as Session);
+  }
+
   async logInViaRefreshToken(refreshToken: string): Promise<Session | null> {
     const rawSession = await getApiClient().auth.refreshToken(refreshToken, '', this.expiration, this.mobile);
     return this._onAuthenticated(rawSession as Session);
