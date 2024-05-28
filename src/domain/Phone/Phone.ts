@@ -31,7 +31,7 @@ export type AvailablePhoneOptions = {
 };
 export interface Phone extends IEmitter {
   accept(callSession: CallSession, enableVideo?: boolean): Promise<string | null>;
-  changeAudioDevice(id: string): PhoneVoid;
+  changeAudioDevice(id: string): Promise<void>;
   changeRingDevice(id: string): PhoneVoid;
   changeAudioVolume(volume: number): PhoneVoid;
   changeRingVolume(volume: number): PhoneVoid;
