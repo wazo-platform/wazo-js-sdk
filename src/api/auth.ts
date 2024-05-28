@@ -114,7 +114,7 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
       saml_session_id: samlSessionId,
     };
 
-    return client.post(`${baseUrl}/token`, body).then((response: Response) => Session.parse(response));
+    return client.post(`${baseUrl}/token`, body).then(Session.parse);
   },
   refreshToken: (refreshToken: string, backend: string, expiration: number, isMobile?: boolean, tenantId?: string, domainName?: string): Promise<Session | null | undefined> => {
     const body: Record<string, any> = {
