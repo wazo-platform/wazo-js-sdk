@@ -233,7 +233,7 @@ export default class Profile {
     this.onlineCallRecordEnabled = onlineCallRecordEnabled;
     this.ringSeconds = ringSeconds;
     this.sipLines = sipLines || [];
-    this.incalls = incalls?.map(incall => Incall.parse(incall)) || [];
+    this.incalls = incalls?.map(Incall.parse) || [];
   }
 
   static getLinesState(lines: Array<Record<string, any>>) {
