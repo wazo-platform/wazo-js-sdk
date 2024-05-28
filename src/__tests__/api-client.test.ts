@@ -119,6 +119,27 @@ describe('With correct API results', () => {
     });
   });
 
+  describe('samlLogIn test', () => {
+    it('should retrieve user token', async () => {
+      const samlSessionId = 'a1b2C3d4';
+      const result = await client.auth.samlLogIn(samlSessionId);
+
+      expect(result).toBeInstanceOf(Session);
+      expect(result?.token).toBe(1);
+      expect(global.fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token`, {
+        method: 'post',
+        body: JSON.stringify({ saml_session_id: samlSessionId }),
+        signal: expect.any(Object),
+        headers: {
+          'X-Auth-Token': token,
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        agent: null,
+      });
+    });
+  });
+
   describe('logOut test', () => {
     it('should delete the specified token', async () => {
       const oldToken = 123;
