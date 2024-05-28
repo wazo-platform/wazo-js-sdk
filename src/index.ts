@@ -14,6 +14,7 @@ export { default as Contact } from './domain/Contact';
 export { default as COUNTRIES } from './domain/Country';
 export { default as Features } from './domain/Features';
 export { default as ForwardOption, FORWARD_KEYS } from './domain/ForwardOption';
+export { default as Incall } from './domain/Incall';
 export { default as Line } from './domain/Line';
 export { default as NotificationOptions } from './domain/NotificationOptions';
 export { default as Profile, STATE as PROFILE_STATE, LINE_STATE } from './domain/Profile';

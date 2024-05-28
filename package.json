@@ -42,7 +42,8 @@
     "lint": "./node_modules/.bin/eslint src/",
     "jest": "./node_modules/.bin/jest src/",
     "checkbuild": "yarn build && node dist/wazo-sdk.js",
-    "format": "./node_modules/.bin/prettier-eslint --write \"src/**/*.js\" \"__tests__/**/*.js\" --single-quote --trailing-comma es5",
+    "format": "yarn format:file \"src/**/*.(ts|js)\" \"__tests__/**/*.(ts|js)\"",
+    "format:file": "./node_modules/.bin/prettier-eslint --write --single-quote --trailing-comma=es5 --arrow-parens=avoid",
     "typecheck": "./node_modules/.bin/tsc --noEmit",
     "prepublishOnly": "yarn build"
   },
