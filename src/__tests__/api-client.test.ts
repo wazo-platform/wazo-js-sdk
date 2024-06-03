@@ -155,6 +155,28 @@ describe('With correct API results', () => {
   });
 });
 
+describe('initiateIdpAuthentication', () => {
+  it('should make a request to obtain an identity provider URL to redirect to', async () => {
+    const domain = 'example.com';
+    const redirectUrl = 'https://myapp.xyz';
+
+    await client.auth.initiateIdpAuthentication(domain, redirectUrl);
+    expect(global.fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/saml/sso`, {
+      method: 'post',
+      body: JSON.stringify({
+        domain,
+        redirect_url: redirectUrl,
+      }),
+      signal: expect.any(Object),
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      agent: null,
+    });
+  });
+});
+
 describe('With unAuthorized API results', () => {
   beforeEach(() => {
     jest.resetModules();
