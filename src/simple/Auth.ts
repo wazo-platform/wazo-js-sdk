@@ -24,6 +24,7 @@ export class InvalidSubscription extends Error {}
 export class InvalidAuthorization extends Error {}
 export class NoTenantIdError extends Error {}
 export class NoDomainNameError extends Error {}
+export class NoSamlRouteError extends Error {}
 
 const logger = IssueReporter.loggerFor('simple-auth');
 
@@ -163,6 +164,21 @@ export class Auth {
   async samlLogIn(samlSessionId: string): Promise<Session | null> {
     const rawSession = await getApiClient().auth.samlLogIn(samlSessionId);
     return this._onAuthenticated(rawSession as Session);
+  }
+
+  async initiateIdpAuthentication(domain: string, redirectUrl: string): Promise<{ location: string, saml_session_id: string }> {
+    const response = await getApiClient().auth.initiateIdpAuthentication(domain, redirectUrl);
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new NoSamlRouteError('No route found for saml sso');
+      }
+
+      const error = await response.json();
+      throw new Error(error.message || error.reason);
+    }
+
+    return response.json();
   }
 
   async logInViaRefreshToken(refreshToken: string): Promise<Session | null> {

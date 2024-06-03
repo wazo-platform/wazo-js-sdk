@@ -1,6 +1,6 @@
 /* eslint-disable import/no-named-as-default */
 /* global window */
-import Auth, { InvalidSubscription, InvalidAuthorization, NoTenantIdError, NoDomainNameError } from './Auth';
+import Auth, { InvalidSubscription, InvalidAuthorization, NoTenantIdError, NoDomainNameError, NoSamlRouteError } from './Auth';
 import Phone from './Phone';
 import Websocket from './Websocket';
 import Room from './room/Room';
@@ -138,6 +138,7 @@ const Wazo = {
   SFUNotAvailableError,
   NoTenantIdError,
   NoDomainNameError,
+  NoSamlRouteError,
 };
 
 if (typeof window !== 'undefined') {
