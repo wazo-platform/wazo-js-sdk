@@ -166,8 +166,14 @@ export class Auth {
     return this._onAuthenticated(rawSession as Session);
   }
 
-  async initiateIdpAuthentication(domain: string, redirectUrl: string): Promise<{ location: string, saml_session_id: string }> {
-    const response = await getApiClient().auth.initiateIdpAuthentication(domain, redirectUrl);
+  async initiateIdpAuthentication(domain: string, redirectUrl: string): Promise<{ location: string, saml_session_id: string } | undefined> {
+    let response;
+    try {
+      response = await getApiClient().auth.initiateIdpAuthentication(domain, redirectUrl);
+    } catch (e: any) {
+      logger.error('Error during IdP authentication initiation:', e.message);
+      return;
+    }
 
     if (!response.ok) {
       if (response.status === 404) {
