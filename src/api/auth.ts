@@ -27,6 +27,7 @@ export interface AuthD {
   logIn(params: LoginParams): Promise<Session | null | undefined> ;
   logOut: (token: Token) => Promise<LogoutResponse>;
   samlLogIn: (samlSessionId: string) => Promise<Session | null | undefined>;
+  initiateIdpAuthentication(domain: string, redirectUrl: string): Promise<any>;
   refreshToken: (refreshToken: string, backend: string, expiration: number, isMobile?: boolean, tenantId?: string, domainName?: string) => Promise<Session | null | undefined>;
   deleteRefreshToken: (clientId: string) => Promise<boolean>;
   updatePassword: (userUuid: UUID, oldPassword: string, newPassword: string) => Promise<boolean>;
@@ -115,6 +116,19 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
     };
 
     return client.post(`${baseUrl}/token`, body).then(Session.parse);
+  },
+  initiateIdpAuthentication: async (domain: string, redirectUrl: string) => {
+    const body = {
+      domain,
+      redirect_url: redirectUrl,
+    };
+
+    const headers = {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    };
+
+    return client.post(`${baseUrl}/saml/sso`, body, headers, (response: any) => response);
   },
   refreshToken: (refreshToken: string, backend: string, expiration: number, isMobile?: boolean, tenantId?: string, domainName?: string): Promise<Session | null | undefined> => {
     const body: Record<string, any> = {
