@@ -25,6 +25,7 @@ export class InvalidAuthorization extends Error {}
 export class NoTenantIdError extends Error {}
 export class NoDomainNameError extends Error {}
 export class NoSamlRouteError extends Error {}
+export class SamlConfigError extends Error {}
 
 const logger = IssueReporter.loggerFor('simple-auth');
 
@@ -178,6 +179,10 @@ export class Auth {
     if (!response.ok) {
       if (response.status === 404) {
         throw new NoSamlRouteError('No route found for saml sso');
+      }
+
+      if (response.status === 500) {
+        throw new SamlConfigError('SAML/server configuration error');
       }
 
       const error = await response.json();
