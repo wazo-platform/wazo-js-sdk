@@ -210,5 +210,37 @@ describe('simple/Auth', () => {
 
       await expect(Auth.initiateIdpAuthentication('example.com', 'https://myapp.xyz')).rejects.toThrow('');
     });
+
+    it('should return a NoSAMLRouteError if the response is a 404', async () => {
+      const initiateIdpAuthentication = jest.fn(() =>
+        Promise.resolve({
+          ok: false,
+          status: 404,
+        }));
+
+      (getApiClient as any).mockImplementation(() => ({
+        auth: {
+          initiateIdpAuthentication,
+        },
+      }));
+
+      await expect(Auth.initiateIdpAuthentication('example.com', 'https://myapp.xyz')).rejects.toThrow('No route found for saml sso');
+    });
+
+    it('should return a SamlConfigError if the response is a 500', async () => {
+      const initiateIdpAuthentication = jest.fn(() =>
+        Promise.resolve({
+          ok: false,
+          status: 500,
+        }));
+
+      (getApiClient as any).mockImplementation(() => ({
+        auth: {
+          initiateIdpAuthentication,
+        },
+      }));
+
+      await expect(Auth.initiateIdpAuthentication('example.com', 'https://myapp.xyz')).rejects.toThrow('SAML/server configuration error');
+    });
   });
 });
