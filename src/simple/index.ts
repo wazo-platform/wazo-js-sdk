@@ -17,7 +17,7 @@ import { CanceledCallError } from '../web-rtc-client';
 import BadResponse from '../domain/BadResponse';
 import ServerError from '../domain/ServerError';
 import SFUNotAvailableError from '../domain/SFUNotAvailableError';
-import Call from '../domain/Call';
+import ApiCall from '../domain/Call';
 import CallLog from '../domain/CallLog';
 import Recording from '../domain/Recording';
 import ChatMessage from '../domain/ChatMessage';
@@ -41,6 +41,9 @@ import Features from '../domain/Features';
 import Meeting from '../domain/Meeting';
 import Checker from '../checker/Checker';
 
+import Softphone from '../voice/softphone';
+import Call from '../voice/call';
+
 const Wazo = {
   Auth,
   Phone,
@@ -60,11 +63,15 @@ const Wazo = {
   loggerFor: IssueReporter.loggerFor.bind(IssueReporter),
   Features,
   Checker,
+  Voice: {
+    Softphone,
+    Call,
+  },
   // Domain
   domain: {
     BadResponse,
     ServerError,
-    Call,
+    Call: ApiCall,
     CallLog,
     CTIPhone,
     Recording,

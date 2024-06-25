@@ -270,6 +270,11 @@ export type WazoSession = (Invitation | Inviter) & {
   callId?: string;
 };
 
+export type SipCall = (Invitation | Inviter) & {
+  remoteTag?: any;
+  callId?: string;
+};
+
 export type WazoTransport = Transport & {
   configuration: Record<string, any>;
   connectPromise: Promise<any>;
