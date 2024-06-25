@@ -155,7 +155,7 @@ describe('simple/Auth', () => {
       }));
 
       await expect(Auth.initiateIdpAuthentication('example.com', 'https://myapp.xyz')).rejects.toThrow(
-        'No route found for saml sso',
+        'No route found for SAML SSO',
       );
     });
 
@@ -224,7 +224,7 @@ describe('simple/Auth', () => {
         },
       }));
 
-      await expect(Auth.initiateIdpAuthentication('example.com', 'https://myapp.xyz')).rejects.toThrow('No route found for saml sso');
+      await expect(Auth.initiateIdpAuthentication('example.com', 'https://myapp.xyz')).rejects.toThrow('No route found for SAML SSO');
     });
 
     it('should return a SamlConfigError if the response is a 500', async () => {
