@@ -172,13 +172,13 @@ export class Auth {
     try {
       response = await getApiClient().auth.initiateIdpAuthentication(domain, redirectUrl);
     } catch (e: any) {
-      logger.error('Error during IdP authentication initiation:', e.message);
-      return;
+      logger.error('Error during IdP authentication initialization:', e.message);
+      throw e;
     }
 
     if (!response.ok) {
       if (response.status === 404) {
-        throw new NoSamlRouteError('No route found for saml sso');
+        throw new NoSamlRouteError('No route found for SAML SSO');
       }
 
       if (response.status === 500) {

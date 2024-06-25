@@ -16,6 +16,12 @@ type LoginParams = {
   domainName?: string;
 };
 
+type SamlLoginBody = {
+  saml_session_id: string,
+  access_type?: 'online' | 'offline';
+  client_id?: string;
+};
+
 type SendResetPasswordArgs = {
   username?: string,
   email?: string,
@@ -111,9 +117,14 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
 
   logOut: (token: Token): Promise<LogoutResponse> => client.delete(`${baseUrl}/token/${token}`, null, {}, ApiRequester.successResponseParser),
   samlLogIn: async (samlSessionId: string): Promise<Session | null | undefined> => {
-    const body = {
+    const body: SamlLoginBody = {
       saml_session_id: samlSessionId,
     };
+
+    if (client.clientId) {
+      body.access_type = 'offline';
+      body.client_id = client.clientId;
+    }
 
     return client.post(`${baseUrl}/token`, body).then(Session.parse);
   },
