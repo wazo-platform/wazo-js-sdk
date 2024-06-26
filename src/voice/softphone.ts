@@ -3,10 +3,11 @@ import { type ActorRefFrom, createActor } from 'xstate';
 
 import type Session from '../domain/Session';
 import type SipLine from '../domain/SipLine';
-import InvalidStateError from '../domain/InvalidStateError';
+import InvalidStateTransition from '../domain/InvalidStateTransition';
+import InvalidState from '../domain/InvalidState';
 
-import Wazo from '../index';
-import softphoneStateMachine, { type ActionTypes, Actions } from '../state-machine/softphone-state-machine';
+import Wazo from '..';
+import softphoneStateMachine, { type ActionTypes, Actions, type StateTypes, States } from '../state-machine/softphone-state-machine';
 import { WebRtcConfig, SipCall } from '../domain/types';
 import WazoWebRTCClient from '../web-rtc-client';
 import IssueReporter from '../service/IssueReporter';
@@ -15,11 +16,22 @@ import Call from './call';
 
 export const EVENT_INCOMING = 'incoming';
 
+export type CallOptions = {
+  params: {
+    To: string,
+  },
+  withCamera?: boolean,
+  // If audioOnly is set to true, all video stream will be deactivated, even remotes ones.
+  audioOnly?: boolean,
+  conference?: boolean,
+  sipLine?: SipLine,
+};
+
 type SoftphoneActorRef = ActorRefFrom<typeof softphoneStateMachine>;
 
 const logger = IssueReporter.loggerFor('softphone');
 
-class Softphone extends EventEmitter {
+export class Softphone extends EventEmitter {
   audioOutputDeviceId?: string;
 
   audioRingDeviceId?: string;
@@ -74,7 +86,8 @@ class Softphone extends EventEmitter {
   }
 
   disconnect() {
-    if (!this.client || !this._can(Actions.ACTION_UNREGISTER)) {
+    this._assertCan(Actions.ACTION_UNREGISTER);
+    if (!this.client) {
       return null;
     }
 
@@ -95,8 +108,10 @@ class Softphone extends EventEmitter {
   ): void {
     this._assertCan(Actions.ACTION_REGISTER);
 
+    this.softphoneActor.send({ type: Actions.ACTION_REGISTER });
+
     const [host, port = 443] = server.split(':');
-    let options = rawOptions;
+    let options = { ...rawOptions };
     options.media = options.media || {
       audio: true,
       video: false,
@@ -129,6 +144,57 @@ class Softphone extends EventEmitter {
     });
   }
 
+  reconnect() {
+    // @TODO
+  }
+
+  call(options: CallOptions): Call {
+    this._assertState(States.STATE_REGISTERED);
+
+    // @TODO
+    return new Call({} as any);
+  }
+
+  startHeartbeat() {
+    // @TODO
+  }
+
+  stopHeartbeat() {
+    // @TODO
+  }
+
+  changeAudioOutputDevice() {
+    // @TODO
+  }
+
+  changeAudioInputDevice() {
+    // @TODO
+  }
+
+  changeVideoInputDevice() {
+    // @TODO
+  }
+
+  changeRingDevice() {
+    // @TODO
+  }
+
+  changeAudioVolume() {
+    // @TODO
+  }
+
+  changeRingVolume() {
+    // @TODO
+  }
+
+  getCalls(): Call[] {
+    return this.calls;
+  }
+
+  getState(): StateTypes {
+    return this.softphoneActor.getSnapshot().value;
+  }
+
   _bindEvents(): void {
     this.client.on(this.client.INVITE, (sipSession: SipCall) => {
       const call = new Call(sipSession);
@@ -141,11 +207,24 @@ class Softphone extends EventEmitter {
   _assertCan(action: ActionTypes): void {
     if (!this._can(action)) {
       const currentState = this.softphoneActor.getSnapshot().value;
-      const message = `Invlid state transition from ${currentState} to ${action}`;
+      const message = `Invalid state transition from ${currentState} with action ${action}`;
       logger.warn(message);
 
-      throw new InvalidStateError(message, action, currentState);
+      throw new InvalidStateTransition(message, action, currentState);
     }
+  }
+
+  _assertState(state: StateTypes): void {
+    if (!this._hasState(state)) {
+      const message = `Invalid state ${state}`;
+      logger.warn(message);
+
+      throw new InvalidState(message, state);
+    }
+  }
+
+  _hasState(state: StateTypes): boolean {
+    return this.getState() === state;
   }
 
   _can(action: ActionTypes): boolean {
