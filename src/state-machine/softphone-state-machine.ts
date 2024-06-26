@@ -25,24 +25,24 @@ const softphoneMachine = setup({
   },
 }).createMachine({
   id: 'softphone',
-  initial: STATE_UNREGISTERED,
+  initial: States.STATE_UNREGISTERED,
   context: {},
   states: {
-    [STATE_UNREGISTERED]: {
+    [States.STATE_UNREGISTERED]: {
       on: {
-        [Actions.ACTION_REGISTER]: STATE_REGISTERING,
+        [Actions.ACTION_REGISTER]: States.STATE_REGISTERING,
       },
     },
-    [STATE_REGISTERING]: {
+    [States.STATE_REGISTERING]: {
       on: {
-        [Actions.ACTION_REGISTER_DONE]: STATE_REGISTERED,
-        [Actions.ACTION_TRANSPORT_CLOSED]: STATE_UNREGISTERED,
+        [Actions.ACTION_REGISTER_DONE]: States.STATE_REGISTERED,
+        [Actions.ACTION_TRANSPORT_CLOSED]: States.STATE_UNREGISTERED,
       },
     },
-    [STATE_REGISTERED]: {
+    [States.STATE_REGISTERED]: {
       on: {
-        [Actions.ACTION_UNREGISTER]: STATE_UNREGISTERED,
-        [Actions.ACTION_TRANSPORT_CLOSED]: STATE_UNREGISTERED,
+        [Actions.ACTION_UNREGISTER]: States.STATE_UNREGISTERED,
+        [Actions.ACTION_TRANSPORT_CLOSED]: States.STATE_UNREGISTERED,
       },
     },
   },
