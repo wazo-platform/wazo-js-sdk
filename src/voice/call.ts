@@ -8,9 +8,12 @@ class Call extends EventEmitter {
   constructor(sipSession: SipCall) {
     super();
 
-    this.video = false;
+    // this.video = false;
   }
 
+  startConference(withCalls: Call[]) {
+    // @TODO
+  }
 }
 
 export default Call;
