@@ -4,6 +4,7 @@ import IssueReporter from '../../service/IssueReporter';
 import Wazo from '../index';
 import Room from './Room';
 import { WazoSession } from '../../domain/types';
+import { getSipSessionId } from '../../utils/sdp';
 
 const logger = IssueReporter.loggerFor('sdk-sip-room');
 
@@ -156,7 +157,7 @@ class SipRoom extends Room {
   }
 
   _getCurrentSipCallIs() {
-    return Wazo.Phone.getSipSessionId(Wazo.Phone.phone?.currentSipSession as WazoSession);
+    return getSipSessionId(Wazo.Phone.phone?.currentSipSession as WazoSession);
   }
 
 }

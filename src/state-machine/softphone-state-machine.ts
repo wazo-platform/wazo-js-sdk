@@ -1,51 +1,47 @@
-import { fromPromise, setup } from 'xstate';
+import { type ActorRefFrom, setup } from 'xstate';
 
 export const States = {
-  STATE_UNREGISTERED: 'unregistered',
-  STATE_REGISTERING: 'registering',
-  STATE_REGISTERED: 'registered',
+  UNREGISTERED: 'unregistered',
+  REGISTERING: 'registering',
+  REGISTERED: 'registered',
 } as const;
 
 export type StateTypes = typeof States[keyof typeof States];
 
 export const Actions = {
-  ACTION_REGISTER: 'register',
-  ACTION_REGISTER_DONE: 'registerDone',
-  ACTION_UNREGISTER: 'unregister',
-  ACTION_TRANSPORT_CLOSED: 'transportClosed',
+  REGISTER: 'register',
+  REGISTER_DONE: 'registerDone',
+  UNREGISTER: 'unregister',
+  TRANSPORT_CLOSED: 'transportClosed',
 } as const;
 
 export type ActionTypes = typeof Actions[keyof typeof Actions];
 
-const softphoneMachine = setup({
-  actors: {
-    waitForRegister: fromPromise(
-      () => new Promise((resolve) => setTimeout(resolve, 100)),
-    ),
-  },
-}).createMachine({
+const softphoneMachine = setup({}).createMachine({
   id: 'softphone',
-  initial: States.STATE_UNREGISTERED,
+  initial: States.UNREGISTERED,
   context: {},
   states: {
-    [States.STATE_UNREGISTERED]: {
+    [States.UNREGISTERED]: {
       on: {
-        [Actions.ACTION_REGISTER]: States.STATE_REGISTERING,
+        [Actions.REGISTER]: States.REGISTERING,
       },
     },
-    [States.STATE_REGISTERING]: {
+    [States.REGISTERING]: {
       on: {
-        [Actions.ACTION_REGISTER_DONE]: States.STATE_REGISTERED,
-        [Actions.ACTION_TRANSPORT_CLOSED]: States.STATE_UNREGISTERED,
+        [Actions.REGISTER_DONE]: States.REGISTERED,
+        [Actions.TRANSPORT_CLOSED]: States.UNREGISTERED,
       },
     },
-    [States.STATE_REGISTERED]: {
+    [States.REGISTERED]: {
       on: {
-        [Actions.ACTION_UNREGISTER]: States.STATE_UNREGISTERED,
-        [Actions.ACTION_TRANSPORT_CLOSED]: States.STATE_UNREGISTERED,
+        [Actions.UNREGISTER]: States.UNREGISTERED,
+        [Actions.TRANSPORT_CLOSED]: States.UNREGISTERED,
       },
     },
   },
 });
+
+export type SoftphoneActorRef = ActorRefFrom<typeof softphoneMachine>;
 
 export default softphoneMachine;

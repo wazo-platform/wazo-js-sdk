@@ -1,18 +1,20 @@
+/* eslint-disable no-underscore-dangle */
 import { EventEmitter } from 'events';
-import { type ActorRefFrom, createActor } from 'xstate';
+import { createActor } from 'xstate';
 
 import type Session from '../domain/Session';
 import type SipLine from '../domain/SipLine';
-import InvalidStateTransition from '../domain/InvalidStateTransition';
 import InvalidState from '../domain/InvalidState';
 
 import Wazo from '..';
-import softphoneStateMachine, { type ActionTypes, Actions, type StateTypes, States } from '../state-machine/softphone-state-machine';
+import softphoneStateMachine, { type SoftphoneActorRef, Actions, type StateTypes, States, ActionTypes } from '../state-machine/softphone-state-machine';
+import { Actions as CallActions } from '../state-machine/call-state-machine';
 import { WebRtcConfig, SipCall } from '../domain/types';
 import WazoWebRTCClient from '../web-rtc-client';
 import IssueReporter from '../service/IssueReporter';
 import configureLogger from '../utils/sip-logger';
 import Call from './call';
+import { assertCan, waitUntilState } from '../state-machine/utils';
 
 export const EVENT_INCOMING = 'incoming';
 
@@ -26,8 +28,6 @@ export type CallOptions = {
   conference?: boolean,
   sipLine?: SipLine,
 };
-
-type SoftphoneActorRef = ActorRefFrom<typeof softphoneStateMachine>;
 
 const logger = IssueReporter.loggerFor('softphone');
 
@@ -56,6 +56,9 @@ export class Softphone extends EventEmitter {
 
   constructor() {
     super();
+
+    this.calls = [];
+
     this.softphoneActor = createActor(softphoneStateMachine);
     this.softphoneActor.start();
   }
@@ -82,11 +85,11 @@ export class Softphone extends EventEmitter {
 
     this.options.userUuid = session.uuid || '';
 
-    this.connectWithCredentials(server, this.sipLine, session.displayName(), options);
+    return this.connectWithCredentials(server, this.sipLine, session.displayName(), options);
   }
 
-  disconnect() {
-    this._assertCan(Actions.ACTION_UNREGISTER);
+  async disconnect() {
+    assertCan(this.softphoneActor, Actions.UNREGISTER);
     if (!this.client) {
       return null;
     }
@@ -100,15 +103,15 @@ export class Softphone extends EventEmitter {
     return this.session?.primaryWebRtcLine() || null;
   }
 
-  connectWithCredentials(
+  async connectWithCredentials(
     server: string,
     sipLine: SipLine,
     displayName: string,
     rawOptions: Partial<WebRtcConfig> = {},
-  ): void {
-    this._assertCan(Actions.ACTION_REGISTER);
+  ): Promise<void> {
+    assertCan(this.softphoneActor, Actions.REGISTER);
 
-    this.softphoneActor.send({ type: Actions.ACTION_REGISTER });
+    this.softphoneActor.send({ type: Actions.REGISTER });
 
     const [host, port = 443] = server.split(':');
     let options = { ...rawOptions };
@@ -134,13 +137,13 @@ export class Softphone extends EventEmitter {
 
     this._bindEvents();
 
-    this.client.register().then(() => {
-      this.softphoneActor.send({ type: Actions.ACTION_REGISTER_DONE });
+    return this.client.register().then(() => {
+      this._sendAction(Actions.REGISTER_DONE);
     }).catch(error => {
       // Avoid exception on `t.server.scheme` in sip transport when losing the webrtc socket connection
       logger.error('WebRTC register error', { message: error.message, stack: error.stack });
 
-      this.softphoneActor.send({ type: Actions.ACTION_UNREGISTER });
+      this._sendAction(Actions.UNREGISTER);
     });
   }
 
@@ -148,11 +151,47 @@ export class Softphone extends EventEmitter {
     // @TODO
   }
 
-  call(options: CallOptions): Call {
-    this._assertState(States.STATE_REGISTERED);
+  async call(options: CallOptions): Promise<Call | null> {
+    logger.info('Calling from softphone', options);
 
-    // @TODO
-    return new Call({} as any);
+    if (!options.params.To) {
+      logger.warn('Calling from softphone with empty number, bailing.');
+
+      return Promise.resolve(null);
+    }
+
+    if (this.getState() !== States.UNREGISTERED) {
+      throw new InvalidState(`Invalid state ${States.UNREGISTERED}`, States.UNREGISTERED);
+    }
+
+    if (this.getState() !== States.REGISTERING) {
+      logger.info('Calling when registering, waiting for Softphone to be registered ...');
+
+      await waitUntilState(this.softphoneActor, States.REGISTERED);
+    }
+
+    // Hold other calls
+    this.holdAllCalls();
+
+    let sipCall: SipCall;
+
+    try {
+      sipCall = this.client.call(options.params.To, options.withCamera, options.audioOnly, options.conference, options) as SipCall;
+      const call = new Call(sipCall, this);
+
+      return call;
+    } catch (error: any) {
+      logger.warn('Calling with softphone, error', { message: error.message, stack: error.stack });
+      return Promise.resolve(null);
+    }
+  }
+
+  removeCall(callToRemove: Call) {
+    this.calls = this.calls.filter((call: Call) => call.id !== callToRemove.id);
+  }
+
+  holdAllCalls(exceptCall: Call | null = null) {
+    this.calls.filter(call => !call.isHeld() && call.id === exceptCall?.id).forEach(call => call.hold());
   }
 
   startHeartbeat() {
@@ -197,38 +236,16 @@ export class Softphone extends EventEmitter {
 
   _bindEvents(): void {
     this.client.on(this.client.INVITE, (sipSession: SipCall) => {
-      const call = new Call(sipSession);
+      const call = new Call(sipSession, this);
+      call._sendAction(CallActions.INCOMING_CALL);
       this.calls.push(call);
 
       this.eventEmitter.emit(EVENT_INCOMING, call);
     });
   }
 
-  _assertCan(action: ActionTypes): void {
-    if (!this._can(action)) {
-      const currentState = this.softphoneActor.getSnapshot().value;
-      const message = `Invalid state transition from ${currentState} with action ${action}`;
-      logger.warn(message);
-
-      throw new InvalidStateTransition(message, action, currentState);
-    }
-  }
-
-  _assertState(state: StateTypes): void {
-    if (!this._hasState(state)) {
-      const message = `Invalid state ${state}`;
-      logger.warn(message);
-
-      throw new InvalidState(message, state);
-    }
-  }
-
-  _hasState(state: StateTypes): boolean {
-    return this.getState() === state;
-  }
-
-  _can(action: ActionTypes): boolean {
-    return this.softphoneActor.getSnapshot().can({ type: action });
+  _sendAction(action: ActionTypes) {
+    this.softphoneActor.send({ type: action });
   }
 }
 

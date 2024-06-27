@@ -1,4 +1,9 @@
 import sdpParser from 'sdp-transform';
+import { Inviter } from 'sip.js/lib/api';
+
+import type { SipCall } from '../domain/types';
+
+export const SIP_ID_LENGTH = 36;
 
 export type Candidate = {
   foundation: string;
@@ -137,4 +142,25 @@ export const addIcesInAllBundles = (sdp: string) => {
     candidates: media.candidates || candidates,
   }));
   return sdpParser.write(parsedSdp);
+};
+
+export const getSipSessionId = (sipSession: SipCall | null | undefined): string => {
+  if (!sipSession) {
+    return '';
+  }
+
+  const message = sipSession.message as Partial<{ callId?: string }>;
+  if (message?.callId) {
+    return message.callId.substring(0, SIP_ID_LENGTH);
+  }
+
+  // For Inviter
+  // @ts-ignore: private
+  if (sipSession instanceof Inviter && sipSession.outgoingRequestMessage) {
+    // @ts-ignore: private
+    return sipSession.outgoingRequestMessage.callId.substring(0, SIP_ID_LENGTH);
+  }
+
+  // For Invitation
+  return (sipSession.id || '').substring(0, SIP_ID_LENGTH);
 };
