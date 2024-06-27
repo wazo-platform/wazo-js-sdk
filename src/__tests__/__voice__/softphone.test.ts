@@ -46,32 +46,32 @@ describe('Softphone', () => {
       expect(instance.client.on).toHaveBeenCalledWith('invite', expect.anything());
     });
 
-    it('Should throw an error when already connected', () => {
+    it('Should throw an error when already connected', async () => {
       const instance = new Softphone();
-      instance.softphoneActor.send({ type: Actions.ACTION_REGISTER });
+      instance.softphoneActor.send({ type: Actions.REGISTER });
 
-      expect(() => instance.connect({})).toThrowError(invalidStateTransition(States.STATE_REGISTERING, Actions.ACTION_REGISTER));
+      await expect(instance.connect({})).rejects.toThrowError(invalidStateTransition(States.REGISTERING, Actions.REGISTER));
     });
 
-    it('Should not allow to register twice', () => {
+    it('Should not allow to register twice', async () => {
       const instance = new Softphone();
       instance.connect({});
 
-      expect(() => instance.connect({})).toThrowError(invalidStateTransition(States.STATE_REGISTERING, Actions.ACTION_REGISTER));
+      await expect(instance.connect({})).rejects.toThrowError(invalidStateTransition(States.REGISTERING, Actions.REGISTER));
     });
   });
 
   describe('disconnect', () => {
-    it('Should throw an error when not connected', () => {
+    it('Should throw an error when not connected', async () => {
       const instance = new Softphone();
 
-      expect(() => instance.disconnect()).toThrowError(invalidStateTransition(States.STATE_UNREGISTERED, Actions.ACTION_UNREGISTER));
+      await expect(instance.disconnect()).rejects.toThrowError(invalidStateTransition(States.UNREGISTERED, Actions.UNREGISTER));
     });
 
     it('Should unregister the client', () => {
       const instance = new Softphone();
       instance.connect({});
-      instance.softphoneActor.send({ type: Actions.ACTION_REGISTER_DONE });
+      instance.softphoneActor.send({ type: Actions.REGISTER_DONE });
 
       instance.disconnect();
 

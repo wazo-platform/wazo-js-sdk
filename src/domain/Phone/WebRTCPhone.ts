@@ -12,6 +12,7 @@ import WazoWebRTCClient from '../../web-rtc-client';
 import Emitter from '../../utils/Emitter';
 import IssueReporter from '../../service/IssueReporter';
 import { PeerConnection, WazoSession } from '../types';
+import { getSipSessionId } from '../../utils/sdp';
 
 export const ON_USER_AGENT = 'onUserAgent';
 export const ON_REGISTERED = 'onRegistered';
@@ -348,6 +349,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       id: callSession ? callSession.getId() : null,
       isUpgrade,
     });
+
     // Have to send the message after a delay due to latency to update the remote peer
     setTimeout(() => {
       this.sendMessage(sipSession, JSON.stringify({
@@ -355,17 +357,16 @@ export default class WebRTCPhone extends Emitter implements Phone {
         content: {
           type: ON_MESSAGE_TRACK_UPDATED,
           update: isUpgrade ? 'upgrade' : 'downgrade',
-          sipCallId: sipSession && this.getSipSessionId(sipSession),
+          sipCallId: sipSession && getSipSessionId(sipSession),
           callId: callSession ? callSession.callId : null,
           number: callSession ? callSession.number : null,
-          callerNumber: callSession ? callSession.callerNumber : null,
         },
       }));
     }, 2500);
   }
 
   _bindEvents(sipSession: WazoSession) {
-    const sipSessionId = this.getSipSessionId(sipSession);
+    const sipSessionId = getSipSessionId(sipSession);
 
     if (sipSession instanceof Invitation) {
       // Monkey patch to know when canceled with the CANCEL message
@@ -433,7 +434,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       const [stream] = event.streams;
       const kind = event && event.track && event.track.kind;
       logger.info('on track stream called on the peer connection', {
-        callId: this.getSipSessionId(sipSession),
+        callId: getSipSessionId(sipSession),
         streamId: stream ? stream.id : null,
         tracks: stream ? stream.getTracks() : null,
         kind,
@@ -468,9 +469,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     const screenTrack = screenShareStream.getVideoTracks()[0];
     const sipSession = this.currentSipSession;
-    const pc = sipSession && this.client.getPeerConnection(this.getSipSessionId(sipSession));
+    const pc = sipSession && this.client.getPeerConnection(getSipSessionId(sipSession));
     const sender = pc && pc.getSenders && pc.getSenders().find((s) => s && s.track && s.track.kind === 'video');
-    const localStream = sipSession && this.client.getLocalStream(this.getSipSessionId(sipSession));
+    const localStream = sipSession && this.client.getLocalStream(getSipSessionId(sipSession));
     const videoTrack = localStream ? localStream.getTracks().find(track => track.kind === 'video') : null;
     const hadVideo = !!videoTrack;
 
@@ -545,12 +546,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   _onScreenSharing(screenStream: MediaStream, sipSession: WazoSession, callSession: CallSession | null | undefined, hadVideo: boolean, desktop?: boolean | null | undefined) {
     const screenTrack = screenStream.getVideoTracks()[0];
-    const sipSessionId = this.getSipSessionId(sipSession);
+    const sipSessionId = getSipSessionId(sipSession);
     const pc = this.client.getPeerConnection(sipSessionId);
     const sender = pc && pc.getSenders && pc.getSenders().find((s) => s && s.track && s.track.kind === 'video');
     logger.info('WebRTC phone - on screensharing', {
       hadVideo,
-      id: this.getSipSessionId(sipSession),
+      id: getSipSessionId(sipSession),
       screenTrack,
     });
 
@@ -558,7 +559,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       screenTrack.onended = () => {
         logger.info('WebRTC phone - on screenshare ended', {
           hadVideo,
-          id: this.getSipSessionId(sipSession),
+          id: getSipSessionId(sipSession),
           screenTrack,
         });
         this.eventEmitter.emit(ON_SHARE_SCREEN_ENDING, this._createCallSession(sipSession, callSession));
@@ -572,7 +573,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       sipSessionId,
       desktop,
     };
-    this.client.setLocalMediaStream(this.getSipSessionId(sipSession), screenStream);
+    this.client.setLocalMediaStream(getSipSessionId(sipSession), screenStream);
     this.eventEmitter.emit(ON_SHARE_SCREEN_STARTED, this._createCallSession(sipSession, callSession, {
       screensharing: true,
     }), screenStream);
@@ -598,7 +599,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.currentSipSession = sipSession;
     this.currentCallSession = callSession;
     this.eventEmitter.emit(ON_TERMINATE_SOUND, callSession, 'call accepted');
-    const sipSessionId = this.getSipSessionId(sipSession);
+    const sipSessionId = getSipSessionId(sipSession);
 
     if (sipSessionId) {
       this.removeIncomingSessions(sipSessionId);
@@ -670,7 +671,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   _onCallTerminated(sipSession: WazoSession): boolean {
-    const sipSessionId = this.getSipSessionId(sipSession);
+    const sipSessionId = getSipSessionId(sipSession);
 
     logger.info('WebRTC phone - on call terminated', {
       sipId: sipSession.id,
@@ -784,7 +785,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return false;
     }
 
-    return this.currentSipSession && this.getSipSessionId(this.currentSipSession) === callSession.getId();
+    return this.currentSipSession && getSipSessionId(this.currentSipSession) === callSession.getId();
   }
 
   hasVideo(callSession: CallSession): boolean {
@@ -976,7 +977,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       return new Promise((resolve, reject) => reject(new Error('No session to hold')));
     }
 
-    const sessionId = this.getSipSessionId(sipSession);
+    const sessionId = getSipSessionId(sipSession);
     const hasVideo = this.client.hasLocalVideo(sessionId);
     logger.info('WebRTC hold sip session', {
       sipId: sipSession.id,
@@ -1010,7 +1011,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     const isConference = !!callSession && callSession.isConference();
-    const sessionId = this.getSipSessionId(sipSession);
+    const sessionId = getSipSessionId(sipSession);
     logger.info('WebRTC unhold sip session', {
       sessionId,
       isConference,
@@ -1292,7 +1293,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       console.error('Call is unknown to the WebRTC phone', callSession ? callSession.sipCallId : null, callSession ? callSession.callId : null);
       return false;
     }
-    const sipSessionId = this.getSipSessionId(sipSession);
+    const sipSessionId = getSipSessionId(sipSession);
 
     logger.info('WebRTC hangup', {
       sipId: sipSession.id,
@@ -1523,13 +1524,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
       // if `_createCallSession` is called too soon `hasVideo` will return false because the stream doesn't exists yet
       setTimeout(() => {
         // Update callSession
-        this._createCallSession(sipSession, this.callSessions[this.getSipSessionId(sipSession)]);
+        this._createCallSession(sipSession, this.callSessions[getSipSessionId(sipSession)]);
 
         this.eventEmitter.emit.apply(this.eventEmitter, [this.client.ON_REINVITE, ...args]);
       }, 2000);
     });
     this.client.on(this.client.ACCEPTED, async (sipSession: WazoSession) => {
-      const sessionId = this.getSipSessionId(sipSession);
+      const sessionId = getSipSessionId(sipSession);
       const hasSession = (sessionId in this.callSessions);
       logger.info('WebRTC call accepted', {
         sipId: sessionId,
@@ -1561,7 +1562,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
       // `_createCallSession` add the CallSession in `this.callSessions`.
       // so we have to remove it or `callCount` will always return 1 even if the call was rejected
-      delete this.callSessions[this.getSipSessionId(session)];
+      delete this.callSessions[getSipSessionId(session)];
 
       callSession.endTime = new Date();
 
@@ -1581,7 +1582,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       const callSession = this._createCallSession(session, null, {
         incoming: false,
         ringing: true,
-        callId: this.getSipSessionId(session),
+        callId: getSipSessionId(session),
       });
 
       this.eventEmitter.emit(ON_PROGRESS, callSession, this.audioOutputDeviceId, this.audioOutputVolume);
@@ -1592,7 +1593,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       const callSession = this._createCallSession(session, null, {
         incoming: false,
         ringing: true,
-        callId: this.getSipSessionId(session),
+        callId: getSipSessionId(session),
       });
 
       this.eventEmitter.emit(ON_EARLY_MEDIA, callSession, this.audioOutputDeviceId, this.audioOutputVolume);
@@ -1653,12 +1654,12 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.eventEmitter.emit(ON_MESSAGE, message);
     });
     this.client.on(this.client.ON_NETWORK_STATS, (session, stats, previousStats) => {
-      const callSession = this.getCallSession(this.getSipSessionId(session));
+      const callSession = this.getCallSession(getSipSessionId(session));
       this.eventEmitter.emit(ON_NETWORK_STATS, callSession, stats, previousStats);
     });
     // Used when upgrading directly in screenshare mode
     this.client.on(this.client.ON_SCREEN_SHARING_REINVITE, (sipSession: WazoSession, response: any, desktop: boolean) => {
-      const sipSessionId = this.getSipSessionId(sipSession);
+      const sipSessionId = getSipSessionId(sipSession);
       const localStream = this.client.getLocalStream(sipSessionId);
       const callSession = this.callSessions[sipSessionId];
       logger.info('Updrading directly in screensharing mode', {
@@ -1676,7 +1677,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const keyIndex = keys.findIndex(sessionId => callSession && callSession.isId(sessionId));
 
     if (keyIndex === -1) {
-      const currentSipSessionId = this.currentSipSession ? this.getSipSessionId(this.currentSipSession) : this.client.getSipSessionIds()[0];
+      const currentSipSessionId = this.currentSipSession ? getSipSessionId(this.currentSipSession) : this.client.getSipSessionIds()[0];
       return currentSipSessionId ? this.client.getSipSession(currentSipSessionId) : null;
     }
 
@@ -1687,13 +1688,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return this.callSessions[sipSessionId];
   }
 
-  getSipSessionId(sipSession: WazoSession): string {
-    return this.client.getSipSessionId(sipSession);
-  }
-
   getSipSessionIdFromCallSession(callSession: CallSession): string | null {
     const sipSession = this.findSipSession(callSession);
-    return sipSession ? this.getSipSessionId(sipSession) : null;
+    return sipSession ? getSipSessionId(sipSession) : null;
   }
 
   _updateCallSession(callSession: CallSession): void {
@@ -1792,7 +1789,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const {
       state,
     } = sipSession || {};
-    const sessionId = this.getSipSessionId(sipSession);
+    const sessionId = getSipSessionId(sipSession);
     fromSession = fromSession || this.callSessions[sessionId];
     const callSession = new CallSession({
       callId: fromSession && fromSession.callId,

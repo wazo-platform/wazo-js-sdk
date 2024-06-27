@@ -12,6 +12,7 @@ import Emitter from '../utils/Emitter';
 import Wazo from './index';
 import SFUNotAvailableError from '../domain/SFUNotAvailableError';
 import { WazoSession, WebRtcConfig } from '../domain/types';
+import { getSipSessionId } from '../utils/sdp';
 
 const logger = IssueReporter.loggerFor('simple-phone');
 const sipLogger = IssueReporter.loggerFor('sip.js');
@@ -332,7 +333,7 @@ export class Phone extends Emitter {
     if (!sipSession || !this.phone) {
       return null;
     }
-    return this.phone.getSipSessionId(sipSession);
+    return getSipSessionId(sipSession);
   }
 
   sendMessage(body: string, sipSession?: WazoSession, contentType = 'text/plain'): void {

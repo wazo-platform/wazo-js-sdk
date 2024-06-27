@@ -33,7 +33,7 @@ import Emitter from './utils/Emitter';
 import ApiClient from './api-client';
 import IssueReporter from './service/IssueReporter';
 import Heartbeat from './utils/Heartbeat';
-import { getVideoDirection, hasAnActiveVideo } from './utils/sdp';
+import { getSipSessionId, getVideoDirection, hasAnActiveVideo, SIP_ID_LENGTH } from './utils/sdp';
 import { lastIndexOf } from './utils/array';
 import type { MediaConfig, UserAgentConfigOverrides, WebRtcConfig, UserAgentOptions, IncomingResponse, PeerConnection, WazoSession, WazoTransport } from './domain/types';
 
@@ -42,7 +42,6 @@ export const replaceLocalIpModifier = (description: Record<string, any>) => Prom
   ...JSON.parse(JSON.stringify(description)),
   sdp: description.sdp.replace('c=IN IP4 0.0.0.0', 'c=IN IP4 127.0.0.1'),
 });
-const SIP_ID_LENGTH = 36;
 const DEFAULT_ICE_TIMEOUT = 3000;
 const SEND_STATS_DELAY = 5000;
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
@@ -588,7 +587,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     if (conference) {
-      this.conferences[this.getSipSessionId(session)] = true;
+      this.conferences[getSipSessionId(session)] = true;
     }
 
     const inviteOptions: InviterInviteOptions = {
@@ -683,7 +682,7 @@ export default class WebRTCClient extends Emitter {
 
       this._cleanupMedia(session);
 
-      delete this.sipSessions[this.getSipSessionId(session)];
+      delete this.sipSessions[getSipSessionId(session)];
       // Check if Invitation or Inviter (Invitation = incoming call)
       const isInviter = session instanceof Inviter;
 
@@ -719,7 +718,7 @@ export default class WebRTCClient extends Emitter {
 
   // Fetch and emit an event at `interval` with session network stats
   startNetworkMonitoring(session: WazoSession, interval = 1000): void {
-    const sessionId = this.getSipSessionId(session);
+    const sessionId = getSipSessionId(session);
     logger.info('starting network inspection', {
       id: sessionId,
       clientId: this.clientId,
@@ -729,7 +728,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   stopNetworkMonitoring(session: WazoSession): void {
-    const sessionId = this.getSipSessionId(session);
+    const sessionId = getSipSessionId(session);
     const exists = (sessionId in this.networkMonitoringInterval);
     logger.info('stopping network inspection', {
       clientId: this.clientId,
@@ -887,7 +886,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   hold(session: WazoSession, isConference = false, hadVideo = false): Promise<OutgoingInviteRequest | void> {
-    const sessionId = this.getSipSessionId(session);
+    const sessionId = getSipSessionId(session);
     const hasVideo = hadVideo || this.hasLocalVideo(sessionId);
     logger.info('sdk webrtc hold', {
       sessionId,
@@ -945,7 +944,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   unhold(session: WazoSession, isConference = false): Promise<OutgoingInviteRequest | void> {
-    const sessionId = this.getSipSessionId(session);
+    const sessionId = getSipSessionId(session);
     const hasVideo = sessionId in this.heldSessions && this.heldSessions[sessionId].hasVideo;
     logger.info('sdk webrtc unhold', {
       sessionId,
@@ -963,7 +962,7 @@ export default class WebRTCClient extends Emitter {
 
     this.unmute(session);
 
-    delete this.heldSessions[this.getSipSessionId(session)];
+    delete this.heldSessions[getSipSessionId(session)];
     session.sessionDescriptionHandlerOptionsReInvite = {
       hold: false,
       conference: isConference,
@@ -1031,7 +1030,7 @@ export default class WebRTCClient extends Emitter {
       videoSender.replaceTrack(videoTrack);
     }
 
-    this.setLocalMediaStream(this.getSipSessionId(session), newStream);
+    this.setLocalMediaStream(getSipSessionId(session), newStream);
     return newStream;
   }
 
@@ -1081,7 +1080,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   isCallHeld(session: WazoSession): boolean {
-    return this.getSipSessionId(session) in this.heldSessions;
+    return getSipSessionId(session) in this.heldSessions;
   }
 
   isVideoRemotelyHeld(sessionId: string): boolean {
@@ -1102,7 +1101,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     logger.info('Sending DTMF', {
-      id: this.getSipSessionId(session),
+      id: getSipSessionId(session),
       tone,
     });
     return session.sessionDescriptionHandler.sendDtmf(tone);
@@ -1121,7 +1120,7 @@ export default class WebRTCClient extends Emitter {
   transfer(session: WazoSession, target: string): void {
     this.hold(session);
     logger.info('Transfering a session', {
-      id: this.getSipSessionId(session),
+      id: getSipSessionId(session),
       target,
     });
     const options = {
@@ -1145,21 +1144,21 @@ export default class WebRTCClient extends Emitter {
   atxfer(session: WazoSession): Record<string, any> {
     this.hold(session);
     logger.info('webrtc transfer started', {
-      id: this.getSipSessionId(session),
+      id: getSipSessionId(session),
     });
     const result: Record<string, any> = {
       newSession: null,
       init: async (target: string) => {
         logger.info('webrtc transfer initialized', {
-          id: this.getSipSessionId(session),
+          id: getSipSessionId(session),
           target,
         });
         result.newSession = await this.call(target);
       },
       complete: () => {
         logger.info('webrtc transfer completed', {
-          id: this.getSipSessionId(session),
-          referId: this.getSipSessionId(result.newSession),
+          id: getSipSessionId(session),
+          referId: getSipSessionId(result.newSession),
         });
         session.refer(result.newSession);
       },
@@ -1362,7 +1361,7 @@ export default class WebRTCClient extends Emitter {
 
     const sdh = session.sessionDescriptionHandler as SessionDescriptionHandler;
     const pc = sdh.peerConnection;
-    const sessionId = this.getSipSessionId(session);
+    const sessionId = getSipSessionId(session);
     const localStream = this.getLocalStream(sessionId);
     logger.info('changing video input device', {
       id,
@@ -1435,7 +1434,7 @@ export default class WebRTCClient extends Emitter {
     const desktop = newConstraints && newConstraints.desktop;
     logger.info('Sending reinvite', {
       clientId: this.clientId,
-      id: this.getSipSessionId(sipSession),
+      id: getSipSessionId(sipSession),
       newConstraints,
       conference,
       audioOnly,
@@ -1473,11 +1472,11 @@ export default class WebRTCClient extends Emitter {
           }
 
           logger.info('on re-INVITE accepted', {
-            id: this.getSipSessionId(sipSession),
+            id: getSipSessionId(sipSession),
             wasMuted,
             shouldDoScreenSharing,
           });
-          this.updateRemoteStream(this.getSipSessionId(sipSession), false);
+          this.updateRemoteStream(getSipSessionId(sipSession), false);
 
           if (wasMuted) {
             this.mute(sipSession);
@@ -1606,27 +1605,6 @@ export default class WebRTCClient extends Emitter {
     return this.hasALocalVideoTrack(sessionId) || this.hasARemoteVideoTrack(sessionId);
   }
 
-  getSipSessionId(sipSession: WazoSession | null | undefined): string {
-    if (!sipSession) {
-      return '';
-    }
-
-    const message = sipSession.message as Partial<{ callId?: string }>;
-    if (message?.callId) {
-      return message.callId.substring(0, SIP_ID_LENGTH);
-    }
-
-    // For Inviter
-    // @ts-ignore: private
-    if (sipSession instanceof Inviter && sipSession.outgoingRequestMessage) {
-      // @ts-ignore: private
-      return sipSession.outgoingRequestMessage.callId.substring(0, SIP_ID_LENGTH);
-    }
-
-    // For Invitation
-    return (sipSession.id || '').substring(0, SIP_ID_LENGTH);
-  }
-
   async waitForRegister(): Promise<void> {
     return new Promise(resolve => this.on(REGISTERED, resolve));
   }
@@ -1678,7 +1656,7 @@ export default class WebRTCClient extends Emitter {
   onCallEnded(session: WazoSession): void {
     this._cleanupMedia(session);
 
-    delete this.sipSessions[this.getSipSessionId(session)];
+    delete this.sipSessions[getSipSessionId(session)];
 
     this._stopSendingStats(session);
 
@@ -1697,7 +1675,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   storeSipSession(session: WazoSession): void {
-    const id = this.getSipSessionId(session);
+    const id = getSipSessionId(session);
     logger.info('storing sip session', { id, clientId: this.clientId });
 
     this.sipSessions[id] = session;
@@ -2093,7 +2071,7 @@ export default class WebRTCClient extends Emitter {
 
   // Invitation and Inviter extends Session
   _setupSession(session: WazoSession): void {
-    const sipSessionId = this.getSipSessionId(session);
+    const sipSessionId = getSipSessionId(session);
 
     // When receiving an Invitation, the delegate is not defined.
     if (!session.delegate) {
@@ -2168,7 +2146,7 @@ export default class WebRTCClient extends Emitter {
   async _onProgress(session: WazoSession, early = false): Promise<void> {
     await this._setupMedias(session);
 
-    const sessionId = this.getSipSessionId(session).substr(0, 20);
+    const sessionId = getSipSessionId(session).substr(0, 20);
     this.updateRemoteStream(sessionId);
     logger.info('progress received', {
       sessionId,
@@ -2187,7 +2165,7 @@ export default class WebRTCClient extends Emitter {
 
     await this._setupMedias(session);
 
-    this.updateRemoteStream(this.getSipSessionId(session), initAllTracks);
+    this.updateRemoteStream(getSipSessionId(session), initAllTracks);
     const pc = (session.sessionDescriptionHandler as SessionDescriptionHandler)?.peerConnection;
 
     const onTrack = (event: RTCTrackEvent | MediaStreamTrackEvent) => {
@@ -2254,7 +2232,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     // Safari hack, because you cannot call .play() from a non user action
-    const sessionId = this.getSipSessionId(session);
+    const sessionId = getSipSessionId(session);
     const isConference = this.isConference(sessionId);
 
     if (sessionId in this.audioElements) {
@@ -2309,7 +2287,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   _cleanupMedia(session?: WazoSession): void {
-    const sessionId = this.getSipSessionId(session);
+    const sessionId = getSipSessionId(session);
     const localStream = this.getLocalStream(sessionId);
 
     if (localStream) {
@@ -2335,7 +2313,7 @@ export default class WebRTCClient extends Emitter {
 
     if (this._hasAudio() && this._isWeb()) {
       if (session) {
-        cleanLocalElement(this.getSipSessionId(session));
+        cleanLocalElement(getSipSessionId(session));
       } else {
         Object.keys(this.audioElements).forEach(id => cleanLocalElement(id));
       }
@@ -2433,7 +2411,7 @@ export default class WebRTCClient extends Emitter {
       return;
     }
 
-    const sessionId = this.getSipSessionId(session);
+    const sessionId = getSipSessionId(session);
     getStats(pc, (result: Record<string, any>) => {
       const {
         results,
@@ -2450,7 +2428,7 @@ export default class WebRTCClient extends Emitter {
   }
 
   _stopSendingStats(session: WazoSession): void {
-    const sessionId = this.getSipSessionId(session);
+    const sessionId = getSipSessionId(session);
     logger.trace('Check for stopping stats', {
       sessionId,
       ids: Object.keys(this.statsIntervals),
