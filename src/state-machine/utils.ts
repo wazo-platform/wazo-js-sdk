@@ -1,6 +1,6 @@
 import { type SnapshotFrom } from 'xstate';
 import { type SoftphoneActorRef, type ActionTypes as SoftphoneActions, type StateTypes as SoftphoneStates } from './softphone-state-machine';
-import { type CallActorRef, type ActionTypes as CallActions, type StateTypes as CallStates, type EstablishedSatateTypes } from './call-state-machine';
+import { type CallActorRef, type ActionTypes as CallActions, type EstablishedActionTypes as EstablishedCallActions, type StateTypes as CallStates, type EstablishedStateTypes } from './call-state-machine';
 
 import InvalidStateTransition from '../domain/InvalidStateTransition';
 import InvalidState from '../domain/InvalidState';
@@ -8,11 +8,11 @@ import IssueReporter from '../service/IssueReporter';
 
 const logger = IssueReporter.loggerFor('state-machine');
 
-export const getState = (actor: SoftphoneActorRef | CallActorRef): SoftphoneStates | CallStates | EstablishedSatateTypes => {
-  return actor.getSnapshot().value as SoftphoneStates | CallStates | EstablishedSatateTypes;
+export const getState = (actor: SoftphoneActorRef | CallActorRef): SoftphoneStates | CallStates | EstablishedStateTypes => {
+  return actor.getSnapshot().value as SoftphoneStates | CallStates | EstablishedStateTypes;
 };
 
-export const can = (actor: SoftphoneActorRef | CallActorRef, action: SoftphoneActions | CallActions): boolean => {
+export const can = (actor: SoftphoneActorRef | CallActorRef, action: SoftphoneActions | CallActions | EstablishedCallActions): boolean => {
   return actor.getSnapshot().can({ type: action });
 };
 
@@ -33,7 +33,7 @@ export const waitUntilState = (actor: SoftphoneActorRef | CallActorRef, state: S
   ]);
 };
 
-export const assertCan = (actor: SoftphoneActorRef | CallActorRef, action: SoftphoneActions | CallActions): void => {
+export const assertCan = (actor: SoftphoneActorRef | CallActorRef, action: SoftphoneActions | CallActions | EstablishedCallActions): void => {
   if (!can(actor, action)) {
     const currentState = actor.getSnapshot().value;
     const message = `Invalid state transition from ${currentState} with action ${action}`;

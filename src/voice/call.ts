@@ -8,12 +8,13 @@ import { SessionDescriptionHandler } from 'sip.js/lib/platform/web';
 import { SessionDescriptionHandlerOptions } from 'sip.js/lib/api';
 import type { IncomingRequestMessage } from 'sip.js/lib/core/messages/incoming-request-message';
 
-import callStateMachine, { type ActionTypes, Actions, type StateTypes, States, EstablishedSatates, type CallActorRef } from '../state-machine/call-state-machine';
+import callStateMachine, { type ActionTypes, Actions, EstablishedActions, EstablishedStates, type CallActorRef } from '../state-machine/call-state-machine';
 import { SipCall, PeerConnection } from '../domain/types';
 import IssueReporter from '../service/IssueReporter';
 import { Softphone } from './softphone';
 import { getSipSessionId } from '../utils/sdp';
 import { assertCan, getState } from '../state-machine/utils';
+import { downgradeToAudio, getLocalStream, getPeerConnection, getStreamFromConstraints, hasLocalVideo, setLocalMediaStream, upgradeToVideo } from '../utils/webrtc';
 
 const logger = IssueReporter.loggerFor('call');
 
@@ -33,6 +34,9 @@ export const CALL_ACCEPTED = 'accepted';
 export const CALL_CANCELED = 'canceled';
 export const CALL_TERMINATING = 'terminating';
 export const CALL_ENDED = 'ended';
+export const CALL_MUTED = 'muted';
+export const CALL_UN_MUTED = 'unMuted';
+export const CALL_HELD = 'held';
 export const AUDIO_STREAM = 'onAudioStream';
 export const VIDEO_STREAM = 'onVideoStream';
 export const REMOVE_STREAM = 'onRemoveStream';
@@ -77,6 +81,7 @@ class Call extends EventEmitter {
     this.phone = phone;
     this.sipCall = sipCall;
 
+    // @TODO
     // this.video = false;
     this._bindEvents();
   }
@@ -119,12 +124,55 @@ class Call extends EventEmitter {
     // @TODO
   }
 
-  hold() {
+  mute() {
+    assertCan(this.callActor, EstablishedActions.MUTE);
 
+    logger.info('mute call', { id: this.id });
+
+    this.phone.client.mute(this.sipCall);
+
+    this.eventEmitter.emit(CALL_MUTED);
+  }
+
+  unMute() {
+    assertCan(this.callActor, EstablishedActions.UN_MUTE);
+
+    logger.info('un-mute call', { id: this.id });
+
+    this.phone.client.unmute(this.sipCall);
+
+    this.eventEmitter.emit(CALL_MUTED);
+  }
+
+  async hold() {
+    logger.info('hold call', { id: this.id });
+
+    const hasVideo = hasLocalVideo(this.sipCall);
+
+    // Stop screenshare if needed
+    if (this.currentScreenShare && this.currentScreenShare.sipSessionId === this.id) {
+      // @TODO
+      // this.lastScreenShare = this.currentScreenShare;
+      await this.stopScreenSharing(false);
+    }
+
+    // Downgrade to audio if needed
+    if (hasVideo) {
+      await downgradeToAudio(this.sipCall);
+    }
+
+    // const isConference = !!callSession && callSession.isConference();
+    // @TODO
+    const isConference = false;
+    const promise = this.phone.client.hold(this.sipCall, isConference, hasVideo);
+
+    this.eventEmitter.emit(CALL_HELD);
+
+    return promise;
   }
 
   isHeld() {
-    return getState(this.callActor) === EstablishedSatates.HELD;
+    return getState(this.callActor) === EstablishedStates.HELD;
   }
 
   async sendReinvite(options: ReinviteOptions = {}): Promise<OutgoingInviteRequest | void> {
@@ -154,6 +202,87 @@ class Call extends EventEmitter {
 
   sendMessage(body: string, contentType = 'text/plain'): void {
     return this.phone.client.sendMessage(this.sipCall, body, contentType);
+  }
+
+  async startScreenSharing(constraints: Record<string, any>): Promise<MediaStream> {
+    logger.info('Call - start screen sharing', { constraints, id: this.id });
+    const screenShareStream = await getStreamFromConstraints(constraints);
+
+    if (!screenShareStream) {
+      throw new Error(`Can't create media stream for screensharing with: ${JSON.stringify(constraints)}`);
+    }
+
+    const screenTrack = screenShareStream.getVideoTracks()[0];
+    const pc = getPeerConnection(this.sipCall);
+    const sender = pc && pc.getSenders && pc.getSenders().find((s) => s && s.track && s.track.kind === 'video');
+    const localStream = getLocalStream(this.sipCall);
+    const videoTrack = localStream ? localStream.getTracks().find(track => track.kind === 'video') : null;
+    const hadVideo = !!videoTrack;
+
+    // Stop local video tracks
+    if (videoTrack && localStream) {
+      videoTrack.enabled = false;
+      videoTrack.stop();
+      localStream.removeTrack(videoTrack);
+    }
+
+    if (localStream) {
+      localStream.addTrack(screenTrack);
+    }
+
+    if (sender) {
+      sender.replaceTrack(screenTrack);
+    }
+
+    this._onScreenSharing(screenShareStream, hadVideo, constraints.desktop);
+
+    return screenShareStream;
+  }
+
+  async stopScreenSharing(restoreLocalStream = true): Promise<OutgoingInviteRequest | void | null> {
+    if (!this.currentScreenShare) {
+      return;
+    }
+
+    logger.info('call - stop screen sharing', { restoreLocalStream });
+    let reinvited: OutgoingInviteRequest | null | void = null;
+
+    try {
+      if (this.currentScreenShare.stream) {
+        this.currentScreenShare.stream.getTracks()
+          .filter((track: MediaStreamTrack) => track.enabled && track.kind === 'video')
+          .forEach((track: MediaStreamTrack) => track.stop());
+      }
+
+      if (restoreLocalStream) {
+        // @TODO
+        // const conference = this.isConference(targetCallSession);
+        const conference = false;
+
+        // When stopping screenshare and we had video before that, we have to re-upgrade
+        // When upgrading directly to screenshare (eg: we don't have a videoLocalStream to replace)
+        // We have to downgrade to audio.
+        const screenshareStopped = this.currentScreenShare.hadVideo;
+        const constraints = {
+          audio: false,
+          video: screenshareStopped,
+        };
+
+        // We have to remove the video sender to be able to re-upgrade to video in `sendReinvite` below
+        this._downgradeToAudio(false);
+
+        // Wait for the track to be removed, unless the video sender won't have a null track in `_upgradeToVideo`.
+        await new Promise(resolve => setTimeout(resolve, 500));
+        reinvited = await this.sendReinvite({ constraints, conference });
+      }
+    } catch (e: any) {
+      console.warn(e);
+    }
+
+    this.eventEmitter.emit(SHARE_SCREEN_ENDED);
+    this.currentScreenShare = null;
+
+    return reinvited;
   }
 
   get id() {
@@ -240,12 +369,14 @@ class Call extends EventEmitter {
       });
       this.eventEmitter.emit(REMOVE_STREAM, event.stream);
     };
+
+    // Client events
   }
 
   _downgradeToAudio(withMessage = true) {
     logger.info('Downgrade to audio', { id: this.id, withMessage });
 
-    this.phone.client.downgradeToAudio(this.sipCall);
+    downgradeToAudio(this.sipCall);
 
     if (withMessage) {
       this._sendReinviteMessage(false);
@@ -262,7 +393,7 @@ class Call extends EventEmitter {
     const desktop = options.constraints?.desktop;
     const sdhOptions = this.sipCall.sessionDescriptionHandlerOptionsReInvite;
     const wasAudioOnly = (sdhOptions as SessionDescriptionHandlerOptions & { audioOnly: boolean })?.audioOnly;
-    const newStream = await this.phone.client.upgradeToVideo(this.sipCall, options.constraints || {}, !!options.conference);
+    const newStream = await upgradeToVideo(this.sipCall, options.constraints || {}, !!options.conference);
 
     // If no stream is returned, it means we have to reinvite
     if (!newStream) {
@@ -324,7 +455,7 @@ class Call extends EventEmitter {
       desktop,
     };
 
-    this.phone.client.setLocalMediaStream(this.id, screenStream);
+    setLocalMediaStream(this.sipCall, screenStream);
     this.eventEmitter.emit(SHARE_SCREEN_STARTED, screenStream);
   }
 

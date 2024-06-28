@@ -26,6 +26,8 @@ jest.mock('../..', () => ({
 jest.mock('../../web-rtc-client', () => jest.fn().mockImplementation(() => ({
   register: jest.fn(() => Promise.resolve()),
   unregister: jest.fn(() => Promise.resolve()),
+  setOnHeartbeatTimeout: jest.fn(() => Promise.resolve()),
+  setOnHeartbeatCallback: jest.fn(() => Promise.resolve()),
   on: jest.fn(),
   INVITE: 'invite',
 })));
@@ -36,7 +38,6 @@ describe('Softphone', () => {
   describe('connect', () => {
     it('Should retrieve information from Wazo.Auth', () => {
       const instance = new Softphone();
-      // instance.connectWithCredentials = jest.fn();
       jest.spyOn(instance, 'connectWithCredentials');
       instance.connect({});
 
