@@ -32,6 +32,8 @@ jest.mock('../..', () => ({
 jest.mock('../../web-rtc-client', () => jest.fn().mockImplementation(() => ({
   answer: jest.fn(() => Promise.resolve()),
   register: jest.fn(() => Promise.resolve()),
+  setOnHeartbeatTimeout: jest.fn(() => Promise.resolve()),
+  setOnHeartbeatCallback: jest.fn(() => Promise.resolve()),
   on: jest.fn(),
 })));
 

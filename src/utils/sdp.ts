@@ -1,5 +1,7 @@
 import sdpParser from 'sdp-transform';
+import { UserAgent } from 'sip.js/lib/api/user-agent';
 import { Inviter } from 'sip.js/lib/api';
+import { URI } from 'sip.js/lib/grammar/uri';
 
 import type { SipCall } from '../domain/types';
 
@@ -164,3 +166,11 @@ export const getSipSessionId = (sipSession: SipCall | null | undefined): string 
   // For Invitation
   return (sipSession.id || '').substring(0, SIP_ID_LENGTH);
 };
+
+// We need to replace 0.0.0.0 to 127.0.0.1 in the sdp to avoid MOH during a createOffer.
+export const replaceLocalIpModifier = (description: Record<string, any>) => Promise.resolve({ // description is immutable... so we have to clone it or the `type` attribute won't be returned.
+  ...JSON.parse(JSON.stringify(description)),
+  sdp: description.sdp.replace('c=IN IP4 0.0.0.0', 'c=IN IP4 127.0.0.1'),
+});
+
+export const makeURI = (target: string, host: string): URI | undefined => UserAgent.makeURI(`sip:${target}@${host}`);

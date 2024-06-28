@@ -13,6 +13,7 @@ import Emitter from '../../utils/Emitter';
 import IssueReporter from '../../service/IssueReporter';
 import { PeerConnection, WazoSession } from '../types';
 import { getSipSessionId } from '../../utils/sdp';
+import { downgradeToAudio, getStreamFromConstraints, getWebRtcStats, setLocalMediaStream, upgradeToVideo } from '../../utils/webrtc';
 
 export const ON_USER_AGENT = 'onUserAgent';
 export const ON_REGISTERED = 'onRegistered';
@@ -283,7 +284,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       id: callSession ? callSession.getId() : null,
       withMessage,
     });
-    this.client.downgradeToAudio(sipSession);
+    downgradeToAudio(sipSession);
 
     if (callSession) {
       callSession.cameraEnabled = false;
@@ -315,7 +316,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const desktop = constraints && constraints.desktop;
     const options = sipSession.sessionDescriptionHandlerOptionsReInvite;
     const wasAudioOnly = (options as SessionDescriptionHandlerOptions & { audioOnly: boolean })?.audioOnly;
-    const newStream = await this.client.upgradeToVideo(sipSession, constraints, isConference);
+    const newStream = await upgradeToVideo(sipSession, constraints, isConference);
 
     if (callSession) {
       callSession.cameraEnabled = true;
@@ -461,7 +462,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       constraints,
       id: callSession ? callSession.getId() : null,
     });
-    const screenShareStream = await this.client.getStreamFromConstraints(constraints);
+    const screenShareStream = await getStreamFromConstraints(constraints);
 
     if (!screenShareStream) {
       throw new Error(`Can't create media stream for screensharing with: ${JSON.stringify(constraints)}`);
@@ -573,7 +574,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       sipSessionId,
       desktop,
     };
-    this.client.setLocalMediaStream(getSipSessionId(sipSession), screenStream);
+    setLocalMediaStream(sipSession, screenStream);
     this.eventEmitter.emit(ON_SHARE_SCREEN_STARTED, this._createCallSession(sipSession, callSession, {
       screensharing: true,
     }), screenStream);
@@ -992,7 +993,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     // Downgrade to audio if needed
     if (hasVideo) {
-      await this.client.downgradeToAudio(sipSession);
+      await downgradeToAudio(sipSession);
     }
 
     const isConference = !!callSession && callSession.isConference();
@@ -1030,7 +1031,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         screen: wasScreensharing,
         desktop: wasDesktop,
       };
-      await this.client.upgradeToVideo(sipSession, constraints, isConference);
+      await upgradeToVideo(sipSession, constraints, isConference);
     }
 
     const onScreenSharing = (stream: MediaStream | null | undefined) => {
@@ -1314,7 +1315,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   async getStats(callSession?: CallSession): Promise<RTCStatsReport | null | undefined> {
     const sipSession = this.findSipSession(callSession);
-    return sipSession ? this.client.getStats(sipSession) : null;
+    return sipSession ? getWebRtcStats(sipSession) : null;
   }
 
   startNetworkMonitoring(callSession?: CallSession, interval = 1000) {
