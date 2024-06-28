@@ -17,6 +17,8 @@ import Call from './call';
 import { assertCan, waitUntilState } from '../state-machine/utils';
 
 export const EVENT_INCOMING = 'incoming';
+export const EVENT_HEARTBEAT = 'heartbeat';
+export const EVENT_HEARTBEAT_TIMEOUT = 'heartbeatTimeout';
 
 export type CallOptions = {
   params: {
@@ -148,7 +150,12 @@ export class Softphone extends EventEmitter {
   }
 
   reconnect() {
-    // @TODO
+    logger.info('Softphone - reconnect', { client: !!this.client });
+    if (!this.client) {
+      return;
+    }
+
+    this.client.attemptReconnection();
   }
 
   async call(options: CallOptions): Promise<Call | null> {
@@ -195,11 +202,21 @@ export class Softphone extends EventEmitter {
   }
 
   startHeartbeat() {
-    // @TODO
+    logger.info('WebRTC phone - start heartbeat', { client: !!this.client, hasHeartbeat: this.client.hasHeartbeat() });
+    if (!this.client || this.client.hasHeartbeat()) {
+      return;
+    }
+
+    this.client.startHeartbeat();
   }
 
   stopHeartbeat() {
-    // @TODO
+    logger.info('WebRTC phone - stopHeartbeat', { client: !!this.client });
+    if (!this.client) {
+      return;
+    }
+
+    this.client.stopHeartbeat();
   }
 
   changeAudioOutputDevice() {
@@ -234,6 +251,10 @@ export class Softphone extends EventEmitter {
     return this.softphoneActor.getSnapshot().value;
   }
 
+  getUserAgent() {
+    return this.client?.config?.userAgentString || 'softphone';
+  }
+
   _bindEvents(): void {
     this.client.on(this.client.INVITE, (sipSession: SipCall) => {
       const call = new Call(sipSession, this);
@@ -241,6 +262,14 @@ export class Softphone extends EventEmitter {
       this.calls.push(call);
 
       this.eventEmitter.emit(EVENT_INCOMING, call);
+    });
+
+    this.client.setOnHeartbeatTimeout(() => {
+      this.eventEmitter.emit(EVENT_HEARTBEAT_TIMEOUT);
+    });
+
+    this.client.setOnHeartbeatCallback(() => {
+      this.eventEmitter.emit(EVENT_HEARTBEAT);
     });
   }
 

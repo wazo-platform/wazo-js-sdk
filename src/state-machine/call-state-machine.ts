@@ -11,7 +11,7 @@ export const States = {
   TERMINATED: 'terminated',
 } as const;
 
-export const EstablishedSatates = {
+export const EstablishedStates = {
   ONGOING: 'ongoing',
   HELD: 'held',
   MUTED: 'muted',
@@ -19,7 +19,7 @@ export const EstablishedSatates = {
 
 export type StateTypes = typeof States[keyof typeof States];
 
-export type EstablishedSatateTypes = typeof EstablishedSatates[keyof typeof EstablishedSatates];
+export type EstablishedStateTypes = typeof EstablishedStates[keyof typeof EstablishedStates];
 
 export const Actions = {
   INCOMING_CALL: 'incomingCall',
@@ -37,6 +37,8 @@ export const EstablishedActions = {
 } as const;
 
 export type ActionTypes = typeof Actions[keyof typeof Actions];
+
+export type EstablishedActionTypes = typeof EstablishedActions[keyof typeof EstablishedActions];
 
 const callMachine = setup({
   guards: {
@@ -80,7 +82,7 @@ const callMachine = setup({
       },
     },
     [States.ESTABLISHED]: {
-      initial: EstablishedSatates.ONGOING,
+      initial: EstablishedStates.ONGOING,
       on: {
         [Actions.HANGUP]: {
           guard: 'isRegistered',
@@ -88,28 +90,28 @@ const callMachine = setup({
         },
         [EstablishedActions.HOLD]: {
           guard: 'isRegistered',
-          target: `.${EstablishedSatates.HELD}`,
+          target: `.${EstablishedStates.HELD}`,
         },
         [EstablishedActions.MUTE]: {
           guard: 'isRegistered',
-          target: `.${EstablishedSatates.MUTED}`,
+          target: `.${EstablishedStates.MUTED}`,
         },
       },
       states: {
-        [EstablishedSatates.ONGOING]: { },
-        [EstablishedSatates.HELD]: {
+        [EstablishedStates.ONGOING]: { },
+        [EstablishedStates.HELD]: {
           on: {
             [EstablishedActions.RESUME]: {
               guard: 'isRegistered',
-              target: EstablishedSatates.ONGOING,
+              target: EstablishedStates.ONGOING,
             },
           },
         },
-        [EstablishedSatates.MUTED]: {
+        [EstablishedStates.MUTED]: {
           on: {
             [EstablishedActions.UN_MUTE]: {
               guard: 'isRegistered',
-              target: EstablishedSatates.ONGOING,
+              target: EstablishedStates.ONGOING,
             },
           },
         },
