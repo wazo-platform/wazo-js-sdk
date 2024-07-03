@@ -158,3 +158,23 @@ describe('With a refresh token', () => {
     });
   });
 });
+
+describe('base64Encode', () => {
+  it('should encode a string using base64', () => {
+    const input = 'Hello World!';
+    const expectedOutput = 'SGVsbG8gV29ybGQh';
+    expect(ApiRequester.base64Encode(input)).toBe(expectedOutput);
+  });
+
+  it('should handle special characters', () => {
+    const input = 'éà$@€';
+    const expectedOutput = 'w6nDoCRA4oKs';
+    expect(ApiRequester.base64Encode(input)).toBe(expectedOutput);
+  });
+
+  it('should handle empty string', () => {
+    const input = '';
+    const expectedOutput = '';
+    expect(ApiRequester.base64Encode(input)).toBe(expectedOutput);
+  });
+});
