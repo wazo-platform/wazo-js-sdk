@@ -64,7 +64,15 @@ export default class ApiRequester {
   }
 
   static base64Encode(str: string): string {
-    return typeof btoa !== 'undefined' ? btoa(str) : Base64.encode(str);
+    if (typeof btoa !== 'undefined') {
+      try {
+        return btoa(str);
+      } catch (error) {
+        // fall back to Base64.encode if btoa fails
+      }
+    }
+
+    return Base64.encode(str);
   }
 
   // @see https://github.com/facebook/flow/issues/183#issuecomment-358607052
