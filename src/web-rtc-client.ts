@@ -1695,7 +1695,7 @@ export default class WebRTCClient extends Emitter {
 
     session.delegate.onSessionDescriptionHandler = (sdh: SessionDescriptionHandler & { on: (type: string, e: any) => void }) => {
       sdh.on('error', (e: any) => {
-        this.eventEmitter.emit(ON_ERROR, e);
+        this.eventEmitter.emit(ON_ERROR, e, session);
       });
       sdh.peerConnectionDelegate = {
         onicecandidateerror: (error: Record<string, any>) => {

@@ -1,6 +1,8 @@
 /* eslint-disable no-underscore-dangle */
 import { EventEmitter } from 'events';
 import { createActor } from 'xstate';
+import type { Message } from 'sip.js/lib/api/message';
+import type { IncomingRequestMessage } from 'sip.js/lib/core/messages/incoming-request-message';
 
 import type Session from '../domain/Session';
 import type SipLine from '../domain/SipLine';
@@ -14,11 +16,21 @@ import WazoWebRTCClient from '../web-rtc-client';
 import IssueReporter from '../service/IssueReporter';
 import configureLogger from '../utils/sip-logger';
 import Call from './call';
-import { assertCan, waitUntilState } from '../state-machine/utils';
+import { assertCan, can, getState, waitUntilState } from '../state-machine/utils';
 
 export const EVENT_INCOMING = 'incoming';
 export const EVENT_HEARTBEAT = 'heartbeat';
 export const EVENT_HEARTBEAT_TIMEOUT = 'heartbeatTimeout';
+export const EVENT_REGISTERED = 'registered';
+export const EVENT_UNREGISTERED = 'unregistered';
+export const EVENT_DISCONNECTED = 'disconnected';
+export const EVENT_VIDEO_INPUT_CHANGE = 'videoInputChange';
+export const EVENT_ON_MESSAGE = 'message';
+export const EVENT_ON_CHAT = 'phone/ON_CHAT';
+export const EVENT_ON_SIGNAL = 'phone/ON_SIGNAL';
+
+export const MESSAGE_TYPE_CHAT = 'message/TYPE_CHAT';
+export const MESSAGE_TYPE_SIGNAL = 'message/TYPE_SIGNAL';
 
 export type CallOptions = {
   params: {
@@ -55,6 +67,8 @@ export class Softphone extends EventEmitter {
   softphoneActor: SoftphoneActorRef;
 
   options: Partial<WebRtcConfig>;
+
+  shouldSendReinvite: boolean;
 
   constructor() {
     super();
@@ -139,9 +153,7 @@ export class Softphone extends EventEmitter {
 
     this._bindEvents();
 
-    return this.client.register().then(() => {
-      this._sendAction(Actions.REGISTER_DONE);
-    }).catch(error => {
+    return this.client.register().catch(error => {
       // Avoid exception on `t.server.scheme` in sip transport when losing the webrtc socket connection
       logger.error('WebRTC register error', { message: error.message, stack: error.stack });
 
@@ -264,6 +276,120 @@ export class Softphone extends EventEmitter {
       this.eventEmitter.emit(EVENT_INCOMING, call);
     });
 
+    this.client.on(this.client.ON_REINVITE, (sipCall: SipCall, request: IncomingRequestMessage, updatedCalleeName: string, updatedNumber: string, hadRemoteVideo: boolean) => {
+      logger.info('Softphone on reinvite', {
+        callId: sipCall.id,
+        inviteId: request.callId,
+        updatedCalleeName,
+        updatedNumber,
+        hadRemoteVideo,
+      });
+
+      this._onCallEvent(sipCall, 'onReinvite', request, updatedCalleeName, updatedNumber, hadRemoteVideo);
+    });
+
+    this.client.on(this.client.ACCEPTED, async (sipCall: SipCall) => {
+      this._onCallEvent(sipCall, 'onAccepted');
+
+      if (this.audioOutputDeviceId) {
+        await this.client.changeAudioOutputDevice(this.audioOutputDeviceId);
+      }
+    });
+
+    this.client.on(this.client.ON_ERROR, (e, sipCall: SipCall) => {
+      this._onCallEvent(sipCall, 'onError', e);
+    });
+
+    this.client.on(this.client.REJECTED, (sipCall: SipCall) => {
+      this._onCallEvent(sipCall, 'onRejected');
+    });
+
+    this.client.on(this.client.ON_PROGRESS, (sipCall: SipCall) => {
+      this._onCallEvent(sipCall, 'onProgress');
+    });
+
+    this.client.on(this.client.ON_EARLY_MEDIA, (sipCall: SipCall) => {
+      this._onCallEvent(sipCall, 'onEarlyMedia');
+    });
+
+    this.client.on(this.client.ON_TRACK, (sipCall: SipCall, event: RTCTrackEvent | MediaStreamTrackEvent) => {
+      this._onCallEvent(sipCall, 'onTrack', event);
+    });
+
+    this.client.on(this.client.ON_NETWORK_STATS, (sipCall: SipCall, stats: Record<string, any>, previousStats: Record<string, any>) => {
+      this._onCallEvent(sipCall, 'onNetworkStats', stats, previousStats);
+    });
+
+    // Used when upgrading directly in screenshare mode
+    this.client.on(this.client.ON_SCREEN_SHARING_REINVITE, (sipCall: SipCall, response: any, desktop: boolean) => {
+      this._onCallEvent(sipCall, 'onScreenshareReinvite', response, desktop);
+    });
+
+    this.client.on(this.client.UNREGISTERED, () => {
+      logger.info('Softphone unregistered');
+      this.eventEmitter.emit(EVENT_UNREGISTERED);
+
+      this._sendAction(Actions.UNREGISTERED);
+    });
+
+    this.client.on(this.client.ON_DISCONNECTED, () => {
+      logger.info('Softphone disconnected');
+      this.eventEmitter.emit(EVENT_DISCONNECTED);
+
+      this._sendAction(Actions.TRANSPORT_CLOSED);
+    });
+
+    this.client.on(this.client.REGISTERED, () => {
+      logger.info('Softphone registered', { state: getState(this.softphoneActor) });
+      if (!can(this.softphoneActor, Actions.REGISTER_DONE)) {
+        logger.warn('Softphone registered but not in REGISTERING state', { state: getState(this.softphoneActor) });
+        return;
+      }
+
+      this.stopHeartbeat();
+      this._sendAction(Actions.REGISTER_DONE);
+
+      this.eventEmitter.emit(EVENT_REGISTERED);
+
+      // If the phone registered with a current callSession (eg: when switching network):
+      // send a reinvite to renegociate ICE with new IP
+      if (this.shouldSendReinvite) {
+        this.shouldSendReinvite = false;
+
+        // Send reinvite for all active calls
+        this.calls.filter(call => call.isEstablished())
+          .forEach(call => { call.sendReinvite({ conference: call.isConference(), iceRestart: true }); });
+      }
+    });
+
+    this.client.on(this.client.CONNECTED, () => {
+      logger.info('WebRTC client connected');
+      this.stopHeartbeat();
+    });
+
+    this.client.on(this.client.DISCONNECTED, () => {
+      logger.info('WebRTC client disconnected');
+      this.eventEmitter.emit(EVENT_DISCONNECTED);
+
+      // Do not trigger heartbeat if already running
+      if (!this.client.hasHeartbeat()) {
+        this.startHeartbeat();
+      }
+
+      // Tell to send reinvite when reconnecting
+      this.shouldSendReinvite = this.calls.length > 0;
+    });
+
+    this.client.on('onVideoInputChange', stream => {
+      this.eventEmitter.emit(EVENT_VIDEO_INPUT_CHANGE, stream);
+    });
+
+    this.client.on(this.client.MESSAGE, (message: Message) => {
+      this._onMessage(message);
+
+      this.eventEmitter.emit(EVENT_ON_MESSAGE, message);
+    });
+
     this.client.setOnHeartbeatTimeout(() => {
       this.eventEmitter.emit(EVENT_HEARTBEAT_TIMEOUT);
     });
@@ -276,6 +402,57 @@ export class Softphone extends EventEmitter {
   _sendAction(action: ActionTypes) {
     this.softphoneActor.send({ type: action });
   }
+
+  _getCall(sipCall: SipCall): Call | undefined {
+    return this.calls.find(call => call.id === sipCall.id);
+  }
+
+  _onCallEvent(sipCall: SipCall, eventName: string, ...args: any[]) {
+    logger.warn('Softphone - received call event', { eventName, sipId: sipCall.id });
+
+    const call = this._getCall(sipCall);
+    if (!call) {
+      logger.warn('Softphone - no call found to send the event', { eventName, sipId: sipCall.id });
+      return;
+    }
+
+    // @ts-ignore
+    call[eventName](...args);
+  }
+
+  _onMessage(message: Message & { method?: string, body?: string }): void {
+    if (!message || message.method !== 'MESSAGE') {
+      return;
+    }
+
+    let body;
+
+    try {
+      body = JSON.parse(message.body || '');
+    } catch (e: any) {
+      return;
+    }
+
+    const {
+      type,
+      content,
+    } = body;
+
+    switch (type) {
+      case MESSAGE_TYPE_CHAT:
+        this.eventEmitter.emit(EVENT_ON_CHAT, content);
+        break;
+
+      case MESSAGE_TYPE_SIGNAL:
+      {
+        this.eventEmitter.emit(EVENT_ON_SIGNAL, content);
+        break;
+      }
+
+      default:
+    }
+  }
+
 }
 
 export default new Softphone();
