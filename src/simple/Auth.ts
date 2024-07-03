@@ -168,28 +168,21 @@ export class Auth {
   }
 
   async initiateIdpAuthentication(domain: string, redirectUrl: string): Promise<{ location: string, saml_session_id: string } | undefined> {
-    let response;
     try {
-      response = await getApiClient().auth.initiateIdpAuthentication(domain, redirectUrl);
+      return await getApiClient().auth.initiateIdpAuthentication(domain, redirectUrl);
     } catch (e: any) {
       logger.error('Error during IdP authentication initialization:', e.message);
-      throw e;
-    }
 
-    if (!response.ok) {
-      if (response.status === 404) {
+      if (e.status === 404) {
         throw new NoSamlRouteError('No route found for SAML SSO');
       }
 
-      if (response.status === 500) {
+      if (e.status === 500) {
         throw new SamlConfigError('SAML/server configuration error');
       }
 
-      const error = await response.json();
-      throw new Error(error.message || error.reason);
+      throw e;
     }
-
-    return response.json();
   }
 
   async logInViaRefreshToken(refreshToken: string): Promise<Session | null> {
