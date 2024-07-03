@@ -8,7 +8,7 @@ import { SessionDescriptionHandler } from 'sip.js/lib/platform/web';
 import { SessionDescriptionHandlerOptions } from 'sip.js/lib/api';
 import type { IncomingRequestMessage } from 'sip.js/lib/core/messages/incoming-request-message';
 
-import callStateMachine, { type ActionTypes, Actions, EstablishedActions, EstablishedStates, type CallActorRef } from '../state-machine/call-state-machine';
+import callStateMachine, { type ActionTypes, Actions, EstablishedActions, States, EstablishedStates, type CallActorRef } from '../state-machine/call-state-machine';
 import { SipCall, PeerConnection } from '../domain/types';
 import IssueReporter from '../service/IssueReporter';
 import { Softphone } from './softphone';
@@ -30,19 +30,25 @@ export type ReinviteOptions = {
 };
 
 // Events
-export const CALL_ACCEPTED = 'accepted';
-export const CALL_CANCELED = 'canceled';
-export const CALL_TERMINATING = 'terminating';
-export const CALL_ENDED = 'ended';
-export const CALL_MUTED = 'muted';
-export const CALL_UN_MUTED = 'unMuted';
-export const CALL_HELD = 'held';
-export const AUDIO_STREAM = 'onAudioStream';
-export const VIDEO_STREAM = 'onVideoStream';
-export const REMOVE_STREAM = 'onRemoveStream';
-export const SHARE_SCREEN_ENDING = 'onScreenShareEnding';
-export const SHARE_SCREEN_STARTED = 'onScreenShareStarted';
-export const SHARE_SCREEN_ENDED = 'onScreenShareEnded';
+export const EVENT_CALL_ACCEPTED = 'accepted';
+export const EVENT_CALL_CANCELED = 'canceled';
+export const EVENT_PROGRESS = 'progress';
+export const EVENT_EARLY_MEDIA = 'earlyMedia';
+export const EVENT_CALL_ERROR = 'error';
+export const EVENT_CALL_REJECTED = 'rejected';
+export const EVENT_CALL_TERMINATING = 'terminating';
+export const EVENT_CALL_ENDED = 'ended';
+export const EVENT_CALL_MUTED = 'muted';
+export const EVENT_CALL_UN_MUTED = 'unMuted';
+export const EVENT_CALL_HELD = 'held';
+export const EVENT_REINVITE = 'reinvite';
+export const EVENT_TRACK = 'track';
+export const EVENT_AUDIO_STREAM = 'onAudioStream';
+export const EVENT_VIDEO_STREAM = 'onVideoStream';
+export const EVENT_REMOVE_STREAM = 'onRemoveStream';
+export const EVENT_SHARE_SCREEN_ENDING = 'onScreenShareEnding';
+export const EVENT_SHARE_SCREEN_STARTED = 'onScreenShareStarted';
+export const EVENT_SHARE_SCREEN_ENDED = 'onScreenShareEnded';
 
 export const MESSAGE_TYPE_CHAT = 'message/TYPE_CHAT';
 export const MESSAGE_TYPE_SIGNAL = 'message/TYPE_SIGNAL';
@@ -131,7 +137,7 @@ class Call extends EventEmitter {
 
     this.phone.client.mute(this.sipCall);
 
-    this.eventEmitter.emit(CALL_MUTED);
+    this.eventEmitter.emit(EVENT_CALL_MUTED);
   }
 
   unMute() {
@@ -141,7 +147,7 @@ class Call extends EventEmitter {
 
     this.phone.client.unmute(this.sipCall);
 
-    this.eventEmitter.emit(CALL_MUTED);
+    this.eventEmitter.emit(EVENT_CALL_UN_MUTED);
   }
 
   async hold() {
@@ -166,13 +172,21 @@ class Call extends EventEmitter {
     const isConference = false;
     const promise = this.phone.client.hold(this.sipCall, isConference, hasVideo);
 
-    this.eventEmitter.emit(CALL_HELD);
+    this.eventEmitter.emit(EVENT_CALL_HELD);
 
     return promise;
   }
 
   isHeld() {
     return getState(this.callActor) === EstablishedStates.HELD;
+  }
+
+  isEstablished() {
+    return getState(this.callActor) === States.ESTABLISHED;
+  }
+
+  isConference(): boolean {
+    return (getPeerConnection(this.sipCall) as PeerConnection)?.sfu;
   }
 
   async sendReinvite(options: ReinviteOptions = {}): Promise<OutgoingInviteRequest | void> {
@@ -279,10 +293,53 @@ class Call extends EventEmitter {
       console.warn(e);
     }
 
-    this.eventEmitter.emit(SHARE_SCREEN_ENDED);
+    this.eventEmitter.emit(EVENT_SHARE_SCREEN_ENDED);
     this.currentScreenShare = null;
 
     return reinvited;
+  }
+
+  onScreenShareReinvite(response: any, desktop: boolean) {
+    const localStream = getLocalStream(this.sipCall);
+    logger.info('Updrading directly in screensharing mode', { id: this.id, tracks: localStream?.getTracks() });
+
+    this._onScreenSharing(localStream as MediaStream, false, desktop);
+  }
+
+  onAccepted() {
+    this.emit(EVENT_CALL_ACCEPTED);
+  }
+
+  onProgress() {
+    this.emit(EVENT_PROGRESS);
+  }
+
+  onEarlyMedia() {
+    this.emit(EVENT_EARLY_MEDIA);
+  }
+
+  onTrack(event: RTCTrackEvent | MediaStreamTrackEvent) {
+    this.emit(EVENT_TRACK, event);
+  }
+
+  onError(error: Error) {
+    this.emit(EVENT_CALL_ERROR, error);
+  }
+
+  onRejected() {
+    this.endTime = new Date();
+
+    this.emit(EVENT_CALL_REJECTED);
+
+    this.phone.removeCall(this);
+  }
+
+  onNetworkStats(stats: Record<string, any>, previousStats: Record<string, any>) {
+    // @TODO
+  }
+
+  onReinvite(request: IncomingRequestMessage, updatedCalleeName: string, updatedNumber: string, hadRemoteVideo: boolean) {
+    this.emit(EVENT_REINVITE, request, updatedCalleeName, updatedNumber, hadRemoteVideo);
   }
 
   get id() {
@@ -305,7 +362,7 @@ class Call extends EventEmitter {
         onCancel(message);
         const elsewhere = message.data.indexOf('cause=26') !== -1 && message.data.indexOf('completed elsewhere') !== -1;
 
-        this.eventEmitter.emit(CALL_CANCELED, elsewhere);
+        this.eventEmitter.emit(EVENT_CALL_CANCELED, elsewhere);
       };
     }
 
@@ -313,7 +370,7 @@ class Call extends EventEmitter {
       switch (newState) {
         case SessionState.Terminating:
           logger.info('call terminating', { id: this.id });
-          this.eventEmitter.emit(CALL_TERMINATING);
+          this.eventEmitter.emit(EVENT_CALL_TERMINATING);
           break;
 
         case SessionState.Terminated:
@@ -323,7 +380,7 @@ class Call extends EventEmitter {
           // Should be called before `_onCallTerminated` or the callCount will not decrement...
           this.endTime = new Date();
 
-          return this.eventEmitter.emit(CALL_ENDED);
+          return this.eventEmitter.emit(EVENT_CALL_ENDED);
         }
 
         default:
@@ -356,10 +413,10 @@ class Call extends EventEmitter {
       });
 
       if (kind === 'audio') {
-        return this.eventEmitter.emit(AUDIO_STREAM, stream);
+        return this.eventEmitter.emit(EVENT_AUDIO_STREAM, stream);
       }
 
-      return this.eventEmitter.emit(VIDEO_STREAM, stream, event.track.id, event);
+      return this.eventEmitter.emit(EVENT_VIDEO_STREAM, stream, event.track.id, event);
     };
 
     peerConnection.onremovestream = (event: any) => {
@@ -367,7 +424,7 @@ class Call extends EventEmitter {
         id: event.stream.id,
         tracks: event.stream.getTracks(),
       });
-      this.eventEmitter.emit(REMOVE_STREAM, event.stream);
+      this.eventEmitter.emit(EVENT_REMOVE_STREAM, event.stream);
     };
 
     // Client events
@@ -444,7 +501,7 @@ class Call extends EventEmitter {
       screenTrack.onended = () => {
         logger.info('WebRTC phone - on screenshare ended', { hadVideo, id: this.id, screenTrack });
 
-        this.eventEmitter.emit(SHARE_SCREEN_ENDING);
+        this.eventEmitter.emit(EVENT_SHARE_SCREEN_ENDING);
       };
     }
 
@@ -456,7 +513,7 @@ class Call extends EventEmitter {
     };
 
     setLocalMediaStream(this.sipCall, screenStream);
-    this.eventEmitter.emit(SHARE_SCREEN_STARTED, screenStream);
+    this.eventEmitter.emit(EVENT_SHARE_SCREEN_STARTED, screenStream);
   }
 
   _sendAction(action: ActionTypes) {
