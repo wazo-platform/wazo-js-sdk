@@ -139,7 +139,7 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
       'Content-Type': 'application/json',
     };
 
-    return client.post(`${baseUrl}/saml/sso`, body, headers, (response: any) => response);
+    return client.post(`${baseUrl}/saml/sso`, body, headers);
   },
   refreshToken: (refreshToken: string, backend: string, expiration: number, isMobile?: boolean, tenantId?: string, domainName?: string): Promise<Session | null | undefined> => {
     const body: Record<string, any> = {
