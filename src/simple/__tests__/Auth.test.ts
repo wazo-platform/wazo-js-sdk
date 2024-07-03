@@ -1,3 +1,5 @@
+import BadResponse from '../../domain/BadResponse';
+import ServerError from '../../domain/ServerError';
 import getApiClient, { setRefreshToken } from '../../service/getApiClient';
 import { Auth as AuthClass } from '../Auth';
 
@@ -124,13 +126,8 @@ describe('simple/Auth', () => {
   describe('initiateIdpAuthentication', () => {
     const validResponse = { location: 'idp.com/auth', saml_session_id: 'a1b2C3d4' };
 
-    it('should return a `location` and `saml_session_id` if the response is ok', async () => {
-      const initiateIdpAuthentication = jest.fn(() =>
-        Promise.resolve({
-          ok: true,
-          status: 303,
-          json: () => Promise.resolve(validResponse),
-        }));
+    it('should return a `location` and `saml_session_id` if the response is valid', async () => {
+      const initiateIdpAuthentication = jest.fn(() => validResponse);
 
       (getApiClient as any).mockImplementation(() => ({
         auth: {
@@ -141,12 +138,9 @@ describe('simple/Auth', () => {
       const response = await Auth.initiateIdpAuthentication('example.com', 'https://myapp.xyz');
       expect(response).toBe(validResponse);
     });
+
     it('should return a `NoSamlRouteError` if the response is a 404', async () => {
-      const initiateIdpAuthentication = jest.fn(() =>
-        Promise.resolve({
-          ok: false,
-          status: 404,
-        }));
+      const initiateIdpAuthentication = jest.fn(() => { throw BadResponse.fromText('an error message', 404); });
 
       (getApiClient as any).mockImplementation(() => ({
         auth: {
@@ -159,80 +153,8 @@ describe('simple/Auth', () => {
       );
     });
 
-    it('should return an error `message` if the response is NOT ok', async () => {
-      const initiateIdpAuthentication = jest.fn(() =>
-        Promise.resolve({
-          ok: false,
-          json: () => Promise.resolve({ message: 'an error message', reason: 'an error reason' }),
-        }));
-
-      (getApiClient as any).mockImplementation(() => ({
-        auth: {
-          initiateIdpAuthentication,
-        },
-      }));
-
-      await expect(Auth.initiateIdpAuthentication('example.com', 'https://myapp.xyz')).rejects.toThrow(
-        'an error message',
-      );
-    });
-
-    it('should return an error `reason` if there is no `message` and the response is NOT ok', async () => {
-      const initiateIdpAuthentication = jest.fn(() =>
-        Promise.resolve({
-          ok: false,
-          json: () => Promise.resolve({ reason: 'an error reason' }),
-        }));
-
-      (getApiClient as any).mockImplementation(() => ({
-        auth: {
-          initiateIdpAuthentication,
-        },
-      }));
-
-      await expect(Auth.initiateIdpAuthentication('example.com', 'https://myapp.xyz')).rejects.toThrow(
-        'an error reason',
-      );
-    });
-
-    it('should return an error with a null message if there is no `message` and `reason`', async () => {
-      const initiateIdpAuthentication = jest.fn(() =>
-        Promise.resolve({
-          ok: false,
-          json: () => Promise.resolve({}),
-        }));
-
-      (getApiClient as any).mockImplementation(() => ({
-        auth: {
-          initiateIdpAuthentication,
-        },
-      }));
-
-      await expect(Auth.initiateIdpAuthentication('example.com', 'https://myapp.xyz')).rejects.toThrow('');
-    });
-
-    it('should return a NoSAMLRouteError if the response is a 404', async () => {
-      const initiateIdpAuthentication = jest.fn(() =>
-        Promise.resolve({
-          ok: false,
-          status: 404,
-        }));
-
-      (getApiClient as any).mockImplementation(() => ({
-        auth: {
-          initiateIdpAuthentication,
-        },
-      }));
-
-      await expect(Auth.initiateIdpAuthentication('example.com', 'https://myapp.xyz')).rejects.toThrow('No route found for SAML SSO');
-    });
-
-    it('should return a SamlConfigError if the response is a 500', async () => {
-      const initiateIdpAuthentication = jest.fn(() =>
-        Promise.resolve({
-          ok: false,
-          status: 500,
-        }));
+    it('should return a `SamlConfigError` if the response is a 500', async () => {
+      const initiateIdpAuthentication = jest.fn(() => { throw ServerError.fromText('an error message', 500); });
 
       (getApiClient as any).mockImplementation(() => ({
         auth: {
