@@ -14,7 +14,7 @@ import IssueReporter from '../service/IssueReporter';
 import { Softphone } from './softphone';
 import { getSipSessionId } from '../utils/sdp';
 import { assertCan, getState } from '../state-machine/utils';
-import { downgradeToAudio, getLocalStream, getPeerConnection, getStreamFromConstraints, hasLocalVideo, setLocalMediaStream, upgradeToVideo } from '../utils/webrtc';
+import { downgradeToAudio, getLocalStream, getLocalVideoStream, getPeerConnection, getRemoteStream, getRemoteVideoStream, getStreamFromConstraints, getWebRtcStats, hasALocalVideoTrack, hasLocalVideo, hasRemoteVideo, isVideoRemotelyHeld, setLocalMediaStream, toggleVideo, upgradeToVideo } from '../utils/webrtc';
 
 const logger = IssueReporter.loggerFor('call');
 
@@ -49,6 +49,10 @@ export const EVENT_REMOVE_STREAM = 'onRemoveStream';
 export const EVENT_SHARE_SCREEN_ENDING = 'onScreenShareEnding';
 export const EVENT_SHARE_SCREEN_STARTED = 'onScreenShareStarted';
 export const EVENT_SHARE_SCREEN_ENDED = 'onScreenShareEnded';
+export const EVENT_WEB_RTC_STATS = 'webRtcStats';
+export const EVENT_CAMERA_RESUMED = 'onCameraResumed';
+export const EVENT_CAMERA_DISABLED = 'onCameraDisabled';
+export const EVENT_TERMINATE_SOUND = 'terminateSound';
 
 export const MESSAGE_TYPE_CHAT = 'message/TYPE_CHAT';
 export const MESSAGE_TYPE_SIGNAL = 'message/TYPE_SIGNAL';
@@ -63,6 +67,8 @@ class Call extends EventEmitter {
   apiId?: string;
 
   sipCall: SipCall;
+
+  talkingToIds: string[];
 
   creationTime: Date;
 
@@ -114,10 +120,17 @@ class Call extends EventEmitter {
     });
   }
 
-  async hangup(): Promise<boolean> {
-    const sipCallId = this.sipCall.id;
+  async reject(): Promise<boolean> {
+    logger.info('call rejected', { id: this.id });
+    this.eventEmitter.emit(EVENT_TERMINATE_SOUND, 'call rejected locally');
 
-    logger.info('Call hangup', { sipCallId });
+    this.shouldSendReinvite = false;
+
+    return this.hangup();
+  }
+
+  async hangup(): Promise<boolean> {
+    logger.info('call hangup', { id: this.id });
     await this.phone.client.hangup(this.sipCall);
 
     // Remove this call from softphone's calls
@@ -126,8 +139,28 @@ class Call extends EventEmitter {
     return true;
   }
 
+  forceCancel(): void {
+    try {
+      // @ts-ignore: private
+      this.sipCall.outgoingInviteRequest.cancel();
+    } catch (e) {
+      logger.info('force cancel, error', e);
+    }
+  }
+
   startConference(withCalls: Call[]) {
     // @TODO
+    // const participants = [this, ...withCalls].reduce((acc: Record<string, any>, call: Call) => {
+    //   acc[call.talkingToIds[0]] = call;
+    //   return acc;
+    // }, {});
+
+    // const adHocConference = new AdHocAPIConference({
+    //   phone: this.phone,
+    //   host,
+    //   participants,
+    // });
+    // return adHocConference.start();
   }
 
   mute() {
@@ -167,14 +200,25 @@ class Call extends EventEmitter {
       await downgradeToAudio(this.sipCall);
     }
 
-    // const isConference = !!callSession && callSession.isConference();
-    // @TODO
-    const isConference = false;
-    const promise = this.phone.client.hold(this.sipCall, isConference, hasVideo);
+    const promise = this.phone.client.hold(this.sipCall, this.isConference(), hasVideo);
 
     this.eventEmitter.emit(EVENT_CALL_HELD);
 
     return promise;
+  }
+
+  turnCameraOn(): void {
+    logger.info('turn camera on', { id: this.id });
+    toggleVideo(this.sipCall, true);
+
+    this.eventEmitter.emit(EVENT_CAMERA_RESUMED);
+  }
+
+  turnCameraOff(): void {
+    logger.info('WebRTC turn camera off', { id: this.id });
+    toggleVideo(this.sipCall, false);
+
+    this.eventEmitter.emit(EVENT_CAMERA_DISABLED);
   }
 
   isHeld() {
@@ -187,6 +231,36 @@ class Call extends EventEmitter {
 
   isConference(): boolean {
     return (getPeerConnection(this.sipCall) as PeerConnection)?.sfu;
+  }
+
+  transfer(target: string): void {
+    logger.info('call - transfer', { id: this.id, target });
+
+    this.phone.client.transfer(this.sipCall, target);
+  }
+
+  atxfer(): Record<string, any> | null | undefined {
+    logger.info('atxfer', { id: this.id });
+
+    return this.phone.client.atxfer(this.sipCall);
+  }
+
+  sendDigits(digits: string) {
+    logger.info('WebRTC send digits', { id: this.id, digits });
+
+    this.phone.client.sendDTMF(this.sipCall, digits);
+  }
+
+  startNetworkMonitoring(interval = 1000) {
+    return this.phone.client.startNetworkMonitoring(this.sipCall, interval);
+  }
+
+  stopNetworkMonitoring() {
+    return this.phone.client.stopNetworkMonitoring(this.sipCall);
+  }
+
+  async getStats(): Promise<RTCStatsReport | null | undefined> {
+    return getWebRtcStats(this.sipCall);
   }
 
   async sendReinvite(options: ReinviteOptions = {}): Promise<OutgoingInviteRequest | void> {
@@ -216,6 +290,14 @@ class Call extends EventEmitter {
 
   sendMessage(body: string, contentType = 'text/plain'): void {
     return this.phone.client.sendMessage(this.sipCall, body, contentType);
+  }
+
+  sendChat(content: string): void {
+    this.sendMessage(JSON.stringify({ type: MESSAGE_TYPE_CHAT, content }), 'application/json');
+  }
+
+  sendSignal(content: any): void {
+    this.sendMessage(JSON.stringify({ type: MESSAGE_TYPE_SIGNAL, content }), 'application/json');
   }
 
   async startScreenSharing(constraints: Record<string, any>): Promise<MediaStream> {
@@ -269,9 +351,7 @@ class Call extends EventEmitter {
       }
 
       if (restoreLocalStream) {
-        // @TODO
-        // const conference = this.isConference(targetCallSession);
-        const conference = false;
+        const conference = this.isConference();
 
         // When stopping screenshare and we had video before that, we have to re-upgrade
         // When upgrading directly to screenshare (eg: we don't have a videoLocalStream to replace)
@@ -335,7 +415,39 @@ class Call extends EventEmitter {
   }
 
   onNetworkStats(stats: Record<string, any>, previousStats: Record<string, any>) {
-    // @TODO
+    this.emit(EVENT_WEB_RTC_STATS, stats, previousStats);
+  }
+
+  getRemoteStream() {
+    return getRemoteStream(this.sipCall);
+  }
+
+  getRemoteVideoStream() {
+    return getRemoteVideoStream(this.sipCall);
+  }
+
+  hasRemoteVideo() {
+    return hasRemoteVideo(this.sipCall);
+  }
+
+  hasLocalVideo() {
+    return hasLocalVideo(this.sipCall);
+  }
+
+  getLocalStream() {
+    return getLocalStream(this.sipCall);
+  }
+
+  getLocalVideoStream() {
+    return getLocalVideoStream(this.sipCall);
+  }
+
+  hasALocalVideoTrack() {
+    return hasALocalVideoTrack(this.sipCall);
+  }
+
+  isVideoRemotelyHeld() {
+    return isVideoRemotelyHeld(this.sipCall);
   }
 
   onReinvite(request: IncomingRequestMessage, updatedCalleeName: string, updatedNumber: string, hadRemoteVideo: boolean) {
@@ -358,7 +470,7 @@ class Call extends EventEmitter {
       const onCancel = (this.sipCall as Invitation)._onCancel.bind(this.sipCall);
 
       this.sipCall._onCancel = (message: IncomingRequestMessage) => {
-        logger.trace('on sip session canceled', { callId: message.callId, id: this.id });
+        logger.trace('call - on sip session canceled', { callId: message.callId, id: this.id });
         onCancel(message);
         const elsewhere = message.data.indexOf('cause=26') !== -1 && message.data.indexOf('completed elsewhere') !== -1;
 

@@ -40,7 +40,6 @@ export type CallOptions = {
   // If audioOnly is set to true, all video stream will be deactivated, even remotes ones.
   audioOnly?: boolean,
   conference?: boolean,
-  sipLine?: SipLine,
 };
 
 const logger = IssueReporter.loggerFor('softphone');
@@ -155,14 +154,14 @@ export class Softphone extends EventEmitter {
 
     return this.client.register().catch(error => {
       // Avoid exception on `t.server.scheme` in sip transport when losing the webrtc socket connection
-      logger.error('WebRTC register error', { message: error.message, stack: error.stack });
+      logger.error('register error', { message: error.message, stack: error.stack });
 
       this._sendAction(Actions.UNREGISTER);
     });
   }
 
   reconnect() {
-    logger.info('Softphone - reconnect', { client: !!this.client });
+    logger.info('reconnect', { client: !!this.client });
     if (!this.client) {
       return;
     }
@@ -214,7 +213,7 @@ export class Softphone extends EventEmitter {
   }
 
   startHeartbeat() {
-    logger.info('WebRTC phone - start heartbeat', { client: !!this.client, hasHeartbeat: this.client.hasHeartbeat() });
+    logger.info('start heartbeat', { client: !!this.client, hasHeartbeat: this.client.hasHeartbeat() });
     if (!this.client || this.client.hasHeartbeat()) {
       return;
     }
@@ -223,7 +222,7 @@ export class Softphone extends EventEmitter {
   }
 
   stopHeartbeat() {
-    logger.info('WebRTC phone - stopHeartbeat', { client: !!this.client });
+    logger.info('stopHeartbeat', { client: !!this.client });
     if (!this.client) {
       return;
     }
@@ -231,32 +230,59 @@ export class Softphone extends EventEmitter {
     this.client.stopHeartbeat();
   }
 
-  changeAudioOutputDevice() {
-    // @TODO
+  setMediaConstraints(media: MediaStreamConstraints): void {
+    this.client.setMediaConstraints(media);
   }
 
-  changeAudioInputDevice() {
-    // @TODO
+  changeAudioOutputDevice(id: string) {
+    logger.info('change audio device', { deviceId: id });
+
+    this.audioOutputDeviceId = id;
+    return this.client.changeAudioOutputDevice(id);
   }
 
-  changeVideoInputDevice() {
-    // @TODO
+  changeAudioInputDevice(id: string, force?: boolean) {
+    logger.info('changeAudio input device', { deviceId: id });
+
+    const currentCall = this.getCurrentCall();
+    return this.client.changeAudioInputDevice(id, currentCall?.sipCall, force);
   }
 
-  changeRingDevice() {
-    // @TODO
+  changeVideoInputDevice(id: string): Promise<void | MediaStream | null | undefined> {
+    logger.info('change video input device', { deviceId: id });
+
+    const currentCall = this.getCurrentCall();
+    return this.client.changeVideoInputDevice(id, currentCall?.sipCall);
   }
 
-  changeAudioVolume() {
-    // @TODO
+  changeRingDevice(id: string) {
+    logger.info('changing ring device', { id });
+    this.audioRingDeviceId = id;
   }
 
-  changeRingVolume() {
-    // @TODO
+  hasSfu(): boolean {
+    return this.sipLine?.hasVideoConference() || false;
+  }
+
+  // volume is a value between 0 and 1
+  changeAudioVolume(volume: number) {
+    logger.info('changing audio volume', { volume });
+    this.audioOutputVolume = volume;
+    this.client.changeAudioOutputVolume(volume);
+  }
+
+  // volume is a value between 0 and 1
+  changeRingVolume(volume: number) {
+    logger.info('changing ring volume', { volume });
+    this.audioRingVolume = volume;
   }
 
   getCalls(): Call[] {
     return this.calls;
+  }
+
+  getCurrentCall(): Call | undefined {
+    return this.calls.find(call => call.isEstablished());
   }
 
   getState(): StateTypes {
@@ -277,7 +303,7 @@ export class Softphone extends EventEmitter {
     });
 
     this.client.on(this.client.ON_REINVITE, (sipCall: SipCall, request: IncomingRequestMessage, updatedCalleeName: string, updatedNumber: string, hadRemoteVideo: boolean) => {
-      logger.info('Softphone on reinvite', {
+      logger.info('on reinvite', {
         callId: sipCall.id,
         inviteId: request.callId,
         updatedCalleeName,
@@ -326,21 +352,21 @@ export class Softphone extends EventEmitter {
     });
 
     this.client.on(this.client.UNREGISTERED, () => {
-      logger.info('Softphone unregistered');
+      logger.info('unregistered');
       this.eventEmitter.emit(EVENT_UNREGISTERED);
 
       this._sendAction(Actions.UNREGISTERED);
     });
 
     this.client.on(this.client.ON_DISCONNECTED, () => {
-      logger.info('Softphone disconnected');
+      logger.info('disconnected');
       this.eventEmitter.emit(EVENT_DISCONNECTED);
 
       this._sendAction(Actions.TRANSPORT_CLOSED);
     });
 
     this.client.on(this.client.REGISTERED, () => {
-      logger.info('Softphone registered', { state: getState(this.softphoneActor) });
+      logger.info('registered', { state: getState(this.softphoneActor) });
       if (!can(this.softphoneActor, Actions.REGISTER_DONE)) {
         logger.warn('Softphone registered but not in REGISTERING state', { state: getState(this.softphoneActor) });
         return;
@@ -363,12 +389,12 @@ export class Softphone extends EventEmitter {
     });
 
     this.client.on(this.client.CONNECTED, () => {
-      logger.info('WebRTC client connected');
+      logger.info('connected');
       this.stopHeartbeat();
     });
 
     this.client.on(this.client.DISCONNECTED, () => {
-      logger.info('WebRTC client disconnected');
+      logger.info('disconnected');
       this.eventEmitter.emit(EVENT_DISCONNECTED);
 
       // Do not trigger heartbeat if already running
@@ -408,11 +434,11 @@ export class Softphone extends EventEmitter {
   }
 
   _onCallEvent(sipCall: SipCall, eventName: string, ...args: any[]) {
-    logger.warn('Softphone - received call event', { eventName, sipId: sipCall.id });
+    logger.warn('received call event', { eventName, sipId: sipCall.id });
 
     const call = this._getCall(sipCall);
     if (!call) {
-      logger.warn('Softphone - no call found to send the event', { eventName, sipId: sipCall.id });
+      logger.warn('no call found to send the event', { eventName, sipId: sipCall.id });
       return;
     }
 
