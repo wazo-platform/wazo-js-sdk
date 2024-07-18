@@ -141,8 +141,9 @@ describe('With correct API results', () => {
 
   describe('samlLogIn mobile test', () => {
     it('should retrieve user token', async () => {
+      Wazo.Auth.mobile = true;
       const samlSessionId = 'a1b2C3d4';
-      const result = await client.auth.samlLogIn(samlSessionId, { mobile: true });
+      const result = await client.auth.samlLogIn(samlSessionId);
 
       expect(result).toBeInstanceOf(Session);
       expect(result?.token).toBe(1);
