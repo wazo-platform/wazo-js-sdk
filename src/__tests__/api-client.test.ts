@@ -131,8 +131,28 @@ describe('With correct API results', () => {
         body: JSON.stringify({ saml_session_id: samlSessionId }),
         signal: expect.any(Object),
         headers: {
-          'X-Auth-Token': token,
           'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        agent: null,
+      });
+    });
+  });
+
+  describe('samlLogIn mobile test', () => {
+    it('should retrieve user token', async () => {
+      const samlSessionId = 'a1b2C3d4';
+      const result = await client.auth.samlLogIn(samlSessionId, { mobile: true });
+
+      expect(result).toBeInstanceOf(Session);
+      expect(result?.token).toBe(1);
+      expect(global.fetch).toBeCalledWith(`https://${server}/api/auth/${authVersion}/token`, {
+        method: 'post',
+        body: JSON.stringify({ saml_session_id: samlSessionId }),
+        signal: expect.any(Object),
+        headers: {
+          'Content-Type': 'application/json',
+          'Wazo-Session-Type': 'mobile',
           Accept: 'application/json',
         },
         agent: null,
