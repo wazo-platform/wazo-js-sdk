@@ -109,7 +109,8 @@ export class Softphone extends EventEmitter {
       return null;
     }
 
-    // @TODO: call terminateAll here
+    // Terminate all calls
+    await Promise.all(this.calls.map(call => call.hangup()));
 
     return this.client.unregister();
   }

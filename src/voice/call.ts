@@ -8,7 +8,7 @@ import { SessionDescriptionHandler } from 'sip.js/lib/platform/web';
 import { SessionDescriptionHandlerOptions } from 'sip.js/lib/api';
 import type { IncomingRequestMessage } from 'sip.js/lib/core/messages/incoming-request-message';
 
-import callStateMachine, { type ActionTypes, Actions, EstablishedActions, States, EstablishedStates, type CallActorRef } from '../state-machine/call-state-machine';
+import callStateMachine, { type ActionTypes, Actions, type EstablishedActionTypes, EstablishedActions, States, EstablishedStates, type CallActorRef } from '../state-machine/call-state-machine';
 import { SipCall, PeerConnection } from '../domain/types';
 import IssueReporter from '../service/IssueReporter';
 import { Softphone } from './softphone';
@@ -41,6 +41,7 @@ export const EVENT_CALL_ENDED = 'ended';
 export const EVENT_CALL_MUTED = 'muted';
 export const EVENT_CALL_UN_MUTED = 'unMuted';
 export const EVENT_CALL_HELD = 'held';
+export const EVENT_CALL_RESUMED = 'resumed';
 export const EVENT_REINVITE = 'reinvite';
 export const EVENT_TRACK = 'track';
 export const EVENT_AUDIO_STREAM = 'onAudioStream';
@@ -93,8 +94,6 @@ class Call extends EventEmitter {
     this.phone = phone;
     this.sipCall = sipCall;
 
-    // @TODO
-    // this.video = false;
     this._bindEvents();
   }
 
@@ -102,7 +101,7 @@ class Call extends EventEmitter {
     assertCan(this.callActor, Actions.ACCEPT);
     logger.info('WebRTC phone - accept call', { id: this.id, ...options });
 
-    // @TODO Check if not already accepted
+    this._sendAction(Actions.ACCEPT);
 
     this.phone.holdAllCalls(this);
 
@@ -165,6 +164,7 @@ class Call extends EventEmitter {
 
   mute() {
     assertCan(this.callActor, EstablishedActions.MUTE);
+    this._sendAction(EstablishedActions.MUTE);
 
     logger.info('mute call', { id: this.id });
 
@@ -175,6 +175,7 @@ class Call extends EventEmitter {
 
   unMute() {
     assertCan(this.callActor, EstablishedActions.UN_MUTE);
+    this._sendAction(EstablishedActions.UN_MUTE);
 
     logger.info('un-mute call', { id: this.id });
 
@@ -184,14 +185,15 @@ class Call extends EventEmitter {
   }
 
   async hold() {
+    assertCan(this.callActor, EstablishedActions.HOLD);
+    this._sendAction(EstablishedActions.HOLD);
+
     logger.info('hold call', { id: this.id });
 
     const hasVideo = hasLocalVideo(this.sipCall);
 
     // Stop screenshare if needed
     if (this.currentScreenShare && this.currentScreenShare.sipSessionId === this.id) {
-      // @TODO
-      // this.lastScreenShare = this.currentScreenShare;
       await this.stopScreenSharing(false);
     }
 
@@ -205,6 +207,49 @@ class Call extends EventEmitter {
     this.eventEmitter.emit(EVENT_CALL_HELD);
 
     return promise;
+  }
+
+  async resume() {
+    assertCan(this.callActor, EstablishedActions.RESUME);
+    this._sendAction(EstablishedActions.RESUME);
+
+    const isConference = this.isConference();
+    const hasVideo = hasLocalVideo(this.sipCall);
+    const wasScreensharing = this.currentScreenShare && this.currentScreenShare.sipSessionId === this.id;
+    const wasDesktop = this.currentScreenShare && this.currentScreenShare.desktop;
+
+    logger.info('resume call', { id: this.id, isConference, hasVideo, wasScreensharing, wasDesktop });
+
+    const promise = this.phone.client.unhold(this.sipCall, isConference);
+
+    if (hasVideo) {
+      const constraints = {
+        audio: false,
+        video: true,
+        screen: wasScreensharing,
+        desktop: wasDesktop,
+      };
+      await upgradeToVideo(this.sipCall, constraints, isConference);
+    }
+
+    const onScreenSharing = (stream: MediaStream | null | undefined) => {
+      const hadVideo = this.currentScreenShare && this.currentScreenShare.hadVideo;
+
+      if (stream) {
+        this._onScreenSharing(stream, hadVideo, wasDesktop);
+      }
+    };
+
+    this.eventEmitter.emit(EVENT_CALL_RESUMED);
+
+    return promise.then(() => {
+      const stream = this.getLocalVideoStream();
+      if (wasScreensharing) {
+        onScreenSharing(this.getLocalVideoStream());
+      }
+
+      return stream;
+    });
   }
 
   turnCameraOn(): void {
@@ -628,7 +673,7 @@ class Call extends EventEmitter {
     this.eventEmitter.emit(EVENT_SHARE_SCREEN_STARTED, screenStream);
   }
 
-  _sendAction(action: ActionTypes) {
+  _sendAction(action: ActionTypes | EstablishedActionTypes) {
     this.callActor.send({ type: action });
   }
 }
