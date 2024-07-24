@@ -13,7 +13,7 @@ import { SipCall, PeerConnection } from '../domain/types';
 import IssueReporter from '../service/IssueReporter';
 import { Softphone } from './softphone';
 import { getSipSessionId } from '../utils/sdp';
-import { assertCan, getState } from '../state-machine/utils';
+import { assertCan, assertState, getState } from '../state-machine/utils';
 import { downgradeToAudio, getLocalStream, getLocalVideoStream, getPeerConnection, getRemoteStream, getRemoteVideoStream, getStreamFromConstraints, getWebRtcStats, hasALocalVideoTrack, hasLocalVideo, hasRemoteVideo, isVideoRemotelyHeld, setLocalMediaStream, toggleVideo, upgradeToVideo } from '../utils/webrtc';
 
 const logger = IssueReporter.loggerFor('call');
@@ -99,7 +99,7 @@ class Call extends EventEmitter {
 
   async accept(options: AcceptOptions = {}): Promise<string | null> {
     assertCan(this.callActor, Actions.ACCEPT);
-    logger.info('WebRTC phone - accept call', { id: this.id, ...options });
+    logger.info('call - accept', { id: this.id, ...options });
 
     this._sendAction(Actions.ACCEPT);
 
@@ -108,9 +108,9 @@ class Call extends EventEmitter {
     this.shouldSendReinvite = false;
     this.answerTime = new Date();
 
-    logger.info('accept call, session found', { sipId: this.id });
-
     return this.phone.client.answer(this.sipCall as Invitation, options.withCamera).then(() => {
+      logger.info('call - accepted', { id: this.id, ...options });
+
       return this.id;
     }).catch(e => {
       logger.error(e);
@@ -120,7 +120,9 @@ class Call extends EventEmitter {
   }
 
   async reject(): Promise<boolean> {
-    logger.info('call rejected', { id: this.id });
+    assertCan(this.callActor, Actions.REJECT);
+    logger.info('call - reject', { id: this.id });
+
     this.eventEmitter.emit(EVENT_TERMINATE_SOUND, 'call rejected locally');
 
     this.shouldSendReinvite = false;
@@ -129,7 +131,9 @@ class Call extends EventEmitter {
   }
 
   async hangup(): Promise<boolean> {
-    logger.info('call hangup', { id: this.id });
+    assertCan(this.callActor, Actions.HANGUP);
+    logger.info('call - hangup', { id: this.id });
+
     await this.phone.client.hangup(this.sipCall);
 
     // Remove this call from softphone's calls
@@ -143,7 +147,7 @@ class Call extends EventEmitter {
       // @ts-ignore: private
       this.sipCall.outgoingInviteRequest.cancel();
     } catch (e) {
-      logger.info('force cancel, error', e);
+      logger.info('call - force cancel, error', e);
     }
   }
 
@@ -164,9 +168,9 @@ class Call extends EventEmitter {
 
   mute() {
     assertCan(this.callActor, EstablishedActions.MUTE);
-    this._sendAction(EstablishedActions.MUTE);
+    logger.info('call - mute', { id: this.id });
 
-    logger.info('mute call', { id: this.id });
+    this._sendAction(EstablishedActions.MUTE);
 
     this.phone.client.mute(this.sipCall);
 
@@ -175,9 +179,9 @@ class Call extends EventEmitter {
 
   unMute() {
     assertCan(this.callActor, EstablishedActions.UN_MUTE);
-    this._sendAction(EstablishedActions.UN_MUTE);
+    logger.info('call - un-mute', { id: this.id });
 
-    logger.info('un-mute call', { id: this.id });
+    this._sendAction(EstablishedActions.UN_MUTE);
 
     this.phone.client.unmute(this.sipCall);
 
@@ -186,9 +190,9 @@ class Call extends EventEmitter {
 
   async hold() {
     assertCan(this.callActor, EstablishedActions.HOLD);
-    this._sendAction(EstablishedActions.HOLD);
+    logger.info('call - hold', { id: this.id });
 
-    logger.info('hold call', { id: this.id });
+    this._sendAction(EstablishedActions.HOLD);
 
     const hasVideo = hasLocalVideo(this.sipCall);
 
@@ -218,7 +222,7 @@ class Call extends EventEmitter {
     const wasScreensharing = this.currentScreenShare && this.currentScreenShare.sipSessionId === this.id;
     const wasDesktop = this.currentScreenShare && this.currentScreenShare.desktop;
 
-    logger.info('resume call', { id: this.id, isConference, hasVideo, wasScreensharing, wasDesktop });
+    logger.info('call - resume', { id: this.id, isConference, hasVideo, wasScreensharing, wasDesktop });
 
     const promise = this.phone.client.unhold(this.sipCall, isConference);
 
@@ -253,14 +257,16 @@ class Call extends EventEmitter {
   }
 
   turnCameraOn(): void {
-    logger.info('turn camera on', { id: this.id });
+    assertState(this.callActor, States.ESTABLISHED);
+    logger.info('call - turn camera on', { id: this.id });
     toggleVideo(this.sipCall, true);
 
     this.eventEmitter.emit(EVENT_CAMERA_RESUMED);
   }
 
   turnCameraOff(): void {
-    logger.info('WebRTC turn camera off', { id: this.id });
+    assertState(this.callActor, States.ESTABLISHED);
+    logger.info('call -  turn camera off', { id: this.id });
     toggleVideo(this.sipCall, false);
 
     this.eventEmitter.emit(EVENT_CAMERA_DISABLED);
@@ -279,28 +285,38 @@ class Call extends EventEmitter {
   }
 
   transfer(target: string): void {
+    assertState(this.callActor, States.ESTABLISHED);
     logger.info('call - transfer', { id: this.id, target });
 
     this.phone.client.transfer(this.sipCall, target);
   }
 
   atxfer(): Record<string, any> | null | undefined {
-    logger.info('atxfer', { id: this.id });
+    assertState(this.callActor, States.ESTABLISHED);
+    logger.info('call - atxfer', { id: this.id });
 
     return this.phone.client.atxfer(this.sipCall);
   }
 
   sendDigits(digits: string) {
-    logger.info('WebRTC send digits', { id: this.id, digits });
+    assertState(this.callActor, States.ESTABLISHED);
+
+    logger.info('call - send digits', { id: this.id, digits });
 
     this.phone.client.sendDTMF(this.sipCall, digits);
   }
 
   startNetworkMonitoring(interval = 1000) {
+    assertState(this.callActor, States.ESTABLISHED);
+    logger.info('call - start network monitoring', { id: this.id });
+
     return this.phone.client.startNetworkMonitoring(this.sipCall, interval);
   }
 
   stopNetworkMonitoring() {
+    assertState(this.callActor, States.ESTABLISHED);
+    logger.info('call - stop network monitoring', { id: this.id });
+
     return this.phone.client.stopNetworkMonitoring(this.sipCall);
   }
 
@@ -309,7 +325,8 @@ class Call extends EventEmitter {
   }
 
   async sendReinvite(options: ReinviteOptions = {}): Promise<OutgoingInviteRequest | void> {
-    logger.info('send reinvite', { id: this.id, ...options });
+    assertState(this.callActor, States.ESTABLISHED);
+    logger.info('call - send reinvite', { id: this.id, ...options });
 
     const shouldScreenShare = options.constraints?.screen;
     const isUpgrade = shouldScreenShare || options.constraints?.video;
@@ -334,19 +351,29 @@ class Call extends EventEmitter {
   }
 
   sendMessage(body: string, contentType = 'text/plain'): void {
+    assertState(this.callActor, States.ESTABLISHED);
+    logger.info('call - send message', { id: this.id, body });
+
     return this.phone.client.sendMessage(this.sipCall, body, contentType);
   }
 
   sendChat(content: string): void {
+    assertState(this.callActor, States.ESTABLISHED);
+    logger.info('call - send chat', { id: this.id, content });
+
     this.sendMessage(JSON.stringify({ type: MESSAGE_TYPE_CHAT, content }), 'application/json');
   }
 
   sendSignal(content: any): void {
+    assertState(this.callActor, States.ESTABLISHED);
+    logger.info('call - send signal', { id: this.id, content });
+
     this.sendMessage(JSON.stringify({ type: MESSAGE_TYPE_SIGNAL, content }), 'application/json');
   }
 
   async startScreenSharing(constraints: Record<string, any>): Promise<MediaStream> {
-    logger.info('Call - start screen sharing', { constraints, id: this.id });
+    assertState(this.callActor, States.ESTABLISHED);
+    logger.info('call - start screen sharing', { constraints, id: this.id });
     const screenShareStream = await getStreamFromConstraints(constraints);
 
     if (!screenShareStream) {
@@ -381,6 +408,7 @@ class Call extends EventEmitter {
   }
 
   async stopScreenSharing(restoreLocalStream = true): Promise<OutgoingInviteRequest | void | null> {
+    assertState(this.callActor, States.ESTABLISHED);
     if (!this.currentScreenShare) {
       return;
     }
@@ -426,12 +454,13 @@ class Call extends EventEmitter {
 
   onScreenShareReinvite(response: any, desktop: boolean) {
     const localStream = getLocalStream(this.sipCall);
-    logger.info('Updrading directly in screensharing mode', { id: this.id, tracks: localStream?.getTracks() });
+    logger.info('call - updrading directly in screensharing mode', { id: this.id, tracks: localStream?.getTracks() });
 
     this._onScreenSharing(localStream as MediaStream, false, desktop);
   }
 
   onAccepted() {
+    this._sendAction(Actions.REMOTLY_ACCEPTED);
     this.emit(EVENT_CALL_ACCEPTED);
   }
 
@@ -526,13 +555,13 @@ class Call extends EventEmitter {
     this.sipCall.stateChange.addListener((newState: SessionState) => {
       switch (newState) {
         case SessionState.Terminating:
-          logger.info('call terminating', { id: this.id });
+          logger.info('call - terminating', { id: this.id });
           this.eventEmitter.emit(EVENT_CALL_TERMINATING);
           break;
 
         case SessionState.Terminated:
         {
-          logger.info('call terminated', { id: this.id });
+          logger.info('call - terminated', { id: this.id });
 
           // Should be called before `_onCallTerminated` or the callCount will not decrement...
           this.endTime = new Date();
@@ -554,7 +583,7 @@ class Call extends EventEmitter {
     const peerConnection = sdh.peerConnection as PeerConnection;
 
     if (!peerConnection) {
-      logger.warn('no peer connection', { id: this.id });
+      logger.warn('call - no peer connection', { id: this.id });
       return;
     }
 
@@ -562,7 +591,7 @@ class Call extends EventEmitter {
       const event = rawEvent;
       const [stream] = event.streams;
       const kind = event && event.track && event.track.kind;
-      logger.info('on track stream called on the peer connection', {
+      logger.info('call - on track stream called on the peer connection', {
         id: this.id,
         streamId: stream ? stream.id : null,
         tracks: stream ? stream.getTracks() : null,
@@ -577,7 +606,7 @@ class Call extends EventEmitter {
     };
 
     peerConnection.onremovestream = (event: any) => {
-      logger.info('on remove stream called on the peer connection', {
+      logger.info('call - on remove stream called on the peer connection', {
         id: event.stream.id,
         tracks: event.stream.getTracks(),
       });
@@ -588,7 +617,8 @@ class Call extends EventEmitter {
   }
 
   _downgradeToAudio(withMessage = true) {
-    logger.info('Downgrade to audio', { id: this.id, withMessage });
+    assertState(this.callActor, States.ESTABLISHED);
+    logger.info('call - downgrade to audio', { id: this.id, withMessage });
 
     downgradeToAudio(this.sipCall);
 
@@ -601,7 +631,8 @@ class Call extends EventEmitter {
 
   // Returns true if we need to send a re-INVITE request
   async _upgradeToVideo(options: ReinviteOptions = {}): Promise<boolean> {
-    logger.info('Upgrade to video', { id: this.id, ...options });
+    assertState(this.callActor, States.ESTABLISHED);
+    logger.info('call - upgrade to video', { id: this.id, ...options });
 
     const shouldScreenShare = options.constraints?.screen;
     const desktop = options.constraints?.desktop;
@@ -630,7 +661,8 @@ class Call extends EventEmitter {
   }
 
   _sendReinviteMessage(isUpgrade: boolean) {
-    logger.info('Sending reinvite message', { id: this.id, isUpgrade });
+    assertState(this.callActor, States.ESTABLISHED);
+    logger.info('call - sending reinvite message', { id: this.id, isUpgrade });
 
     // Have to send the message after a delay due to latency to update the remote peer
     setTimeout(() => {
@@ -652,11 +684,11 @@ class Call extends EventEmitter {
     const pc = this.phone.client.getPeerConnection(this.id);
     const sender = pc && pc.getSenders && pc.getSenders().find((s) => s && s.track && s.track.kind === 'video');
 
-    logger.info('WebRTC phone - on screensharing', { hadVideo, id: this.id, screenTrack });
+    logger.info('call - on screensharing', { hadVideo, id: this.id, screenTrack });
 
     if (screenTrack) {
       screenTrack.onended = () => {
-        logger.info('WebRTC phone - on screenshare ended', { hadVideo, id: this.id, screenTrack });
+        logger.info('call - on screenshare ended', { hadVideo, id: this.id, screenTrack });
 
         this.eventEmitter.emit(EVENT_SHARE_SCREEN_ENDING);
       };
