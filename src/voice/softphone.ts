@@ -155,14 +155,14 @@ export class Softphone extends EventEmitter {
 
     return this.client.register().catch(error => {
       // Avoid exception on `t.server.scheme` in sip transport when losing the webrtc socket connection
-      logger.error('register error', { message: error.message, stack: error.stack });
+      logger.error('softphone - register error', { message: error.message, stack: error.stack });
 
       this._sendAction(Actions.UNREGISTER);
     });
   }
 
   reconnect() {
-    logger.info('reconnect', { client: !!this.client });
+    logger.info('softphone - reconnect', { client: !!this.client });
     if (!this.client) {
       return;
     }
@@ -171,10 +171,10 @@ export class Softphone extends EventEmitter {
   }
 
   async call(options: CallOptions): Promise<Call | null> {
-    logger.info('Calling from softphone', options);
+    logger.info('softphone - call', options);
 
     if (!options.params.To) {
-      logger.warn('Calling from softphone with empty number, bailing.');
+      logger.warn('softphone -  calling with empty number, bailing.');
 
       return Promise.resolve(null);
     }
@@ -184,7 +184,7 @@ export class Softphone extends EventEmitter {
     }
 
     if (this.getState() !== States.REGISTERING) {
-      logger.info('Calling when registering, waiting for Softphone to be registered ...');
+      logger.info('softphone - calling when registering, waiting for Softphone to be registered ...');
 
       await waitUntilState(this.softphoneActor, States.REGISTERED);
     }
@@ -200,7 +200,7 @@ export class Softphone extends EventEmitter {
 
       return call;
     } catch (error: any) {
-      logger.warn('Calling with softphone, error', { message: error.message, stack: error.stack });
+      logger.warn('softphone - call, error', { message: error.message, stack: error.stack });
       return Promise.resolve(null);
     }
   }
@@ -214,7 +214,7 @@ export class Softphone extends EventEmitter {
   }
 
   startHeartbeat() {
-    logger.info('start heartbeat', { client: !!this.client, hasHeartbeat: this.client.hasHeartbeat() });
+    logger.info('softphone - start heartbeat', { client: !!this.client, hasHeartbeat: this.client.hasHeartbeat() });
     if (!this.client || this.client.hasHeartbeat()) {
       return;
     }
@@ -223,7 +223,7 @@ export class Softphone extends EventEmitter {
   }
 
   stopHeartbeat() {
-    logger.info('stopHeartbeat', { client: !!this.client });
+    logger.info('softphone - stop heartbeat', { client: !!this.client });
     if (!this.client) {
       return;
     }
@@ -236,28 +236,28 @@ export class Softphone extends EventEmitter {
   }
 
   changeAudioOutputDevice(id: string) {
-    logger.info('change audio device', { deviceId: id });
+    logger.info('softphone - change audio device', { deviceId: id });
 
     this.audioOutputDeviceId = id;
     return this.client.changeAudioOutputDevice(id);
   }
 
   changeAudioInputDevice(id: string, force?: boolean) {
-    logger.info('changeAudio input device', { deviceId: id });
+    logger.info('softphone - changeAudio input device', { deviceId: id });
 
     const currentCall = this.getCurrentCall();
     return this.client.changeAudioInputDevice(id, currentCall?.sipCall, force);
   }
 
   changeVideoInputDevice(id: string): Promise<void | MediaStream | null | undefined> {
-    logger.info('change video input device', { deviceId: id });
+    logger.info('softphone - change video input device', { deviceId: id });
 
     const currentCall = this.getCurrentCall();
     return this.client.changeVideoInputDevice(id, currentCall?.sipCall);
   }
 
   changeRingDevice(id: string) {
-    logger.info('changing ring device', { id });
+    logger.info('softphone - changing ring device', { id });
     this.audioRingDeviceId = id;
   }
 
@@ -267,14 +267,14 @@ export class Softphone extends EventEmitter {
 
   // volume is a value between 0 and 1
   changeAudioVolume(volume: number) {
-    logger.info('changing audio volume', { volume });
+    logger.info('softphone - changing audio volume', { volume });
     this.audioOutputVolume = volume;
     this.client.changeAudioOutputVolume(volume);
   }
 
   // volume is a value between 0 and 1
   changeRingVolume(volume: number) {
-    logger.info('changing ring volume', { volume });
+    logger.info('softphone - changing ring volume', { volume });
     this.audioRingVolume = volume;
   }
 
@@ -304,7 +304,7 @@ export class Softphone extends EventEmitter {
     });
 
     this.client.on(this.client.ON_REINVITE, (sipCall: SipCall, request: IncomingRequestMessage, updatedCalleeName: string, updatedNumber: string, hadRemoteVideo: boolean) => {
-      logger.info('on reinvite', {
+      logger.info('softphone - on reinvite', {
         callId: sipCall.id,
         inviteId: request.callId,
         updatedCalleeName,
@@ -353,23 +353,23 @@ export class Softphone extends EventEmitter {
     });
 
     this.client.on(this.client.UNREGISTERED, () => {
-      logger.info('unregistered');
+      logger.info('softphone - unregistered');
       this.eventEmitter.emit(EVENT_UNREGISTERED);
 
       this._sendAction(Actions.UNREGISTERED);
     });
 
     this.client.on(this.client.ON_DISCONNECTED, () => {
-      logger.info('disconnected');
+      logger.info('softphone - disconnected');
       this.eventEmitter.emit(EVENT_DISCONNECTED);
 
       this._sendAction(Actions.TRANSPORT_CLOSED);
     });
 
     this.client.on(this.client.REGISTERED, () => {
-      logger.info('registered', { state: getState(this.softphoneActor) });
+      logger.info('softphone - registered', { state: getState(this.softphoneActor) });
       if (!can(this.softphoneActor, Actions.REGISTER_DONE)) {
-        logger.warn('Softphone registered but not in REGISTERING state', { state: getState(this.softphoneActor) });
+        logger.warn('softphone - registered but not in REGISTERING state', { state: getState(this.softphoneActor) });
         return;
       }
 
@@ -390,12 +390,12 @@ export class Softphone extends EventEmitter {
     });
 
     this.client.on(this.client.CONNECTED, () => {
-      logger.info('connected');
+      logger.info('softphone - connected');
       this.stopHeartbeat();
     });
 
     this.client.on(this.client.DISCONNECTED, () => {
-      logger.info('disconnected');
+      logger.info('softphone - disconnected');
       this.eventEmitter.emit(EVENT_DISCONNECTED);
 
       // Do not trigger heartbeat if already running
@@ -435,11 +435,11 @@ export class Softphone extends EventEmitter {
   }
 
   _onCallEvent(sipCall: SipCall, eventName: string, ...args: any[]) {
-    logger.warn('received call event', { eventName, sipId: sipCall.id });
+    logger.warn('softphone - received call event', { eventName, sipId: sipCall.id });
 
     const call = this._getCall(sipCall);
     if (!call) {
-      logger.warn('no call found to send the event', { eventName, sipId: sipCall.id });
+      logger.warn('softphone - no call found to send the event', { eventName, sipId: sipCall.id });
       return;
     }
 

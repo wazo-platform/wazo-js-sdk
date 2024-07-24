@@ -31,6 +31,7 @@ jest.mock('../..', () => ({
 
 jest.mock('../../web-rtc-client', () => jest.fn().mockImplementation(() => ({
   answer: jest.fn(() => Promise.resolve()),
+  hangup: jest.fn(() => Promise.resolve()),
   register: jest.fn(() => Promise.resolve()),
   setOnHeartbeatTimeout: jest.fn(() => Promise.resolve()),
   setOnHeartbeatCallback: jest.fn(() => Promise.resolve()),
@@ -53,12 +54,37 @@ describe('Call', () => {
       await expect(call.accept()).rejects.toThrowError(invalidStateTransition(States.IDLE, Actions.ACCEPT));
     });
 
+    it.only('Should throw an error when the softphone is not registered', async () => {
+      const call = new Call(sipCall, softphone);
+      call._sendAction(Actions.INCOMING_CALL);
+      softphone._sendAction(SoftphoneActions.TRANSPORT_CLOSED);
+
+      await expect(call.accept()).rejects.toThrowError(invalidStateTransition(States.RINGING, Actions.ACCEPT));
+    });
+
     it('Should not throw an error when accepting a not ringing call', async () => {
       const call = new Call(sipCall, softphone);
       call._sendAction(Actions.INCOMING_CALL);
 
       await call.accept();
       expect(softphone.client.answer).toHaveBeenCalled();
+    });
+  });
+
+  describe('hangup', () => {
+    it('Should throw an error when terminating a non established call', async () => {
+      const call = new Call(sipCall, softphone);
+
+      await expect(call.hangup()).rejects.toThrowError(invalidStateTransition(States.IDLE, Actions.HANGUP));
+    });
+
+    it('Should not throw an error when terminating an established call', async () => {
+      const call = new Call(sipCall, softphone);
+      call._sendAction(Actions.MAKE_CALL);
+      call._sendAction(Actions.REMOTLY_ACCEPTED);
+
+      await call.hangup();
+      expect(softphone.client.hangup).toHaveBeenCalled();
     });
   });
 });

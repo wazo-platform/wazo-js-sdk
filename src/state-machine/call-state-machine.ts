@@ -25,6 +25,7 @@ export const Actions = {
   INCOMING_CALL: 'incomingCall',
   MAKE_CALL: 'makeCall',
   ACCEPT: 'accept',
+  REMOTLY_ACCEPTED: 'remotlyAccepted',
   REJECT: 'reject',
   HANGUP: 'hangup',
 } as const;
@@ -67,12 +68,16 @@ const callMachine = setup({
           guard: 'isRegistered',
           target: States.TERMINATED,
         },
+        [Actions.REMOTLY_ACCEPTED]: {
+          guard: 'isRegistered',
+          target: States.ESTABLISHED,
+        },
       },
     },
     [States.RINGING]: {
       on: {
         [Actions.ACCEPT]: {
-          // guard: 'isRegistered',
+          guard: 'isRegistered',
           target: States.ESTABLISHED,
         },
         [Actions.REJECT]: {

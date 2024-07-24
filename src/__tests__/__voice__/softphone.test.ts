@@ -69,12 +69,12 @@ describe('Softphone', () => {
       await expect(instance.disconnect()).rejects.toThrowError(invalidStateTransition(States.UNREGISTERED, Actions.UNREGISTER));
     });
 
-    it('Should unregister the client', () => {
+    it('Should unregister the client', async () => {
       const instance = new Softphone();
       instance.connect({});
       instance.softphoneActor.send({ type: Actions.REGISTER_DONE });
 
-      instance.disconnect();
+      await instance.disconnect();
 
       expect(instance.client.unregister).toHaveBeenCalled();
     });
