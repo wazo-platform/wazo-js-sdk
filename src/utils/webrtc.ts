@@ -329,7 +329,7 @@ export const getMediaConfiguration = (enableVideo: boolean, conference = false, 
   return {
     constraints: {
       // Exact constraint are not supported with `getDisplayMedia` and we must have a video=false in desktop screenshare
-      audio: screenSharing ? !isDesktop : constraints?.audio,
+      audio: screenSharing ? !isDesktop : withAudio ? getAudioConstraints(true) : false,
       video: screenSharing ? isDesktop ? {
         mandatory: {
           chromeMediaSource: 'desktop',
