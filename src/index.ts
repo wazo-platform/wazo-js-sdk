@@ -4,6 +4,8 @@ export { default as Emitter } from './utils/Emitter';
 export { default as IssueReporter } from './service/IssueReporter';
 export { default as BadResponse } from './domain/BadResponse';
 export { default as ServerError } from './domain/ServerError';
+export { default as InvalidStateTransition } from './domain/InvalidStateTransition';
+export { default as InvalidState } from './domain/InvalidState';
 export { default as SFUNotAvailableError } from './domain/SFUNotAvailableError';
 export { default as Call } from './domain/Call';
 export { default as CallLog } from './domain/CallLog';
