@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import sdpParser from 'sdp-transform';
 import { UserAgent } from 'sip.js/lib/api/user-agent';
 import { Inviter } from 'sip.js/lib/api';
@@ -174,3 +175,18 @@ export const replaceLocalIpModifier = (description: Record<string, any>) => Prom
 });
 
 export const makeURI = (target: string, host: string): URI | undefined => UserAgent.makeURI(`sip:${target}@${host}`);
+
+export const getCallNumber = (sipCall: SipCall): string => {
+  // eslint-disable-next-line
+  const identity = sipCall ? sipCall.remoteIdentity || sipCall.assertedIdentity : null;
+  // @ts-ignore: private
+  return identity ? identity.uri._normal.user : null;
+};
+
+export const getCallDisplayName = (sipCall: SipCall): string => {
+  // eslint-disable-next-line
+  const identity = sipCall ? sipCall.remoteIdentity || sipCall.assertedIdentity : null;
+  const number = getCallNumber(sipCall);
+
+  return identity ? identity.displayName || number : number;
+};

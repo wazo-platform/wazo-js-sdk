@@ -10,7 +10,6 @@ import InvalidState from '../domain/InvalidState';
 
 import Wazo from '..';
 import softphoneStateMachine, { type SoftphoneActorRef, Actions, type StateTypes, States, ActionTypes } from '../state-machine/softphone-state-machine';
-import { Actions as CallActions } from '../state-machine/call-state-machine';
 import { WebRtcConfig, SipCall } from '../domain/types';
 import WazoWebRTCClient from '../web-rtc-client';
 import IssueReporter from '../service/IssueReporter';
@@ -19,12 +18,17 @@ import Call from './call';
 import { assertCan, can, getState, waitUntilState } from '../state-machine/utils';
 
 export const EVENT_INCOMING = 'incoming';
+export const EVENT_OUTGOING = 'outgoing';
 export const EVENT_HEARTBEAT = 'heartbeat';
 export const EVENT_HEARTBEAT_TIMEOUT = 'heartbeatTimeout';
 export const EVENT_REGISTERED = 'registered';
 export const EVENT_UNREGISTERED = 'unregistered';
 export const EVENT_DISCONNECTED = 'disconnected';
 export const EVENT_VIDEO_INPUT_CHANGE = 'videoInputChange';
+export const EVENT_TERMINATE_SOUND = 'terminateSound';
+export const EVENT_PLAY_HANGUP_SOUND = 'playHangupSound';
+export const EVENT_PLAY_RING_SOUND = 'playRingSound';
+export const EVENT_PLAY_INBOUND_CALL_SOUND = 'playInboundCallSound';
 export const EVENT_ON_MESSAGE = 'message';
 export const EVENT_ON_CHAT = 'phone/ON_CHAT';
 export const EVENT_ON_SIGNAL = 'phone/ON_SIGNAL';
@@ -53,8 +57,6 @@ export class Softphone extends EventEmitter {
 
   audioRingVolume: number;
 
-  eventEmitter: EventEmitter;
-
   calls: Call[];
 
   client: WazoWebRTCClient;
@@ -68,6 +70,8 @@ export class Softphone extends EventEmitter {
   options: Partial<WebRtcConfig>;
 
   shouldSendReinvite: boolean;
+
+  ringingEnabled = true;
 
   constructor() {
     super();
@@ -179,14 +183,14 @@ export class Softphone extends EventEmitter {
       return Promise.resolve(null);
     }
 
-    if (this.getState() !== States.UNREGISTERED) {
-      throw new InvalidState(`Invalid state ${States.UNREGISTERED}`, States.UNREGISTERED);
-    }
-
-    if (this.getState() !== States.REGISTERING) {
+    if (this.state === States.REGISTERING) {
       logger.info('softphone - calling when registering, waiting for Softphone to be registered ...');
 
       await waitUntilState(this.softphoneActor, States.REGISTERED);
+    }
+
+    if (this.state !== States.UNREGISTERED) {
+      throw new InvalidState(`Invalid state ${States.UNREGISTERED}`, States.UNREGISTERED);
     }
 
     // Hold other calls
@@ -198,6 +202,8 @@ export class Softphone extends EventEmitter {
       sipCall = this.client.call(options.params.To, options.withCamera, options.audioOnly, options.conference, options) as SipCall;
       const call = new Call(sipCall, this);
 
+      this.emit(EVENT_OUTGOING, call);
+
       return call;
     } catch (error: any) {
       logger.warn('softphone - call, error', { message: error.message, stack: error.stack });
@@ -207,6 +213,69 @@ export class Softphone extends EventEmitter {
 
   removeCall(callToRemove: Call) {
     this.calls = this.calls.filter((call: Call) => call.id !== callToRemove.id);
+  }
+
+  onCallTerminated(call: Call) {
+    logger.info('softphone - on call terminated', { id: call.id });
+
+    const currentCall = this.getCurrentCall();
+    const isCurrentCall = currentCall?.id === call.id;
+    const isRinging = call.isRinging();
+    const isCurrentIncomingCall = isCurrentCall && isRinging;
+    const incomingCalls = this.getIncomingCalls();
+    const nbIncomingCalls = incomingCalls.length;
+
+    // Send an event to terminate ringing sound
+    if (isCurrentIncomingCall) {
+      setTimeout(() => {
+        // Avoid race condition when the other is calling and hanging up immediately
+        this.emit(EVENT_TERMINATE_SOUND, call, 'call terminated');
+      }, 5);
+    }
+
+    // If the terminated call was an incoming call, we have to re-trigger if it's was the first incoming call
+    // Otherwise, we have to re-trigger an incoming call event if another call is incoming
+    const shouldRetrigger = isCurrentCall ? nbIncomingCalls : isCurrentIncomingCall;
+
+    // Re-trigger incoming call event for remaining incoming calls
+    logger.info('Softphone - check to re-trigger incoming call', { shouldRetrigger, nbIncomingCalls });
+
+    if (shouldRetrigger && nbIncomingCalls > 1) {
+      const nextCall = incomingCalls.find(c => c.id !== call.id);
+      // Avoid race condition
+      setTimeout(() => {
+        if (this.ringingEnabled) {
+          if (currentCall) {
+            this.emit(EVENT_PLAY_RING_SOUND, this.audioRingDeviceId, this.audioRingVolume, nextCall);
+          } else {
+            this.emit(EVENT_PLAY_INBOUND_CALL_SOUND, this.audioOutputDeviceId, this.audioOutputVolume, nextCall);
+          }
+        }
+
+        this.emit(EVENT_INCOMING, nextCall);
+      }, 100);
+    }
+
+    // @ts-ignore: does not exist
+    if (!call.sipCall.isCanceled) {
+      setTimeout(() => {
+        this.emit(EVENT_PLAY_HANGUP_SOUND, this.audioOutputDeviceId, this.audioOutputVolume, call);
+      }, 10);
+    }
+
+    this.client.onCallEnded(call.sipCall);
+
+    this.removeCall(call);
+  }
+
+  enableRinging(): Promise<void> | void {
+    logger.info('softphone - enable ringing');
+    this.ringingEnabled = true;
+  }
+
+  disableRinging(): Promise<void> | void {
+    logger.info('softphone - disable ringing');
+    this.ringingEnabled = false;
   }
 
   holdAllCalls(exceptCall: Call | null = null) {
@@ -278,29 +347,43 @@ export class Softphone extends EventEmitter {
     this.audioRingVolume = volume;
   }
 
-  getCalls(): Call[] {
-    return this.calls;
-  }
-
   getCurrentCall(): Call | undefined {
     return this.calls.find(call => call.isEstablished());
   }
 
-  getState(): StateTypes {
-    return this.softphoneActor.getSnapshot().value;
+  getIncomingCalls(): Call[] {
+    return this.calls.filter(call => call.isRinging());
+  }
+
+  get state(): StateTypes {
+    return getState(this.softphoneActor) as StateTypes;
   }
 
   getUserAgent() {
     return this.client?.config?.userAgentString || 'softphone';
   }
 
+  isRegistered() {
+    return this.state === States.REGISTERED;
+  }
+
   _bindEvents(): void {
     this.client.on(this.client.INVITE, (sipSession: SipCall) => {
       const call = new Call(sipSession, this);
-      call._sendAction(CallActions.INCOMING_CALL);
+      logger.info('softphone - on invite', { callId: call.id, number: call.number });
+
+      call.onCallIncoming();
       this.calls.push(call);
 
-      this.eventEmitter.emit(EVENT_INCOMING, call);
+      this.emit(EVENT_INCOMING, call);
+
+      if (!this.getCurrentCall()) {
+        if (this.ringingEnabled) {
+          this.emit(EVENT_PLAY_RING_SOUND, this.audioRingDeviceId, this.audioRingVolume, call);
+        }
+      } else {
+        this.emit(EVENT_PLAY_INBOUND_CALL_SOUND, this.audioOutputDeviceId, this.audioOutputVolume, call);
+      }
     });
 
     this.client.on(this.client.ON_REINVITE, (sipCall: SipCall, request: IncomingRequestMessage, updatedCalleeName: string, updatedNumber: string, hadRemoteVideo: boolean) => {
@@ -316,6 +399,9 @@ export class Softphone extends EventEmitter {
     });
 
     this.client.on(this.client.ACCEPTED, async (sipCall: SipCall) => {
+      const call = this._getCall(sipCall);
+      this.emit(EVENT_TERMINATE_SOUND, call, 'call accepted');
+
       this._onCallEvent(sipCall, 'onAccepted');
 
       if (this.audioOutputDeviceId) {
@@ -354,14 +440,14 @@ export class Softphone extends EventEmitter {
 
     this.client.on(this.client.UNREGISTERED, () => {
       logger.info('softphone - unregistered');
-      this.eventEmitter.emit(EVENT_UNREGISTERED);
+      this.emit(EVENT_UNREGISTERED);
 
       this._sendAction(Actions.UNREGISTERED);
     });
 
     this.client.on(this.client.ON_DISCONNECTED, () => {
       logger.info('softphone - disconnected');
-      this.eventEmitter.emit(EVENT_DISCONNECTED);
+      this.emit(EVENT_DISCONNECTED);
 
       this._sendAction(Actions.TRANSPORT_CLOSED);
     });
@@ -376,7 +462,7 @@ export class Softphone extends EventEmitter {
       this.stopHeartbeat();
       this._sendAction(Actions.REGISTER_DONE);
 
-      this.eventEmitter.emit(EVENT_REGISTERED);
+      this.emit(EVENT_REGISTERED);
 
       // If the phone registered with a current callSession (eg: when switching network):
       // send a reinvite to renegociate ICE with new IP
@@ -396,7 +482,7 @@ export class Softphone extends EventEmitter {
 
     this.client.on(this.client.DISCONNECTED, () => {
       logger.info('softphone - disconnected');
-      this.eventEmitter.emit(EVENT_DISCONNECTED);
+      this.emit(EVENT_DISCONNECTED);
 
       // Do not trigger heartbeat if already running
       if (!this.client.hasHeartbeat()) {
@@ -408,33 +494,33 @@ export class Softphone extends EventEmitter {
     });
 
     this.client.on('onVideoInputChange', stream => {
-      this.eventEmitter.emit(EVENT_VIDEO_INPUT_CHANGE, stream);
+      this.emit(EVENT_VIDEO_INPUT_CHANGE, stream);
     });
 
     this.client.on(this.client.MESSAGE, (message: Message) => {
       this._onMessage(message);
 
-      this.eventEmitter.emit(EVENT_ON_MESSAGE, message);
+      this.emit(EVENT_ON_MESSAGE, message);
     });
 
     this.client.setOnHeartbeatTimeout(() => {
-      this.eventEmitter.emit(EVENT_HEARTBEAT_TIMEOUT);
+      this.emit(EVENT_HEARTBEAT_TIMEOUT);
     });
 
     this.client.setOnHeartbeatCallback(() => {
-      this.eventEmitter.emit(EVENT_HEARTBEAT);
+      this.emit(EVENT_HEARTBEAT);
     });
   }
 
-  _sendAction(action: ActionTypes) {
+  private _sendAction(action: ActionTypes) {
     this.softphoneActor.send({ type: action });
   }
 
-  _getCall(sipCall: SipCall): Call | undefined {
+  private _getCall(sipCall: SipCall): Call | undefined {
     return this.calls.find(call => call.id === sipCall.id);
   }
 
-  _onCallEvent(sipCall: SipCall, eventName: string, ...args: any[]) {
+  private _onCallEvent(sipCall: SipCall, eventName: string, ...args: any[]) {
     logger.warn('softphone - received call event', { eventName, sipId: sipCall.id });
 
     const call = this._getCall(sipCall);
@@ -447,7 +533,7 @@ export class Softphone extends EventEmitter {
     call[eventName](...args);
   }
 
-  _onMessage(message: Message & { method?: string, body?: string }): void {
+  private _onMessage(message: Message & { method?: string, body?: string }): void {
     if (!message || message.method !== 'MESSAGE') {
       return;
     }
@@ -467,12 +553,12 @@ export class Softphone extends EventEmitter {
 
     switch (type) {
       case MESSAGE_TYPE_CHAT:
-        this.eventEmitter.emit(EVENT_ON_CHAT, content);
+        this.emit(EVENT_ON_CHAT, content);
         break;
 
       case MESSAGE_TYPE_SIGNAL:
       {
-        this.eventEmitter.emit(EVENT_ON_SIGNAL, content);
+        this.emit(EVENT_ON_SIGNAL, content);
         break;
       }
 

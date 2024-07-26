@@ -8,8 +8,8 @@ import IssueReporter from '../service/IssueReporter';
 
 const logger = IssueReporter.loggerFor('state-machine');
 
-export const getState = (actor: SoftphoneActorRef | CallActorRef): SoftphoneStates | CallStates | EstablishedStateTypes => {
-  return actor.getSnapshot().value as SoftphoneStates | CallStates | EstablishedStateTypes;
+export const getState = (actor: SoftphoneActorRef | CallActorRef): SoftphoneStates | CallStates | EstablishedStateTypes | Record<CallStates, EstablishedStateTypes> => {
+  return actor.getSnapshot().value as SoftphoneStates | CallStates | EstablishedStateTypes | Record<CallStates, EstablishedStateTypes>;
 };
 
 export const can = (actor: SoftphoneActorRef | CallActorRef, action: SoftphoneActions | CallActions | EstablishedCallActions): boolean => {

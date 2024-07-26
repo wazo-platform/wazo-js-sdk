@@ -19,6 +19,7 @@ const sipLogger = IssueReporter.loggerFor('sip.js');
 const protocolLogger = IssueReporter.loggerFor('sip');
 const protocolDebugMessages = ['Received WebSocket text message:', 'Sending WebSocket message:'];
 
+// @deprecated: Use Wazo.Voice.Softphone instead
 export class Phone extends Emitter {
   client: WazoWebRTCClient;
 
