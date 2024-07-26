@@ -1,4 +1,4 @@
-/* eslint-disable no-underscore-dangle, no-param-reassign */
+/* eslint-disable no-underscore-dangle, no-param-reassign, no-restricted-syntax */
 import type { SessionDescriptionHandler } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler';
 import type { SessionDescriptionHandlerFactoryOptions } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-factory-options';
 import type { SessionDescriptionHandlerConfiguration } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-configuration';
@@ -244,6 +244,28 @@ export const toggleVideo = (sipCall: SipCall, muteCamera: boolean): void => {
       });
     });
   }
+};
+
+export const isVideoMuted = (sipCall: SipCall): boolean => {
+  const sdh = sipCall.sessionDescriptionHandler as SessionDescriptionHandler;
+  const pc = sdh?.peerConnection as PeerConnection;
+
+  if (pc?.getSenders) {
+    for (const sender of pc.getSenders()) {
+      if (sender && sender.track && sender.track.kind === 'video') {
+        return !sender.track.enabled;
+      }
+    }
+  } else {
+    for (const stream of pc.getLocalStreams()) {
+      // eslint-disable-next-line no-unreachable-loop
+      for (const track of stream.getVideoTracks()) {
+        return !track.enabled;
+      }
+    }
+  }
+
+  return true;
 };
 
 export const cleanupStream = (stream: MediaStream): void => {

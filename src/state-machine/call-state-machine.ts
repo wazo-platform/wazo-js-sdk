@@ -43,7 +43,7 @@ export type EstablishedActionTypes = typeof EstablishedActions[keyof typeof Esta
 
 const callMachine = setup({
   guards: {
-    isRegistered: () => softphone.getState() === SoftphoneStates.REGISTERED,
+    isRegistered: () => softphone.state === SoftphoneStates.REGISTERED,
   },
 }).createMachine({
   id: 'call',

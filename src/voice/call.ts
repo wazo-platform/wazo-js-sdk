@@ -8,13 +8,15 @@ import { SessionDescriptionHandler } from 'sip.js/lib/platform/web';
 import { SessionDescriptionHandlerOptions } from 'sip.js/lib/api';
 import type { IncomingRequestMessage } from 'sip.js/lib/core/messages/incoming-request-message';
 
-import callStateMachine, { type ActionTypes, Actions, type EstablishedActionTypes, EstablishedActions, States, EstablishedStates, type CallActorRef } from '../state-machine/call-state-machine';
+import callStateMachine, { type ActionTypes, Actions, type EstablishedActionTypes, EstablishedActions, States, type StateTypes, EstablishedStates, type EstablishedStateTypes, type CallActorRef } from '../state-machine/call-state-machine';
 import { SipCall, PeerConnection } from '../domain/types';
+import ApiCall from '../domain/Call';
+
 import IssueReporter from '../service/IssueReporter';
-import { Softphone } from './softphone';
-import { getSipSessionId } from '../utils/sdp';
+import softphone, { EVENT_TERMINATE_SOUND, Softphone } from './softphone';
+import { getCallDisplayName, getCallNumber, getSipSessionId } from '../utils/sdp';
 import { assertCan, assertState, getState } from '../state-machine/utils';
-import { downgradeToAudio, getLocalStream, getLocalVideoStream, getPeerConnection, getRemoteStream, getRemoteVideoStream, getStreamFromConstraints, getWebRtcStats, hasALocalVideoTrack, hasLocalVideo, hasRemoteVideo, isVideoRemotelyHeld, setLocalMediaStream, toggleVideo, upgradeToVideo } from '../utils/webrtc';
+import { downgradeToAudio, getLocalStream, getLocalVideoStream, getPeerConnection, getRemoteStream, getRemoteVideoStream, getStreamFromConstraints, getWebRtcStats, hasALocalVideoTrack, hasLocalVideo, hasRemoteVideo, isVideoMuted, isVideoRemotelyHeld, setLocalMediaStream, toggleVideo, upgradeToVideo } from '../utils/webrtc';
 
 const logger = IssueReporter.loggerFor('call');
 
@@ -53,15 +55,12 @@ export const EVENT_SHARE_SCREEN_ENDED = 'onScreenShareEnded';
 export const EVENT_WEB_RTC_STATS = 'webRtcStats';
 export const EVENT_CAMERA_RESUMED = 'onCameraResumed';
 export const EVENT_CAMERA_DISABLED = 'onCameraDisabled';
-export const EVENT_TERMINATE_SOUND = 'terminateSound';
 
 export const MESSAGE_TYPE_CHAT = 'message/TYPE_CHAT';
 export const MESSAGE_TYPE_SIGNAL = 'message/TYPE_SIGNAL';
 export const MESSAGE_TRACK_UPDATED = 'onTrackUpdated';
 
 class Call extends EventEmitter {
-  eventEmitter: EventEmitter;
-
   callActor: CallActorRef;
 
   // Wazo call id, used in Wazo Websocket and API
@@ -81,7 +80,64 @@ class Call extends EventEmitter {
 
   shouldSendReinvite = false;
 
+  recording = false;
+
+  displayName: string | null;
+
+  number: string | null;
+
   currentScreenShare: Record<string, any> | null;
+
+  static parseCall(apiCall: ApiCall): Call {
+    const sipCall = {
+      id: apiCall.sipCallId,
+      stateChange: {
+        addListener: () => {},
+      },
+      remoteIdentity: {
+        uri: {
+          _normal: {
+            user: apiCall.calleeNumber,
+          },
+        },
+      },
+      // Mock sdk so `hasLocalVideo` will return true.
+      sessionDescriptionHandler: {
+        localMediaStream: {
+          getTracks: () => (apiCall.isVideo ? [{ kind: 'video', readyState: 'live' }] : []),
+        },
+      },
+    } as any;
+
+    const call = new Call(sipCall, softphone);
+    // call._sendAction(Actions.ES);
+    call.apiId = apiCall.id;
+    call.answerTime = new Date(+apiCall.startingTime);
+
+    // Update call state
+    const snapshot = call.callActor.getSnapshot();
+
+    if (apiCall.isUp()) {
+      snapshot.value = { [States.ESTABLISHED]: EstablishedStates.ONGOING };
+    }
+
+    if (apiCall.muted) {
+      snapshot.value = { [States.ESTABLISHED]: EstablishedStates.MUTED };
+    }
+
+    if (apiCall.isRinging()) {
+      snapshot.value = States.RINGING;
+    }
+
+    if (apiCall.isRecording()) {
+      call.recording = true;
+    }
+
+    // @ts-ignore
+    call.callActor.update(snapshot);
+
+    return call;
+  }
 
   constructor(sipCall: SipCall, phone: Softphone) {
     super();
@@ -93,6 +149,9 @@ class Call extends EventEmitter {
 
     this.phone = phone;
     this.sipCall = sipCall;
+
+    this.number = getCallNumber(sipCall);
+    this.displayName = getCallDisplayName(sipCall);
 
     this._bindEvents();
   }
@@ -123,7 +182,7 @@ class Call extends EventEmitter {
     assertCan(this.callActor, Actions.REJECT);
     logger.info('call - reject', { id: this.id });
 
-    this.eventEmitter.emit(EVENT_TERMINATE_SOUND, 'call rejected locally');
+    this.phone.emit(EVENT_TERMINATE_SOUND, 'call rejected locally');
 
     this.shouldSendReinvite = false;
 
@@ -137,7 +196,7 @@ class Call extends EventEmitter {
     await this.phone.client.hangup(this.sipCall);
 
     // Remove this call from softphone's calls
-    this.phone.removeCall(this);
+    this.phone.onCallTerminated(this);
 
     return true;
   }
@@ -151,7 +210,7 @@ class Call extends EventEmitter {
     }
   }
 
-  startConference(withCalls: Call[]) {
+  startConference(/* withCalls: Call[] */) {
     // @TODO
     // const participants = [this, ...withCalls].reduce((acc: Record<string, any>, call: Call) => {
     //   acc[call.talkingToIds[0]] = call;
@@ -174,7 +233,7 @@ class Call extends EventEmitter {
 
     this.phone.client.mute(this.sipCall);
 
-    this.eventEmitter.emit(EVENT_CALL_MUTED);
+    this.emit(EVENT_CALL_MUTED);
   }
 
   unMute() {
@@ -185,7 +244,7 @@ class Call extends EventEmitter {
 
     this.phone.client.unmute(this.sipCall);
 
-    this.eventEmitter.emit(EVENT_CALL_UN_MUTED);
+    this.emit(EVENT_CALL_UN_MUTED);
   }
 
   async hold() {
@@ -208,7 +267,7 @@ class Call extends EventEmitter {
 
     const promise = this.phone.client.hold(this.sipCall, this.isConference(), hasVideo);
 
-    this.eventEmitter.emit(EVENT_CALL_HELD);
+    this.emit(EVENT_CALL_HELD);
 
     return promise;
   }
@@ -244,7 +303,7 @@ class Call extends EventEmitter {
       }
     };
 
-    this.eventEmitter.emit(EVENT_CALL_RESUMED);
+    this.emit(EVENT_CALL_RESUMED);
 
     return promise.then(() => {
       const stream = this.getLocalVideoStream();
@@ -261,7 +320,7 @@ class Call extends EventEmitter {
     logger.info('call - turn camera on', { id: this.id });
     toggleVideo(this.sipCall, true);
 
-    this.eventEmitter.emit(EVENT_CAMERA_RESUMED);
+    this.emit(EVENT_CAMERA_RESUMED);
   }
 
   turnCameraOff(): void {
@@ -269,15 +328,23 @@ class Call extends EventEmitter {
     logger.info('call -  turn camera off', { id: this.id });
     toggleVideo(this.sipCall, false);
 
-    this.eventEmitter.emit(EVENT_CAMERA_DISABLED);
+    this.emit(EVENT_CAMERA_DISABLED);
+  }
+
+  isMuted() {
+    return this._hasEstablishedState(EstablishedStates.MUTED);
+  }
+
+  isCameraMuted() {
+    return isVideoMuted(this.sipCall);
   }
 
   isHeld() {
-    return getState(this.callActor) === EstablishedStates.HELD;
+    return this._hasEstablishedState(EstablishedStates.HELD);
   }
 
   isEstablished() {
-    return getState(this.callActor) === States.ESTABLISHED;
+    return States.ESTABLISHED in (this.state as Record<StateTypes, EstablishedStateTypes>);
   }
 
   isConference(): boolean {
@@ -446,7 +513,7 @@ class Call extends EventEmitter {
       console.warn(e);
     }
 
-    this.eventEmitter.emit(EVENT_SHARE_SCREEN_ENDED);
+    this.emit(EVENT_SHARE_SCREEN_ENDED);
     this.currentScreenShare = null;
 
     return reinvited;
@@ -480,12 +547,16 @@ class Call extends EventEmitter {
     this.emit(EVENT_CALL_ERROR, error);
   }
 
+  onCallIncoming() {
+    this._sendAction(Actions.INCOMING_CALL);
+  }
+
   onRejected() {
     this.endTime = new Date();
 
     this.emit(EVENT_CALL_REJECTED);
 
-    this.phone.removeCall(this);
+    this.phone.onCallTerminated(this);
   }
 
   onNetworkStats(stats: Record<string, any>, previousStats: Record<string, any>) {
@@ -524,6 +595,10 @@ class Call extends EventEmitter {
     return isVideoRemotelyHeld(this.sipCall);
   }
 
+  isRinging() {
+    return this.state === States.RINGING;
+  }
+
   onReinvite(request: IncomingRequestMessage, updatedCalleeName: string, updatedNumber: string, hadRemoteVideo: boolean) {
     this.emit(EVENT_REINVITE, request, updatedCalleeName, updatedNumber, hadRemoteVideo);
   }
@@ -532,13 +607,16 @@ class Call extends EventEmitter {
     return getSipSessionId(this.sipCall);
   }
 
-  get number() {
-    const identity = this.sipCall.remoteIdentity || this.sipCall.assertedIdentity;
-    // @ts-ignore: private
-    return identity ? identity.uri._normal.user : null;
+  get state(): StateTypes | Record<StateTypes, EstablishedStateTypes> {
+    return getState(this.callActor) as StateTypes | Record<StateTypes, EstablishedStateTypes>;
   }
 
-  _bindEvents() {
+  private _hasEstablishedState(establishedState: EstablishedStateTypes) {
+    const state = this.state as Record<StateTypes, EstablishedStateTypes>;
+    return States.ESTABLISHED in state && state[States.ESTABLISHED] === establishedState;
+  }
+
+  private _bindEvents() {
     if (this.sipCall instanceof Invitation) {
       // Monkey patch to know when canceled with the CANCEL message
       const onCancel = (this.sipCall as Invitation)._onCancel.bind(this.sipCall);
@@ -548,7 +626,7 @@ class Call extends EventEmitter {
         onCancel(message);
         const elsewhere = message.data.indexOf('cause=26') !== -1 && message.data.indexOf('completed elsewhere') !== -1;
 
-        this.eventEmitter.emit(EVENT_CALL_CANCELED, elsewhere);
+        this.emit(EVENT_CALL_CANCELED, elsewhere);
       };
     }
 
@@ -556,7 +634,7 @@ class Call extends EventEmitter {
       switch (newState) {
         case SessionState.Terminating:
           logger.info('call - terminating', { id: this.id });
-          this.eventEmitter.emit(EVENT_CALL_TERMINATING);
+          this.emit(EVENT_CALL_TERMINATING);
           break;
 
         case SessionState.Terminated:
@@ -566,7 +644,9 @@ class Call extends EventEmitter {
           // Should be called before `_onCallTerminated` or the callCount will not decrement...
           this.endTime = new Date();
 
-          return this.eventEmitter.emit(EVENT_CALL_ENDED);
+          this.emit(EVENT_CALL_ENDED);
+
+          return this.phone.onCallTerminated(this);
         }
 
         default:
@@ -599,10 +679,10 @@ class Call extends EventEmitter {
       });
 
       if (kind === 'audio') {
-        return this.eventEmitter.emit(EVENT_AUDIO_STREAM, stream);
+        return this.emit(EVENT_AUDIO_STREAM, stream);
       }
 
-      return this.eventEmitter.emit(EVENT_VIDEO_STREAM, stream, event.track.id, event);
+      return this.emit(EVENT_VIDEO_STREAM, stream, event.track.id, event);
     };
 
     peerConnection.onremovestream = (event: any) => {
@@ -610,13 +690,11 @@ class Call extends EventEmitter {
         id: event.stream.id,
         tracks: event.stream.getTracks(),
       });
-      this.eventEmitter.emit(EVENT_REMOVE_STREAM, event.stream);
+      this.emit(EVENT_REMOVE_STREAM, event.stream);
     };
-
-    // Client events
   }
 
-  _downgradeToAudio(withMessage = true) {
+  private _downgradeToAudio(withMessage = true) {
     assertState(this.callActor, States.ESTABLISHED);
     logger.info('call - downgrade to audio', { id: this.id, withMessage });
 
@@ -630,7 +708,7 @@ class Call extends EventEmitter {
   }
 
   // Returns true if we need to send a re-INVITE request
-  async _upgradeToVideo(options: ReinviteOptions = {}): Promise<boolean> {
+  private async _upgradeToVideo(options: ReinviteOptions = {}): Promise<boolean> {
     assertState(this.callActor, States.ESTABLISHED);
     logger.info('call - upgrade to video', { id: this.id, ...options });
 
@@ -660,7 +738,7 @@ class Call extends EventEmitter {
     return false;
   }
 
-  _sendReinviteMessage(isUpgrade: boolean) {
+  private _sendReinviteMessage(isUpgrade: boolean) {
     assertState(this.callActor, States.ESTABLISHED);
     logger.info('call - sending reinvite message', { id: this.id, isUpgrade });
 
@@ -679,7 +757,7 @@ class Call extends EventEmitter {
     }, 2500);
   }
 
-  _onScreenSharing(screenStream: MediaStream, hadVideo: boolean, desktop?: boolean | null | undefined) {
+  private _onScreenSharing(screenStream: MediaStream, hadVideo: boolean, desktop?: boolean | null | undefined) {
     const screenTrack = screenStream.getVideoTracks()[0];
     const pc = this.phone.client.getPeerConnection(this.id);
     const sender = pc && pc.getSenders && pc.getSenders().find((s) => s && s.track && s.track.kind === 'video');
@@ -690,7 +768,7 @@ class Call extends EventEmitter {
       screenTrack.onended = () => {
         logger.info('call - on screenshare ended', { hadVideo, id: this.id, screenTrack });
 
-        this.eventEmitter.emit(EVENT_SHARE_SCREEN_ENDING);
+        this.emit(EVENT_SHARE_SCREEN_ENDING);
       };
     }
 
@@ -702,10 +780,10 @@ class Call extends EventEmitter {
     };
 
     setLocalMediaStream(this.sipCall, screenStream);
-    this.eventEmitter.emit(EVENT_SHARE_SCREEN_STARTED, screenStream);
+    this.emit(EVENT_SHARE_SCREEN_STARTED, screenStream);
   }
 
-  _sendAction(action: ActionTypes | EstablishedActionTypes) {
+  private _sendAction(action: ActionTypes | EstablishedActionTypes) {
     this.callActor.send({ type: action });
   }
 }

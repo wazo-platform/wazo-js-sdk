@@ -12,7 +12,7 @@ import WebRTCClient from '../../web-rtc-client';
 import Emitter from '../../utils/Emitter';
 import IssueReporter from '../../service/IssueReporter';
 import { PeerConnection, WazoSession } from '../types';
-import { getSipSessionId } from '../../utils/sdp';
+import { getCallDisplayName, getCallNumber, getSipSessionId } from '../../utils/sdp';
 import { downgradeToAudio, getStreamFromConstraints, getWebRtcStats, setLocalMediaStream, upgradeToVideo } from '../../utils/webrtc';
 
 export const ON_USER_AGENT = 'onUserAgent';
@@ -61,6 +61,8 @@ export const MESSAGE_TYPE_CHAT = 'message/TYPE_CHAT';
 export const MESSAGE_TYPE_SIGNAL = 'message/TYPE_SIGNAL';
 export const events = [ON_USER_AGENT, ON_REGISTERED, ON_UNREGISTERED, ON_PROGRESS, ON_CALL_ACCEPTED, ON_CALL_ANSWERED, ON_CALL_INCOMING, ON_CALL_OUTGOING, ON_CALL_MUTED, ON_CALL_UNMUTED, ON_CALL_RESUMED, ON_CALL_HELD, ON_CALL_UNHELD, ON_CAMERA_DISABLED, ON_CALL_FAILED, ON_CALL_ENDED, ON_CALL_REJECTED, ON_MESSAGE, ON_REINVITE, ON_TRACK, ON_AUDIO_STREAM, ON_VIDEO_STREAM, ON_REMOVE_STREAM, ON_SHARE_SCREEN_ENDED, ON_TERMINATE_SOUND, ON_PLAY_RING_SOUND, ON_PLAY_INBOUND_CALL_SIGNAL_SOUND, ON_PLAY_HANGUP_SOUND, ON_PLAY_PROGRESS_SOUND, ON_VIDEO_INPUT_CHANGE, ON_SHARE_SCREEN_STARTED, ON_CALL_ERROR, ON_CHAT, ON_SIGNAL, ON_NETWORK_STATS, ON_DISCONNECTED, ON_EARLY_MEDIA];
 const logger = IssueReporter.loggerFor('webrtc-phone');
+
+// @deprecated: Use Wazo.Voice.Softphone instead
 export default class WebRTCPhone extends Emitter implements Phone {
   client: WebRTCClient;
 
@@ -1785,20 +1787,17 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   _createCallSession(sipSession: WazoSession, fromSession?: CallSession | null | undefined, extra: Record<string, any> = {}): CallSession {
-    // eslint-disable-next-line
-    const identity = sipSession ? sipSession.remoteIdentity || sipSession.assertedIdentity : null;
-    // @ts-ignore: private
-    const number = identity ? identity.uri._normal.user : null;
-    const {
-      state,
-    } = sipSession || {};
+    const number = getCallNumber(sipSession);
+    const displayName = getCallDisplayName(sipSession);
+    const { state } = sipSession || {};
     const sessionId = getSipSessionId(sipSession);
+
     fromSession = fromSession || this.callSessions[sessionId];
     const callSession = new CallSession({
       callId: fromSession && fromSession.callId,
       sipCallId: sessionId,
       sipStatus: state,
-      displayName: identity ? identity.displayName || number : number,
+      displayName,
       // @ts-ignore: date / number
       startTime: fromSession ? fromSession.startTime : new Date(),
       creationTime: fromSession ? fromSession.creationTime : null,
@@ -1819,6 +1818,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       ...extra,
     });
     this.callSessions[sessionId] = callSession;
+
     return callSession;
   }
 

@@ -31,7 +31,7 @@ import IssueReporter from './service/IssueReporter';
 import Heartbeat from './utils/Heartbeat';
 import { getSipSessionId, makeURI, replaceLocalIpModifier, SIP_ID_LENGTH } from './utils/sdp';
 import type { MediaConfig, UserAgentConfigOverrides, WebRtcConfig, IncomingResponse, PeerConnection, WazoSession, WazoTransport } from './domain/types';
-import { cleanupStream, createUaOptions, fetchNetworkStats, getAudioConstraints, getLocalStream, getLocalTracks, getLocalVideoStream, getMediaConfiguration, getPeerConnection, getRemoteStream, getRemoteTracks, getRemoteVideoStream, getRemoteVideoStreamFromPc, getStreamFromConstraints, getVideoConstraints, hasALocalVideoTrack, hasARemoteVideoTrack, hasAVideoTrack, hasLocalVideo, hasRemoteVideo, hasVideoTrack, isAudioOnly, isVideoRemotelyHeld, isWeb, sessionWantsToDoVideo, setLocalMediaStream, toggleAudio, toggleVideo, updateRemoteStream } from './utils/webrtc';
+import { cleanupStream, createUaOptions, fetchNetworkStats, getAudioConstraints, getLocalStream, getLocalTracks, getLocalVideoStream, getMediaConfiguration, getPeerConnection, getRemoteStream, getRemoteTracks, getRemoteVideoStream, getRemoteVideoStreamFromPc, getVideoConstraints, hasALocalVideoTrack, hasARemoteVideoTrack, hasAVideoTrack, hasLocalVideo, hasRemoteVideo, hasVideoTrack, isAudioOnly, isVideoRemotelyHeld, isWeb, sessionWantsToDoVideo, setLocalMediaStream, toggleAudio, toggleVideo, updateRemoteStream } from './utils/webrtc';
 
 const SEND_STATS_DELAY = 5000;
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
