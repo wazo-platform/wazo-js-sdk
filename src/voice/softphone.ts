@@ -44,6 +44,7 @@ export type CallOptions = {
   // If audioOnly is set to true, all video stream will be deactivated, even remotes ones.
   audioOnly?: boolean,
   conference?: boolean,
+  extraHeaders?: Record<string, any>,
 };
 
 const logger = IssueReporter.loggerFor('softphone');
@@ -107,6 +108,10 @@ export class Softphone extends EventEmitter {
     return this.connectWithCredentials(server, this.sipLine, session.displayName(), options);
   }
 
+  async hangupAllCalls() {
+    return Promise.all(this.calls.map(call => call.hangup()));
+  }
+
   async disconnect() {
     assertCan(this.softphoneActor, Actions.UNREGISTER);
     if (!this.client) {
@@ -114,7 +119,7 @@ export class Softphone extends EventEmitter {
     }
 
     // Terminate all calls
-    await Promise.all(this.calls.map(call => call.hangup()));
+    await this.hangupAllCalls();
 
     return this.client.unregister();
   }
@@ -348,7 +353,11 @@ export class Softphone extends EventEmitter {
   }
 
   getCurrentCall(): Call | undefined {
-    return this.calls.find(call => call.isEstablished());
+    return this.getActiveCalls()[0];
+  }
+
+  getActiveCalls(): Call[] {
+    return this.calls.filter(call => call.isEstablished());
   }
 
   getIncomingCalls(): Call[] {
@@ -357,6 +366,10 @@ export class Softphone extends EventEmitter {
 
   get state(): StateTypes {
     return getState(this.softphoneActor) as StateTypes;
+  }
+
+  get user() {
+    return this.client?.userAgent?.contact?.uri?.user;
   }
 
   getUserAgent() {

@@ -7,7 +7,7 @@ export { default as ServerError } from './domain/ServerError';
 export { default as InvalidStateTransition } from './domain/InvalidStateTransition';
 export { default as InvalidState } from './domain/InvalidState';
 export { default as SFUNotAvailableError } from './domain/SFUNotAvailableError';
-export { default as Call } from './domain/Call';
+export { default as ApiCall } from './domain/Call';
 export { default as CallLog } from './domain/CallLog';
 export { default as Recording } from './domain/Recording';
 export { default as ChatMessage } from './domain/ChatMessage';
