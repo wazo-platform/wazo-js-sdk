@@ -79,6 +79,7 @@ describe('Call', () => {
       expect(call.answerTime).toStrictEqual(apiCall.startingTime);
       expect(call.isMuted()).toBeTruthy();
       expect(call.state).toStrictEqual({ [States.ESTABLISHED]: EstablishedStates.MUTED });
+      expect(call.isEstablished()).toBeTruthy();
     });
   });
 

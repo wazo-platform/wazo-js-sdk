@@ -11,7 +11,8 @@ import type { IncomingRequestMessage } from 'sip.js/lib/core/messages/incoming-r
 import callStateMachine, { type ActionTypes, Actions, type EstablishedActionTypes, EstablishedActions, States, type StateTypes, EstablishedStates, type EstablishedStateTypes, type CallActorRef } from '../state-machine/call-state-machine';
 import { SipCall, PeerConnection } from '../domain/types';
 import ApiCall from '../domain/Call';
-
+import newFrom from '../utils/new-from';
+import updateFrom from '../utils/update-from';
 import IssueReporter from '../service/IssueReporter';
 import softphone, { EVENT_TERMINATE_SOUND, Softphone } from './softphone';
 import { getCallDisplayName, getCallNumber, getSipSessionId } from '../utils/sdp';
@@ -32,7 +33,8 @@ export type ReinviteOptions = {
 };
 
 // Events
-export const EVENT_CALL_ACCEPTED = 'accepted';
+export const EVENT_CALL_REMOTLY_ACCEPTED = 'remotelyAccepted';
+export const EVENT_CALL_LOCALLY_ACCEPTED = 'locallyAccepted';
 export const EVENT_CALL_CANCELED = 'canceled';
 export const EVENT_PROGRESS = 'progress';
 export const EVENT_EARLY_MEDIA = 'earlyMedia';
@@ -87,6 +89,10 @@ class Call extends EventEmitter {
   number: string | null;
 
   currentScreenShare: Record<string, any> | null;
+
+  static newFrom(call: Call) {
+    return newFrom(call, Call);
+  }
 
   static parseCall(apiCall: ApiCall): Call {
     const sipCall = {
@@ -169,6 +175,8 @@ class Call extends EventEmitter {
 
     return this.phone.client.answer(this.sipCall as Invitation, options.withCamera).then(() => {
       logger.info('call - accepted', { id: this.id, ...options });
+
+      this.emit(EVENT_CALL_LOCALLY_ACCEPTED, this);
 
       return this.id;
     }).catch(e => {
@@ -343,8 +351,24 @@ class Call extends EventEmitter {
     return this._hasEstablishedState(EstablishedStates.HELD);
   }
 
+  isEstablishing() {
+    return this.sipCall.state === SessionState.Establishing;
+  }
+
   isEstablished() {
     return States.ESTABLISHED in (this.state as Record<StateTypes, EstablishedStateTypes>);
+  }
+
+  isRinging() {
+    return this.state === States.RINGING;
+  }
+
+  isOutgoing() {
+    return this.sipCall instanceof Invitation;
+  }
+
+  isIncoming() {
+    return !this.isOutgoing();
   }
 
   isConference(): boolean {
@@ -355,7 +379,7 @@ class Call extends EventEmitter {
     assertState(this.callActor, States.ESTABLISHED);
     logger.info('call - transfer', { id: this.id, target });
 
-    this.phone.client.transfer(this.sipCall, target);
+    return this.phone.client.transfer(this.sipCall, target);
   }
 
   atxfer(): Record<string, any> | null | undefined {
@@ -528,7 +552,7 @@ class Call extends EventEmitter {
 
   onAccepted() {
     this._sendAction(Actions.REMOTLY_ACCEPTED);
-    this.emit(EVENT_CALL_ACCEPTED);
+    this.emit(EVENT_CALL_REMOTLY_ACCEPTED);
   }
 
   onProgress() {
@@ -595,12 +619,16 @@ class Call extends EventEmitter {
     return isVideoRemotelyHeld(this.sipCall);
   }
 
-  isRinging() {
-    return this.state === States.RINGING;
-  }
-
   onReinvite(request: IncomingRequestMessage, updatedCalleeName: string, updatedNumber: string, hadRemoteVideo: boolean) {
     this.emit(EVENT_REINVITE, request, updatedCalleeName, updatedNumber, hadRemoteVideo);
+  }
+
+  updateFrom(call: Call) {
+    updateFrom(this, call);
+  }
+
+  is(otherCall: Call) {
+    return otherCall && this.id && this.id === otherCall.id;
   }
 
   get id() {
