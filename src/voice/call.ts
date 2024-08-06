@@ -631,6 +631,10 @@ class Call extends EventEmitter {
     return otherCall && this.id && this.id === otherCall.id;
   }
 
+  shouldAutoAnswer() {
+    return !!this.sipCall.request.getHeader('alert-info');
+  }
+
   get id() {
     return getSipSessionId(this.sipCall);
   }
@@ -641,7 +645,7 @@ class Call extends EventEmitter {
 
   private _hasEstablishedState(establishedState: EstablishedStateTypes) {
     const state = this.state as Record<StateTypes, EstablishedStateTypes>;
-    return States.ESTABLISHED in state && state[States.ESTABLISHED] === establishedState;
+    return typeof state === 'object' && States.ESTABLISHED in state && state[States.ESTABLISHED] === establishedState;
   }
 
   private _bindEvents() {
@@ -658,7 +662,7 @@ class Call extends EventEmitter {
       };
     }
 
-    this.sipCall.stateChange.addListener((newState: SessionState) => {
+    this.sipCall?.stateChange?.addListener((newState: SessionState) => {
       switch (newState) {
         case SessionState.Terminating:
           logger.info('call - terminating', { id: this.id });

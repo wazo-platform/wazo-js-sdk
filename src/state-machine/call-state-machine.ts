@@ -53,7 +53,7 @@ const callMachine = setup({
     [States.IDLE]: {
       on: {
         [Actions.INCOMING_CALL]: {
-          // guard: 'isRegistered',
+          guard: 'isRegistered',
           target: States.RINGING,
         },
         [Actions.MAKE_CALL]: {
