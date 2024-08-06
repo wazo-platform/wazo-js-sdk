@@ -33,6 +33,7 @@ export interface AuthD {
   logIn(params: LoginParams): Promise<Session | null | undefined> ;
   logOut: (token: Token) => Promise<LogoutResponse>;
   samlLogIn: (samlSessionId: string) => Promise<Session | null | undefined>;
+  samlLogOut: () => Promise<void | { location:string }>;
   initiateIdpAuthentication(domain: string, redirectUrl: string): Promise<any>;
   refreshToken: (refreshToken: string, backend: string, expiration: number, isMobile?: boolean, tenantId?: string, domainName?: string) => Promise<Session | null | undefined>;
   deleteRefreshToken: (clientId: string) => Promise<boolean>;
@@ -137,6 +138,10 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
     }
 
     return client.post(`${baseUrl}/token`, body, headers).then(Session.parse);
+  },
+
+  samlLogOut() {
+    return client.get(`${baseUrl}/saml/logout`, null, null);
   },
 
   initiateIdpAuthentication: async (domain: string, redirectUrl: string) => {

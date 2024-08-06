@@ -167,6 +167,10 @@ export class Auth {
     return this._onAuthenticated(rawSession as Session);
   }
 
+  async samlLogOut(): Promise<void | { location: string }> {
+    return await this.logout(false, true);
+  }
+
   async initiateIdpAuthentication(domain: string, redirectUrl: string): Promise<{ location: string, saml_session_id: string } | undefined> {
     try {
       return await getApiClient().auth.initiateIdpAuthentication(domain, redirectUrl);
@@ -218,20 +222,26 @@ export class Auth {
     return getApiClient().auth.refreshToken(refreshToken, '', this.expiration);
   }
 
-  async logout(deleteRefreshToken = true): Promise<void> {
+  async logout(deleteRefreshToken = true, saml = false): Promise<void | { location: string }> {
     try {
       Wazo.Websocket.close(true);
 
-      if (this.clientId && deleteRefreshToken) {
+      if (!saml && this.clientId && deleteRefreshToken) {
         await getApiClient().auth.deleteRefreshToken(this.clientId);
       }
     } catch (e: any) {
       // Nothing to
     }
 
+    let response;
+
     try {
       if (this.session?.token) {
-        await getApiClient().auth.logOut(this.session.token);
+        if (saml) {
+          response = await getApiClient().auth.samlLogOut();
+        } else {
+          await getApiClient().auth.logOut(this.session.token);
+        }
       }
     } catch (e: any) {
       // Nothing to
@@ -243,6 +253,8 @@ export class Auth {
     this.authenticated = false;
     this.usingEdgeServer = undefined;
     setFetchOptions({});
+
+    return response;
   }
 
   setOnHostFromHeaders(callback: (hostFromHeaders: string) => void) {
