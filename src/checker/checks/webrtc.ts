@@ -1,4 +1,5 @@
 /* global MediaStream */
+import { getSipSessionId } from '../../utils/sdp';
 import WebRTCClient from '../../web-rtc-client';
 
 export default {
@@ -35,7 +36,7 @@ export default {
     client.on(client.REGISTERED, () => {
       const sipSession = client.call('*10');
 
-      if (!sipSession || !client.getSipSessionId(sipSession)) {
+      if (!sipSession || !getSipSessionId(sipSession)) {
         return handleError('Unable to make call through WebRTC');
       }
 

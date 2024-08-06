@@ -1,9 +1,9 @@
-import Call from '../domain/Call';
+import ApiCall from '../domain/Call';
+import Call from '../voice/call';
 import CallLog from '../domain/CallLog';
 import Line from '../domain/Line';
 import Session from '../domain/Session';
 import Relocation from '../domain/Relocation';
-import CallSession from '../domain/CallSession';
 import getApiClient from './getApiClient';
 import Transfer from '../domain/IndirectTransfer';
 
@@ -16,7 +16,7 @@ export default class CallApi {
     return getApiClient().callLogd.listDistinctCallLogs(offset, limit, distinct);
   }
 
-  static async fetchActiveCalls(): Promise<Call[]> {
+  static async fetchActiveCalls(): Promise<ApiCall[]> {
     return getApiClient().calld.listCalls();
   }
 
@@ -37,14 +37,14 @@ export default class CallApi {
     return getApiClient().confd.getUserLineSip(session.uuid as string, lineToUse ? <unknown>lineToUse.id as string : '');
   }
 
-  static async cancelCall(callSession: CallSession): Promise<boolean> {
-    return getApiClient().calld.cancelCall(callSession.callId);
+  static async cancelCall(call: Call): Promise<boolean> {
+    return getApiClient().calld.cancelCall(call.apiId || '');
   }
 
-  static async makeCall(callFromLine: Line, extension: string, isMobile = false, callbackAllLines = false): Promise<Call | null | undefined> {
+  static async makeCall(callFromLine: Line, extension: string, isMobile = false, callbackAllLines = false): Promise<ApiCall | null | undefined> {
     const lineId = callFromLine ? callFromLine.id : null;
     const response = await getApiClient().calld.makeCall(extension, isMobile, lineId, callbackAllLines);
-    return Call.parse(response);
+    return ApiCall.parse(response);
   }
 
   static async relocateCall(callId: string, line: number, contactIdentifier?: string): Promise<Relocation> {

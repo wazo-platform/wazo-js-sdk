@@ -264,8 +264,13 @@ export type PeerConnection = RTCPeerConnection & {
   addStream: (stream: MediaStream) => void;
   sfu: any;
 };
-
+// @TODO, rename it to SipCall
 export type WazoSession = (Invitation | Inviter) & {
+  remoteTag?: any;
+  callId?: string;
+};
+
+export type SipCall = (Invitation | Inviter) & {
   remoteTag?: any;
   callId?: string;
 };
