@@ -53,6 +53,9 @@ export { default as WazoApiClient } from './api-client';
 export { default as Agent, AgentResponse, AgentArguments } from './domain/Agent';
 export { default as ExternalApp } from './domain/ExternalApp';
 export { default as SessionDescriptionHandler } from './lib/WazoSessionDescriptionHandler';
+export { default as Call } from './voice/call';
+export { Softphone } from './voice/softphone';
+
 export * from './types/WebSocketMessage';
 export * from './utils/PhoneNumberUtil';
 export * from './utils/string';

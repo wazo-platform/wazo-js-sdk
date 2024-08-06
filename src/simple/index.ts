@@ -41,7 +41,7 @@ import Features from '../domain/Features';
 import Meeting from '../domain/Meeting';
 import Checker from '../checker/Checker';
 
-import Softphone from '../voice/softphone';
+import Softphone, { Softphone as SoftphoneClass } from '../voice/softphone';
 import Call from '../voice/call';
 
 const Wazo = {
@@ -91,6 +91,7 @@ const Wazo = {
     SwitchboardCall,
     WebRTCPhone,
     Meeting,
+    SoftphoneClass,
   },
 
   // Api
