@@ -632,7 +632,7 @@ class Call extends EventEmitter {
   }
 
   shouldAutoAnswer() {
-    return !!this.sipCall.request.getHeader('alert-info');
+    return !!this.sipCall.request?.getHeader('alert-info');
   }
 
   get id() {
