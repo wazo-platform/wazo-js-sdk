@@ -272,6 +272,15 @@ const session = await Wazo.Auth.samlLogIn(samlSessionId);
 
 Returns as `Wazo.domain.Session`. This object contains, among other information, the user's token.
 
+
+```js
+const logoutResponse = await Wazo.Auth.samlLogOut();
+```
+
+Returns an object that contains a `location`
+
+`location` is the URL to open for the user to log out from their identity provider.
+
 #### Validating a token
 
 ```js
