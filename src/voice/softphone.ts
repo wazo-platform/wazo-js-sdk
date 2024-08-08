@@ -16,6 +16,7 @@ import IssueReporter from '../service/IssueReporter';
 import configureLogger from '../utils/sip-logger';
 import Call from './call';
 import { assertCan, can, getState, waitUntilState } from '../state-machine/utils';
+import { getSipCallId } from '../utils/sdp';
 
 export const EVENT_INCOMING = 'incoming';
 export const EVENT_OUTGOING = 'outgoing';
@@ -194,7 +195,7 @@ export class Softphone extends EventEmitter {
       await waitUntilState(this.softphoneActor, States.REGISTERED);
     }
 
-    if (this.state !== States.UNREGISTERED) {
+    if (this.state !== States.REGISTERED) {
       throw new InvalidState(`Invalid state ${States.UNREGISTERED}`, States.UNREGISTERED);
     }
 
@@ -207,6 +208,7 @@ export class Softphone extends EventEmitter {
       sipCall = this.client.call(options.params.To, options.withCamera, options.audioOnly, options.conference, options) as SipCall;
       const call = new Call(sipCall, this);
 
+      this.calls.push(call);
       this.emit(EVENT_OUTGOING, call);
 
       return call;
@@ -401,7 +403,7 @@ export class Softphone extends EventEmitter {
 
     this.client.on(this.client.ON_REINVITE, (sipCall: SipCall, request: IncomingRequestMessage, updatedCalleeName: string, updatedNumber: string, hadRemoteVideo: boolean) => {
       logger.info('softphone - on reinvite', {
-        callId: sipCall.id,
+        callId: getSipCallId(sipCall),
         inviteId: request.callId,
         updatedCalleeName,
         updatedNumber,
@@ -530,15 +532,19 @@ export class Softphone extends EventEmitter {
   }
 
   private _getCall(sipCall: SipCall): Call | undefined {
-    return this.calls.find(call => call.id === sipCall.id);
+    return this.calls.find(call => call.id === getSipCallId(sipCall));
+  }
+
+  private _getCallIds(): string[] {
+    return this.calls.map(call => call.id);
   }
 
   private _onCallEvent(sipCall: SipCall, eventName: string, ...args: any[]) {
-    logger.warn('softphone - received call event', { eventName, sipId: sipCall.id });
+    logger.info('softphone - received call event', { eventName, sipId: getSipCallId(sipCall) });
 
     const call = this._getCall(sipCall);
     if (!call) {
-      logger.warn('softphone - no call found to send the event', { eventName, sipId: sipCall.id });
+      logger.warn('softphone - no call found to send the event', { eventName, sipId: getSipCallId(sipCall), ids: this._getCallIds() });
       return;
     }
 

@@ -7,7 +7,7 @@ import { stripVideo } from 'sip.js/lib/platform/web';
 
 import WazoSessionDescriptionHandler, { wazoMediaStreamFactory } from '../lib/WazoSessionDescriptionHandler';
 import { SipCall, PeerConnection, UserAgentOptions, WebRtcConfig, UserAgentConfigOverrides } from '../domain/types';
-import { getVideoDirection, hasAnActiveVideo, makeURI, replaceLocalIpModifier } from './sdp';
+import { getSipCallId, getVideoDirection, hasAnActiveVideo, makeURI, replaceLocalIpModifier } from './sdp';
 import IssueReporter from '../service/IssueReporter';
 import { lastIndexOf } from './array';
 
@@ -274,7 +274,7 @@ export const cleanupStream = (stream: MediaStream): void => {
 
 export const setLocalMediaStream = (sipCall: SipCall, newStream: MediaStream): void => {
   logger.info('setting local media stream', {
-    id: sipCall.id,
+    id: getSipCallId(sipCall),
     tracks: newStream ? newStream.getTracks() : null,
   });
 
@@ -290,7 +290,7 @@ export const updateRemoteStream = (sipCall: SipCall, allTracks = true): void => 
   const pc = getPeerConnection(sipCall);
 
   logger.info('Updating remote stream', {
-    id: sipCall.id,
+    id: getSipCallId(sipCall),
     tracks: remoteStream ? remoteStream.getTracks() : null,
     receiverTracks: pc && pc.getReceivers ? pc.getReceivers().map((receiver) => receiver.track) : null,
   });

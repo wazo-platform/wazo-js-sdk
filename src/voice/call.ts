@@ -15,7 +15,7 @@ import newFrom from '../utils/new-from';
 import updateFrom from '../utils/update-from';
 import IssueReporter from '../service/IssueReporter';
 import softphone, { EVENT_TERMINATE_SOUND, Softphone } from './softphone';
-import { getCallDisplayName, getCallNumber, getSipSessionId } from '../utils/sdp';
+import { getCallDisplayName, getCallNumber, getSipCallId } from '../utils/sdp';
 import { assertCan, assertState, getState } from '../state-machine/utils';
 import { downgradeToAudio, getLocalStream, getLocalVideoStream, getPeerConnection, getRemoteStream, getRemoteVideoStream, getStreamFromConstraints, getWebRtcStats, hasALocalVideoTrack, hasLocalVideo, hasRemoteVideo, isVideoMuted, isVideoRemotelyHeld, setLocalMediaStream, toggleVideo, upgradeToVideo } from '../utils/webrtc';
 
@@ -356,7 +356,7 @@ class Call extends EventEmitter {
   }
 
   isEstablished() {
-    return States.ESTABLISHED in (this.state as Record<StateTypes, EstablishedStateTypes>);
+    return typeof this.state === 'object' && States.ESTABLISHED in (this.state as Record<StateTypes, EstablishedStateTypes>);
   }
 
   isRinging() {
@@ -636,7 +636,7 @@ class Call extends EventEmitter {
   }
 
   get id() {
-    return getSipSessionId(this.sipCall);
+    return getSipCallId(this.sipCall);
   }
 
   get state(): StateTypes | Record<StateTypes, EstablishedStateTypes> {

@@ -6,7 +6,7 @@ import { URI } from 'sip.js/lib/grammar/uri';
 
 import type { SipCall } from '../domain/types';
 
-export const SIP_ID_LENGTH = 36;
+export const SIP_ID_MIN_LENGTH = 20;
 
 export type Candidate = {
   foundation: string;
@@ -147,7 +147,7 @@ export const addIcesInAllBundles = (sdp: string) => {
   return sdpParser.write(parsedSdp);
 };
 
-export const getSipSessionId = (sipSession: SipCall | null | undefined): string => {
+export const getSipCallId = (sipSession: SipCall | null | undefined): string => {
   if (!sipSession) {
     return '';
   }
