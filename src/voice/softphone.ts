@@ -207,6 +207,7 @@ export class Softphone extends EventEmitter {
     try {
       sipCall = this.client.call(options.params.To, options.withCamera, options.audioOnly, options.conference, options) as SipCall;
       const call = new Call(sipCall, this);
+      call.onMakeCall();
 
       this.calls.push(call);
       this.emit(EVENT_OUTGOING, call);
