@@ -6,7 +6,7 @@ import { URI } from 'sip.js/lib/grammar/uri';
 
 import type { SipCall } from '../domain/types';
 
-export const SIP_ID_LENGTH = 36;
+export const SIP_ID_MIN_LENGTH = 20;
 
 export type Candidate = {
   foundation: string;
@@ -147,25 +147,25 @@ export const addIcesInAllBundles = (sdp: string) => {
   return sdpParser.write(parsedSdp);
 };
 
-export const getSipSessionId = (sipSession: SipCall | null | undefined): string => {
+export const getSipCallId = (sipSession: SipCall | null | undefined): string => {
   if (!sipSession) {
     return '';
   }
 
   const message = sipSession.message as Partial<{ callId?: string }>;
   if (message?.callId) {
-    return message.callId.substring(0, SIP_ID_LENGTH);
+    return message.callId.substring(0, SIP_ID_MIN_LENGTH);
   }
 
   // For Inviter
   // @ts-ignore: private
   if (sipSession instanceof Inviter && sipSession.outgoingRequestMessage) {
     // @ts-ignore: private
-    return sipSession.outgoingRequestMessage.callId.substring(0, SIP_ID_LENGTH);
+    return sipSession.outgoingRequestMessage.callId.substring(0, SIP_ID_MIN_LENGTH);
   }
 
   // For Invitation
-  return (sipSession.id || '').substring(0, SIP_ID_LENGTH);
+  return (sipSession.id || '').substring(0, SIP_ID_MIN_LENGTH);
 };
 
 // We need to replace 0.0.0.0 to 127.0.0.1 in the sdp to avoid MOH during a createOffer.

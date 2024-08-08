@@ -133,4 +133,19 @@ describe('Call', () => {
       expect(softphone.client.hangup).toHaveBeenCalled();
     });
   });
+
+  describe('state propagation', () => {
+    it('Should update the call state in events', (done) => {
+      const call = new Call(sipCall, softphone);
+      // @ts-ignore: private method
+      call._sendAction(Actions.MAKE_CALL);
+
+      call.on('remotelyAccepted', () => {
+        expect(call.state).toStrictEqual({ [States.ESTABLISHED]: EstablishedStates.ONGOING });
+        done();
+      });
+
+      call.onAccepted();
+    });
+  });
 });

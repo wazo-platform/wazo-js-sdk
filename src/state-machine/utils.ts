@@ -45,7 +45,7 @@ export const assertCan = (actor: SoftphoneActorRef | CallActorRef, action: Softp
 
 export const assertState = (actor: SoftphoneActorRef | CallActorRef, state: SoftphoneStates | CallStates): void => {
   if (!hasState(actor, state)) {
-    const message = `Invalid state ${state}`;
+    const message = `Invalid state ${state}, has state ${getState(actor)}`;
     logger.warn(message);
 
     throw new InvalidState(message, state);
