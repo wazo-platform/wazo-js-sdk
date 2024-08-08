@@ -550,6 +550,10 @@ class Call extends EventEmitter {
     this._onScreenSharing(localStream as MediaStream, false, desktop);
   }
 
+  onMakeCall() {
+    this._sendAction(Actions.MAKE_CALL);
+  }
+
   onAccepted() {
     this._sendAction(Actions.REMOTLY_ACCEPTED);
     this.emit(EVENT_CALL_REMOTLY_ACCEPTED);

@@ -16,8 +16,15 @@ export const can = (actor: SoftphoneActorRef | CallActorRef, action: SoftphoneAc
   return actor.getSnapshot().can({ type: action });
 };
 
-export const hasState = (actor: SoftphoneActorRef | CallActorRef, state: SoftphoneStates | CallStates): boolean => {
-  return getState(actor) === state;
+export const hasState = (actor: SoftphoneActorRef | CallActorRef, state: SoftphoneStates | CallStates, innerState?: EstablishedStateTypes): boolean => {
+  const currentState = getState(actor);
+
+  // When using nested states, we'll have an object here
+  if (typeof currentState === 'object') {
+    return innerState ? state in currentState && currentState[state as CallStates] === innerState : state in currentState;
+  }
+
+  return currentState === state;
 };
 
 export const waitUntilState = (actor: SoftphoneActorRef | CallActorRef, state: SoftphoneStates | CallStates, timeout = 5000): Promise<unknown> => {
