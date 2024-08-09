@@ -12,7 +12,6 @@ export const Actions = {
   REGISTER: 'register',
   REGISTER_DONE: 'registerDone',
   UNREGISTER: 'unregister',
-  UNREGISTERED: 'unregistered',
   TRANSPORT_CLOSED: 'transportClosed',
 } as const;
 
@@ -32,7 +31,7 @@ const softphoneMachine = setup({}).createMachine({
       on: {
         [Actions.REGISTER_DONE]: States.REGISTERED,
         [Actions.TRANSPORT_CLOSED]: States.UNREGISTERED,
-        [Actions.UNREGISTERED]: States.UNREGISTERED,
+        [Actions.UNREGISTER]: States.UNREGISTERED,
       },
     },
     [States.REGISTERED]: {

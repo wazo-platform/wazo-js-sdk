@@ -39,6 +39,7 @@ const logger = IssueReporter ? IssueReporter.loggerFor('webrtc-client') : consol
 const statsLogger = IssueReporter ? IssueReporter.loggerFor('webrtc-stats') : console;
 // events
 const REGISTERED = 'registered';
+const REGISTERING = 'registering';
 const UNREGISTERED = 'unregistered';
 const REGISTRATION_FAILED = 'registrationFailed';
 const INVITE = 'invite';
@@ -57,7 +58,7 @@ const ON_SCREEN_SHARING_REINVITE = 'onScreenSharingReinvite';
 const ON_NETWORK_STATS = 'onNetworkStats';
 const ON_DISCONNECTED = 'onDisconnected';
 
-export const events = [REGISTERED, UNREGISTERED, REGISTRATION_FAILED, INVITE];
+export const events = [REGISTERED, REGISTERING, UNREGISTERED, REGISTRATION_FAILED, INVITE];
 export const transportEvents = [CONNECTED, DISCONNECTED, TRANSPORT_ERROR, MESSAGE];
 export class CanceledCallError extends Error {}
 
@@ -118,6 +119,8 @@ export default class WebRTCClient extends Emitter {
   ON_USER_AGENT: string;
 
   REGISTERED: string;
+
+  REGISTERING: string;
 
   UNREGISTERED: string;
 
@@ -196,6 +199,7 @@ export default class WebRTCClient extends Emitter {
     this.heartbeat.setOnHeartbeatTimeout(this._onHeartbeatTimeout.bind(this));
     // sugar
     this.REGISTERED = REGISTERED;
+    this.REGISTERING = REGISTERING;
     this.UNREGISTERED = UNREGISTERED;
     this.REGISTRATION_FAILED = REGISTRATION_FAILED;
     this.INVITE = INVITE;
@@ -342,6 +346,8 @@ export default class WebRTCClient extends Emitter {
     }
 
     logger.info('sdk webrtc registering...', logInfo);
+
+    this.eventEmitter.emit(REGISTERING);
 
     if (!this.userAgent) {
       logger.info('sdk webrtc recreating User Agent');
@@ -1547,8 +1553,8 @@ export default class WebRTCClient extends Emitter {
     return audio;
   }
 
-  _onTransportError(): void {
-    logger.error('on transport error');
+  _onTransportError(reason?: string): void {
+    logger.warn('on transport error', { reason });
     this.eventEmitter.emit(TRANSPORT_ERROR);
     this.attemptReconnection();
   }
@@ -1610,7 +1616,7 @@ export default class WebRTCClient extends Emitter {
       }
 
       // We can invoke disconnect() with an error that can be catcher by `onDisconnect`, so we have to trigger it here.
-      this._onTransportError();
+      this._onTransportError('heartbeat timeout');
     }
   }
 

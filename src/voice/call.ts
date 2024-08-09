@@ -820,7 +820,9 @@ class Call extends EventEmitter {
   }
 
   private _sendAction(action: ActionTypes | EstablishedActionTypes) {
+    const was = this.state;
     this.callActor.send({ type: action });
+    logger.trace('call - send action', { action, was, state: this.state });
   }
 }
 

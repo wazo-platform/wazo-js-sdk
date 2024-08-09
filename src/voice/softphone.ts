@@ -93,6 +93,8 @@ export class Softphone extends EventEmitter {
     const server = Wazo.Auth.getHost();
     const session = Wazo.Auth.getSession();
 
+    logger.info('softphone - connect', { server, session: !!session });
+
     if (!server || !session) {
       throw new Error('Please connect to the server using `Wazo.Auth.logIn` or `Wazo.Auth.authenticate` before using Room.connect().');
     }
@@ -116,6 +118,7 @@ export class Softphone extends EventEmitter {
   async disconnect() {
     assertCan(this.softphoneActor, Actions.UNREGISTER);
     if (!this.client) {
+      logger.info('softphone - disconnect, not client to disconnect, bailing');
       return null;
     }
 
@@ -137,7 +140,9 @@ export class Softphone extends EventEmitter {
   ): Promise<void> {
     assertCan(this.softphoneActor, Actions.REGISTER);
 
-    this.softphoneActor.send({ type: Actions.REGISTER });
+    logger.info('softphone - connect with credentials', { server, username: sipLine.username, displayName, options: rawOptions });
+
+    this._sendAction(Actions.REGISTER);
 
     const [host, port = 443] = server.split(':');
     let options = { ...rawOptions };
@@ -291,7 +296,7 @@ export class Softphone extends EventEmitter {
   }
 
   startHeartbeat() {
-    logger.info('softphone - start heartbeat', { client: !!this.client, hasHeartbeat: this.client.hasHeartbeat() });
+    logger.info('softphone - start heartbeat', { client: !!this.client, hasHeartbeat: this.client?.hasHeartbeat() });
     if (!this.client || this.client.hasHeartbeat()) {
       return;
     }
@@ -456,22 +461,32 @@ export class Softphone extends EventEmitter {
 
     this.client.on(this.client.UNREGISTERED, () => {
       logger.info('softphone - unregistered');
-      this.emit(EVENT_UNREGISTERED);
+      if (!can(this.softphoneActor, Actions.UNREGISTER)) {
+        logger.warn('softphone - cannot unregister', { state: this.state });
+        return;
+      }
 
-      this._sendAction(Actions.UNREGISTERED);
+      this._sendAction(Actions.UNREGISTER);
+
+      this.emit(EVENT_UNREGISTERED);
     });
 
     this.client.on(this.client.ON_DISCONNECTED, () => {
       logger.info('softphone - disconnected');
-      this.emit(EVENT_DISCONNECTED);
+      if (!can(this.softphoneActor, Actions.TRANSPORT_CLOSED)) {
+        logger.warn('softphone - cannot disconnected', { state: this.state });
+        return;
+      }
 
       this._sendAction(Actions.TRANSPORT_CLOSED);
+
+      this.emit(EVENT_DISCONNECTED);
     });
 
     this.client.on(this.client.REGISTERED, () => {
       logger.info('softphone - registered', { state: getState(this.softphoneActor) });
       if (!can(this.softphoneActor, Actions.REGISTER_DONE)) {
-        logger.warn('softphone - registered but not in REGISTERING state', { state: getState(this.softphoneActor) });
+        logger.warn('softphone - registered but not in REGISTERING state', { state: this.state });
         return;
       }
 
@@ -492,8 +507,14 @@ export class Softphone extends EventEmitter {
     });
 
     this.client.on(this.client.CONNECTED, () => {
-      logger.info('softphone - connected');
+      logger.info('softphone - connected', { state: this.state });
       this.stopHeartbeat();
+    });
+
+    this.client.on(this.client.REGISTERING, () => {
+      logger.info('softphone - registering', { state: this.state });
+
+      this._sendAction(Actions.REGISTER);
     });
 
     this.client.on(this.client.DISCONNECTED, () => {
@@ -529,7 +550,9 @@ export class Softphone extends EventEmitter {
   }
 
   private _sendAction(action: ActionTypes) {
+    const was = this.state;
     this.softphoneActor.send({ type: action });
+    logger.trace('softphone - send action', { action, was, state: this.state });
   }
 
   private _getCall(sipCall: SipCall): Call | undefined {
