@@ -656,7 +656,7 @@ Depending on your environment you can import:
 ##### WebRTC Library
 
 ```js
-import { WazoWebRTCClient } from '@wazo/sdk';
+import { WebRTCClient } from '@wazo/sdk';
 ```
 
 ##### WebSocket Library
@@ -956,11 +956,11 @@ const results = await requester.call('dird/0.1/personal');
 This sample describes the very first steps to place a call using WebRTC.
 
 ```js
-import { WazoWebRTCClient } from '@wazo/sdk'; // import the library
+import { WebRTCClient } from '@wazo/sdk'; // import the library
 
 const session = await client.auth.logIn({ ... }); // log in
 
-const client = new WazoWebRTCClient({
+const client = new WebRTCClient({
   displayName: 'From WEB',
   host: 'stack.example.com',
   websocketSip: 'other.url.com', // Allows to connect throught another URL than host (default to `host` is not set).
@@ -1021,7 +1021,7 @@ const uaConfigOverrides = {
   }
 }
 
-const client = new WazoWebRTCClient(config, session, /* optional */ uaConfigOverrides);
+const client = new WebRTCClient(config, session, /* optional */ uaConfigOverrides);
 ```
 
 #### Basic client features
@@ -1147,12 +1147,12 @@ client.close();
 Higher level of abstraction to use the `WebRtcClient`.
 
 ```js
-import { WazoWebRTCClient, WebRTCPhone } from '@wazo/sdk';
+import { WebRTCClient, WebRTCPhone } from '@wazo/sdk';
 
-const webRtcClient = new WazoWebRTCClient({/* See above for parameters */});
+const webRtcClient = new WebRTCClient({/* See above for parameters */});
 
 const phone = new WebRTCPhone(
-  webRtcClient: WazoWebRTCClient, // Instance of WazoWebRTCClient
+  webRtcClient: WebRTCClient, // Instance of WebRTCClient
   audioDeviceOutput: string, // The output device used to play audio
   allowVideo: boolean, // Allow to send and receive video
   audioDeviceRing, // The output device used to play ringtones

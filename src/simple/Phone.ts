@@ -6,7 +6,7 @@ import type CallSession from '../domain/CallSession';
 import AdHocAPIConference from '../domain/AdHocAPIConference';
 import WebRTCPhone, * as PHONE_EVENTS from '../domain/Phone/WebRTCPhone';
 import { MESSAGE_TYPE_CHAT, MESSAGE_TYPE_SIGNAL } from '../domain/Phone/WebRTCPhone';
-import WazoWebRTCClient, { events as clientEvents, transportEvents } from '../web-rtc-client';
+import WebRTCClient, { events as clientEvents, transportEvents } from '../web-rtc-client';
 import IssueReporter from '../service/IssueReporter';
 import Emitter from '../utils/Emitter';
 import Wazo from './index';
@@ -19,7 +19,7 @@ const protocolLogger = IssueReporter.loggerFor('sip');
 const protocolDebugMessages = ['Received WebSocket text message:', 'Sending WebSocket message:'];
 
 export class Phone extends Emitter {
-  client: WazoWebRTCClient;
+  client: WebRTCClient;
 
   phone: WebRTCPhone | null | undefined;
 
@@ -186,7 +186,7 @@ export class Phone extends Emitter {
       options.log.connector = this._logConnector;
     }
 
-    this.client = new WazoWebRTCClient({
+    this.client = new WebRTCClient({
       host,
       port: typeof port === 'string' ? parseInt(port, 10) : port,
       displayName,
