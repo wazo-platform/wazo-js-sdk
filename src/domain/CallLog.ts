@@ -118,8 +118,7 @@ export default class CallLog {
 
   static parseNew(plain: CallLogResponse, session: Session): CallLog {
     const callLog: CallLog = CallLog.parse(plain);
-    // @TODO: FIXME add verification declined vs missed call
-    callLog.newMissedCall = session && session.hasExtension((plain.requested_extension || plain.destination_extension) as string) && !plain.answered;
+    callLog.newMissedCall = session && plain.destination_user_uuid === session.uuid && !plain.answered;
     return callLog;
   }
 
@@ -203,7 +202,7 @@ export default class CallLog {
   }
 
   isAnOutgoingCall(session: Session): boolean {
-    console.warn(`@wazo/sdk 
+    console.warn(`@wazo/sdk
       CallLog.isAnOutgoingcall(session) method is obsolete.
       Please use CallLog.isOutgoing(session).
     `);
