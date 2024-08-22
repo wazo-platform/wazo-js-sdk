@@ -158,8 +158,6 @@ class Call extends EventEmitter {
 
     this.number = getCallNumber(sipCall);
     this.displayName = getCallDisplayName(sipCall);
-
-    this._bindEvents();
   }
 
   async accept(options: AcceptOptions = {}): Promise<string | null> {
@@ -551,6 +549,8 @@ class Call extends EventEmitter {
   }
 
   onMakeCall() {
+    this._bindEvents();
+
     this._sendAction(Actions.MAKE_CALL);
   }
 
