@@ -42,7 +42,7 @@ export const replaceLocalIpModifier = (description: Record<string, any>) => Prom
   ...JSON.parse(JSON.stringify(description)),
   sdp: description.sdp.replace('c=IN IP4 0.0.0.0', 'c=IN IP4 127.0.0.1'),
 });
-const SIP_ID_LENGTH = 36;
+const SIP_ID_LENGTH = 20;
 const DEFAULT_ICE_TIMEOUT = 3000;
 const SEND_STATS_DELAY = 5000;
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
@@ -1178,7 +1178,7 @@ export default class WebRTCClient extends Emitter {
     }
 
     logger.info('send WebRTC message', {
-      sipId: sipSession.id,
+      sipId: this.getSipSessionId(sipSession),
       contentType,
     });
 
