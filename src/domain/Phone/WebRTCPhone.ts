@@ -1557,7 +1557,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.eventEmitter.emit(ON_CALL_ERROR, e);
     });
     this.client.on(this.client.REJECTED, session => {
-      logger.info('WebRTC call rejected', session.id);
+      logger.info('WebRTC call rejected', { id: this.getSipSessionId(session) });
 
       const callSession = this._createCallSession(session);
 
