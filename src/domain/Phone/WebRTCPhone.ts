@@ -163,7 +163,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
   async sendReinvite(callSession?: CallSession, constraints: Record<string, any> | null | undefined = null, conference = false, audioOnly = false, iceRestart = false): Promise<OutgoingInviteRequest | void> {
     const sipSession = this.findSipSession(callSession);
     logger.info('WebRTC phone - send reinvite', {
-      sessionId: getSipSessionId(sipSession),
+      sessionId: getSipCallId(sipSession),
       constraints,
       audioOnly,
       conference,
@@ -395,7 +395,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       switch (newState) {
         case SessionState.Terminating:
           logger.info('WebRTC phone - call terminating', {
-            sipId: getSipSessionId(sipSession),
+            sipId: getSipCallId(sipSession),
           });
           this.eventEmitter.emit(ON_CALL_ENDING, this._createCallSession(sipSession));
           break;
@@ -403,7 +403,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         case SessionState.Terminated:
         {
           logger.info('WebRTC phone - call terminated', {
-            sipId: getSipSessionId(sipSession),
+            sipId: getSipCallId(sipSession),
           });
 
           // Should be called before `_onCallTerminated` or the callCount will not decrement...
@@ -586,7 +586,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   _onCallAccepted(sipSession: WazoSession, cameraEnabled: boolean): CallSession {
     logger.info('WebRTC phone - on call accepted', {
-      sipId: getSipSessionId(sipSession),
+      sipId: getSipCallId(sipSession),
       cameraEnabled,
     });
 
@@ -594,7 +594,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     if (this.currentSipSession && !this.isCurrentCallSipSession(callSession)) {
       logger.info('WebRTC phone - on call accepted with another ongoing call, holding it', {
-        sipId: getSipSessionId(sipSession),
+        sipId: getSipCallId(sipSession),
         cameraEnabled,
       });
 
@@ -679,7 +679,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const sipSessionId = getSipCallId(sipSession);
 
     logger.info('WebRTC phone - on call terminated', {
-      sipId: getSipSessionId(sipSession),
+      sipId: getSipCallId(sipSession),
       sipSessionId,
       ids: Object.keys(this.callSessions),
     });
@@ -715,7 +715,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const hasIncomingCallSession = this.hasIncomingCallSession();
     // Re-trigger incoming call event for remaining incoming calls
     logger.info('WebRTC phone - check to re-trigger incoming call', {
-      sipId: getSipSessionId(sipSession),
+      sipId: getSipCallId(sipSession),
       shouldRetrigger,
       hasIncomingCallSession,
     });
@@ -859,7 +859,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const sipSession = this.client.getSipSession(callSession.getId()) as Invitation;
 
     if (sipSession) {
-      logger.info('accept call, session found', { sipId: getSipSessionId(sipSession) });
+      logger.info('accept call, session found', { sipId: getSipCallId(sipSession) });
 
       return this.client.answer(sipSession, this.allowVideo ? cameraEnabled : false).then(() => {
         return callSession.sipCallId;
@@ -904,7 +904,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     if (sipSession) {
       logger.info('WebRTC rejecting', {
-        sipId: getSipSessionId(sipSession),
+        sipId: getSipCallId(sipSession),
       });
       this.client.hangup(sipSession);
     }
@@ -925,7 +925,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
     if (sipSession) {
       logger.info('WebRTC atxfer', {
-        sipId: getSipSessionId(sipSession),
+        sipId: getSipCallId(sipSession),
       });
       return this.client.atxfer(sipSession);
     }
@@ -956,13 +956,13 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     logger.info('WebRTC resuming', {
-      sipId: getSipSessionId(sipSession),
+      sipId: getSipCallId(sipSession),
     });
 
     // Hold current session if different from the current one (we don't want 2 sessions active at the same time).
-    if (this.currentSipSession && getSipSessionId(this.currentSipSession) !== getSipSessionId(sipSession)) {
+    if (this.currentSipSession && getSipCallId(this.currentSipSession) !== getSipCallId(sipSession)) {
       logger.info('WebRTC hold call after resume', {
-        id: getSipSessionId(this.currentSipSession),
+        id: getSipCallId(this.currentSipSession),
       });
       this.holdSipSession(this.currentSipSession, this.currentCallSession, withEvent);
     }
@@ -985,7 +985,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const sessionId = getSipCallId(sipSession);
     const hasVideo = this.client.hasLocalVideo(sessionId);
     logger.info('WebRTC hold sip session', {
-      sipId: getSipSessionId(sipSession),
+      sipId: getSipCallId(sipSession),
       hasVideo,
     });
 
@@ -1082,7 +1082,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     logger.info('WebRTC muting', {
-      sipId: getSipSessionId(sipSession),
+      sipId: getSipCallId(sipSession),
     });
     this.client.mute(sipSession);
 
@@ -1110,7 +1110,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     logger.info('WebRTC unmuting', {
-      sipId: getSipSessionId(sipSession),
+      sipId: getSipCallId(sipSession),
     });
     this.client.unmute(sipSession);
 
@@ -1145,7 +1145,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     logger.info('WebRTC turn camera on', {
-      sipId: getSipSessionId(sipSession),
+      sipId: getSipCallId(sipSession),
     });
     this.client.toggleCameraOn(sipSession);
     this.eventEmitter.emit(ON_CAMERA_RESUMED, this._createCameraResumedCallSession(sipSession, callSession));
@@ -1159,7 +1159,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     logger.info('WebRTC turn camera off', {
-      sipId: getSipSessionId(sipSession),
+      sipId: getSipCallId(sipSession),
     });
     this.client.toggleCameraOff(sipSession);
     this.eventEmitter.emit(ON_CAMERA_DISABLED, this._createCameraDisabledCallSession(sipSession, callSession));
@@ -1173,7 +1173,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     logger.info('WebRTC send key', {
-      sipId: getSipSessionId(sipSession),
+      sipId: getSipCallId(sipSession),
       tone,
     });
     this.client.sendDTMF(sipSession, tone);
@@ -1251,7 +1251,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     logger.info('WebRTC transfer', {
-      sipId: getSipSessionId(sipSession),
+      sipId: getSipCallId(sipSession),
       target,
     });
     this.client.transfer(sipSession, target);
@@ -1261,8 +1261,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const sipSession = this.client.getSipSession(source.sipCallId);
     const sipSessionTarget = this.client.getSipSession(destination.sipCallId);
     logger.info('WebRTC indirect transfer', {
-      sipId: sipSession ? getSipSessionId(sipSession) : null,
-      target: sipSessionTarget ? getSipSessionId(sipSessionTarget) : null,
+      sipId: sipSession ? getSipCallId(sipSession) : null,
+      target: sipSessionTarget ? getSipCallId(sipSessionTarget) : null,
     });
 
     if (!sipSessionTarget) {
@@ -1301,7 +1301,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const sipSessionId = getSipCallId(sipSession);
 
     logger.info('WebRTC hangup', {
-      sipId: getSipSessionId(sipSession),
+      sipId: getSipCallId(sipSession),
       sipSessionId,
     });
     await this.client.hangup(sipSession);
@@ -1490,7 +1490,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       const autoAnswer = sipSession.request.getHeader('Answer-Mode') === 'Auto';
       const withVideo = this.allowVideo ? wantsToDoVideo : false;
       logger.info('WebRTC invite received', {
-        sipId: getSipSessionId(sipSession),
+        sipId: getSipCallId(sipSession),
         withVideo,
         autoAnswer,
       });
@@ -1561,7 +1561,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       this.eventEmitter.emit(ON_CALL_ERROR, e);
     });
     this.client.on(this.client.REJECTED, session => {
-      logger.info('WebRTC call rejected', { id: getSipSessionId(session) });
+      logger.info('WebRTC call rejected', { id: getSipCallId(session) });
 
       const callSession = this._createCallSession(session);
 

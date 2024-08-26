@@ -1,7 +1,7 @@
 /* eslint-disable no-underscore-dangle */
 import sdpParser from 'sdp-transform';
 import { UserAgent } from 'sip.js/lib/api/user-agent';
-import { Inviter } from 'sip.js/lib/api';
+import { Inviter, Invitation } from 'sip.js/lib/api';
 import { URI } from 'sip.js/lib/grammar/uri';
 
 import type { SipCall } from '../domain/types';
@@ -166,7 +166,7 @@ export const getSipCallId = (sipSession: SipCall | null | undefined): string => 
     return sipSession.incomingInviteRequest.message.callId;
   }
 
-  return '';
+  return sipSession.id;
 };
 
 // We need to replace 0.0.0.0 to 127.0.0.1 in the sdp to avoid MOH during a createOffer.

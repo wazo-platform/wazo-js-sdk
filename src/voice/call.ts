@@ -116,7 +116,6 @@ class Call extends EventEmitter {
     } as any;
 
     const call = new Call(sipCall, softphone);
-    // call._sendAction(Actions.ES);
     call.apiId = apiCall.id;
     call.answerTime = new Date(+apiCall.startingTime);
 
