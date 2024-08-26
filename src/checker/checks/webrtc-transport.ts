@@ -1,9 +1,9 @@
 import WebRTCClient from '../../web-rtc-client';
-import { WazoSession } from '../../domain/types';
+import { SipCall } from '../../domain/types';
 
 export default {
   name: 'WebRTC Transport (WS) ~30s',
-  check: (server: string, session: WazoSession): Promise<void> => new Promise((resolve, reject) => {
+  check: (server: string, session: SipCall): Promise<void> => new Promise((resolve, reject) => {
     const [host, port = 443] = server.split(':');
 
     const client = new WebRTCClient({

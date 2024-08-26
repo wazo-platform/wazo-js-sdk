@@ -2,7 +2,7 @@ import { SessionState } from 'sip.js/lib/api/session-state';
 import Call from './Call';
 import newFrom from '../utils/new-from';
 import updateFrom from '../utils/update-from';
-import { WazoSession } from './types';
+import { SipCall } from './types';
 
 type CallSessionArguments = {
   answered: boolean;
@@ -32,7 +32,7 @@ type CallSessionArguments = {
   screensharing: boolean;
   recording: boolean;
   recordingPaused: boolean;
-  sipSession?: WazoSession;
+  sipSession?: SipCall;
   conference: boolean;
 };
 export default class CallSession {
@@ -96,7 +96,7 @@ export default class CallSession {
 
   recordingPaused: boolean;
 
-  sipSession: WazoSession | undefined;
+  sipSession: SipCall | undefined;
 
   conference: boolean;
 

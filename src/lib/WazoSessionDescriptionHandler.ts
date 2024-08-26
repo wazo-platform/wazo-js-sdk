@@ -5,7 +5,7 @@ import type { MediaStreamFactory } from 'sip.js/lib/platform/web/session-descrip
 import type { SessionDescriptionHandlerConfiguration } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-configuration';
 import { SessionDescriptionHandler } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler';
 import { SessionDescriptionHandlerOptions } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-options';
-import { PeerConnection, WazoSession } from '../domain/types';
+import { PeerConnection, SipCall } from '../domain/types';
 import IssueReporter from '../service/IssueReporter';
 import { type Candidate, addIcesInAllBundles, fixSdp, parseCandidate } from '../utils/sdp';
 
@@ -36,10 +36,10 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
 
   isWeb: boolean;
 
-  session: WazoSession;
+  session: SipCall;
 
   // eslint-disable-next-line @typescript-eslint/default-param-last
-  constructor(logger: Logger, mediaStreamFactory: MediaStreamFactory, sessionDescriptionHandlerConfiguration: SessionDescriptionHandlerConfiguration, isWeb: boolean, session: WazoSession) {
+  constructor(logger: Logger, mediaStreamFactory: MediaStreamFactory, sessionDescriptionHandlerConfiguration: SessionDescriptionHandlerConfiguration, isWeb: boolean, session: SipCall) {
     super(logger, mediaStreamFactory, sessionDescriptionHandlerConfiguration);
     this.eventEmitter = new EventEmitter();
     this.isWeb = isWeb;
