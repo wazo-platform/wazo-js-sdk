@@ -43,7 +43,8 @@ export const waitUntilState = (actor: SoftphoneActorRef | CallActorRef, state: S
 export const assertCan = (actor: SoftphoneActorRef | CallActorRef, action: SoftphoneActions | CallActions | EstablishedCallActions): void => {
   if (!can(actor, action)) {
     const currentState = actor.getSnapshot().value;
-    const message = `Invalid state transition from ${currentState} with action ${action}`;
+    const currentStateString = typeof currentState === 'object' ? JSON.stringify(currentState) : currentState;
+    const message = `Invalid state transition from ${currentStateString} with action ${action}`;
     logger.warn(message);
 
     throw new InvalidStateTransition(message, action, currentState as string);

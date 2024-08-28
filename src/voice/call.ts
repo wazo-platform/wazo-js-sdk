@@ -1,7 +1,7 @@
 /* eslint-disable no-underscore-dangle */
 import { EventEmitter } from 'events';
 import { createActor } from 'xstate';
-import { Invitation } from 'sip.js/lib/api/invitation';
+import { Inviter } from 'sip.js/lib/api/inviter';
 import { SessionState } from 'sip.js/lib/api/session-state';
 import { OutgoingInviteRequest } from 'sip.js/lib/core';
 import { SessionDescriptionHandler } from 'sip.js/lib/platform/web';
@@ -363,7 +363,7 @@ class Call extends EventEmitter {
   }
 
   isOutgoing() {
-    return this.sipCall instanceof Invitation;
+    return this.sipCall instanceof Inviter;
   }
 
   isIncoming() {
