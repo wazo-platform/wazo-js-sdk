@@ -14,7 +14,7 @@ import ApiCall from '../domain/Call';
 import newFrom from '../utils/new-from';
 import updateFrom from '../utils/update-from';
 import IssueReporter from '../service/IssueReporter';
-import softphone, { EVENT_TERMINATE_SOUND, Softphone } from './softphone';
+import softphone, { Softphone } from './softphone';
 import { getCallDisplayName, getCallNumber, getSipCallId } from '../utils/sdp';
 import { assertCan, assertState, getState } from '../state-machine/utils';
 import { downgradeToAudio, getLocalStream, getLocalVideoStream, getPeerConnection, getRemoteStream, getRemoteVideoStream, getStreamFromConstraints, getWebRtcStats, hasALocalVideoTrack, hasLocalVideo, hasRemoteVideo, isVideoMuted, isVideoRemotelyHeld, setLocalMediaStream, toggleVideo, upgradeToVideo } from '../utils/webrtc';
@@ -187,18 +187,20 @@ class Call extends EventEmitter {
     assertCan(this.callActor, Actions.REJECT);
     logger.info('call - reject', { id: this.id });
 
-    this.phone.emit(EVENT_TERMINATE_SOUND, 'call rejected locally');
-
-    this.shouldSendReinvite = false;
-
-    return this.hangup();
+    return this._terminate();
   }
 
   async hangup(): Promise<boolean> {
     assertCan(this.callActor, Actions.HANGUP);
     logger.info('call - hangup', { id: this.id });
 
+    return this._terminate();
+  }
+
+  async _terminate(): Promise<boolean> {
     await this.phone.client.hangup(this.sipCall);
+
+    this.shouldSendReinvite = false;
 
     // Remove this call from softphone's calls
     this.phone.onCallTerminated(this);
@@ -575,6 +577,8 @@ class Call extends EventEmitter {
   }
 
   onCallIncoming() {
+    this._bindEvents();
+
     this._sendAction(Actions.INCOMING_CALL);
   }
 

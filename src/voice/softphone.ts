@@ -292,7 +292,9 @@ export class Softphone extends EventEmitter {
   }
 
   holdAllCalls(exceptCall: Call | null = null) {
-    this.calls.filter(call => !call.isHeld() && call.id === exceptCall?.id).forEach(call => call.hold());
+    logger.info('softphone - hold all calls', { exceptId: exceptCall?.id, ids: this.calls.map(call => call.id) });
+
+    this.calls.filter(call => !call.isHeld() && call.id !== exceptCall?.id).forEach(call => call.hold());
   }
 
   startHeartbeat() {
@@ -384,8 +386,16 @@ export class Softphone extends EventEmitter {
     return this.client?.config?.userAgentString || 'softphone';
   }
 
+  isRegistering() {
+    return this.state === States.REGISTERING;
+  }
+
   isRegistered() {
     return this.state === States.REGISTERED;
+  }
+
+  isUnRegistered() {
+    return this.state === States.UNREGISTERED;
   }
 
   _bindEvents(): void {
