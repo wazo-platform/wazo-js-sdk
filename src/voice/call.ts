@@ -18,7 +18,7 @@ import IssueReporter from '../service/IssueReporter';
 import softphone, { Softphone } from './softphone';
 import { getCallDisplayName, getCallNumber, getSipCallId } from '../utils/sdp';
 import { assertCan, assertState, getState } from '../state-machine/utils';
-import { downgradeToAudio, getLocalStream, getLocalVideoStream, getPeerConnection, getRemoteStream, getRemoteVideoStream, getStreamFromConstraints, getWebRtcStats, hasALocalVideoTrack, hasLocalVideo, hasRemoteVideo, isVideoMuted, isVideoRemotelyHeld, setLocalMediaStream, toggleVideo, upgradeToVideo } from '../utils/webrtc';
+import { downgradeToAudio, getLocalStream, getLocalVideoStream, getPeerConnection, getRemoteStream, getRemoteVideoStream, getStreamFromConstraints, getWebRtcStats, hasALocalVideoTrack, hasLocalVideo, hasRemoteVideo, isVideoMuted, isVideoRemotelyHeld, sessionWantsToDoVideo, setLocalMediaStream, toggleVideo, upgradeToVideo } from '../utils/webrtc';
 
 const logger = IssueReporter.loggerFor('call');
 
@@ -111,7 +111,7 @@ class Call extends EventEmitter {
       // Mock sdk so `hasLocalVideo` will return true.
       sessionDescriptionHandler: {
         localMediaStream: {
-          getTracks: () => (apiCall.isVideo ? [{ kind: 'video', readyState: 'live' }] : []),
+          getTracks: () => (apiCall.isVideo ? [{ id: 'mocked', kind: 'video', readyState: 'live' }] : []),
         },
       },
     } as any;
@@ -326,7 +326,7 @@ class Call extends EventEmitter {
   turnCameraOn(): void {
     assertState(this.callActor, States.ESTABLISHED);
     logger.info('call - turn camera on', { id: this.id });
-    toggleVideo(this.sipCall, true);
+    toggleVideo(this.sipCall, false);
 
     this.emit(EVENT_CAMERA_RESUMED);
   }
@@ -334,7 +334,7 @@ class Call extends EventEmitter {
   turnCameraOff(): void {
     assertState(this.callActor, States.ESTABLISHED);
     logger.info('call -  turn camera off', { id: this.id });
-    toggleVideo(this.sipCall, false);
+    toggleVideo(this.sipCall, true);
 
     this.emit(EVENT_CAMERA_DISABLED);
   }
@@ -557,6 +557,8 @@ class Call extends EventEmitter {
   }
 
   onAccepted() {
+    this.answerTime = new Date();
+
     this._sendAction(Actions.REMOTLY_ACCEPTED);
     this.emit(EVENT_CALL_REMOTLY_ACCEPTED);
   }
@@ -609,6 +611,10 @@ class Call extends EventEmitter {
 
   hasLocalVideo() {
     return hasLocalVideo(this.sipCall);
+  }
+
+  wantsToDoVideo() {
+    return sessionWantsToDoVideo(this.sipCall);
   }
 
   getLocalStream() {

@@ -187,6 +187,10 @@ export const sessionWantsToDoVideo = (sipCall: SipCall): boolean => {
   } = sipCall.request || sipCall;
   // Sometimes with InviteClientContext the body is in the body attribute ...
   const sdp = typeof body === 'object' && body ? body.body : body;
+  if (!sdp) {
+    return (sipCall.sessionDescriptionHandler as any)?.localMediaStreamConstraints?.video;
+  }
+
   return hasAnActiveVideo(sdp);
 };
 
@@ -327,7 +331,7 @@ export const getVideoConstraints = (video: Constraint = false): MediaTrackConstr
   }
 
   // @ts-ignore: media constraints
-  return this.video?.deviceId?.exact ? this.video : true;
+  return video?.deviceId?.exact ? video : true;
 };
 
 // eslint-disable-next-line no-unused-vars
