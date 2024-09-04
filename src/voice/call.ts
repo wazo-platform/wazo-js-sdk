@@ -85,6 +85,8 @@ class Call extends EventEmitter {
 
   recording = false;
 
+  recordingPaused = false;
+
   displayName: string | null;
 
   number: string | null;
