@@ -182,7 +182,7 @@ export class Softphone extends EventEmitter {
       return;
     }
 
-    this.client.attemptReconnection();
+    this.client.register();
   }
 
   async call(options: CallOptions): Promise<Call | null> {
