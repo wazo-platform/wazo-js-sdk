@@ -63,6 +63,8 @@ export const MESSAGE_TYPE_CHAT = 'message/TYPE_CHAT';
 export const MESSAGE_TYPE_SIGNAL = 'message/TYPE_SIGNAL';
 export const MESSAGE_TRACK_UPDATED = 'onTrackUpdated';
 
+const attributesToUpdate = ['apiId', 'talkingToIds', 'creationTime', 'answerTime', 'endTime', 'recording', 'recordingPaused', 'displayName', 'number'];
+
 class Call extends EventEmitter {
   callActor: CallActorRef;
 
@@ -121,6 +123,7 @@ class Call extends EventEmitter {
     const call = new Call(sipCall, softphone);
     call.apiId = apiCall.id;
     call.answerTime = new Date(+apiCall.startingTime);
+    call.recording = apiCall.isRecording();
 
     // Update call state
     const snapshot = call.callActor.getSnapshot();
@@ -640,7 +643,7 @@ class Call extends EventEmitter {
   }
 
   updateFrom(call: Call) {
-    updateFrom(this, call);
+    updateFrom(this, call, attributesToUpdate);
   }
 
   is(otherCall: Call) {
