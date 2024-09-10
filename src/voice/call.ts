@@ -77,7 +77,7 @@ class Call extends EventEmitter {
 
   creationTime: Date;
 
-  answerTime: Date;
+  answerTime: Date | null;
 
   endTime: Date;
 
@@ -108,7 +108,7 @@ class Call extends EventEmitter {
       remoteIdentity: {
         uri: {
           _normal: {
-            user: apiCall.calleeNumber,
+            user: apiCall.calleeName || apiCall.calleeNumber,
           },
         },
       },
@@ -122,7 +122,7 @@ class Call extends EventEmitter {
 
     const call = new Call(sipCall, softphone);
     call.apiId = apiCall.id;
-    call.answerTime = new Date(+apiCall.startingTime);
+    call.creationTime = new Date(+apiCall.startingTime);
     call.recording = apiCall.isRecording();
 
     // Update call state
@@ -644,6 +644,10 @@ class Call extends EventEmitter {
 
   updateFrom(call: Call) {
     updateFrom(this, call, attributesToUpdate);
+
+    // Update call state
+    // @ts-ignore
+    this.callActor.update(call.callActor.getSnapshot());
   }
 
   is(otherCall: Call) {
