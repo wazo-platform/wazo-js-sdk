@@ -1,4 +1,10 @@
+/* eslint-disable no-underscore-dangle */
 import sdpParser from 'sdp-transform';
+import { UserAgent } from 'sip.js/lib/api/user-agent';
+import { Inviter, Invitation } from 'sip.js/lib/api';
+import { URI } from 'sip.js/lib/grammar/uri';
+
+import type { SipCall } from '../domain/types';
 
 export type Candidate = {
   foundation: string;
@@ -137,4 +143,49 @@ export const addIcesInAllBundles = (sdp: string) => {
     candidates: media.candidates || candidates,
   }));
   return sdpParser.write(parsedSdp);
+};
+
+export const getSipCallId = (sipSession: SipCall | null | undefined): string => {
+  if (!sipSession) {
+    return '';
+  }
+
+  // For Inviter
+  // @ts-ignore: private
+  if (sipSession instanceof Inviter && sipSession.outgoingRequestMessage) {
+    // @ts-ignore: private
+    return sipSession.outgoingRequestMessage.callId;
+  }
+
+  // For Invitation
+  // @ts-ignore: private
+  if (sipSession instanceof Invitation && sipSession.incomingInviteRequest.message) {
+    // @ts-ignore: private
+    return sipSession.incomingInviteRequest.message.callId;
+  }
+
+  return sipSession.id;
+};
+
+// We need to replace 0.0.0.0 to 127.0.0.1 in the sdp to avoid MOH during a createOffer.
+export const replaceLocalIpModifier = (description: Record<string, any>) => Promise.resolve({ // description is immutable... so we have to clone it or the `type` attribute won't be returned.
+  ...JSON.parse(JSON.stringify(description)),
+  sdp: description.sdp.replace('c=IN IP4 0.0.0.0', 'c=IN IP4 127.0.0.1'),
+});
+
+export const makeURI = (target: string, host: string): URI | undefined => UserAgent.makeURI(`sip:${target}@${host}`);
+
+export const getCallNumber = (sipCall: SipCall): string => {
+  // eslint-disable-next-line
+  const identity = sipCall ? sipCall.remoteIdentity || sipCall.assertedIdentity : null;
+  // @ts-ignore: private
+  return identity ? identity.uri._normal.user : null;
+};
+
+export const getCallDisplayName = (sipCall: SipCall): string => {
+  // eslint-disable-next-line
+  const identity = sipCall ? sipCall.remoteIdentity || sipCall.assertedIdentity : null;
+  const number = getCallNumber(sipCall);
+
+  return identity ? identity.displayName || number : number;
 };

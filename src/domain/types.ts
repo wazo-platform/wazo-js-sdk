@@ -265,7 +265,7 @@ export type PeerConnection = RTCPeerConnection & {
   sfu: any;
 };
 
-export type WazoSession = (Invitation | Inviter) & {
+export type SipCall = (Invitation | Inviter) & {
   remoteTag?: any;
   callId?: string;
 };

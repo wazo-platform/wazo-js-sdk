@@ -1,5 +1,6 @@
 import Session from '../Session';
 import Call from '../Call';
+import SoftphoneCall from '../../voice/call';
 import Line from '../Line';
 import CallSession from '../CallSession';
 import type { Phone, AvailablePhoneOptions } from './Phone';
@@ -141,7 +142,7 @@ export default class CTIPhone extends Emitter implements Phone {
     });
 
     try {
-      await CallApi.cancelCall(callSession);
+      await CallApi.cancelCall({ apiId: callSession.getId() } as SoftphoneCall);
 
       if (this.currentCall && callSession.callId === this.currentCall.id) {
         this.endCurrentCall(callSession);
@@ -167,7 +168,7 @@ export default class CTIPhone extends Emitter implements Phone {
       callId: callSession.getId(),
       number: callSession.number,
     });
-    await CallApi.cancelCall(callSession);
+    await CallApi.cancelCall({ id: callSession.getId() } as SoftphoneCall);
     this.eventEmitter.emit('onCallEnded', callSession);
   }
 

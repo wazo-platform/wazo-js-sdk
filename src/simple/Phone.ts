@@ -11,13 +11,15 @@ import IssueReporter from '../service/IssueReporter';
 import Emitter from '../utils/Emitter';
 import Wazo from './index';
 import SFUNotAvailableError from '../domain/SFUNotAvailableError';
-import { WazoSession, WebRtcConfig } from '../domain/types';
+import { SipCall, WebRtcConfig } from '../domain/types';
+import { getSipCallId } from '../utils/sdp';
 
 const logger = IssueReporter.loggerFor('simple-phone');
 const sipLogger = IssueReporter.loggerFor('sip.js');
 const protocolLogger = IssueReporter.loggerFor('sip');
 const protocolDebugMessages = ['Received WebSocket text message:', 'Sending WebSocket message:'];
 
+// @deprecated: Use Wazo.Voice.Softphone instead
 export class Phone extends Emitter {
   client: WebRTCClient;
 
@@ -328,14 +330,14 @@ export class Phone extends Emitter {
     return this.phone ? this.phone.stopNetworkMonitoring(callSession) : null;
   }
 
-  getSipSessionId(sipSession: WazoSession): string | null | undefined {
+  getSipCallId(sipSession: SipCall): string | null | undefined {
     if (!sipSession || !this.phone) {
       return null;
     }
-    return this.phone.getSipSessionId(sipSession);
+    return getSipCallId(sipSession);
   }
 
-  sendMessage(body: string, sipSession?: WazoSession, contentType = 'text/plain'): void {
+  sendMessage(body: string, sipSession?: SipCall, contentType = 'text/plain'): void {
     const toSipSession = sipSession || this.getCurrentSipSession();
 
     if (!toSipSession || !this.phone) {
@@ -345,14 +347,14 @@ export class Phone extends Emitter {
     this.phone.sendMessage(toSipSession, body, contentType);
   }
 
-  sendChat(content: string, sipSession?: WazoSession): void {
+  sendChat(content: string, sipSession?: SipCall): void {
     this.sendMessage(JSON.stringify({
       type: MESSAGE_TYPE_CHAT,
       content,
     }), sipSession, 'application/json');
   }
 
-  sendSignal(content: any, sipSession?: WazoSession): void {
+  sendSignal(content: any, sipSession?: SipCall): void {
     this.sendMessage(JSON.stringify({
       type: MESSAGE_TYPE_SIGNAL,
       content,
@@ -445,7 +447,7 @@ export class Phone extends Emitter {
     return this.phone ? this.phone.hasAVideoTrack(callSession) : false;
   }
 
-  getCurrentSipSession(): WazoSession | null {
+  getCurrentSipSession(): SipCall | null {
     return this.phone?.currentSipSession || null;
   }
 

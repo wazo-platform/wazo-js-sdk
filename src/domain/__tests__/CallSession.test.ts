@@ -3,6 +3,7 @@ import CallSession from '../CallSession';
 const stringify = (cs: any) => JSON.parse(JSON.stringify(cs));
 
 describe('CallSession domain', () => {
+
   it('should update from another CallSession without data loss', () => {
     const callSession = new CallSession({
       callId: null,
@@ -12,6 +13,7 @@ describe('CallSession domain', () => {
       isCaller: true,
       dialedExtension: null,
     } as any);
+
     const anotherCallSession = new CallSession({
       callId: 345,
       callerNumber: '8008',
@@ -19,6 +21,7 @@ describe('CallSession domain', () => {
       isCaller: false,
       dialedExtension: undefined,
     } as any);
+
     callSession.updateFrom(anotherCallSession);
     expect(callSession.callId).toBe(345);
     expect(callSession.sipCallId).toBe(123);
@@ -29,6 +32,7 @@ describe('CallSession domain', () => {
     expect(callSession.isCaller).toBe(false);
     expect(callSession.dialedExtension).toBe('');
   });
+
   it('should compare 2 callSession', () => {
     const cs1 = new CallSession({
       callId: 123,
