@@ -253,6 +253,9 @@ export const toggleVideo = (sipCall: SipCall, muteCamera: boolean): void => {
 export const isVideoMuted = (sipCall: SipCall): boolean => {
   const sdh = sipCall.sessionDescriptionHandler as SessionDescriptionHandler;
   const pc = sdh?.peerConnection as PeerConnection;
+  if (!pc) {
+    return true;
+  }
 
   if (pc?.getSenders) {
     for (const sender of pc.getSenders()) {
