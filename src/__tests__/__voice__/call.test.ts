@@ -3,7 +3,7 @@ import { Inviter, UserAgent, type URI } from 'sip.js';
 
 import softphone from '../../voice/softphone';
 import Call from '../../voice/call';
-import { Actions, EstablishedStates, States } from '../../state-machine/call-state-machine';
+import { Actions, EstablishedStates, EstablishedSubStates, States } from '../../state-machine/call-state-machine';
 import { Actions as SoftphoneActions } from '../../state-machine/softphone-state-machine';
 import ApiCall from '../../domain/Call';
 
@@ -32,6 +32,9 @@ jest.mock('../..', () => ({
 
 jest.mock('../../web-rtc-client', () => jest.fn().mockImplementation(() => ({
   answer: jest.fn(() => Promise.resolve()),
+  mute: jest.fn(() => Promise.resolve()),
+  hold: jest.fn(() => Promise.resolve()),
+  unhold: jest.fn(() => Promise.resolve()),
   hangup: jest.fn(() => Promise.resolve()),
   register: jest.fn(() => Promise.resolve()),
   onCallEnded: jest.fn(() => Promise.resolve()),
@@ -76,9 +79,16 @@ describe('Call', () => {
       expect(call.id).toBe(apiCall.sipCallId);
       expect(call.apiId).toBe(apiCall.id);
       expect(call.number).toBe(apiCall.calleeNumber);
-      expect(call.answerTime).toStrictEqual(apiCall.startingTime);
+      expect(call.answerTime).toStrictEqual(undefined);
+      expect(call.creationTime).toStrictEqual(apiCall.startingTime);
       expect(call.isMuted()).toBeTruthy();
-      expect(call.state).toStrictEqual({ [States.ESTABLISHED]: EstablishedStates.MUTED });
+      expect(call.state).toStrictEqual({
+        [States.ESTABLISHED]: {
+          [EstablishedStates.ONGOING]: {},
+          [EstablishedSubStates.MUTE]: EstablishedStates.MUTED,
+          [EstablishedSubStates.HOLD]: EstablishedStates.UN_HELD,
+        },
+      });
       expect(call.isEstablished()).toBeTruthy();
     });
   });
@@ -141,11 +151,43 @@ describe('Call', () => {
       call._sendAction(Actions.MAKE_CALL);
 
       call.on('remotelyAccepted', () => {
-        expect(call.state).toStrictEqual({ [States.ESTABLISHED]: EstablishedStates.ONGOING });
+        expect(call.state).toStrictEqual({
+          [States.ESTABLISHED]: {
+            [EstablishedStates.ONGOING]: {},
+            [EstablishedSubStates.MUTE]: EstablishedStates.UN_MUTED,
+            [EstablishedSubStates.HOLD]: EstablishedStates.UN_HELD,
+          },
+        });
         done();
       });
 
       call.onAccepted();
+    });
+  });
+
+  describe('Multiple sub state', () => {
+    it('Should mute and hold a call', () => {
+      const call = new Call(sipCall, softphone);
+      // @ts-ignore: private method
+      call._sendAction(Actions.MAKE_CALL);
+
+      expect(call.isMuted()).toBeFalsy();
+      expect(call.isHeld()).toBeFalsy();
+
+      // @ts-ignore: private method
+      call._sendAction(Actions.REMOTLY_ACCEPTED);
+
+      call.mute();
+      expect(call.isMuted()).toBeTruthy();
+      expect(call.isHeld()).toBeFalsy();
+
+      call.hold();
+      expect(call.isMuted()).toBeTruthy();
+      expect(call.isHeld()).toBeTruthy();
+
+      call.resume();
+      expect(call.isMuted()).toBeTruthy();
+      expect(call.isHeld()).toBeFalsy();
     });
   });
 });

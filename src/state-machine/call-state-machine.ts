@@ -15,11 +15,19 @@ export const EstablishedStates = {
   ONGOING: 'ongoing',
   HELD: 'held',
   MUTED: 'muted',
+  UN_MUTED: 'unMuted',
+  UN_HELD: 'unHeld',
+} as const;
+
+export const EstablishedSubStates = {
+  MUTE: 'muteState',
+  HOLD: 'holdState',
 } as const;
 
 export type StateTypes = typeof States[keyof typeof States];
 
 export type EstablishedStateTypes = typeof EstablishedStates[keyof typeof EstablishedStates];
+export type EstablishedSubStateTypes = typeof EstablishedSubStates[keyof typeof EstablishedSubStates];
 
 export const Actions = {
   INCOMING_CALL: 'incomingCall',
@@ -88,35 +96,46 @@ const callMachine = setup({
     },
     [States.ESTABLISHED]: {
       initial: EstablishedStates.ONGOING,
+      type: 'parallel',
       on: {
         [Actions.HANGUP]: {
           guard: 'isRegistered',
           target: States.TERMINATED,
         },
-        [EstablishedActions.HOLD]: {
-          guard: 'isRegistered',
-          target: `.${EstablishedStates.HELD}`,
-        },
-        [EstablishedActions.MUTE]: {
-          guard: 'isRegistered',
-          target: `.${EstablishedStates.MUTED}`,
-        },
       },
       states: {
         [EstablishedStates.ONGOING]: { },
-        [EstablishedStates.HELD]: {
-          on: {
-            [EstablishedActions.RESUME]: {
-              guard: 'isRegistered',
-              target: EstablishedStates.ONGOING,
+
+        // Mute / Unmute
+        [EstablishedSubStates.MUTE]: {
+          initial: EstablishedStates.UN_MUTED,
+          states: {
+            [EstablishedStates.MUTED]: {
+              on: {
+                unMute: EstablishedStates.UN_MUTED,
+              },
+            },
+            [EstablishedStates.UN_MUTED]: {
+              on: {
+                mute: EstablishedStates.MUTED,
+              },
             },
           },
         },
-        [EstablishedStates.MUTED]: {
-          on: {
-            [EstablishedActions.UN_MUTE]: {
-              guard: 'isRegistered',
-              target: EstablishedStates.ONGOING,
+
+        // Hold / Resume
+        [EstablishedSubStates.HOLD]: {
+          initial: EstablishedStates.UN_HELD,
+          states: {
+            [EstablishedStates.HELD]: {
+              on: {
+                [EstablishedActions.RESUME]: EstablishedStates.UN_HELD,
+              },
+            },
+            [EstablishedStates.UN_HELD]: {
+              on: {
+                [EstablishedActions.HOLD]: EstablishedStates.HELD,
+              },
             },
           },
         },

@@ -9,7 +9,7 @@ import { SessionDescriptionHandler } from 'sip.js/lib/platform/web';
 import { SessionDescriptionHandlerOptions } from 'sip.js/lib/api';
 import type { IncomingRequestMessage } from 'sip.js/lib/core/messages/incoming-request-message';
 
-import callStateMachine, { type ActionTypes, Actions, type EstablishedActionTypes, EstablishedActions, States, type StateTypes, EstablishedStates, type EstablishedStateTypes, type CallActorRef } from '../state-machine/call-state-machine';
+import callStateMachine, { type ActionTypes, Actions, type EstablishedActionTypes, EstablishedActions, States, type StateTypes, EstablishedStates, type EstablishedStateTypes, type CallActorRef, EstablishedSubStateTypes } from '../state-machine/call-state-machine';
 import { SipCall, PeerConnection } from '../domain/types';
 import ApiCall from '../domain/Call';
 import newFrom from '../utils/new-from';
@@ -129,11 +129,23 @@ class Call extends EventEmitter {
     const snapshot = call.callActor.getSnapshot();
 
     if (apiCall.isUp()) {
-      snapshot.value = { [States.ESTABLISHED]: EstablishedStates.ONGOING };
+      snapshot.value = {
+        [States.ESTABLISHED]: {
+          [EstablishedStates.ONGOING]: {},
+          muteState: EstablishedStates.UN_MUTED,
+          holdState: EstablishedStates.UN_HELD,
+        },
+      };
     }
 
     if (apiCall.muted) {
-      snapshot.value = { [States.ESTABLISHED]: EstablishedStates.MUTED };
+      snapshot.value = {
+        [States.ESTABLISHED]: {
+          [EstablishedStates.ONGOING]: {},
+          muteState: EstablishedStates.MUTED,
+          holdState: EstablishedStates.UN_HELD,
+        },
+      };
     }
 
     if (apiCall.isRinging()) {
@@ -345,7 +357,7 @@ class Call extends EventEmitter {
   }
 
   isMuted() {
-    return this._hasEstablishedState(EstablishedStates.MUTED);
+    return this._hasEstablishedState('muteState', EstablishedStates.MUTED);
   }
 
   isCameraMuted() {
@@ -353,7 +365,7 @@ class Call extends EventEmitter {
   }
 
   isHeld() {
-    return this._hasEstablishedState(EstablishedStates.HELD);
+    return this._hasEstablishedState('holdState', EstablishedStates.HELD);
   }
 
   isEstablishing() {
@@ -662,9 +674,17 @@ class Call extends EventEmitter {
     return getState(this.callActor) as StateTypes | Record<StateTypes, EstablishedStateTypes>;
   }
 
-  private _hasEstablishedState(establishedState: EstablishedStateTypes) {
-    const state = this.state as Record<StateTypes, EstablishedStateTypes>;
-    return typeof state === 'object' && States.ESTABLISHED in state && state[States.ESTABLISHED] === establishedState;
+  private _hasEstablishedState(subState: EstablishedSubStateTypes, establishedState: EstablishedStateTypes) {
+    const state = this.state as Record<StateTypes, EstablishedStateTypes | Record<EstablishedSubStateTypes, EstablishedStateTypes>>;
+    if (typeof state !== 'object') {
+      return false;
+    }
+
+    if (!(States.ESTABLISHED in state)) {
+      return false;
+    }
+
+    return (state[States.ESTABLISHED] as Record<EstablishedSubStateTypes, EstablishedStateTypes>)[subState] === establishedState;
   }
 
   private _bindEvents() {
