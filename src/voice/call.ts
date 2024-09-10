@@ -644,10 +644,6 @@ class Call extends EventEmitter {
 
   updateFrom(call: Call) {
     updateFrom(this, call, attributesToUpdate);
-
-    // Update call state
-    // @ts-ignore
-    this.callActor.update(call.callActor.getSnapshot());
   }
 
   is(otherCall: Call) {
