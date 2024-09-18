@@ -7,7 +7,6 @@ import type { InvitationRejectOptions } from 'sip.js/lib/api/invitation-reject-o
 import type { InviterCancelOptions } from 'sip.js/lib/api/inviter-cancel-options';
 import type { SessionByeOptions } from 'sip.js/lib/api/session-bye-options';
 import type { InvitationAcceptOptions } from 'sip.js/lib/api/invitation-accept-options';
-import type { SessionDialog } from 'sip.js/lib/core/dialogs/session-dialog';
 import type { IncomingRequestMessage } from 'sip.js/lib/core/messages/incoming-request-message';
 import type { SessionDescriptionHandlerFactoryOptions } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-factory-options';
 import type { SessionDescriptionHandlerConfiguration } from 'sip.js/lib/platform/web/session-description-handler/session-description-handler-configuration';
@@ -18,6 +17,7 @@ import { C } from 'sip.js/lib/core/messages/methods/constants';
 import { URI } from 'sip.js/lib/grammar/uri';
 import { UserAgent } from 'sip.js/lib/api/user-agent';
 import { holdModifier, stripVideo } from 'sip.js/lib/platform/web/modifiers/modifiers';
+import { SessionDialog } from 'sip.js/lib/core/dialogs/session-dialog';
 
 import { Messager } from 'sip.js/lib/api/messager';
 import { RegistererState } from 'sip.js/lib/api/registerer-state';
@@ -1622,6 +1622,13 @@ export default class WebRTCClient extends Emitter {
     if (sipSession instanceof Invitation && sipSession.incomingInviteRequest.message) {
       // @ts-ignore: private
       return sipSession.incomingInviteRequest.message.callId;
+    }
+
+    // For EarlyMedia
+    // @ts-ignore: private
+    if (sipSession instanceof SessionDialog) {
+      // @ts-ignore: private
+      return sipSession.dialogState.callId;
     }
 
     return '';
