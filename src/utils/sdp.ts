@@ -2,6 +2,7 @@
 import sdpParser from 'sdp-transform';
 import { UserAgent } from 'sip.js/lib/api/user-agent';
 import { Inviter, Invitation } from 'sip.js/lib/api';
+import { SessionDialog } from 'sip.js/lib/core/dialogs/session-dialog';
 import { URI } from 'sip.js/lib/grammar/uri';
 
 import type { SipCall } from '../domain/types';
@@ -162,6 +163,13 @@ export const getSipCallId = (sipSession: SipCall | null | undefined): string => 
   if (sipSession instanceof Invitation && sipSession.incomingInviteRequest.message) {
     // @ts-ignore: private
     return sipSession.incomingInviteRequest.message.callId;
+  }
+
+  // For EarlyMedia
+  // @ts-ignore: private
+  if (sipSession instanceof SessionDialog) {
+    // @ts-ignore: private
+    return sipSession.dialogState.callId;
   }
 
   return sipSession.id;
