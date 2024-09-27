@@ -476,6 +476,13 @@ export default class WebRTCClient extends Emitter {
       registerer: !!this.registerer,
     });
 
+    // @ts-ignore: private
+    if (this.registerer?.waiting) {
+      logger.info('sdk webrtc unregistering, waiting for register to finish...');
+      // We have to wait for the register phase to finish
+      await this.waitForRegister();
+    }
+
     try {
       return new Promise((resolve, reject) => {
         if (!this.registerer) {

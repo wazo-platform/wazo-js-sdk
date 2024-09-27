@@ -597,9 +597,9 @@ class Call extends EventEmitter {
   }
 
   onCallIncoming() {
-    this._bindEvents();
-
     this._sendAction(Actions.INCOMING_CALL);
+
+    this._bindEvents();
   }
 
   onRejected() {
@@ -857,7 +857,7 @@ class Call extends EventEmitter {
   private _sendAction(action: ActionTypes | EstablishedActionTypes) {
     const was = this.state;
     this.callActor.send({ type: action });
-    logger.trace('call - send action', { action, was, state: this.state });
+    logger.trace('call - send action', { id: this.id, action, was, state: this.state });
   }
 }
 

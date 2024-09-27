@@ -117,6 +117,8 @@ export class Softphone extends EventEmitter {
 
   async disconnect() {
     assertCan(this.softphoneActor, Actions.UNREGISTER);
+    logger.info('softphone - disconnect');
+
     if (!this.client) {
       logger.info('softphone - disconnect, not client to disconnect, bailing');
       return null;
@@ -125,7 +127,9 @@ export class Softphone extends EventEmitter {
     // Terminate all calls
     await this.hangupAllCalls();
 
-    return this.client.unregister();
+    await this.client.unregister();
+
+    return this.client.close();
   }
 
   getPrimaryWebRtcLine(): SipLine | null {
@@ -494,7 +498,7 @@ export class Softphone extends EventEmitter {
     });
 
     this.client.on(this.client.REGISTERED, () => {
-      logger.info('softphone - registered', { state: getState(this.softphoneActor) });
+      logger.info('softphone - registered', { state: getState(this.softphoneActor), reinvite: this.shouldSendReinvite });
       if (!can(this.softphoneActor, Actions.REGISTER_DONE)) {
         logger.warn('softphone - registered but not in REGISTERING state', { state: this.state });
         return;
