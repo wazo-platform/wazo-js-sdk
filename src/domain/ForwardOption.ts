@@ -4,7 +4,12 @@ type Response = {
   destination: string;
   enabled: boolean;
 };
-export const FORWARD_KEYS = {
+export type ForwardName = 'busy' | 'noanswer' | 'unconditional';
+export const FORWARD_KEYS: {
+  BUSY: 'busy';
+  NO_ANSWER: 'noanswer';
+  UNCONDITIONAL: 'unconditional';
+} = {
   BUSY: 'busy',
   NO_ANSWER: 'noanswer',
   UNCONDITIONAL: 'unconditional',
@@ -12,16 +17,16 @@ export const FORWARD_KEYS = {
 type ForwardOptionArguments = {
   destination?: string;
   enabled?: boolean;
-  key?: string;
+  key?: ForwardName;
 };
 export default class ForwardOption {
   destination: string | undefined;
 
   enabled: boolean | undefined;
 
-  key: string | undefined;
+  key: ForwardName | undefined;
 
-  static parse(plain: Response, key: string): ForwardOption {
+  static parse(plain: Response, key: ForwardName): ForwardOption {
     return new ForwardOption({
       destination: plain.destination || '',
       enabled: plain.enabled,

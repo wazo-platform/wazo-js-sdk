@@ -8,12 +8,14 @@ import ExternalApp from '../domain/ExternalApp';
 import Meeting from '../domain/Meeting';
 import MeetingAuthorization from '../domain/MeetingAuthorization';
 import { convertKeysFromCamelToUnderscore } from '../utils/object';
+import { ForwardName } from '../domain/ForwardOption';
 
 export interface ConfD {
   listUsers: () => Promise<ListConfdUsersResponse>;
   getUser: (userUuid: string) => Promise<Profile>;
   updateUser: (userUuid: string, profile: Profile) => Promise<boolean>;
-  updateForwardOption: (userUuid: string, key: string, destination: string, enabled: boolean) => Promise<boolean>;
+  updateForwardOption: (userUuid: string, key: ForwardName, destination: string, enabled: boolean) => Promise<boolean>;
+  updateForwardOptions: (userUuid: string, options: Record<ForwardName, { destination: string, enabled: boolean }>) => Promise<boolean>;
   updateDoNotDisturb: (userUuid: UUID, enabled: boolean) => Promise<boolean>;
   getUserLineSip: (userUuid: string, lineId: string) => Promise<SipLine>;
   getUserLinesSip: (userUuid: string, lineIds: string[]) => Promise<(SipLine | null)[]>;
@@ -51,12 +53,16 @@ export default ((client: ApiRequester, baseUrl: string): ConfD => ({
     };
     return client.put(`${baseUrl}/users/${userUuid}`, body, null, ApiRequester.successResponseParser);
   },
-  updateForwardOption: (userUuid: string, key: string, destination: string, enabled: boolean): Promise<boolean> => {
+  updateForwardOption: (userUuid: string, key: ForwardName, destination: string, enabled: boolean): Promise<boolean> => {
     const url = `${baseUrl}/users/${userUuid}/forwards/${key}`;
     return client.put(url, {
       destination,
       enabled,
     }, null, ApiRequester.successResponseParser);
+  },
+  updateForwardOptions: (userUuid: string, options: Record<ForwardName, { destination: string, enabled: boolean }>): Promise<boolean> => {
+    const url = `${baseUrl}/users/${userUuid}/forwards`;
+    return client.put(url, options, null, ApiRequester.successResponseParser);
   },
   updateDoNotDisturb: (userUuid: UUID, enabled: boolean): Promise<boolean> => client.put(`${baseUrl}/users/${userUuid}/services/dnd`, {
     enabled,
