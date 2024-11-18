@@ -1,6 +1,22 @@
 import moment from 'moment';
 import newFrom from '../utils/new-from';
 
+export const VoicemailFolder = {
+  NEW: 'new',
+  OLD: 'old',
+  URGENT: 'urgent',
+  OTHER: 'other',
+} as const;
+
+const VoicemailFolderMapping = {
+  [VoicemailFolder.NEW]: 1,
+  [VoicemailFolder.OLD]: 2,
+  [VoicemailFolder.URGENT]: 3,
+  [VoicemailFolder.OTHER]: 4,
+} as const;
+
+export type VoicemailFolderType = typeof VoicemailFolder[keyof typeof VoicemailFolder];
+
 type MessageResponse = {
   caller_id_name: string;
   caller_id_num: string;
@@ -17,7 +33,7 @@ export type Response = {
   folders: Array<{
     id: string;
     name: string;
-    type: string;
+    type: VoicemailFolderType;
     messages: Array<MessageResponse>;
   }>;
 };
@@ -57,7 +73,7 @@ export default class Voicemail {
         name: plain.caller_id_name,
         number: plain.caller_id_num,
       },
-      unread: plain.folder ? plain.folder.type === 'new' : null,
+      unread: plain.folder ? plain.folder.type === VoicemailFolder.NEW : null,
     });
   }
 
@@ -66,8 +82,8 @@ export default class Voicemail {
       return [];
     }
 
-    const plainUnread = plain.folders.filter(folder => folder.type === 'new')[0].messages;
-    const plainRead = plain.folders.filter(folder => folder.type === 'old')[0].messages;
+    const plainUnread = plain.folders.filter(folder => folder.type === VoicemailFolder.NEW)[0].messages;
+    const plainRead = plain.folders.filter(folder => folder.type === VoicemailFolder.OLD)[0].messages;
     const unread = plainUnread.map(message => Voicemail.parse(message)).map(voicemail => voicemail.makeAsUnRead());
     const read = plainRead.map(message => Voicemail.parse(message)).map(voicemail => voicemail.acknowledge());
     return [...unread, ...read];
@@ -75,6 +91,10 @@ export default class Voicemail {
 
   static newFrom(profile: Voicemail) {
     return newFrom(profile, Voicemail);
+  }
+
+  static getFolderMappingFromType(folder: VoicemailFolderType) {
+    return VoicemailFolderMapping[folder];
   }
 
   constructor({
