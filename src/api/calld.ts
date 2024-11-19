@@ -3,7 +3,7 @@ import ApiRequester from '../utils/api-requester';
 import type { UUID } from '../domain/types';
 import Relocation, { RelocationResponse } from '../domain/Relocation';
 import ChatMessage, { ChatMessageListResponse } from '../domain/ChatMessage';
-import Voicemail from '../domain/Voicemail';
+import Voicemail, { type VoicemailFolderType } from '../domain/Voicemail';
 import Call, { CallResponse } from '../domain/Call';
 import IndirectTransfer from '../domain/IndirectTransfer';
 import MeetingStatus from '../domain/MeetingStatus';
@@ -26,6 +26,7 @@ export interface CallD {
   listVoicemails: () => Promise<Array<Voicemail>>;
   deleteVoicemail: (voicemailId: string) => Promise<boolean>;
   getVoicemailUrl: (voicemail: Voicemail) => string;
+  updateVoicemailFolder: (voicemail: Voicemail, folder: VoicemailFolderType) => Promise<void>;
   fetchSwitchboardHeldCalls: (switchboardUuid: UUID) => Promise<any>; // @TODO: replace `any`
   holdSwitchboardCall: (switchboardUuid: UUID, callId: string) => Promise<boolean>;
   answerSwitchboardHeldCall: (switchboardUuid: UUID, callId: string, lineId: string | null | undefined) => Promise<void>;
@@ -133,6 +134,7 @@ export default ((client: ApiRequester, baseUrl: string): CallD => ({
     };
     return client.computeUrl('get', `${baseUrl}/users/me/voicemails/messages/${voicemail.id}/recording`, body);
   },
+  updateVoicemailFolder: (voicemail: Voicemail, folder: VoicemailFolderType) => client.put(`${baseUrl}/users/me/voicemails/messages/${voicemail.id}`, { folder_id: Voicemail.getFolderMappingFromType(folder) }, null, ApiRequester.successResponseParser),
   fetchSwitchboardHeldCalls: (switchboardUuid: UUID) => client.get(`${baseUrl}/switchboards/${switchboardUuid}/calls/held`),
   holdSwitchboardCall: (switchboardUuid: UUID, callId: string) => client.put(`${baseUrl}/switchboards/${switchboardUuid}/calls/held/${callId}`, null, null, ApiRequester.successResponseParser),
   answerSwitchboardHeldCall: (switchboardUuid: UUID, callId: string, lineId: string | null | undefined = null) => client.put(`${baseUrl}/switchboards/${switchboardUuid}/calls/held/${callId}/answer${lineId ? `?line_id=${lineId}` : ''}`),

@@ -19,7 +19,7 @@ export { default as Line } from './domain/Line';
 export { default as NotificationOptions } from './domain/NotificationOptions';
 export { default as Profile, STATE as PROFILE_STATE, LINE_STATE } from './domain/Profile';
 export { default as Session } from './domain/Session';
-export { default as Voicemail } from './domain/Voicemail';
+export { default as Voicemail, VoicemailFolder, VoicemailFolderType } from './domain/Voicemail';
 export { default as Relocation } from './domain/Relocation';
 export { default as Room } from './domain/Room';
 export { default as CallSession } from './domain/CallSession';
