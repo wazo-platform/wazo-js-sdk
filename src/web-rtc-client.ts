@@ -2025,9 +2025,6 @@ export default class WebRTCClient extends Emitter {
       authorizationPassword: this.config.password,
       displayName: this.config.displayName,
       hackIpInContact: true,
-      contactParams: {
-        transport: 'wss',
-      },
       logBuiltinEnabled: this.config.log ? this.config.log.builtinEnabled : null,
       logLevel: this.config.log ? this.config.log.logLevel : null,
       logConnector: this.config.log ? this.config.log.connector : null,
