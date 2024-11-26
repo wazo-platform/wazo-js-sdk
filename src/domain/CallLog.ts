@@ -20,6 +20,7 @@ type CallLogResponse = {
   recordings: RecordingResponse[];
   requested_extension: string;
   requested_name: string;
+  requested_user_uuid: string | null;
   start: string;
 };
 
@@ -32,7 +33,11 @@ type Response = {
 type LogOrigin = {
   extension: string;
   name: string;
-  uuid?: string;
+  uuid?: string | null;
+};
+
+type DestinationLogOrigin = LogOrigin & {
+  plainExtension?: string;
 };
 
 type CallLogArguments = {
@@ -40,7 +45,8 @@ type CallLogArguments = {
   answered: boolean;
   newMissedCall?: boolean;
   callDirection: string;
-  destination: LogOrigin;
+  destination: DestinationLogOrigin;
+  requested: LogOrigin;
   source: LogOrigin;
   id: number;
   duration: number;
@@ -60,7 +66,9 @@ export default class CallLog {
 
   callDirection: string;
 
-  destination: LogOrigin;
+  destination: DestinationLogOrigin;
+
+  requested: LogOrigin;
 
   recordings: Recording[];
 
@@ -99,8 +107,14 @@ export default class CallLog {
         // @TEMP: Temporarily assuming empty numbers are meetings
         // which is admittedly a very dangerous assumption. Did i mention it was temporary?
         extension: plain.requested_extension || plain.destination_extension || `meeting-${plain.requested_name || plain.destination_name || ''}`,
+        plainExtension: plain.destination_extension,
         name: plain.requested_name || plain.destination_name || '',
         uuid: plain.destination_user_uuid,
+      },
+      requested: {
+        extension: plain.requested_extension,
+        name: plain.requested_extension,
+        uuid: plain.requested_user_uuid,
       },
       source: {
         extension: plain.source_extension,
@@ -131,6 +145,7 @@ export default class CallLog {
     answered,
     callDirection,
     destination,
+    requested,
     source,
     id,
     duration,
@@ -142,6 +157,7 @@ export default class CallLog {
     this.answered = answered;
     this.callDirection = callDirection;
     this.destination = destination;
+    this.requested = requested;
     this.source = source;
     this.id = id;
     this.duration = duration;
