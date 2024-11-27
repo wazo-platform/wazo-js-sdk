@@ -4,19 +4,22 @@ import Session from './Session';
 import type { RecordingResponse } from './Recording';
 import Recording from './Recording';
 
-type CallLogResponse = {
+// note: 24.14 fixes requested (first contact reached) and destination (last contact reached)
+export const CALL_LOG_VALID_RESQUESTED_VERSION = '24.14';
+
+export type CallLogResponse = {
   answer: string | null | undefined;
   answered: boolean;
   call_direction: string;
-  destination_extension?: string;
-  destination_name?: string;
-  destination_user_uuid?: string;
+  destination_extension: string;
+  destination_name: string;
+  destination_user_uuid: string | null;
   duration: number;
   end: string | null | undefined;
   id: number;
   source_extension: string;
   source_name: string;
-  source_user_uuid?: string;
+  source_user_uuid: string | null;
   recordings: RecordingResponse[];
   requested_extension: string;
   requested_name: string;
@@ -24,7 +27,7 @@ type CallLogResponse = {
   start: string;
 };
 
-type Response = {
+export type Response = {
   filtered: number;
   items: Array<CallLogResponse>;
   total: number;
@@ -37,7 +40,8 @@ type LogOrigin = {
 };
 
 type DestinationLogOrigin = LogOrigin & {
-  plainExtension?: string;
+  plainExtension: string;
+  plainName: string | null;
 };
 
 type CallLogArguments = {
@@ -83,7 +87,7 @@ export default class CallLog {
   end: Date | null | undefined;
 
   static merge(current: Array<CallLog>, toMerge: Array<CallLog>): Array<CallLog | null | undefined> {
-    const onlyUnique = (value: any, index: any, self: any) => self.indexOf(value) === index;
+    const onlyUnique = (value: number, index: number, self: number[]) => self.indexOf(value) === index;
 
     const allLogs: Array<CallLog> = current.concat(toMerge);
     const onlyUniqueIds: Array<number> = allLogs.map(c => c.id).filter(onlyUnique);
@@ -106,20 +110,21 @@ export default class CallLog {
       destination: {
         // @TEMP: Temporarily assuming empty numbers are meetings
         // which is admittedly a very dangerous assumption. Did i mention it was temporary?
+        uuid: plain.destination_user_uuid,
+        name: plain.requested_name || plain.destination_name || '',
         extension: plain.requested_extension || plain.destination_extension || `meeting-${plain.requested_name || plain.destination_name || ''}`,
         plainExtension: plain.destination_extension,
-        name: plain.requested_name || plain.destination_name || '',
-        uuid: plain.destination_user_uuid,
+        plainName: plain.destination_name,
       },
       requested: {
-        extension: plain.requested_extension,
-        name: plain.requested_extension,
         uuid: plain.requested_user_uuid,
+        name: plain.requested_name || '',
+        extension: plain.requested_extension,
       },
       source: {
-        extension: plain.source_extension,
-        name: plain.source_name,
         uuid: plain.source_user_uuid,
+        name: plain.source_name,
+        extension: plain.source_extension,
       },
       id: plain.id,
       duration: (plain.duration || 0) * 1000,
@@ -181,7 +186,7 @@ export default class CallLog {
       return this.destination;
     }
 
-    return session && session.hasExtension(this.source.extension) ? this.destination : this.source;
+    return session?.hasExtension(this.source.extension) ? this.destination : this.source;
   }
 
   isNewMissedCall(): boolean {
@@ -211,10 +216,19 @@ export default class CallLog {
 
   isIncoming(session: Session): boolean {
     if (this.callDirection === 'internal') {
-      return session.hasExtension(this.destination.extension);
+      return session.hasExtension(this.destination.plainExtension) || session.hasExtension(this.requested.extension);
     }
 
     return this.callDirection === 'inbound';
+  }
+
+  // Example of call flow: User A => User B (No anwser forward) => User C or external number
+  isIncomingAndForwarded(session: Session): boolean {
+    if (!session.hasEngineVersionGte(CALL_LOG_VALID_RESQUESTED_VERSION) || !this.isIncoming(session)) {
+      return false;
+    }
+
+    return this.requested.extension !== this.destination.plainExtension;
   }
 
   isAnOutgoingCall(session: Session): boolean {
