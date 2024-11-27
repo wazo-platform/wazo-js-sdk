@@ -56,8 +56,6 @@ type Authorization = {
 };
 
 type SessionArguments = {
-  acls?: string[];
-  // deprecated
   acl?: string[];
   token: string;
   refreshToken?: string | null | undefined;
