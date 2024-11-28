@@ -15,16 +15,16 @@ export interface NewContact {
   firstName: string;
   lastName: string;
   phoneNumber: string;
-  email: string | null | undefined;
-  address: string | null | undefined;
-  entreprise: string | null | undefined;
-  birthday: string | null | undefined;
-  note: string | null | undefined;
+  email?: string;
+  address?: string;
+  entreprise?: string;
+  birthday?: string;
+  note?: string;
   sessions: Array<{
     uuid: string;
     mobile: boolean;
   }> | null | undefined;
-  connected: boolean | null | undefined;
+  connected?: boolean;
 }
 export type ContactResponse = {
   source: string;
@@ -33,7 +33,7 @@ export type ContactResponse = {
   relations: {
     user_id: number;
     xivo_id: string;
-    agent_id: number | null | undefined;
+    agent_id?: number | null;
     endpoint_id: number;
     user_uuid: string;
     source_entry_id: string;
@@ -47,22 +47,22 @@ export type ContactsResponse = {
 };
 export type ContactPersonalResponse = {
   id: string;
-  firstName: string | null | undefined;
-  lastName: string | null | undefined;
-  number: string | null | undefined;
+  firstName?: string;
+  lastName?: string;
+  number?: string;
   numbers: Array<{
     label?: string;
     number: string;
   }> | null | undefined;
-  email: string | null | undefined;
-  entreprise: string | null | undefined;
-  birthday: string | null | undefined;
-  address: string | null | undefined;
-  note: string | null | undefined;
+  email?: string;
+  entreprise?: string;
+  birthday?: string;
+  address?: string;
+  note?: string;
   // @TODO: legacy ?
-  firstname: string | null | undefined;
-  lastname: string | null | undefined;
-  backend: string | null | undefined;
+  firstname?: string;
+  lastname?: string;
+  backend?: string;
   favorited: boolean;
 };
 export type ContactsGraphQlResponse = {
@@ -127,6 +127,8 @@ type ContactArguments = {
   id?: string;
   uuid?: string;
   name?: string;
+  firstName?: string;
+  lastName?: string;
   number?: string;
   numbers?: Array<{
     label?: string;
@@ -146,7 +148,7 @@ type ContactArguments = {
   personal?: boolean;
   state?: string;
   source?: string;
-  sourceId?: string | null | undefined;
+  sourceId?: string;
   lineState?: string;
   previousPresential?: string;
   lastActivity?: string;
@@ -233,6 +235,8 @@ type GoogleResponse = {
   emails: string[];
   id: string;
   name: string;
+  firstname: string;
+  lastname: string;
   numbers: string[];
   numbers_by_label: any;
 };
@@ -243,57 +247,61 @@ export default class Contact {
 
   type: string;
 
-  id: string | null | undefined;
+  id?: string;
 
-  uuid: string | null | undefined;
+  uuid?: string;
 
-  name: string | null | undefined;
+  name?: string;
 
-  number: string | null | undefined;
+  firstName?: string;
+
+  lastName?: string;
+
+  number?: string;
 
   numbers: Array<{
     label?: string;
     number: string;
   }> | null | undefined;
 
-  favorited: boolean | null | undefined;
+  favorited?: boolean;
 
-  email: string | null | undefined;
+  email?: string;
 
   emails: Array<{
     label?: string;
     email: string;
   }> | null | undefined;
 
-  entreprise: string | null | undefined;
+  entreprise?: string;
 
-  birthday: string | null | undefined;
+  birthday?: string;
 
-  address: string | null | undefined;
+  address?: string;
 
-  note: string | null | undefined;
+  note?: string;
 
-  endpointId: number | null | undefined;
+  endpointId?: number;
 
-  personal: boolean | null | undefined;
+  personal?: boolean;
 
-  state: string | null | undefined;
+  state?: string;
 
-  lineState: string | null | undefined;
+  lineState?: string;
 
-  previousPresential: string | null | undefined;
+  previousPresential?: string;
 
-  lastActivity: string | null | undefined;
+  lastActivity?: string;
 
-  mobile: boolean | null | undefined;
+  mobile?: boolean;
 
-  source: string | null | undefined;
+  source?: string;
 
-  sourceId: string | null | undefined;
+  sourceId?: string;
 
-  status: string | null | undefined;
+  status?: string;
 
-  backend: string | null | undefined;
+  backend?: string;
 
   personalStatus: string;
 
@@ -302,11 +310,11 @@ export default class Contact {
     mobile: boolean;
   }> | null | undefined;
 
-  connected: boolean | null | undefined;
+  connected?: boolean;
 
-  doNotDisturb: boolean | null | undefined;
+  doNotDisturb?: boolean;
 
-  ringing: boolean | null | undefined;
+  ringing?: boolean;
 
   lines: Record<string, any>[];
 
@@ -357,6 +365,8 @@ export default class Contact {
         const name = edge.node.firstname && edge.node.lastname ? `${edge.node.firstname || ''} ${edge.node.lastname || ''}` : edge.node.wazoReverse;
         return new Contact({
           name,
+          firstName: edge.node.firstname,
+          lastName: edge.node.lastname,
           number: numbers[i],
           numbers: [{
             label: 'primary',
@@ -389,6 +399,8 @@ export default class Contact {
     const email = plain.column_values[columns.indexOf('email')];
     return new Contact({
       name: plain.column_values[columns.indexOf('name')],
+      firstName: plain.column_values[columns.indexOf('firstname')],
+      lastName: plain.column_values[columns.indexOf('lastname')],
       number: numbers.length ? numbers[0] : '',
       numbers: numbers.map((number, i) => ({
         label: i === 0 ? 'primary' : 'secondary',
@@ -420,6 +432,8 @@ export default class Contact {
   static parsePersonal(plain: ContactPersonalResponse): Contact {
     return new Contact({
       name: `${plain.firstName || plain.firstname || ''} ${plain.lastName || plain.lastname || ''}`,
+      firstName: plain.firstName || plain.firstname,
+      lastName: plain.lastName || plain.lastname,
       number: plain.number || '',
       numbers: plain.number ? [{
         label: 'primary',
@@ -458,6 +472,8 @@ export default class Contact {
 
     return new Contact({
       name,
+      firstName,
+      lastName,
       number: plain.phoneNumbers.length ? plain.phoneNumbers[0].number : '',
       // Make numbers unique
       numbers: [...new Map(plain.phoneNumbers.map(item => [item.number, item])).values()].map((item, idx) => ({
@@ -523,6 +539,8 @@ export default class Contact {
     return new Contact({
       sourceId: single.id || '',
       name: single.displayName || '',
+      firstName: single.givenName,
+      lastName: single.surname,
       number: numbers.length ? numbers[0].number : '',
       numbers,
       emails,
@@ -568,6 +586,8 @@ export default class Contact {
     return new Contact({
       sourceId: single.id || '',
       name: single.name || '',
+      firstName: single.lastname || '',
+      lastName: single.firstname || '',
       number: numbers.length ? numbers[0].number : '',
       numbers,
       emails,
@@ -609,6 +629,8 @@ export default class Contact {
       uuid: single.uuid,
       sourceId: String(single.id) || '',
       name: `${single.firstname}${single.lastname ? ` ${single.lastname}` : ''}`,
+      firstName: single.firstname,
+      lastName: single.lastname,
       number: numbers.length ? numbers[0].number : '',
       numbers,
       emails,
@@ -651,6 +673,8 @@ export default class Contact {
     id,
     uuid,
     name,
+    firstName,
+    lastName,
     number,
     numbers,
     email,
@@ -681,6 +705,8 @@ export default class Contact {
     this.id = id;
     this.uuid = uuid;
     this.name = name || '';
+    this.firstName = firstName || '';
+    this.lastName = lastName || '';
     this.number = number;
     this.numbers = numbers;
     this.email = email;
