@@ -5,7 +5,7 @@ import type { RecordingResponse } from './Recording';
 import Recording from './Recording';
 
 // note: 24.14 fixes requested (first contact reached) and destination (last contact reached)
-export const CALL_LOG_VALID_RESQUESTED_VERSION = '24.14';
+export const CALL_LOG_VALID_REQUESTED_VERSION = '24.14';
 
 export type CallLogResponse = {
   answer: string | null | undefined;
