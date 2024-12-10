@@ -216,7 +216,10 @@ export default class CallLog {
 
   isIncoming(session: Session): boolean {
     if (this.callDirection === 'internal') {
-      return session.hasExtension(this.destination.plainExtension) || session.hasExtension(this.requested.extension);
+      return session.hasExtension(this.destination.plainExtension)
+        || session.hasExtension(this.requested.extension)
+        || session.uuid === this.destination.uuid
+        || session.uuid === this.requested.uuid;
     }
 
     return this.callDirection === 'inbound';
