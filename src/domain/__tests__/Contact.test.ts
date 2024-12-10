@@ -3,6 +3,8 @@ import Contact from '../Contact';
 const genericContactResponse = {
   column_types: [
     'name',
+    'firstname',
+    'lastname',
     'number',
     'callable',
     'voicemail',
@@ -13,6 +15,8 @@ const genericContactResponse = {
   term: 'a',
   column_headers: [
     'Nom',
+    'Pr\u00e9nom',
+    'Nom de famille',
     'Num\u00e9ro',
     'Mobile',
     'Bo\u00eete vocale',
@@ -27,6 +31,8 @@ const contact1 = {
   source: 'internal',
   column_values: [
     'Jonathan Lessard',
+    'Jonathan',
+    'Lessard',
     '8020',
     '06800880',
     null,
@@ -49,6 +55,8 @@ const contact2 = {
   source: 'internal',
   column_values: [
     'John Doe',
+    'John',
+    'Doe',
     '8021',
     '06800881',
     null,
@@ -69,6 +77,8 @@ const contact2 = {
 
 const parsedContact1 = new Contact({
   name: 'Jonathan Lessard',
+  firstName: 'Jonathan',
+  lastName: 'Lessard',
   number: '8020',
   numbers: [
     {
@@ -102,6 +112,8 @@ const parsedContact1 = new Contact({
 
 const parsedContact2 = new Contact({
   name: 'John Doe',
+  firstName: 'John',
+  lastName: 'Doe',
   number: '8021',
   numbers: [
     {
