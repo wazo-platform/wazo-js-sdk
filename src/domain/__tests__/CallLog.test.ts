@@ -1,5 +1,5 @@
 import moment from 'moment';
-import CallLog, { Response, CallLogResponse, CALL_LOG_VALID_RESQUESTED_VERSION } from '../CallLog';
+import CallLog, { Response, CallLogResponse, CALL_LOG_VALID_REQUESTED_VERSION } from '../CallLog';
 import Recording from '../Recording';
 import Session from '../Session';
 import Profile from '../Profile';
@@ -48,7 +48,7 @@ const generateBobSession = (opts?: Partial<Session>): Session =>
     token: 'ref-12345',
     uuid: BOB_UUID,
     expiresAt: new Date(9999, 0, 1),
-    engineVersion: CALL_LOG_VALID_RESQUESTED_VERSION,
+    engineVersion: CALL_LOG_VALID_REQUESTED_VERSION,
     profile: new Profile({
       lines: [new Line({
         id: 1,
@@ -184,7 +184,7 @@ describe('CallLog Domain', () => {
       expect(outboundCallLog.isIncomingAndForwarded(BOB_SESSION)).toBe(false);
 
       // Stack version
-      const oldStackSession = generateBobSession({ engineVersion: CALL_LOG_VALID_RESQUESTED_VERSION.replace('14', '10') });
+      const oldStackSession = generateBobSession({ engineVersion: CALL_LOG_VALID_REQUESTED_VERSION.replace('14', '10') });
       expect(CALL_LOG.isIncomingAndForwarded(oldStackSession)).toBe(false);
     });
   });

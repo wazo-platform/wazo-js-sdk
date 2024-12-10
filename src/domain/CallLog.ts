@@ -224,7 +224,7 @@ export default class CallLog {
 
   // Example of call flow: User A => User B (No anwser forward) => User C or external number
   isIncomingAndForwarded(session: Session): boolean {
-    if (!session.hasEngineVersionGte(CALL_LOG_VALID_RESQUESTED_VERSION) || !this.isIncoming(session)) {
+    if (!session.hasEngineVersionGte(CALL_LOG_VALID_REQUESTED_VERSION) || !this.isIncoming(session)) {
       return false;
     }
 
