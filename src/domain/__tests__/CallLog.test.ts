@@ -127,6 +127,18 @@ describe('CallLog Domain', () => {
       });
       expect(destinationCallLog.isIncomingAndForwarded(BOB_SESSION)).toBe(true);
 
+      // When destination is set to the same user with a changed extension
+      const destinationExtensionChangedCallLog = CallLog.parse({
+        ...CALL_LOG_RESPONSE,
+        destination_extension: `${CALL_LOG_RESPONSE.requested_extension}9`,
+        destination_name: CALL_LOG_RESPONSE.requested_name,
+        destination_user_uuid: CALL_LOG_RESPONSE.requested_user_uuid,
+        requested_extension: `${CALL_LOG_RESPONSE.destination_extension}9`,
+        requested_name: CALL_LOG_RESPONSE.destination_name,
+        requested_user_uuid: CALL_LOG_RESPONSE.destination_user_uuid,
+      });
+      expect(destinationExtensionChangedCallLog.isIncomingAndForwarded(BOB_SESSION)).toBe(true);
+
       // When call direction is inbound
       const inboundCallLog = CallLog.parse({ ...CALL_LOG_RESPONSE, call_direction: 'inbound' });
       expect(inboundCallLog.isIncomingAndForwarded(BOB_SESSION)).toBe(true);
