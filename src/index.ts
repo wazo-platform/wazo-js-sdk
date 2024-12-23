@@ -48,6 +48,7 @@ export { default as AdHocAPIConference } from './domain/AdHocAPIConference';
 export { default as WebSocketClient, SOCKET_EVENTS } from './websocket-client';
 export { default as WebRTCClient } from './web-rtc-client';
 export { default as WazoApiClient } from './api-client';
+export { default as BaseApiClient } from './base-api-client';
 export { default as Agent, AgentResponse, AgentArguments } from './domain/Agent';
 export { default as ExternalApp } from './domain/ExternalApp';
 export { default as SessionDescriptionHandler } from './lib/WazoSessionDescriptionHandler';
