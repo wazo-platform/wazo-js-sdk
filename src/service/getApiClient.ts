@@ -1,5 +1,6 @@
 /* eslint-disable dot-notation */
 import WazoApiClient from '../api-client';
+import BaseApiClient from '../base-api-client';
 
 // Can't use node cache mechanism here because when requiring lib/CallApi.js
 // this file will be merge with CallApi.js and the cache will be lost.
@@ -60,7 +61,7 @@ export const setFetchOptions = (fetchOptions: Record<string, any>, forServer: st
 export const getFetchOptions = (forServer: string | null | undefined = null) =>
   (forServer ? global.wazoFetchOptions[forServer] : global.wazoFetchOptions.null) || global.wazoFetchOptions.null;
 
-const fillClient = (apiClient: WazoApiClient) => {
+const fillClient = (apiClient: InstanceType<typeof BaseApiClient>) => {
   const {
     server,
     token,
@@ -88,19 +89,25 @@ const fillClient = (apiClient: WazoApiClient) => {
   if (requestTimeout) {
     apiClient.setRequestTimeout(requestTimeout);
   }
-
-  return apiClient;
 };
 
-export default ((forServer: string | null | undefined = null): WazoApiClient => {
+type ForServer = string | null;
+type TClient = new (...args: any[]) => BaseApiClient;
+
+const getApiClient = <T extends BaseApiClient = WazoApiClient>(forServer?: ForServer, Client: TClient = WazoApiClient): T => {
   const server: string = forServer || global.wazoCurrentServer || '';
 
   if (server in global.wazoClients) {
-    return fillClient(global.wazoClients[server]);
+    fillClient(global.wazoClients[server]);
+    return global.wazoClients[server];
   }
 
-  global.wazoClients[server] = new WazoApiClient({
+  global.wazoClients[server] = new Client({
     server,
   });
-  return fillClient(global.wazoClients[server]);
-});
+
+  fillClient(global.wazoClients[server]);
+  return global.wazoClients[server];
+};
+
+export default getApiClient;
