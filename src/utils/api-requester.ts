@@ -75,7 +75,6 @@ export default class ApiRequester {
     return Base64.encode(str);
   }
 
-  // @see https://github.com/facebook/flow/issues/183#issuecomment-358607052
   constructor({
     server,
     refreshTokenCallback,

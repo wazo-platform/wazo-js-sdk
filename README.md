@@ -146,9 +146,9 @@ Wazo's Javascript SDK allows you to use these features :
         - [Listening for event](#listening-for-event)
         - [Updating the user token](#updating-the-user-token)
         - [Closing the socket](#closing-the-socket)
-      
-## Install 
- 
+
+## Install
+
 ### Install / Add
 **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
 
@@ -181,7 +181,7 @@ import Wazo from '@wazo/sdk';
 // Browser
 // You can access the `Wazo` object directly on the browser, simply include it in the html :
 <script src="https://unpkg.com/@wazo/sdk/dist/wazo-sdk.js"></script>
-or 
+or
 <script src="https://cdn.jsdelivr.net/npm/@wazo/sdk"></script>
 ```
 
@@ -193,17 +193,17 @@ Wazo.Auth.init(clientId, tokenExpiration, minSubscriptionType, authorizationName
 ```
 
 - `clientId`: string (optional)
-  - An identifier of your application that will be used to refresh users token 
-  
+  - An identifier of your application that will be used to refresh users token
+
 - `tokenExpiration`: number (optional, default 3600 seconds)
-  - Duration before token expiration (in seconds) 
-  
+  - Duration before token expiration (in seconds)
+
 - `minSubscriptionType`: number (optional)
   - Defines the minimum user subscription type that allows access to your application.
-  
+
 - `authorizationName`: string (optional)
   - Defines the name of the authorization the user should have to ba able to login.
-  
+
 #### Setting the engine host
 
 ```js
@@ -289,7 +289,7 @@ const session = await Wazo.Auth.validateToken(token, refreshToken);
 
 - `token`: string
   - User's token to validate (eg: makes sure the token is valid and not expired).
-  
+
 - `refreshToken`: string (optional)
   - User's refresh token, used to generate a new token if expired.
 
@@ -328,10 +328,10 @@ Wazo.Room.connect(options);
 - `options`: Object
  - `extension`: string
    The room extension (number) you want to join
- - `audio`: boolean|Object 
+ - `audio`: boolean|Object
    A boolean, if you want to send the user audio or not; or an Object, if you want to specify the audio input, etc...
-   See [getUserMedia arguments](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia) for more information. 
- - `video`: boolean|Object 
+   See [getUserMedia arguments](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia) for more information.
+ - `video`: boolean|Object
    A boolean, if you want to send the user video or not; or an Object, if you want to specify the audio input, etc...
    See [getUserMedia arguments](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia) for more information.
  - `extra`: Object
@@ -347,7 +347,7 @@ room.sendChat(content);
 
 - `content`: string
   The chat message content you want to send to all participants in the room.
-  
+
 #### Sending a custom message to all participants
 
 ```js
@@ -356,15 +356,15 @@ room.sendSignal(content);
 
 - `content`: string
   The message content you want to send to all participants in the room.
-  
+
 #### Sharing the user screen
 
 ```js
 room.startScreenSharing(constraints);
 ```
 
-- `constraints`: Object 
-  See [getUserMedia arguments](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia) for more information. 
+- `constraints`: Object
+  See [getUserMedia arguments](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia) for more information.
 
 #### Stopping the screen share
 
@@ -469,9 +469,9 @@ Triggered when a participant is talking or stops talking.
 - `channel`: Object containing information about the event.
 - `participant`: `Wazo.RemoteParticipant` or `Wazo.LocalParticipant`.
   The participant instance, you can access the `participant.isTalking` attribute to know the status.
-  
+
 ### Ad hoc Conference features
-**`Voice`**   **`Video`** 
+**`Voice`**   **`Video`**
 
 #### Merging sessions in one conference
 Use this method to merge multiple calls in a new ad hoc conference.
@@ -497,7 +497,7 @@ Use this method to terminate a conference.
 ```js
 adHocConference.hangup();
 ```
-  
+
 ### Accessing the current WebRtc phone
 
 You can access the current [webRtcPhone instance](#WebRTCPhone) via `Wazo.Phone.phone`.
@@ -512,32 +512,32 @@ You can access all Wazo's domain objects in `Wazo.domain.*`, like `Wazo.domain.S
 
 - `uuid`: string
   The participant uuid.
-  
+
 - `name`: string
   The participant name, retrieved from the sip configuration.
-  
+
 - `isTalking`: boolean
   Indicates if the participant is currently talking.
-  
+
 - `streams`: Array of `Wazo.Stream`
   List all streams that the participant is sending.
-  
+
 - `videoStreams`: Array of `Wazo.Stream`
   List all video streams that the participant is sending.
-  
+
 - `audioMuted`: boolean
   Indicates if the participant has muted his microphone.
-  
+
 - `videoMuted`: boolean
   Indicates if the participant has muted his camera.
-  
+
 - `screensharing`: boolean
   Indicates if the participant is currently sharing his screen.
-  
+
 - `extra`: Object
   extra information related to a participant.
-  
-  
+
+
 #### Participant events
 
 ```js
@@ -572,7 +572,7 @@ Triggered when the participant sends a stream.
 
 - `stream`: `Wazo.Stream`
   A Wazo stream that is sent by the participant.
-  
+
 ```js
 participant.on(participant.ON_STREAM_UNSUBSCRIBED, (stream) => {});
 ```
@@ -581,42 +581,42 @@ Triggered when the participant stops sending a stream.
 
 - `stream`: `Wazo.Stream`
   A Wazo stream that is no longer sent by the participant.
-  
+
 ```js
 participant.on(participant.ON_AUDIO_MUTED, () => {});
 ```
 
 Triggered when the participant has disabled his microphone.
-  
+
 ```js
 participant.on(participant.ON_AUDIO_UNMUTED, () => {});
 ```
 
-Triggered when the participant has enabled his microphone. 
-  
+Triggered when the participant has enabled his microphone.
+
 ```js
 participant.on(participant.ON_VIDEO_MUTED, () => {});
 ```
 
-Triggered when the participant has disabled his camera. 
-  
+Triggered when the participant has disabled his camera.
+
 ```js
 participant.on(participant.ON_VIDEO_UNMUTED, () => {});
 ```
 
-Triggered when the participant has enabled his camera. 
-  
+Triggered when the participant has enabled his camera.
+
 ```js
 participant.on(participant.ON_SCREENSHARING, () => {});
 ```
 
-Triggered when the participant is sharing his screen. 
-  
+Triggered when the participant is sharing his screen.
+
 ```js
 participant.on(participant.ON_STOP_SCREENSHARING, () => {});
 ```
 
-Triggered when the participant stops sharing his screen. 
+Triggered when the participant stops sharing his screen.
 
 #### Stream
 
@@ -664,7 +664,7 @@ import { WebRTCClient } from '@wazo/sdk';
 import { WazoWebSocketClient } from '@wazo/sdk';
 ```
 
-### Authentication 
+### Authentication
 #### Initialization
 **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
 
@@ -809,7 +809,7 @@ logger(logger.TRACE, 'my log');
 Wazo.IssueReporter.log(Wazo.IssueReporter.INFO, 'my log');
 ```
 
-### Interact with the engine 
+### Interact with the engine
 #### Applicationd
 **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**
 
@@ -934,12 +934,12 @@ client.chatd.getMessages(options: GetMessagesOptions);
 ```
 
 #### Calling an API endpoint without WazoApiClient
-**`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
+**`Config`**   **`Misc`**
 
 Use this generic method to request endpoints directly.
 
 ```js
-const requester = new ApiRequester({ 
+const requester = new ApiRequester({
   server: 'stack.example.com', // Engine server
   refreshTokenCallback: () => {}, // Called when the token is refreshed
   clientId: 'my-id', // ClientId used for refreshToken
@@ -949,7 +949,34 @@ const requester = new ApiRequester({
 
 // Retrieve personal contacts
 const results = await requester.call('dird/0.1/personal');
+```
 
+#### Extending BaseApiClient with you own methods
+**`Config`**   **`Misc`**
+
+WazoApiClient is an extended version of BaseApiClient with needed APIs for softphone users. If you want to add new endpoints and methods it is also possible.
+
+```js
+const myEndpointMethods = (client: ApiRequester, baseUrl: string) => ({
+  getFoo: () => client.get(`${baseUrl}/foo`),
+  postFoo: () => client.post(`${baseUrl}/foo`, { /* body */ }),
+  putFoo: (uuid: string) => client.post(`${baseUrl}/foo/${uuid}`, { /* body */ }),
+  deleteFoo: (uuid: string) => client.delete(`${baseUrl}/foo/${uuid}`),
+});
+
+class CustomApiClient extends BaseApiClient {
+  public myEndpoint;
+
+  constructor(args: ConstructorParams) {
+    super(args);
+    this.initializeEndpoints(); // Reinitialize sdk endpoints
+  }
+
+  initializeEndpoints() {
+    super.initializeEndpoints(); // Include default `auth` methods for token and refresh token mecanism
+    this.myEndpoint = myEndpointMethods(this.client, `confd/1.1`);
+  }
+}
 ```
 
 ### WebRTCClient
@@ -971,7 +998,7 @@ const client = new WebRTCClient({
   }
 }, session);
 
-// eventName can be on the of events : 
+// eventName can be on the of events :
 // - transport: `connected`, `disconnected`, `transportError`, `message`, `closed`, `keepAliveDebounceTimeout`
 // - webrtc: `registered`, `unregistered`, `registrationFailed`, `invite`, `inviteSent`, `transportCreated`, `newTransaction`, `transactionDestroyed`, `notify`, `outOfDialogReferRequested`, `message`.
 client.on('invite', (sipSession: SipSession, hasVideo: boolean, shouldAutoAnswer: boolean) => {
@@ -1004,7 +1031,7 @@ const config = {
   heartbeatDelay: 1000, // Duration in ms between 2 heartbeat (default to 2000)
   heartbeatTimeout: 5000, // Duration in ms when to consider that the Asterisk server is not responding (default to 5000)
   maxHeartbeats: 4, // Number of heatbeat send each time we want to check connection (default to 3)
-  
+
   // When not passing session as second argument:
   authorizationUser: '', // The SIP username
   password: '', // The SIP user password
@@ -1168,7 +1195,7 @@ Use this method to dial a number.
 const callSession = await phone.makeCall(
   number: string, // The number to dial
   line: // Not used
-  enableVideo: boolean // Optional (default to false) when we want to make a video call 
+  enableVideo: boolean // Optional (default to false) when we want to make a video call
 );
 ```
 
@@ -1279,10 +1306,10 @@ phone.indirectTransfer(
 ##### Start screen sharing
 
 ```js
-const screenShareStream: MediaStream = await phone.startScreenSharing({ 
-  audio: true, 
-  video: true, 
-  /* See webRtc media constraints */ 
+const screenShareStream: MediaStream = await phone.startScreenSharing({
+  audio: true,
+  video: true,
+  /* See webRtc media constraints */
 });
 ```
 
@@ -1293,7 +1320,7 @@ phone.stopScreenSharing();
 ```
 
 #### Conference phone features
-**`Voice`**   **`Video`**  **`Chat`** 
+**`Voice`**   **`Video`**  **`Chat`**
 
 ##### Starting a conference
 Use this method to start an ad-hoc conference.
@@ -1402,8 +1429,8 @@ phone.callCount(): number;
 ```
 
 ##### Sending a SIP message
-Sends a SIP MESSAGE in a session. 
-Use `phone.currentSipSession` to retrieve the current `sipSession`. 
+Sends a SIP MESSAGE in a session.
+Use `phone.currentSipSession` to retrieve the current `sipSession`.
 
 ```js
 phone.sendMessage(
