@@ -1,14 +1,9 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "lib": [
-      "ES6",
-      "DOM"
-    ],
+    "lib": ["ES6", "DOM"],
     "target": "ES6",
     "module": "CommonJS",
-    "moduleResolution": "Node",
-    "outDir": "./lib",
-    "declarationDir": "./lib/types"
+    "moduleResolution": "Node"
   }
 }

@@ -1,15 +1,7 @@
 {
-  "extends": [
-    "airbnb-base",
-    "airbnb-typescript/base",
-    "plugin:@typescript-eslint/recommended"
-  ],
-  "plugins": [
-    "@typescript-eslint"
-  ],
-  "ignorePatterns": [
-    "rollup.config.js"
-  ],
+  "extends": ["airbnb-base", "airbnb-typescript/base", "plugin:@typescript-eslint/recommended"],
+  "plugins": ["@typescript-eslint"],
+  "ignorePatterns": ["rslib.config.ts"],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "project": "./tsconfig.json"
@@ -46,11 +38,7 @@
     "no-console": [
       "error",
       {
-        "allow": [
-          "info",
-          "warn",
-          "error"
-        ]
+        "allow": ["info", "warn", "error"]
       }
     ],
     "import/no-cycle": 0,
@@ -80,12 +68,7 @@
   "settings": {
     "import/resolver": {
       "node": {
-        "extensions": [
-          ".js",
-          ".jsx",
-          ".ts",
-          ".tsx"
-        ]
+        "extensions": [".js", ".jsx", ".ts", ".tsx"]
       }
     }
   }
