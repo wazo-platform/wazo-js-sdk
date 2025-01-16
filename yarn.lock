@@ -3040,7 +3040,7 @@ __metadata:
     eslint-plugin-prettier: "npm:^4.2.1"
     events: "npm:^3.3.0"
     fstream: "npm:^1.0.12"
-    getstats: "wazo-platform/getStats#fix_stats_mobile"
+    getstats: "wazo-platform/getStats#1.0.6"
     jest: "npm:^29.6.1"
     js-base64: "npm:^3.7.7"
     json-to-graphql-query: "npm:^2.2.5"
@@ -5113,10 +5113,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"getstats@wazo-platform/getStats#fix_stats_mobile":
-  version: 1.2.0
-  resolution: "getstats@https://github.com/wazo-platform/getStats.git#commit=a7f41af68965a19744ffef6c37b6b1fe3e115717"
-  checksum: 10c0/8e00577e18eaace2db1557c5856aa0ae1b2cd59dbbe4fe4201fab4b20760ab669679db0a4b83d1bb244d06ed5d893163a19cd46570c2b6e5d37b4a7ef38d952d
+"getstats@wazo-platform/getStats#1.0.6":
+  version: 1.0.6
+  resolution: "getstats@https://github.com/wazo-platform/getStats.git#commit=5c69f5b5a1f67aa898a10da5d8f0b8f4087fc7f0"
+  checksum: 10c0/e7ae30b623a5a5d84e90a70d236c600b6682a8833e15013ca1cb41f58c697764f4ada560706225acb8453dcfe229f6c3f5de0bd70fe26fba1a8981337db40cff
   languageName: node
   linkType: hard
 
