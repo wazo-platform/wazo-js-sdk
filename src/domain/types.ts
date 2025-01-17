@@ -3,18 +3,25 @@ import type {
   Inviter,
   Session as SipSession,
   UserAgentOptions as sipJsUserAgentOptions,
-} from 'sip.js';
-import { SessionDescriptionHandlerFactoryOptions } from 'sip.js/lib/platform/web';
-import type { IncomingResponse as SipIncomingResponse } from 'sip.js/lib/core/messages/incoming-response';
-import { Transport } from 'sip.js/lib/api';
-import WazoSessionDescriptionHandler from '../lib/WazoSessionDescriptionHandler';
-import { Websocket } from '../simple/Websocket';
-import * as WebSocketClient from '../websocket-client';
+} from "sip.js";
+import { SessionDescriptionHandlerFactoryOptions } from "sip.js/lib/platform/web";
+import type { IncomingResponse as SipIncomingResponse } from "sip.js/lib/core/messages/incoming-response";
+import { Transport } from "sip.js/lib/api";
+import WazoSessionDescriptionHandler from "../lib/WazoSessionDescriptionHandler";
+import { Websocket } from "../simple/Websocket";
+import * as WebSocketClient from "../websocket-client";
 
 const { SOCKET_EVENTS, ...OTHER_EVENTS } = WebSocketClient;
 
 type GenericObject = Record<string, any>;
-
+export enum LINE_STATE {
+  AVAILABLE = "available",
+  HOLDING = "holding",
+  RINGING = "ringing",
+  TALKING = "talking",
+  UNAVAILABLE = "unavailable",
+  PROGRESSING = "progressing",
+}
 export type Token = string;
 export type UUID = string;
 export type DateString = string;
@@ -223,9 +230,9 @@ export type UserAgentOptions = sipJsUserAgentOptions & {
   ) => WazoSessionDescriptionHandler;
 };
 export type UserAgentConfigOverrides = Partial<
-UserAgentOptions & {
-  traceSip: any;
-}
+  UserAgentOptions & {
+    traceSip: any;
+  }
 >;
 export type MediaConfig = {
   audio: Record<string, any> | boolean;
@@ -249,10 +256,10 @@ export type WebRtcConfig = {
   heartbeatTimeout?: number;
   maxHeartbeats?: number;
   skipRegister?: boolean;
-  userUuid?: string,
-  uaConfigOverrides?: UserAgentConfigOverrides,
-  audioDeviceOutput?: string,
-  audioDeviceRing?: string
+  userUuid?: string;
+  uaConfigOverrides?: UserAgentConfigOverrides;
+  audioDeviceOutput?: string;
+  audioDeviceRing?: string;
 }; // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
 
 export type IncomingResponse = SipIncomingResponse & { session: any };
@@ -297,23 +304,28 @@ export type PhonebookResponseItem = {
 };
 
 export type PresenceResponse = {
+  connected: boolean;
+  do_not_disturb: boolean;
+  mobile: boolean;
+  line_state: LINE_STATE;
+  tenant_uuid:string;
   lines: Array<{
     id: number;
     state: string;
   }>;
-  sessions: Array<{
+  sessions?: Array<{
     mobile: boolean;
     uuid: string;
   }>;
   state: string;
-  status: string;
+  status: string | null;
   user_uuid: string;
-  last_activity?: string;
+  last_activity?: string | null;
 };
 
 export type QueryParams = {
   order?: string;
-  direction?: 'asc' | 'desc';
+  direction?: "asc" | "desc";
   limit?: number;
   offset?: number;
 };
