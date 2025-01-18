@@ -10,18 +10,11 @@ import { Transport } from "sip.js/lib/api";
 import WazoSessionDescriptionHandler from "../lib/WazoSessionDescriptionHandler";
 import { Websocket } from "../simple/Websocket";
 import * as WebSocketClient from "../websocket-client";
+import { LINE_STATE } from "../domain/Profile";
 
 const { SOCKET_EVENTS, ...OTHER_EVENTS } = WebSocketClient;
 
 type GenericObject = Record<string, any>;
-export enum LINE_STATE {
-  AVAILABLE = "available",
-  HOLDING = "holding",
-  RINGING = "ringing",
-  TALKING = "talking",
-  UNAVAILABLE = "unavailable",
-  PROGRESSING = "progressing",
-}
 export type Token = string;
 export type UUID = string;
 export type DateString = string;
