@@ -3,14 +3,14 @@ import type {
   Inviter,
   Session as SipSession,
   UserAgentOptions as sipJsUserAgentOptions,
-} from "sip.js";
-import { SessionDescriptionHandlerFactoryOptions } from "sip.js/lib/platform/web";
-import type { IncomingResponse as SipIncomingResponse } from "sip.js/lib/core/messages/incoming-response";
-import { Transport } from "sip.js/lib/api";
-import WazoSessionDescriptionHandler from "../lib/WazoSessionDescriptionHandler";
-import { Websocket } from "../simple/Websocket";
-import * as WebSocketClient from "../websocket-client";
-import { LineState } from "../domain/Profile";
+} from 'sip.js';
+import { SessionDescriptionHandlerFactoryOptions } from 'sip.js/lib/platform/web';
+import type { IncomingResponse as SipIncomingResponse } from 'sip.js/lib/core/messages/incoming-response';
+import { Transport } from 'sip.js/lib/api';
+import WazoSessionDescriptionHandler from '../lib/WazoSessionDescriptionHandler';
+import { Websocket } from '../simple/Websocket';
+import * as WebSocketClient from '../websocket-client';
+import { LineState } from '../domain/Profile';
 
 const { SOCKET_EVENTS, ...OTHER_EVENTS } = WebSocketClient;
 
@@ -301,7 +301,7 @@ export type PresenceResponse = {
   do_not_disturb: boolean;
   mobile: boolean;
   line_state: LineState;
-  tenant_uuid:string;
+  tenant_uuid: string;
   lines: Array<{
     id: number;
     state: string;
@@ -318,7 +318,7 @@ export type PresenceResponse = {
 
 export type QueryParams = {
   order?: string;
-  direction?: "asc" | "desc";
+  direction?: 'asc' | 'desc';
   limit?: number;
   offset?: number;
 };

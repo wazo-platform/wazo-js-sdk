@@ -1,8 +1,8 @@
-import Line, { LineResponse } from "./Line";
-import ForwardOption, { FORWARD_KEYS } from "./ForwardOption";
-import newFrom from "../utils/new-from";
-import SipLine from "./SipLine";
-import Incall, { GenericIncall } from "./Incall";
+import Line, { LineResponse } from './Line';
+import ForwardOption, { FORWARD_KEYS } from './ForwardOption';
+import newFrom from '../utils/new-from';
+import SipLine from './SipLine';
+import Incall, { GenericIncall } from './Incall';
 
 export const STATE = {
   AVAILABLE: 'available',
@@ -177,13 +177,13 @@ export default class Profile {
   static parse(plain: ProfileResponse): Profile {
     return new Profile({
       id: plain.uuid,
-      firstName: plain.firstName || plain.firstname || "",
-      lastName: plain.lastName || plain.lastname || "",
+      firstName: plain.firstName || plain.firstname || '',
+      lastName: plain.lastName || plain.lastname || '',
       email: plain.email,
       lines: plain.lines.map((line) => Line.parse(line)),
       incalls: plain.incalls,
       username: plain.username,
-      mobileNumber: plain.mobile_phone_number || "",
+      mobileNumber: plain.mobile_phone_number || '',
       ringSeconds: plain.ring_seconds,
       forwards: [
         ForwardOption.parse(
@@ -198,7 +198,7 @@ export default class Profile {
       voicemail: plain.voicemail,
       switchboards: plain.switchboards || [],
       agent: plain.agent,
-      status: "",
+      status: '',
       callPickupTargetUsers: plain.call_pickup_target_users || [],
       onlineCallRecordEnabled: plain.online_call_record_enabled,
     });
