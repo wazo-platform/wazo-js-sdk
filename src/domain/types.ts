@@ -10,7 +10,7 @@ import { Transport } from "sip.js/lib/api";
 import WazoSessionDescriptionHandler from "../lib/WazoSessionDescriptionHandler";
 import { Websocket } from "../simple/Websocket";
 import * as WebSocketClient from "../websocket-client";
-import { LINE_STATE } from "../domain/Profile";
+import { LineState } from "../domain/Profile";
 
 const { SOCKET_EVENTS, ...OTHER_EVENTS } = WebSocketClient;
 
@@ -300,7 +300,7 @@ export type PresenceResponse = {
   connected: boolean;
   do_not_disturb: boolean;
   mobile: boolean;
-  line_state: LINE_STATE;
+  line_state: LineState;
   tenant_uuid:string;
   lines: Array<{
     id: number;
