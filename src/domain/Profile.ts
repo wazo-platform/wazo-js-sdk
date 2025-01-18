@@ -11,14 +11,14 @@ export const STATE = {
   DISCONNECTED: 'disconnected',
   AWAY: 'away',
 };
-export enum LineState {
-  AVAILABLE = 'available',
-  HOLDING = 'holding',
-  RINGING = 'ringing',
-  TALKING = 'talking',
-  UNAVAILABLE = 'unavailable',
-  PROGRESSING = 'progressing',
-}
+export const LineState = {
+  AVAILABLE: 'available',
+  HOLDING: 'holding',
+  RINGING: 'ringing',
+  TALKING: 'talking',
+  UNAVAILABLE: 'unavailable',
+  PROGRESSING: 'progressing',
+};
 
 type ProfileResponse = {
   groups: Array<{
@@ -141,38 +141,29 @@ export default class Profile {
 
   ringSeconds: number | null | undefined;
 
-  voicemail:
-    | {
-        id: number;
-        name: string;
-      }
-    | null
-    | undefined;
+  voicemail: {
+    id: number;
+    name: string;
+  } | null | undefined;
 
   status: string;
 
   subscriptionType: number | null | undefined;
 
-  agent:
-    | {
-        firstname: string;
-        id: number;
-        lastname: string;
-        number: string;
-      }
-    | null
-    | undefined;
+  agent: {
+    firstname: string;
+    id: number;
+    lastname: string;
+    number: string;
+  } | null | undefined;
 
   switchboards: Array<any>;
 
-  callPickupTargetUsers:
-    | Array<{
-        firstname: string;
-        lastname: string;
-        uuid: string;
-      }>
-    | null
-    | undefined;
+  callPickupTargetUsers: Array<{
+    firstname: string;
+    lastname: string;
+    uuid: string;
+  }> | null | undefined;
 
   static parse(plain: ProfileResponse): Profile {
     return new Profile({
@@ -180,19 +171,12 @@ export default class Profile {
       firstName: plain.firstName || plain.firstname || '',
       lastName: plain.lastName || plain.lastname || '',
       email: plain.email,
-      lines: plain.lines.map((line) => Line.parse(line)),
+      lines: plain.lines.map(line => Line.parse(line)),
       incalls: plain.incalls,
       username: plain.username,
       mobileNumber: plain.mobile_phone_number || '',
       ringSeconds: plain.ring_seconds,
-      forwards: [
-        ForwardOption.parse(
-          plain.forwards.unconditional,
-          FORWARD_KEYS.UNCONDITIONAL
-        ),
-        ForwardOption.parse(plain.forwards.noanswer, FORWARD_KEYS.NO_ANSWER),
-        ForwardOption.parse(plain.forwards.busy, FORWARD_KEYS.BUSY),
-      ],
+      forwards: [ForwardOption.parse(plain.forwards.unconditional, FORWARD_KEYS.UNCONDITIONAL), ForwardOption.parse(plain.forwards.noanswer, FORWARD_KEYS.NO_ANSWER), ForwardOption.parse(plain.forwards.busy, FORWARD_KEYS.BUSY)],
       doNotDisturb: plain.services.dnd.enabled,
       subscriptionType: plain.subscription_type,
       voicemail: plain.voicemail,
@@ -286,9 +270,7 @@ export default class Profile {
 
   setForwardOption(forwardOption: ForwardOption) {
     const updatedForwardOptions = this.forwards.slice();
-    const index = updatedForwardOptions.findIndex((forward) =>
-      forward.is(forwardOption)
-    );
+    const index = updatedForwardOptions.findIndex(forward => forward.is(forwardOption));
     updatedForwardOptions.splice(index, 1, forwardOption);
     this.forwards = updatedForwardOptions;
     return this;
@@ -303,4 +285,5 @@ export default class Profile {
     this.state = state;
     return this;
   }
+
 }

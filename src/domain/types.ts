@@ -10,7 +10,7 @@ import { Transport } from 'sip.js/lib/api';
 import WazoSessionDescriptionHandler from '../lib/WazoSessionDescriptionHandler';
 import { Websocket } from '../simple/Websocket';
 import * as WebSocketClient from '../websocket-client';
-import { LineState } from '../domain/Profile';
+import { LineState } from '../Profile';
 
 const { SOCKET_EVENTS, ...OTHER_EVENTS } = WebSocketClient;
 
@@ -223,9 +223,9 @@ export type UserAgentOptions = sipJsUserAgentOptions & {
   ) => WazoSessionDescriptionHandler;
 };
 export type UserAgentConfigOverrides = Partial<
-  UserAgentOptions & {
-    traceSip: any;
-  }
+UserAgentOptions & {
+  traceSip: any;
+}
 >;
 export type MediaConfig = {
   audio: Record<string, any> | boolean;
