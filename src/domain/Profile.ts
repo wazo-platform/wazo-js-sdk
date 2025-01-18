@@ -18,7 +18,7 @@ export enum LineState {
   TALKING = 'talking',
   UNAVAILABLE = 'unavailable',
   PROGRESSING = 'progressing',
-};
+}
 
 type ProfileResponse = {
   groups: Array<{
