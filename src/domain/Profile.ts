@@ -11,7 +11,7 @@ export const STATE = {
   DISCONNECTED: 'disconnected',
   AWAY: 'away',
 };
-export enum LineState  {
+export enum LineState {
   AVAILABLE = 'available',
   HOLDING = 'holding',
   RINGING = 'ringing',
