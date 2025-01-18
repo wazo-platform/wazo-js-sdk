@@ -11,13 +11,13 @@ export const STATE = {
   DISCONNECTED: 'disconnected',
   AWAY: 'away',
 };
-export const LineState = {
-  AVAILABLE: 'available',
-  HOLDING: 'holding',
-  RINGING: 'ringing',
-  TALKING: 'talking',
-  UNAVAILABLE: 'unavailable',
-  PROGRESSING: 'progressing',
+export enum LineState  {
+  AVAILABLE = 'available',
+  HOLDING = 'holding',
+  RINGING = 'ringing',
+  TALKING = 'talking',
+  UNAVAILABLE = 'unavailable',
+  PROGRESSING = 'progressing',
 };
 
 type ProfileResponse = {
