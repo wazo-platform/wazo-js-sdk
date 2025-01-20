@@ -10,11 +10,11 @@ import { Transport } from 'sip.js/lib/api';
 import WazoSessionDescriptionHandler from '../lib/WazoSessionDescriptionHandler';
 import { Websocket } from '../simple/Websocket';
 import * as WebSocketClient from '../websocket-client';
+import { LineState } from './Profile';
 
 const { SOCKET_EVENTS, ...OTHER_EVENTS } = WebSocketClient;
 
 type GenericObject = Record<string, any>;
-
 export type Token = string;
 export type UUID = string;
 export type DateString = string;
@@ -249,10 +249,10 @@ export type WebRtcConfig = {
   heartbeatTimeout?: number;
   maxHeartbeats?: number;
   skipRegister?: boolean;
-  userUuid?: string,
-  uaConfigOverrides?: UserAgentConfigOverrides,
-  audioDeviceOutput?: string,
-  audioDeviceRing?: string
+  userUuid?: string;
+  uaConfigOverrides?: UserAgentConfigOverrides;
+  audioDeviceOutput?: string;
+  audioDeviceRing?: string;
 }; // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
 
 export type IncomingResponse = SipIncomingResponse & { session: any };
@@ -297,18 +297,23 @@ export type PhonebookResponseItem = {
 };
 
 export type PresenceResponse = {
+  connected: boolean;
+  do_not_disturb: boolean;
+  mobile: boolean;
+  line_state: LineState;
+  tenant_uuid: string;
   lines: Array<{
     id: number;
     state: string;
   }>;
-  sessions: Array<{
+  sessions?: Array<{
     mobile: boolean;
     uuid: string;
   }>;
   state: string;
-  status: string;
+  status: string | null;
   user_uuid: string;
-  last_activity?: string;
+  last_activity?: string | null;
 };
 
 export type QueryParams = {

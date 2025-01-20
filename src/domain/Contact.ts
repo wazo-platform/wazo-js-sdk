@@ -1,5 +1,5 @@
 import Session from './Session';
-import { LINE_STATE, STATE } from './Profile';
+import { LineState, STATE } from './Profile';
 import newFrom from '../utils/new-from';
 import type { DirectorySource } from './DirectorySource';
 
@@ -780,7 +780,7 @@ export default class Contact {
   }
 
   isInCall(): boolean {
-    return this.lineState === LINE_STATE.TALKING || this.lineState === LINE_STATE.HOLDING;
+    return this.lineState === LineState.TALKING || this.lineState === LineState.HOLDING;
   }
 
   isRinging(): boolean | null | undefined {
@@ -788,11 +788,11 @@ export default class Contact {
   }
 
   isInUseOrRinging(): boolean {
-    return this.lineState === LINE_STATE.TALKING || this.lineState === LINE_STATE.RINGING;
+    return this.lineState === LineState.TALKING || this.lineState === LineState.RINGING;
   }
 
   isProgressing(): boolean {
-    return this.lineState === LINE_STATE.PROGRESSING;
+    return this.lineState === LineState.PROGRESSING;
   }
 
   merge(old: Contact): Contact {
