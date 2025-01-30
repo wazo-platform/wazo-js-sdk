@@ -18,8 +18,8 @@ export const LINE_STATE = {
   TALKING: 'talking',
   UNAVAILABLE: 'unavailable',
   PROGRESSING: 'progressing',
-};
-
+} as const;
+export type LineStateType = (typeof LINE_STATE)[keyof typeof LINE_STATE];
 type ProfileResponse = {
   groups: Array<{
     id: number;
@@ -237,7 +237,7 @@ export default class Profile {
   }
 
   static getLinesState(lines: Array<Record<string, any>>) {
-    let result = LINE_STATE.UNAVAILABLE;
+    let result:string = LINE_STATE.UNAVAILABLE;
 
     // eslint-disable-next-line
     for (const line of lines) {
