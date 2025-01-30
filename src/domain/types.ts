@@ -10,7 +10,7 @@ import { Transport } from 'sip.js/lib/api';
 import WazoSessionDescriptionHandler from '../lib/WazoSessionDescriptionHandler';
 import { Websocket } from '../simple/Websocket';
 import * as WebSocketClient from '../websocket-client';
-import { LineStateType } from './Profile';
+import type { LineStateType } from './Profile';
 
 const { SOCKET_EVENTS, ...OTHER_EVENTS } = WebSocketClient;
 
