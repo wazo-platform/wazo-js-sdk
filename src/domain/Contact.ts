@@ -129,6 +129,7 @@ type ContactArguments = {
   name?: string;
   firstName?: string;
   lastName?: string;
+  external?: boolean;
   number?: string;
   numbers?: Array<{
     label?: string;
@@ -256,6 +257,8 @@ export default class Contact {
   firstName?: string;
 
   lastName?: string;
+
+  external?: boolean;
 
   number?: string;
 
@@ -675,6 +678,7 @@ export default class Contact {
     name,
     firstName,
     lastName,
+    external,
     number,
     numbers,
     email,
@@ -707,6 +711,7 @@ export default class Contact {
     this.name = name || '';
     this.firstName = firstName || '';
     this.lastName = lastName || '';
+    this.external = external || false;
     this.number = number;
     this.numbers = numbers;
     this.email = email;

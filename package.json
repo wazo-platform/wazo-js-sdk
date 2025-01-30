@@ -1,9 +1,9 @@
 {
   "name": "@wazo/sdk",
-  "version": "0.43.14",
+  "version": "0.44.1",
   "description": "Wazo's JavaScript Software Development Kit.",
-  "main": "index.js",
-  "types": "lib/types/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/types/index.d.ts",
   "author": "Wazo (http://wazo.io)",
   "maintainers": [
     "Wazo Team <dev@wazo.io> (https://github.com/wazo-platform)"
@@ -14,16 +14,12 @@
   "license": "MIT",
   "homepage": "https://github.com/wazo-platform/wazo-js-sdk",
   "files": [
-    "index.js",
-    "dist/*.js",
-    "src/**/*",
-    "esm/**/*",
-    "lib/**/*"
+    "dist"
   ],
   "exports": {
-    "import": "./esm/index.js",
+    "import": "./dist/index.mjs",
     "node": "./dist/wazo-sdk.js",
-    "require": "./lib/index.js"
+    "require": "./dist/index.js"
   },
   "repository": {
     "type": "git",
@@ -33,11 +29,9 @@
     "url": "https://github.com/wazo-platform/wazo-js-sdk/issues"
   },
   "scripts": {
-    "clean": "rimraf lib esm dist",
-    "build": "yarn clean && yarn build:esm && yarn build:cjs && yarn build:umd",
-    "build:umd": "rollup --config --extend --bundleConfigAsCjs",
-    "build:esm": "tsc -p ./tsconfig.esm.json",
-    "build:cjs": "tsc -p ./tsconfig.cjs.json",
+    "clean": "rimraf dist",
+    "build": "rslib build",
+    "build:watch": "rslib build --watch",
     "test": "jest && yarn lint && yarn typecheck && yarn checkbuild",
     "lint": "eslint src/",
     "jest": "jest src/",
@@ -50,7 +44,7 @@
   "dependencies": {
     "events": "^3.3.0",
     "fstream": "^1.0.12",
-    "getstats": "wazo-platform/getStats#fix_stats_mobile",
+    "getstats": "wazo-platform/getStats#1.0.7",
     "js-base64": "^3.7.7",
     "json-to-graphql-query": "^2.2.5",
     "jsrsasign": "^11.1.0",
@@ -65,11 +59,7 @@
     "@babel/core": "^7.24.4",
     "@babel/preset-env": "^7.24.4",
     "@babel/preset-typescript": "^7.24.1",
-    "@rollup/plugin-commonjs": "^25.0.7",
-    "@rollup/plugin-json": "^6.1.0",
-    "@rollup/plugin-node-resolve": "^15.2.3",
-    "@rollup/plugin-terser": "^0.4.4",
-    "@rollup/plugin-typescript": "^11.1.6",
+    "@rslib/core": "^0.3.1",
     "@types/events": "^3.0.3",
     "@types/jest": "^29.5.2",
     "@types/jsrsasign": "^10.5.8",
@@ -90,7 +80,6 @@
     "jsonlint": "^1.6.3",
     "prettier-eslint-cli": "^7.1.0",
     "rimraf": "^5.0.5",
-    "rollup": "^3.26.2",
     "ts-jest": "^29.1.2",
     "typescript": "^5.4.5"
   },
