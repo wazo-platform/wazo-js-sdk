@@ -11,15 +11,15 @@ export const STATE = {
   DISCONNECTED: 'disconnected',
   AWAY: 'away',
 };
-export enum LineState {
-  AVAILABLE = 'available',
-  HOLDING = 'holding',
-  RINGING = 'ringing',
-  TALKING = 'talking',
-  UNAVAILABLE = 'unavailable',
-  PROGRESSING = 'progressing',
-}
-
+export const LINE_STATE = {
+  AVAILABLE: 'available',
+  HOLDING: 'holding',
+  RINGING: 'ringing',
+  TALKING: 'talking',
+  UNAVAILABLE: 'unavailable',
+  PROGRESSING: 'progressing',
+} as const;
+type LineStateType = (typeof LINE_STATE)[keyof typeof LINE_STATE];
 type ProfileResponse = {
   groups: Array<{
     id: number;
@@ -237,22 +237,22 @@ export default class Profile {
   }
 
   static getLinesState(lines: Array<Record<string, any>>) {
-    let result = LineState.UNAVAILABLE;
+    let result:string = LINE_STATE.UNAVAILABLE;
 
     // eslint-disable-next-line
     for (const line of lines) {
-      if (line.state === LineState.RINGING) {
-        result = LineState.RINGING;
+      if (line.state === LINE_STATE.RINGING) {
+        result = LINE_STATE.RINGING;
         break;
       }
 
-      if (line.state === LineState.TALKING) {
-        result = LineState.TALKING;
+      if (line.state === LINE_STATE.TALKING) {
+        result = LINE_STATE.TALKING;
         break;
       }
 
-      if (line.state === LineState.AVAILABLE) {
-        result = LineState.AVAILABLE;
+      if (line.state === LINE_STATE.AVAILABLE) {
+        result = LINE_STATE.AVAILABLE;
       }
     }
 
