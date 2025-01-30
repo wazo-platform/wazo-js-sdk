@@ -19,7 +19,7 @@ export const LINE_STATE = {
   UNAVAILABLE: 'unavailable',
   PROGRESSING: 'progressing',
 } as const;
-type LineStateType = (typeof LINE_STATE)[keyof typeof LINE_STATE];
+export type LineStateType = (typeof LINE_STATE)[keyof typeof LINE_STATE];
 type ProfileResponse = {
   groups: Array<{
     id: number;
