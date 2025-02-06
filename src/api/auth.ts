@@ -14,6 +14,7 @@ type LoginParams = {
   mobile?: boolean;
   tenantId?: string;
   domainName?: string;
+  headers?: Record<string, any>;
 };
 
 type SamlLoginBody = {
@@ -77,15 +78,7 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
   checkToken: (token: Token): Promise<boolean> => client.head(`${baseUrl}/token/${token}`, null, {}),
   authenticate: (token: Token): Promise<Session | null | undefined> => client.get(`${baseUrl}/token/${token}`, null, {}).then((response: Response) => Session.parse(response)),
 
-  logIn(params: {
-    username: string;
-    password: string;
-    backend: string;
-    expiration: number;
-    mobile?: boolean;
-    tenantId?: string;
-    domainName?: string;
-  }): Promise<Session | null | undefined> {
+  logIn(params: LoginParams): Promise<Session | null | undefined> {
     const body: Record<string, any> = {
       backend: params.backend || DEFAULT_BACKEND_USER,
       expiration: params.expiration || DETAULT_EXPIRATION,
@@ -93,6 +86,7 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
     const headers: Record<string, any> = {
       Authorization: `Basic ${ApiRequester.base64Encode(`${params.username}:${params.password}`)}`,
       'Content-Type': 'application/json',
+      ...(params.headers || {}),
     };
 
     if (client.clientId) {
