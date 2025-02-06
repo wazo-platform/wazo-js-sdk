@@ -33,6 +33,9 @@ describe('Session domain', () => {
       engineUuid: '6cd695d2-cdb9-4444-8b2d-27425ab85fa8',
       stackUuid: '6cd695d2-cdb9-4444-8b2d-27425ab85fa8',
       stackHostFromHeader: 'new-stack',
+      metadata: {
+        uuid: 'a14dd6d6-547c-434d-bd5c-e882b5b83b54',
+      },
     }));
   });
   describe('about voicemails', () => {

@@ -15,6 +15,21 @@ const { jws } = KJUR;
 const swarmKey = <unknown>(KEYUTIL.getKey(swarmPublicKey)) as string;
 const MINIMUM_WAZO_ENGINE_VERSION_FOR_DEFAULT_CONTEXT = '19.08';
 
+type SessionMetadata = {
+  jwt?: string;
+  username?: string;
+  uuid: UUID;
+  tenant_uuid?: UUID;
+  xivo_user_uuid?: UUID;
+  groups?: Array<string>;
+  xivo_uuid?: UUID;
+  tenants?: Array<{
+    uuid: UUID;
+  }>;
+  auth_id?: UUID;
+  [key: string]: any; // Plugin can extend metadata
+} | null | undefined;
+
 export type Response = {
   _headers: Headers,
   data: {
@@ -30,19 +45,7 @@ export type Response = {
     auth_id: string;
     expires_at: string;
     xivo_user_uuid: string | null | undefined;
-    metadata: {
-      jwt?: string;
-      username?: string;
-      uuid: UUID;
-      tenant_uuid?: UUID;
-      xivo_user_uuid?: UUID;
-      groups?: Array<string>;
-      xivo_uuid?: UUID;
-      tenants?: Array<{
-        uuid: UUID;
-      }>;
-      auth_id?: UUID;
-    } | null | undefined;
+    metadata: SessionMetadata;
   };
 };
 
@@ -70,6 +73,7 @@ type SessionArguments = {
   engineUuid?: string | null | undefined;
   stackUuid?: string | null | undefined;
   stackHostFromHeader?: string | null | undefined;
+  metadata?: SessionMetadata
 };
 
 export default class Session {
@@ -99,6 +103,8 @@ export default class Session {
 
   authorizations: Array<Authorization>;
 
+  metadata: SessionMetadata;
+
   static parse(plain: Response): Session | null | undefined {
     const token = plain.data.metadata ? plain.data.metadata.jwt : null;
     let authorizations = [];
@@ -127,6 +133,7 @@ export default class Session {
       tenantUuid: plain.data.metadata ? plain.data.metadata.tenant_uuid : undefined,
       expiresAt: moment.utc(plain.data.utc_expires_at).toDate(),
       stackUuid: plain.data.xivo_uuid,
+      metadata: plain.data.metadata,
       // eslint-disable-next-line
       stackHostFromHeader: plain._headers?.get?.('wazo-stack-host'),
     });
@@ -148,6 +155,7 @@ export default class Session {
     refreshToken,
     sessionUuid,
     stackUuid,
+    metadata,
     stackHostFromHeader = undefined,
   }: SessionArguments) {
     this.token = token;
@@ -161,6 +169,7 @@ export default class Session {
     this.refreshToken = refreshToken;
     this.sessionUuid = sessionUuid;
     this.stackUuid = stackUuid;
+    this.metadata = metadata;
     this._stackHostFromHeader = stackHostFromHeader;
   }
 
