@@ -31,8 +31,8 @@ type CallSessionArguments = {
   ignored?: boolean;
   screensharing: boolean;
   recording: boolean;
-  recordingPaused: boolean;
-  recordingState: RecordingStateType;
+  recordingPaused?: boolean;
+  recordingState?: RecordingStateType;
   sipSession?: WazoSession;
   conference: boolean;
 };

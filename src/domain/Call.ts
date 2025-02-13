@@ -82,9 +82,9 @@ export default class Call {
 
   recording: boolean;
 
-  recordingPaused: boolean;
+  recordingPaused?: boolean;
 
-  recordingState: RecordingStateType;
+  recordingState?: RecordingStateType;
 
   static parseMany(plain: Array<CallResponse>): Array<Call> {
     if (!plain) {
@@ -234,7 +234,7 @@ export default class Call {
   }
 
   isRecordingPaused(): boolean {
-    return this.recordingPaused;
+    return !!this.recordingPaused;
   }
 
 }
