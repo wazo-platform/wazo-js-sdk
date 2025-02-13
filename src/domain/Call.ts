@@ -1,7 +1,14 @@
 import moment from 'moment';
 import newFrom from '../utils/new-from';
 
-const RECORD_STATE_ACTIVE = 'active';
+export const RECORDING_STATE = {
+  ACTIVE: 'active',
+  INACTIVE: 'inactive',
+  PAUSED: 'paused',
+} as const;
+
+export type RecordingStateType = typeof RECORDING_STATE [keyof typeof RECORDING_STATE];
+
 export type CallResponse = {
   call_id: string;
   sip_call_id: string;
@@ -18,7 +25,7 @@ export type CallResponse = {
   on_hold: boolean;
   muted: boolean;
   talking_to: Record<string, any>;
-  record_state: string;
+  record_state: RecordingStateType;
 };
 type CallArguments = {
   id: string;
@@ -37,6 +44,8 @@ type CallArguments = {
   startingTime: Date;
   talkingToIds: string[];
   recording: boolean;
+  recordingPaused: boolean;
+  recordingState: RecordingStateType;
 };
 export default class Call {
   type: string;
@@ -73,6 +82,10 @@ export default class Call {
 
   recording: boolean;
 
+  recordingPaused: boolean;
+
+  recordingState: RecordingStateType;
+
   static parseMany(plain: Array<CallResponse>): Array<Call> {
     if (!plain) {
       return [];
@@ -98,7 +111,9 @@ export default class Call {
       lineId: plain.line_id,
       startingTime: moment(plain.creation_time).toDate(),
       talkingToIds: Object.keys(plain.talking_to || {}),
-      recording: plain.record_state === RECORD_STATE_ACTIVE,
+      recording: plain.record_state === RECORDING_STATE.ACTIVE,
+      recordingPaused: plain.record_state === RECORDING_STATE.PAUSED,
+      recordingState: plain.record_state,
     });
   }
 
@@ -123,6 +138,8 @@ export default class Call {
     startingTime,
     talkingToIds,
     recording,
+    recordingPaused,
+    recordingState,
   }: CallArguments) {
     this.id = id;
     this.sipCallId = sipCallId;
@@ -139,6 +156,8 @@ export default class Call {
     this.startingTime = startingTime;
     this.talkingToIds = talkingToIds || [];
     this.recording = recording;
+    this.recordingPaused = recordingPaused;
+    this.recordingState = recordingState || RECORDING_STATE.INACTIVE;
     this.isVideo = !!isVideo;
     // Useful to compare instead of instanceof with minified code
     this.type = 'Call';
@@ -212,6 +231,10 @@ export default class Call {
 
   isRecording(): boolean {
     return this.recording;
+  }
+
+  isRecordingPaused(): boolean {
+    return this.recordingPaused;
   }
 
 }

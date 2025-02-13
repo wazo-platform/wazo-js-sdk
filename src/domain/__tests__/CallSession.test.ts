@@ -1,3 +1,4 @@
+import Call, { RECORDING_STATE } from '../Call';
 import CallSession from '../CallSession';
 
 const stringify = (cs: any) => JSON.parse(JSON.stringify(cs));
@@ -76,5 +77,40 @@ describe('CallSession domain', () => {
     const cs5 = stringify(cs2);
     expect(cs4.answered).toEqual(false);
     expect(cs5.answered).toEqual(false);
+  });
+
+  describe.only('recording state', () => {
+    it('should handle ACTIVE recording state', () => {
+      const call = Call.parse({
+        record_state: RECORDING_STATE.ACTIVE,
+      } as any);
+
+      const cs = CallSession.parseCall(call);
+      expect(cs.recording).toEqual(true);
+      expect(cs.recordingPaused).toEqual(false);
+      expect(cs.recordingState).toEqual(RECORDING_STATE.ACTIVE);
+    });
+
+    it('should handle INACTIVE recording state', () => {
+      const call = Call.parse({
+        record_state: RECORDING_STATE.INACTIVE,
+      } as any);
+
+      const cs = CallSession.parseCall(call);
+      expect(cs.recording).toEqual(false);
+      expect(cs.recordingPaused).toEqual(false);
+      expect(cs.recordingState).toEqual(RECORDING_STATE.INACTIVE);
+    });
+
+    it('should handle INACTIVE recording state', () => {
+      const call = Call.parse({
+        record_state: RECORDING_STATE.PAUSED,
+      } as any);
+
+      const cs = CallSession.parseCall(call);
+      expect(cs.recording).toEqual(false);
+      expect(cs.recordingPaused).toEqual(true);
+      expect(cs.recordingState).toEqual(RECORDING_STATE.PAUSED);
+    });
   });
 });
