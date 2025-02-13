@@ -1,5 +1,5 @@
 import { SessionState } from 'sip.js/lib/api/session-state';
-import Call from './Call';
+import Call, { RECORDING_STATE, type RecordingStateType } from './Call';
 import newFrom from '../utils/new-from';
 import updateFrom from '../utils/update-from';
 import { WazoSession } from './types';
@@ -31,7 +31,8 @@ type CallSessionArguments = {
   ignored?: boolean;
   screensharing: boolean;
   recording: boolean;
-  recordingPaused: boolean;
+  recordingPaused?: boolean;
+  recordingState?: RecordingStateType;
   sipSession?: WazoSession;
   conference: boolean;
 };
@@ -96,6 +97,8 @@ export default class CallSession {
 
   recordingPaused: boolean;
 
+  recordingState: RecordingStateType;
+
   sipSession: WazoSession | undefined;
 
   conference: boolean;
@@ -125,6 +128,7 @@ export default class CallSession {
     screensharing,
     recording,
     recordingPaused,
+    recordingState,
     videoRemotelyDowngraded,
     sipSession,
     answerTime,
@@ -154,6 +158,7 @@ export default class CallSession {
     this.screensharing = screensharing || false;
     this.recording = recording || false;
     this.recordingPaused = recordingPaused || false;
+    this.recordingState = recordingState || RECORDING_STATE.INACTIVE;
     this.videoRemotelyDowngraded = videoRemotelyDowngraded;
     this.sipSession = sipSession;
     this.answerTime = answerTime || this.answerTime;
@@ -270,7 +275,7 @@ export default class CallSession {
     return this.recording;
   }
 
-  recordingIsPaused(): boolean {
+  isRecordingPaused(): boolean {
     return this.recordingPaused;
   }
 
@@ -385,7 +390,8 @@ export default class CallSession {
       videoMuted: false,
       screensharing: false,
       recording: call.isRecording(),
-      recordingPaused: false,
+      recordingPaused: call.isRecordingPaused(),
+      recordingState: call.recordingState,
       // @TODO
       ringing: call.isRinging(),
       answered: call.isUp(),
@@ -394,7 +400,6 @@ export default class CallSession {
       dialedExtension: call.dialedExtension,
       call,
       conference: false, // @FIXME?
-
     });
   }
 

@@ -5,7 +5,7 @@ export { default as IssueReporter } from './service/IssueReporter';
 export { default as BadResponse } from './domain/BadResponse';
 export { default as ServerError } from './domain/ServerError';
 export { default as SFUNotAvailableError } from './domain/SFUNotAvailableError';
-export { default as Call } from './domain/Call';
+export { default as Call, RECORDING_STATE } from './domain/Call';
 export { default as CallLog } from './domain/CallLog';
 export { default as Recording } from './domain/Recording';
 export { default as ChatMessage } from './domain/ChatMessage';

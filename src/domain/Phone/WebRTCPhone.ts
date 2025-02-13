@@ -12,6 +12,7 @@ import WebRTCClient from '../../web-rtc-client';
 import Emitter from '../../utils/Emitter';
 import IssueReporter from '../../service/IssueReporter';
 import { PeerConnection, WazoSession } from '../types';
+import { RECORDING_STATE } from '../Call';
 
 export const ON_USER_AGENT = 'onUserAgent';
 export const ON_REGISTERED = 'onRegistered';
@@ -1818,7 +1819,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
       muted: fromSession ? fromSession.isMuted() : this.client.isAudioMuted(sipSession),
       videoMuted: fromSession ? fromSession.isVideoMuted() : false,
       recording: fromSession ? fromSession.isRecording() : false,
-      recordingPaused: false,
+      recordingPaused: fromSession ? fromSession.isRecordingPaused() : false,
+      recordingState: fromSession ? fromSession.recordingState : RECORDING_STATE.INACTIVE,
       sipSession,
       conference: !!fromSession && fromSession.isConference(),
       ...extra,

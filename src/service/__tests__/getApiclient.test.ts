@@ -13,7 +13,7 @@ describe('getApiClient', () => {
     expect(globalClient.amid).toBeDefined();
   });
 
-  it.only('should return custom ApiClient', () => {
+  it('should return custom ApiClient', () => {
     const fooMethods = (client: ApiRequester, baseUrl: string) => ({
       test: (myString: string) => ({ client, myString, baseUrl }),
     });
