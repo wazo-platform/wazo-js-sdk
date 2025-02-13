@@ -14,7 +14,7 @@ type LoginParams = {
   mobile?: boolean;
   tenantId?: string;
   domainName?: string;
-  headers?: Record<string, any>;
+  headers?: Record<string, string>;
 };
 
 type SamlLoginBody = {
@@ -83,7 +83,7 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
       backend: params.backend || DEFAULT_BACKEND_USER,
       expiration: params.expiration || DETAULT_EXPIRATION,
     };
-    const headers: Record<string, any> = {
+    const headers: Record<string, string> = {
       Authorization: `Basic ${ApiRequester.base64Encode(`${params.username}:${params.password}`)}`,
       'Content-Type': 'application/json',
       ...(params.headers || {}),
@@ -113,7 +113,7 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
   logOut: (token: Token): Promise<LogoutResponse> => client.delete(`${baseUrl}/token/${token}`, null, {}, ApiRequester.successResponseParser),
 
   samlLogIn: async (samlSessionId: string): Promise<Session | null | undefined> => {
-    const headers: Record<string, any> = {
+    const headers: Record<string, string> = {
       Accept: 'application/json',
       'Content-Type': 'application/json',
     };
@@ -168,7 +168,7 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
       body.domain_name = domainName;
     }
 
-    const headers: Record<string, any> = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(isMobile ? {
         'Wazo-Session-Type': 'mobile',
