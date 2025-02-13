@@ -79,7 +79,7 @@ describe('CallSession domain', () => {
     expect(cs5.answered).toEqual(false);
   });
 
-  describe.only('recording state', () => {
+  describe('recording state', () => {
     it('should handle ACTIVE recording state', () => {
       const call = Call.parse({
         record_state: RECORDING_STATE.ACTIVE,
