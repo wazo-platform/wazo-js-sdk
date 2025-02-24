@@ -13,7 +13,7 @@ export { default as ChatRoom, type RoomResponse } from './domain/ChatRoom';
 export { default as Contact } from './domain/Contact';
 export { default as COUNTRIES } from './domain/Country';
 export { default as Features } from './domain/Features';
-export { default as ForwardOption, FORWARD_KEYS } from './domain/ForwardOption';
+export { default as ForwardOption, FORWARD_KEYS, type ForwardName } from './domain/ForwardOption';
 export { default as Incall } from './domain/Incall';
 export { default as Line } from './domain/Line';
 export { default as NotificationOptions } from './domain/NotificationOptions';
