@@ -17,6 +17,7 @@
     "dist"
   ],
   "exports": {
+    "types": "./dist/types/index.d.ts",
     "import": "./dist/index.mjs",
     "node": "./dist/wazo-sdk.js",
     "require": "./dist/index.js"
