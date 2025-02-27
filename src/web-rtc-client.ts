@@ -2470,7 +2470,8 @@ export default class WebRTCClient extends Emitter {
   }
 
   _makeURI(target: string): URI | undefined {
-    return UserAgent.makeURI(`sip:${target}@${this.config.host}`);
+    const encodedTarget = encodeURIComponent(target.replaceAll(' ', ''));
+    return UserAgent.makeURI(`sip:${encodedTarget}@${this.config.host}`);
   }
 
   async _disconnectTransport(force = false) {
