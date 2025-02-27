@@ -1,12 +1,14 @@
+/* eslint-disable no-underscore-dangle */
+import { UserAgent as UserAgentClass } from 'sip.js';
 import WebRTCClient from '../web-rtc-client';
 
 jest.mock('sip.js/lib/platform/web/transport');
 jest.mock('sip.js/lib/api/user-agent', () => ({
-  start: () => {},
+  start: () => { },
   UserAgent: class UserAgent {
     static makeURI: () => null = () => null;
 
-    start = () => {};
+    start = () => { };
 
     transport = {};
   },
@@ -156,7 +158,8 @@ describe('changeAudioInputDevice', () => {
       };
       client.video = video;
       client.setVideoInputDevice(deviceId);
-      expect(client.video).toEqual({ ...video,
+      expect(client.video).toEqual({
+        ...video,
         deviceId: {
           exact: deviceId,
         },
@@ -193,6 +196,36 @@ describe('changeAudioInputDevice', () => {
           exact: deviceId,
         },
       });
+    });
+  });
+
+  describe('_makeURI', () => {
+    let makeURISpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      makeURISpy = jest.spyOn(UserAgentClass, 'makeURI');
+    });
+
+    it('should call UserAgent.makeURI with encoded phone number', () => {
+      const target = '555-123-4567';
+      client._makeURI(target);
+
+      expect(makeURISpy).toHaveBeenCalledWith(`sip:555-123-4567@${client.config.host}`);
+    });
+
+    it('should call UserAgent.makeURI with trimmed phone number', () => {
+      const target = '  1234 5 6789  ';
+      client._makeURI(target);
+
+      expect(makeURISpy).toHaveBeenCalledWith(`sip:123456789@${client.config.host}`);
+    });
+
+    it('should call UserAgent.makeURI with formatted phone number encoded', () => {
+      const target = '1 (800) 555-1234';
+      client._makeURI(target);
+
+      expect(makeURISpy).toHaveBeenCalledWith(`sip:1(800)555-1234@${client.config.host}`);
     });
   });
 });
