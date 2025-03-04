@@ -589,8 +589,8 @@ export default class Contact {
     return new Contact({
       sourceId: single.id || '',
       name: single.name || '',
-      firstName: single.lastname || '',
-      lastName: single.firstname || '',
+      firstName: single.firstname || '',
+      lastName: single.lastname || '',
       number: numbers.length ? numbers[0].number : '',
       numbers,
       emails,
