@@ -1,4 +1,4 @@
-import authMethods, { AuthD } from './api/auth';
+import authMethods from './api/auth';
 import ApiRequester from './utils/api-requester';
 import IssueReporter from './service/IssueReporter';
 import { obfuscateToken } from './utils/string';
@@ -18,7 +18,7 @@ const logger = IssueReporter ? IssueReporter.loggerFor('api') : console;
 export default class BaseApiClient {
   client: ApiRequester;
 
-  auth: AuthD;
+  auth: ReturnType<typeof authMethods>;
 
   refreshToken: string | null | undefined;
 
@@ -60,12 +60,7 @@ export default class BaseApiClient {
     this.auth = authMethods(this.client, `auth/${AUTH_VERSION}`);
   }
 
-  updateParameters({
-    server,
-    agent,
-    clientId,
-    fetchOptions,
-  }: Record<string, any>) {
+  updateParameters({ server, agent, clientId, fetchOptions }: Record<string, any>) {
     const refreshTokenCallback = this.refreshTokenCallback.bind(this);
     this.client = new ApiRequester({
       server,
@@ -97,7 +92,14 @@ export default class BaseApiClient {
     }
 
     try {
-      const session = await this.auth.refreshToken(this.refreshToken, this.refreshBackend as string, this.refreshExpiration as number, this.isMobile, this.refreshTenantId as string, this.refreshDomainName as string);
+      const session = await this.auth.refreshToken(
+        this.refreshToken,
+        this.refreshBackend as string,
+        this.refreshExpiration as number,
+        this.isMobile,
+        this.refreshTenantId as string,
+        this.refreshDomainName as string,
+      );
       if (!session) {
         return null;
       }
@@ -180,5 +182,4 @@ export default class BaseApiClient {
   disableErrorLogging() {
     this.client.disableErrorLogging();
   }
-
 }
