@@ -22,33 +22,11 @@ type GetPresenceResponse = {
   xivo_uuid: string;
 };
 
-export interface CtidNg {
-  updatePresence: (presence: string) => Promise<boolean>;
-  listMessages: (participantUuid: UUID | null | undefined, limit?: number) => Promise<Array<ChatMessage>>;
-  sendMessage: (alias: string, msg: string, toUserId: string) => Promise<boolean>;
-  makeCall: (extension: string, fromMobile: boolean, lineId: number | null | undefined, allLines: boolean | null | undefined) => Promise<CallResponse>;
-  cancelCall: (callId: number) => Promise<boolean>;
-  listCalls: () => Promise<Array<Call>>;
-  relocateCall: (callId: number, destination: string, lineId: number | null | undefined, contact?: string | null | undefined) => Promise<Relocation>;
-  transferCall: (callId: number, number: string, flow: string) => Promise<CTITransfer>;
-  cancelCallTransfer: (transferId: string) => Promise<void>;
-  confirmCallTransfer: (transferId: string) => Promise<void>;
-  listVoicemails: () => Promise<Array<Voicemail>>;
-  deleteVoicemail: (voicemailId: number) => Promise<boolean>;
-  getPresence: (contactUuid: UUID) => Promise<GetPresenceResponse>;
-  getStatus: (lineUuid: UUID) => Promise<string>;
-  fetchSwitchboardHeldCalls: (switchboardUuid: UUID) => Promise<any>;
-  holdSwitchboardCall: (switchboardUuid: UUID, callId: string) => Promise<boolean>;
-  answerSwitchboardHeldCall: (switchboardUuid: UUID, callId: string) => Promise<boolean>;
-  fetchSwitchboardQueuedCalls: (switchboardUuid: UUID) => Promise<boolean>;
-  answerSwitchboardQueuedCall: (switchboardUuid: UUID, callId: string) => Promise<boolean>;
-  sendFax: (extension: string, fax: string, callerId: string | null | undefined) => Promise<any>;
-}
-
-export default ((client: ApiRequester, baseUrl: string): CtidNg => ({
+export default ((client: ApiRequester, baseUrl: string) => ({
   updatePresence: (presence: string): Promise<boolean> => client.put(`${baseUrl}/users/me/presences`, {
     presence,
   }, null, ApiRequester.successResponseParser),
+
   listMessages: (participantUuid: UUID | null | undefined, limit?: number): Promise<Array<ChatMessage>> => {
     const query: Record<string, any> = {};
 
@@ -62,7 +40,8 @@ export default ((client: ApiRequester, baseUrl: string): CtidNg => ({
 
     return client.get(`${baseUrl}/users/me/chats`, query).then(ChatMessage.parseMany);
   },
-  sendMessage: (alias: string, msg: string, toUserId: string) => {
+
+  sendMessage: (alias: string, msg: string, toUserId: string): Promise<boolean> => {
     const body = {
       alias,
       msg,
@@ -70,7 +49,8 @@ export default ((client: ApiRequester, baseUrl: string): CtidNg => ({
     };
     return client.post(`${baseUrl}/users/me/chats`, body, null, ApiRequester.successResponseParser);
   },
-  makeCall: (extension: string, fromMobile: boolean, lineId: number | null | undefined, allLines: boolean | null | undefined = false) => {
+
+  makeCall: (extension: string, fromMobile: boolean, lineId: number | null | undefined, allLines: boolean | null | undefined = false): Promise<CallResponse> => {
     const query: CallQuery = {
       from_mobile: fromMobile,
       extension,
@@ -86,7 +66,9 @@ export default ((client: ApiRequester, baseUrl: string): CtidNg => ({
 
     return client.post(`${baseUrl}/users/me/calls`, query);
   },
+
   cancelCall: (callId: number): Promise<boolean> => client.delete(`${baseUrl}/users/me/calls/${callId}`),
+
   listCalls: (): Promise<Array<Call>> => client.get(`${baseUrl}/users/me/calls`).then((response: any) => Call.parseMany(response.items)),
 
   relocateCall(callId: number, destination: string, lineId: number | null | undefined, contact?: string | null | undefined): Promise<Relocation> {
@@ -123,22 +105,29 @@ export default ((client: ApiRequester, baseUrl: string): CtidNg => ({
 
   // @TODO: fix response type
   cancelCallTransfer: (transferId: string): Promise<void> => client.delete(`${baseUrl}/users/me/transfers/${transferId}`),
+
   // @TODO: fix response type
   confirmCallTransfer: (transferId: string): Promise<void> => client.put(`${baseUrl}/users/me/transfers/${transferId}/complete`),
+
   listVoicemails: (): Promise<Array<Voicemail>> => client.get(`${baseUrl}/users/me/voicemails`, null).then((response: Response) => Voicemail.parseMany(response)),
+
   deleteVoicemail: (voicemailId: number): Promise<boolean> => client.delete(`${baseUrl}/users/me/voicemails/messages/${voicemailId}`, null),
-  getPresence: (contactUuid: UUID): Promise<{
-    presence: string;
-    user_uuid: string;
-    xivo_uuid: string;
-  }> => client.get(`${baseUrl}/users/${contactUuid}/presences`, null),
-  getStatus: (lineUuid: UUID) => client.get(`${baseUrl}/lines/${lineUuid}/presences`, null),
-  fetchSwitchboardHeldCalls: (switchboardUuid: UUID) => client.get(`${baseUrl}/switchboards/${switchboardUuid}/calls/held`, null),
-  holdSwitchboardCall: (switchboardUuid: UUID, callId: string) => client.put(`${baseUrl}/switchboards/${switchboardUuid}/calls/held/${callId}`, null, null, ApiRequester.successResponseParser),
-  answerSwitchboardHeldCall: (switchboardUuid: UUID, callId: string) => client.put(`${baseUrl}/switchboards/${switchboardUuid}/calls/held/${callId}/answer`, null),
-  fetchSwitchboardQueuedCalls: (switchboardUuid: UUID) => client.get(`${baseUrl}/switchboards/${switchboardUuid}/calls/queued`, null),
-  answerSwitchboardQueuedCall: (switchboardUuid: UUID, callId: string) => client.put(`${baseUrl}/switchboards/${switchboardUuid}/calls/queued/${callId}/answer`, null),
-  sendFax: (extension: string, fax: string, callerId: string | null | undefined = null) => {
+
+  getPresence: (contactUuid: UUID): Promise<GetPresenceResponse> => client.get(`${baseUrl}/users/${contactUuid}/presences`, null),
+
+  getStatus: (lineUuid: UUID): Promise<string> => client.get(`${baseUrl}/lines/${lineUuid}/presences`, null),
+
+  fetchSwitchboardHeldCalls: (switchboardUuid: UUID): Promise<any> => client.get(`${baseUrl}/switchboards/${switchboardUuid}/calls/held`, null),
+
+  holdSwitchboardCall: (switchboardUuid: UUID, callId: string): Promise<boolean> => client.put(`${baseUrl}/switchboards/${switchboardUuid}/calls/held/${callId}`, null, null, ApiRequester.successResponseParser),
+
+  answerSwitchboardHeldCall: (switchboardUuid: UUID, callId: string): Promise<boolean> => client.put(`${baseUrl}/switchboards/${switchboardUuid}/calls/held/${callId}/answer`, null),
+
+  fetchSwitchboardQueuedCalls: (switchboardUuid: UUID): Promise<boolean> => client.get(`${baseUrl}/switchboards/${switchboardUuid}/calls/queued`, null),
+
+  answerSwitchboardQueuedCall: (switchboardUuid: UUID, callId: string): Promise<boolean> => client.put(`${baseUrl}/switchboards/${switchboardUuid}/calls/queued/${callId}/answer`, null),
+
+  sendFax: (extension: string, fax: string, callerId: string | null | undefined = null): Promise<any> => {
     const headers = {
       'Content-type': 'application/pdf',
       'X-Auth-Token': client.token,
