@@ -10,40 +10,11 @@ import MeetingAuthorization from '../domain/MeetingAuthorization';
 import { convertKeysFromCamelToUnderscore } from '../utils/object';
 import { ForwardName } from '../domain/ForwardOption';
 
-export interface ConfD {
-  listUsers: () => Promise<ListConfdUsersResponse>;
-  getUser: (userUuid: string) => Promise<Profile>;
-  updateUser: (userUuid: string, profile: Profile) => Promise<boolean>;
-  updateForwardOption: (userUuid: string, key: ForwardName, destination: string, enabled: boolean) => Promise<boolean>;
-  updateForwardOptions: (userUuid: string, options: Record<ForwardName, { destination: string, enabled: boolean }>) => Promise<boolean>;
-  updateDoNotDisturb: (userUuid: UUID, enabled: boolean) => Promise<boolean>;
-  getUserLineSip: (userUuid: string, lineId: string) => Promise<SipLine>;
-  getUserLinesSip: (userUuid: string, lineIds: string[]) => Promise<(SipLine | null)[]>;
-  getUserLineSipFromToken: (userUuid: string) => Promise<any>; // @TODO
-  listApplications: () => Promise<ListApplicationsResponse>;
-  getInfos: () => Promise<{
-    uuid: string;
-    wazo_version: string;
-  }>;
-  getExternalApps: (userUuid: string) => Promise<ExternalApp[]>;
-  getExternalApp: (userUuid: string, name: string) => Promise<ExternalApp | null | undefined>;
-  getMyMeetings: () => Promise<Meeting>;
-  createMyMeeting: (args: MeetingCreateArguments) => Promise<Meeting>;
-  updateMyMeeting: (meetingUuid: string, data: MeetingUpdateArguments) => Promise<boolean>;
-  deleteMyMeeting: (meetingUuid: string) => Promise<Meeting>;
-  getMeeting: (meetingUuid: string) => Promise<Meeting>;
-  meetingAuthorizations: (meetingUuid: string) => Promise<Array<MeetingAuthorization>>;
-  meetingAuthorizationReject: (meetingUuid: string, authorizationUuid: string) => Promise<boolean>;
-  meetingAuthorizationAccept: (meetingUuid: string, authorizationUuid: string) => Promise<boolean>;
-  guestGetMeeting: (meetingUuid: string) => Promise<Meeting>;
-  guestAuthorizationRequest: (userUuid: string, meetingUuid: string, username: string) => Promise<any>;
-  guestAuthorizationCheck: (userUuid: string, meetingUuid: string, authorizationUuid: string) => Promise<any>;
-  getOutgoingCallerIDs: (userUuid: string) => Promise<CallerID[]>;
-}
-
-export default ((client: ApiRequester, baseUrl: string): ConfD => ({
+export default ((client: ApiRequester, baseUrl: string) => ({
   listUsers: (): Promise<ListConfdUsersResponse> => client.get(`${baseUrl}/users`, null),
+
   getUser: (userUuid: string): Promise<Profile> => client.get(`${baseUrl}/users/${userUuid}`, null).then(Profile.parse),
+
   updateUser: (userUuid: string, profile: Profile): Promise<boolean> => {
     const body = {
       firstname: profile.firstName,
@@ -53,6 +24,7 @@ export default ((client: ApiRequester, baseUrl: string): ConfD => ({
     };
     return client.put(`${baseUrl}/users/${userUuid}`, body, null, ApiRequester.successResponseParser);
   },
+
   updateForwardOption: (userUuid: string, key: ForwardName, destination: string, enabled: boolean): Promise<boolean> => {
     const url = `${baseUrl}/users/${userUuid}/forwards/${key}`;
     return client.put(url, {
@@ -60,13 +32,16 @@ export default ((client: ApiRequester, baseUrl: string): ConfD => ({
       enabled,
     }, null, ApiRequester.successResponseParser);
   },
+
   updateForwardOptions: (userUuid: string, options: Record<ForwardName, { destination: string, enabled: boolean }>): Promise<boolean> => {
     const url = `${baseUrl}/users/${userUuid}/forwards`;
     return client.put(url, options, null, ApiRequester.successResponseParser);
   },
+
   updateDoNotDisturb: (userUuid: UUID, enabled: boolean): Promise<boolean> => client.put(`${baseUrl}/users/${userUuid}/services/dnd`, {
     enabled,
   }, null, ApiRequester.successResponseParser),
+
   getUserLineSip: (userUuid: string, lineId: string): Promise<SipLine> => client.get(`${baseUrl}/users/${userUuid}/lines/${lineId}/associated/endpoints/sip?view=merged`).then(SipLine.parse),
 
   getUserLinesSip(userUuid: string, lineIds: string[]): Promise<(SipLine | null)[]> {
@@ -75,7 +50,7 @@ export default ((client: ApiRequester, baseUrl: string): ConfD => ({
     return Promise.all(lineIds.map(lineId => this.getUserLineSip(userUuid, lineId).catch(() => null)));
   },
 
-  getUserLineSipFromToken(userUuid: string) {
+  getUserLineSipFromToken(userUuid: string): Promise<any> {
     return this.getUser(userUuid).then(user => {
       if (!user.lines.length) {
         console.warn(`No sip line for user: ${userUuid}`);
@@ -88,11 +63,11 @@ export default ((client: ApiRequester, baseUrl: string): ConfD => ({
   },
 
   listApplications: (): Promise<ListApplicationsResponse> => client.get(`${baseUrl}/applications`, null),
-  getInfos: (): Promise<{
-    uuid: string;
-    wazo_version: string;
-  }> => client.get(`${baseUrl}/infos`, null),
+
+  getInfos: (): Promise<{ uuid: string; wazo_version: string; }> => client.get(`${baseUrl}/infos`, null),
+
   getExternalApps: (userUuid: string): Promise<ExternalApp[]> => client.get(`${baseUrl}/users/${userUuid}/external/apps`).then(ExternalApp.parseMany),
+
   getExternalApp: async (userUuid: string, name: string): Promise<ExternalApp | null | undefined> => {
     const url = `${baseUrl}/users/${userUuid}/external/apps/${name}?view=fallback`;
 
@@ -102,18 +77,30 @@ export default ((client: ApiRequester, baseUrl: string): ConfD => ({
       return null;
     }
   },
+
   getMyMeetings: (): Promise<Meeting> => client.get(`${baseUrl}/users/me/meetings`).then((response: any) => Meeting.parseMany(response.items)),
+
   createMyMeeting: (args: MeetingCreateArguments): Promise<Meeting> => client.post(`${baseUrl}/users/me/meetings`, convertKeysFromCamelToUnderscore(args)).then(Meeting.parse),
+
   updateMyMeeting: (meetingUuid: string, data: MeetingUpdateArguments): Promise<boolean> => client.put(`${baseUrl}/users/me/meetings/${meetingUuid}`, convertKeysFromCamelToUnderscore(data), null, ApiRequester.successResponseParser),
+
   deleteMyMeeting: (meetingUuid: string): Promise<Meeting> => client.delete(`${baseUrl}/users/me/meetings/${meetingUuid}`, null),
+
   getMeeting: (meetingUuid: string): Promise<Meeting> => client.get(`${baseUrl}/meetings/${meetingUuid}`, null).then(Meeting.parse),
+
   meetingAuthorizations: (meetingUuid: string): Promise<Array<MeetingAuthorization>> => client.get(`${baseUrl}/users/me/meetings/${meetingUuid}/authorizations`, null).then((response: any) => MeetingAuthorization.parseMany(response.items)),
+
   meetingAuthorizationReject: (meetingUuid: string, authorizationUuid: string): Promise<boolean> => client.put(`${baseUrl}/users/me/meetings/${meetingUuid}/authorizations/${authorizationUuid}/reject`, {}, null, ApiRequester.successResponseParser),
+
   meetingAuthorizationAccept: (meetingUuid: string, authorizationUuid: string): Promise<boolean> => client.put(`${baseUrl}/users/me/meetings/${meetingUuid}/authorizations/${authorizationUuid}/accept`, {}, null, ApiRequester.successResponseParser),
+
   guestGetMeeting: (meetingUuid: string): Promise<Meeting> => client.get(`${baseUrl}/guests/me/meetings/${meetingUuid}`, null).then(Meeting.parse),
+
   guestAuthorizationRequest: (userUuid: string, meetingUuid: string, username: string): Promise<any> => client.post(`${baseUrl}/guests/${userUuid}/meetings/${meetingUuid}/authorizations`, {
     guest_name: username,
   }).then(MeetingAuthorization.parse),
+
   guestAuthorizationCheck: (userUuid: string, meetingUuid: string, authorizationUuid: string): Promise<any> => client.get(`${baseUrl}/guests/${userUuid}/meetings/${meetingUuid}/authorizations/${authorizationUuid}`, null),
+
   getOutgoingCallerIDs: (userUuid: string): Promise<CallerID[]> => client.get(`${baseUrl}/users/${userUuid}/callerids/outgoing`, null).then(CallerID.parseMany),
 }));
