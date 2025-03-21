@@ -1,5 +1,5 @@
 import ApiRequester from '../utils/api-requester';
-import type { UUID, ListConfdUsersResponse, ListApplicationsResponse } from '../domain/types';
+import type { UUID, ListConfdUsersResponse, ListApplicationsResponse, BlockNumber, BlockNumberBody } from '../domain/types';
 import type { MeetingCreateArguments, MeetingUpdateArguments } from '../domain/Meeting';
 import CallerID from '../domain/CallerID';
 import Profile from '../domain/Profile';
@@ -9,6 +9,12 @@ import Meeting from '../domain/Meeting';
 import MeetingAuthorization from '../domain/MeetingAuthorization';
 import { convertKeysFromCamelToUnderscore } from '../utils/object';
 import { ForwardName } from '../domain/ForwardOption';
+import { ApiParams } from '../types/api';
+
+type GetBlockNumbersSearchParams = {
+  number?: string;
+  name?: string;
+};
 
 export default ((client: ApiRequester, baseUrl: string) => ({
   listUsers: (): Promise<ListConfdUsersResponse> => client.get(`${baseUrl}/users`, null),
@@ -103,4 +109,19 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   guestAuthorizationCheck: (userUuid: string, meetingUuid: string, authorizationUuid: string): Promise<any> => client.get(`${baseUrl}/guests/${userUuid}/meetings/${meetingUuid}/authorizations/${authorizationUuid}`, null),
 
   getOutgoingCallerIDs: (userUuid: string): Promise<CallerID[]> => client.get(`${baseUrl}/users/${userUuid}/callerids/outgoing`, null).then(CallerID.parseMany),
+
+  getBlockNumbers: (opts: ApiParams<GetBlockNumbersSearchParams> = {}): Promise<BlockNumber[]> =>
+    client.get(`${baseUrl}/users/me/blocklist/numbers`, opts),
+
+  getBlockNumber: (uuid: UUID): Promise<BlockNumber> =>
+    client.get(`${baseUrl}/users/me/blocklist/numbers/${uuid}`),
+
+  createBlockNumber: (body: BlockNumberBody): Promise<BlockNumber> =>
+    client.post(`${baseUrl}/users/me/blocklist/numbers`, body),
+
+  updateBlockNumber: (uuid: string, body: BlockNumberBody): Promise<boolean> =>
+    client.put(`${baseUrl}/users/me/blocklist/numbers/${uuid}`, body, null, ApiRequester.successResponseParser),
+
+  deleteBlockNumber: (uuid: string): Promise<boolean> =>
+    client.delete(`${baseUrl}/users/me/blocklist/numbers/${uuid}`),
 }));

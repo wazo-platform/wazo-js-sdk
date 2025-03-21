@@ -329,3 +329,14 @@ export type UuidSearchableQueryParams = SearchableQueryParams & {
 export type WebsocketType = Websocket &
   typeof SOCKET_EVENTS &
   typeof OTHER_EVENTS;
+
+export type BlockNumber = {
+  uuid: string;
+  number: string;
+  label: string | null;
+};
+
+export type BlockNumberBody = {
+  number: string;
+  label?: string | null;
+};
