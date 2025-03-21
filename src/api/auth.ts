@@ -28,54 +28,9 @@ type SendResetPasswordArgs = {
   email?: string,
 };
 
-export interface AuthD {
-  checkToken: (token: Token) => Promise<boolean>;
-  authenticate: (token: Token) => Promise<Session | null | undefined>;
-  logIn(params: LoginParams): Promise<Session | null | undefined> ;
-  logOut: (token: Token) => Promise<LogoutResponse>;
-  samlLogIn: (samlSessionId: string) => Promise<Session | null | undefined>;
-  samlLogOut: () => Promise<void | { location:string }>;
-  initiateIdpAuthentication(domain: string, redirectUrl: string): Promise<any>;
-  refreshToken: (refreshToken: string, backend: string, expiration: number, isMobile?: boolean, tenantId?: string, domainName?: string) => Promise<Session | null | undefined>;
-  deleteRefreshToken: (clientId: string) => Promise<boolean>;
-  updatePassword: (userUuid: UUID, oldPassword: string, newPassword: string) => Promise<boolean>;
-  sendDeviceToken: (userUuid: UUID, deviceToken: string, apnsVoipToken: string | null | undefined, apnsNotificationToken: string | null | undefined) => Promise<void>;
-  getPushNotificationSenderId: (userUuid: UUID) => Promise<string>;
-  sendResetPasswordEmail: (params: SendResetPasswordArgs) => Promise<boolean>;
-  resetPassword: (userUuid: string, password: string) => Promise<boolean>;
-  removeDeviceToken: (userUuid: UUID) => Promise<void>;
-  createUser: (username: string, password: string, firstname: string, lastname: string) => Promise<User>;
-  addUserEmail: (userUuid: UUID, email: string, main?: boolean) => Promise<void>;
-  addUserPolicy: (userUuid: UUID, policyUuid: UUID) => Promise<void>;
-  getRestrictionPolicies: (scopes: string[]) => Promise<any>;
-  deleteUserPolicy: (userUuid: UUID, policyUuid: UUID) => Promise<any>;
-  addUserGroup: (userUuid: UUID, groupUuid: UUID) => Promise<any>;
-  listUsersGroup: (groupUuid: UUID) => Promise<any>;
-  deleteUserGroup: (userUuid: UUID, groupUuid: UUID) => Promise<void>;
-  getUser: (userUuid: UUID) => Promise<GetUserResponse>;
-  getUserSession: (userUuid: UUID) => Promise<any>; // @TODO
-  deleteUserSession: (userUuid: UUID, sessionUuids: UUID) => Promise<void>;
-  listUsers: () => Promise<ListUsersResponse>;
-  deleteUser: (userUuid: UUID) => Promise<boolean>;
-  listTenants: () => Promise<ListTenantsResponse>;
-  getTenant: (tenantUuid: UUID) => Promise<GetTenantResponse>;
-  createTenant: (name: string) => Promise<Tenant>;
-  updateTenant: (uuid: UUID, name: string, contact: string, phone: string, address: Array<Record<string, any>>) => Promise<Tenant>;
-  deleteTenant: (uuid: UUID) => Promise<boolean>;
-  createGroup: (name: string) => Promise<void>;
-  listGroups: () => Promise<ListGroupsResponse>;
-  deleteGroup: (uuid: UUID) => Promise<boolean>;
-  createPolicy: (name: string, description: string, aclTemplates: Array<Record<string, any>>) => Promise<void>;
-  listPolicies: () => Promise<ListPoliciesResponse>;
-  deletePolicy: (policyUuid: UUID) => Promise<boolean>;
-  getProviders: (userUuid: UUID) => Promise<any>; // @TODO
-  getProviderToken: (userUuid: UUID, provider: string) => Promise<string>; // @TODO; validate
-  getProviderAuthUrl: (userUuid: UUID, provider: string) => Promise<string>;
-  deleteProviderToken: (userUuid: UUID, provider: string) => Promise<void>;
-}
-
-export default ((client: ApiRequester, baseUrl: string): AuthD => ({
+export default ((client: ApiRequester, baseUrl: string) => ({
   checkToken: (token: Token): Promise<boolean> => client.head(`${baseUrl}/token/${token}`, null, {}),
+
   authenticate: (token: Token): Promise<Session | null | undefined> => client.get(`${baseUrl}/token/${token}`, null, {}).then((response: Response) => Session.parse(response)),
 
   logIn(params: LoginParams): Promise<Session | null | undefined> {
@@ -134,11 +89,11 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
     return client.post(`${baseUrl}/token`, body, headers).then(Session.parse);
   },
 
-  samlLogOut() {
+  samlLogOut(): Promise<void | { location:string }> {
     return client.get(`${baseUrl}/saml/logout`, null, null);
   },
 
-  initiateIdpAuthentication: async (domain: string, redirectUrl: string) => {
+  initiateIdpAuthentication: async (domain: string, redirectUrl: string): Promise<any> => {
     const body = {
       domain,
       redirect_url: redirectUrl,
@@ -151,6 +106,7 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
 
     return client.post(`${baseUrl}/saml/sso`, body, headers);
   },
+
   refreshToken: (refreshToken: string, backend: string, expiration: number, isMobile?: boolean, tenantId?: string, domainName?: string): Promise<Session | null | undefined> => {
     const body: Record<string, any> = {
       backend: backend || DEFAULT_BACKEND_USER,
@@ -176,7 +132,9 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
     };
     return client.post(`${baseUrl}/token`, body, headers, ApiRequester.defaultParser, false).then(Session.parse);
   },
+
   deleteRefreshToken: (clientId: string): Promise<boolean> => client.delete(`${baseUrl}/users/me/tokens/${clientId}`, null, null, ApiRequester.successResponseParser),
+
   updatePassword: (userUuid: UUID, oldPassword: string, newPassword: string): Promise<boolean> => {
     const body = {
       new_password: newPassword,
@@ -184,7 +142,8 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
     };
     return client.put(`${baseUrl}/users/${userUuid}/password`, body, null, ApiRequester.successResponseParser);
   },
-  sendDeviceToken: (userUuid: UUID, deviceToken: string, apnsVoipToken: string | null | undefined, apnsNotificationToken: string | null | undefined) => {
+
+  sendDeviceToken: (userUuid: UUID, deviceToken: string, apnsVoipToken: string | null | undefined, apnsNotificationToken: string | null | undefined): Promise<void> => {
     const body: Record<string, any> = {
       token: deviceToken,
     };
@@ -201,15 +160,13 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
 
     return client.post(`${baseUrl}/users/${userUuid}/external/mobile`, body);
   },
-  getPushNotificationSenderId: (userUuid: UUID) => client.get(`${baseUrl}/users/${userUuid}/external/mobile/sender_id`, null).then((response: Record<string, any>) => response.sender_id),
+
+  getPushNotificationSenderId: (userUuid: UUID): Promise<string> => client.get(`${baseUrl}/users/${userUuid}/external/mobile/sender_id`, null).then((response: Record<string, any>) => response.sender_id),
 
   /**
    * `username` or `email` should be set.
    */
-  sendResetPasswordEmail: ({
-    username,
-    email,
-  }) => {
+  sendResetPasswordEmail: ({ username, email }: SendResetPasswordArgs): Promise<boolean> => {
     const body: any = {};
 
     if (username) {
@@ -222,13 +179,16 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
 
     return client.get(`${baseUrl}/users/password/reset`, body, {}, ApiRequester.successResponseParser);
   },
-  resetPassword: (userUuid: string, password: string) => {
+
+  resetPassword: (userUuid: string, password: string): Promise<boolean> => {
     const body = {
       password,
     };
     return client.post(`${baseUrl}/users/password/reset?user_uuid=${userUuid}`, body, null, ApiRequester.successResponseParser);
   },
-  removeDeviceToken: (userUuid: UUID) => client.delete(`${baseUrl}/users/${userUuid}/external/mobile`),
+
+  removeDeviceToken: (userUuid: UUID): Promise<void> => client.delete(`${baseUrl}/users/${userUuid}/external/mobile`),
+
   createUser: (username: string, password: string, firstname: string, lastname: string): Promise<User> => {
     const body = {
       username,
@@ -238,7 +198,8 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
     };
     return client.post(`${baseUrl}/users`, body);
   },
-  addUserEmail: (userUuid: UUID, email: string, main?: boolean) => {
+
+  addUserEmail: (userUuid: UUID, email: string, main?: boolean): Promise<void> => {
     const body = {
       emails: [{
         address: email,
@@ -247,24 +208,35 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
     };
     return client.put(`${baseUrl}/users/${userUuid}/emails`, body);
   },
-  addUserPolicy: (userUuid: UUID, policyUuid: UUID) => client.put(`${baseUrl}/users/${userUuid}/policies/${policyUuid}`),
-  getRestrictionPolicies: (scopes: string[]) => client.post(`${baseUrl}/token/${client.token}/scopes/check`, {
-    scopes,
-  }),
-  deleteUserPolicy: (userUuid: UUID, policyUuid: UUID) => client.delete(`${baseUrl}/users/${userUuid}/policies/${policyUuid}`),
-  addUserGroup: (userUuid: UUID, groupUuid: UUID) => client.put(`${baseUrl}/groups/${groupUuid}/users/${userUuid}`),
-  listUsersGroup: (groupUuid: UUID) => client.get(`${baseUrl}/groups/${groupUuid}/users`),
-  deleteUserGroup: (userUuid: UUID, groupUuid: UUID) => client.delete(`${baseUrl}/groups/${groupUuid}/users/${userUuid}`),
+
+  addUserPolicy: (userUuid: UUID, policyUuid: UUID): Promise<void> => client.put(`${baseUrl}/users/${userUuid}/policies/${policyUuid}`),
+
+  getRestrictionPolicies: (scopes: string[]): Promise<any> => client.post(`${baseUrl}/token/${client.token}/scopes/check`, { scopes }),
+
+  deleteUserPolicy: (userUuid: UUID, policyUuid: UUID): Promise<any> => client.delete(`${baseUrl}/users/${userUuid}/policies/${policyUuid}`),
+
+  addUserGroup: (userUuid: UUID, groupUuid: UUID): Promise<any> => client.put(`${baseUrl}/groups/${groupUuid}/users/${userUuid}`),
+
+  listUsersGroup: (groupUuid: UUID): Promise<any> => client.get(`${baseUrl}/groups/${groupUuid}/users`),
+
+  deleteUserGroup: (userUuid: UUID, groupUuid: UUID): Promise<void> => client.delete(`${baseUrl}/groups/${groupUuid}/users/${userUuid}`),
+
   getUser: (userUuid: UUID): Promise<GetUserResponse> => client.get(`${baseUrl}/users/${userUuid}`),
-  getUserSession: (userUuid: UUID) => client.get(`${baseUrl}/users/${userUuid}/sessions`),
-  deleteUserSession: (userUuid: UUID, sessionUuids: UUID) => client.delete(`${baseUrl}/users/${userUuid}/sessions/${sessionUuids}`),
+
+  getUserSession: (userUuid: UUID): Promise<any> => client.get(`${baseUrl}/users/${userUuid}/sessions`),
+
+  deleteUserSession: (userUuid: UUID, sessionUuids: UUID): Promise<void> => client.delete(`${baseUrl}/users/${userUuid}/sessions/${sessionUuids}`),
+
   listUsers: (): Promise<ListUsersResponse> => client.get(`${baseUrl}/users`),
+
   deleteUser: (userUuid: UUID): Promise<boolean> => client.delete(`${baseUrl}/users/${userUuid}`),
+
   listTenants: (): Promise<ListTenantsResponse> => client.get(`${baseUrl}/tenants`),
+
   getTenant: (tenantUuid: UUID): Promise<GetTenantResponse> => client.get(`${baseUrl}/tenants/${tenantUuid}`),
-  createTenant: (name: string): Promise<Tenant> => client.post(`${baseUrl}/tenants`, {
-    name,
-  }),
+
+  createTenant: (name: string): Promise<Tenant> => client.post(`${baseUrl}/tenants`, { name }),
+
   updateTenant: (uuid: UUID, name: string, contact: string, phone: string, address: Array<Record<string, any>>): Promise<Tenant> => {
     const body = {
       name,
@@ -274,13 +246,16 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
     };
     return client.put(`${baseUrl}/tenants/${uuid}`, body);
   },
+
   deleteTenant: (uuid: UUID): Promise<boolean> => client.delete(`${baseUrl}/tenants/${uuid}`),
-  createGroup: (name: string) => client.post(`${baseUrl}/groups`, {
-    name,
-  }),
+
+  createGroup: (name: string): Promise<void> => client.post(`${baseUrl}/groups`, { name }),
+
   listGroups: (): Promise<ListGroupsResponse> => client.get(`${baseUrl}/groups`),
+
   deleteGroup: (uuid: UUID): Promise<boolean> => client.delete(`${baseUrl}/groups/${uuid}`),
-  createPolicy: (name: string, description: string, aclTemplates: Array<Record<string, any>>) => {
+
+  createPolicy: (name: string, description: string, aclTemplates: Array<Record<string, any>>): Promise<void> => {
     const body = {
       name,
       description,
@@ -290,10 +265,16 @@ export default ((client: ApiRequester, baseUrl: string): AuthD => ({
     };
     return client.post(`${baseUrl}/policies`, body);
   },
+
   listPolicies: (): Promise<ListPoliciesResponse> => client.get(`${baseUrl}/policies`),
+
   deletePolicy: (policyUuid: UUID): Promise<boolean> => client.delete(`${baseUrl}/policies/${policyUuid}`),
-  getProviders: (userUuid: UUID) => client.get(`${baseUrl}/users/${userUuid}/external`),
-  getProviderToken: (userUuid: UUID, provider: string) => client.get(`${baseUrl}/users/${userUuid}/external/${provider}`),
-  getProviderAuthUrl: (userUuid: UUID, provider: string) => client.post(`${baseUrl}/users/${userUuid}/external/${provider}`, {}),
-  deleteProviderToken: (userUuid: UUID, provider: string) => client.delete(`${baseUrl}/users/${userUuid}/external/${provider}`),
+
+  getProviders: (userUuid: UUID): Promise<any> => client.get(`${baseUrl}/users/${userUuid}/external`),
+
+  getProviderToken: (userUuid: UUID, provider: string): Promise<string> => client.get(`${baseUrl}/users/${userUuid}/external/${provider}`),
+
+  getProviderAuthUrl: (userUuid: UUID, provider: string): Promise<string> => client.post(`${baseUrl}/users/${userUuid}/external/${provider}`, {}),
+
+  deleteProviderToken: (userUuid: UUID, provider: string): Promise<void> => client.delete(`${baseUrl}/users/${userUuid}/external/${provider}`),
 }));
