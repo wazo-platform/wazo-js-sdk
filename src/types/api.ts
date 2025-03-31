@@ -21,3 +21,9 @@ export type SortingParams = {
 export type SearchParams<T extends Record<string, any> = Record<string, any>> = {
   search?: string;
 } & T;
+
+export type ListResponse<Item extends Record<string, any> = Record<string, any>> = {
+  filtered: number;
+  total: number;
+  items: Item[];
+};
