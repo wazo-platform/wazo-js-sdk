@@ -15,16 +15,12 @@ type CreatePayload = {
   tags: Record<string, any>;
 };
 
-export interface WebhookD {
-  getSubscriptions: () => Promise<Subscription[]>;
-  getSubscription: (uuid: string) => Promise<Subscription>;
-  createSubscription: (payload: CreatePayload) => Promise<Subscription>;
-  removeSubscription: (uuid: string) => Promise<Subscription>;
-}
-
-export default ((client: ApiRequester, baseUrl: string): WebhookD => ({
+export default ((client: ApiRequester, baseUrl: string) => ({
   getSubscriptions: (): Promise<Subscription[]> => client.get(`${baseUrl}/users/me/subscriptions`).then(Subscription.parseMany),
+
   getSubscription: (uuid: string): Promise<Subscription> => client.get(`${baseUrl}/users/me/subscriptions/${uuid}`).then(Subscription.parse),
+
   createSubscription: (payload: CreatePayload): Promise<Subscription> => client.post(`${baseUrl}/users/me/subscriptions`, payload),
+
   removeSubscription: (uuid: string): Promise<Subscription> => client.delete(`${baseUrl}/users/me/subscriptions/${uuid}`),
 }));

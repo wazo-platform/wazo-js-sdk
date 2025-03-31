@@ -1,13 +1,13 @@
-import applicationMethods, { ApplicationD } from './api/application';
-import confdMethods, { ConfD } from './api/confd';
-import ctidNgMethods, { CtidNg } from './api/ctid-ng';
-import dirdMethods, { DirD } from './api/dird';
-import callLogdMethods, { CallLogD } from './api/call-logd';
-import chatdMethods, { ChatD } from './api/chatd';
-import calldMethods, { CallD } from './api/calld';
-import agentdMethods, { AgentD } from './api/agentd';
-import webhookdMethods, { WebhookD } from './api/webhookd';
-import amidMethods, { AmiD } from './api/amid';
+import applicationMethods from './api/application';
+import confdMethods from './api/confd';
+import ctidNgMethods from './api/ctid-ng';
+import dirdMethods from './api/dird';
+import callLogdMethods from './api/call-logd';
+import chatdMethods from './api/chatd';
+import calldMethods from './api/calld';
+import agentdMethods from './api/agentd';
+import webhookdMethods from './api/webhookd';
+import amidMethods from './api/amid';
 import {
   APPLICATION_VERSION,
   CONFD_VERSION,
@@ -23,25 +23,25 @@ import {
 import BaseApiClient, { ConstructorParams } from './base-api-client';
 
 export default class ApiClient extends BaseApiClient {
-  application: ApplicationD;
+  application: ReturnType<typeof applicationMethods>;
 
-  confd: ConfD;
+  confd: ReturnType<typeof confdMethods>;
 
-  ctidNg: CtidNg;
+  ctidNg: ReturnType<typeof ctidNgMethods>;
 
-  dird: DirD;
+  dird: ReturnType<typeof dirdMethods>;
 
-  callLogd: CallLogD;
+  callLogd: ReturnType<typeof callLogdMethods>;
 
-  chatd: ChatD;
+  chatd: ReturnType<typeof chatdMethods>;
 
-  calld: CallD;
+  calld: ReturnType<typeof calldMethods>;
 
-  agentd: AgentD;
+  agentd: ReturnType<typeof agentdMethods>;
 
-  webhookd: WebhookD;
+  webhookd: ReturnType<typeof webhookdMethods>;
 
-  amid: AmiD;
+  amid: ReturnType<typeof amidMethods>;
 
   constructor(args: ConstructorParams) {
     super(args);
