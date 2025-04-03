@@ -9,7 +9,7 @@ import Meeting from '../domain/Meeting';
 import MeetingAuthorization from '../domain/MeetingAuthorization';
 import { convertKeysFromCamelToUnderscore } from '../utils/object';
 import { ForwardName } from '../domain/ForwardOption';
-import { ApiParams } from '../types/api';
+import { ApiParams, ListResponse } from '../types/api';
 
 type GetBlockNumbersSearchParams = {
   number?: string;
@@ -110,7 +110,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
 
   getOutgoingCallerIDs: (userUuid: string): Promise<CallerID[]> => client.get(`${baseUrl}/users/${userUuid}/callerids/outgoing`, null).then(CallerID.parseMany),
 
-  getBlockNumbers: (opts: ApiParams<GetBlockNumbersSearchParams> = {}): Promise<BlockNumber[]> =>
+  getBlockNumbers: (opts: ApiParams<GetBlockNumbersSearchParams> = {}): Promise<ListResponse<BlockNumber>> =>
     client.get(`${baseUrl}/users/me/blocklist/numbers`, opts),
 
   getBlockNumber: (uuid: UUID): Promise<BlockNumber> =>

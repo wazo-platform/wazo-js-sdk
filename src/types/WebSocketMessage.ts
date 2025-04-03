@@ -3,6 +3,7 @@ import type { ChatMessageResponse } from '../domain/ChatMessage';
 import ChatRoom from '../domain/ChatRoom';
 import Meeting from '../domain/Meeting';
 import type MeetingAuthorization from '../domain/MeetingAuthorization';
+import { CallDirection } from '../domain/CallLog';
 
 type WebSocketBaseMessage = {
   op: string;
@@ -66,7 +67,7 @@ export type VoicemailEvent = {
 export type CallLogEvent = {
   answer: string;
   answered: boolean;
-  call_direction: string;
+  call_direction: CallDirection;
   destination_extension: string;
   destination_internal_context: any | null | undefined;
   destination_internal_extension: any | null | undefined;
