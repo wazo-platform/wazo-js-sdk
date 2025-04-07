@@ -10,7 +10,7 @@ export const CALL_LOG_VALID_REQUESTED_VERSION = '24.14';
 export type CallLogResponse = {
   answer: string | null | undefined;
   answered: boolean;
-  call_direction: string;
+  call_direction: CallDirection;
   destination_extension: string;
   destination_name: string;
   destination_user_uuid: string | null;
@@ -33,6 +33,8 @@ export type Response = {
   total: number;
 };
 
+export type CallDirection = 'internal' | 'inbound' | 'outbound';
+
 type LogOrigin = {
   extension: string;
   name: string;
@@ -48,7 +50,7 @@ type CallLogArguments = {
   answer: Date | null | undefined;
   answered: boolean;
   newMissedCall?: boolean;
-  callDirection: string;
+  callDirection: CallDirection;
   destination: DestinationLogOrigin;
   requested: LogOrigin;
   source: LogOrigin;
@@ -68,7 +70,7 @@ export default class CallLog {
 
   newMissedCall: boolean;
 
-  callDirection: string;
+  callDirection: CallDirection;
 
   destination: DestinationLogOrigin;
 
