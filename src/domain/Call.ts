@@ -22,6 +22,8 @@ export type CallResponse = {
   is_video?: boolean;
   line_id: number | null | undefined;
   creation_time: string;
+  answer_time: string;
+  hangup_time: string;
   on_hold: boolean;
   muted: boolean;
   talking_to: Record<string, any>;
@@ -42,6 +44,8 @@ type CallArguments = {
   muted: boolean;
   status: string;
   startingTime: Date;
+  answerTime: Date;
+  hangupTime: Date;
   talkingToIds: string[];
   recording: boolean;
   recordingPaused: boolean;
@@ -78,6 +82,10 @@ export default class Call {
 
   startingTime: Date;
 
+  answerTime: Date;
+
+  hangupTime: Date;
+
   talkingToIds: string[];
 
   recording: boolean;
@@ -110,6 +118,8 @@ export default class Call {
       status: plain.status,
       lineId: plain.line_id,
       startingTime: moment(plain.creation_time).toDate(),
+      answerTime: moment(plain.answer_time).toDate(),
+      hangupTime: moment(plain.hangup_time).toDate(),
       talkingToIds: Object.keys(plain.talking_to || {}),
       recording: plain.record_state === RECORDING_STATE.ACTIVE,
       recordingPaused: plain.record_state === RECORDING_STATE.PAUSED,
@@ -136,6 +146,8 @@ export default class Call {
     onHold,
     status,
     startingTime,
+    answerTime,
+    hangupTime,
     talkingToIds,
     recording,
     recordingPaused,
@@ -154,6 +166,8 @@ export default class Call {
     this.lineId = lineId;
     this.status = status;
     this.startingTime = startingTime;
+    this.answerTime = answerTime;
+    this.hangupTime = hangupTime;
     this.talkingToIds = talkingToIds || [];
     this.recording = recording;
     this.recordingPaused = recordingPaused;
