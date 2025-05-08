@@ -8,9 +8,14 @@ import { ApiParams } from '../types/api';
 // note: 24.14 fixes requested (first contact reached) and destination (last contact reached)
 export const CALL_LOG_VALID_REQUESTED_VERSION = '24.14';
 
+export type CallDirection = 'internal' | 'inbound' | 'outbound';
+
+export type CallStatus = 'answered' | 'blocked' | 'unknown';
+
 export type CallLogResponse = {
   answer: string | null | undefined;
   answered: boolean;
+  call_status: CallStatus;
   call_direction: CallDirection;
   destination_extension: string;
   destination_name: string;
@@ -34,10 +39,6 @@ export type Response = {
   total: number;
 };
 
-export type CallDirection = 'internal' | 'inbound' | 'outbound';
-
-export type CallStatus = 'answered' | 'blocked' | 'unknown';
-
 type LogOrigin = {
   extension: string;
   name: string;
@@ -54,6 +55,7 @@ type CallLogArguments = {
   answered: boolean;
   newMissedCall?: boolean;
   callDirection: CallDirection;
+  callStatus: CallStatus;
   destination: DestinationLogOrigin;
   requested: LogOrigin;
   source: LogOrigin;
@@ -88,6 +90,8 @@ export default class CallLog {
   newMissedCall: boolean;
 
   callDirection: CallDirection;
+
+  callStatus: CallStatus;
 
   destination: DestinationLogOrigin;
 
@@ -126,6 +130,7 @@ export default class CallLog {
       answer: plain.answer ? moment(plain.answer).toDate() : null,
       answered: plain.answered,
       callDirection: plain.call_direction,
+      callStatus: plain.call_status || 'unknown',
       destination: {
         // @TEMP: Temporarily assuming empty numbers are meetings
         // which is admittedly a very dangerous assumption. Did i mention it was temporary?
@@ -168,6 +173,7 @@ export default class CallLog {
     answer,
     answered,
     callDirection,
+    callStatus = 'unknown',
     destination,
     requested,
     source,
@@ -180,6 +186,7 @@ export default class CallLog {
     this.answer = answer;
     this.answered = answered;
     this.callDirection = callDirection;
+    this.callStatus = callStatus;
     this.destination = destination;
     this.requested = requested;
     this.source = source;

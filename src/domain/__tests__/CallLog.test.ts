@@ -19,6 +19,7 @@ const CALL_LOG_RESPONSE: CallLogResponse = {
   id: 1,
   answer: '2024-01-02T00:00:00.000000+00:00',
   answered: true,
+  call_status: 'answered',
   call_direction: 'internal',
   source_name: 'Alice',
   source_extension: ALICE_EXTENSION,
@@ -78,6 +79,7 @@ describe('CallLog Domain', () => {
         id: 1,
         answer: moment(CALL_LOG_RESPONSE.answer).toDate(),
         answered: true,
+        callStatus: 'answered',
         callDirection: 'internal',
         source: {
           uuid: ALICE_UUID,
