@@ -3,6 +3,7 @@ import newFrom from '../utils/new-from';
 import Session from './Session';
 import type { RecordingResponse } from './Recording';
 import Recording from './Recording';
+import { ApiParams } from '../types/api';
 
 // note: 24.14 fixes requested (first contact reached) and destination (last contact reached)
 export const CALL_LOG_VALID_REQUESTED_VERSION = '24.14';
@@ -35,6 +36,8 @@ export type Response = {
 
 export type CallDirection = 'internal' | 'inbound' | 'outbound';
 
+export type CallStatus = 'answered' | 'blocked' | 'unknown';
+
 type LogOrigin = {
   extension: string;
   name: string;
@@ -60,6 +63,20 @@ type CallLogArguments = {
   end: Date | null | undefined;
   recordings: Recording[];
 };
+
+type CallLogSpecificQueryParams = {
+  call_direction?: CallDirection;
+  call_status?: CallStatus;
+  number?: string;
+  tags?: string[];
+  user_uuid?: string;
+  from_id?: number;
+  distinct?: string;
+  recorded?: boolean;
+  conversation_id?: string;
+};
+
+export type CallLogQueryParams = ApiParams<CallLogSpecificQueryParams>;
 
 export default class CallLog {
   type: string;
