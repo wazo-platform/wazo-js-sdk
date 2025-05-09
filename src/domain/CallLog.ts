@@ -130,7 +130,7 @@ export default class CallLog {
       answer: plain.answer ? moment(plain.answer).toDate() : null,
       answered: plain.answered,
       callDirection: plain.call_direction,
-      callStatus: plain.call_status || 'unknown',
+      callStatus: plain.call_status || (plain?.answered ? 'answered' : 'unknown'),
       destination: {
         // @TEMP: Temporarily assuming empty numbers are meetings
         // which is admittedly a very dangerous assumption. Did i mention it was temporary?
