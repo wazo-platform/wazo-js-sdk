@@ -1,5 +1,7 @@
 import ApiRequester from '../utils/api-requester';
-import CallLog from '../domain/CallLog';
+import CallLog, { CallLogQueryParams } from '../domain/CallLog';
+
+type ListCallLogsQueryParams = Exclude<CallLogQueryParams, 'offset' | 'limit'>;
 
 export default ((client: ApiRequester, baseUrl: string) => ({
   search: (search: string, limit = 5): Promise<Array<CallLog>> => client.get(`${baseUrl}/users/me/cdr`, {
@@ -12,9 +14,10 @@ export default ((client: ApiRequester, baseUrl: string) => ({
     limit,
   }).then(CallLog.parseMany),
 
-  listCallLogs: (offset?: number, limit = 5): Promise<Array<CallLog>> => client.get(`${baseUrl}/users/me/cdr`, {
+  listCallLogs: (offset?: number, limit = 5, queryParameters: ListCallLogsQueryParams = {}): Promise<Array<CallLog>> => client.get(`${baseUrl}/users/me/cdr`, {
     offset,
     limit,
+    ...queryParameters,
   }).then(CallLog.parseMany),
 
   listDistinctCallLogs: (offset: number, limit = 5, distinct?: string): Promise<Array<CallLog>> => client.get(`${baseUrl}/users/me/cdr`, {
