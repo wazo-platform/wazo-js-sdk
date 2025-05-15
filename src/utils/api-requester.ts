@@ -15,8 +15,18 @@ type ConstructorParams = {
   requestTimeout?: number | null;
 };
 const methods = ['head', 'get', 'post', 'put', 'delete', 'options'];
+
 const logger = IssueReporter ? IssueReporter.loggerFor('api') : console;
 const REQUEST_TIMEOUT_MS = 300 * 1000; // 300s like the Chrome engine default value.
+
+type CallPath = string;
+type CallMethod = 'head' | 'get' | 'post' | 'put' | 'delete' | 'options';
+type CallBody = Record<string, any> | null | undefined | string;
+type CallHeaders = Record<string, any> | null | undefined;
+type CallParser = ((...args: Array<any>) => any) | undefined;
+type CallFirstCall = boolean;
+
+type CallHelpers = (path: CallPath, body?: CallBody, headers?: CallHeaders, parse?: CallParser, firstCall?: CallFirstCall) => Promise<any>;
 
 export default class ApiRequester {
   server: string;
@@ -39,17 +49,17 @@ export default class ApiRequester {
 
   requestTimeout: number;
 
-  head: (...args: Array<any>) => any;
+  head: CallHelpers;
 
-  get: (...args: Array<any>) => any;
+  get: CallHelpers;
 
-  post: (...args: Array<any>) => any;
+  post: CallHelpers;
 
-  put: (...args: Array<any>) => any;
+  put: CallHelpers;
 
-  delete: (...args: Array<any>) => any;
+  delete: CallHelpers;
 
-  options: (...args: Array<any>) => any;
+  options: CallHelpers;
 
   static successResponseParser(response: Record<string, any>): boolean {
     return response.status === 204 || response.status === 201 || response.status === 200;
@@ -132,7 +142,7 @@ export default class ApiRequester {
     this.shouldLogErrors = true;
   }
 
-  async call(path: string, method = 'get', body: Record<string, any> | null | undefined = null, headers: (string | null | undefined) | (Record<string, any> | null | undefined) = null, parse: (...args: Array<any>) => any = ApiRequester.defaultParser, firstCall = true): Promise<any> {
+  async call(path: CallPath, method: CallMethod = 'get', body: CallBody = null, headers: CallHeaders = null, parse: CallParser = ApiRequester.defaultParser, firstCall: CallFirstCall = true): Promise<any> {
     const url = this.computeUrl(method, path, body);
     const newHeaders = this.getHeaders(headers);
     let newBody: any = method === 'get' ? null : body;
@@ -234,11 +244,11 @@ export default class ApiRequester {
 
   _replayWithNewToken(
     err: Record<string, any>,
-    path: string,
-    method: string,
-    body: Record<string, any> | null | undefined = null,
-    headers: (string | null | undefined) | (Record<string, any> | null | undefined) = null,
-    parse: ((...args: Array<any>) => any) | undefined = undefined,
+    path: CallPath,
+    method: CallMethod,
+    body: CallBody = null,
+    headers: CallHeaders = null,
+    parse: CallParser = undefined,
   ) {
     const isTokenNotFound = this._isTokenNotFound(err);
 
@@ -282,9 +292,9 @@ export default class ApiRequester {
     };
   }
 
-  computeUrl(method: string, path: string, body: Record<string, any> | null | undefined): string {
+  computeUrl(method: CallMethod, path: CallPath, body: CallBody): string {
     const url = `${this.baseUrl}/${path}`;
-    return method === 'get' && body && Object.keys(body).length ? `${url}?${ApiRequester.getQueryString(body)}` : url;
+    return method === 'get' && typeof body === 'object' && body && Object.keys(body).length ? `${url}?${ApiRequester.getQueryString(body)}` : url;
   }
 
   get baseUrl(): string {
