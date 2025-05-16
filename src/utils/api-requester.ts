@@ -2,7 +2,6 @@ import { Base64 } from 'js-base64';
 
 import BadResponse from '../domain/BadResponse';
 import ServerError from '../domain/ServerError';
-import type { Token } from '../domain/types';
 import IssueReporter from '../service/IssueReporter';
 
 type ConstructorParams = {
@@ -22,7 +21,7 @@ const REQUEST_TIMEOUT_MS = 300 * 1000; // 300s like the Chrome engine default va
 type CallPath = string;
 type CallMethod = 'head' | 'get' | 'post' | 'put' | 'delete' | 'options';
 type CallBody = Record<string, any> | null | undefined | string;
-type CallHeaders = Record<string, any> | null | undefined;
+type CallHeaders = { 'Wazo-Tenant'?: boolean | string, [key: string]: any } | null | undefined;
 type CallParser = ((...args: Array<any>) => any) | undefined;
 type CallFirstCall = boolean;
 
@@ -277,12 +276,15 @@ export default class ApiRequester {
     });
   }
 
-  getHeaders(header: (Token | null | undefined) | (Record<string, any> | null | undefined)): Record<string, any> {
-    if (header instanceof Object) {
+  getHeaders(header: CallHeaders): Record<string, any> {
+    const isObject = header instanceof Object;
+    const isWazoTenantOnly = isObject && header['Wazo-Tenant'] !== undefined && Object.keys(header).length === 1;
+
+    if (isObject && !isWazoTenantOnly) {
       return header;
     }
 
-    return {
+    const headers = {
       'X-Auth-Token': this.token,
       ...(this.tenant ? {
         'Wazo-Tenant': this.tenant,
@@ -290,6 +292,12 @@ export default class ApiRequester {
       Accept: 'application/json',
       'Content-Type': 'application/json',
     };
+
+    if (isWazoTenantOnly) {
+      delete headers['Wazo-Tenant'];
+    }
+
+    return headers;
   }
 
   computeUrl(method: CallMethod, path: CallPath, body: CallBody): string {

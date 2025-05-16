@@ -9,6 +9,7 @@ const body = {
 const url = `https://${server}/api/${path}?a=1`;
 const token = 'abc';
 const newToken = 'newToken';
+const tenant = 'abc234';
 const headers = {
   Accept: 'application/json',
   'Content-Type': 'application/json',
@@ -53,54 +54,97 @@ describe('Computing fetch URL', () => {
 });
 
 describe('Retrieving headers', () => {
-  it('should send a tenant if exists', () => {
-    const tenant = 'abc234';
-    const requester = new ApiRequester({
+  let requester: ApiRequester;
+
+  beforeEach(() => {
+    requester = new ApiRequester({
       server,
       agent: null,
+      token,
       clientId: null,
       refreshTokenCallback: () => null,
       fetchOptions: null,
     });
+
+    requester.setTenant(null);
+  });
+
+  it('should send a tenant if defined from helper', () => {
     requester.setTenant(tenant);
     expect(requester.getHeaders(null)['Wazo-Tenant']).toBe(tenant);
   });
 
   it('should not send a tenant if not present', () => {
-    const requester = new ApiRequester({
-      server,
-      agent: null,
-      clientId: null,
-      refreshTokenCallback: () => null,
-      fetchOptions: null,
-    });
     expect(requester.getHeaders(null)).not.toHaveProperty('Wazo-Tenant');
   });
+
+  it('should remove tenant header based on arguments', () => {
+    requester.setTenant(tenant);
+    const forcedHeaders = {
+      'Wazo-Tenant': false,
+    };
+
+    const generatedHeaders = requester.getHeaders(forcedHeaders);
+    expect(generatedHeaders).not.toHaveProperty('Wazo-Tenant');
+    expect(generatedHeaders['X-Auth-Token']).toBe(token);
+    expect(generatedHeaders['Content-Type']).toBe('application/json');
+  });
+
+  it('should be able to override all headers', () => {
+    const forcedHeaders = { foo: 'bar' };
+
+    expect(requester.getHeaders(forcedHeaders)).toStrictEqual(forcedHeaders);
+  });
 });
+
 describe('Calling fetch', () => {
-  it('should call fetch without body but query string in get method', async () => {
+  let requester: ApiRequester;
+
+  beforeEach(() => {
     Object.defineProperty(global, 'fetch', {
       value: jest.fn(() => Promise.resolve({
         json: () => Promise.resolve({}),
         headers: {
-          get: () => '',
+          get: () => 'application/json',
         },
       }) as any),
     });
 
-    await new ApiRequester({
+    requester = new ApiRequester({
       server,
       agent: null,
       clientId: null,
+      token,
       refreshTokenCallback: () => null,
       fetchOptions: null,
-    }).call(path, method, body, {});
+    });
+
+    requester.setTenant(tenant);
+  });
+
+  it('should call fetch without body but query string in get method', async () => {
+    await requester.call(path, method, body);
 
     expect(global.fetch).toBeCalledWith(url, {
       method: 'get',
       body: null,
       signal: expect.any(Object),
-      headers: {},
+      headers: {
+        ...headers,
+        'Wazo-Tenant': tenant,
+      },
+      agent: null,
+    });
+  });
+
+  it('should use allow to call a path witout wazo-tenant', async () => {
+    await requester.call(path, method, body, { 'Wazo-Tenant': false });
+
+    expect(global.fetch).toBeCalledWith(url, {
+      method: 'get',
+      body: null,
+      signal: expect.any(Object),
+      headers, // without Wazo-Tenant
       agent: null,
     });
   });
