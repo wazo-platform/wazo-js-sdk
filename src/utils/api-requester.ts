@@ -18,14 +18,12 @@ const methods = ['head', 'get', 'post', 'put', 'delete', 'options'];
 const logger = IssueReporter ? IssueReporter.loggerFor('api') : console;
 const REQUEST_TIMEOUT_MS = 300 * 1000; // 300s like the Chrome engine default value.
 
-type CallPath = string;
 type CallMethod = 'head' | 'get' | 'post' | 'put' | 'delete' | 'options';
 type CallBody = Record<string, any> | null | undefined | string;
 type CallHeaders = { 'Wazo-Tenant'?: boolean | string, [key: string]: any } | null | undefined;
 type CallParser = ((...args: Array<any>) => any) | undefined;
-type CallFirstCall = boolean;
 
-type CallHelpers = (path: CallPath, body?: CallBody, headers?: CallHeaders, parse?: CallParser, firstCall?: CallFirstCall) => Promise<any>;
+type CallHelpers = (path: string, body?: CallBody, headers?: CallHeaders, parse?: CallParser, firstCall?: boolean) => Promise<any>;
 
 export default class ApiRequester {
   server: string;
@@ -141,7 +139,7 @@ export default class ApiRequester {
     this.shouldLogErrors = true;
   }
 
-  async call(path: CallPath, method: CallMethod = 'get', body: CallBody = null, headers: CallHeaders = null, parse: CallParser = ApiRequester.defaultParser, firstCall: CallFirstCall = true): Promise<any> {
+  async call(path: string, method: CallMethod = 'get', body: CallBody = null, headers: CallHeaders = null, parse: CallParser = ApiRequester.defaultParser, firstCall = true): Promise<any> {
     const url = this.computeUrl(method, path, body);
     const newHeaders = this.getHeaders(headers);
     let newBody: any = method === 'get' ? null : body;
@@ -243,7 +241,7 @@ export default class ApiRequester {
 
   _replayWithNewToken(
     err: Record<string, any>,
-    path: CallPath,
+    path: string,
     method: CallMethod,
     body: CallBody = null,
     headers: CallHeaders = null,
@@ -300,7 +298,7 @@ export default class ApiRequester {
     return headers;
   }
 
-  computeUrl(method: CallMethod, path: CallPath, body: CallBody): string {
+  computeUrl(method: CallMethod, path: string, body: CallBody): string {
     const url = `${this.baseUrl}/${path}`;
     return method === 'get' && typeof body === 'object' && body && Object.keys(body).length ? `${url}?${ApiRequester.getQueryString(body)}` : url;
   }
