@@ -119,6 +119,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
       extension,
       caller_id: callerId,
     });
+
     return client.post(`${baseUrl}/users/me/faxes?${params}`, fax, headers);
   },
 

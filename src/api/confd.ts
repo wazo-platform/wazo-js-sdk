@@ -84,7 +84,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
     }
   },
 
-  getMyMeetings: (): Promise<Meeting> => client.get(`${baseUrl}/users/me/meetings`).then((response: any) => Meeting.parseMany(response.items)),
+  getMyMeetings: (): Promise<Meeting[]> => client.get(`${baseUrl}/users/me/meetings`).then((response: any) => Meeting.parseMany(response.items)),
 
   createMyMeeting: (args: MeetingCreateArguments): Promise<Meeting> => client.post(`${baseUrl}/users/me/meetings`, convertKeysFromCamelToUnderscore(args)).then(Meeting.parse),
 
