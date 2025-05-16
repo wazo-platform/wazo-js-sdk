@@ -70,6 +70,7 @@ export { default as BaseApiClient } from './base-api-client';
 export { default as Agent, type AgentResponse, type AgentArguments } from './domain/Agent';
 export { default as ExternalApp } from './domain/ExternalApp';
 export { default as SessionDescriptionHandler } from './lib/WazoSessionDescriptionHandler';
+export * from './types/api';
 export * from './types/WebSocketMessage';
 export * from './utils/PhoneNumberUtil';
 export * from './utils/string';
