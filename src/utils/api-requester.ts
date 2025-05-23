@@ -2,7 +2,6 @@ import { Base64 } from 'js-base64';
 
 import BadResponse from '../domain/BadResponse';
 import ServerError from '../domain/ServerError';
-import type { Token } from '../domain/types';
 import IssueReporter from '../service/IssueReporter';
 
 type ConstructorParams = {
@@ -15,8 +14,16 @@ type ConstructorParams = {
   requestTimeout?: number | null;
 };
 const methods = ['head', 'get', 'post', 'put', 'delete', 'options'];
+
 const logger = IssueReporter ? IssueReporter.loggerFor('api') : console;
 const REQUEST_TIMEOUT_MS = 300 * 1000; // 300s like the Chrome engine default value.
+
+type CallMethod = 'head' | 'get' | 'post' | 'put' | 'delete' | 'options';
+type CallBody = Record<string, any> | null | undefined | string;
+type CallHeaders = { 'Wazo-Tenant'?: boolean | string | null, [key: string]: any } | null | undefined;
+type CallParser = ((...args: Array<any>) => any) | undefined;
+
+type CallHelpers = (path: string, body?: CallBody, headers?: CallHeaders, parse?: CallParser, firstCall?: boolean) => Promise<any>;
 
 export default class ApiRequester {
   server: string;
@@ -39,17 +46,17 @@ export default class ApiRequester {
 
   requestTimeout: number;
 
-  head: (...args: Array<any>) => any;
+  head: CallHelpers;
 
-  get: (...args: Array<any>) => any;
+  get: CallHelpers;
 
-  post: (...args: Array<any>) => any;
+  post: CallHelpers;
 
-  put: (...args: Array<any>) => any;
+  put: CallHelpers;
 
-  delete: (...args: Array<any>) => any;
+  delete: CallHelpers;
 
-  options: (...args: Array<any>) => any;
+  options: CallHelpers;
 
   static successResponseParser(response: Record<string, any>): boolean {
     return response.status === 204 || response.status === 201 || response.status === 200;
@@ -132,7 +139,7 @@ export default class ApiRequester {
     this.shouldLogErrors = true;
   }
 
-  async call(path: string, method = 'get', body: Record<string, any> | null | undefined = null, headers: (string | null | undefined) | (Record<string, any> | null | undefined) = null, parse: (...args: Array<any>) => any = ApiRequester.defaultParser, firstCall = true): Promise<any> {
+  async call(path: string, method: CallMethod = 'get', body: CallBody = null, headers: CallHeaders = null, parse: CallParser = ApiRequester.defaultParser, firstCall = true): Promise<any> {
     const url = this.computeUrl(method, path, body);
     const newHeaders = this.getHeaders(headers);
     let newBody: any = method === 'get' ? null : body;
@@ -235,10 +242,10 @@ export default class ApiRequester {
   _replayWithNewToken(
     err: Record<string, any>,
     path: string,
-    method: string,
-    body: Record<string, any> | null | undefined = null,
-    headers: (string | null | undefined) | (Record<string, any> | null | undefined) = null,
-    parse: ((...args: Array<any>) => any) | undefined = undefined,
+    method: CallMethod,
+    body: CallBody = null,
+    headers: CallHeaders = null,
+    parse: CallParser = undefined,
   ) {
     const isTokenNotFound = this._isTokenNotFound(err);
 
@@ -267,24 +274,33 @@ export default class ApiRequester {
     });
   }
 
-  getHeaders(header: (Token | null | undefined) | (Record<string, any> | null | undefined)): Record<string, any> {
-    if (header instanceof Object) {
+  getHeaders(header: CallHeaders): Record<string, any> {
+    const isObject = header instanceof Object;
+    const isWazoTenantOnly = isObject && header['Wazo-Tenant'] !== undefined && Object.keys(header).length === 1;
+
+    if (isObject && !isWazoTenantOnly) {
       return header;
     }
 
-    return {
+    const headers = {
       'X-Auth-Token': this.token,
       ...(this.tenant ? {
-        'Wazo-Tenant': this.tenant,
+        'Wazo-Tenant': header?.['Wazo-Tenant'] || this.tenant,
       } : null),
       Accept: 'application/json',
       'Content-Type': 'application/json',
     };
+
+    if (isWazoTenantOnly && !header?.['Wazo-Tenant']) {
+      delete headers['Wazo-Tenant'];
+    }
+
+    return headers;
   }
 
-  computeUrl(method: string, path: string, body: Record<string, any> | null | undefined): string {
+  computeUrl(method: CallMethod, path: string, body: CallBody): string {
     const url = `${this.baseUrl}/${path}`;
-    return method === 'get' && body && Object.keys(body).length ? `${url}?${ApiRequester.getQueryString(body)}` : url;
+    return method === 'get' && typeof body === 'object' && body && Object.keys(body).length ? `${url}?${ApiRequester.getQueryString(body)}` : url;
   }
 
   get baseUrl(): string {

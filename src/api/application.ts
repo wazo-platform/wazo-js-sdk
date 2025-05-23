@@ -3,7 +3,7 @@ import ApiRequester from '../utils/api-requester';
 import type { ListNodesResponse, ListCallNodesResponse } from '../domain/types';
 
 export default ((client: ApiRequester, baseUrl: string) => ({
-  bridgeCall(applicationUuid: string, callId: number, context: string, exten: string, autoanswer: string, displayed_caller_id_number: string | null | undefined): Promise<boolean> {
+  bridgeCall(applicationUuid: string, callId: number, context: string, exten: string, autoanswer: string, displayed_caller_id_number: string | null | undefined): Promise<Record<string, any>> {
     const url = `${baseUrl}/${applicationUuid}/nodes`;
     const body = {
       calls: [{

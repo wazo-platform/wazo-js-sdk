@@ -428,7 +428,7 @@ export default class Contact {
     });
   }
 
-  static parseManyPersonal(results: Array<ContactPersonalResponse>): Array<Contact | null | undefined> {
+  static parseManyPersonal(results: Array<ContactPersonalResponse>): Contact[] {
     return results.map(r => Contact.parsePersonal(r));
   }
 
