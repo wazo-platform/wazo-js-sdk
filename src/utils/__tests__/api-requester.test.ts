@@ -78,14 +78,29 @@ describe('Retrieving headers', () => {
     expect(requester.getHeaders(null)).not.toHaveProperty('Wazo-Tenant');
   });
 
-  it('should remove tenant header based on arguments', () => {
+  it('should remove tenant header based on arguments if falsy', () => {
+    requester.setTenant(tenant);
+    const forcedHeaders = { 'Wazo-Tenant': false };
+    const generatedHeaders = requester.getHeaders(forcedHeaders);
+    expect(generatedHeaders).not.toHaveProperty('Wazo-Tenant');
+    expect(generatedHeaders['X-Auth-Token']).toBe(token);
+    expect(generatedHeaders['Content-Type']).toBe('application/json');
+
+    const forcedHeadersNull = { 'Wazo-Tenant': null };
+    const generatedHeadersNull = requester.getHeaders(forcedHeadersNull);
+    expect(generatedHeadersNull).not.toHaveProperty('Wazo-Tenant');
+    expect(generatedHeadersNull['X-Auth-Token']).toBe(token);
+    expect(generatedHeadersNull['Content-Type']).toBe('application/json');
+  });
+
+  it('should override tenant header based on arguments if not false', () => {
     requester.setTenant(tenant);
     const forcedHeaders = {
-      'Wazo-Tenant': false,
+      'Wazo-Tenant': '1111-1111-1111-111',
     };
 
     const generatedHeaders = requester.getHeaders(forcedHeaders);
-    expect(generatedHeaders).not.toHaveProperty('Wazo-Tenant');
+    expect(generatedHeaders['Wazo-Tenant']).toBe('1111-1111-1111-111');
     expect(generatedHeaders['X-Auth-Token']).toBe(token);
     expect(generatedHeaders['Content-Type']).toBe('application/json');
   });

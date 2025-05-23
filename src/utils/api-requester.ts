@@ -20,7 +20,7 @@ const REQUEST_TIMEOUT_MS = 300 * 1000; // 300s like the Chrome engine default va
 
 type CallMethod = 'head' | 'get' | 'post' | 'put' | 'delete' | 'options';
 type CallBody = Record<string, any> | null | undefined | string;
-type CallHeaders = { 'Wazo-Tenant'?: boolean | string, [key: string]: any } | null | undefined;
+type CallHeaders = { 'Wazo-Tenant'?: boolean | string | null, [key: string]: any } | null | undefined;
 type CallParser = ((...args: Array<any>) => any) | undefined;
 
 type CallHelpers = (path: string, body?: CallBody, headers?: CallHeaders, parse?: CallParser, firstCall?: boolean) => Promise<any>;
@@ -285,13 +285,13 @@ export default class ApiRequester {
     const headers = {
       'X-Auth-Token': this.token,
       ...(this.tenant ? {
-        'Wazo-Tenant': this.tenant,
+        'Wazo-Tenant': header?.['Wazo-Tenant'] || this.tenant,
       } : null),
       Accept: 'application/json',
       'Content-Type': 'application/json',
     };
 
-    if (isWazoTenantOnly) {
+    if (isWazoTenantOnly && !header?.['Wazo-Tenant']) {
       delete headers['Wazo-Tenant'];
     }
 
