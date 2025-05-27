@@ -291,6 +291,9 @@ export default class Session {
     return this.acl;
   }
 
+  /**
+   * @deprecated Use `stackUuid` instead.
+   */
   get engineUuid(): string | null | undefined {
     console.warn('`engineUuid` property of Session has been removed in Wazo\'s SDK, please use `stackUuid` instead.');
     return this.stackUuid;
@@ -300,7 +303,7 @@ export default class Session {
     return {
       ...this,
       // Added `engineUuid` because of the getter, it won't be included in `JSON.stringify()` methods.
-      engineUuid: this.engineUuid,
+      engineUuid: this.stackUuid,
     };
   }
 }
