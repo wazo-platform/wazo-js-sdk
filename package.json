@@ -43,6 +43,7 @@
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
+    "@wazo/types": "^25.7.3",
     "events": "^3.3.0",
     "fstream": "^1.0.12",
     "getstats": "wazo-platform/getStats#1.0.7",

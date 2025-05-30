@@ -3109,6 +3109,7 @@ __metadata:
     "@types/sdp-transform": "npm:^2.4.9"
     "@typescript-eslint/eslint-plugin": "npm:^5.61.0"
     "@typescript-eslint/parser": "npm:^5.61.0"
+    "@wazo/types": "npm:^25.7.3"
     babel-core: "npm:^7.0.0-bridge.0"
     babel-eslint: "npm:10.1.0"
     babel-loader: "npm:^9.1.3"
@@ -3138,6 +3139,13 @@ __metadata:
     webrtc-adapter: "npm:^8.2.3"
   languageName: unknown
   linkType: soft
+
+"@wazo/types@npm:^25.7.3":
+  version: 25.7.3
+  resolution: "@wazo/types@npm:25.7.3"
+  checksum: 10c0/0f663c567f5a1425f5182031bd8fb6d05d1d50b833e8970b5c423ec816d6a92dae9dfbf0a22dfc7b9e3f448a427c920b4c74d5d6692a025bc7bb738a3c9eefd3
+  languageName: node
+  linkType: hard
 
 "JSV@npm:^4.0.x":
   version: 4.0.2

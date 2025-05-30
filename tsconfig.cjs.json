@@ -4,6 +4,6 @@
     "lib": ["ES6", "DOM"],
     "target": "ES6",
     "module": "CommonJS",
-    "moduleResolution": "Node"
+    "moduleResolution": "bundler"
   }
 }

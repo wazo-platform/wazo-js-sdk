@@ -75,5 +75,6 @@ export * from './types/WebSocketMessage';
 export * from './utils/PhoneNumberUtil';
 export * from './utils/string';
 export * from './domain/types';
+export type * from '@wazo/types';
 
 export default Wazo;
