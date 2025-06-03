@@ -13,7 +13,8 @@ type ConstructorParams = {
   fetchOptions: Record<string, any> | null | undefined;
   requestTimeout?: number | null;
 };
-const methods = ['head', 'get', 'post', 'put', 'delete', 'options'];
+type Methods = 'head' | 'get' | 'post' | 'put' | 'delete' | 'options';
+const methods: Methods[] = ['head', 'get', 'post', 'put', 'delete', 'options'];
 
 const logger = IssueReporter ? IssueReporter.loggerFor('api') : console;
 const REQUEST_TIMEOUT_MS = 300 * 1000; // 300s like the Chrome engine default value.
@@ -23,8 +24,20 @@ type CallBody = Record<string, any> | null | undefined | string;
 type CallHeaders = { 'Wazo-Tenant'?: boolean | string | null, [key: string]: any } | null | undefined;
 type CallParser = ((...args: Array<any>) => any) | undefined;
 
-type CallHelpers = (path: string, body?: CallBody, headers?: CallHeaders, parse?: CallParser, firstCall?: boolean) => Promise<any>;
+type CallParams = { path: string, body?: CallBody, headers?: CallHeaders, parse?: CallParser, firstCall?: boolean };
+type CallHelpers = {
+  // Signature 1: Single object argument
+  (options: CallParams): Promise<any>;
 
+  // Signature 2: Positional arguments
+  (
+    path: string,
+    body?: CallBody,
+    headers?: CallHeaders,
+    parse?: CallParser,
+    firstCall?: boolean
+  ): Promise<any>;
+};
 export default class ApiRequester {
   server: string;
 
@@ -104,14 +117,22 @@ export default class ApiRequester {
     }
 
     this.shouldLogErrors = true;
+
     methods.forEach(method => {
-      // @ts-ignore
-      this[method] = function sugar(...args) {
-        // Add method in arguments passed to `call`
-        args.splice(1, 0, method);
-        // @ts-ignore
-        return this.call.call(this, ...args);
-      };
+      this[method] = ((pathOrParams: CallParams | CallParams['path'], body?: CallBody, headers?: CallHeaders, parse?: CallParser, firstCall?: boolean) => {
+        if (pathOrParams && typeof pathOrParams === 'object' && pathOrParams.path) {
+          return this.call({ ...pathOrParams as CallParams, method });
+        }
+
+        return this.call({
+          path: pathOrParams as CallParams['path'],
+          method,
+          body,
+          headers,
+          parse,
+          firstCall,
+        });
+      }) as CallHelpers;
     });
   }
 
@@ -139,7 +160,14 @@ export default class ApiRequester {
     this.shouldLogErrors = true;
   }
 
-  async call(path: string, method: CallMethod = 'get', body: CallBody = null, headers: CallHeaders = null, parse: CallParser = ApiRequester.defaultParser, firstCall = true): Promise<any> {
+  async call({
+    path,
+    method = 'get',
+    body = null,
+    headers = null,
+    parse = ApiRequester.defaultParser,
+    firstCall = true,
+  }: CallParams & { method: Methods }): Promise<any> {
     const url = this.computeUrl(method, path, body);
     const newHeaders = this.getHeaders(headers);
     let newBody: any = method === 'get' ? null : body;
@@ -267,7 +295,7 @@ export default class ApiRequester {
         newPath = pathParts.join('/');
       }
 
-      return this.call(newPath, method, body, headers, parse, false);
+      return this.call({ path: newPath, method, body, headers, parse, firstCall: false });
     }).catch(e => {
       this.refreshTokenPromise = null;
       throw e;
