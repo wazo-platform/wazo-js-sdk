@@ -1,8 +1,12 @@
+const esmModules = ['sip.js'];
+
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  transformIgnorePatterns: ["node_modules/(?!(sip.js))"],
+  transformIgnorePatterns: [
+    `node_modules/(?!(?:.pnpm/)?(${esmModules.join('|')}))`,
+  ],
   transform: {
     '\\.js$': 'babel-jest',
   },
