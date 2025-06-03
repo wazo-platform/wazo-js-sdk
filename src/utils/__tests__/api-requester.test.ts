@@ -138,7 +138,7 @@ describe('Calling fetch', () => {
   });
 
   it('should call fetch without body but query string in get method', async () => {
-    await requester.call(path, method, body);
+    await requester.call({ path, method, body });
 
     expect(global.fetch).toBeCalledWith(url, {
       method: 'get',
@@ -153,7 +153,7 @@ describe('Calling fetch', () => {
   });
 
   it('should use allow to call a path witout wazo-tenant', async () => {
-    await requester.call(path, method, body, { 'Wazo-Tenant': false });
+    await requester.call({ path, method, body, headers: { 'Wazo-Tenant': false } });
 
     expect(global.fetch).toBeCalledWith(url, {
       method: 'get',
@@ -200,7 +200,7 @@ describe('With a refresh token', () => {
       'Content-Type': 'application/json',
       'X-Auth-Token': newToken,
     };
-    await requester.call(path, method, body, null);
+    await requester.call({ path, method, body, headers: null });
     expect(global.fetch).toHaveBeenNthCalledWith(1, url, {
       method: 'get',
       body: null,
