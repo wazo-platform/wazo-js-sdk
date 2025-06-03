@@ -1414,7 +1414,7 @@ export default class WebRTCClient extends Emitter {
     return this.audio && typeof this.audio === 'object' && 'deviceId' in this.audio ? (this.audio.deviceId as any)?.exact : undefined;
   }
 
-  getVideoDeviceId(): string | null {
+  getVideoDeviceId(): string | null | undefined {
     return this.video && typeof this.video === 'object' && 'deviceId' in this.video ? (this.video.deviceId as any)?.exact : undefined;
   }
 
