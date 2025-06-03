@@ -154,7 +154,7 @@ Wazo's Javascript SDK allows you to use these features :
 
 You may install the Wazo JavaScript Software Development Kit to your project one of the following ways:
 * `npm install @wazo/sdk`
-* `yarn add @wazo/sdk`
+* `pnpm add @wazo/sdk`
 
 ### Content Delivery Networks
 **`Voice`**   **`Video`**  **`Chat`**   **`Fax`**  **`Status`**  **`Config`**   **`Misc`**
@@ -1520,13 +1520,13 @@ ws.close();
 As Webpack 5 dropped some polyfills, you have to add them manually:
 
 ```sh
-yarn add -D assert buffer https-browserify url stream-http stream-browserify browserify-zlib process
+pnpm add -D assert buffer https-browserify url stream-http stream-browserify browserify-zlib process
 ```
 
 If you have used `create-react-app` to create your app, you can customize the Webpack configuration with `react-app-rewired` :
 
 ```sh
-yarn add -D react-app-rewired
+pnpm add -D react-app-rewired
 ```
 
 Create a `config-overrides.js` file :
