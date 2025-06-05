@@ -1,6 +1,6 @@
 {
   "name": "@wazo/sdk",
-  "version": "0.45.0",
+  "version": "0.45.1",
   "description": "Wazo's JavaScript Software Development Kit.",
   "main": "./dist/index.js",
   "types": "./dist/types/index.d.ts",
