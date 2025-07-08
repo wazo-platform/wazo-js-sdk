@@ -1347,7 +1347,8 @@ export default class WebRTCClient extends Emitter {
 
     // let's make sure we don't lose other video constraints settings -- width, height, frameRate...
     const videoObject = typeof this.video === 'object' ? this.video : {};
-    this.video = { ...videoObject,
+    this.video = {
+      ...videoObject,
       deviceId: {
         exact: id,
       },
@@ -1450,7 +1451,8 @@ export default class WebRTCClient extends Emitter {
       sipSession.sessionDescriptionHandlerModifiersReInvite = modifiers.filter(modifier => modifier !== stripVideo);
     }
 
-    sipSession.sessionDescriptionHandlerOptionsReInvite = { ...sipSession.sessionDescriptionHandlerOptionsReInvite,
+    sipSession.sessionDescriptionHandlerOptionsReInvite = {
+      ...sipSession.sessionDescriptionHandlerOptionsReInvite,
       conference,
       audioOnly,
     } as SessionDescriptionHandlerOptions;
@@ -2039,9 +2041,11 @@ export default class WebRTCClient extends Emitter {
         const isWeb = this._isWeb();
 
         const iceGatheringTimeout = 'peerConnectionOptions' in options ? (options.peerConnectionOptions as any).iceGatheringTimeout || DEFAULT_ICE_TIMEOUT : DEFAULT_ICE_TIMEOUT;
-        const sdhOptions: SessionDescriptionHandlerConfiguration = { ...options,
+        const sdhOptions: SessionDescriptionHandlerConfiguration = {
+          ...options,
           iceGatheringTimeout,
-          peerConnectionConfiguration: { ...defaultPeerConnectionConfiguration(),
+          peerConnectionConfiguration: {
+            ...defaultPeerConnectionConfiguration(),
             ...(options.peerConnectionConfiguration || {}),
           },
         };
@@ -2269,10 +2273,21 @@ export default class WebRTCClient extends Emitter {
     }
 
     if (this._hasAudio() && this._isWeb() && !(sessionId in this.audioElements)) {
-      await this.createAudioElementFor(sessionId);
+      try {
+        await this.createAudioElementFor(sessionId);
+        logger.info('Audio element created successfully', { sessionId });
+      } catch (error) {
+        logger.error('Failed to create audio element', { sessionId, error });
+        return;
+      }
     }
 
     const audioElement = this.audioElements[sessionId];
+    if (!audioElement) {
+      logger.error('No audio element found after creation', { sessionId });
+      return;
+    }
+
     const sipSession = this.sipSessions[session.callId as string];
     const removeStream = this.getRemoteStream(sessionId);
     const sdh = sipSession?.sessionDescriptionHandler as SessionDescriptionHandler;
@@ -2296,6 +2311,7 @@ export default class WebRTCClient extends Emitter {
       hasAudio: this._hasAudio(),
       isConference,
       shouldPause,
+      streamTracks: stream.getTracks().map(t => ({ kind: t.kind, enabled: t.enabled, muted: t.muted })),
     });
 
     if (isConference) {
@@ -2309,7 +2325,16 @@ export default class WebRTCClient extends Emitter {
 
     audioElement.srcObject = stream;
     audioElement.volume = this.audioOutputVolume;
-    audioElement.play().catch(() => {});
+
+    try {
+      await audioElement.play();
+      logger.info('Audio element play() successful', { sessionId });
+    } catch (error: any) {
+      logger.error('Audio element play() failed', {
+        sessionId,
+        error: error.message,
+      });
+    }
   }
 
   _cleanupMedia(session?: WazoSession): void {
@@ -2683,5 +2708,49 @@ export default class WebRTCClient extends Emitter {
     }
 
     return null;
+  }
+
+  debugAudioStatus(sessionId: string): Record<string, any> {
+    const audioElement = this.audioElements[sessionId];
+    const session = this.getSipSession(sessionId);
+    const remoteStream = this.getRemoteStream(sessionId);
+    const pc = this.getPeerConnection(sessionId);
+
+    return {
+      sessionId,
+      hasAudio: this._hasAudio(),
+      audioOutputVolume: this.audioOutputVolume,
+      audioOutputDeviceId: this.audioOutputDeviceId,
+      audioElement: audioElement ? {
+        exists: true,
+        paused: audioElement.paused,
+        ended: audioElement.ended,
+        readyState: audioElement.readyState,
+        currentTime: audioElement.currentTime,
+        volume: audioElement.volume,
+        srcObject: !!audioElement.srcObject,
+        muted: audioElement.muted,
+      } : { exists: false },
+      session: session ? {
+        exists: true,
+        state: session.state,
+        hasSdh: !!session.sessionDescriptionHandler,
+      } : { exists: false },
+      remoteStream: remoteStream ? {
+        exists: true,
+        tracks: remoteStream.getTracks().map(t => ({
+          kind: t.kind,
+          enabled: t.enabled,
+          muted: t.muted,
+          readyState: t.readyState,
+        })),
+      } : { exists: false },
+      peerConnection: pc ? {
+        exists: true,
+        iceConnectionState: pc.iceConnectionState,
+        connectionState: pc.connectionState,
+        signalingState: pc.signalingState,
+      } : { exists: false },
+    };
   }
 }
