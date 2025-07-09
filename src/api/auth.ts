@@ -143,6 +143,8 @@ export default ((client: ApiRequester, baseUrl: string) => ({
     return client.put(`${baseUrl}/users/${userUuid}/password`, body, null, ApiRequester.successResponseParser);
   },
 
+  getDeviceToken: (userUuid: UUID)=>client.get(`${baseUrl}/users/${userUuid}/external/mobile`),
+
   sendDeviceToken: (userUuid: UUID, deviceToken: string, apnsVoipToken: string | null | undefined, apnsNotificationToken: string | null | undefined): Promise<void> => {
     const body: Record<string, any> = {
       token: deviceToken,
