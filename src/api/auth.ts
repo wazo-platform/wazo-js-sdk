@@ -1,5 +1,5 @@
 import ApiRequester from '../utils/api-requester';
-import type { User, Tenant, Token, UUID, LogoutResponse, ListTenantsResponse, ListUsersResponse, ListGroupsResponse, ListPoliciesResponse, GetTenantResponse, GetUserResponse } from '../domain/types';
+import type { User, Tenant, Token, UUID, LogoutResponse, ListTenantsResponse, ListUsersResponse, ListGroupsResponse, ListPoliciesResponse, GetTenantResponse, GetUserResponse, DeviceToken } from '../domain/types';
 import Session, { Response } from '../domain/Session';
 
 export const DEFAULT_BACKEND_USER = 'wazo_user';
@@ -142,6 +142,8 @@ export default ((client: ApiRequester, baseUrl: string) => ({
     };
     return client.put(`${baseUrl}/users/${userUuid}/password`, body, null, ApiRequester.successResponseParser);
   },
+
+  getDeviceToken: (userUuid: UUID): Promise<DeviceToken> => client.get(`${baseUrl}/users/${userUuid}/external/mobile`),
 
   sendDeviceToken: (userUuid: UUID, deviceToken: string, apnsVoipToken: string | null | undefined, apnsNotificationToken: string | null | undefined): Promise<void> => {
     const body: Record<string, any> = {

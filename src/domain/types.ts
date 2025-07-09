@@ -340,3 +340,10 @@ export type BlockNumberBody = {
   number: string;
   label?: string | null;
 };
+
+export type DeviceToken = {
+  token: string | null;
+  apns_token: string | null;
+  apns_voip_token: string | null;
+  apns_notification_token: string | null;
+};
