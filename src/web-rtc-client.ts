@@ -44,6 +44,7 @@ export const replaceLocalIpModifier = (description: Record<string, any>) => Prom
 });
 const DEFAULT_ICE_TIMEOUT = 3000;
 const SEND_STATS_DELAY = 5000;
+const MAX_ICE_RECONNECT_ATTEMPTS = 3;
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
 const logger = IssueReporter ? IssueReporter.loggerFor('webrtc-client') : console;
 const statsLogger = IssueReporter ? IssueReporter.loggerFor('webrtc-stats') : console;
@@ -124,6 +125,8 @@ export default class WebRTCClient extends Emitter {
   sessionNetworkStats: Record<string, Record<string, any>>;
 
   forceClosed: boolean;
+
+  iceReconnectAttempts: Record<string, number>;
 
   // sugar
   ON_USER_AGENT: string;
@@ -216,6 +219,7 @@ export default class WebRTCClient extends Emitter {
     this.networkMonitoringInterval = {};
     this.sessionNetworkStats = {};
     this.forceClosed = false;
+    this.iceReconnectAttempts = {};
     this._boundOnHeartbeat = this._onHeartbeat.bind(this);
     this.heartbeat = new Heartbeat(config.heartbeatDelay, config.heartbeatTimeout, config.maxHeartbeats);
     this.heartbeat.setSendHeartbeat(this.pingServer.bind(this));
@@ -1687,7 +1691,9 @@ export default class WebRTCClient extends Emitter {
   onCallEnded(session: WazoSession): void {
     this._cleanupMedia(session);
 
-    delete this.sipSessions[this.getSipSessionId(session)];
+    const sessionId = this.getSipSessionId(session);
+    delete this.sipSessions[sessionId];
+    delete this.iceReconnectAttempts[sessionId];
 
     this._stopSendingStats(session);
 
@@ -2233,13 +2239,43 @@ export default class WebRTCClient extends Emitter {
     sessionDescriptionHandler.remoteMediaStream.onaddtrack = onTrack;
 
     if (pc) {
+      const currentSessionId = this.getSipSessionId(session);
+
       pc.oniceconnectionstatechange = () => {
         logger.info('on ice connection state changed', {
           state: pc.iceConnectionState,
+          sessionId: currentSessionId,
         });
 
         if (pc.iceConnectionState === 'disconnected') {
-          this.eventEmitter.emit(ON_DISCONNECTED);
+          const attempts = this.iceReconnectAttempts[currentSessionId] || 0;
+
+          if (attempts < MAX_ICE_RECONNECT_ATTEMPTS) {
+            this.iceReconnectAttempts[currentSessionId] = attempts + 1;
+            logger.info(
+              'ICE connection disconnected, attempting to reconnect...',
+              {
+                sessionId: currentSessionId,
+                attempt: attempts + 1,
+              },
+            );
+            const isConference = this.isConference(currentSessionId);
+            // The reinvite will trigger a new offer/answer, and oniceconnectionstatechange will be called again.
+            this.reinvite(session, null, isConference, false, true);
+          } else {
+            logger.warn('ICE reconnection failed after max attempts', {
+              sessionId: currentSessionId,
+            });
+            this.eventEmitter.emit(ON_DISCONNECTED, session);
+          }
+        } else if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+          if (this.iceReconnectAttempts[currentSessionId] > 0) {
+            logger.info('ICE reconnected successfully', {
+              sessionId: currentSessionId,
+            });
+          }
+          // Reset attempts on successful connection
+          this.iceReconnectAttempts[currentSessionId] = 0;
         }
       };
     }
