@@ -67,6 +67,8 @@ const ON_ERROR = 'onError';
 const ON_SCREEN_SHARING_REINVITE = 'onScreenSharingReinvite';
 const ON_NETWORK_STATS = 'onNetworkStats';
 const ON_DISCONNECTED = 'onDisconnected';
+const ON_ICE_RECONNECTING = 'onIceReconnecting';
+const ON_ICE_RECONNECTED = 'onIceReconnected';
 export const events = [REGISTERED, UNREGISTERED, REGISTRATION_FAILED, INVITE];
 export const transportEvents = [CONNECTED, DISCONNECTED, TRANSPORT_ERROR, MESSAGE];
 export class CanceledCallError extends Error {}
@@ -167,6 +169,10 @@ export default class WebRTCClient extends Emitter {
 
   ON_DISCONNECTED: string;
 
+  ON_ICE_RECONNECTING: string;
+
+  ON_ICE_RECONNECTED: string;
+
   static isAPrivateIp(ip: string): boolean {
     const regex = /^(?:10|127|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\..*/;
     return regex.exec(ip) == null;
@@ -243,6 +249,8 @@ export default class WebRTCClient extends Emitter {
     this.ON_DISCONNECTED = ON_DISCONNECTED;
     this.ON_EARLY_MEDIA = ON_EARLY_MEDIA;
     this.ON_PROGRESS = ON_PROGRESS;
+    this.ON_ICE_RECONNECTING = ON_ICE_RECONNECTING;
+    this.ON_ICE_RECONNECTED = ON_ICE_RECONNECTED;
   }
 
   configureMedia(media: MediaConfig) {
@@ -2251,6 +2259,7 @@ export default class WebRTCClient extends Emitter {
           const attempts = this.iceReconnectAttempts[currentSessionId] || 0;
 
           if (attempts < MAX_ICE_RECONNECT_ATTEMPTS) {
+            this.eventEmitter.emit(ON_ICE_RECONNECTING, session);
             this.iceReconnectAttempts[currentSessionId] = attempts + 1;
             logger.info(
               'ICE connection disconnected, attempting to reconnect...',
@@ -2272,6 +2281,7 @@ export default class WebRTCClient extends Emitter {
           }
         } else if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
           if (this.iceReconnectAttempts[currentSessionId] > 0) {
+            this.eventEmitter.emit(ON_ICE_RECONNECTED, session);
             logger.info('ICE reconnected successfully', {
               sessionId: currentSessionId,
             });
