@@ -45,6 +45,7 @@ export const replaceLocalIpModifier = (description: Record<string, any>) => Prom
 const DEFAULT_ICE_TIMEOUT = 3000;
 const SEND_STATS_DELAY = 5000;
 const MAX_ICE_RECONNECT_ATTEMPTS = 3;
+const DEFAULT_ICE_RECONNECT_DELAY = 1000; // in milliseconds
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
 const logger = IssueReporter ? IssueReporter.loggerFor('webrtc-client') : console;
 const statsLogger = IssueReporter ? IssueReporter.loggerFor('webrtc-stats') : console;
@@ -129,6 +130,8 @@ export default class WebRTCClient extends Emitter {
   forceClosed: boolean;
 
   iceReconnectAttempts: Record<string, number>;
+
+  iceReconnectDelay: number;
 
   // sugar
   ON_USER_AGENT: string;
@@ -217,6 +220,7 @@ export default class WebRTCClient extends Emitter {
       });
     }
 
+    this.iceReconnectDelay = config.iceReconnectDelay || DEFAULT_ICE_RECONNECT_DELAY;
     this.heldSessions = {};
     this.statsIntervals = {};
     this.connectionPromise = null;
@@ -2272,7 +2276,7 @@ export default class WebRTCClient extends Emitter {
             const isConference = this.isConference(currentSessionId);
 
             // The reinvite will trigger a new offer/answer, and oniceconnectionstatechange will be called again.
-            setTimeout(() => { this.reinvite(session, null, isConference, false, true); }, 1000);
+            setTimeout(() => { this.reinvite(session, null, isConference, false, true); }, this.iceReconnectDelay);
           } else {
             logger.warn('ICE reconnection failed after max attempts', {
               sessionId: currentSessionId,
