@@ -70,7 +70,7 @@ const ON_DISCONNECTED = 'onDisconnected';
 const ON_ICE_RECONNECTING = 'onIceReconnecting';
 const ON_ICE_RECONNECTED = 'onIceReconnected';
 export const events = [REGISTERED, UNREGISTERED, REGISTRATION_FAILED, INVITE];
-export const transportEvents = [CONNECTED, DISCONNECTED, TRANSPORT_ERROR, MESSAGE];
+export const transportEvents = [CONNECTED, ON_ICE_RECONNECTING, ON_ICE_RECONNECTED, DISCONNECTED, TRANSPORT_ERROR, MESSAGE];
 export class CanceledCallError extends Error {}
 
 const MAX_REGISTER_TRIES = 5;
