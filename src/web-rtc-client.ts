@@ -2259,9 +2259,11 @@ export default class WebRTCClient extends Emitter {
                 attempt: attempts + 1,
               },
             );
+
             const isConference = this.isConference(currentSessionId);
+
             // The reinvite will trigger a new offer/answer, and oniceconnectionstatechange will be called again.
-            this.reinvite(session, null, isConference, false, true);
+            setTimeout(() => { this.reinvite(session, null, isConference, false, true); }, 1000);
           } else {
             logger.warn('ICE reconnection failed after max attempts', {
               sessionId: currentSessionId,
@@ -2274,8 +2276,6 @@ export default class WebRTCClient extends Emitter {
               sessionId: currentSessionId,
             });
           }
-          // Reset attempts on successful connection
-          this.iceReconnectAttempts[currentSessionId] = 0;
         }
       };
     }
