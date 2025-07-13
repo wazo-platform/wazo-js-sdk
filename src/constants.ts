@@ -11,9 +11,8 @@ export const WEBHOOKD_VERSION = '1.0';
 export const AMID_VERSION = '1.0';
 
 export const ICE_CONNECTION_STATE = {
-    UNDETERMINED: 'undetermined',
-    RECONNECTING: 'reconnecting',
-    CONNECTED: 'connected',
-    FAILED: 'failed',
+  UNDETERMINED: 'undetermined',
+  RECONNECTING: 'reconnecting',
+  CONNECTED: 'connected',
+  FAILED: 'failed',
 } as const;
-    
