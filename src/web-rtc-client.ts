@@ -2324,7 +2324,6 @@ export default class WebRTCClient extends Emitter {
         logger.info('Audio element created successfully', { sessionId });
       } catch (error) {
         logger.error('Failed to create audio element', { sessionId, error });
-        return;
       }
     }
 
@@ -2373,7 +2372,7 @@ export default class WebRTCClient extends Emitter {
     audioElement.volume = this.audioOutputVolume;
 
     try {
-      await audioElement.play();
+      audioElement.play();
       logger.info('Audio element play() successful', { sessionId });
     } catch (error: any) {
       logger.error('Audio element play() failed', {
