@@ -44,7 +44,8 @@ export const replaceLocalIpModifier = (description: Record<string, any>) => Prom
 });
 const DEFAULT_ICE_TIMEOUT = 3000;
 const SEND_STATS_DELAY = 5000;
-const MAX_ICE_RECONNECT_ATTEMPTS = 3;
+const MAX_ICE_RECONNECT_ATTEMPTS = 5;
+const DEFAULT_ICE_RECONNECT_DELAY = 500;
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
 const logger = IssueReporter ? IssueReporter.loggerFor('webrtc-client') : console;
 const statsLogger = IssueReporter ? IssueReporter.loggerFor('webrtc-stats') : console;
@@ -66,7 +67,7 @@ const ON_REINVITE = 'reinvite';
 const ON_ERROR = 'onError';
 const ON_SCREEN_SHARING_REINVITE = 'onScreenSharingReinvite';
 const ON_NETWORK_STATS = 'onNetworkStats';
-const ON_DISCONNECTED = 'onDisconnected';
+const ON_ICE_DISCONNECTED = 'onIceDisconnected';
 const ON_ICE_RECONNECTING = 'onIceReconnecting';
 const ON_ICE_RECONNECTED = 'onIceReconnected';
 export const events = [REGISTERED, UNREGISTERED, REGISTRATION_FAILED, INVITE];
@@ -130,7 +131,8 @@ export default class WebRTCClient extends Emitter {
 
   iceReconnectAttempts: Record<string, number>;
 
-  // sugar
+  iceReconnectDelay: number;
+
   ON_USER_AGENT: string;
 
   REGISTERED: string;
@@ -167,7 +169,7 @@ export default class WebRTCClient extends Emitter {
 
   ON_PROGRESS: string;
 
-  ON_DISCONNECTED: string;
+  ON_ICE_DISCONNECTED: string;
 
   ON_ICE_RECONNECTING: string;
 
@@ -226,6 +228,7 @@ export default class WebRTCClient extends Emitter {
     this.sessionNetworkStats = {};
     this.forceClosed = false;
     this.iceReconnectAttempts = {};
+    this.iceReconnectDelay = config.iceReconnectDelay || DEFAULT_ICE_RECONNECT_DELAY;
     this._boundOnHeartbeat = this._onHeartbeat.bind(this);
     this.heartbeat = new Heartbeat(config.heartbeatDelay, config.heartbeatTimeout, config.maxHeartbeats);
     this.heartbeat.setSendHeartbeat(this.pingServer.bind(this));
@@ -246,7 +249,7 @@ export default class WebRTCClient extends Emitter {
     this.ON_ERROR = ON_ERROR;
     this.ON_SCREEN_SHARING_REINVITE = ON_SCREEN_SHARING_REINVITE;
     this.ON_NETWORK_STATS = ON_NETWORK_STATS;
-    this.ON_DISCONNECTED = ON_DISCONNECTED;
+    this.ON_ICE_DISCONNECTED = ON_ICE_DISCONNECTED;
     this.ON_EARLY_MEDIA = ON_EARLY_MEDIA;
     this.ON_PROGRESS = ON_PROGRESS;
     this.ON_ICE_RECONNECTING = ON_ICE_RECONNECTING;
@@ -445,7 +448,13 @@ export default class WebRTCClient extends Emitter {
       this.registerer.stateChange.addListener(newState => {
         logger.info('sdk webrtc registering, state changed', { newState, clientId: this.clientId });
 
-        if (newState === RegistererState.Registered && this.registerer && this.registerer.state === RegistererState.Registered) {
+        if (newState === RegistererState.Registered && this.registerer?.state === RegistererState.Registered) {
+          if (navigator.userAgent.includes('Windows') && (navigator.userAgent.includes('Chrome') || navigator.userAgent.includes('Chromium'))) {
+            this._performSacrificialWebRTCOperation().catch(error => {
+              logger.warn('ICE warmup after registration failed', { error: error.message, clientId: this.clientId });
+            });
+          }
+
           this.eventEmitter.emit(REGISTERED);
         } else if (newState === RegistererState.Unregistered) {
           this.eventEmitter.emit(UNREGISTERED);
@@ -1708,6 +1717,52 @@ export default class WebRTCClient extends Emitter {
     this.stopNetworkMonitoring(session);
   }
 
+  /**
+   * Performs a sacrificial WebRTC operation on Windows Chromium after reboot
+   * This mitigates the bug where the first WebRTC operation fails due to port binding issues
+   * See: https://issues.webrtc.org/issues/42225439
+   */
+  private async _performSacrificialWebRTCOperation(): Promise<void> {
+    try {
+      logger.info('Performing sacrificial WebRTC operation for Windows Chromium bug', { clientId: this.clientId });
+
+      // Create two peer connections to simulate actual call scenario
+      const config = {
+        iceServers: this.uaConfigOverrides?.peerConnectionOptions?.iceServers || WebRTCClient.getIceServers(this.config.host),
+      };
+
+      const pc1 = new RTCPeerConnection(config);
+      const pc2 = new RTCPeerConnection(config);
+
+      pc1.createDataChannel('sacrifice');
+
+      // Complete offer/answer exchange to trigger actual connection attempt
+      const offer = await pc1.createOffer();
+      await pc1.setLocalDescription(offer);
+      await pc2.setRemoteDescription(offer);
+
+      const answer = await pc2.createAnswer();
+      await pc2.setLocalDescription(answer);
+      await pc1.setRemoteDescription(answer);
+
+      // Wait briefly for ICE connectivity checks (which may fail due to the bug)
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      pc1.close();
+      pc2.close();
+
+      logger.info('Sacrificial WebRTC operation completed', {
+        clientId: this.clientId,
+      });
+    } catch (error: any) {
+      // Expected to fail - this is the "sacrificial" operation
+      logger.info('Sacrificial WebRTC operation failed as expected', {
+        error: error.message,
+        clientId: this.clientId,
+      });
+    }
+  }
+
   attemptReconnection(): void {
     logger.info('attempt reconnection', { clientId: this.clientId, userAgent: !!this.userAgent });
 
@@ -2272,12 +2327,12 @@ export default class WebRTCClient extends Emitter {
             const isConference = this.isConference(currentSessionId);
 
             // The reinvite will trigger a new offer/answer, and oniceconnectionstatechange will be called again.
-            setTimeout(() => { this.reinvite(session, null, isConference, false, true); }, 1000);
+            setTimeout(() => { this.reinvite(session, null, isConference, false, true); }, this.iceReconnectDelay);
           } else {
             logger.warn('ICE reconnection failed after max attempts', {
               sessionId: currentSessionId,
             });
-            this.eventEmitter.emit(ON_DISCONNECTED, session);
+            this.eventEmitter.emit(ON_ICE_DISCONNECTED, session);
           }
         } else if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
           if (this.iceReconnectAttempts[currentSessionId] > 0) {

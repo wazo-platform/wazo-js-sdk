@@ -109,7 +109,11 @@ export class Phone extends Emitter {
 
   ON_SIGNAL: string;
 
-  ON_DISCONNECTED: string;
+  ON_ICE_DISCONNECTED: string;
+
+  ON_ICE_RECONNECTING: string;
+
+  ON_ICE_RECONNECTED: string;
 
   ON_EARLY_MEDIA: string;
 
@@ -433,7 +437,7 @@ export class Phone extends Emitter {
   }
 
   //  Useful in a react-native environment when remoteMediaStream is not updated
-  getRemoteVideoStreamFromPc(callSession: CallSession) : MediaStream | null {
+  getRemoteVideoStreamFromPc(callSession: CallSession): MediaStream | null {
     return this.phone?.getRemoteVideoStreamFromPc(callSession) || null;
   }
 
