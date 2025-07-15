@@ -2,7 +2,8 @@ import { SessionState } from 'sip.js/lib/api/session-state';
 import Call, { RECORDING_STATE, type RecordingStateType } from './Call';
 import newFrom from '../utils/new-from';
 import updateFrom from '../utils/update-from';
-import { WazoSession } from './types';
+import { IceConnectionState, WazoSession } from './types';
+import { ICE_CONNECTION_STATE } from '../constants';
 
 type CallSessionArguments = {
   answered: boolean;
@@ -35,6 +36,7 @@ type CallSessionArguments = {
   recordingState?: RecordingStateType;
   sipSession?: WazoSession;
   conference: boolean;
+  iceConnectionState: IceConnectionState;
 };
 export default class CallSession {
   call: Call | null | undefined;
@@ -103,6 +105,8 @@ export default class CallSession {
 
   conference: boolean;
 
+  iceConnectionState: IceConnectionState;
+
   constructor({
     answered,
     answeredBySystem,
@@ -133,6 +137,7 @@ export default class CallSession {
     sipSession,
     answerTime,
     conference,
+    iceConnectionState,
   }: CallSessionArguments) {
     this.callId = callId;
     this.sipCallId = sipCallId;
@@ -163,6 +168,7 @@ export default class CallSession {
     this.sipSession = sipSession;
     this.answerTime = answerTime || this.answerTime;
     this.conference = conference;
+    this.iceConnectionState = iceConnectionState;
     // Useful to compare instead of instanceof with minified code
     this.type = 'CallSession';
   }
@@ -400,6 +406,7 @@ export default class CallSession {
       dialedExtension: call.dialedExtension,
       call,
       conference: false, // @FIXME?
+      iceConnectionState: ICE_CONNECTION_STATE.UNDETERMINED,
     });
   }
 

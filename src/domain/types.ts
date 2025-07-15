@@ -10,6 +10,7 @@ import { Transport } from 'sip.js/lib/api';
 import WazoSessionDescriptionHandler from '../lib/WazoSessionDescriptionHandler';
 import { Websocket } from '../simple/Websocket';
 import * as WebSocketClient from '../websocket-client';
+import { ICE_CONNECTION_STATE } from '../constants';
 
 const { SOCKET_EVENTS, ...OTHER_EVENTS } = WebSocketClient;
 
@@ -252,7 +253,8 @@ export type WebRtcConfig = {
   userUuid?: string,
   uaConfigOverrides?: UserAgentConfigOverrides,
   audioDeviceOutput?: string,
-  audioDeviceRing?: string
+  audioDeviceRing?: string,
+  iceReconnectDelay?: number,
 }; // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
 
 export type IncomingResponse = SipIncomingResponse & { session: any };
@@ -347,3 +349,5 @@ export type DeviceToken = {
   apns_voip_token: string | null;
   apns_notification_token: string | null;
 };
+
+export type IceConnectionState = (typeof ICE_CONNECTION_STATE)[keyof typeof ICE_CONNECTION_STATE];
