@@ -252,7 +252,9 @@ export type WebRtcConfig = {
   userUuid?: string,
   uaConfigOverrides?: UserAgentConfigOverrides,
   audioDeviceOutput?: string,
-  audioDeviceRing?: string
+  audioDeviceRing?: string,
+  iceReconnectDelay?: number,
+  iceWarmup?: boolean, // Enable/disable ICE warmup after registration
 }; // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
 
 export type IncomingResponse = SipIncomingResponse & { session: any };

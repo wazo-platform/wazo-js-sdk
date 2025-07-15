@@ -45,6 +45,9 @@ export const replaceLocalIpModifier = (description: Record<string, any>) => Prom
 const DEFAULT_ICE_TIMEOUT = 3000;
 const SEND_STATS_DELAY = 5000;
 const MAX_ICE_RECONNECT_ATTEMPTS = 3;
+const DEFAULT_ICE_RECONNECT_DELAY = 1000; // in milliseconds
+const MAX_STUN_RETRY_ATTEMPTS = 3;
+const STUN_RETRY_DELAY = 2000; // in milliseconds
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
 const logger = IssueReporter ? IssueReporter.loggerFor('webrtc-client') : console;
 const statsLogger = IssueReporter ? IssueReporter.loggerFor('webrtc-stats') : console;
@@ -76,6 +79,19 @@ export class CanceledCallError extends Error {}
 const MAX_REGISTER_TRIES = 5;
 // setting a 24hr timeout and letting the backend define the actual value
 const NO_ANSWER_TIMEOUT = 60 * 60 * 24; // in seconds
+
+const STUN_SERVERS = [
+  'stun:stun.l.google.com:19302',
+  'stun:stun1.l.google.com:19302', 
+  'stun:stun2.l.google.com:19302',
+  'stun:stun3.l.google.com:19302',
+  'stun:stun4.l.google.com:19302',
+  'stun:stun.ekiga.net:3478',
+  'stun:stun.ideasip.com:3478',
+  'stun:stun.rixtelecom.se:3478',
+  'stun:stun.schlund.de:3478',
+  'stun:stun.stunprotocol.org:3478',
+];
 
 export default class WebRTCClient extends Emitter {
   clientId: number;
@@ -130,7 +146,11 @@ export default class WebRTCClient extends Emitter {
 
   iceReconnectAttempts: Record<string, number>;
 
-  // sugar
+  iceReconnectDelay: number;
+
+  stunRetryAttempts: Record<string, number>;
+
+  stunRetryDelay: number;
   ON_USER_AGENT: string;
 
   REGISTERED: string;
@@ -226,6 +246,9 @@ export default class WebRTCClient extends Emitter {
     this.sessionNetworkStats = {};
     this.forceClosed = false;
     this.iceReconnectAttempts = {};
+    this.iceReconnectDelay = config.iceReconnectDelay || DEFAULT_ICE_RECONNECT_DELAY;
+    this.stunRetryAttempts = {};
+    this.stunRetryDelay = STUN_RETRY_DELAY;
     this._boundOnHeartbeat = this._onHeartbeat.bind(this);
     this.heartbeat = new Heartbeat(config.heartbeatDelay, config.heartbeatTimeout, config.maxHeartbeats);
     this.heartbeat.setSendHeartbeat(this.pingServer.bind(this));
@@ -446,6 +469,11 @@ export default class WebRTCClient extends Emitter {
         logger.info('sdk webrtc registering, state changed', { newState, clientId: this.clientId });
 
         if (newState === RegistererState.Registered && this.registerer && this.registerer.state === RegistererState.Registered) {
+          // Warm up ICE connectivity after successful registration
+          this.warmupIceConnectivity().catch(error => {
+            logger.warn('ICE warmup after registration failed', { error: error.message, clientId: this.clientId });
+          });
+          
           this.eventEmitter.emit(REGISTERED);
         } else if (newState === RegistererState.Unregistered) {
           this.eventEmitter.emit(UNREGISTERED);
@@ -1702,10 +1730,190 @@ export default class WebRTCClient extends Emitter {
     const sessionId = this.getSipSessionId(session);
     delete this.sipSessions[sessionId];
     delete this.iceReconnectAttempts[sessionId];
+    delete this.stunRetryAttempts[sessionId];
 
     this._stopSendingStats(session);
 
     this.stopNetworkMonitoring(session);
+  }
+
+  handleStunRetry(session: WazoSession, error: Record<string, any>): void {
+    const sessionId = this.getSipSessionId(session);
+    const attempts = this.stunRetryAttempts[sessionId] || 0;
+    
+    logger.warn('STUN binding error detected', {
+      sessionId,
+      attempt: attempts + 1,
+      error: {
+        address: error.address,
+        port: error.port,
+        errorCode: error.errorCode,
+        errorText: error.errorText,
+        url: error.url,
+      },
+    });
+
+    if (attempts < MAX_STUN_RETRY_ATTEMPTS) {
+      this.stunRetryAttempts[sessionId] = attempts + 1;
+      
+      // Exponential backoff delay
+      const retryDelay = this.stunRetryDelay * Math.pow(2, attempts);
+      
+      logger.info('Attempting STUN retry', {
+        sessionId,
+        attempt: attempts + 1,
+        retryDelay,
+        maxAttempts: MAX_STUN_RETRY_ATTEMPTS,
+      });
+
+      setTimeout(() => {
+        this._retryStunConnection(session, attempts + 1);
+      }, retryDelay);
+    } else {
+      logger.error('STUN retry failed after max attempts', {
+        sessionId,
+        maxAttempts: MAX_STUN_RETRY_ATTEMPTS,
+      });
+      
+      // Emit error event for application handling
+      this.eventEmitter.emit(ON_ERROR, {
+        type: 'stun_retry_failed',
+        sessionId,
+        error,
+      });
+    }
+  }
+
+  private _retryStunConnection(session: WazoSession, attempt: number): void {
+    const sessionId = this.getSipSessionId(session);
+    const pc = (session.sessionDescriptionHandler as SessionDescriptionHandler)?.peerConnection;
+    
+    if (!pc) {
+      logger.warn('No peer connection available for STUN retry', { sessionId });
+      return;
+    }
+
+    // Get new STUN servers for this retry attempt
+    const retryServers = WebRTCClient.getStunRetryServers(attempt);
+    
+    logger.info('Retrying STUN connection with new servers', {
+      sessionId,
+      attempt,
+      servers: retryServers,
+    });
+
+    // Update ICE servers configuration
+    const newConfig = {
+      ...pc.getConfiguration(),
+      iceServers: retryServers,
+    };
+
+    try {
+      // Restart ICE gathering with new servers
+      pc.setConfiguration(newConfig);
+      
+      // Trigger ICE restart if connection is established
+      if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+        logger.info('Triggering ICE restart for STUN retry', { sessionId });
+        this.reinvite(session, null, this.isConference(sessionId), false, true);
+      }
+    } catch (error) {
+      logger.error('Failed to update ICE configuration for STUN retry', {
+        sessionId,
+        error,
+      });
+    }
+  }
+
+  /**
+   * Warm up ICE connectivity after system reboot
+   * This method creates a temporary peer connection to establish ICE candidates
+   * before the first real call, reducing the likelihood of STUN timeouts
+   */
+  async warmupIceConnectivity(): Promise<void> {
+    // Skip if ICE warmup is disabled in config
+    if (this.config.iceWarmup === false) {
+      logger.info('ICE warmup disabled in configuration', { clientId: this.clientId });
+      return;
+    }
+
+    if (!this._isWeb()) {
+      logger.info('ICE warmup skipped on non-web platform');
+      return;
+    }
+
+    const config: RTCConfiguration = {
+      iceServers: this.uaConfigOverrides?.peerConnectionOptions?.iceServers || WebRTCClient.getIceServers(this.config.host),
+    };
+
+    logger.info('Starting ICE connectivity warmup', { clientId: this.clientId, config });
+
+    try {
+      const pc = new RTCPeerConnection(config);
+      pc.createDataChannel('warmup');
+
+      // Set up ICE candidate gathering
+      const candidates: RTCIceCandidate[] = [];
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          candidates.push(event.candidate);
+          logger.debug('ICE warmup candidate gathered', {
+            candidate: event.candidate.candidate,
+            type: event.candidate.type,
+          });
+        } else {
+          logger.info('ICE warmup completed', {
+            totalCandidates: candidates.length,
+            clientId: this.clientId,
+          });
+        }
+      };
+
+      // Create and set local description to trigger ICE gathering
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      // Wait for ICE gathering to complete or timeout
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          logger.warn('ICE warmup timed out', { clientId: this.clientId });
+          resolve();
+        }, 10000); // 10 second timeout
+
+        pc.onicegatheringstatechange = () => {
+          if (pc.iceGatheringState === 'complete') {
+            clearTimeout(timeout);
+            logger.info('ICE warmup gathering completed', {
+              candidates: candidates.length,
+              clientId: this.clientId,
+            });
+            resolve();
+          }
+        };
+
+        // Also resolve if we get some candidates even if gathering doesn't complete
+        if (candidates.length > 0) {
+          setTimeout(() => {
+            clearTimeout(timeout);
+            logger.info('ICE warmup resolved with candidates', {
+              candidates: candidates.length,
+              clientId: this.clientId,
+            });
+            resolve();
+          }, 5000);
+        }
+      });
+
+      // Clean up
+      pc.close();
+      logger.info('ICE warmup completed successfully', { clientId: this.clientId });
+
+    } catch (error: any) {
+      logger.warn('ICE warmup failed', {
+        error: error.message,
+        clientId: this.clientId,
+      });
+    }
   }
 
   attemptReconnection(): void {
@@ -2082,6 +2290,7 @@ export default class WebRTCClient extends Emitter {
           rtcConfiguration: {
             rtcpMuxPolicy: 'require',
             iceServers: WebRTCClient.getIceServers(this.config.host),
+            iceCandidatePoolSize: STUN_SERVERS.length, // Increased pool size for better candidate gathering
             ...this._getRtcOptions(),
             ...(uaOptionsOverrides?.peerConnectionOptions || {}),
           },
@@ -2090,6 +2299,7 @@ export default class WebRTCClient extends Emitter {
         peerConnectionConfiguration: {
           rtcpMuxPolicy: 'require',
           iceServers: WebRTCClient.getIceServers(this.config.host),
+          iceCandidatePoolSize: STUN_SERVERS.length, // Increased pool size for better candidate gathering
           ...(uaOptionsOverrides?.peerConnectionOptions || {}),
         },
       },
@@ -2135,6 +2345,11 @@ export default class WebRTCClient extends Emitter {
             errorText: error.errorText,
             url: error.url,
           });
+          
+          // Handle STUN binding errors with retry logic
+          if (error.errorCode === 701 || error.errorText?.includes('STUN binding request timed out')) {
+            this.handleStunRetry(session, error);
+          }
         },
       };
     };
@@ -2272,7 +2487,7 @@ export default class WebRTCClient extends Emitter {
             const isConference = this.isConference(currentSessionId);
 
             // The reinvite will trigger a new offer/answer, and oniceconnectionstatechange will be called again.
-            setTimeout(() => { this.reinvite(session, null, isConference, false, true); }, 1000);
+            setTimeout(() => { this.reinvite(session, null, isConference, false, true); }, this.iceReconnectDelay);
           } else {
             logger.warn('ICE reconnection failed after max attempts', {
               sessionId: currentSessionId,
