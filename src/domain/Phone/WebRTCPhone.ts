@@ -37,6 +37,8 @@ export const ON_CALL_ENDING = 'onCallEnding';
 export const ON_MESSAGE = 'onMessage';
 export const ON_REINVITE = 'reinvite';
 export const ON_TRACK = 'onTrack';
+export const ON_ICE_WARMUP_COMPLETED = 'onIceWarmupCompleted';
+export const ON_ICE_WARMUP_FAILED = 'onIceWarmupFailed';
 export const ON_AUDIO_STREAM = 'onAudioStream';
 export const ON_VIDEO_STREAM = 'onVideoStream';
 export const ON_REMOVE_STREAM = 'onRemoveStream';
@@ -398,20 +400,20 @@ export default class WebRTCPhone extends Emitter implements Phone {
           break;
 
         case SessionState.Terminated:
-        {
-          logger.info('WebRTC phone - call terminated', {
-            sipId: this.getSipSessionId(sipSession),
-          });
+          {
+            logger.info('WebRTC phone - call terminated', {
+              sipId: this.getSipSessionId(sipSession),
+            });
 
-          // Should be called before `_onCallTerminated` or the callCount will not decrement...
-          const callSession = this._createCallSession(sipSession);
+            // Should be called before `_onCallTerminated` or the callCount will not decrement...
+            const callSession = this._createCallSession(sipSession);
 
-          callSession.endTime = new Date();
+            callSession.endTime = new Date();
 
-          const wasCurrentSession = this._onCallTerminated(sipSession);
+            const wasCurrentSession = this._onCallTerminated(sipSession);
 
-          return this.eventEmitter.emit(ON_CALL_ENDED, callSession, wasCurrentSession);
-        }
+            return this.eventEmitter.emit(ON_CALL_ENDED, callSession, wasCurrentSession);
+          }
 
         default:
           break;
@@ -1284,9 +1286,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   initiateCTIIndirectTransfer() { return Promise.resolve(null); }
 
-  cancelCTIIndirectTransfer() {}
+  cancelCTIIndirectTransfer() { }
 
-  confirmCTIIndirectTransfer() {}
+  confirmCTIIndirectTransfer() { }
 
   async hangup(callSession?: CallSession): Promise<boolean> {
     const sipSession = this.findSipSession(callSession);
@@ -1358,7 +1360,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.eventEmitter.emit(ON_TERMINATE_SOUND, callSession, 'locally ended');
   }
 
-  onConnectionMade(): void {}
+  onConnectionMade(): void { }
 
   isConference(callSession: CallSession | null | undefined): boolean {
     if (!callSession) {
@@ -1552,7 +1554,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
         await this.client.changeAudioOutputDevice(this.audioOutputDeviceId);
       }
     });
-    this.client.on('ended', () => {});
+    this.client.on('ended', () => { });
     this.client.on(this.client.ON_ERROR, e => {
       logger.error('WebRTC error', e);
       this.eventEmitter.emit(ON_CALL_ERROR, e);
@@ -1647,6 +1649,15 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.on(this.client.ON_TRACK, (session, event) => {
       this.eventEmitter.emit(ON_TRACK, session, event);
     });
+
+    // Forward ICE warmup events
+    this.client.on(this.client.ON_ICE_WARMUP_COMPLETED, (result) => {
+      this.eventEmitter.emit(ON_ICE_WARMUP_COMPLETED, result);
+    });
+
+    this.client.on(this.client.ON_ICE_WARMUP_FAILED, (error) => {
+      this.eventEmitter.emit(ON_ICE_WARMUP_FAILED, error);
+    });
     this.client.on('onVideoInputChange', stream => {
       this.eventEmitter.emit(ON_VIDEO_INPUT_CHANGE, stream);
     });
@@ -1734,10 +1745,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
         break;
 
       case MESSAGE_TYPE_SIGNAL:
-      {
-        this.eventEmitter.emit(ON_SIGNAL, content);
-        break;
-      }
+        {
+          this.eventEmitter.emit(ON_SIGNAL, content);
+          break;
+        }
 
       default:
     }

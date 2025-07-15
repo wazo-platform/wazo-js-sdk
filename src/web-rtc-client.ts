@@ -69,13 +69,17 @@ const ON_NETWORK_STATS = 'onNetworkStats';
 const ON_DISCONNECTED = 'onDisconnected';
 const ON_ICE_RECONNECTING = 'onIceReconnecting';
 const ON_ICE_RECONNECTED = 'onIceReconnected';
+const ON_ICE_WARMUP_COMPLETED = 'onIceWarmupCompleted';
+const ON_ICE_WARMUP_FAILED = 'onIceWarmupFailed';
 export const events = [REGISTERED, UNREGISTERED, REGISTRATION_FAILED, INVITE];
 export const transportEvents = [CONNECTED, DISCONNECTED, TRANSPORT_ERROR, MESSAGE];
-export class CanceledCallError extends Error {}
+export const iceWarmupEvents = [ON_ICE_WARMUP_COMPLETED, ON_ICE_WARMUP_FAILED];
+export class CanceledCallError extends Error { }
 
 const MAX_REGISTER_TRIES = 5;
 // setting a 24hr timeout and letting the backend define the actual value
 const NO_ANSWER_TIMEOUT = 60 * 60 * 24; // in seconds
+const ICE_WARMUP_TIMEOUT = 8000; // 8 seconds for ICE warmup
 
 export default class WebRTCClient extends Emitter {
   clientId: number;
@@ -130,6 +134,12 @@ export default class WebRTCClient extends Emitter {
 
   iceReconnectAttempts: Record<string, number>;
 
+  iceWarmupEnabled: boolean;
+
+  iceWarmupConnection: RTCPeerConnection | null;
+
+  iceWarmupTimeout: NodeJS.Timeout | null;
+
   // sugar
   ON_USER_AGENT: string;
 
@@ -172,6 +182,10 @@ export default class WebRTCClient extends Emitter {
   ON_ICE_RECONNECTING: string;
 
   ON_ICE_RECONNECTED: string;
+
+  ON_ICE_WARMUP_COMPLETED: string;
+
+  ON_ICE_WARMUP_FAILED: string;
 
   static isAPrivateIp(ip: string): boolean {
     const regex = /^(?:10|127|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\..*/;
@@ -226,6 +240,9 @@ export default class WebRTCClient extends Emitter {
     this.sessionNetworkStats = {};
     this.forceClosed = false;
     this.iceReconnectAttempts = {};
+    this.iceWarmupEnabled = config.iceWarmupEnabled !== false; // Enable by default
+    this.iceWarmupConnection = null;
+    this.iceWarmupTimeout = null;
     this._boundOnHeartbeat = this._onHeartbeat.bind(this);
     this.heartbeat = new Heartbeat(config.heartbeatDelay, config.heartbeatTimeout, config.maxHeartbeats);
     this.heartbeat.setSendHeartbeat(this.pingServer.bind(this));
@@ -251,6 +268,8 @@ export default class WebRTCClient extends Emitter {
     this.ON_PROGRESS = ON_PROGRESS;
     this.ON_ICE_RECONNECTING = ON_ICE_RECONNECTING;
     this.ON_ICE_RECONNECTED = ON_ICE_RECONNECTED;
+    this.ON_ICE_WARMUP_COMPLETED = ON_ICE_WARMUP_COMPLETED;
+    this.ON_ICE_WARMUP_FAILED = ON_ICE_WARMUP_FAILED;
   }
 
   configureMedia(media: MediaConfig) {
@@ -447,6 +466,11 @@ export default class WebRTCClient extends Emitter {
 
         if (newState === RegistererState.Registered && this.registerer && this.registerer.state === RegistererState.Registered) {
           this.eventEmitter.emit(REGISTERED);
+
+          // Start ICE warmup after successful registration
+          this.warmupIceConnectivity().catch((error) => {
+            logger.warn('ICE warmup failed after registration', { error, clientId: this.clientId });
+          });
         } else if (newState === RegistererState.Unregistered) {
           this.eventEmitter.emit(UNREGISTERED);
         }
@@ -783,6 +807,7 @@ export default class WebRTCClient extends Emitter {
     this.forceClosed = force;
 
     this._cleanupMedia();
+    this._cleanupIceWarmup();
 
     this.connectionPromise = null;
     (Object.values(this.audioElements) as any).forEach((audioElement: HTMLAudioElement) => {
@@ -808,7 +833,7 @@ export default class WebRTCClient extends Emitter {
 
     try {
       // Prevent `Connect aborted.` error when disconnecting
-      (this.userAgent.transport as WazoTransport & { connectReject: () => void }).connectReject = () => {};
+      (this.userAgent.transport as WazoTransport & { connectReject: () => void }).connectReject = () => { };
       // Don't wait here, It can take ~30s to stop ...
       this.userAgent.stop().catch(console.error);
     } catch (_) { // Avoid to raise exception when trying to close with hanged-up sessions remaining
@@ -2548,7 +2573,7 @@ export default class WebRTCClient extends Emitter {
 
     if (force && transport) {
       // Bypass sip.js state machine that prevent to close WS with the state `Connecting`
-      transport.disconnectResolve = () => {};
+      transport.disconnectResolve = () => { };
 
       if (transport._ws) {
         transport._ws.close(1000);
@@ -2797,5 +2822,136 @@ export default class WebRTCClient extends Emitter {
         signalingState: pc.signalingState,
       } : { exists: false },
     };
+  }
+
+  // ICE Warmup functionality
+  async warmupIceConnectivity(): Promise<void> {
+    if (!this.iceWarmupEnabled || !this._isWeb()) {
+      logger.info('ICE warmup skipped', {
+        enabled: this.iceWarmupEnabled,
+        isWeb: this._isWeb(),
+        clientId: this.clientId,
+      });
+      return;
+    }
+
+    if (this.iceWarmupConnection) {
+      logger.info('ICE warmup already in progress', { clientId: this.clientId });
+      return;
+    }
+
+    logger.info('Starting ICE connectivity warmup', { clientId: this.clientId });
+
+    try {
+      const iceServers = WebRTCClient.getIceServers(this.config.host);
+      const configuration: RTCConfiguration = {
+        iceServers,
+        iceCandidatePoolSize: 1, // Pre-gather candidates
+      };
+
+      this.iceWarmupConnection = new RTCPeerConnection(configuration);
+
+      const candidates: string[] = [];
+      let hasValidCandidate = false;
+
+      return new Promise<void>((resolve, reject) => {
+        if (!this.iceWarmupConnection) {
+          reject(new Error('ICE warmup connection not created'));
+          return;
+        }
+
+        this.iceWarmupTimeout = setTimeout(() => {
+          logger.warn('ICE warmup timed out', {
+            candidatesCount: candidates.length,
+            hasValidCandidate,
+            clientId: this.clientId,
+          });
+          this._cleanupIceWarmup();
+          this.eventEmitter.emit(ON_ICE_WARMUP_FAILED, new Error('ICE warmup timeout'));
+          reject(new Error('ICE warmup timeout'));
+        }, ICE_WARMUP_TIMEOUT);
+
+        this.iceWarmupConnection.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
+          if (event.candidate) {
+            candidates.push(event.candidate.candidate);
+            logger.debug('ICE warmup candidate gathered', {
+              candidate: event.candidate.candidate,
+              clientId: this.clientId,
+            });
+
+            // Check for successful STUN/TURN candidates (srflx or relay)
+            if (event.candidate.candidate.includes('srflx') || event.candidate.candidate.includes('relay')) {
+              hasValidCandidate = true;
+              logger.info('Valid ICE candidate found during warmup', {
+                type: event.candidate.candidate.includes('srflx') ? 'srflx' : 'relay',
+                clientId: this.clientId,
+              });
+            }
+          } else {
+            // ICE gathering complete
+            logger.info('ICE warmup completed', {
+              candidatesCount: candidates.length,
+              hasValidCandidate,
+              clientId: this.clientId,
+            });
+
+            this._cleanupIceWarmup();
+
+            if (hasValidCandidate) {
+              this.eventEmitter.emit(ON_ICE_WARMUP_COMPLETED, {
+                candidatesCount: candidates.length,
+                hasValidCandidate,
+              });
+              resolve();
+            } else {
+              const error = new Error('No valid ICE candidates found during warmup');
+              this.eventEmitter.emit(ON_ICE_WARMUP_FAILED, error);
+              reject(error);
+            }
+          }
+        };
+
+        this.iceWarmupConnection.onicecandidateerror = (event) => {
+          logger.error('ICE warmup candidate error', {
+            error: event,
+            clientId: this.clientId,
+          });
+        };
+
+        // Create a data channel to trigger ICE gathering
+        this.iceWarmupConnection.createDataChannel('warmup', { ordered: false });
+
+        // Create offer to start ICE gathering
+        this.iceWarmupConnection.createOffer()
+          .then(offer => this.iceWarmupConnection?.setLocalDescription(offer))
+          .catch(error => {
+            logger.error('ICE warmup offer creation failed', { error, clientId: this.clientId });
+            this._cleanupIceWarmup();
+            this.eventEmitter.emit(ON_ICE_WARMUP_FAILED, error);
+            reject(error);
+          });
+      });
+    } catch (error) {
+      logger.error('ICE warmup failed to start', { error, clientId: this.clientId });
+      this._cleanupIceWarmup();
+      this.eventEmitter.emit(ON_ICE_WARMUP_FAILED, error);
+      throw error;
+    }
+  }
+
+  private _cleanupIceWarmup(): void {
+    if (this.iceWarmupTimeout) {
+      clearTimeout(this.iceWarmupTimeout);
+      this.iceWarmupTimeout = null;
+    }
+
+    if (this.iceWarmupConnection) {
+      try {
+        this.iceWarmupConnection.close();
+      } catch (error) {
+        logger.warn('Error closing ICE warmup connection', { error, clientId: this.clientId });
+      }
+      this.iceWarmupConnection = null;
+    }
   }
 }

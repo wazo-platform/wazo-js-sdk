@@ -223,9 +223,9 @@ export type UserAgentOptions = sipJsUserAgentOptions & {
   ) => WazoSessionDescriptionHandler;
 };
 export type UserAgentConfigOverrides = Partial<
-UserAgentOptions & {
-  traceSip: any;
-}
+  UserAgentOptions & {
+    traceSip: any;
+  }
 >;
 export type MediaConfig = {
   audio: Record<string, any> | boolean;
@@ -242,6 +242,7 @@ export type WebRtcConfig = {
   uri?: string;
   media?: MediaConfig;
   iceCheckingTimeout?: number;
+  iceWarmupEnabled?: boolean;
   log?: Record<string, any>;
   audioOutputVolume?: number;
   userAgentString?: string;
