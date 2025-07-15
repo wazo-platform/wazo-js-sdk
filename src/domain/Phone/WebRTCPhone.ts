@@ -54,11 +54,14 @@ export const ON_MESSAGE_TRACK_UPDATED = 'onTrackUpdated';
 export const ON_NETWORK_STATS = 'onNetworkStats';
 export const ON_CHAT = 'phone/ON_CHAT';
 export const ON_SIGNAL = 'phone/ON_SIGNAL';
-export const ON_DISCONNECTED = 'onDisconnected';
+export const ON_ICE_DISCONNECTED = 'onIceDisconnected';
+export const ON_ICE_RECONNECTING = 'onIceReconnecting';
+export const ON_ICE_RECONNECTED = 'onIceReconnected';
 export const ON_EARLY_MEDIA = 'onEarlyMedia';
 export const MESSAGE_TYPE_CHAT = 'message/TYPE_CHAT';
 export const MESSAGE_TYPE_SIGNAL = 'message/TYPE_SIGNAL';
-export const events = [ON_USER_AGENT, ON_REGISTERED, ON_UNREGISTERED, ON_PROGRESS, ON_CALL_ACCEPTED, ON_CALL_ANSWERED, ON_CALL_INCOMING, ON_CALL_OUTGOING, ON_CALL_MUTED, ON_CALL_UNMUTED, ON_CALL_RESUMED, ON_CALL_HELD, ON_CALL_UNHELD, ON_CAMERA_DISABLED, ON_CALL_FAILED, ON_CALL_ENDED, ON_CALL_REJECTED, ON_MESSAGE, ON_REINVITE, ON_TRACK, ON_AUDIO_STREAM, ON_VIDEO_STREAM, ON_REMOVE_STREAM, ON_SHARE_SCREEN_ENDED, ON_TERMINATE_SOUND, ON_PLAY_RING_SOUND, ON_PLAY_INBOUND_CALL_SIGNAL_SOUND, ON_PLAY_HANGUP_SOUND, ON_PLAY_PROGRESS_SOUND, ON_VIDEO_INPUT_CHANGE, ON_SHARE_SCREEN_STARTED, ON_CALL_ERROR, ON_CHAT, ON_SIGNAL, ON_NETWORK_STATS, ON_DISCONNECTED, ON_EARLY_MEDIA];
+export const events = [ON_USER_AGENT, ON_REGISTERED, ON_UNREGISTERED, ON_PROGRESS, ON_CALL_ACCEPTED, ON_CALL_ANSWERED, ON_CALL_INCOMING, ON_CALL_OUTGOING, ON_CALL_MUTED, ON_CALL_UNMUTED, ON_CALL_RESUMED, ON_CALL_HELD, ON_CALL_UNHELD, ON_CAMERA_DISABLED, ON_CALL_FAILED, ON_CALL_ENDED, ON_CALL_REJECTED, ON_MESSAGE, ON_REINVITE, ON_TRACK, ON_AUDIO_STREAM, ON_VIDEO_STREAM, ON_REMOVE_STREAM, ON_SHARE_SCREEN_ENDED, ON_TERMINATE_SOUND, ON_PLAY_RING_SOUND, ON_PLAY_INBOUND_CALL_SIGNAL_SOUND, ON_PLAY_HANGUP_SOUND, ON_PLAY_PROGRESS_SOUND, ON_VIDEO_INPUT_CHANGE, ON_SHARE_SCREEN_STARTED, ON_CALL_ERROR, ON_CHAT, ON_SIGNAL, ON_NETWORK_STATS, ON_ICE_DISCONNECTED, ON_EARLY_MEDIA];
+
 const logger = IssueReporter.loggerFor('webrtc-phone');
 export default class WebRTCPhone extends Emitter implements Phone {
   client: WebRTCClient;
@@ -398,20 +401,20 @@ export default class WebRTCPhone extends Emitter implements Phone {
           break;
 
         case SessionState.Terminated:
-        {
-          logger.info('WebRTC phone - call terminated', {
-            sipId: this.getSipSessionId(sipSession),
-          });
+          {
+            logger.info('WebRTC phone - call terminated', {
+              sipId: this.getSipSessionId(sipSession),
+            });
 
-          // Should be called before `_onCallTerminated` or the callCount will not decrement...
-          const callSession = this._createCallSession(sipSession);
+            // Should be called before `_onCallTerminated` or the callCount will not decrement...
+            const callSession = this._createCallSession(sipSession);
 
-          callSession.endTime = new Date();
+            callSession.endTime = new Date();
 
-          const wasCurrentSession = this._onCallTerminated(sipSession);
+            const wasCurrentSession = this._onCallTerminated(sipSession);
 
-          return this.eventEmitter.emit(ON_CALL_ENDED, callSession, wasCurrentSession);
-        }
+            return this.eventEmitter.emit(ON_CALL_ENDED, callSession, wasCurrentSession);
+          }
 
         default:
           break;
@@ -1574,9 +1577,17 @@ export default class WebRTCPhone extends Emitter implements Phone {
       logger.info('WebRTC unregistered');
       this.eventEmitter.emit(ON_UNREGISTERED);
     });
-    this.client.on(this.client.ON_DISCONNECTED, () => {
-      logger.info('WebRTC disconnected');
-      this.eventEmitter.emit(ON_DISCONNECTED);
+    this.client.on(this.client.ON_ICE_DISCONNECTED, () => {
+      logger.info('ICE connection disconnected');
+      this.eventEmitter.emit(ON_ICE_DISCONNECTED);
+    });
+    this.client.on(this.client.ON_ICE_RECONNECTING, () => {
+      logger.info('ICE connection reconnecting');
+      this.eventEmitter.emit(ON_ICE_RECONNECTING);
+    });
+    this.client.on(this.client.ON_ICE_RECONNECTED, () => {
+      logger.info('ICE connection reconnected');
+      this.eventEmitter.emit(ON_ICE_RECONNECTED);
     });
     this.client.on(this.client.ON_PROGRESS, session => {
       logger.info('WebRTC progress (180)');
@@ -1734,10 +1745,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
         break;
 
       case MESSAGE_TYPE_SIGNAL:
-      {
-        this.eventEmitter.emit(ON_SIGNAL, content);
-        break;
-      }
+        {
+          this.eventEmitter.emit(ON_SIGNAL, content);
+          break;
+        }
 
       default:
     }

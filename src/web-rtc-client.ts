@@ -44,7 +44,8 @@ export const replaceLocalIpModifier = (description: Record<string, any>) => Prom
 });
 const DEFAULT_ICE_TIMEOUT = 3000;
 const SEND_STATS_DELAY = 5000;
-const MAX_ICE_RECONNECT_ATTEMPTS = 3;
+const MAX_ICE_RECONNECT_ATTEMPTS = 5;
+const DEFAULT_ICE_RECONNECT_DELAY = 500;
 const states = ['STATUS_NULL', 'STATUS_NEW', 'STATUS_CONNECTING', 'STATUS_CONNECTED', 'STATUS_COMPLETED'];
 const logger = IssueReporter ? IssueReporter.loggerFor('webrtc-client') : console;
 const statsLogger = IssueReporter ? IssueReporter.loggerFor('webrtc-stats') : console;
@@ -66,7 +67,7 @@ const ON_REINVITE = 'reinvite';
 const ON_ERROR = 'onError';
 const ON_SCREEN_SHARING_REINVITE = 'onScreenSharingReinvite';
 const ON_NETWORK_STATS = 'onNetworkStats';
-const ON_DISCONNECTED = 'onDisconnected';
+const ON_ICE_DISCONNECTED = 'onIceDisconnected';
 const ON_ICE_RECONNECTING = 'onIceReconnecting';
 const ON_ICE_RECONNECTED = 'onIceReconnected';
 export const events = [REGISTERED, UNREGISTERED, REGISTRATION_FAILED, INVITE];
@@ -130,7 +131,8 @@ export default class WebRTCClient extends Emitter {
 
   iceReconnectAttempts: Record<string, number>;
 
-  // sugar
+  iceReconnectDelay: number;
+
   ON_USER_AGENT: string;
 
   REGISTERED: string;
@@ -167,7 +169,7 @@ export default class WebRTCClient extends Emitter {
 
   ON_PROGRESS: string;
 
-  ON_DISCONNECTED: string;
+  ON_ICE_DISCONNECTED: string;
 
   ON_ICE_RECONNECTING: string;
 
@@ -226,6 +228,7 @@ export default class WebRTCClient extends Emitter {
     this.sessionNetworkStats = {};
     this.forceClosed = false;
     this.iceReconnectAttempts = {};
+    this.iceReconnectDelay = config.iceReconnectDelay || DEFAULT_ICE_RECONNECT_DELAY;
     this._boundOnHeartbeat = this._onHeartbeat.bind(this);
     this.heartbeat = new Heartbeat(config.heartbeatDelay, config.heartbeatTimeout, config.maxHeartbeats);
     this.heartbeat.setSendHeartbeat(this.pingServer.bind(this));
@@ -246,7 +249,7 @@ export default class WebRTCClient extends Emitter {
     this.ON_ERROR = ON_ERROR;
     this.ON_SCREEN_SHARING_REINVITE = ON_SCREEN_SHARING_REINVITE;
     this.ON_NETWORK_STATS = ON_NETWORK_STATS;
-    this.ON_DISCONNECTED = ON_DISCONNECTED;
+    this.ON_ICE_DISCONNECTED = ON_ICE_DISCONNECTED;
     this.ON_EARLY_MEDIA = ON_EARLY_MEDIA;
     this.ON_PROGRESS = ON_PROGRESS;
     this.ON_ICE_RECONNECTING = ON_ICE_RECONNECTING;
@@ -445,7 +448,12 @@ export default class WebRTCClient extends Emitter {
       this.registerer.stateChange.addListener(newState => {
         logger.info('sdk webrtc registering, state changed', { newState, clientId: this.clientId });
 
-        if (newState === RegistererState.Registered && this.registerer && this.registerer.state === RegistererState.Registered) {
+        if (newState === RegistererState.Registered && this.registerer?.state === RegistererState.Registered) {
+          // Warm up ICE connectivity after successful registration
+          this.warmupIceConnectivity().catch(error => {
+            logger.warn('ICE warmup after registration failed', { error: error.message, clientId: this.clientId });
+          });
+
           this.eventEmitter.emit(REGISTERED);
         } else if (newState === RegistererState.Unregistered) {
           this.eventEmitter.emit(UNREGISTERED);
@@ -1708,6 +1716,91 @@ export default class WebRTCClient extends Emitter {
     this.stopNetworkMonitoring(session);
   }
 
+  /**
+   * Warm up ICE connectivity after system reboot
+   * This method creates a temporary peer connection to establish ICE candidates
+   * before the first real call, reducing the likelihood of STUN timeouts
+   */
+  async warmupIceConnectivity(): Promise<void> {
+    if (!this.config.iceWarmup) {
+      logger.info('ICE warmup disabled in configuration', { clientId: this.clientId });
+      return;
+    }
+
+    const config: RTCConfiguration = {
+      iceServers: this.uaConfigOverrides?.peerConnectionOptions?.iceServers || WebRTCClient.getIceServers(this.config.host),
+    };
+
+    logger.info('Starting ICE connectivity warmup', { clientId: this.clientId, config });
+
+    try {
+      const pc = new RTCPeerConnection(config);
+      pc.createDataChannel('warmup');
+
+      // Set up ICE candidate gathering
+      const candidates: RTCIceCandidate[] = [];
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          candidates.push(event.candidate);
+          logger.debug('ICE warmup candidate gathered', {
+            candidate: event.candidate.candidate,
+            type: event.candidate.type,
+          });
+        } else {
+          logger.info('ICE warmup completed', {
+            totalCandidates: candidates.length,
+            clientId: this.clientId,
+          });
+        }
+      };
+
+      // Create and set local description to trigger ICE gathering
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      // Wait for ICE gathering to complete or timeout
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          logger.warn('ICE warmup timed out', { clientId: this.clientId });
+          resolve();
+        }, 10000); // 10 second timeout
+
+        pc.onicegatheringstatechange = () => {
+          if (pc.iceGatheringState === 'complete') {
+            clearTimeout(timeout);
+            logger.info('ICE warmup gathering completed', {
+              candidates: candidates.length,
+              clientId: this.clientId,
+            });
+            resolve();
+          }
+        };
+
+        // Also resolve if we get some candidates even if gathering doesn't complete
+        if (candidates.length > 0) {
+          setTimeout(() => {
+            clearTimeout(timeout);
+            logger.info('ICE warmup resolved with candidates', {
+              candidates: candidates.length,
+              clientId: this.clientId,
+            });
+            resolve();
+          }, 5000);
+        }
+      });
+
+      // Clean up
+      pc.close();
+      logger.info('ICE warmup completed successfully', { clientId: this.clientId });
+
+    } catch (error: any) {
+      logger.warn('ICE warmup failed', {
+        error: error.message,
+        clientId: this.clientId,
+      });
+    }
+  }
+
   attemptReconnection(): void {
     logger.info('attempt reconnection', { clientId: this.clientId, userAgent: !!this.userAgent });
 
@@ -2272,12 +2365,12 @@ export default class WebRTCClient extends Emitter {
             const isConference = this.isConference(currentSessionId);
 
             // The reinvite will trigger a new offer/answer, and oniceconnectionstatechange will be called again.
-            setTimeout(() => { this.reinvite(session, null, isConference, false, true); }, 1000);
+            setTimeout(() => { this.reinvite(session, null, isConference, false, true); }, this.iceReconnectDelay);
           } else {
             logger.warn('ICE reconnection failed after max attempts', {
               sessionId: currentSessionId,
             });
-            this.eventEmitter.emit(ON_DISCONNECTED, session);
+            this.eventEmitter.emit(ON_ICE_DISCONNECTED, session);
           }
         } else if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
           if (this.iceReconnectAttempts[currentSessionId] > 0) {
