@@ -401,20 +401,16 @@ export default class WebRTCPhone extends Emitter implements Phone {
           break;
 
         case SessionState.Terminated:
-          {
-            logger.info('WebRTC phone - call terminated', {
-              sipId: this.getSipSessionId(sipSession),
-            });
-
-            // Should be called before `_onCallTerminated` or the callCount will not decrement...
-            const callSession = this._createCallSession(sipSession);
-
-            callSession.endTime = new Date();
-
-            const wasCurrentSession = this._onCallTerminated(sipSession);
-
-            return this.eventEmitter.emit(ON_CALL_ENDED, callSession, wasCurrentSession);
-          }
+        {
+          logger.info('WebRTC phone - call terminated', {
+            sipId: this.getSipSessionId(sipSession),
+          });
+          // Should be called before `_onCallTerminated` or the callCount will not decrement...
+          const callSession = this._createCallSession(sipSession);
+          callSession.endTime = new Date();
+          const wasCurrentSession = this._onCallTerminated(sipSession);
+          return this.eventEmitter.emit(ON_CALL_ENDED, callSession, wasCurrentSession);
+        }
 
         default:
           break;
@@ -1745,10 +1741,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
         break;
 
       case MESSAGE_TYPE_SIGNAL:
-        {
-          this.eventEmitter.emit(ON_SIGNAL, content);
-          break;
-        }
+      {
+        this.eventEmitter.emit(ON_SIGNAL, content);
+        break;
+      }
 
       default:
     }
