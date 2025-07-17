@@ -67,9 +67,10 @@ export default ((client: ApiRequester, baseUrl: string) => ({
 
   getUserRooms: async (): Promise<Array<ChatRoom>> => client.get(`${baseUrl}/users/me/rooms`).then(ChatRoom.parseMany),
 
-  createRoom: async (name: string, users: Array<ChatUser>): Promise<ChatRoom> => client.post(`${baseUrl}/users/me/rooms`, {
+  createRoom: async (name: string, users: Array<ChatUser>, kind?: string): Promise<ChatRoom> => client.post(`${baseUrl}/users/me/rooms`, {
     name,
     users,
+    kind,
   }).then(ChatRoom.parse),
 
   getRoomMessages: async (roomUuid: string, params?: GetMessagesOptions): Promise<Array<ChatMessage>> => {
