@@ -16,7 +16,28 @@ const LOG_LEVELS = [TRACE, DEBUG, INFO, LOG, WARN, ERROR];
 const CATEGORY_PREFIX = 'logger-category=';
 const MAX_REMOTE_RETRY = 10;
 
-const addLevelsTo = (instance: Record<string, any>, withMethods = false) => {
+type Logger = {
+  TRACE: string;
+  DEBUG: string;
+  INFO: string;
+  LOG: string;
+  WARN: string;
+  ERROR: string;
+};
+
+type LoggerWithMethods = Logger & {
+  trace: (...args: any) => void;
+  debug: (...args: any) => void;
+  info: (...args: any) => void;
+  log: (...args: any) => void;
+  warn: (...args: any) => void;
+  error: (...args: any) => void;
+  apply: (this: Logger, ...args: any) => void;
+};
+
+function addLevelsTo(instance: Record<string, any>, withMethods: true): LoggerWithMethods;
+function addLevelsTo(instance: Record<string, any>, withMethods?: false): Logger;
+function addLevelsTo(instance: Record<string, any>, withMethods = false): Logger | LoggerWithMethods {
   instance.TRACE = TRACE;
   instance.DEBUG = DEBUG;
   instance.INFO = INFO;
@@ -25,21 +46,21 @@ const addLevelsTo = (instance: Record<string, any>, withMethods = false) => {
   instance.ERROR = ERROR;
 
   if (withMethods) {
-    instance.trace = (...args: any) => instance.apply(null, [TRACE, ...args]);
+    (instance as LoggerWithMethods).trace = (...args: any) => (instance as LoggerWithMethods).apply(null, [TRACE, ...args]);
 
-    instance.debug = (...args: any) => instance.apply(null, [DEBUG, ...args]);
+    (instance as LoggerWithMethods).debug = (...args: any) => (instance as LoggerWithMethods).apply(null, [DEBUG, ...args]);
 
-    instance.info = (...args: any) => instance.apply(null, [INFO, ...args]);
+    (instance as LoggerWithMethods).info = (...args: any) => (instance as LoggerWithMethods).apply(null, [INFO, ...args]);
 
-    instance.log = (...args: any) => instance.apply(null, [LOG, ...args]);
+    (instance as LoggerWithMethods).log = (...args: any) => (instance as LoggerWithMethods).apply(null, [LOG, ...args]);
 
-    instance.warn = (...args: any) => instance.apply(null, [WARN, ...args]);
+    (instance as LoggerWithMethods).warn = (...args: any) => (instance as LoggerWithMethods).apply(null, [WARN, ...args]);
 
-    instance.error = (...args: any) => instance.apply(null, [ERROR, ...args]);
+    (instance as LoggerWithMethods).error = (...args: any) => (instance as LoggerWithMethods).apply(null, [ERROR, ...args]);
   }
 
-  return instance;
-};
+  return instance as Logger | LoggerWithMethods;
+}
 
 const safeStringify = (object: Record<string, any>) => {
   const result = '{"message": "Not parsable JSON"}';
@@ -121,7 +142,7 @@ class IssueReporter {
     this.enabled = false;
   }
 
-  loggerFor(category: string): any {
+  loggerFor(category: string): LoggerWithMethods {
     const logger = (level: string, ...args: any) => {
       this.log.apply(this, [level, this._makeCategory(category), ...args]);
     };
@@ -265,7 +286,7 @@ class IssueReporter {
         // eslint-disable-next-line
         this.oldConsoleMethods[methodName] = console[methodName];
       }
-      const parent:any = typeof window !== 'undefined' ? window : global;
+      const parent: any = typeof window !== 'undefined' ? window : global;
       parent.console[methodName] = (...args: any) => {
         // Store message
         try {
