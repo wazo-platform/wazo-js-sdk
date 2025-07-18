@@ -1732,6 +1732,19 @@ export default class WebRTCClient extends Emitter {
     const pc1 = new RTCPeerConnection(config);
     const pc2 = new RTCPeerConnection(config);
 
+    // Set up ICE candidate exchange to actually trigger connectivity
+    pc1.onicecandidate = (event) => {
+      if (event.candidate) {
+        pc2.addIceCandidate(event.candidate).catch(() => {});
+      }
+    };
+
+    pc2.onicecandidate = (event) => {
+      if (event.candidate) {
+        pc1.addIceCandidate(event.candidate).catch(() => {});
+      }
+    };
+
     pc1.addTransceiver('audio', { direction: 'recvonly' });
     pc1.addTransceiver('video', { direction: 'recvonly' });
 
