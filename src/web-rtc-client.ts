@@ -1723,44 +1723,53 @@ export default class WebRTCClient extends Emitter {
    * See: https://issues.webrtc.org/issues/42225439
    */
   private async _performSacrificialWebRTCOperation(): Promise<void> {
-    try {
-      logger.info('Performing sacrificial WebRTC operation for Windows Chromium bug', { clientId: this.clientId });
+    logger.info('Performing sacrificial WebRTC operation for Windows Chromium bug', { clientId: this.clientId });
 
-      // Create two peer connections to simulate actual call scenario
-      const config = {
-        iceServers: this.uaConfigOverrides?.peerConnectionOptions?.iceServers || WebRTCClient.getIceServers(this.config.host),
+    const config = {
+      iceServers: this.uaConfigOverrides?.peerConnectionOptions?.iceServers || WebRTCClient.getIceServers(this.config.host),
+    };
+
+    const pc1 = new RTCPeerConnection(config);
+    const pc2 = new RTCPeerConnection(config);
+
+    pc1.addTransceiver('audio', { direction: 'recvonly' });
+    pc1.addTransceiver('video', { direction: 'recvonly' });
+
+    pc1.createDataChannel('sacrifice');
+
+    const offer = await pc1.createOffer();
+    await pc1.setLocalDescription(offer);
+    await pc2.setRemoteDescription(offer);
+
+    const answer = await pc2.createAnswer();
+    await pc2.setLocalDescription(answer);
+    await pc1.setRemoteDescription(answer);
+
+    await new Promise<void>((resolve) => {
+      const timeoutId = setTimeout(() => {
+        logger.warn('Sacrificial WebRTC operation timed out waiting for ICE connection state.', { clientId: this.clientId });
+        resolve();
+      }, 10000);
+
+      const checkIceState = () => {
+        if (pc1.iceConnectionState !== 'new' && pc1.iceConnectionState !== 'checking') {
+          clearTimeout(timeoutId);
+          logger.info(`Sacrificial WebRTC: ICE connection state reached ${pc1.iceConnectionState}`, { clientId: this.clientId });
+          resolve();
+        }
       };
 
-      const pc1 = new RTCPeerConnection(config);
-      const pc2 = new RTCPeerConnection(config);
+      pc1.oniceconnectionstatechange = checkIceState;
 
-      pc1.createDataChannel('sacrifice');
+      checkIceState();
+    });
 
-      // Complete offer/answer exchange to trigger actual connection attempt
-      const offer = await pc1.createOffer();
-      await pc1.setLocalDescription(offer);
-      await pc2.setRemoteDescription(offer);
+    pc1.close();
+    pc2.close();
 
-      const answer = await pc2.createAnswer();
-      await pc2.setLocalDescription(answer);
-      await pc1.setRemoteDescription(answer);
-
-      // Wait briefly for ICE connectivity checks (which may fail due to the bug)
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      pc1.close();
-      pc2.close();
-
-      logger.info('Sacrificial WebRTC operation completed', {
-        clientId: this.clientId,
-      });
-    } catch (error: any) {
-      // Expected to fail - this is the "sacrificial" operation
-      logger.info('Sacrificial WebRTC operation failed as expected', {
-        error: error.message,
-        clientId: this.clientId,
-      });
-    }
+    logger.info('Sacrificial WebRTC operation completed', {
+      clientId: this.clientId,
+    });
   }
 
   attemptReconnection(): void {
