@@ -222,11 +222,7 @@ export type UserAgentOptions = sipJsUserAgentOptions & {
     options: SessionDescriptionHandlerFactoryOptions
   ) => WazoSessionDescriptionHandler;
 };
-export type UserAgentConfigOverrides = Partial<
-UserAgentOptions & {
-  traceSip: any;
-}
->;
+export type UserAgentConfigOverrides = Partial<UserAgentOptions & { traceSip: any }>;
 export type MediaConfig = {
   audio: Record<string, any> | boolean;
   video?: Record<string, any> | boolean;
@@ -252,7 +248,8 @@ export type WebRtcConfig = {
   userUuid?: string,
   uaConfigOverrides?: UserAgentConfigOverrides,
   audioDeviceOutput?: string,
-  audioDeviceRing?: string
+  audioDeviceRing?: string,
+  iceReconnectDelay?: number,
 }; // @see https://github.com/onsip/SIP.js/blob/master/src/Web/Simple.js
 
 export type IncomingResponse = SipIncomingResponse & { session: any };
