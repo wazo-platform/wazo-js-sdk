@@ -195,12 +195,12 @@ type CallResumed = WebSocketBaseMessage & {
 
 type ChatMessageSent = WebSocketBaseMessage & {
   data: ChatMessageEvent;
-  name: 'chatd_user_room_created';
+  name: 'chatd_user_room_message_created';
 };
 
 type ChatRoomCreate = WebSocketBaseMessage & {
   data: ChatRoom;
-  name: 'chatd_user_room_message_created';
+  name: 'chatd_user_room_created';
 };
 
 type VoicemailCreated = WebSocketBaseMessage & {
