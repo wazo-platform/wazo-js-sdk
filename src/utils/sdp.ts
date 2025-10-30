@@ -110,6 +110,7 @@ export const fixSdp = (sdp: string, candidates: Candidate[], forcePort = true): 
     const port = forcePort ? mainCandidate ? mainCandidate.port : media.port : media.port;
     return { ...media,
       port,
+      // @ts-ignore: priority type mismatch between Candidate and sdp-transform types
       candidates: (media.candidates || []).concat(candidates),
       direction: port < 10 ? 'inactive' : media.direction,
     };
