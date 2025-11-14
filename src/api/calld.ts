@@ -1,4 +1,6 @@
 /* eslint-disable camelcase */
+import { Calld } from '@wazo/types';
+
 import Call, { CallResponse } from '../domain/Call';
 import ChatMessage, { ChatMessageListResponse } from '../domain/ChatMessage';
 import IndirectTransfer from '../domain/IndirectTransfer';
@@ -89,8 +91,8 @@ export default ((client: ApiRequester, baseUrl: string) => ({
 
   listVoicemails: (): Promise<Array<Voicemail>> => client.get(`${baseUrl}/users/me/voicemails`).then((response: any) => Voicemail.parseMany(response)),
 
-  listVoicemailsMessages: (params: MeVoicemailsMessagesList['Params']) =>
-    client.get({ path: `${baseUrl}/users/me/voicemails/messages`, body: params }) as Promise<MeVoicemailsMessagesList['ResponseBody']>,
+  listVoicemailsMessages: (params: Calld.MeVoicemailsMessagesListParams) =>
+    client.get({ path: `${baseUrl}/users/me/voicemails/messages`, body: params }) as Promise<Calld.MeVoicemailsMessagesListData>,
 
   deleteVoicemail: (voicemailId: string): Promise<boolean> => client.delete(`${baseUrl}/users/me/voicemails/messages/${voicemailId}`),
 
