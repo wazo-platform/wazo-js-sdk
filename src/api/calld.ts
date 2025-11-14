@@ -1,12 +1,14 @@
 /* eslint-disable camelcase */
-import ApiRequester from '../utils/api-requester';
-import type { UUID } from '../domain/types';
-import Relocation, { RelocationResponse } from '../domain/Relocation';
-import ChatMessage, { ChatMessageListResponse } from '../domain/ChatMessage';
-import Voicemail, { type VoicemailFolderType } from '../domain/Voicemail';
+import { Calld } from '@wazo/types';
+
 import Call, { CallResponse } from '../domain/Call';
+import ChatMessage, { ChatMessageListResponse } from '../domain/ChatMessage';
 import IndirectTransfer from '../domain/IndirectTransfer';
 import MeetingStatus from '../domain/MeetingStatus';
+import Relocation, { RelocationResponse } from '../domain/Relocation';
+import type { UUID } from '../domain/types';
+import Voicemail, { type VoicemailFolderType } from '../domain/Voicemail';
+import ApiRequester from '../utils/api-requester';
 
 type CallQuery = {
   from_mobile: boolean;
@@ -88,6 +90,9 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   },
 
   listVoicemails: (): Promise<Array<Voicemail>> => client.get(`${baseUrl}/users/me/voicemails`).then((response: any) => Voicemail.parseMany(response)),
+
+  listVoicemailsMessages: (params: Calld.MeVoicemailsMessagesListParams = {}) =>
+    client.get({ path: `${baseUrl}/users/me/voicemails/messages`, body: params }) as Promise<Calld.MeVoicemailsMessagesListData>,
 
   deleteVoicemail: (voicemailId: string): Promise<boolean> => client.delete(`${baseUrl}/users/me/voicemails/messages/${voicemailId}`),
 

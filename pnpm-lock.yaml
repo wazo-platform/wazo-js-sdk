@@ -12,8 +12,8 @@ importers:
   .:
     dependencies:
       '@wazo/types':
-        specifier: ^25.8.0
-        version: 25.8.0
+        specifier: ^25.16.0
+        version: 25.16.0
       events:
         specifier: ^3.3.0
         version: 3.3.0
@@ -1120,8 +1120,8 @@ packages:
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
 
-  '@wazo/types@25.8.0':
-    resolution: {integrity: sha512-ezNozqFgW7X6DTNFz05MGCs4+XbZocxaZ2h7smrCQ1Fgwp3gyCuQ10HQt/NkP6mH6E1AMqMrkneijUxL3VcjZQ==}
+  '@wazo/types@25.16.0':
+    resolution: {integrity: sha512-5dCWPyijS4WrP1vbLmqDpA4KV13pWqGW5kuDrZcJqCyTWweRgj/tK8ID7JTCFzj3lDRQAnfJMO/DWeogHCkvdg==}
     engines: {node: '>=18.0.0'}
 
   '@webassemblyjs/ast@1.14.1':
@@ -4700,7 +4700,7 @@ snapshots:
 
   '@ungap/structured-clone@1.3.0': {}
 
-  '@wazo/types@25.8.0': {}
+  '@wazo/types@25.16.0': {}
 
   '@webassemblyjs/ast@1.14.1':
     dependencies:
