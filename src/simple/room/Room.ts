@@ -1,18 +1,17 @@
-import type { Message } from 'sip.js/lib/api/message';
 import sdpParser from 'sdp-transform';
+import type { Message } from 'sip.js/lib/api/message';
 import { SessionDescriptionHandler } from 'sip.js/lib/platform/web';
 import type CallSession from '../../domain/CallSession';
+import { PeerConnection, WazoSession } from '../../domain/types';
 import getApiClient from '../../service/getApiClient';
+import IssueReporter from '../../service/IssueReporter';
 import Emitter from '../../utils/Emitter';
 import Wazo from '../index';
+import { SIGNAL_TYPE_PARTICIPANT_REQUEST, SIGNAL_TYPE_PARTICIPANT_UPDATE } from './constants';
+import LocalParticipant from './LocalParticipant';
 import Participant, { RawParticipant } from './Participant';
 import RemoteParticipant from './RemoteParticipant';
-import IssueReporter from '../../service/IssueReporter';
-import LocalParticipant from './LocalParticipant';
-import { PeerConnection, WazoSession } from '../../domain/types';
 
-export const SIGNAL_TYPE_PARTICIPANT_UPDATE = 'signal/PARTICIPANT_UPDATE';
-export const SIGNAL_TYPE_PARTICIPANT_REQUEST = 'signal/PARTICIPANT_REQUEST';
 const logger = IssueReporter.loggerFor('sdk-room');
 
 type ConnectArgs = {
