@@ -91,7 +91,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
 
   listVoicemails: (): Promise<Array<Voicemail>> => client.get(`${baseUrl}/users/me/voicemails`).then((response: any) => Voicemail.parseMany(response)),
 
-  listVoicemailsMessages: (params: Calld.MeVoicemailsMessagesListParams) =>
+  listVoicemailsMessages: (params: Calld.MeVoicemailsMessagesListParams = {}) =>
     client.get({ path: `${baseUrl}/users/me/voicemails/messages`, body: params }) as Promise<Calld.MeVoicemailsMessagesListData>,
 
   deleteVoicemail: (voicemailId: string): Promise<boolean> => client.delete(`${baseUrl}/users/me/voicemails/messages/${voicemailId}`),

@@ -1,17 +1,17 @@
 import { SessionState } from 'sip.js/lib/api/session-state';
 import { OutgoingInviteRequest } from 'sip.js/lib/core';
-import type SipLine from '../domain/SipLine';
-import type Session from '../domain/Session';
-import type CallSession from '../domain/CallSession';
 import AdHocAPIConference from '../domain/AdHocAPIConference';
-import WebRTCPhone, * as PHONE_EVENTS from '../domain/Phone/WebRTCPhone';
-import { MESSAGE_TYPE_CHAT, MESSAGE_TYPE_SIGNAL } from '../domain/Phone/WebRTCPhone';
-import WebRTCClient, { events as clientEvents, transportEvents } from '../web-rtc-client';
+import type CallSession from '../domain/CallSession';
+import * as PHONE_EVENTS from '../domain/Phone/WebRTCPhone';
+import WebRTCPhone, { MESSAGE_TYPE_CHAT, MESSAGE_TYPE_SIGNAL } from '../domain/Phone/WebRTCPhone';
+import type Session from '../domain/Session';
+import SFUNotAvailableError from '../domain/SFUNotAvailableError';
+import type SipLine from '../domain/SipLine';
+import { WazoSession, WebRtcConfig } from '../domain/types';
 import IssueReporter from '../service/IssueReporter';
 import Emitter from '../utils/Emitter';
+import WebRTCClient, { events as clientEvents, transportEvents } from '../web-rtc-client';
 import Wazo from './index';
-import SFUNotAvailableError from '../domain/SFUNotAvailableError';
-import { WazoSession, WebRtcConfig } from '../domain/types';
 
 const logger = IssueReporter.loggerFor('simple-phone');
 const sipLogger = IssueReporter.loggerFor('sip.js');
@@ -278,7 +278,7 @@ export class Phone extends Emitter {
 
   muteViaAPI(callSession: CallSession): void {
     if (callSession && callSession.callId) {
-      Wazo.getApiClient().calld.mute(callSession.callId).catch(e => {
+      Wazo.getApiClient().calld.mute(callSession.callId).catch((e: any) => {
         logger.error('Mute via API, error', e);
       });
     }
@@ -286,7 +286,7 @@ export class Phone extends Emitter {
 
   unmuteViaAPI(callSession: CallSession): void {
     if (callSession && callSession.callId) {
-      Wazo.getApiClient().calld.unmute(callSession.callId).catch(e => {
+      Wazo.getApiClient().calld.unmute(callSession.callId).catch((e: any) => {
         logger.error('Unmute via API, error', e);
       });
     }
