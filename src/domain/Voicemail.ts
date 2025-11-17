@@ -1,4 +1,5 @@
 import moment from 'moment';
+import { Calld } from '@wazo/types';
 import newFrom from '../utils/new-from';
 
 export const VoicemailFolder = {
@@ -24,6 +25,13 @@ type MessageResponse = {
   id: string;
   folder?: Record<string, any>;
   timestamp: number;
+  voicemail?: VoicemailBox;
+};
+
+export type VoicemailBox = {
+  id: string;
+  name: string;
+  type: string;
 };
 
 export type Response = {
@@ -36,6 +44,7 @@ export type Response = {
     type: VoicemailFolderType;
     messages: Array<MessageResponse>;
   }>;
+  voicemail?: VoicemailBox;
 };
 
 type VoicemailArguments = {
@@ -47,6 +56,7 @@ type VoicemailArguments = {
     number: string;
   };
   unread?: boolean | null | undefined;
+  mailbox?: VoicemailBox;
 };
 export default class Voicemail {
   type: string;
@@ -58,6 +68,8 @@ export default class Voicemail {
   duration: number;
 
   unread: boolean | null | undefined;
+
+  mailbox?: VoicemailBox;
 
   caller: {
     name: string;
@@ -74,6 +86,7 @@ export default class Voicemail {
         number: plain.caller_id_num,
       },
       unread: plain.folder ? plain.folder.type === VoicemailFolder.NEW : null,
+      mailbox: plain.voicemail,
     });
   }
 
@@ -87,6 +100,29 @@ export default class Voicemail {
     const unread = plainUnread.map(message => Voicemail.parse(message)).map(voicemail => voicemail.makeAsUnRead());
     const read = plainRead.map(message => Voicemail.parse(message)).map(voicemail => voicemail.acknowledge());
     return [...unread, ...read];
+  }
+
+  static parseListData(plain: Calld.MeVoicemailsMessagesListData): Array<Voicemail> {
+    if (!plain || !plain.items) {
+      return [];
+    }
+
+    return plain.items
+      .filter((item): item is NonNullable<typeof item> & { id: string; duration: number; timestamp: number } =>
+        item != null && typeof item.id === 'string' && typeof item.duration === 'number' && typeof item.timestamp === 'number')
+      .map(item => Voicemail.parse({
+        id: item.id,
+        caller_id_name: item.caller_id_name ?? '',
+        caller_id_num: item.caller_id_num ?? '',
+        duration: item.duration,
+        timestamp: item.timestamp,
+        folder: item.folder,
+        voicemail: item.voicemail ? {
+          id: String(item.voicemail.id ?? ''),
+          name: item.voicemail.name ?? '',
+          type: item.voicemail.type ?? '',
+        } : undefined,
+      }));
   }
 
   static newFrom(profile: Voicemail) {
@@ -103,12 +139,14 @@ export default class Voicemail {
     duration,
     caller,
     unread,
+    mailbox,
   }: VoicemailArguments) {
     this.id = id;
     this.date = date;
     this.duration = duration;
     this.caller = caller;
     this.unread = unread;
+    this.mailbox = mailbox;
     // Useful to compare instead of instanceof with minified code
     this.type = 'Voicemail';
   }
