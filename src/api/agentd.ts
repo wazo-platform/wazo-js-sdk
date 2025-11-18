@@ -15,8 +15,8 @@ export default ((client: ApiRequester, baseUrl: string) => ({
 
   logout: (agentNumber: string): Promise<boolean> => client.post(`${baseUrl}/agents/by-number/${agentNumber}/logoff`, null, null, ApiRequester.successResponseParser),
 
-  pause: (agentNumber: string): Promise<boolean> => client.post(`${baseUrl}/agents/by-number/${agentNumber}/pause`, {
-    reason: 'songbird_reason',
+  pause: (agentNumber: string, reason = 'songbird_reason'): Promise<boolean> => client.post(`${baseUrl}/agents/by-number/${agentNumber}/pause`, {
+    reason,
   }, null, ApiRequester.successResponseParser),
 
   resume: (agentNumber: string): Promise<boolean> => client.post(`${baseUrl}/agents/by-number/${agentNumber}/unpause`, null, null, ApiRequester.successResponseParser),
