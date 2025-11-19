@@ -208,6 +208,21 @@ type VoicemailCreated = WebSocketBaseMessage & {
   name: 'user_voicemail_message_created';
 };
 
+type GlobalVoicemailCreated = WebSocketBaseMessage & {
+  data: VoicemailEvent;
+  name: 'global_voicemail_message_created';
+};
+
+type GlobalVoicemailUpdated = WebSocketBaseMessage & {
+  data: VoicemailEvent;
+  name: 'global_voicemail_message_updated';
+};
+
+type GlobalVoicemailDeleted = WebSocketBaseMessage & {
+  data: VoicemailEvent;
+  name: 'global_voicemail_message_deleted';
+};
+
 type UpdateDoNotDisturb = WebSocketBaseMessage & {
   data: DoNotDisturbUpdateEvent;
   name: 'users_services_dnd_updated';
@@ -333,4 +348,4 @@ type MeetingAuthorizationPending = WebSocketBaseMessage & {
   name: 'meeting_authorization_pending';
 };
 
-export type WebSocketMessage = CallCreated | CallUpdated | CallEnded | CallHeld | CallResumed | NewCallLog | ChatMessageSent | (WebSocketBaseMessage & ChatMessageResponse) | ChatRoomCreate | VoicemailCreated | UpdateDoNotDisturb | VoicemailDeleted | FavoriteAdded | FavoriteDeleted | UserStatusUpdate | EndpointStatusUpdate | ExternalAuthAdded | ExternalAuthDeleted | PresencesRead | SwitchboardQueuedCallsUpdated | SwitchboardQueuedCallAnswered | SwitchboardHeldCallsUpdated | SwitchboardHeldCallAnswered | ParticipantJoinedRoom | ParticipantLeftRoom | ParticipantJoinedMeeting | ParticipantLeftMeeting | FaxOutboundFailed | FaxOutboundSucceeded | AgentStatusUpdate | AgentPaused | AgentUnpaused | MeetingUserProgress | MeetingAuthorizationPending;
+export type WebSocketMessage = CallCreated | CallUpdated | CallEnded | CallHeld | CallResumed | NewCallLog | ChatMessageSent | (WebSocketBaseMessage & ChatMessageResponse) | ChatRoomCreate | VoicemailCreated | GlobalVoicemailCreated | GlobalVoicemailDeleted | GlobalVoicemailUpdated | UpdateDoNotDisturb | VoicemailDeleted | FavoriteAdded | FavoriteDeleted | UserStatusUpdate | EndpointStatusUpdate | ExternalAuthAdded | ExternalAuthDeleted | PresencesRead | SwitchboardQueuedCallsUpdated | SwitchboardQueuedCallAnswered | SwitchboardHeldCallsUpdated | SwitchboardHeldCallAnswered | ParticipantJoinedRoom | ParticipantLeftRoom | ParticipantJoinedMeeting | ParticipantLeftMeeting | FaxOutboundFailed | FaxOutboundSucceeded | AgentStatusUpdate | AgentPaused | AgentUnpaused | MeetingUserProgress | MeetingAuthorizationPending;
