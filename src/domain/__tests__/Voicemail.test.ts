@@ -8,7 +8,7 @@ const defaultCaller = {
 const defaultMailbox: VoicemailBox = {
   id: '123',
   name: 'Main Mailbox',
-  type: 'user',
+  type: 'personal',
 };
 describe('Voicemail', () => {
   it('is the same voicemail given the same id', () => {
@@ -210,6 +210,49 @@ describe('Voicemail', () => {
         name: '',
         type: '',
       });
+    });
+  });
+
+  describe('isPersonal', () => {
+    it('returns true when mailbox is undefined', () => {
+      const voicemail = new Voicemail({
+        id: 'ref-abc',
+        caller: defaultCaller,
+        date: new Date(),
+        duration: 0,
+      });
+      expect(voicemail.isPersonal()).toBeTruthy();
+    });
+
+    it('returns true when mailbox type is personal', () => {
+      const voicemail = new Voicemail({
+        id: 'ref-abc',
+        caller: defaultCaller,
+        date: new Date(),
+        duration: 0,
+        mailbox: {
+          id: '123',
+          name: 'Personal Mailbox',
+          type: 'personal',
+        },
+      });
+      expect(voicemail.isPersonal()).toBeTruthy();
+    });
+
+    it('returns false when mailbox type is not personal', () => {
+      const globalMailbox: VoicemailBox = {
+        id: '123',
+        name: 'Global Mailbox',
+        type: 'global',
+      };
+      const voicemail = new Voicemail({
+        id: 'ref-abc',
+        caller: defaultCaller,
+        date: new Date(),
+        duration: 0,
+        mailbox: globalMailbox,
+      });
+      expect(voicemail.isPersonal()).toBeFalsy();
     });
   });
 });

@@ -165,6 +165,10 @@ export default class Voicemail {
     return this;
   }
 
+  isPersonal(): boolean {
+    return !this.mailbox || this.mailbox?.type === 'personal';
+  }
+
   contains(query: string): boolean {
     if (!query) {
       return true;
