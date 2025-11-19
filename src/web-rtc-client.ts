@@ -449,7 +449,7 @@ export default class WebRTCClient extends Emitter {
         logger.info('sdk webrtc registering, state changed', { newState, clientId: this.clientId });
 
         if (newState === RegistererState.Registered && this.registerer?.state === RegistererState.Registered) {
-          if (navigator.userAgent.includes('Windows') && (navigator.userAgent.includes('Chrome') || navigator.userAgent.includes('Chromium'))) {
+          if (navigator.userAgent?.includes('Windows') && (navigator.userAgent?.includes('Chrome') || navigator.userAgent?.includes('Chromium'))) {
             this._performSacrificialWebRTCOperation().catch(error => {
               logger.warn('ICE warmup after registration failed', { error: error.message, clientId: this.clientId });
             });
