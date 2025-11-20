@@ -8,7 +8,7 @@ const defaultCaller = {
 const defaultMailbox: VoicemailBox = {
   id: '123',
   name: 'Main Mailbox',
-  type: 'personal',
+  accesstype: 'personal',
 };
 describe('Voicemail', () => {
   it('is the same voicemail given the same id', () => {
@@ -160,7 +160,7 @@ describe('Voicemail', () => {
             voicemail: {
               id: 123,
               name: 'Main Mailbox',
-              type: 'user' as const,
+              accesstype: 'user',
             },
           },
           {
@@ -179,7 +179,7 @@ describe('Voicemail', () => {
       expect(voicemails[0].mailbox).toEqual({
         id: '123',
         name: 'Main Mailbox',
-        type: 'user',
+        accesstype: 'user',
       });
       expect(voicemails[1].id).toBe('vm-2');
       expect(voicemails[1].mailbox).toBeUndefined();
@@ -208,7 +208,7 @@ describe('Voicemail', () => {
       expect(voicemails[0].mailbox).toEqual({
         id: '456',
         name: '',
-        type: '',
+        accesstype: '',
       });
     });
   });
@@ -233,7 +233,7 @@ describe('Voicemail', () => {
         mailbox: {
           id: '123',
           name: 'Personal Mailbox',
-          type: 'personal',
+          accesstype: 'personal',
         },
       });
       expect(voicemail.isPersonal()).toBeTruthy();
@@ -243,7 +243,7 @@ describe('Voicemail', () => {
       const globalMailbox: VoicemailBox = {
         id: '123',
         name: 'Global Mailbox',
-        type: 'global',
+        accesstype: 'global',
       };
       const voicemail = new Voicemail({
         id: 'ref-abc',
