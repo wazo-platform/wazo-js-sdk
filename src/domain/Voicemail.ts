@@ -31,7 +31,7 @@ type MessageResponse = {
 export type VoicemailBox = {
   id: string;
   name: string;
-  type: string;
+  accesstype: string;
 };
 
 export type Response = {
@@ -120,7 +120,7 @@ export default class Voicemail {
         voicemail: item.voicemail ? {
           id: String(item.voicemail.id ?? ''),
           name: item.voicemail.name ?? '',
-          type: item.voicemail.type ?? '',
+          accesstype: item.voicemail.accesstype ?? '',
         } : undefined,
       }));
   }
@@ -166,7 +166,7 @@ export default class Voicemail {
   }
 
   isPersonal(): boolean {
-    return !this.mailbox || this.mailbox?.type === 'personal';
+    return !this.mailbox || this.mailbox?.accesstype === 'personal';
   }
 
   contains(query: string): boolean {
