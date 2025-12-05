@@ -1,8 +1,8 @@
 import { jsonToGraphQLQuery } from 'json-to-graphql-query/lib/jsonToGraphQLQuery';
-import ApiRequester from '../utils/api-requester';
-import type { UuidSearchableQueryParams, SearchableQueryParams, PhonebookResponseItem, QueryParams, UUID } from '../domain/types';
+import type { PhonebookResponseItem, QueryParams, SearchableQueryParams, UUID, UuidSearchableQueryParams } from '../domain/types';
+import type { DirectorySource, DirectorySources, NewContact } from '../index';
 import { Contact, ContactsResponse } from '../index';
-import type { NewContact, DirectorySource, DirectorySources } from '../index';
+import ApiRequester from '../utils/api-requester';
 
 const getContactPayload = (contact: NewContact | Contact) => ({
   email: contact.email,
@@ -64,12 +64,19 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   }),
 
   // Can be used with `queryParams = { uuid: uuid1, uuid2 }` to fetch multiple contacts
-  fetchWazoContacts: async (source: DirectorySource, queryParams?: UuidSearchableQueryParams): Promise<Contact[]> => {
+  fetchWazoContacts: async <T = Contact[]>(
+    source: DirectorySource,
+    queryParams?: UuidSearchableQueryParams,
+    options?: { parser?: (response: { items: any[]; total: number }, source: DirectorySource) => T },
+  ): Promise<T> => {
     if (!source) {
-      return Promise.resolve([]);
+      return [] as T;
     }
 
-    return client.get(`${baseUrl}/backends/wazo/sources/${source.uuid}/contacts`, queryParams).then((response: any) => Contact.parseManyWazo(response.items, source));
+    const defaultParser = (response: any, src: DirectorySource): T => Contact.parseManyWazo(response.items, src) as T;
+    const parser = options?.parser ?? defaultParser;
+
+    return client.get(`${baseUrl}/backends/wazo/sources/${source.uuid}/contacts`, queryParams).then((response: any) => parser(response, source));
   },
 
   fetchGoogleSource: (context: string): Promise<DirectorySources> => client.get(`${baseUrl}/directories/${context}/sources`, {
