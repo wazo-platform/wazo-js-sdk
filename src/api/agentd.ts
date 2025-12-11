@@ -30,4 +30,8 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   }, null, ApiRequester.successResponseParser),
 
   staticResume: (): Promise<boolean> => client.post(`${baseUrl}/users/me/agents/unpause`, null, null, ApiRequester.successResponseParser),
+
+  subscribeToQueue: (queueId: string): Promise<boolean> => client.put(`${baseUrl}/users/me/agents/queues/${queueId}/subscribe`, null, null, ApiRequester.successResponseParser),
+
+  unsubscribeFromQueue: (queueId: string): Promise<boolean> => client.put(`${baseUrl}/users/me/agents/queues/${queueId}/unsubscribe`, null, null, ApiRequester.successResponseParser),
 }));
