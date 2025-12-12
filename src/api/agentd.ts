@@ -25,8 +25,8 @@ export default ((client: ApiRequester, baseUrl: string) => ({
 
   staticLogout: (): Promise<boolean> => client.post(`${baseUrl}/users/me/agents/logoff`, null, null, ApiRequester.successResponseParser),
 
-  staticPause: (): Promise<boolean> => client.post(`${baseUrl}/users/me/agents/pause`, {
-    reason: 'songbird_reason',
+  staticPause: (reason = 'songbird_reason'): Promise<boolean> => client.post(`${baseUrl}/users/me/agents/pause`, {
+    reason,
   }, null, ApiRequester.successResponseParser),
 
   staticResume: (): Promise<boolean> => client.post(`${baseUrl}/users/me/agents/unpause`, null, null, ApiRequester.successResponseParser),
