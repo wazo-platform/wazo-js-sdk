@@ -31,7 +31,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
 
   staticResume: (): Promise<boolean> => client.post(`${baseUrl}/users/me/agents/unpause`, null, null, ApiRequester.successResponseParser),
 
-  loginToQueue: (queueId: string): Promise<boolean> => client.put(`${baseUrl}/users/me/agents/queue/${queueId}/login`, null, null, ApiRequester.successResponseParser),
+  loginToQueue: (queueId: string): Promise<boolean> => client.put(`${baseUrl}/users/me/agents/queues/${queueId}/login`, null, null, ApiRequester.successResponseParser),
 
-  logoffFromQueue: (queueId: string): Promise<boolean> => client.put(`${baseUrl}/users/me/agents/queue/${queueId}/logoff`, null, null, ApiRequester.successResponseParser),
+  logoffFromQueue: (queueId: string): Promise<boolean> => client.put(`${baseUrl}/users/me/agents/queues/${queueId}/logoff`, null, null, ApiRequester.successResponseParser),
 }));
