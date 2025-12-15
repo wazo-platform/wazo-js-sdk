@@ -163,7 +163,7 @@ export type FaxOutboundSucceededEvent = {
   user_uuid: string;
 };
 
-export type AgentQueueSubscriptionEvent = {
+export type AgentQueueLoginEvent = {
   agent_id: string,
   queue_id: string,
 };
@@ -343,14 +343,14 @@ type AgentUnpaused = WebSocketBaseMessage & {
   name: 'agent_unpaused';
 };
 
-type AgentQueueSubscribed = WebSocketBaseMessage & {
-  data: AgentQueueSubscriptionEvent;
-  name: 'user_agent_queue_subscribed';
+type AgentQueueLoggedIn = WebSocketBaseMessage & {
+  data: AgentQueueLoginEvent;
+  name: 'user_agent_queue_logged_in';
 };
 
-type AgentQueueUnsubscribed = WebSocketBaseMessage & {
-  data: AgentQueueSubscriptionEvent;
-  name: 'user_agent_queue_unsubscribed';
+type AgentQueueLoggedOut = WebSocketBaseMessage & {
+  data: AgentQueueLoginEvent;
+  name: 'user_agent_queue_logged_out';
 };
 
 type MeetingUserProgress = WebSocketBaseMessage & {
@@ -363,4 +363,4 @@ type MeetingAuthorizationPending = WebSocketBaseMessage & {
   name: 'meeting_authorization_pending';
 };
 
-export type WebSocketMessage = CallCreated | CallUpdated | CallEnded | CallHeld | CallResumed | NewCallLog | ChatMessageSent | (WebSocketBaseMessage & ChatMessageResponse) | ChatRoomCreate | VoicemailCreated | GlobalVoicemailCreated | GlobalVoicemailDeleted | GlobalVoicemailUpdated | UpdateDoNotDisturb | VoicemailDeleted | FavoriteAdded | FavoriteDeleted | UserStatusUpdate | EndpointStatusUpdate | ExternalAuthAdded | ExternalAuthDeleted | PresencesRead | SwitchboardQueuedCallsUpdated | SwitchboardQueuedCallAnswered | SwitchboardHeldCallsUpdated | SwitchboardHeldCallAnswered | ParticipantJoinedRoom | ParticipantLeftRoom | ParticipantJoinedMeeting | ParticipantLeftMeeting | FaxOutboundFailed | FaxOutboundSucceeded | AgentStatusUpdate | AgentPaused | AgentUnpaused | MeetingUserProgress | MeetingAuthorizationPending | AgentQueueSubscribed | AgentQueueUnsubscribed;
+export type WebSocketMessage = CallCreated | CallUpdated | CallEnded | CallHeld | CallResumed | NewCallLog | ChatMessageSent | (WebSocketBaseMessage & ChatMessageResponse) | ChatRoomCreate | VoicemailCreated | GlobalVoicemailCreated | GlobalVoicemailDeleted | GlobalVoicemailUpdated | UpdateDoNotDisturb | VoicemailDeleted | FavoriteAdded | FavoriteDeleted | UserStatusUpdate | EndpointStatusUpdate | ExternalAuthAdded | ExternalAuthDeleted | PresencesRead | SwitchboardQueuedCallsUpdated | SwitchboardQueuedCallAnswered | SwitchboardHeldCallsUpdated | SwitchboardHeldCallAnswered | ParticipantJoinedRoom | ParticipantLeftRoom | ParticipantJoinedMeeting | ParticipantLeftMeeting | FaxOutboundFailed | FaxOutboundSucceeded | AgentStatusUpdate | AgentPaused | AgentUnpaused | MeetingUserProgress | MeetingAuthorizationPending | AgentQueueLoggedIn | AgentQueueLoggedOut;
