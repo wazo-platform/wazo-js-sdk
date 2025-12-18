@@ -13,12 +13,12 @@ export type AgentResponse = {
   id: number;
   logged: boolean;
   number: string;
-  origin_uuid: string;
+  origin_uuid?: string;
   paused: boolean;
   paused_reason: string;
-  queues: AgentQueueResponse[];
-  state_interface: string;
-  tenant_uuid: string;
+  queues?: AgentQueueResponse[];
+  state_interface?: string;
+  tenant_uuid?: string;
 };
 
 export type AgentQueue = {
@@ -36,12 +36,12 @@ export type AgentArguments = {
   id: number;
   logged: boolean;
   number: string;
-  originUuid: string;
+  originUuid?: string;
   paused: boolean;
   pausedReason: string;
-  queues: AgentQueue[];
-  stateInterface: string;
-  tenantUuid: string;
+  queues?: AgentQueue[];
+  stateInterface?: string;
+  tenantUuid?: string;
 };
 
 class Agent {
@@ -74,19 +74,21 @@ class Agent {
       id: plain.id,
       logged: plain.logged,
       number: plain.number,
-      originUuid: plain.origin_uuid,
+      originUuid: plain.origin_uuid ?? '',
       paused: plain.paused,
       pausedReason: plain.paused_reason,
-      queues: plain.queues.map(queue => ({
-        displayName: queue.display_name,
-        id: queue.id,
-        logged: queue.logged,
-        name: queue.name,
-        paused: queue.paused,
-        pausedReason: queue.paused_reason,
-      })),
-      stateInterface: plain.state_interface,
-      tenantUuid: plain.tenant_uuid,
+      queues: plain.queues
+        ? plain.queues.map(queue => ({
+          displayName: queue.display_name,
+          id: queue.id,
+          logged: queue.logged,
+          name: queue.name,
+          paused: queue.paused,
+          pausedReason: queue.paused_reason,
+        }))
+        : [],
+      stateInterface: plain.state_interface ?? '',
+      tenantUuid: plain.tenant_uuid ?? '',
     });
   }
 
@@ -96,12 +98,12 @@ class Agent {
     id,
     logged,
     number,
-    originUuid,
+    originUuid = '',
     paused,
     pausedReason,
-    queues,
-    stateInterface,
-    tenantUuid,
+    queues = [],
+    stateInterface = '',
+    tenantUuid = '',
   }: AgentArguments) {
     this.context = context;
     this.extension = extension;

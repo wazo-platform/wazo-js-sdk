@@ -58,4 +58,50 @@ describe('Call Center Agent domain', () => {
     const agent = Agent.parse(plain as AgentResponse);
     expect(agent).toEqual(new Agent(formatted as AgentArguments));
   });
+  describe('backward compatibility', () => {
+    it('should handle missing new fields from older backends', () => {
+      const legacyPlain: AgentResponse = {
+        context: 'legacy_context',
+        extension: 'legacy_extension',
+        id: 5678,
+        logged: false,
+        number: 'legacy_number',
+        paused: false,
+        paused_reason: '',
+        // origin_uuid, queues, state_interface, tenant_uuid are intentionally omitted
+      };
+      const agent = Agent.parse(legacyPlain);
+      expect(agent).toBeInstanceOf(Agent);
+      expect(agent.context).toBe('legacy_context');
+      expect(agent.extension).toBe('legacy_extension');
+      expect(agent.id).toBe(5678);
+      expect(agent.logged).toBe(false);
+      expect(agent.number).toBe('legacy_number');
+      expect(agent.paused).toBe(false);
+      expect(agent.pausedReason).toBe('');
+      // Verify defaults are applied for missing fields
+      expect(agent.originUuid).toBe('');
+      expect(agent.stateInterface).toBe('');
+      expect(agent.tenantUuid).toBe('');
+      expect(agent.queues).toEqual([]);
+    });
+    it('should allow creating Agent without new optional fields', () => {
+      const legacyArgs: AgentArguments = {
+        context: 'legacy_context',
+        extension: 'legacy_extension',
+        id: 5678,
+        logged: false,
+        number: 'legacy_number',
+        paused: false,
+        pausedReason: '',
+        // originUuid, queues, stateInterface, tenantUuid are intentionally omitted
+      };
+      const agent = new Agent(legacyArgs);
+      expect(agent).toBeInstanceOf(Agent);
+      expect(agent.originUuid).toBe('');
+      expect(agent.stateInterface).toBe('');
+      expect(agent.tenantUuid).toBe('');
+      expect(agent.queues).toEqual([]);
+    });
+  });
 });
