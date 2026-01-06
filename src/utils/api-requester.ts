@@ -76,6 +76,10 @@ export default class ApiRequester {
   }
 
   static defaultParser(response: Record<string, any>) {
+    // 204 No Content responses have no body, so don't try to parse JSON
+    if (response.status === 204) {
+      return Promise.resolve({ _headers: response.headers });
+    }
     return response.json().then((data: Record<string, any>) => ({ ...data, _headers: response.headers }));
   }
 
