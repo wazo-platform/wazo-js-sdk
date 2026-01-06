@@ -218,6 +218,46 @@ describe('With a refresh token', () => {
   });
 });
 
+describe('Handling 204 No Content responses', () => {
+  let requester: ApiRequester;
+
+  beforeEach(() => {
+    requester = new ApiRequester({
+      server,
+      agent: null,
+      clientId: null,
+      token,
+      refreshTokenCallback: () => null,
+      fetchOptions: null,
+    });
+  });
+
+  it('should not trigger a JSON.parse error on 204 response with content-type application/json', async () => {
+    const mockedEmpty204 = {
+      json: () => Promise.reject(new SyntaxError('Unexpected end of JSON input')),
+      text: () => Promise.resolve(''),
+      ok: true,
+      status: 204,
+      headers: {
+        get: () => 'application/json',
+      },
+    };
+
+    Object.defineProperty(global, 'fetch', {
+      value: jest.fn(() => Promise.resolve(mockedEmpty204) as any),
+    });
+
+    let error = null;
+    try {
+      await requester.call({ path, method: 'put', body: {} });
+    } catch (e: any) {
+      error = e;
+    }
+
+    expect(error).toBeNull();
+  });
+});
+
 describe('base64Encode', () => {
   it('should encode a string using base64', () => {
     const input = 'Hello World!';
