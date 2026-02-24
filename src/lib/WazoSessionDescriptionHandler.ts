@@ -295,7 +295,8 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
                 transceiver.direction = offerDirection;
               }
 
-              if (transceiver.receiver && transceiver.receiver.track) {
+              // Set unconditionally: track.enabled may be out of sync even when direction didn't change
+              if (transceiver.receiver?.track) {
                 // eslint-disable-next-line no-param-reassign
                 transceiver.receiver.track.enabled = (offerDirection === 'sendrecv' || offerDirection === 'recvonly');
               }
@@ -380,10 +381,8 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
               if (isConference && audioOnly && receiver.track && receiver.track.kind === 'video') {
                 // eslint-disable-next-line no-param-reassign
                 transceiver.direction = 'inactive';
-                if (receiver.track) {
-                  // eslint-disable-next-line no-param-reassign
-                  receiver.track.enabled = false;
-                }
+                // eslint-disable-next-line no-param-reassign
+                receiver.track.enabled = false;
                 return;
               }
 
@@ -392,7 +391,8 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
                 transceiver.direction = answerDirection;
               }
 
-              if (receiver && receiver.track) {
+              // Set unconditionally: track.enabled may be out of sync even when direction didn't change
+              if (receiver?.track) {
                 // eslint-disable-next-line no-param-reassign
                 receiver.track.enabled = (answerDirection === 'sendrecv' || answerDirection === 'recvonly');
               }
