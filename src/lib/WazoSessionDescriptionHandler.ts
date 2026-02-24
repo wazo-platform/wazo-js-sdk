@@ -238,8 +238,8 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       return Promise.reject(new Error('Peer connection closed.'));
     }
 
-    // Waiting for `getTransceivers` API on mobile
-    if (!this.isWeb) {
+    // Skip if getTransceivers is not available on the peer connection
+    if (!this._peerConnection.getTransceivers) {
       return Promise.resolve();
     }
 
