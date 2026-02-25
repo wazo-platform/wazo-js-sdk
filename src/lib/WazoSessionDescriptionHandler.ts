@@ -238,8 +238,8 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       return Promise.reject(new Error('Peer connection closed.'));
     }
 
-    // Waiting for `getTransceivers` API on mobile
-    if (!this.isWeb) {
+    // Skip if getTransceivers is not available on the peer connection
+    if (!this._peerConnection.getTransceivers) {
       return Promise.resolve();
     }
 
@@ -293,6 +293,12 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
                 // @ts-ignore - @REEVALUATE
                 // eslint-disable-next-line no-param-reassign
                 transceiver.direction = offerDirection;
+              }
+
+              // Set unconditionally: track.enabled may be out of sync even when direction didn't change
+              if (transceiver.receiver?.track) {
+                // eslint-disable-next-line no-param-reassign
+                transceiver.receiver.track.enabled = (offerDirection === 'sendrecv' || offerDirection === 'recvonly');
               }
             }
           });
@@ -375,12 +381,20 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
               if (isConference && audioOnly && receiver.track && receiver.track.kind === 'video') {
                 // eslint-disable-next-line no-param-reassign
                 transceiver.direction = 'inactive';
+                // eslint-disable-next-line no-param-reassign
+                receiver.track.enabled = false;
                 return;
               }
 
               if (transceiver.direction !== 'stopped' && transceiver.direction !== answerDirection) {
                 // eslint-disable-next-line no-param-reassign
                 transceiver.direction = answerDirection;
+              }
+
+              // Set unconditionally: track.enabled may be out of sync even when direction didn't change
+              if (receiver?.track) {
+                // eslint-disable-next-line no-param-reassign
+                receiver.track.enabled = (answerDirection === 'sendrecv' || answerDirection === 'recvonly');
               }
             }
           });
