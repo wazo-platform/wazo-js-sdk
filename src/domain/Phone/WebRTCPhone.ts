@@ -98,6 +98,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
 
   shouldSendReinvite: boolean;
 
+  fallbackToFirstSipSession: boolean;
+
   constructor(client: WebRTCClient, audioOutputDeviceId: string | undefined, allowVideo = false, audioRingDeviceId?: string) {
     super();
     this.client = client;
@@ -110,6 +112,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.incomingSessions = [];
     this.ringingEnabled = true;
     this.shouldSendReinvite = false;
+    this.fallbackToFirstSipSession = true;
     this.bindClientEvents();
     this.acceptedSessions = {};
     this.rejectedSessions = {};
@@ -1686,7 +1689,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const keyIndex = keys.findIndex(sessionId => callSession && callSession.isId(sessionId));
 
     if (keyIndex === -1) {
-      const currentSipSessionId = this.currentSipSession ? this.getSipSessionId(this.currentSipSession) : this.client.getSipSessionIds()[0];
+      const currentSipSessionId = this.currentSipSession ? this.getSipSessionId(this.currentSipSession) : (this.fallbackToFirstSipSession ? this.client.getSipSessionIds()[0] : null);
       return currentSipSessionId ? this.client.getSipSession(currentSipSessionId) : null;
     }
 
