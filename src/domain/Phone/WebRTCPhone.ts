@@ -902,7 +902,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       logger.info('WebRTC rejecting', {
         sipId: this.getSipSessionId(sipSession),
       });
-      this.client.hangup(sipSession);
+      this.client.reject(sipSession);
     }
   }
 
