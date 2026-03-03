@@ -2786,6 +2786,9 @@ export default class WebRTCClient extends Emitter {
   }
 
   async _reject(session: Invitation, options: InvitationRejectOptions = {}) {
+    options.statusCode = 603;
+    options.reasonPhrase = 'Decline';
+
     if (session.state !== SessionState.Initial && session.state !== SessionState.Establishing) {
       logger.warn('Trying to reject a session in a wrong state', { state: session.state, sessionId: this.getSipSessionId(session) });
       return;
