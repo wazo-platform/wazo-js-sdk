@@ -772,7 +772,10 @@ export default class WebRTCClient extends Emitter {
 
     try {
       if (session instanceof Invitation) {
-        return this._reject(session);
+        return this._reject(session, {
+          statusCode: 603,
+          reasonPhrase: 'Decline',
+        });
       }
 
       if (session instanceof Inviter) {
