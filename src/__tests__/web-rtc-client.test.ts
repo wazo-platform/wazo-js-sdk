@@ -14,6 +14,137 @@ jest.mock('sip.js/lib/api/user-agent', () => ({
 
 const client = new WebRTCClient({} as any, undefined, undefined);
 
+describe('ON_MEDIA_CONNECTED event', () => {
+  const spies: jest.SpyInstance[] = [];
+
+  afterEach(() => {
+    spies.forEach(s => s.mockRestore());
+    spies.length = 0;
+    (client as any).mediaConnectedSessions = {};
+  });
+
+  const stubOnAccepted = (sessionId: string) => {
+    spies.push(
+      jest.spyOn(client as any, '_setupMedias').mockResolvedValue(undefined),
+      jest.spyOn(client, 'updateRemoteStream').mockImplementation(() => {}),
+      jest.spyOn(client, 'getSipSessionId').mockReturnValue(sessionId),
+      jest.spyOn(client, 'storeSipSession').mockImplementation(() => {}),
+      jest.spyOn(client as any, '_startSendingStats').mockImplementation(() => {}),
+    );
+  };
+
+  const makeMockSession = () => {
+    const pc = {
+      connectionState: 'new',
+      onconnectionstatechange: null as (() => void) | null,
+      iceConnectionState: 'new',
+      oniceconnectionstatechange: null as (() => void) | null,
+      addEventListener: jest.fn(),
+    };
+    const remoteStream = {
+      getTracks: jest.fn(() => []),
+      getAudioTracks: jest.fn(() => []),
+      getVideoTracks: jest.fn(() => []),
+      onaddtrack: null,
+    };
+    const session = {
+      sessionDescriptionHandler: { peerConnection: pc, remoteMediaStream: remoteStream },
+      sessionDescriptionHandlerModifiersReInvite: [],
+    } as any;
+    return { session, pc };
+  };
+
+  it('should emit onMediaConnected when pc.connectionState reaches connected', async () => {
+    const emitSpy = jest.spyOn(client.eventEmitter, 'emit');
+    spies.push(emitSpy);
+    const { session, pc } = makeMockSession();
+    stubOnAccepted('session-1');
+
+    // eslint-disable-next-line no-underscore-dangle
+    await (client as any)._onAccepted(session, undefined, false, true);
+
+    expect(pc.onconnectionstatechange).toBeDefined();
+
+    (pc as any).connectionState = 'connected';
+    pc.onconnectionstatechange!();
+
+    expect(emitSpy).toHaveBeenCalledWith(client.ON_MEDIA_CONNECTED, session);
+  });
+
+  it('should NOT emit onMediaConnected for non-connected states', async () => {
+    const emitSpy = jest.spyOn(client.eventEmitter, 'emit');
+    spies.push(emitSpy);
+    const { session, pc } = makeMockSession();
+    (pc as any).connectionState = 'connecting';
+    stubOnAccepted('session-2');
+
+    // eslint-disable-next-line no-underscore-dangle
+    await (client as any)._onAccepted(session, undefined, false, true);
+
+    pc.onconnectionstatechange!();
+
+    expect(emitSpy).not.toHaveBeenCalledWith(client.ON_MEDIA_CONNECTED, expect.anything());
+  });
+
+  it('should emit onMediaConnected immediately if connectionState is already connected when handler is registered', async () => {
+    const emitSpy = jest.spyOn(client.eventEmitter, 'emit');
+    spies.push(emitSpy);
+    const { session, pc } = makeMockSession();
+    // Simulate connection completing before handler registration
+    (pc as any).connectionState = 'connected';
+    stubOnAccepted('session-3');
+
+    // eslint-disable-next-line no-underscore-dangle
+    await (client as any)._onAccepted(session, undefined, false, true);
+
+    expect(emitSpy).toHaveBeenCalledWith(client.ON_MEDIA_CONNECTED, session);
+  });
+
+  it('should not emit onMediaConnected twice if already connected and handler fires', async () => {
+    const emitSpy = jest.spyOn(client.eventEmitter, 'emit');
+    spies.push(emitSpy);
+    const { session, pc } = makeMockSession();
+    (pc as any).connectionState = 'connected';
+    stubOnAccepted('session-4');
+
+    // eslint-disable-next-line no-underscore-dangle
+    await (client as any)._onAccepted(session, undefined, false, true);
+
+    // Simulate the handler also firing (browser queued event)
+    pc.onconnectionstatechange!();
+
+    const mediaConnectedCalls = emitSpy.mock.calls.filter(
+      ([event]) => event === client.ON_MEDIA_CONNECTED,
+    );
+    expect(mediaConnectedCalls).toHaveLength(1);
+  });
+
+  it('should NOT emit onMediaConnected again on re-INVITE for the same session', async () => {
+    const emitSpy = jest.spyOn(client.eventEmitter, 'emit');
+    spies.push(emitSpy);
+    const { session, pc } = makeMockSession();
+    stubOnAccepted('session-5');
+
+    // First _onAccepted: connection reaches 'connected'
+    // eslint-disable-next-line no-underscore-dangle
+    await (client as any)._onAccepted(session, undefined, false, true);
+    (pc as any).connectionState = 'connected';
+    pc.onconnectionstatechange!();
+
+    // Simulate a re-INVITE (e.g. hold/unhold) calling _onAccepted again
+    // eslint-disable-next-line no-underscore-dangle
+    await (client as any)._onAccepted(session, undefined, false, true);
+
+    // The handler fires again but should NOT emit a second time
+    pc.onconnectionstatechange!();
+
+    const mediaConnectedCalls = emitSpy.mock.calls.filter(
+      ([event]) => event === client.ON_MEDIA_CONNECTED,
+    );
+    expect(mediaConnectedCalls).toHaveLength(1);
+  });
+});
+
 describe('WebRTC client', () => {
   it('should compute muted/unmuted state', async () => {
     const mutedSession = {

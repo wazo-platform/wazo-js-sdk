@@ -70,6 +70,7 @@ const ON_NETWORK_STATS = 'onNetworkStats';
 const ON_ICE_DISCONNECTED = 'onIceDisconnected';
 const ON_ICE_RECONNECTING = 'onIceReconnecting';
 const ON_ICE_RECONNECTED = 'onIceReconnected';
+const ON_MEDIA_CONNECTED = 'onMediaConnected';
 export const events = [REGISTERED, UNREGISTERED, REGISTRATION_FAILED, INVITE];
 export const transportEvents = [CONNECTED, DISCONNECTED, TRANSPORT_ERROR, MESSAGE];
 export class CanceledCallError extends Error {}
@@ -131,6 +132,8 @@ export default class WebRTCClient extends Emitter {
 
   iceReconnectAttempts: Record<string, number>;
 
+  mediaConnectedSessions: Record<string, boolean>;
+
   iceReconnectDelay: number;
 
   ON_USER_AGENT: string;
@@ -174,6 +177,8 @@ export default class WebRTCClient extends Emitter {
   ON_ICE_RECONNECTING: string;
 
   ON_ICE_RECONNECTED: string;
+
+  ON_MEDIA_CONNECTED: string;
 
   static isAPrivateIp(ip: string): boolean {
     const regex = /^(?:10|127|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\..*/;
@@ -228,6 +233,7 @@ export default class WebRTCClient extends Emitter {
     this.sessionNetworkStats = {};
     this.forceClosed = false;
     this.iceReconnectAttempts = {};
+    this.mediaConnectedSessions = {};
     this.iceReconnectDelay = config.iceReconnectDelay || DEFAULT_ICE_RECONNECT_DELAY;
     this._boundOnHeartbeat = this._onHeartbeat.bind(this);
     this.heartbeat = new Heartbeat(config.heartbeatDelay, config.heartbeatTimeout, config.maxHeartbeats);
@@ -254,6 +260,7 @@ export default class WebRTCClient extends Emitter {
     this.ON_PROGRESS = ON_PROGRESS;
     this.ON_ICE_RECONNECTING = ON_ICE_RECONNECTING;
     this.ON_ICE_RECONNECTED = ON_ICE_RECONNECTED;
+    this.ON_MEDIA_CONNECTED = ON_MEDIA_CONNECTED;
   }
 
   configureMedia(media: MediaConfig) {
@@ -1711,6 +1718,7 @@ export default class WebRTCClient extends Emitter {
     const sessionId = this.getSipSessionId(session);
     delete this.sipSessions[sessionId];
     delete this.iceReconnectAttempts[sessionId];
+    delete this.mediaConnectedSessions[sessionId];
 
     this._stopSendingStats(session);
 
@@ -2325,6 +2333,24 @@ export default class WebRTCClient extends Emitter {
 
     if (pc) {
       const currentSessionId = this.getSipSessionId(session);
+
+      pc.onconnectionstatechange = () => {
+        logger.info('on peer connection state changed', {
+          state: pc.connectionState,
+          sessionId: currentSessionId,
+        });
+
+        if (pc.connectionState === 'connected' && !this.mediaConnectedSessions[currentSessionId]) {
+          this.mediaConnectedSessions[currentSessionId] = true;
+          this.eventEmitter.emit(ON_MEDIA_CONNECTED, session);
+        }
+      };
+
+      // Handle case where connection reached 'connected' before handler was registered
+      if (pc.connectionState === 'connected' && !this.mediaConnectedSessions[currentSessionId]) {
+        this.mediaConnectedSessions[currentSessionId] = true;
+        this.eventEmitter.emit(ON_MEDIA_CONNECTED, session);
+      }
 
       pc.oniceconnectionstatechange = () => {
         logger.info('on ice connection state changed', {

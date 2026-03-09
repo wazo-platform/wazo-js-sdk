@@ -16,6 +16,7 @@ export type PhoneEventCallbacks = {
   onCallUnmuted?: () => void;
   onCallEnded?: () => void;
   onCallFailed?: (message: string) => void;
+  onMediaConnected?: (callSession: CallSession) => void;
 };
 type PhoneVoid = Promise<void> | void;
 export type AvailablePhoneOptions = {
