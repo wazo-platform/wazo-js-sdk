@@ -1596,6 +1596,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
       const callSession = this.callSessions[sessionId];
       if (callSession) {
         this.eventEmitter.emit(ON_MEDIA_CONNECTED, callSession);
+      } else {
+        logger.warn('ON_MEDIA_CONNECTED fired but no callSession found', { sipId: sessionId });
       }
     });
     this.client.on(this.client.ON_PROGRESS, session => {
