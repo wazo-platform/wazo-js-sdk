@@ -2330,16 +2330,25 @@ export default class WebRTCClient extends Emitter {
     if (pc) {
       const currentSessionId = this.getSipSessionId(session);
 
+      let mediaConnectedEmitted = false;
+
       pc.onconnectionstatechange = () => {
         logger.info('on peer connection state changed', {
           state: pc.connectionState,
           sessionId: currentSessionId,
         });
 
-        if (pc.connectionState === 'connected') {
+        if (pc.connectionState === 'connected' && !mediaConnectedEmitted) {
+          mediaConnectedEmitted = true;
           this.eventEmitter.emit(ON_MEDIA_CONNECTED, session);
         }
       };
+
+      // Handle case where connection reached 'connected' before handler was registered
+      if (pc.connectionState === 'connected' && !mediaConnectedEmitted) {
+        mediaConnectedEmitted = true;
+        this.eventEmitter.emit(ON_MEDIA_CONNECTED, session);
+      }
 
       pc.oniceconnectionstatechange = () => {
         logger.info('on ice connection state changed', {

@@ -84,6 +84,39 @@ describe('ON_MEDIA_CONNECTED event', () => {
 
     expect(emitSpy).not.toHaveBeenCalledWith(client.ON_MEDIA_CONNECTED, expect.anything());
   });
+
+  it('should emit onMediaConnected immediately if connectionState is already connected when handler is registered', async () => {
+    const emitSpy = jest.spyOn(client.eventEmitter, 'emit');
+    spies.push(emitSpy);
+    const { session, pc } = makeMockSession();
+    // Simulate connection completing before handler registration
+    (pc as any).connectionState = 'connected';
+    stubOnAccepted('session-3');
+
+    // eslint-disable-next-line no-underscore-dangle
+    await (client as any)._onAccepted(session, undefined, false, true);
+
+    expect(emitSpy).toHaveBeenCalledWith(client.ON_MEDIA_CONNECTED, session);
+  });
+
+  it('should not emit onMediaConnected twice if already connected and handler fires', async () => {
+    const emitSpy = jest.spyOn(client.eventEmitter, 'emit');
+    spies.push(emitSpy);
+    const { session, pc } = makeMockSession();
+    (pc as any).connectionState = 'connected';
+    stubOnAccepted('session-4');
+
+    // eslint-disable-next-line no-underscore-dangle
+    await (client as any)._onAccepted(session, undefined, false, true);
+
+    // Simulate the handler also firing (browser queued event)
+    pc.onconnectionstatechange!();
+
+    const mediaConnectedCalls = emitSpy.mock.calls.filter(
+      ([event]) => event === client.ON_MEDIA_CONNECTED,
+    );
+    expect(mediaConnectedCalls).toHaveLength(1);
+  });
 });
 
 describe('WebRTC client', () => {
