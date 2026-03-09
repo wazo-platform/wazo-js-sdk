@@ -132,6 +132,8 @@ export default class WebRTCClient extends Emitter {
 
   iceReconnectAttempts: Record<string, number>;
 
+  mediaConnectedSessions: Record<string, boolean>;
+
   iceReconnectDelay: number;
 
   ON_USER_AGENT: string;
@@ -231,6 +233,7 @@ export default class WebRTCClient extends Emitter {
     this.sessionNetworkStats = {};
     this.forceClosed = false;
     this.iceReconnectAttempts = {};
+    this.mediaConnectedSessions = {};
     this.iceReconnectDelay = config.iceReconnectDelay || DEFAULT_ICE_RECONNECT_DELAY;
     this._boundOnHeartbeat = this._onHeartbeat.bind(this);
     this.heartbeat = new Heartbeat(config.heartbeatDelay, config.heartbeatTimeout, config.maxHeartbeats);
@@ -1715,6 +1718,7 @@ export default class WebRTCClient extends Emitter {
     const sessionId = this.getSipSessionId(session);
     delete this.sipSessions[sessionId];
     delete this.iceReconnectAttempts[sessionId];
+    delete this.mediaConnectedSessions[sessionId];
 
     this._stopSendingStats(session);
 
@@ -2330,23 +2334,21 @@ export default class WebRTCClient extends Emitter {
     if (pc) {
       const currentSessionId = this.getSipSessionId(session);
 
-      let mediaConnectedEmitted = false;
-
       pc.onconnectionstatechange = () => {
         logger.info('on peer connection state changed', {
           state: pc.connectionState,
           sessionId: currentSessionId,
         });
 
-        if (pc.connectionState === 'connected' && !mediaConnectedEmitted) {
-          mediaConnectedEmitted = true;
+        if (pc.connectionState === 'connected' && !this.mediaConnectedSessions[currentSessionId]) {
+          this.mediaConnectedSessions[currentSessionId] = true;
           this.eventEmitter.emit(ON_MEDIA_CONNECTED, session);
         }
       };
 
       // Handle case where connection reached 'connected' before handler was registered
-      if (pc.connectionState === 'connected' && !mediaConnectedEmitted) {
-        mediaConnectedEmitted = true;
+      if (pc.connectionState === 'connected' && !this.mediaConnectedSessions[currentSessionId]) {
+        this.mediaConnectedSessions[currentSessionId] = true;
         this.eventEmitter.emit(ON_MEDIA_CONNECTED, session);
       }
 

@@ -20,6 +20,7 @@ describe('ON_MEDIA_CONNECTED event', () => {
   afterEach(() => {
     spies.forEach(s => s.mockRestore());
     spies.length = 0;
+    (client as any).mediaConnectedSessions = {};
   });
 
   const stubOnAccepted = (sessionId: string) => {
@@ -110,6 +111,31 @@ describe('ON_MEDIA_CONNECTED event', () => {
     await (client as any)._onAccepted(session, undefined, false, true);
 
     // Simulate the handler also firing (browser queued event)
+    pc.onconnectionstatechange!();
+
+    const mediaConnectedCalls = emitSpy.mock.calls.filter(
+      ([event]) => event === client.ON_MEDIA_CONNECTED,
+    );
+    expect(mediaConnectedCalls).toHaveLength(1);
+  });
+
+  it('should NOT emit onMediaConnected again on re-INVITE for the same session', async () => {
+    const emitSpy = jest.spyOn(client.eventEmitter, 'emit');
+    spies.push(emitSpy);
+    const { session, pc } = makeMockSession();
+    stubOnAccepted('session-5');
+
+    // First _onAccepted: connection reaches 'connected'
+    // eslint-disable-next-line no-underscore-dangle
+    await (client as any)._onAccepted(session, undefined, false, true);
+    (pc as any).connectionState = 'connected';
+    pc.onconnectionstatechange!();
+
+    // Simulate a re-INVITE (e.g. hold/unhold) calling _onAccepted again
+    // eslint-disable-next-line no-underscore-dangle
+    await (client as any)._onAccepted(session, undefined, false, true);
+
+    // The handler fires again but should NOT emit a second time
     pc.onconnectionstatechange!();
 
     const mediaConnectedCalls = emitSpy.mock.calls.filter(
