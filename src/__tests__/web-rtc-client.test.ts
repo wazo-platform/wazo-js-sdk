@@ -59,6 +59,7 @@ describe('ON_MEDIA_CONNECTED event', () => {
     const { session, pc } = makeMockSession();
     stubOnAccepted('session-1');
 
+    // eslint-disable-next-line no-underscore-dangle
     await (client as any)._onAccepted(session, undefined, false, true);
 
     expect(pc.onconnectionstatechange).toBeDefined();
@@ -76,6 +77,7 @@ describe('ON_MEDIA_CONNECTED event', () => {
     (pc as any).connectionState = 'connecting';
     stubOnAccepted('session-2');
 
+    // eslint-disable-next-line no-underscore-dangle
     await (client as any)._onAccepted(session, undefined, false, true);
 
     pc.onconnectionstatechange!();
