@@ -58,9 +58,10 @@ export const ON_ICE_DISCONNECTED = 'onIceDisconnected';
 export const ON_ICE_RECONNECTING = 'onIceReconnecting';
 export const ON_ICE_RECONNECTED = 'onIceReconnected';
 export const ON_EARLY_MEDIA = 'onEarlyMedia';
+export const ON_MEDIA_CONNECTED = 'onMediaConnected';
 export const MESSAGE_TYPE_CHAT = 'message/TYPE_CHAT';
 export const MESSAGE_TYPE_SIGNAL = 'message/TYPE_SIGNAL';
-export const events = [ON_USER_AGENT, ON_REGISTERED, ON_UNREGISTERED, ON_PROGRESS, ON_CALL_ACCEPTED, ON_CALL_ANSWERED, ON_CALL_INCOMING, ON_CALL_OUTGOING, ON_CALL_MUTED, ON_CALL_UNMUTED, ON_CALL_RESUMED, ON_CALL_HELD, ON_CALL_UNHELD, ON_CAMERA_DISABLED, ON_CALL_FAILED, ON_CALL_ENDED, ON_CALL_REJECTED, ON_MESSAGE, ON_REINVITE, ON_TRACK, ON_AUDIO_STREAM, ON_VIDEO_STREAM, ON_REMOVE_STREAM, ON_SHARE_SCREEN_ENDED, ON_TERMINATE_SOUND, ON_PLAY_RING_SOUND, ON_PLAY_INBOUND_CALL_SIGNAL_SOUND, ON_PLAY_HANGUP_SOUND, ON_PLAY_PROGRESS_SOUND, ON_VIDEO_INPUT_CHANGE, ON_SHARE_SCREEN_STARTED, ON_CALL_ERROR, ON_CHAT, ON_SIGNAL, ON_NETWORK_STATS, ON_ICE_DISCONNECTED, ON_ICE_RECONNECTING, ON_ICE_RECONNECTED, ON_EARLY_MEDIA];
+export const events = [ON_USER_AGENT, ON_REGISTERED, ON_UNREGISTERED, ON_PROGRESS, ON_CALL_ACCEPTED, ON_CALL_ANSWERED, ON_CALL_INCOMING, ON_CALL_OUTGOING, ON_CALL_MUTED, ON_CALL_UNMUTED, ON_CALL_RESUMED, ON_CALL_HELD, ON_CALL_UNHELD, ON_CAMERA_DISABLED, ON_CALL_FAILED, ON_CALL_ENDED, ON_CALL_REJECTED, ON_MESSAGE, ON_REINVITE, ON_TRACK, ON_AUDIO_STREAM, ON_VIDEO_STREAM, ON_REMOVE_STREAM, ON_SHARE_SCREEN_ENDED, ON_TERMINATE_SOUND, ON_PLAY_RING_SOUND, ON_PLAY_INBOUND_CALL_SIGNAL_SOUND, ON_PLAY_HANGUP_SOUND, ON_PLAY_PROGRESS_SOUND, ON_VIDEO_INPUT_CHANGE, ON_SHARE_SCREEN_STARTED, ON_CALL_ERROR, ON_CHAT, ON_SIGNAL, ON_NETWORK_STATS, ON_ICE_DISCONNECTED, ON_ICE_RECONNECTING, ON_ICE_RECONNECTED, ON_EARLY_MEDIA, ON_MEDIA_CONNECTED];
 
 const logger = IssueReporter.loggerFor('webrtc-phone');
 export default class WebRTCPhone extends Emitter implements Phone {
@@ -1587,6 +1588,15 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.on(this.client.ON_ICE_RECONNECTED, () => {
       logger.info('ICE connection reconnected');
       this.eventEmitter.emit(ON_ICE_RECONNECTED);
+    });
+    this.client.on(this.client.ON_MEDIA_CONNECTED, (sipSession: WazoSession) => {
+      const sessionId = this.getSipSessionId(sipSession);
+      logger.info('WebRTC media connected', { sipId: sessionId });
+
+      const callSession = this.callSessions[sessionId];
+      if (callSession) {
+        this.eventEmitter.emit(ON_MEDIA_CONNECTED, callSession);
+      }
     });
     this.client.on(this.client.ON_PROGRESS, session => {
       logger.info('WebRTC progress (180)');

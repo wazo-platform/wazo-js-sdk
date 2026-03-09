@@ -14,6 +14,76 @@ jest.mock('sip.js/lib/api/user-agent', () => ({
 
 const client = new WebRTCClient({} as any, undefined, undefined);
 
+describe('ON_MEDIA_CONNECTED event', () => {
+  const spies: jest.SpyInstance[] = [];
+
+  afterEach(() => {
+    spies.forEach(s => s.mockRestore());
+    spies.length = 0;
+  });
+
+  const stubOnAccepted = (sessionId: string) => {
+    spies.push(
+      jest.spyOn(client as any, '_setupMedias').mockResolvedValue(undefined),
+      jest.spyOn(client, 'updateRemoteStream').mockImplementation(() => {}),
+      jest.spyOn(client, 'getSipSessionId').mockReturnValue(sessionId),
+      jest.spyOn(client, 'storeSipSession').mockImplementation(() => {}),
+      jest.spyOn(client as any, '_startSendingStats').mockImplementation(() => {}),
+    );
+  };
+
+  const makeMockSession = () => {
+    const pc = {
+      connectionState: 'new',
+      onconnectionstatechange: null as (() => void) | null,
+      iceConnectionState: 'new',
+      oniceconnectionstatechange: null as (() => void) | null,
+      addEventListener: jest.fn(),
+    };
+    const remoteStream = {
+      getTracks: jest.fn(() => []),
+      getAudioTracks: jest.fn(() => []),
+      getVideoTracks: jest.fn(() => []),
+      onaddtrack: null,
+    };
+    const session = {
+      sessionDescriptionHandler: { peerConnection: pc, remoteMediaStream: remoteStream },
+      sessionDescriptionHandlerModifiersReInvite: [],
+    } as any;
+    return { session, pc };
+  };
+
+  it('should emit onMediaConnected when pc.connectionState reaches connected', async () => {
+    const emitSpy = jest.spyOn(client.eventEmitter, 'emit');
+    spies.push(emitSpy);
+    const { session, pc } = makeMockSession();
+    stubOnAccepted('session-1');
+
+    await (client as any)._onAccepted(session, undefined, false, true);
+
+    expect(pc.onconnectionstatechange).toBeDefined();
+
+    (pc as any).connectionState = 'connected';
+    pc.onconnectionstatechange!();
+
+    expect(emitSpy).toHaveBeenCalledWith(client.ON_MEDIA_CONNECTED, session);
+  });
+
+  it('should NOT emit onMediaConnected for non-connected states', async () => {
+    const emitSpy = jest.spyOn(client.eventEmitter, 'emit');
+    spies.push(emitSpy);
+    const { session, pc } = makeMockSession();
+    (pc as any).connectionState = 'connecting';
+    stubOnAccepted('session-2');
+
+    await (client as any)._onAccepted(session, undefined, false, true);
+
+    pc.onconnectionstatechange!();
+
+    expect(emitSpy).not.toHaveBeenCalledWith(client.ON_MEDIA_CONNECTED, expect.anything());
+  });
+});
+
 describe('WebRTC client', () => {
   it('should compute muted/unmuted state', async () => {
     const mutedSession = {
