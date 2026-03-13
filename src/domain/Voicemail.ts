@@ -26,12 +26,18 @@ type MessageResponse = {
   folder?: Record<string, any>;
   timestamp: number;
   voicemail?: VoicemailBox;
+  transcription?: VoicemailMessageTranscription;
 };
 
 export type VoicemailBox = {
   id: string;
   name: string;
   accesstype: string;
+};
+
+export type VoicemailMessageTranscription = {
+  id: string;
+  text: string;
 };
 
 export type Response = {
@@ -57,6 +63,7 @@ type VoicemailArguments = {
   };
   unread?: boolean | null | undefined;
   mailbox?: VoicemailBox;
+  transcription?: VoicemailMessageTranscription;
 };
 export default class Voicemail {
   type: string;
@@ -70,6 +77,8 @@ export default class Voicemail {
   unread: boolean | null | undefined;
 
   mailbox?: VoicemailBox;
+
+  transcription?: VoicemailMessageTranscription;
 
   caller: {
     name: string;
@@ -87,6 +96,7 @@ export default class Voicemail {
       },
       unread: plain.folder ? plain.folder.type === VoicemailFolder.NEW : null,
       mailbox: plain.voicemail,
+      transcription: plain.transcription,
     });
   }
 
@@ -122,6 +132,7 @@ export default class Voicemail {
           name: item.voicemail.name ?? '',
           accesstype: item.voicemail.accesstype ?? '',
         } : undefined,
+        transcription: (item as { transcription?: VoicemailMessageTranscription }).transcription,
       }));
   }
 
@@ -140,6 +151,7 @@ export default class Voicemail {
     caller,
     unread,
     mailbox,
+    transcription,
   }: VoicemailArguments) {
     this.id = id;
     this.date = date;
@@ -147,6 +159,7 @@ export default class Voicemail {
     this.caller = caller;
     this.unread = unread;
     this.mailbox = mailbox;
+    this.transcription = transcription;
     // Useful to compare instead of instanceof with minified code
     this.type = 'Voicemail';
   }

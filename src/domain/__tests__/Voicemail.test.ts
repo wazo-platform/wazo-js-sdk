@@ -139,6 +139,25 @@ describe('Voicemail', () => {
       const voicemail = Voicemail.parse(raw);
       expect(voicemail.mailbox).toBeUndefined();
     });
+
+    it('can parse voicemail with transcription', () => {
+      const raw = {
+        duration: 5,
+        timestamp: 1530823017,
+        id: '1530823017-00000000',
+        caller_id_name: 'Cl\u00e9ment Bourgeois',
+        caller_id_num: '8005',
+        transcription: {
+          id: 'trans-123',
+          text: 'Hi, this is a test message.',
+        },
+      };
+      const voicemail = Voicemail.parse(raw);
+      expect(voicemail.transcription).toEqual({
+        id: 'trans-123',
+        text: 'Hi, this is a test message.',
+      });
+    });
   });
 
   describe('parseListData', () => {
@@ -209,6 +228,31 @@ describe('Voicemail', () => {
         id: '456',
         name: '',
         accesstype: '',
+      });
+    });
+
+    it('passes through transcription when present in items', () => {
+      const listData = {
+        items: [
+          {
+            id: 'vm-1',
+            duration: 30,
+            timestamp: 1530823017,
+            caller_id_name: 'John',
+            caller_id_num: '123',
+            transcription: {
+              id: 'trans-1',
+              text: 'Please call me back.',
+            },
+          },
+        ],
+      };
+
+      const voicemails = Voicemail.parseListData(listData as any);
+      expect(voicemails).toHaveLength(1);
+      expect(voicemails[0].transcription).toEqual({
+        id: 'trans-1',
+        text: 'Please call me back.',
       });
     });
   });

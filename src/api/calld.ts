@@ -22,7 +22,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
     presence,
   }, null, ApiRequester.successResponseParser),
 
-  listMessages: (participantUuid: UUID | null | undefined, limit?: number): Promise<Array<ChatMessage>> => {
+  listMessages: async (participantUuid: UUID | null | undefined, limit?: number): Promise<Array<ChatMessage>> => {
     const query: Record<string, any> = {};
 
     if (participantUuid) {
@@ -33,7 +33,8 @@ export default ((client: ApiRequester, baseUrl: string) => ({
       query.limit = limit;
     }
 
-    return client.get(`${baseUrl}/users/me/chats`, query).then((response: ChatMessageListResponse) => ChatMessage.parseMany(response));
+    const response = await client.get(`${baseUrl}/users/me/chats`, query) as ChatMessageListResponse;
+    return ChatMessage.parseMany(response);
   },
 
   sendMessage: (alias: string, msg: string, toUserId: string): Promise<boolean> => {
@@ -64,9 +65,12 @@ export default ((client: ApiRequester, baseUrl: string) => ({
 
   cancelCall: (callId: string): Promise<boolean> => client.delete(`${baseUrl}/users/me/calls/${callId}`, null),
 
-  listCalls: (): Promise<Array<Call>> => client.get(`${baseUrl}/users/me/calls`, null).then((response: any) => Call.parseMany(response.items)),
+  listCalls: async (): Promise<Array<Call>> => {
+    const response = await client.get(`${baseUrl}/users/me/calls`, null) as any;
+    return Call.parseMany(response.items);
+  },
 
-  relocateCall(callId: string, destination: string, lineId: number | null | undefined, contact?: string | null | undefined): Promise<Relocation> {
+  relocateCall: async (callId: string, destination: string, lineId: number | null | undefined, contact?: string | null | undefined): Promise<Relocation> => {
     const body: Record<string, any> = {
       completions: ['answer'],
       destination,
@@ -86,14 +90,32 @@ export default ((client: ApiRequester, baseUrl: string) => ({
       body.location.contact = contact;
     }
 
-    return client.post(`${baseUrl}/users/me/relocates`, body).then((response: RelocationResponse) => Relocation.parse(response));
+    const response = await client.post(`${baseUrl}/users/me/relocates`, body) as RelocationResponse;
+    return Relocation.parse(response);
   },
 
-  listVoicemails: (): Promise<Array<Voicemail>> => client.get(`${baseUrl}/users/me/voicemails`).then((response: any) => Voicemail.parseMany(response)),
+  listVoicemails: async (): Promise<Array<Voicemail>> => {
+    const response = await client.get(`${baseUrl}/users/me/voicemails`) as any;
+    return Voicemail.parseMany(response);
+  },
 
-  listVoicemailsMessages: (params: Calld.MeVoicemailsMessagesListParams & { raw?: boolean } = {}) =>
-    client.get({ path: `${baseUrl}/users/me/voicemails/messages`, body: params })
-      .then((response: Calld.MeVoicemailsMessagesListData) => (params.raw ? response : Voicemail.parseListData(response))),
+  listVoicemailsMessages: async (params: Calld.MeVoicemailsMessagesListParams & { raw?: boolean } = {}) => {
+    const response = await client.get({ path: `${baseUrl}/users/me/voicemails/messages`, body: params }) as Calld.MeVoicemailsMessagesListData;
+    return params.raw ? response : Voicemail.parseListData(response);
+  },
+
+  listVoicemailsMessagesAll: async (params: {
+    user_uuid?: string;
+    voicemail_type?: 'all' | 'personal' | 'global';
+    direction?: string;
+    order?: string;
+    limit?: number;
+    offset?: number;
+    recurse?: boolean;
+  } = {}) => {
+    const response = await client.get({ path: `${baseUrl}/voicemails/messages`, body: params }) as Calld.MeVoicemailsMessagesListData;
+    return Voicemail.parseListData(response);
+  },
 
   deleteVoicemail: (voicemailId: string): Promise<boolean> => client.delete(`${baseUrl}/users/me/voicemails/messages/${voicemailId}`),
 
@@ -146,11 +168,14 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   resume: (callId: string): Promise<boolean> => client.put(`${baseUrl}/users/me/calls/${callId}/hold/stop`, null, null, ApiRequester.successResponseParser),
 
   // eslint-disable-next-line camelcase
-  transferCall: (initiator_call: string, exten: string, flow: string): Promise<IndirectTransfer> => client.post(`${baseUrl}/users/me/transfers`, {
-    initiator_call,
-    exten,
-    flow,
-  }).then(IndirectTransfer.parseFromApi),
+  transferCall: async (initiator_call: string, exten: string, flow: string): Promise<IndirectTransfer> => {
+    const response = await client.post(`${baseUrl}/users/me/transfers`, {
+      initiator_call,
+      exten,
+      flow,
+    });
+    return IndirectTransfer.parseFromApi(response);
+  },
 
   confirmCallTransfer: (transferId: string): Promise<boolean> => client.put(`${baseUrl}/users/me/transfers/${transferId}/complete`, null, null, ApiRequester.successResponseParser),
 
@@ -180,5 +205,8 @@ export default ((client: ApiRequester, baseUrl: string) => ({
 
   resumeRecording: (callId: string): Promise<boolean> => client.put(`${baseUrl}/users/me/calls/${callId}/record/resume`, null, null, ApiRequester.successResponseParser),
 
-  guestGetMeetingStatus: (meetingUuid: string): Promise<MeetingStatus> => client.get(`${baseUrl}/guests/me/meetings/${meetingUuid}/status`).then(MeetingStatus.parse),
+  guestGetMeetingStatus: async (meetingUuid: string): Promise<MeetingStatus> => {
+    const response = await client.get(`${baseUrl}/guests/me/meetings/${meetingUuid}/status`);
+    return MeetingStatus.parse(response);
+  },
 }));

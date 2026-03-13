@@ -847,6 +847,8 @@ client.calld.holdSwitchboardCall(switchboardUuid, callId);
 client.calld.listCalls();
 client.calld.listMessages(participantUuid, limit);
 client.calld.listVoicemails();
+client.calld.listVoicemailsMessages(params); // includes optional transcription per message
+client.calld.listVoicemailsMessagesAll(params); // tenant-wide (admin)
 client.calld.makeCall(extension, fromMobile, lineId, allLines);
 client.calld.sendFax(extension, fax, callerId);
 client.calld.sendMessage(alias, msg, toUserId);
@@ -913,6 +915,15 @@ Use callLogd to interact with call logs.
 client.callLogd.search(search, limit);
 client.callLogd.listCallLogs(offset, limit);
 client.callLogd.listCallLogsFromDate(from, number);
+```
+
+Voicemail transcriptions (AI transcription of voicemail messages):
+```js
+client.callLogd.listUserMeVoicemailTranscriptions({ from, until, limit, offset, search_text, voicemail_id });
+client.callLogd.getUserMeVoicemailTranscription(voicemailMessageId);
+client.callLogd.listUserVoicemailTranscriptions(userUuid, params);
+client.callLogd.getUserVoicemailTranscription(userUuid, voicemailMessageId);
+// Admin: client.callLogd.listVoicemailTranscriptions(params);
 ```
 
 #### Chatd
@@ -1490,6 +1501,11 @@ import { USERS_SERVICES_DND_UPDATED, AUTH_SESSION_EXPIRE_SOON } from '@wazo/sdk/
 // eventName can be on the of events here: http://documentation.wazo.community/en/stable/api_sdk/websocket.html
 ws.on('eventName', (data: mixed) => {
 });
+
+// Voicemail transcription events (when AI transcription is created or deleted):
+import { USER_VOICEMAIL_TRANSCRIPTION_CREATED, USER_VOICEMAIL_TRANSCRIPTION_DELETED } from '@wazo/sdk/lib/websocket-client';
+ws.on(USER_VOICEMAIL_TRANSCRIPTION_CREATED, (data) => { /* data: { user_uuid, voicemail_id, message_id, transcription_text, ... } */ });
+ws.on(USER_VOICEMAIL_TRANSCRIPTION_DELETED, (data) => { /* same */ });
 
 ws.on(USERS_SERVICES_DND_UPDATED, ({ enabled }) => {
   // Do something with the new do not disturb value.

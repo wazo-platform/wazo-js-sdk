@@ -64,6 +64,22 @@ export type VoicemailEvent = {
   voicemail_id: number;
 };
 
+export type VoicemailTranscriptionEventBase = {
+  voicemail_id: number;
+  message_id: string;
+  transcription_text: string;
+  provider_id: string;
+  language: string;
+  duration: number;
+  created_at: string;
+};
+
+export type UserVoicemailTranscriptionEvent = VoicemailTranscriptionEventBase & {
+  user_uuid: string;
+};
+
+export type GlobalVoicemailTranscriptionEvent = VoicemailTranscriptionEventBase;
+
 export type CallLogEvent = {
   answer: string;
   answered: boolean;
@@ -238,6 +254,26 @@ type VoicemailDeleted = WebSocketBaseMessage & {
   name: 'user_voicemail_message_deleted';
 };
 
+type UserVoicemailTranscriptionCreated = WebSocketBaseMessage & {
+  data: UserVoicemailTranscriptionEvent;
+  name: 'user_voicemail_transcription_created';
+};
+
+type UserVoicemailTranscriptionDeleted = WebSocketBaseMessage & {
+  data: UserVoicemailTranscriptionEvent;
+  name: 'user_voicemail_transcription_deleted';
+};
+
+type GlobalVoicemailTranscriptionCreated = WebSocketBaseMessage & {
+  data: GlobalVoicemailTranscriptionEvent;
+  name: 'global_voicemail_transcription_created';
+};
+
+type GlobalVoicemailTranscriptionDeleted = WebSocketBaseMessage & {
+  data: GlobalVoicemailTranscriptionEvent;
+  name: 'global_voicemail_transcription_deleted';
+};
+
 type FavoriteAdded = WebSocketBaseMessage & {
   data: FavoriteEvent;
   name: 'favorite_added';
@@ -363,4 +399,4 @@ type MeetingAuthorizationPending = WebSocketBaseMessage & {
   name: 'meeting_authorization_pending';
 };
 
-export type WebSocketMessage = CallCreated | CallUpdated | CallEnded | CallHeld | CallResumed | NewCallLog | ChatMessageSent | (WebSocketBaseMessage & ChatMessageResponse) | ChatRoomCreate | VoicemailCreated | GlobalVoicemailCreated | GlobalVoicemailDeleted | GlobalVoicemailUpdated | UpdateDoNotDisturb | VoicemailDeleted | FavoriteAdded | FavoriteDeleted | UserStatusUpdate | EndpointStatusUpdate | ExternalAuthAdded | ExternalAuthDeleted | PresencesRead | SwitchboardQueuedCallsUpdated | SwitchboardQueuedCallAnswered | SwitchboardHeldCallsUpdated | SwitchboardHeldCallAnswered | ParticipantJoinedRoom | ParticipantLeftRoom | ParticipantJoinedMeeting | ParticipantLeftMeeting | FaxOutboundFailed | FaxOutboundSucceeded | AgentStatusUpdate | AgentPaused | AgentUnpaused | MeetingUserProgress | MeetingAuthorizationPending | AgentQueueLoggedIn | AgentQueueLoggedOut;
+export type WebSocketMessage = CallCreated | CallUpdated | CallEnded | CallHeld | CallResumed | NewCallLog | ChatMessageSent | (WebSocketBaseMessage & ChatMessageResponse) | ChatRoomCreate | VoicemailCreated | GlobalVoicemailCreated | GlobalVoicemailDeleted | GlobalVoicemailUpdated | UpdateDoNotDisturb | VoicemailDeleted | UserVoicemailTranscriptionCreated | UserVoicemailTranscriptionDeleted | GlobalVoicemailTranscriptionCreated | GlobalVoicemailTranscriptionDeleted | FavoriteAdded | FavoriteDeleted | UserStatusUpdate | EndpointStatusUpdate | ExternalAuthAdded | ExternalAuthDeleted | PresencesRead | SwitchboardQueuedCallsUpdated | SwitchboardQueuedCallAnswered | SwitchboardHeldCallsUpdated | SwitchboardHeldCallAnswered | ParticipantJoinedRoom | ParticipantLeftRoom | ParticipantJoinedMeeting | ParticipantLeftMeeting | FaxOutboundFailed | FaxOutboundSucceeded | AgentStatusUpdate | AgentPaused | AgentUnpaused | MeetingUserProgress | MeetingAuthorizationPending | AgentQueueLoggedIn | AgentQueueLoggedOut;

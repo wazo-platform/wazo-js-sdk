@@ -1,7 +1,18 @@
 import ApiRequester from '../utils/api-requester';
 import CallLog, { CallLogQueryParams } from '../domain/CallLog';
+import type { VoicemailTranscription, VoicemailTranscriptionListParams } from '../domain/types';
+import type { ListResponse } from '../types/api';
 
 type ListCallLogsQueryParams = Exclude<CallLogQueryParams, 'offset' | 'limit'>;
+
+const serializeListParams = (params: VoicemailTranscriptionListParams): Record<string, any> => {
+  const { voicemail_id: voicemailIds, ...rest } = params;
+  const result: Record<string, any> = { ...rest };
+  if (Array.isArray(voicemailIds) && voicemailIds.length > 0) {
+    result.voicemail_id = voicemailIds.join(',');
+  }
+  return result;
+};
 
 export default ((client: ApiRequester, baseUrl: string) => ({
   search: (search: string, limit = 5): Promise<Array<CallLog>> => client.get(`${baseUrl}/users/me/cdr`, {
@@ -30,4 +41,19 @@ export default ((client: ApiRequester, baseUrl: string) => ({
     from: from.toISOString(),
     number,
   }).then(CallLog.parseMany),
+
+  listVoicemailTranscriptions: (params: VoicemailTranscriptionListParams = {}): Promise<ListResponse<VoicemailTranscription>> =>
+    client.get(`${baseUrl}/voicemails/transcriptions`, serializeListParams(params)),
+
+  listUserMeVoicemailTranscriptions: (params: VoicemailTranscriptionListParams = {}): Promise<ListResponse<VoicemailTranscription>> =>
+    client.get(`${baseUrl}/users/me/voicemails/transcriptions`, serializeListParams(params)),
+
+  getUserMeVoicemailTranscription: (voicemailMessageId: string): Promise<VoicemailTranscription> =>
+    client.get(`${baseUrl}/users/me/voicemails/${voicemailMessageId}/transcription`),
+
+  listUserVoicemailTranscriptions: (userUuid: string, params: VoicemailTranscriptionListParams = {}): Promise<ListResponse<VoicemailTranscription>> =>
+    client.get(`${baseUrl}/users/${userUuid}/voicemails/transcriptions`, serializeListParams(params)),
+
+  getUserVoicemailTranscription: (userUuid: string, voicemailMessageId: string): Promise<VoicemailTranscription> =>
+    client.get(`${baseUrl}/users/${userUuid}/voicemails/${voicemailMessageId}/transcription`),
 }));

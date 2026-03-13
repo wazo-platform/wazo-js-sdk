@@ -7,6 +7,7 @@ import type {
 import { SessionDescriptionHandlerFactoryOptions } from 'sip.js/lib/platform/web';
 import type { IncomingResponse as SipIncomingResponse } from 'sip.js/lib/core/messages/incoming-response';
 import { Transport } from 'sip.js/lib/api';
+import type { ApiParams } from '../types/api';
 import WazoSessionDescriptionHandler from '../lib/WazoSessionDescriptionHandler';
 import { Websocket } from '../simple/Websocket';
 import * as WebSocketClient from '../websocket-client';
@@ -343,4 +344,25 @@ export type DeviceToken = {
   apns_token: string | null;
   apns_voip_token: string | null;
   apns_notification_token: string | null;
+};
+
+export type VoicemailTranscription = {
+  voicemail_message_id: string;
+  tenant_uuid?: string;
+  voicemail_id: number;
+  transcript: string;
+  provider_id?: string;
+  language?: string;
+  duration?: number;
+  created_at?: string;
+};
+
+export type VoicemailTranscriptionListParams = ApiParams<{
+  from?: string;
+  until?: string;
+  voicemail_id?: number[];
+  search_text?: string;
+}> & {
+  order?: 'created_at' | 'voicemail_message_id';
+  direction?: 'asc' | 'desc';
 };
