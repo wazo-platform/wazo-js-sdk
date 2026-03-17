@@ -1,3 +1,5 @@
+import { Invitation, SessionState } from 'sip.js/lib/api';
+
 import WebRTCClient from '../web-rtc-client';
 
 jest.mock('sip.js/lib/platform/web/transport');
@@ -67,6 +69,50 @@ describe('WebRTC client', () => {
     expect(client.isAudioMuted(oldKindMuted as any)).toBeTruthy();
     expect(client.isAudioMuted(unMutedSession as any)).toBeFalsy();
     expect(client.isAudioMuted(oldKindUnmuted as any)).toBeFalsy();
+  });
+
+  describe('reject', () => {
+    it('should call _reject with 603 Decline when session is an Invitation', async () => {
+      const rejectMock = jest.fn().mockResolvedValue(undefined);
+      const session = Object.create(Invitation.prototype, {
+        state: { value: SessionState.Initial },
+        incomingInviteRequest: { value: { rejectable: true } },
+        reject: { value: rejectMock },
+      });
+
+      await client.reject(session);
+
+      expect(rejectMock).toHaveBeenCalledWith({
+        statusCode: 603,
+        reasonPhrase: 'Decline',
+      });
+    });
+
+    it('should not reject an Invitation in wrong state', async () => {
+      const rejectMock = jest.fn();
+      const session = Object.create(Invitation.prototype, {
+        state: { value: SessionState.Terminated },
+        incomingInviteRequest: { value: { rejectable: true, message: { callId: 'test' } } },
+        reject: { value: rejectMock },
+      });
+
+      await client.reject(session);
+
+      expect(rejectMock).not.toHaveBeenCalled();
+    });
+
+    it('should not reject an Invitation when not rejectable', async () => {
+      const rejectMock = jest.fn();
+      const session = Object.create(Invitation.prototype, {
+        state: { value: SessionState.Initial },
+        incomingInviteRequest: { value: { rejectable: false, message: { callId: 'test' } } },
+        reject: { value: rejectMock },
+      });
+
+      await client.reject(session);
+
+      expect(rejectMock).not.toHaveBeenCalled();
+    });
   });
 });
 describe('changeAudioInputDevice', () => {
