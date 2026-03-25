@@ -2337,23 +2337,55 @@ export default class WebRTCClient extends Emitter {
     if (pc) {
       const currentSessionId = this.getSipSessionId(session);
 
+      const emitMediaConnectedOnce = () => {
+        if (this.mediaConnectedSessions[currentSessionId]) {
+          return;
+        }
+
+        // Require both: connection established AND remote audio track unmuted
+        // (i.e. first audio frame decoded). This prevents sending HID offHook
+        // before audio is actually flowing, which causes some headsets to enter
+        // a Line Busy Tone state.
+        if (pc.connectionState !== 'connected') {
+          return;
+        }
+
+        const receivers = pc.getReceivers();
+        const audioReceiver = receivers.find(r => r.track?.kind === 'audio');
+        if (audioReceiver?.track?.muted !== false) {
+          return;
+        }
+
+        this.mediaConnectedSessions[currentSessionId] = true;
+        this.eventEmitter.emit(ON_MEDIA_CONNECTED, session);
+      };
+
       pc.onconnectionstatechange = () => {
         logger.info('on peer connection state changed', {
           state: pc.connectionState,
           sessionId: currentSessionId,
         });
 
-        if (pc.connectionState === 'connected' && !this.mediaConnectedSessions[currentSessionId]) {
-          this.mediaConnectedSessions[currentSessionId] = true;
-          this.eventEmitter.emit(ON_MEDIA_CONNECTED, session);
-        }
+        emitMediaConnectedOnce();
       };
 
-      // Handle case where connection reached 'connected' before handler was registered
-      if (pc.connectionState === 'connected' && !this.mediaConnectedSessions[currentSessionId]) {
-        this.mediaConnectedSessions[currentSessionId] = true;
-        this.eventEmitter.emit(ON_MEDIA_CONNECTED, session);
-      }
+      // Listen for remote audio track unmute
+      const receivers = pc.getReceivers();
+      receivers.forEach(receiver => {
+        if (receiver.track?.kind === 'audio') {
+          receiver.track.addEventListener('unmute', emitMediaConnectedOnce);
+        }
+      });
+
+      // Also listen on future tracks (re-INVITE, etc.)
+      pc.addEventListener('track', (event: RTCTrackEvent) => {
+        if (event.track.kind === 'audio') {
+          event.track.addEventListener('unmute', emitMediaConnectedOnce);
+        }
+      });
+
+      // Handle case where both conditions are already met
+      emitMediaConnectedOnce();
 
       pc.oniceconnectionstatechange = () => {
         logger.info('on ice connection state changed', {

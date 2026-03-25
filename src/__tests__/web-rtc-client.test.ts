@@ -35,13 +35,36 @@ describe('ON_MEDIA_CONNECTED event', () => {
     );
   };
 
-  const makeMockSession = () => {
+  const makeMockAudioTrack = (muted = true) => {
+    const listeners: Record<string, Function[]> = {};
+    return {
+      kind: 'audio' as const,
+      muted,
+      addEventListener: jest.fn((event: string, cb: Function) => {
+        listeners[event] = listeners[event] || [];
+        listeners[event].push(cb);
+      }),
+      // Helper to simulate the browser firing 'unmute'
+      _fireUnmute() {
+        this.muted = false;
+        (listeners['unmute'] || []).forEach(cb => cb());
+      },
+    };
+  };
+
+  const makeMockSession = (audioTrackMuted = true) => {
+    const audioTrack = makeMockAudioTrack(audioTrackMuted);
+    const trackListeners: Record<string, Function[]> = {};
     const pc = {
       connectionState: 'new',
       onconnectionstatechange: null as (() => void) | null,
       iceConnectionState: 'new',
       oniceconnectionstatechange: null as (() => void) | null,
-      addEventListener: jest.fn(),
+      addEventListener: jest.fn((event: string, cb: Function) => {
+        trackListeners[event] = trackListeners[event] || [];
+        trackListeners[event].push(cb);
+      }),
+      getReceivers: jest.fn(() => [{ track: audioTrack }]),
     };
     const remoteStream = {
       getTracks: jest.fn(() => []),
@@ -53,27 +76,48 @@ describe('ON_MEDIA_CONNECTED event', () => {
       sessionDescriptionHandler: { peerConnection: pc, remoteMediaStream: remoteStream },
       sessionDescriptionHandlerModifiersReInvite: [],
     } as any;
-    return { session, pc };
+    return { session, pc, audioTrack };
   };
 
-  it('should emit onMediaConnected when pc.connectionState reaches connected', async () => {
+  it('should emit onMediaConnected when both pc connected AND audio track unmuted', async () => {
     const emitSpy = jest.spyOn(client.eventEmitter, 'emit');
     spies.push(emitSpy);
-    const { session, pc } = makeMockSession();
+    const { session, pc, audioTrack } = makeMockSession();
     stubOnAccepted('session-1');
 
     // eslint-disable-next-line no-underscore-dangle
     await (client as any)._onAccepted(session, undefined, false, true);
 
-    expect(pc.onconnectionstatechange).toBeDefined();
-
+    // Connection becomes connected — but audio track is still muted
     (pc as any).connectionState = 'connected';
     pc.onconnectionstatechange!();
+    expect(emitSpy).not.toHaveBeenCalledWith(client.ON_MEDIA_CONNECTED, expect.anything());
 
+    // Audio track unmutes — NOW it should emit
+    audioTrack._fireUnmute();
     expect(emitSpy).toHaveBeenCalledWith(client.ON_MEDIA_CONNECTED, session);
   });
 
-  it('should NOT emit onMediaConnected for non-connected states', async () => {
+  it('should emit onMediaConnected when audio unmutes first, then pc connects', async () => {
+    const emitSpy = jest.spyOn(client.eventEmitter, 'emit');
+    spies.push(emitSpy);
+    const { session, pc, audioTrack } = makeMockSession();
+    stubOnAccepted('session-1b');
+
+    // eslint-disable-next-line no-underscore-dangle
+    await (client as any)._onAccepted(session, undefined, false, true);
+
+    // Audio unmutes first — pc not yet connected
+    audioTrack._fireUnmute();
+    expect(emitSpy).not.toHaveBeenCalledWith(client.ON_MEDIA_CONNECTED, expect.anything());
+
+    // Now pc connects
+    (pc as any).connectionState = 'connected';
+    pc.onconnectionstatechange!();
+    expect(emitSpy).toHaveBeenCalledWith(client.ON_MEDIA_CONNECTED, session);
+  });
+
+  it('should NOT emit onMediaConnected when only pc connected but audio still muted', async () => {
     const emitSpy = jest.spyOn(client.eventEmitter, 'emit');
     spies.push(emitSpy);
     const { session, pc } = makeMockSession();
@@ -88,11 +132,11 @@ describe('ON_MEDIA_CONNECTED event', () => {
     expect(emitSpy).not.toHaveBeenCalledWith(client.ON_MEDIA_CONNECTED, expect.anything());
   });
 
-  it('should emit onMediaConnected immediately if connectionState is already connected when handler is registered', async () => {
+  it('should emit immediately if both conditions already met when handler is registered', async () => {
     const emitSpy = jest.spyOn(client.eventEmitter, 'emit');
     spies.push(emitSpy);
-    const { session, pc } = makeMockSession();
-    // Simulate connection completing before handler registration
+    // Audio track already unmuted, connection already connected
+    const { session, pc } = makeMockSession(false);
     (pc as any).connectionState = 'connected';
     stubOnAccepted('session-3');
 
@@ -102,18 +146,20 @@ describe('ON_MEDIA_CONNECTED event', () => {
     expect(emitSpy).toHaveBeenCalledWith(client.ON_MEDIA_CONNECTED, session);
   });
 
-  it('should not emit onMediaConnected twice if already connected and handler fires', async () => {
+  it('should not emit onMediaConnected twice', async () => {
     const emitSpy = jest.spyOn(client.eventEmitter, 'emit');
     spies.push(emitSpy);
-    const { session, pc } = makeMockSession();
+    const { session, pc, audioTrack } = makeMockSession(false);
     (pc as any).connectionState = 'connected';
     stubOnAccepted('session-4');
 
     // eslint-disable-next-line no-underscore-dangle
     await (client as any)._onAccepted(session, undefined, false, true);
 
-    // Simulate the handler also firing (browser queued event)
+    // Both conditions met at registration — emits once
+    // Simulate handler also firing (browser queued event)
     pc.onconnectionstatechange!();
+    audioTrack._fireUnmute();
 
     const mediaConnectedCalls = emitSpy.mock.calls.filter(
       ([event]) => event === client.ON_MEDIA_CONNECTED,
@@ -124,14 +170,15 @@ describe('ON_MEDIA_CONNECTED event', () => {
   it('should NOT emit onMediaConnected again on re-INVITE for the same session', async () => {
     const emitSpy = jest.spyOn(client.eventEmitter, 'emit');
     spies.push(emitSpy);
-    const { session, pc } = makeMockSession();
+    const { session, pc, audioTrack } = makeMockSession();
     stubOnAccepted('session-5');
 
-    // First _onAccepted: connection reaches 'connected'
+    // First _onAccepted: connection reaches 'connected', audio unmutes
     // eslint-disable-next-line no-underscore-dangle
     await (client as any)._onAccepted(session, undefined, false, true);
     (pc as any).connectionState = 'connected';
     pc.onconnectionstatechange!();
+    audioTrack._fireUnmute();
 
     // Simulate a re-INVITE (e.g. hold/unhold) calling _onAccepted again
     // eslint-disable-next-line no-underscore-dangle
