@@ -36,31 +36,31 @@ describe('ON_MEDIA_CONNECTED event', () => {
   };
 
   const makeMockAudioTrack = (muted = true) => {
-    const listeners: Record<string, Function[]> = {};
+    const listeners: Record<string, ((...args: any[]) => void)[]> = {};
     return {
       kind: 'audio' as const,
       muted,
-      addEventListener: jest.fn((event: string, cb: Function) => {
+      addEventListener: jest.fn((event: string, cb: (...args: any[]) => void) => {
         listeners[event] = listeners[event] || [];
         listeners[event].push(cb);
       }),
       // Helper to simulate the browser firing 'unmute'
-      _fireUnmute() {
+      fireUnmute() {
         this.muted = false;
-        (listeners['unmute'] || []).forEach(cb => cb());
+        (listeners.unmute || []).forEach(cb => cb());
       },
     };
   };
 
   const makeMockSession = (audioTrackMuted = true) => {
     const audioTrack = makeMockAudioTrack(audioTrackMuted);
-    const trackListeners: Record<string, Function[]> = {};
+    const trackListeners: Record<string, ((...args: any[]) => void)[]> = {};
     const pc = {
       connectionState: 'new',
       onconnectionstatechange: null as (() => void) | null,
       iceConnectionState: 'new',
       oniceconnectionstatechange: null as (() => void) | null,
-      addEventListener: jest.fn((event: string, cb: Function) => {
+      addEventListener: jest.fn((event: string, cb: (...args: any[]) => void) => {
         trackListeners[event] = trackListeners[event] || [];
         trackListeners[event].push(cb);
       }),
@@ -94,7 +94,7 @@ describe('ON_MEDIA_CONNECTED event', () => {
     expect(emitSpy).not.toHaveBeenCalledWith(client.ON_MEDIA_CONNECTED, expect.anything());
 
     // Audio track unmutes — NOW it should emit
-    audioTrack._fireUnmute();
+    audioTrack.fireUnmute();
     expect(emitSpy).toHaveBeenCalledWith(client.ON_MEDIA_CONNECTED, session);
   });
 
@@ -108,7 +108,7 @@ describe('ON_MEDIA_CONNECTED event', () => {
     await (client as any)._onAccepted(session, undefined, false, true);
 
     // Audio unmutes first — pc not yet connected
-    audioTrack._fireUnmute();
+    audioTrack.fireUnmute();
     expect(emitSpy).not.toHaveBeenCalledWith(client.ON_MEDIA_CONNECTED, expect.anything());
 
     // Now pc connects
@@ -159,7 +159,7 @@ describe('ON_MEDIA_CONNECTED event', () => {
     // Both conditions met at registration — emits once
     // Simulate handler also firing (browser queued event)
     pc.onconnectionstatechange!();
-    audioTrack._fireUnmute();
+    audioTrack.fireUnmute();
 
     const mediaConnectedCalls = emitSpy.mock.calls.filter(
       ([event]) => event === client.ON_MEDIA_CONNECTED,
@@ -178,7 +178,7 @@ describe('ON_MEDIA_CONNECTED event', () => {
     await (client as any)._onAccepted(session, undefined, false, true);
     (pc as any).connectionState = 'connected';
     pc.onconnectionstatechange!();
-    audioTrack._fireUnmute();
+    audioTrack.fireUnmute();
 
     // Simulate a re-INVITE (e.g. hold/unhold) calling _onAccepted again
     // eslint-disable-next-line no-underscore-dangle
