@@ -2350,7 +2350,7 @@ export default class WebRTCClient extends Emitter {
           return;
         }
 
-        const receivers = pc.getReceivers();
+        const receivers = pc.getReceivers ? pc.getReceivers() : [];
         const audioReceiver = receivers.find(r => r.track?.kind === 'audio');
         if (audioReceiver?.track?.muted !== false) {
           return;
@@ -2370,7 +2370,7 @@ export default class WebRTCClient extends Emitter {
       };
 
       // Listen for remote audio track unmute
-      const receivers = pc.getReceivers();
+      const receivers = pc.getReceivers ? pc.getReceivers() : [];
       receivers.forEach(receiver => {
         if (receiver.track?.kind === 'audio') {
           receiver.track.addEventListener('unmute', emitMediaConnectedOnce);
