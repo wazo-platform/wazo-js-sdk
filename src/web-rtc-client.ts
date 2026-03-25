@@ -2381,6 +2381,7 @@ export default class WebRTCClient extends Emitter {
       pc.addEventListener('track', (event: RTCTrackEvent) => {
         if (event.track.kind === 'audio') {
           event.track.addEventListener('unmute', emitMediaConnectedOnce);
+          emitMediaConnectedOnce();
         }
       });
 

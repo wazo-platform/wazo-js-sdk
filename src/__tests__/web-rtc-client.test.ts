@@ -121,7 +121,7 @@ describe('ON_MEDIA_CONNECTED event', () => {
     const emitSpy = jest.spyOn(client.eventEmitter, 'emit');
     spies.push(emitSpy);
     const { session, pc } = makeMockSession();
-    (pc as any).connectionState = 'connecting';
+    (pc as any).connectionState = 'connected';
     stubOnAccepted('session-2');
 
     // eslint-disable-next-line no-underscore-dangle
