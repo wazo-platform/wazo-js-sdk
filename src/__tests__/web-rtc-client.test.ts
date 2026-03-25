@@ -121,12 +121,13 @@ describe('ON_MEDIA_CONNECTED event', () => {
     const emitSpy = jest.spyOn(client.eventEmitter, 'emit');
     spies.push(emitSpy);
     const { session, pc } = makeMockSession();
-    (pc as any).connectionState = 'connecting';
     stubOnAccepted('session-2');
 
     // eslint-disable-next-line no-underscore-dangle
     await (client as any)._onAccepted(session, undefined, false, true);
 
+    // PC reaches 'connected' but audio track is still muted — should NOT emit
+    (pc as any).connectionState = 'connected';
     pc.onconnectionstatechange!();
 
     expect(emitSpy).not.toHaveBeenCalledWith(client.ON_MEDIA_CONNECTED, expect.anything());
