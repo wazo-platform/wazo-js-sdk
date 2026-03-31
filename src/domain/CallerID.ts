@@ -3,6 +3,7 @@ import newFrom from '../utils/new-from';
 type Response = {
   number?: string;
   type: 'main' | 'associated' | 'anonymous';
+  caller_id_name?: string;
 };
 
 type ListResponse = {
@@ -12,6 +13,7 @@ type ListResponse = {
 type Arguments = {
   number?: string;
   type: 'main' | 'associated' | 'anonymous';
+  callerIdName?: string;
 };
 
 export default class CallerID {
@@ -21,10 +23,13 @@ export default class CallerID {
 
   type: string;
 
+  callerIdName?: string;
+
   static parse(plain: Response): CallerID {
     return new CallerID({
       number: plain.number,
       type: plain.type,
+      callerIdName: plain.caller_id_name,
     });
   }
 
@@ -39,9 +44,11 @@ export default class CallerID {
   constructor({
     type,
     number,
+    callerIdName,
   }: Arguments) {
     this.idType = type;
     this.number = number;
+    this.callerIdName = callerIdName;
     // Useful to compare instead of instanceof with minified code
     this.type = 'CallerID';
   }
