@@ -4,6 +4,8 @@ import Profile from '../domain/Profile';
 import ChatRoom from '../domain/ChatRoom';
 import type { ChatUser, ChatMessageListResponse } from '../domain/ChatMessage';
 import ChatMessage from '../domain/ChatMessage';
+import Alias from '../domain/Alias';
+import type { AliasListResponse } from '../domain/Alias';
 
 type PresenceListResponse = {
   filtered: number;
@@ -78,7 +80,18 @@ export default ((client: ApiRequester, baseUrl: string) => ({
     return client.get(`${baseUrl}/users/me/rooms/${roomUuid}/messages${qs.length ? `?${qs}` : ''}`).then((response: ChatMessageListResponse) => ChatMessage.parseMany(response));
   },
 
-  sendRoomMessage: async (roomUuid: string, message: ChatMessage): Promise<ChatMessage> => client.post(`${baseUrl}/users/me/rooms/${roomUuid}/messages`, message).then(ChatMessage.parse),
+  sendRoomMessage: async (roomUuid: string, message: ChatMessage, userAliasUuid?: string): Promise<ChatMessage> => {
+    const body: Record<string, any> = { content: message.content, alias: message.alias };
+    if (userAliasUuid) {
+      body.user_alias_uuid = userAliasUuid;
+    }
+    return client.post(`${baseUrl}/users/me/rooms/${roomUuid}/messages`, body).then(ChatMessage.parse);
+  },
 
   getMessages: async (options: GetMessagesOptions): Promise<ChatMessageListResponse> => client.get(`${baseUrl}/users/me/rooms/messages`, options),
+
+  getUserAliases: async (type?: string): Promise<Array<Alias>> => {
+    const qs = type ? `?type=${encodeURIComponent(type)}` : '';
+    return client.get(`${baseUrl}/users/me/aliases${qs}`).then((response: AliasListResponse) => Alias.parseMany(response));
+  },
 }));

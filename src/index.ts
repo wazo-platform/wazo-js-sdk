@@ -8,6 +8,8 @@ export { default as SFUNotAvailableError } from './domain/SFUNotAvailableError';
 export { default as Call, RECORDING_STATE } from './domain/Call';
 export { default as CallLog } from './domain/CallLog';
 export { default as Recording } from './domain/Recording';
+export { default as Alias } from './domain/Alias';
+export { type AliasResponse, type AliasListResponse } from './domain/Alias';
 export { default as ChatMessage } from './domain/ChatMessage';
 export { default as ChatRoom, type RoomResponse } from './domain/ChatRoom';
 export { default as Contact } from './domain/Contact';
