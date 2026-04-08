@@ -4,8 +4,8 @@ import Profile from '../domain/Profile';
 import ChatRoom from '../domain/ChatRoom';
 import type { ChatUser, ChatMessageListResponse } from '../domain/ChatMessage';
 import ChatMessage from '../domain/ChatMessage';
-import Alias from '../domain/Alias';
-import type { AliasListResponse } from '../domain/Alias';
+import UserIdentity from '../domain/UserIdentity';
+import type { UserIdentityListResponse } from '../domain/UserIdentity';
 
 type PresenceListResponse = {
   filtered: number;
@@ -80,18 +80,22 @@ export default ((client: ApiRequester, baseUrl: string) => ({
     return client.get(`${baseUrl}/users/me/rooms/${roomUuid}/messages${qs.length ? `?${qs}` : ''}`).then((response: ChatMessageListResponse) => ChatMessage.parseMany(response));
   },
 
-  sendRoomMessage: async (roomUuid: string, message: ChatMessage, userAliasUuid?: string): Promise<ChatMessage> => {
+  sendRoomMessage: async (roomUuid: string, message: ChatMessage, senderIdentityUuid?: string): Promise<ChatMessage> => {
     const body: Record<string, any> = { content: message.content, alias: message.alias };
-    if (userAliasUuid) {
-      body.user_alias_uuid = userAliasUuid;
+    if (senderIdentityUuid) {
+      body.sender_identity_uuid = senderIdentityUuid;
     }
     return client.post(`${baseUrl}/users/me/rooms/${roomUuid}/messages`, body).then(ChatMessage.parse);
   },
 
   getMessages: async (options: GetMessagesOptions): Promise<ChatMessageListResponse> => client.get(`${baseUrl}/users/me/rooms/messages`, options),
 
-  getUserAliases: async (type?: string): Promise<Array<Alias>> => {
+  getUserIdentities: async (type?: string): Promise<Array<UserIdentity>> => {
     const qs = type ? `?type=${encodeURIComponent(type)}` : '';
-    return client.get(`${baseUrl}/users/me/aliases${qs}`).then((response: AliasListResponse) => Alias.parseMany(response));
+    return client.get(`${baseUrl}/users/me/identities${qs}`).then((response: UserIdentityListResponse) => UserIdentity.parseMany(response));
+  },
+
+  getRoomIdentities: async (roomUuid: string): Promise<Array<UserIdentity>> => {
+    return client.get(`${baseUrl}/users/me/rooms/${roomUuid}/identities`).then((response: UserIdentityListResponse) => UserIdentity.parseMany(response));
   },
 }));
