@@ -5,6 +5,7 @@ export type ChatUser = {
   tenant_uuid: string;
   uuid: string;
   wazo_uuid: string;
+  identity?: string;
 };
 
 export type ChatMessageResponseRoom = {
