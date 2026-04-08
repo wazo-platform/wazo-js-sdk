@@ -1320,12 +1320,16 @@ export default class WebRTCClient extends Emitter {
       }
     }
 
-    // let's update the local audio value
+    // let's update the local audio value, preserving audio processing constraints
     if (this.audio) {
+      const prevAudio = typeof this.audio === 'object' ? this.audio : {};
       this.audio = {
         deviceId: {
           exact: deviceId,
         },
+        ...('autoGainControl' in prevAudio ? { autoGainControl: prevAudio.autoGainControl } : {}),
+        ...('noiseSuppression' in prevAudio ? { noiseSuppression: prevAudio.noiseSuppression } : {}),
+        ...('echoCancellation' in prevAudio ? { echoCancellation: prevAudio.echoCancellation } : {}),
       };
     }
 
@@ -1333,7 +1337,7 @@ export default class WebRTCClient extends Emitter {
       const sdh = session.sessionDescriptionHandler as SessionDescriptionHandler;
       const pc = sdh?.peerConnection;
       const constraints = {
-        audio: {
+        audio: typeof this.audio === 'object' ? { ...this.audio, deviceId: { exact: deviceId } } : {
           deviceId: {
             exact: deviceId,
           },

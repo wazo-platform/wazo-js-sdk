@@ -523,8 +523,14 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     if (this.localMediaStreamConstraints) {
       // if constraints have not changed, do not get a new media stream
       // @ts-ignore: private
-      if (JSON.stringify(this.localMediaStreamConstraints.audio) === JSON.stringify(constraints.audio) && JSON.stringify(this.localMediaStreamConstraints.video) === JSON.stringify(constraints.video)) {
-        return Promise.resolve();
+      if (this._constraintsEqual(this.localMediaStreamConstraints.audio, constraints.audio) && this._constraintsEqual(this.localMediaStreamConstraints.video, constraints.video)) {
+        // Also verify existing stream has an active audio track before skipping
+        const existingAudioTracks = this._localMediaStream?.getAudioTracks() || [];
+        const hasActiveAudioTrack = existingAudioTracks.some((t: MediaStreamTrack) => t.readyState === 'live' && t.enabled);
+        if (hasActiveAudioTrack) {
+          return Promise.resolve();
+        }
+        // No active audio track -- fall through to get a new stream
       }
     } else if (constraints.audio === undefined && constraints.video === undefined) {
       // if no constraints have been specified, default to audio for initial media stream
@@ -539,6 +545,17 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       this.setLocalMediaStream(mediaStream);
       return mediaStream;
     });
+  }
+
+  // Order-independent deep comparison for media constraints
+  private _constraintsEqual(a: any, b: any): boolean {
+    if (a === b) return true;
+    if (typeof a !== typeof b) return false;
+    if (typeof a !== 'object' || a === null || b === null) return a === b;
+    const keysA = Object.keys(a).sort();
+    const keysB = Object.keys(b).sort();
+    if (keysA.length !== keysB.length) return false;
+    return keysA.every((key, i) => keysB[i] === key && this._constraintsEqual(a[key], b[key]));
   }
 
 }
