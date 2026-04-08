@@ -1320,12 +1320,16 @@ export default class WebRTCClient extends Emitter {
       }
     }
 
-    // let's update the local audio value
+    // let's update the local audio value, preserving audio processing constraints
     if (this.audio) {
+      const prevAudio = typeof this.audio === 'object' ? this.audio : {};
       this.audio = {
         deviceId: {
           exact: deviceId,
         },
+        ...('autoGainControl' in prevAudio ? { autoGainControl: prevAudio.autoGainControl } : {}),
+        ...('noiseSuppression' in prevAudio ? { noiseSuppression: prevAudio.noiseSuppression } : {}),
+        ...('echoCancellation' in prevAudio ? { echoCancellation: prevAudio.echoCancellation } : {}),
       };
     }
 
@@ -1333,7 +1337,7 @@ export default class WebRTCClient extends Emitter {
       const sdh = session.sessionDescriptionHandler as SessionDescriptionHandler;
       const pc = sdh?.peerConnection;
       const constraints = {
-        audio: {
+        audio: typeof this.audio === 'object' ? { ...this.audio, deviceId: { exact: deviceId } } : {
           deviceId: {
             exact: deviceId,
           },
@@ -2418,6 +2422,16 @@ export default class WebRTCClient extends Emitter {
     const isConference = this.isConference(sessionId);
 
     if (sessionId in this.audioElements) {
+      const existingAudio = this.audioElements[sessionId];
+      // Ensure the audio output device is correct on the existing element
+      if (this.audioOutputDeviceId && existingAudio.sinkId !== this.audioOutputDeviceId) {
+        try {
+          await existingAudio.setSinkId(this.audioOutputDeviceId);
+          logger.info('Updated sinkId on existing audio element', { sessionId, sinkId: this.audioOutputDeviceId });
+        } catch (error) {
+          logger.error('Failed to update sinkId on existing audio element', { sessionId, error });
+        }
+      }
       logger.info('html element already exists for session', {
         sessionId,
       });
@@ -2478,7 +2492,7 @@ export default class WebRTCClient extends Emitter {
     audioElement.volume = this.audioOutputVolume;
 
     try {
-      audioElement.play();
+      await audioElement.play();
       logger.info('Audio element play() successful', { sessionId });
     } catch (error: any) {
       logger.error('Audio element play() failed', {
@@ -2728,6 +2742,9 @@ export default class WebRTCClient extends Emitter {
         networkStats.packetsReceived = Number(report.packetsReceived);
         audioBytesReceived += Number(report.bytesReceived) + Number(report.headerBytesReceived);
         audioContentReceived += Number(report.bytesReceived);
+        if ('audioLevel' in report) {
+          networkStats.inboundAudioLevel = Number(report.audioLevel);
+        }
       }
 
       if (report.type === 'inbound-rtp' && report.kind === 'video') {
@@ -2742,6 +2759,12 @@ export default class WebRTCClient extends Emitter {
         if ('framerateMean' in report) {
           // framerateMean is only available in FF
           networkStats.framesPerSecond = Math.round(report.framerateMean);
+        }
+      }
+
+      if (report.type === 'media-source' && report.kind === 'audio') {
+        if ('audioLevel' in report) {
+          networkStats.outboundAudioLevel = Number(report.audioLevel);
         }
       }
 
