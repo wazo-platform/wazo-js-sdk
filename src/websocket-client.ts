@@ -95,9 +95,7 @@ export const AGENT_STATUS_UPDATE = 'agent_status_update';
 export const AGENT_PAUSED = 'agent_paused';
 export const AGENT_UNPAUSED = 'agent_unpaused';
 export const AGENT_QUEUE_LOGGED_IN = 'user_agent_queue_logged_in';
-/** @since wazo-platform >= 25.17 */
 export const AGENT_QUEUE_LOGGED_OFF = 'user_agent_queue_logged_off';
-/** @deprecated Use AGENT_QUEUE_LOGGED_OFF — backend sends 'user_agent_queue_logged_off' since 25.17 */
 export const AGENT_QUEUE_LOGGED_OUT = 'user_agent_queue_logged_out';
 export const CONFERENCE_ADHOC_PARTICIPANT_LEFT = 'conference_adhoc_participant_left';
 export const CONFERENCE_ADHOC_DELETED = 'conference_adhoc_deleted';

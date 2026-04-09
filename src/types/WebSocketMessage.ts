@@ -353,7 +353,6 @@ type AgentQueueLoggedOff = WebSocketBaseMessage & {
   name: 'user_agent_queue_logged_off';
 };
 
-/** @deprecated Use AgentQueueLoggedOff */
 type AgentQueueLoggedOut = WebSocketBaseMessage & {
   data: AgentQueueLoginEvent;
   name: 'user_agent_queue_logged_out';
