@@ -1,0 +1,12 @@
+export declare const AUTH_VERSION = "0.1";
+export declare const APPLICATION_VERSION = "1.0";
+export declare const CONFD_VERSION = "1.1";
+export declare const CTIDNG_VERSION = "1.0";
+export declare const DIRD_VERSION = "0.1";
+export declare const CALL_LOGD_VERSION = "1.0";
+export declare const CHATD_VERSION = "1.0";
+export declare const CALLD_VERSION = "1.0";
+export declare const AGENTD_VERSION = "1.0";
+export declare const WEBHOOKD_VERSION = "1.0";
+export declare const AMID_VERSION = "1.0";
+//# sourceMappingURL=constants.d.ts.map

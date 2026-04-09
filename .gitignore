@@ -1,6 +1,5 @@
 *.js.map
 node_modules/
 *.swp
-dist/
 esm
 /lib/

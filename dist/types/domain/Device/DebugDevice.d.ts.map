@@ -1,0 +1,1 @@
+{"version":3,"file":"DebugDevice.d.ts","sourceRoot":"","sources":["../../../../src/domain/Device/DebugDevice.ts"],"names":[],"mappings":"AACA,OAAO,KAAK,EAAE,MAAM,EAAE,MAAM,UAAU,CAAC;AACvC,MAAM,CAAC,OAAO,OAAO,WAAY,YAAW,MAAM;IAChD,aAAa;IAIb,kBAAkB;IAIlB,QAAQ;IAIR,YAAY;IAIZ,YAAY;IAIZ,YAAY;IAIZ,IAAI;IAIJ,MAAM;IAIN,YAAY;IAIZ,aAAa;CAId"}

@@ -1,0 +1,106 @@
+import Session from './Session';
+import type { RecordingResponse } from './Recording';
+import Recording from './Recording';
+import { ApiParams } from '../types/api';
+export declare const CALL_LOG_VALID_REQUESTED_VERSION = "24.14";
+export type CallDirection = 'internal' | 'inbound' | 'outbound';
+export type CallStatus = 'answered' | 'blocked' | 'unknown';
+export type CallLogResponse = {
+    answer: string | null | undefined;
+    answered: boolean;
+    call_status: CallStatus;
+    call_direction: CallDirection;
+    destination_extension: string;
+    destination_name: string;
+    destination_user_uuid: string | null;
+    duration: number;
+    end: string | null | undefined;
+    id: number;
+    source_extension: string;
+    source_name: string;
+    source_user_uuid: string | null;
+    recordings: RecordingResponse[];
+    requested_extension: string;
+    requested_name: string;
+    requested_user_uuid: string | null;
+    start: string;
+};
+export type Response = {
+    filtered: number;
+    items: Array<CallLogResponse>;
+    total: number;
+};
+type LogOrigin = {
+    extension: string;
+    name: string;
+    uuid?: string | null;
+};
+type DestinationLogOrigin = LogOrigin & {
+    plainExtension: string;
+    plainName: string | null;
+};
+type CallLogArguments = {
+    answer: Date | null | undefined;
+    answered: boolean;
+    newMissedCall?: boolean;
+    callDirection: CallDirection;
+    callStatus: CallStatus;
+    destination: DestinationLogOrigin;
+    requested: LogOrigin;
+    source: LogOrigin;
+    id: number;
+    duration: number;
+    start: Date;
+    end: Date | null | undefined;
+    recordings: Recording[];
+};
+type CallLogSpecificQueryParams = {
+    call_direction?: CallDirection;
+    call_status?: CallStatus;
+    number?: string;
+    tags?: string[];
+    user_uuid?: string;
+    from_id?: number;
+    distinct?: string;
+    recorded?: boolean;
+    conversation_id?: string;
+};
+export type CallLogQueryParams = ApiParams<CallLogSpecificQueryParams>;
+export default class CallLog {
+    type: string;
+    answer: Date | null | undefined;
+    answered: boolean;
+    newMissedCall: boolean;
+    callDirection: CallDirection;
+    callStatus: CallStatus;
+    destination: DestinationLogOrigin;
+    requested: LogOrigin;
+    recordings: Recording[];
+    source: LogOrigin;
+    id: number;
+    duration: number;
+    start: Date;
+    end: Date | null | undefined;
+    static merge(current: Array<CallLog>, toMerge: Array<CallLog>): Array<CallLog | null | undefined>;
+    static parseMany(plain: Response): Array<CallLog>;
+    static parse(plain: CallLogResponse): CallLog;
+    static parseNew(plain: CallLogResponse, session: Session): CallLog;
+    static newFrom(profile: CallLog): any;
+    constructor({ answer, answered, callDirection, callStatus, destination, requested, source, id, duration, start, end, recordings, }: CallLogArguments);
+    isFromSameParty(other: CallLog, session: Session): boolean;
+    theOtherParty(session: Session): LogOrigin;
+    isNewMissedCall(): boolean;
+    acknowledgeCall(): CallLog;
+    isAcknowledged(): boolean;
+    isAnswered(): boolean;
+    isOutgoing(session: Session): boolean;
+    isIncoming(session: Session): boolean;
+    isIncomingAndForwarded(session: Session): boolean;
+    isAnOutgoingCall(session: Session): boolean;
+    isAMissedOutgoingCall(session: Session): boolean;
+    isAnIncomingCall(session: Session): boolean;
+    isADeclinedCall(session: Session): boolean;
+    getRecordings(): Recording[];
+}
+export {};
+//# sourceMappingURL=CallLog.d.ts.map

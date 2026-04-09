@@ -1,0 +1,3 @@
+declare const swarmPublicKey = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmkXOuNfY8u5xoTiIhkb8\ndjnbIwG/Wrz3vpo8BZir8L5e1a1nSy740qBjP7ZINBQoALDhFfmdOfJnCyEGiHuz\nZW6jbG6C3PryE3Bu6GKwqSmD6k3q4Zk27fpwYAnNl+rWhYYM563rJZBda/INyHNN\npK7M1mixWi7gNdjjXwoEXSSBx+VpYMkY6LiAB2mvHXTY9M1qI14dvgGoQISZQoKi\nNMTRCg5UP2ic0Dd9nSz/XpcOxGfa+0fwIl1F7RC1tJXOqvkGGPTOV4LLfg/Yta3h\nnUPX9EZZDIX6vO/0IBV1LzjSl2A1bYFYAjJfowv3i1CpvONBOClHjSY5t9Y8MH6p\nBwIDAQAB\n-----END PUBLIC KEY-----";
+export default swarmPublicKey;
+//# sourceMappingURL=pubkey.d.ts.map

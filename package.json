@@ -40,6 +40,7 @@
     "format": "pnpm format:file \"src/**/*.(ts|js)\" \"__tests__/**/*.(ts|js)\"",
     "format:file": "prettier-eslint --write --single-quote --trailing-comma=es5 --arrow-parens=avoid",
     "typecheck": "tsc --noEmit",
+    "prepare": "rslib build",
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {
