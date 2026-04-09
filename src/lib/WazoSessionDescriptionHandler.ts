@@ -541,7 +541,17 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
 
     // @ts-ignore: private
     this.localMediaStreamConstraints = constraints;
+
+    wazoLogger.info('getLocalMediaStream: acquiring media stream', {
+      audioConstraints: constraints.audio,
+      videoConstraints: !!constraints.video,
+    });
+
     return this.mediaStreamFactory(constraints, this).then(mediaStream => {
+      const audioTracks = mediaStream.getAudioTracks();
+      wazoLogger.info('getLocalMediaStream: media stream acquired', {
+        audioTracks: audioTracks.map(t => ({ id: t.id, label: t.label, readyState: t.readyState, enabled: t.enabled })),
+      });
       this.setLocalMediaStream(mediaStream);
       return mediaStream;
     });

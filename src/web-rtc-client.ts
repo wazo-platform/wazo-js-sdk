@@ -136,6 +136,8 @@ export default class WebRTCClient extends Emitter {
 
   iceReconnectDelay: number;
 
+  _warmupStream: MediaStream | null;
+
   ON_USER_AGENT: string;
 
   REGISTERED: string;
@@ -235,6 +237,7 @@ export default class WebRTCClient extends Emitter {
     this.iceReconnectAttempts = {};
     this.mediaConnectedSessions = {};
     this.iceReconnectDelay = config.iceReconnectDelay || DEFAULT_ICE_RECONNECT_DELAY;
+    this._warmupStream = null;
     this._boundOnHeartbeat = this._onHeartbeat.bind(this);
     this.heartbeat = new Heartbeat(config.heartbeatDelay, config.heartbeatTimeout, config.maxHeartbeats);
     this.heartbeat.setSendHeartbeat(this.pingServer.bind(this));
@@ -1543,6 +1546,48 @@ export default class WebRTCClient extends Emitter {
     });
   }
 
+  // Pre-acquire the microphone to force USB headsets to switch from stereo/multimedia
+  // to communication profile before the actual call starts. This avoids weak/inaudible
+  // audio during the first seconds of the call while the device transitions profiles.
+  // The stream is kept alive (muted) until releaseWarmupStream() is called -- stopping it
+  // too early lets the OS revert to stereo mode before the real getUserMedia fires.
+  async warmupAudioDevice(): Promise<void> {
+    const audioConstraints = this._getAudioConstraints();
+    if (!audioConstraints) {
+      logger.info('warmupAudioDevice: no audio constraints, skipping');
+      return;
+    }
+
+    // Release any previous warmup stream
+    this.releaseWarmupStream();
+
+    try {
+      const constraintDetails = typeof audioConstraints === 'object' ? audioConstraints : { raw: audioConstraints };
+      logger.info('warmupAudioDevice: acquiring mic to trigger communication profile switch', constraintDetails);
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
+      const tracks = stream.getAudioTracks();
+      const trackInfo = tracks.map(t => ({ id: t.id, label: t.label, readyState: t.readyState, muted: t.muted }));
+      logger.info('warmupAudioDevice: mic acquired, muting tracks but keeping stream alive', { tracks: trackInfo });
+
+      // Mute but do NOT stop -- the OS needs the device handle open to stay in communication mode
+      tracks.forEach(track => { track.enabled = false; });
+      this._warmupStream = stream;
+    } catch (e) {
+      logger.warn('warmupAudioDevice: failed to acquire mic', e);
+    }
+  }
+
+  releaseWarmupStream(): void {
+    if (this._warmupStream) {
+      const tracks = this._warmupStream.getAudioTracks();
+      const trackInfo = tracks.map(t => ({ id: t.id, label: t.label, readyState: t.readyState }));
+      logger.info('releaseWarmupStream: stopping warmup tracks', { tracks: trackInfo });
+      tracks.forEach(track => track.stop());
+      this._warmupStream = null;
+    }
+  }
+
   async getUserMedia(constraints: Record<string, any>): Promise<MediaStream> {
     const newConstraints = {
       audio: this._getAudioConstraints(),
@@ -2155,7 +2200,12 @@ export default class WebRTCClient extends Emitter {
             ...(options.peerConnectionConfiguration || {}),
           },
         };
-        return new WazoSessionDescriptionHandler(uaLogger, wazoMediaStreamFactory, sdhOptions, isWeb, session as WazoSession);
+        // Wrap the media stream factory to release any warmup stream before acquiring the real one
+        const wrappedMediaStreamFactory = (constraints: Record<string, any>) => {
+          this.releaseWarmupStream();
+          return wazoMediaStreamFactory(constraints);
+        };
+        return new WazoSessionDescriptionHandler(uaLogger, wrappedMediaStreamFactory, sdhOptions, isWeb, session as WazoSession);
       },
       transportOptions: {
         traceSip: uaOptionsOverrides?.traceSip || false,
@@ -2801,6 +2851,20 @@ export default class WebRTCClient extends Emitter {
     networkStats.totalTransportReceived = transportReceived;
     networkStats.transportReceived = transportReceived - lastTransportReceived;
     networkStats.bandwidth = networkStats.audioBytesSent + networkStats.audioBytesReceived + networkStats.videoBytesSent + networkStats.videoBytesReceived + networkStats.transportReceived + networkStats.transportSent;
+
+    // Log audio diagnostics at each stats interval for debugging weak-audio issues
+    statsLogger.info('audio-diagnostics', {
+      sessionId,
+      audioBytesSent: networkStats.audioBytesSent,
+      audioBytesReceived: networkStats.audioBytesReceived,
+      audioContentSent: networkStats.audioContentSent,
+      audioContentReceived: networkStats.audioContentReceived,
+      inboundAudioLevel: networkStats.inboundAudioLevel,
+      outboundAudioLevel: networkStats.outboundAudioLevel,
+      packetsLost: networkStats.packetsLost,
+      roundTripTime: networkStats.roundTripTime,
+      jitter: networkStats.jitter,
+    });
 
     if (this.sessionNetworkStats[sessionId]) {
       this.eventEmitter.emit(ON_NETWORK_STATS, session, networkStats, this.sessionNetworkStats[sessionId]);

@@ -1480,6 +1480,14 @@ export default class WebRTCPhone extends Emitter implements Phone {
     this.client.setMediaConstraints(media);
   }
 
+  async warmupAudioDevice(): Promise<void> {
+    return this.client.warmupAudioDevice();
+  }
+
+  releaseWarmupStream(): void {
+    this.client.releaseWarmupStream();
+  }
+
   isVideoRemotelyHeld(callSession: CallSession): boolean {
     return callSession ? this.client.isVideoRemotelyHeld(callSession.sipCallId) : false;
   }
