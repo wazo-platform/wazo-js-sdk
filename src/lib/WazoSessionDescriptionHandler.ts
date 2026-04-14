@@ -524,13 +524,13 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       // if constraints have not changed, do not get a new media stream
       // @ts-ignore: private
       if (this._constraintsEqual(this.localMediaStreamConstraints.audio, constraints.audio) && this._constraintsEqual(this.localMediaStreamConstraints.video, constraints.video)) {
-        // Also verify existing stream has an active audio track before skipping
-        const existingAudioTracks = this._localMediaStream?.getAudioTracks() || [];
-        const hasActiveAudioTrack = existingAudioTracks.some((t: MediaStreamTrack) => t.readyState === 'live' && t.enabled);
-        if (hasActiveAudioTrack) {
+        // Verify existing stream has active tracks for the requested media types before skipping
+        const hasActiveAudio = !constraints.audio || (this._localMediaStream?.getAudioTracks() || []).some((t: MediaStreamTrack) => t.readyState === 'live' && t.enabled);
+        const hasActiveVideo = !constraints.video || (this._localMediaStream?.getVideoTracks() || []).some((t: MediaStreamTrack) => t.readyState === 'live' && t.enabled);
+        if (hasActiveAudio && hasActiveVideo) {
           return Promise.resolve();
         }
-        // No active audio track -- fall through to get a new stream
+        // Missing active track for a requested media type -- fall through to get a new stream
       }
     } else if (constraints.audio === undefined && constraints.video === undefined) {
       // if no constraints have been specified, default to audio for initial media stream
@@ -552,6 +552,11 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     if (a === b) return true;
     if (typeof a !== typeof b) return false;
     if (typeof a !== 'object' || a === null || b === null) return a === b;
+    if (Array.isArray(a) !== Array.isArray(b)) return false;
+    if (Array.isArray(a)) {
+      if (a.length !== b.length) return false;
+      return a.every((val: any, i: number) => this._constraintsEqual(val, b[i]));
+    }
     const keysA = Object.keys(a).sort();
     const keysB = Object.keys(b).sort();
     if (keysA.length !== keysB.length) return false;
