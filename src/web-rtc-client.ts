@@ -1343,6 +1343,7 @@ export default class WebRTCClient extends Emitter {
           },
         },
       };
+      logger.info('changing audio input device with constraints', { constraints });
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       const audioTrack = stream.getAudioTracks()[0];
       const sender = pc && pc.getSenders && pc.getSenders().find((s) => audioTrack && s && s.track && s.track.kind === audioTrack.kind);
