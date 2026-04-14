@@ -48,6 +48,7 @@ describe('WazoSessionDescriptionHandler._constraintsEqual', () => {
   const handler = createHandler();
 
   // Access private method for testing
+  // eslint-disable-next-line no-underscore-dangle
   const constraintsEqual = (a: any, b: any) => (handler as any)._constraintsEqual(a, b);
 
   describe('primitive values', () => {
