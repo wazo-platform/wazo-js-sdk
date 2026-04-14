@@ -1327,12 +1327,8 @@ export default class WebRTCClient extends Emitter {
     if (this.audio) {
       const prevAudio = typeof this.audio === 'object' ? this.audio : {};
       this.audio = {
-        deviceId: {
-          exact: deviceId,
-        },
-        ...('autoGainControl' in prevAudio ? { autoGainControl: prevAudio.autoGainControl } : {}),
-        ...('noiseSuppression' in prevAudio ? { noiseSuppression: prevAudio.noiseSuppression } : {}),
-        ...('echoCancellation' in prevAudio ? { echoCancellation: prevAudio.echoCancellation } : {}),
+        ...prevAudio,
+        deviceId: { exact: deviceId },
       };
     }
 

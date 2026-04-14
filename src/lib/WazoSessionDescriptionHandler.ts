@@ -557,7 +557,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     });
   }
 
-  // Order-independent deep comparison for media constraints
+  // Deep comparison with order-independent object keys for media constraints
   private _constraintsEqual(a: any, b: any): boolean {
     if (a === b) return true;
     if (typeof a !== typeof b) return false;
