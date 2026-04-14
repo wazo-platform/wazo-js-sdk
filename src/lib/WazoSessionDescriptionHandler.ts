@@ -557,8 +557,8 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       if (a.length !== b.length) return false;
       return a.every((val: any, i: number) => this._constraintsEqual(val, b[i]));
     }
-    const keysA = Object.keys(a).sort();
-    const keysB = Object.keys(b).sort();
+    const keysA = Object.keys(a).sort((x, y) => x.localeCompare(y));
+    const keysB = Object.keys(b).sort((x, y) => x.localeCompare(y));
     if (keysA.length !== keysB.length) return false;
     return keysA.every((key, i) => keysB[i] === key && this._constraintsEqual(a[key], b[key]));
   }
