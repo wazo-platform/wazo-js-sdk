@@ -301,6 +301,84 @@ describe('changeAudioInputDevice', () => {
       enumerateDevices: enumerateDevicesMock,
     },
   });
+  it('should preserve audio processing constraints when switching device', async () => {
+    const audioConstraints = {
+      audio: {
+        deviceId: { exact: 'old-device' },
+        echoCancellation: true,
+        noiseSuppression: false,
+        autoGainControl: true,
+      },
+      video: null,
+    };
+    client.setMediaConstraints(audioConstraints as any);
+
+    await client.changeAudioInputDevice('new-device', session as any);
+
+    expect((client as any).audio).toEqual({
+      deviceId: { exact: 'new-device' },
+      echoCancellation: true,
+      noiseSuppression: false,
+      autoGainControl: true,
+    });
+  });
+
+  it('should pass preserved audio processing constraints to getUserMedia', async () => {
+    getUserMediaMock.mockClear();
+    const audioConstraints = {
+      audio: {
+        deviceId: { exact: 'old-device' },
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: false,
+      },
+      video: null,
+    };
+    client.setMediaConstraints(audioConstraints as any);
+
+    await client.changeAudioInputDevice('new-device', session as any);
+
+    expect(getUserMediaMock).toHaveBeenCalledWith({
+      audio: {
+        deviceId: { exact: 'new-device' },
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: false,
+      },
+    });
+  });
+
+  it('should not preserve non-processing audio constraints (only echoCancellation, noiseSuppression, autoGainControl)', async () => {
+    const audioConstraints = {
+      audio: {
+        deviceId: { exact: 'old-device' },
+        echoCancellation: true,
+        sampleRate: 48000,
+        channelCount: 2,
+      },
+      video: null,
+    };
+    client.setMediaConstraints(audioConstraints as any);
+
+    await client.changeAudioInputDevice('new-device', session as any);
+
+    // sampleRate and channelCount should NOT be preserved
+    expect((client as any).audio).toEqual({
+      deviceId: { exact: 'new-device' },
+      echoCancellation: true,
+    });
+  });
+
+  it('should handle audio=true (boolean) without errors during device switch', async () => {
+    client.setMediaConstraints({ audio: true, video: null } as any);
+
+    await client.changeAudioInputDevice('new-device', session as any);
+
+    expect((client as any).audio).toEqual({
+      deviceId: { exact: 'new-device' },
+    });
+  });
+
   it('should change the audio input track if the provided id is different', async () => {
     client.setMediaConstraints(constraints as any);
     expect(client.getAudioDeviceId()).toBe(defaultId);

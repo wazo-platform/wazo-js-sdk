@@ -523,8 +523,14 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     if (this.localMediaStreamConstraints) {
       // if constraints have not changed, do not get a new media stream
       // @ts-ignore: private
-      if (JSON.stringify(this.localMediaStreamConstraints.audio) === JSON.stringify(constraints.audio) && JSON.stringify(this.localMediaStreamConstraints.video) === JSON.stringify(constraints.video)) {
-        return Promise.resolve();
+      if (this._constraintsEqual(this.localMediaStreamConstraints.audio, constraints.audio) && this._constraintsEqual(this.localMediaStreamConstraints.video, constraints.video)) {
+        // Verify existing stream has active tracks for the requested media types before skipping
+        const hasActiveAudio = !constraints.audio || (this._localMediaStream?.getAudioTracks() || []).some((t: MediaStreamTrack) => t.readyState === 'live' && t.enabled);
+        const hasActiveVideo = !constraints.video || (this._localMediaStream?.getVideoTracks() || []).some((t: MediaStreamTrack) => t.readyState === 'live' && t.enabled);
+        if (hasActiveAudio && hasActiveVideo) {
+          return Promise.resolve();
+        }
+        // Missing active track for a requested media type -- fall through to get a new stream
       }
     } else if (constraints.audio === undefined && constraints.video === undefined) {
       // if no constraints have been specified, default to audio for initial media stream
@@ -539,6 +545,22 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       this.setLocalMediaStream(mediaStream);
       return mediaStream;
     });
+  }
+
+  // Order-independent deep comparison for media constraints
+  private _constraintsEqual(a: any, b: any): boolean {
+    if (a === b) return true;
+    if (typeof a !== typeof b) return false;
+    if (typeof a !== 'object' || a === null || b === null) return a === b;
+    if (Array.isArray(a) !== Array.isArray(b)) return false;
+    if (Array.isArray(a)) {
+      if (a.length !== b.length) return false;
+      return a.every((val: any, i: number) => this._constraintsEqual(val, b[i]));
+    }
+    const keysA = Object.keys(a).sort((x, y) => x.localeCompare(y));
+    const keysB = Object.keys(b).sort((x, y) => x.localeCompare(y));
+    if (keysA.length !== keysB.length) return false;
+    return keysA.every((key, i) => keysB[i] === key && this._constraintsEqual(a[key], b[key]));
   }
 
 }
