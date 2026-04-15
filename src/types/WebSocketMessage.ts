@@ -168,6 +168,13 @@ export type AgentQueueLoginEvent = {
   queue_id: string,
 };
 
+export type MessageDeliveryStatusEvent = {
+  message_uuid: string;
+  status: string;
+  timestamp: string;
+  backend: string;
+};
+
 export type AgentStatusUpdateEvent = {
   agent_id: string;
   status: string;
@@ -368,4 +375,9 @@ type MeetingAuthorizationPending = WebSocketBaseMessage & {
   name: 'meeting_authorization_pending';
 };
 
-export type WebSocketMessage = CallCreated | CallUpdated | CallEnded | CallHeld | CallResumed | NewCallLog | ChatMessageSent | (WebSocketBaseMessage & ChatMessageResponse) | ChatRoomCreate | VoicemailCreated | GlobalVoicemailCreated | GlobalVoicemailDeleted | GlobalVoicemailUpdated | UpdateDoNotDisturb | VoicemailDeleted | FavoriteAdded | FavoriteDeleted | UserStatusUpdate | EndpointStatusUpdate | ExternalAuthAdded | ExternalAuthDeleted | PresencesRead | SwitchboardQueuedCallsUpdated | SwitchboardQueuedCallAnswered | SwitchboardHeldCallsUpdated | SwitchboardHeldCallAnswered | ParticipantJoinedRoom | ParticipantLeftRoom | ParticipantJoinedMeeting | ParticipantLeftMeeting | FaxOutboundFailed | FaxOutboundSucceeded | AgentStatusUpdate | AgentPaused | AgentUnpaused | MeetingUserProgress | MeetingAuthorizationPending | AgentQueueLoggedIn | AgentQueueLoggedOff | AgentQueueLoggedOut;
+type ChatdMessageDeliveryStatus = WebSocketBaseMessage & {
+  data: MessageDeliveryStatusEvent;
+  name: 'chatd_message_delivery_status';
+};
+
+export type WebSocketMessage = CallCreated | CallUpdated | CallEnded | CallHeld | CallResumed | NewCallLog | ChatMessageSent | (WebSocketBaseMessage & ChatMessageResponse) | ChatRoomCreate | VoicemailCreated | GlobalVoicemailCreated | GlobalVoicemailDeleted | GlobalVoicemailUpdated | UpdateDoNotDisturb | VoicemailDeleted | FavoriteAdded | FavoriteDeleted | UserStatusUpdate | EndpointStatusUpdate | ExternalAuthAdded | ExternalAuthDeleted | PresencesRead | SwitchboardQueuedCallsUpdated | SwitchboardQueuedCallAnswered | SwitchboardHeldCallsUpdated | SwitchboardHeldCallAnswered | ParticipantJoinedRoom | ParticipantLeftRoom | ParticipantJoinedMeeting | ParticipantLeftMeeting | FaxOutboundFailed | FaxOutboundSucceeded | AgentStatusUpdate | AgentPaused | AgentUnpaused | MeetingUserProgress | MeetingAuthorizationPending | AgentQueueLoggedIn | AgentQueueLoggedOff | AgentQueueLoggedOut | ChatdMessageDeliveryStatus;
