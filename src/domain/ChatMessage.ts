@@ -12,6 +12,12 @@ export type ChatMessageResponseRoom = {
   uuid: string | null | undefined;
 };
 
+export type ChatMessageDelivery = {
+  type?: string;
+  backend?: string | null;
+  status?: string;
+};
+
 export type ChatMessageResponse = {
   alias: string;
   content: string;
@@ -21,8 +27,7 @@ export type ChatMessageResponse = {
   uuid: string;
   wazo_uuid: string;
   room: ChatMessageResponseRoom | null | undefined;
-  type?: string;
-  backend?: string | null;
+  delivery?: ChatMessageDelivery | null;
 };
 
 export type ChatMessageListResponse = {
@@ -52,6 +57,8 @@ export default class ChatMessage {
 
   backend: string | null;
 
+  deliveryStatus: string | null;
+
   static parseMany(plain: ChatMessageListResponse): Array<ChatMessage> {
     if (!plain || !plain.items) {
       return [];
@@ -69,8 +76,9 @@ export default class ChatMessage {
       userUuid: plain.user_uuid,
       read: true,
       roomUuid: plain.room ? plain.room.uuid : null,
-      channelType: plain.type ?? 'internal',
-      backend: plain.backend ?? null,
+      channelType: plain.delivery?.type ?? 'internal',
+      backend: plain.delivery?.backend ?? null,
+      deliveryStatus: plain.delivery?.status ?? null,
     });
   }
 
@@ -88,6 +96,7 @@ export default class ChatMessage {
     read,
     channelType,
     backend,
+    deliveryStatus,
   }: Record<string, any> = {}) {
     this.uuid = uuid;
     this.date = date;
@@ -101,6 +110,7 @@ export default class ChatMessage {
     this.type = 'ChatMessage';
     this.channelType = channelType ?? 'internal';
     this.backend = backend ?? null;
+    this.deliveryStatus = deliveryStatus ?? null;
   }
 
   is(other: ChatMessage) {
