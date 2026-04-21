@@ -90,7 +90,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
 
   getMessages: async (options: GetMessagesOptions): Promise<ChatMessageListResponse> => client.get(`${baseUrl}/users/me/rooms/messages`, options),
 
-  getRoomIdentities: async (roomUuid: string): Promise<Array<UserIdentity>> => {
-    return client.get(`${baseUrl}/users/me/rooms/${roomUuid}/identities`).then((response: UserIdentityListResponse) => UserIdentity.parseMany(response));
+  getIdentities: async (roomUuid?: string): Promise<Array<UserIdentity>> => {
+    return client.get(`${baseUrl}/users/me/identities${roomUuid ? `?room_uuid=${roomUuid}` : ''}`).then((response: UserIdentityListResponse) => UserIdentity.parseMany(response));
   },
 }));
