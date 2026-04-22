@@ -81,16 +81,15 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   },
 
   sendRoomMessage: async (roomUuid: string, message: ChatMessage, senderIdentityUuid?: string): Promise<ChatMessage> => {
-    const body: Record<string, any> = { content: message.content, alias: message.alias };
-    if (senderIdentityUuid) {
-      body.sender_identity_uuid = senderIdentityUuid;
-    }
+    const senderIdentity = senderIdentityUuid ? { sender_identity_uuid: senderIdentityUuid } : {};
+    const body = { ...message, ...senderIdentity };
     return client.post(`${baseUrl}/users/me/rooms/${roomUuid}/messages`, body).then(ChatMessage.parse);
   },
 
   getMessages: async (options: GetMessagesOptions): Promise<ChatMessageListResponse> => client.get(`${baseUrl}/users/me/rooms/messages`, options),
 
   getIdentities: async (roomUuid?: string): Promise<Array<UserIdentity>> => {
-    return client.get(`${baseUrl}/users/me/identities${roomUuid ? `?room_uuid=${roomUuid}` : ''}`).then((response: UserIdentityListResponse) => UserIdentity.parseMany(response));
+    const query = roomUuid ? { room_uuid: roomUuid } : undefined;
+    return client.get(`${baseUrl}/users/me/identities`, query).then((response: UserIdentityListResponse) => UserIdentity.parseMany(response));
   },
 }));

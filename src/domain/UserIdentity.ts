@@ -22,7 +22,7 @@ export default class UserIdentity {
   identity: string;
 
   static parseMany(plain: UserIdentityListResponse): Array<UserIdentity> {
-    if (!plain || !plain.items) {
+    if (!plain?.items) {
       return [];
     }
 
