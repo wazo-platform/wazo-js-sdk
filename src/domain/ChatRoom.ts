@@ -6,6 +6,7 @@ export type RoomResponse = {
   uuid: string;
   users: Array<ChatUser>;
   kind?: string;
+  capabilities?: string[];
 };
 export type RootListResponse = {
   filtered: number;
@@ -23,6 +24,8 @@ export default class ChatRoom {
 
   kind?: string;
 
+  capabilities: string[];
+
   static parseMany(plain: RootListResponse): Array<ChatRoom> {
     if (!plain || !plain.items) {
       return [];
@@ -37,6 +40,7 @@ export default class ChatRoom {
       name: plain.name,
       users: plain.users,
       kind: plain.kind,
+      capabilities: plain.capabilities ?? ['internal'],
     });
   }
 
@@ -49,11 +53,13 @@ export default class ChatRoom {
     name,
     users,
     kind,
+    capabilities,
   }: Record<string, any> = {}) {
     this.uuid = uuid;
     this.name = name;
     this.users = users;
     this.kind = kind;
+    this.capabilities = capabilities ?? ['internal'];
     // Useful to compare instead of instanceof with minified code
     this.type = 'ChatRoom';
   }

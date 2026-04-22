@@ -8,6 +8,8 @@ export { default as SFUNotAvailableError } from './domain/SFUNotAvailableError';
 export { default as Call, RECORDING_STATE } from './domain/Call';
 export { default as CallLog } from './domain/CallLog';
 export { default as Recording } from './domain/Recording';
+export { default as UserIdentity } from './domain/UserIdentity';
+export { type UserIdentityResponse, type UserIdentityListResponse } from './domain/UserIdentity';
 export { default as ChatMessage } from './domain/ChatMessage';
 export { default as ChatRoom, type RoomResponse } from './domain/ChatRoom';
 export { default as Contact } from './domain/Contact';
@@ -37,7 +39,7 @@ export {
   type ContactMobileResponse,
 } from './domain/Contact';
 export { type Phone, type PhoneEventCallbacks } from './domain/Phone/Phone';
-export { type ChatUser, type ChatMessageResponse } from './domain/ChatMessage';
+export { type ChatUser, type ChatMessageResponse, type ChatMessageDelivery } from './domain/ChatMessage';
 export { type Device } from './domain/Device/Device';
 export { default as DebugDevice } from './domain/Device/DebugDevice';
 export { default as Checker } from './checker/Checker';
