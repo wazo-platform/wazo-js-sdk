@@ -2215,6 +2215,13 @@ export default class WebRTCClient extends Emitter {
       session.delegate = {};
     }
 
+    if (session instanceof Invitation) {
+      const diversion = session.request.getHeaders('Diversion');
+      if (diversion?.length) {
+        session.diversion = diversion;
+      }
+    }
+
     session.delegate.onSessionDescriptionHandler = (sdh: SessionDescriptionHandler & { on: (type: string, e: any) => void }) => {
       sdh.on('error', (e: any) => {
         this.eventEmitter.emit(ON_ERROR, e);

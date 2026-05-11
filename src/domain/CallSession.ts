@@ -14,6 +14,7 @@ type CallSessionArguments = {
   cameraEnabled: boolean;
   creationTime?: Date | null | undefined;
   dialedExtension?: string | null;
+  diversion?: string[];
   displayName: string;
   endTime?: Date | null | undefined;
   isCaller: boolean;
@@ -67,6 +68,8 @@ export default class CallSession {
 
   dialedExtension: string;
 
+  diversion: string[];
+
   ringing: boolean;
 
   // Should be computed ?
@@ -119,6 +122,7 @@ export default class CallSession {
     endTime,
     cameraEnabled,
     dialedExtension,
+    diversion,
     sipCallId,
     sipStatus,
     callerNumber,
@@ -151,6 +155,7 @@ export default class CallSession {
     this.callerNumber = callerNumber;
     this.cameraEnabled = cameraEnabled;
     this.dialedExtension = dialedExtension || '';
+    this.diversion = diversion ?? [];
     this.call = call;
     this.sipStatus = sipStatus;
     this.autoAnswer = autoAnswer || false;

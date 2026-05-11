@@ -265,6 +265,7 @@ export type PeerConnection = RTCPeerConnection & {
 export type WazoSession = (Invitation | Inviter) & {
   remoteTag?: any;
   callId?: string;
+  diversion?: string[];
 };
 
 export type WazoTransport = Transport & {

@@ -82,3 +82,44 @@ describe('WebRTCPhone.findSipSession', () => {
     expect(result).toBeNull();
   });
 });
+
+/* eslint-disable no-underscore-dangle */
+describe('WebRTCPhone._createCallSession diversion', () => {
+  const SAMPLE = ['"Alice" <sip:1001@wazo.example>;reason=unconditional'];
+
+  const createCreatableMockClient = (sessions: Record<string, any> = {}) => ({
+    ...createMockClient(sessions),
+    isCallHeld: () => false,
+    hasVideo: () => false,
+    isAudioMuted: () => false,
+  } as any);
+
+  it('propagates diversion from the sipSession', () => {
+    const sipSession = { id: 'session-1', diversion: SAMPLE } as any;
+    const phone = createPhone(createCreatableMockClient({ 'session-1': sipSession }));
+
+    const cs = phone._createCallSession(sipSession);
+
+    expect(cs.diversion).toEqual(SAMPLE);
+  });
+
+  it('falls back to fromSession.diversion when sipSession lacks one', () => {
+    const sipSession = { id: 'session-1' } as any;
+    const phone = createPhone(createCreatableMockClient({ 'session-1': sipSession }));
+    const previous = new CallSession({ callId: 'a', sipCallId: 'session-1', diversion: SAMPLE } as any);
+
+    const cs = phone._createCallSession(sipSession, previous);
+
+    expect(cs.diversion).toEqual(SAMPLE);
+  });
+
+  it('defaults to an empty array when neither sipSession nor fromSession has diversion', () => {
+    const sipSession = { id: 'session-1' } as any;
+    const phone = createPhone(createCreatableMockClient({ 'session-1': sipSession }));
+
+    const cs = phone._createCallSession(sipSession);
+
+    expect(cs.diversion).toEqual([]);
+  });
+});
+/* eslint-enable no-underscore-dangle */

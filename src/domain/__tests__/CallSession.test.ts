@@ -113,4 +113,25 @@ describe('CallSession domain', () => {
       expect(cs.recordingState).toEqual(RECORDING_STATE.PAUSED);
     });
   });
+
+  describe('diversion field', () => {
+    const SAMPLE = ['"Alice" <sip:1001@wazo.example>;reason=unconditional'];
+
+    it('defaults to an empty array when not provided', () => {
+      const cs = new CallSession({} as any);
+      expect(cs.diversion).toEqual([]);
+    });
+
+    it('preserves diversion through updateFrom', () => {
+      const cs = new CallSession({ callId: 'a', diversion: SAMPLE } as any);
+      const next = new CallSession({ callId: 'a' } as any);
+      next.updateFrom(cs);
+      expect(next.diversion).toEqual(SAMPLE);
+    });
+
+    it('preserves diversion through JSON serialization', () => {
+      const cs = new CallSession({ callId: 'a', diversion: SAMPLE } as any);
+      expect(stringify(cs).diversion).toEqual(SAMPLE);
+    });
+  });
 });
