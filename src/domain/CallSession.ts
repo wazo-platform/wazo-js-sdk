@@ -68,7 +68,7 @@ export default class CallSession {
 
   dialedExtension: string;
 
-  diversion: string[];
+  diversion?: string[];
 
   ringing: boolean;
 
@@ -155,7 +155,7 @@ export default class CallSession {
     this.callerNumber = callerNumber;
     this.cameraEnabled = cameraEnabled;
     this.dialedExtension = dialedExtension || '';
-    this.diversion = diversion ?? [];
+    this.diversion = diversion;
     this.call = call;
     this.sipStatus = sipStatus;
     this.autoAnswer = autoAnswer || false;
@@ -333,11 +333,7 @@ export default class CallSession {
   }
 
   updateFrom(session: CallSession) {
-    const preservedDiversion = this.diversion;
     updateFrom(this, session);
-    if (!session.diversion?.length && preservedDiversion?.length) {
-      this.diversion = preservedDiversion;
-    }
   }
 
   separateDisplayName(): {

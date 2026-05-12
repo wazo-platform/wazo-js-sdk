@@ -103,13 +103,13 @@ describe('WebRTCPhone._createCallSession diversion', () => {
     expect(cs.diversion).toEqual(SAMPLE);
   });
 
-  it('defaults to an empty array when the sipSession has no diversion', () => {
+  it('is undefined when the sipSession has no diversion', () => {
     const sipSession = { id: 'session-1' } as any;
     const phone = createPhone(createCreatableMockClient({ 'session-1': sipSession }));
 
     const cs = phone._createCallSession(sipSession);
 
-    expect(cs.diversion).toEqual([]);
+    expect(cs.diversion).toBeUndefined();
   });
 });
 /* eslint-enable no-underscore-dangle */

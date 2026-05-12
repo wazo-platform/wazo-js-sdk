@@ -117,9 +117,9 @@ describe('CallSession domain', () => {
   describe('diversion field', () => {
     const SAMPLE = ['"Alice" <sip:1001@wazo.example>;reason=unconditional'];
 
-    it('defaults to an empty array when not provided', () => {
+    it('is undefined when not provided', () => {
       const cs = new CallSession({} as any);
-      expect(cs.diversion).toEqual([]);
+      expect(cs.diversion).toBeUndefined();
     });
 
     it('copies diversion via updateFrom', () => {
@@ -134,6 +134,13 @@ describe('CallSession domain', () => {
       const next = new CallSession({ callId: 'a' } as any);
       cs.updateFrom(next);
       expect(cs.diversion).toEqual(SAMPLE);
+    });
+
+    it('clears diversion when source explicitly sets an empty array', () => {
+      const cs = new CallSession({ callId: 'a', diversion: SAMPLE } as any);
+      const next = new CallSession({ callId: 'a', diversion: [] } as any);
+      cs.updateFrom(next);
+      expect(cs.diversion).toEqual([]);
     });
 
     it('preserves diversion through JSON serialization', () => {
