@@ -92,7 +92,7 @@ describe('WebRTCPhone._createCallSession diversion', () => {
     isCallHeld: () => false,
     hasVideo: () => false,
     isAudioMuted: () => false,
-  } as any);
+  });
 
   it('propagates diversion from the sipSession', () => {
     const sipSession = { id: 'session-1', diversion: SAMPLE } as any;
