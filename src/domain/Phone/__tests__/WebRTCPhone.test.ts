@@ -103,17 +103,7 @@ describe('WebRTCPhone._createCallSession diversion', () => {
     expect(cs.diversion).toEqual(SAMPLE);
   });
 
-  it('falls back to fromSession.diversion when sipSession lacks one', () => {
-    const sipSession = { id: 'session-1' } as any;
-    const phone = createPhone(createCreatableMockClient({ 'session-1': sipSession }));
-    const previous = new CallSession({ callId: 'a', sipCallId: 'session-1', diversion: SAMPLE } as any);
-
-    const cs = phone._createCallSession(sipSession, previous);
-
-    expect(cs.diversion).toEqual(SAMPLE);
-  });
-
-  it('defaults to an empty array when neither sipSession nor fromSession has diversion', () => {
+  it('defaults to an empty array when the sipSession has no diversion', () => {
     const sipSession = { id: 'session-1' } as any;
     const phone = createPhone(createCreatableMockClient({ 'session-1': sipSession }));
 

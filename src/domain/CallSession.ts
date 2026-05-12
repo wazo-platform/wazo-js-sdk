@@ -333,7 +333,11 @@ export default class CallSession {
   }
 
   updateFrom(session: CallSession) {
+    const preservedDiversion = this.diversion;
     updateFrom(this, session);
+    if (!session.diversion?.length && preservedDiversion?.length) {
+      this.diversion = preservedDiversion;
+    }
   }
 
   separateDisplayName(): {

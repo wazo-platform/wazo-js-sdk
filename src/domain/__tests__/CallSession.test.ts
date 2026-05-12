@@ -122,11 +122,18 @@ describe('CallSession domain', () => {
       expect(cs.diversion).toEqual([]);
     });
 
-    it('preserves diversion through updateFrom', () => {
+    it('copies diversion via updateFrom', () => {
       const cs = new CallSession({ callId: 'a', diversion: SAMPLE } as any);
       const next = new CallSession({ callId: 'a' } as any);
       next.updateFrom(cs);
       expect(next.diversion).toEqual(SAMPLE);
+    });
+
+    it('does not clobber diversion when source lacks one', () => {
+      const cs = new CallSession({ callId: 'a', diversion: SAMPLE } as any);
+      const next = new CallSession({ callId: 'a' } as any);
+      cs.updateFrom(next);
+      expect(cs.diversion).toEqual(SAMPLE);
     });
 
     it('preserves diversion through JSON serialization', () => {

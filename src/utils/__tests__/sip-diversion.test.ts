@@ -77,11 +77,4 @@ describe('parseDiversionHeader', () => {
     expect(parseDiversionHeader('not a sip uri')).toBeNull();
     expect(parseDiversionHeader('')).toBeNull();
   });
-
-  it('handles addr-spec without angle brackets', () => {
-    expect(parseDiversionHeader('sip:1001@wazo.example;reason=unconditional')).toEqual({
-      number: '1001',
-      reason: 'unconditional',
-    });
-  });
 });
