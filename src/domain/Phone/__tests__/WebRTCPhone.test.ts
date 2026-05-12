@@ -82,3 +82,34 @@ describe('WebRTCPhone.findSipSession', () => {
     expect(result).toBeNull();
   });
 });
+
+/* eslint-disable no-underscore-dangle */
+describe('WebRTCPhone._createCallSession diversion', () => {
+  const SAMPLE = ['"Alice" <sip:1001@wazo.example>;reason=unconditional'];
+
+  const createCreatableMockClient = (sessions: Record<string, any> = {}) => ({
+    ...createMockClient(sessions),
+    isCallHeld: () => false,
+    hasVideo: () => false,
+    isAudioMuted: () => false,
+  });
+
+  it('propagates diversion from the sipSession', () => {
+    const sipSession = { id: 'session-1', diversion: SAMPLE } as any;
+    const phone = createPhone(createCreatableMockClient({ 'session-1': sipSession }));
+
+    const cs = phone._createCallSession(sipSession);
+
+    expect(cs.diversion).toEqual(SAMPLE);
+  });
+
+  it('is undefined when the sipSession has no diversion', () => {
+    const sipSession = { id: 'session-1' } as any;
+    const phone = createPhone(createCreatableMockClient({ 'session-1': sipSession }));
+
+    const cs = phone._createCallSession(sipSession);
+
+    expect(cs.diversion).toBeUndefined();
+  });
+});
+/* eslint-enable no-underscore-dangle */

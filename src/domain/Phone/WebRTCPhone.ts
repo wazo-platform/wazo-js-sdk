@@ -1851,6 +1851,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       recordingPaused: fromSession ? fromSession.isRecordingPaused() : false,
       recordingState: fromSession ? fromSession.recordingState : RECORDING_STATE.INACTIVE,
       sipSession,
+      diversion: sipSession?.diversion,
       conference: !!fromSession && fromSession.isConference(),
       ...extra,
     });

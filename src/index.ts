@@ -44,6 +44,7 @@ export { type Device } from './domain/Device/Device';
 export { default as DebugDevice } from './domain/Device/DebugDevice';
 export { default as Checker } from './checker/Checker';
 export { default as ApiRequester } from './utils/api-requester';
+export { parseDiversionHeader, type DivertedBy } from './utils/sip-diversion';
 export { type DirectorySource as Source, type DirectorySources as Sources } from './domain/DirectorySource';
 export { type DirectorySource, type DirectorySources } from './domain/DirectorySource';
 export {

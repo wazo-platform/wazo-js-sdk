@@ -113,4 +113,39 @@ describe('CallSession domain', () => {
       expect(cs.recordingState).toEqual(RECORDING_STATE.PAUSED);
     });
   });
+
+  describe('diversion field', () => {
+    const SAMPLE = ['"Alice" <sip:1001@wazo.example>;reason=unconditional'];
+
+    it('is undefined when not provided', () => {
+      const cs = new CallSession({} as any);
+      expect(cs.diversion).toBeUndefined();
+    });
+
+    it('copies diversion via updateFrom', () => {
+      const cs = new CallSession({ callId: 'a', diversion: SAMPLE } as any);
+      const next = new CallSession({ callId: 'a' } as any);
+      next.updateFrom(cs);
+      expect(next.diversion).toEqual(SAMPLE);
+    });
+
+    it('does not clobber diversion when source lacks one', () => {
+      const cs = new CallSession({ callId: 'a', diversion: SAMPLE } as any);
+      const next = new CallSession({ callId: 'a' } as any);
+      cs.updateFrom(next);
+      expect(cs.diversion).toEqual(SAMPLE);
+    });
+
+    it('clears diversion when source explicitly sets an empty array', () => {
+      const cs = new CallSession({ callId: 'a', diversion: SAMPLE } as any);
+      const next = new CallSession({ callId: 'a', diversion: [] } as any);
+      cs.updateFrom(next);
+      expect(cs.diversion).toEqual([]);
+    });
+
+    it('preserves diversion through JSON serialization', () => {
+      const cs = new CallSession({ callId: 'a', diversion: SAMPLE } as any);
+      expect(stringify(cs).diversion).toEqual(SAMPLE);
+    });
+  });
 });
