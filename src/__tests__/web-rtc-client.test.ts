@@ -246,6 +246,96 @@ describe('WebRTC client', () => {
     });
   });
 });
+describe('ICE reconnect reinvite guard', () => {
+  let reinviteSpy: jest.SpyInstance;
+  const spies: jest.SpyInstance[] = [];
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    reinviteSpy = jest.spyOn(client, 'reinvite').mockResolvedValue(undefined as any);
+    spies.push(
+      jest.spyOn(client as any, '_setupMedias').mockResolvedValue(undefined),
+      jest.spyOn(client, 'updateRemoteStream').mockImplementation(() => {}),
+      jest.spyOn(client, 'storeSipSession').mockImplementation(() => {}),
+      jest.spyOn(client as any, '_startSendingStats').mockImplementation(() => {}),
+      jest.spyOn(client, 'isConference').mockReturnValue(false),
+    );
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+    spies.forEach(s => s.mockRestore());
+    spies.length = 0;
+    reinviteSpy.mockRestore();
+    (client as any).mediaConnectedSessions = {};
+    (client as any).iceReconnectAttempts = {};
+  });
+
+  const buildSession = (sessionId: string, state: SessionState) => {
+    const pc = {
+      connectionState: 'new',
+      onconnectionstatechange: null as (() => void) | null,
+      iceConnectionState: 'new',
+      oniceconnectionstatechange: null as (() => void) | null,
+      addEventListener: jest.fn(),
+    };
+    const remoteStream = {
+      getTracks: jest.fn(() => []),
+      getAudioTracks: jest.fn(() => []),
+      getVideoTracks: jest.fn(() => []),
+      onaddtrack: null,
+    };
+    const session = {
+      state,
+      sessionDescriptionHandler: { peerConnection: pc, remoteMediaStream: remoteStream },
+      sessionDescriptionHandlerModifiersReInvite: [],
+    } as any;
+    spies.push(jest.spyOn(client, 'getSipSessionId').mockReturnValue(sessionId));
+    return { session, pc };
+  };
+
+  it('reinvites when the session is still Established when the timer fires', async () => {
+    const { session, pc } = buildSession('ice-1', SessionState.Established);
+
+    // eslint-disable-next-line no-underscore-dangle
+    await (client as any)._onAccepted(session, undefined, false, true);
+
+    (pc as any).iceConnectionState = 'disconnected';
+    pc.oniceconnectionstatechange!();
+    jest.runAllTimers();
+
+    expect(reinviteSpy).toHaveBeenCalledWith(session, null, false, false, true);
+  });
+
+  it('skips the reinvite when the session has Terminated before the timer fires', async () => {
+    const { session, pc } = buildSession('ice-2', SessionState.Established);
+
+    // eslint-disable-next-line no-underscore-dangle
+    await (client as any)._onAccepted(session, undefined, false, true);
+
+    (pc as any).iceConnectionState = 'disconnected';
+    pc.oniceconnectionstatechange!();
+    session.state = SessionState.Terminated;
+    jest.runAllTimers();
+
+    expect(reinviteSpy).not.toHaveBeenCalled();
+  });
+
+  it('skips the reinvite when the session is Terminating when the timer fires', async () => {
+    const { session, pc } = buildSession('ice-3', SessionState.Established);
+
+    // eslint-disable-next-line no-underscore-dangle
+    await (client as any)._onAccepted(session, undefined, false, true);
+
+    (pc as any).iceConnectionState = 'disconnected';
+    pc.oniceconnectionstatechange!();
+    session.state = SessionState.Terminating;
+    jest.runAllTimers();
+
+    expect(reinviteSpy).not.toHaveBeenCalled();
+  });
+});
+
 describe('changeAudioInputDevice', () => {
   const defaultId = 'default';
   const deviceId = 'device1';

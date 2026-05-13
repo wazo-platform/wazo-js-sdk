@@ -2390,7 +2390,18 @@ export default class WebRTCClient extends Emitter {
             const isConference = this.isConference(currentSessionId);
 
             // The reinvite will trigger a new offer/answer, and oniceconnectionstatechange will be called again.
-            setTimeout(() => { this.reinvite(session, null, isConference, false, true); }, this.iceReconnectDelay);
+            setTimeout(() => {
+              // Guard against the session being torn down between scheduling and firing:
+              // sip.js rejects invite() on a Terminated/Terminating session as an unhandled promise.
+              if (session.state === SessionState.Terminated || session.state === SessionState.Terminating) {
+                logger.info('ICE reconnect reinvite skipped, session no longer active', {
+                  sessionId: currentSessionId,
+                  state: session.state,
+                });
+                return;
+              }
+              this.reinvite(session, null, isConference, false, true);
+            }, this.iceReconnectDelay);
           } else {
             logger.warn('ICE reconnection failed after max attempts', {
               sessionId: currentSessionId,
