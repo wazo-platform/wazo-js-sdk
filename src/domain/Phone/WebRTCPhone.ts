@@ -358,6 +358,16 @@ export default class WebRTCPhone extends Emitter implements Phone {
     });
     // Have to send the message after a delay due to latency to update the remote peer
     setTimeout(() => {
+      // Guard against the session not being in Established state when the timer fires:
+      // sip.js rejects message() unless the session is Established. On slow networks/devices the preceding
+      // re-INVITE may still be in Establishing, or the session may already be Terminated/Terminating.
+      if (!sipSession || sipSession.state !== SessionState.Established) {
+        logger.info('Reinvite track-update message skipped, session not Established', {
+          id: callSession ? callSession.getId() : null,
+          state: sipSession?.state,
+        });
+        return;
+      }
       this.sendMessage(sipSession, JSON.stringify({
         type: MESSAGE_TYPE_SIGNAL,
         content: {

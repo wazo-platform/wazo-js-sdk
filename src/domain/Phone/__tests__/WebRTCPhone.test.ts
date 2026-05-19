@@ -1,3 +1,5 @@
+import { SessionState } from 'sip.js/lib/api/session-state';
+
 import WebRTCPhone from '../WebRTCPhone';
 import CallSession from '../../CallSession';
 
@@ -110,6 +112,87 @@ describe('WebRTCPhone._createCallSession diversion', () => {
     const cs = phone._createCallSession(sipSession);
 
     expect(cs.diversion).toBeUndefined();
+  });
+});
+/* eslint-enable no-underscore-dangle */
+
+/* eslint-disable no-underscore-dangle */
+describe('WebRTCPhone._sendReinviteMessage', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  const createMessageMockClient = (sessions: Record<string, any> = {}) => ({
+    ...createMockClient(sessions),
+    sendMessage: jest.fn(),
+  });
+
+  it('sends the track-update message when the session is Established when the timer fires', () => {
+    const sipSession = { id: 'session-1', state: SessionState.Established } as any;
+    const client = createMessageMockClient({ 'session-1': sipSession });
+    const phone = createPhone(client);
+    const callSession = new CallSession({ callId: 'session-1', sipCallId: 'session-1' } as any);
+
+    phone._sendReinviteMessage(callSession, true);
+    jest.runAllTimers();
+
+    expect(client.sendMessage).toHaveBeenCalledTimes(1);
+    const [calledSession, body] = client.sendMessage.mock.calls[0];
+    expect(calledSession).toBe(sipSession);
+    expect(JSON.parse(body).content.update).toBe('upgrade');
+  });
+
+  it('skips the message when the session is not yet Established when the timer fires', () => {
+    const sipSession = { id: 'session-1', state: SessionState.Establishing } as any;
+    const client = createMessageMockClient({ 'session-1': sipSession });
+    const phone = createPhone(client);
+    const callSession = new CallSession({ callId: 'session-1', sipCallId: 'session-1' } as any);
+
+    phone._sendReinviteMessage(callSession, true);
+    jest.runAllTimers();
+
+    expect(client.sendMessage).not.toHaveBeenCalled();
+  });
+
+  it('skips the message when the session is already Terminated when the timer fires', () => {
+    const sipSession = { id: 'session-1', state: SessionState.Terminated } as any;
+    const client = createMessageMockClient({ 'session-1': sipSession });
+    const phone = createPhone(client);
+    const callSession = new CallSession({ callId: 'session-1', sipCallId: 'session-1' } as any);
+
+    phone._sendReinviteMessage(callSession, false);
+    jest.runAllTimers();
+
+    expect(client.sendMessage).not.toHaveBeenCalled();
+  });
+
+  it('skips the message when no sip session can be resolved', () => {
+    const client = createMessageMockClient({});
+    const phone = createPhone(client);
+    phone.fallbackToFirstSipSession = false;
+    const callSession = new CallSession({ callId: 'unknown', sipCallId: 'unknown' } as any);
+
+    phone._sendReinviteMessage(callSession, false);
+    jest.runAllTimers();
+
+    expect(client.sendMessage).not.toHaveBeenCalled();
+  });
+
+  it('skips the message when the session moves to Terminated after scheduling', () => {
+    const sipSession = { id: 'session-1', state: SessionState.Established } as any;
+    const client = createMessageMockClient({ 'session-1': sipSession });
+    const phone = createPhone(client);
+    const callSession = new CallSession({ callId: 'session-1', sipCallId: 'session-1' } as any);
+
+    phone._sendReinviteMessage(callSession, true);
+    sipSession.state = SessionState.Terminated;
+    jest.runAllTimers();
+
+    expect(client.sendMessage).not.toHaveBeenCalled();
   });
 });
 /* eslint-enable no-underscore-dangle */
