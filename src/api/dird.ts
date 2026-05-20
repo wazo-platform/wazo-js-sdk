@@ -47,8 +47,11 @@ export default ((client: ApiRequester, baseUrl: string) => ({
 
   removeFavorite: (source: string, sourceId: string): Promise<void> => client.delete(`${baseUrl}/directories/favorites/${source}/${sourceId}`),
 
-  fetchOffice365Source: (context: string): Promise<DirectorySources> => client.get(`${baseUrl}/directories/${context}/sources`, {
-    backend: 'office365',
+  // The directory source may not be configured on the engine — a 404 is expected and not a real error.
+  fetchOffice365Source: (context: string): Promise<DirectorySources> => client.get({
+    path: `${baseUrl}/directories/${context}/sources`,
+    body: { backend: 'office365' },
+    ignoreErrors: [404],
   }),
 
   fetchOffice365Contacts: async (source: DirectorySource, queryParams?: SearchableQueryParams): Promise<Contact[]> => {
@@ -59,8 +62,11 @@ export default ((client: ApiRequester, baseUrl: string) => ({
     return client.get(`${baseUrl}/backends/office365/sources/${source.uuid}/contacts`, queryParams).then((response: any) => Contact.parseManyOffice365(response.items, source));
   },
 
-  fetchWazoSource: (context: string): Promise<DirectorySources> => client.get(`${baseUrl}/directories/${context}/sources`, {
-    backend: 'wazo',
+  // The directory source may not be configured on the engine — a 404 is expected and not a real error.
+  fetchWazoSource: (context: string): Promise<DirectorySources> => client.get({
+    path: `${baseUrl}/directories/${context}/sources`,
+    body: { backend: 'wazo' },
+    ignoreErrors: [404],
   }),
 
   // Can be used with `queryParams = { uuid: uuid1, uuid2 }` to fetch multiple contacts
@@ -79,8 +85,11 @@ export default ((client: ApiRequester, baseUrl: string) => ({
     return client.get(`${baseUrl}/backends/wazo/sources/${source.uuid}/contacts`, queryParams).then((response: any) => parser(response, source));
   },
 
-  fetchGoogleSource: (context: string): Promise<DirectorySources> => client.get(`${baseUrl}/directories/${context}/sources`, {
-    backend: 'google',
+  // The directory source may not be configured on the engine — a 404 is expected and not a real error.
+  fetchGoogleSource: (context: string): Promise<DirectorySources> => client.get({
+    path: `${baseUrl}/directories/${context}/sources`,
+    body: { backend: 'google' },
+    ignoreErrors: [404],
   }),
 
   fetchGoogleContacts: async (source: DirectorySource, queryParams?: SearchableQueryParams): Promise<Contact[]> => {
@@ -91,8 +100,11 @@ export default ((client: ApiRequester, baseUrl: string) => ({
     return client.get(`${baseUrl}/backends/google/sources/${source.uuid}/contacts`, queryParams).then((response: any) => Contact.parseManyGoogle(response.items, source));
   },
 
-  fetchConferenceSource: (context: string): Promise<DirectorySources> => client.get(`${baseUrl}/directories/${context}/sources`, {
-    backend: 'conference',
+  // The directory source may not be configured on the engine — a 404 is expected and not a real error.
+  fetchConferenceSource: (context: string): Promise<DirectorySources> => client.get({
+    path: `${baseUrl}/directories/${context}/sources`,
+    body: { backend: 'conference' },
+    ignoreErrors: [404],
   }),
 
   fetchSourcesFor: (context: string, backend: string): Promise<DirectorySources> => client.get(`${baseUrl}/directories/${context}/sources`, { backend }),

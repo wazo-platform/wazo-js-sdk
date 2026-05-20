@@ -274,7 +274,8 @@ export default ((client: ApiRequester, baseUrl: string) => ({
 
   getProviders: (userUuid: UUID): Promise<any> => client.get(`${baseUrl}/users/${userUuid}/external`),
 
-  getProviderToken: (userUuid: UUID, provider: string): Promise<string> => client.get(`${baseUrl}/users/${userUuid}/external/${provider}`),
+  // External provider may not be linked for this user — a 404 is expected and not a real error.
+  getProviderToken: (userUuid: UUID, provider: string): Promise<string> => client.get({ path: `${baseUrl}/users/${userUuid}/external/${provider}`, ignoreErrors: [404] }),
 
   getProviderAuthUrl: (userUuid: UUID, provider: string): Promise<string> => client.post(`${baseUrl}/users/${userUuid}/external/${provider}`, {}),
 
