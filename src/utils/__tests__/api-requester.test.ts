@@ -288,7 +288,7 @@ describe('ignoreErrors option', () => {
   const apiErrorCalls = () => logSpy.mock.calls.filter(call => call[2] === 'API error');
 
   it('does not log an API error when status is in ignoreErrors', async () => {
-    Object.defineProperty(global, 'fetch', { value: jest.fn(() => makeFetchResponse(404)) });
+    Object.defineProperty(globalThis, 'fetch', { value: jest.fn(() => makeFetchResponse(404)) });
 
     await expect(requester.call({ path, method, ignoreErrors: [404] })).rejects.toBeDefined();
 
@@ -296,7 +296,7 @@ describe('ignoreErrors option', () => {
   });
 
   it('still logs when the status is not in ignoreErrors', async () => {
-    Object.defineProperty(global, 'fetch', { value: jest.fn(() => makeFetchResponse(500)) });
+    Object.defineProperty(globalThis, 'fetch', { value: jest.fn(() => makeFetchResponse(500)) });
 
     await expect(requester.call({ path, method, ignoreErrors: [404] })).rejects.toBeDefined();
 
@@ -304,7 +304,7 @@ describe('ignoreErrors option', () => {
   });
 
   it('logs as usual when ignoreErrors is not set', async () => {
-    Object.defineProperty(global, 'fetch', { value: jest.fn(() => makeFetchResponse(404)) });
+    Object.defineProperty(globalThis, 'fetch', { value: jest.fn(() => makeFetchResponse(404)) });
 
     await expect(requester.call({ path, method })).rejects.toBeDefined();
 
@@ -312,7 +312,7 @@ describe('ignoreErrors option', () => {
   });
 
   it('does not affect a concurrent call without ignoreErrors', async () => {
-    Object.defineProperty(global, 'fetch', { value: jest.fn(() => makeFetchResponse(404)) });
+    Object.defineProperty(globalThis, 'fetch', { value: jest.fn(() => makeFetchResponse(404)) });
 
     await Promise.allSettled([
       requester.call({ path, method, ignoreErrors: [404] }),
