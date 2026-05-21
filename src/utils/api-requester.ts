@@ -24,7 +24,17 @@ type CallBody = Record<string, any> | null | undefined | string;
 type CallHeaders = { 'Wazo-Tenant'?: boolean | string | null, [key: string]: any } | null | undefined;
 type CallParser = ((...args: Array<any>) => any) | undefined;
 
-type CallParams = { path: string, body?: CallBody, headers?: CallHeaders, parse?: CallParser, firstCall?: boolean };
+type CallParams = {
+  path: string,
+  body?: CallBody,
+  headers?: CallHeaders,
+  parse?: CallParser,
+  firstCall?: boolean,
+  // Response statuses listed here won't be reported to the logger.
+  // The caller still receives the rejection — only the "API error" log line is skipped.
+  // Useful for endpoints that may legitimately fail (e.g. probing an optional feature).
+  ignoreStatuses?: number[],
+};
 type CallHelpers = {
   // Signature 1: Single object argument
   (options: CallParams): Promise<any>;
@@ -171,6 +181,7 @@ export default class ApiRequester {
     headers = null,
     parse = ApiRequester.defaultParser,
     firstCall = true,
+    ignoreStatuses = [],
   }: CallParams & { method: Methods }): Promise<any> {
     const url = this.computeUrl(method, path, body);
     const newHeaders = this.getHeaders(headers);
@@ -228,7 +239,7 @@ export default class ApiRequester {
 
           const error = typeof err === 'string' ? exceptionClass.fromText(err, response.status) : exceptionClass.fromResponse(err, response.status);
 
-          if (this.shouldLogErrors) {
+          if (this.shouldLogErrors && !ignoreStatuses.includes(response.status)) {
             logger.error('API error', error);
           }
 

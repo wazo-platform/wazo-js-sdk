@@ -75,10 +75,11 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   getExternalApps: (userUuid: string): Promise<ExternalApp[]> => client.get(`${baseUrl}/users/${userUuid}/external/apps`).then(ExternalApp.parseMany),
 
   getExternalApp: async (userUuid: string, name: string): Promise<ExternalApp | null | undefined> => {
-    const url = `${baseUrl}/users/${userUuid}/external/apps/${name}?view=fallback`;
+    const path = `users/${userUuid}/external/apps/${name}?view=fallback`;
 
     try {
-      return await client.get(url).then(ExternalApp.parse);
+      // The external app may not be configured on the engine — a 404 is expected and not a real error.
+      return await client.get({ path: `${baseUrl}/${path}`, ignoreStatuses: [404] }).then(ExternalApp.parse);
     } catch (e: any) {
       return null;
     }
