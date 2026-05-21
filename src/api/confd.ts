@@ -79,7 +79,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
 
     try {
       // The external app may not be configured on the engine — a 404 is expected and not a real error.
-      return await client.get({ path: `${baseUrl}/${path}`, ignoreErrors: [404] }).then(ExternalApp.parse);
+      return await client.get({ path: `${baseUrl}/${path}`, ignoreStatuses: [404] }).then(ExternalApp.parse);
     } catch (e: any) {
       return null;
     }

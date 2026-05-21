@@ -51,7 +51,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   fetchOffice365Source: (context: string): Promise<DirectorySources> => client.get({
     path: `${baseUrl}/directories/${context}/sources`,
     body: { backend: 'office365' },
-    ignoreErrors: [404],
+    ignoreStatuses: [404],
   }),
 
   fetchOffice365Contacts: async (source: DirectorySource, queryParams?: SearchableQueryParams): Promise<Contact[]> => {
@@ -66,7 +66,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   fetchWazoSource: (context: string): Promise<DirectorySources> => client.get({
     path: `${baseUrl}/directories/${context}/sources`,
     body: { backend: 'wazo' },
-    ignoreErrors: [404],
+    ignoreStatuses: [404],
   }),
 
   // Can be used with `queryParams = { uuid: uuid1, uuid2 }` to fetch multiple contacts
@@ -89,7 +89,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   fetchGoogleSource: (context: string): Promise<DirectorySources> => client.get({
     path: `${baseUrl}/directories/${context}/sources`,
     body: { backend: 'google' },
-    ignoreErrors: [404],
+    ignoreStatuses: [404],
   }),
 
   fetchGoogleContacts: async (source: DirectorySource, queryParams?: SearchableQueryParams): Promise<Contact[]> => {
@@ -104,7 +104,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   fetchConferenceSource: (context: string): Promise<DirectorySources> => client.get({
     path: `${baseUrl}/directories/${context}/sources`,
     body: { backend: 'conference' },
-    ignoreErrors: [404],
+    ignoreStatuses: [404],
   }),
 
   fetchSourcesFor: (context: string, backend: string): Promise<DirectorySources> => client.get(`${baseUrl}/directories/${context}/sources`, { backend }),

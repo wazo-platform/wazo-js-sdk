@@ -33,7 +33,7 @@ type CallParams = {
   // Response statuses listed here won't be reported to the logger.
   // The caller still receives the rejection — only the "API error" log line is skipped.
   // Useful for endpoints that may legitimately fail (e.g. probing an optional feature).
-  ignoreErrors?: number[],
+  ignoreStatuses?: number[],
 };
 type CallHelpers = {
   // Signature 1: Single object argument
@@ -181,7 +181,7 @@ export default class ApiRequester {
     headers = null,
     parse = ApiRequester.defaultParser,
     firstCall = true,
-    ignoreErrors,
+    ignoreStatuses = [],
   }: CallParams & { method: Methods }): Promise<any> {
     const url = this.computeUrl(method, path, body);
     const newHeaders = this.getHeaders(headers);
@@ -239,8 +239,7 @@ export default class ApiRequester {
 
           const error = typeof err === 'string' ? exceptionClass.fromText(err, response.status) : exceptionClass.fromResponse(err, response.status);
 
-          const isIgnoredStatus = Array.isArray(ignoreErrors) && ignoreErrors.includes(response.status);
-          if (this.shouldLogErrors && !isIgnoredStatus) {
+          if (this.shouldLogErrors && !ignoreStatuses.includes(response.status)) {
             logger.error('API error', error);
           }
 

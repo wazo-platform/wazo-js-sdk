@@ -259,7 +259,7 @@ describe('Handling 204 No Content responses', () => {
   });
 });
 
-describe('ignoreErrors option', () => {
+describe('ignoreStatuses option', () => {
   const makeFetchResponse = (status: number) => Promise.resolve({
     status,
     headers: { get: () => 'application/json' },
@@ -287,23 +287,23 @@ describe('ignoreErrors option', () => {
 
   const apiErrorCalls = () => logSpy.mock.calls.filter(call => call[2] === 'API error');
 
-  it('does not log an API error when status is in ignoreErrors', async () => {
+  it('does not log an API error when status is in ignoreStatuses', async () => {
     Object.defineProperty(globalThis, 'fetch', { value: jest.fn(() => makeFetchResponse(404)) });
 
-    await expect(requester.call({ path, method, ignoreErrors: [404] })).rejects.toBeDefined();
+    await expect(requester.call({ path, method, ignoreStatuses: [404] })).rejects.toBeDefined();
 
     expect(apiErrorCalls()).toHaveLength(0);
   });
 
-  it('still logs when the status is not in ignoreErrors', async () => {
+  it('still logs when the status is not in ignoreStatuses', async () => {
     Object.defineProperty(globalThis, 'fetch', { value: jest.fn(() => makeFetchResponse(500)) });
 
-    await expect(requester.call({ path, method, ignoreErrors: [404] })).rejects.toBeDefined();
+    await expect(requester.call({ path, method, ignoreStatuses: [404] })).rejects.toBeDefined();
 
     expect(apiErrorCalls()).toHaveLength(1);
   });
 
-  it('logs as usual when ignoreErrors is not set', async () => {
+  it('logs as usual when ignoreStatuses is not set', async () => {
     Object.defineProperty(globalThis, 'fetch', { value: jest.fn(() => makeFetchResponse(404)) });
 
     await expect(requester.call({ path, method })).rejects.toBeDefined();
@@ -311,11 +311,11 @@ describe('ignoreErrors option', () => {
     expect(apiErrorCalls()).toHaveLength(1);
   });
 
-  it('does not affect a concurrent call without ignoreErrors', async () => {
+  it('does not affect a concurrent call without ignoreStatuses', async () => {
     Object.defineProperty(globalThis, 'fetch', { value: jest.fn(() => makeFetchResponse(404)) });
 
     await Promise.allSettled([
-      requester.call({ path, method, ignoreErrors: [404] }),
+      requester.call({ path, method, ignoreStatuses: [404] }),
       requester.call({ path, method }),
     ]);
 
