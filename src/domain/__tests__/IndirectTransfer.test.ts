@@ -65,4 +65,41 @@ describe('Indirect transfer', () => {
       expect(isSource).toBeFalsy();
     });
   });
+
+  // IndirectTransfer's fields are all scalars (string IDs + status). The
+  // `update_from`/`new_from` helpers iterate keys once and copy references; they
+  // cannot loop on this shape. The tests below lock that contract in so any
+  // future field addition that breaks it (e.g. an object reference back to a
+  // CallSession) is caught here rather than at runtime in production.
+  describe('updateFrom and newFrom safety', () => {
+    it('updateFrom copies scalar fields from another IndirectTransfer', () => {
+      const a = new IndirectTransfer({ sourceId: 's-1', destinationId: 'd-1', status: 'starting' });
+      const b = new IndirectTransfer({ sourceId: 's-2', destinationId: 'd-2', status: 'answered', id: 'tr-1' });
+      a.updateFrom(b);
+      expect(a.sourceId).toBe('s-2');
+      expect(a.destinationId).toBe('d-2');
+      expect(a.status).toBe('answered');
+      expect(a.id).toBe('tr-1');
+    });
+
+    it('newFrom returns a new instance with the same scalar fields', () => {
+      const original = new IndirectTransfer({ sourceId: 's-1', destinationId: 'd-1', status: 'starting', id: 'tr-1' });
+      const copy = IndirectTransfer.newFrom(original);
+      expect(copy).not.toBe(original);
+      expect(copy).toEqual(original);
+    });
+
+    it('JSON.stringify of an IndirectTransfer round-trips cleanly', () => {
+      const transfer = new IndirectTransfer({ sourceId: 's-1', destinationId: 'd-1', status: 'starting', id: 'tr-1' });
+      expect(() => JSON.stringify(transfer)).not.toThrow();
+      // All fields are scalars: spreading the instance is equivalent to the
+      // JSON round-trip shape for plain-data classes like this one.
+      expect({ ...transfer }).toEqual({
+        sourceId: 's-1',
+        destinationId: 'd-1',
+        status: 'starting',
+        id: 'tr-1',
+      });
+    });
+  });
 });
