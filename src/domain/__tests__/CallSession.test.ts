@@ -126,7 +126,7 @@ describe('CallSession domain', () => {
     it('toJSON omits sipSession entirely', () => {
       const cs = new CallSession({ callId: 'a', sipCallId: 'b' } as any);
       cs.sipSession = buildCyclicSipSession(cs);
-      const json = cs.toJSON() as any;
+      const json = cs.toJSON();
       expect(json.sipSession).toBeUndefined();
     });
 
@@ -134,14 +134,15 @@ describe('CallSession domain', () => {
       const cs = new CallSession({ callId: 'a', sipCallId: 'b' } as any);
       cs.sipSession = buildCyclicSipSession(cs);
       expect(() => JSON.stringify(cs)).not.toThrow();
-      expect(JSON.parse(JSON.stringify(cs)).sipSession).toBeUndefined();
+      const serialized = JSON.stringify(cs);
+      expect(serialized).not.toContain('sipSession');
     });
 
     it('toJSON still includes the answered getter value', () => {
       const cs = new CallSession({ callId: 'a' } as any);
       cs.answered = true;
       cs.sipSession = { id: 'sip-1' } as any;
-      const json = cs.toJSON() as any;
+      const json = cs.toJSON();
       expect(json.answered).toBe(true);
       expect(json.sipSession).toBeUndefined();
     });
