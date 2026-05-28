@@ -1192,10 +1192,18 @@ export default class WebRTCClient extends Emitter {
           referId: this.getSipSessionId(result.newSession),
         });
         session.refer(result.newSession);
+        // Drop the consultation-leg reference once REFER is sent: holding it
+        // in the closure keeps a dead SIP.js session graph alive for any later
+        // walker (toJSON, logger, Sentry) to trip over.
+        result.newSession = null;
       },
       cancel: () => {
         this.hangup(result.newSession);
         this.unhold(session);
+        // Same reasoning as `complete`: after the consultation leg is hung up,
+        // null out the closure ref so a rejected/cancelled attended transfer
+        // doesn't leave a poisoned object graph reachable from the app side.
+        result.newSession = null;
       },
     };
     return result;

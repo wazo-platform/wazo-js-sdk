@@ -333,7 +333,13 @@ export default class CallSession {
   }
 
   updateFrom(session: CallSession) {
-    updateFrom(this, session);
+    // `sipSession` is a SIP.js runtime handle owned by WebRTCPhone. It carries
+    // back-references (event emitters, dialogs) that form cycles when copied
+    // between CallSession instances and can crash any walker without a cycle
+    // guard. The current instance keeps its own sipSession; never propagate it.
+    const safeSource: any = { ...session };
+    delete safeSource.sipSession;
+    updateFrom(this, safeSource);
   }
 
   separateDisplayName(): {
@@ -362,7 +368,14 @@ export default class CallSession {
   }
 
   static newFrom(callSession: CallSession) {
-    return newFrom(callSession, CallSession);
+    // Strip `sipSession` before copying (see updateFrom) then re-attach the
+    // original reference so the new instance still points at the live SIP.js
+    // session without going through a generic property copy.
+    const safeSource: any = { ...callSession };
+    delete safeSource.sipSession;
+    const next = newFrom(safeSource, CallSession);
+    next.sipSession = callSession.sipSession;
+    return next;
   }
 
   // Retro-compatibility: `answered` was a boolean before. We can reproduce the behaviour with a getter/setter
@@ -375,8 +388,11 @@ export default class CallSession {
   }
 
   toJSON() {
-    const jsonObj = { ...this,
-    };
+    // Exclude `sipSession` from JSON output: it is a SIP.js Invitation/Inviter
+    // with internal back-references and event emitters that crash serializers
+    // (JSON.stringify, Sentry context, redux-logger…) on circular structures.
+    const jsonObj: any = { ...this };
+    delete jsonObj.sipSession;
     jsonObj.answered = this.answered;
     return jsonObj;
   }

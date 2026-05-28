@@ -114,6 +114,76 @@ describe('CallSession domain', () => {
     });
   });
 
+  describe('sipSession handling (BUG-320 / ITEM-350)', () => {
+    // Builds a fake sipSession with a cycle back to its owning CallSession,
+    // mimicking what SIP.js does via event emitters / dialog references.
+    const buildCyclicSipSession = (owner: CallSession) => {
+      const fakeSipSession: any = { id: 'sip-1', state: 'Established' };
+      fakeSipSession.owner = owner; // cycle: sipSession.owner -> CallSession
+      return fakeSipSession;
+    };
+
+    it('toJSON omits sipSession entirely', () => {
+      const cs = new CallSession({ callId: 'a', sipCallId: 'b' } as any);
+      cs.sipSession = buildCyclicSipSession(cs);
+      const json = cs.toJSON() as any;
+      expect(json.sipSession).toBeUndefined();
+    });
+
+    it('toJSON does not throw on a CallSession with a circular sipSession', () => {
+      const cs = new CallSession({ callId: 'a', sipCallId: 'b' } as any);
+      cs.sipSession = buildCyclicSipSession(cs);
+      expect(() => JSON.stringify(cs)).not.toThrow();
+      expect(JSON.parse(JSON.stringify(cs)).sipSession).toBeUndefined();
+    });
+
+    it('toJSON still includes the answered getter value', () => {
+      const cs = new CallSession({ callId: 'a' } as any);
+      cs.answered = true;
+      cs.sipSession = { id: 'sip-1' } as any;
+      const json = cs.toJSON() as any;
+      expect(json.answered).toBe(true);
+      expect(json.sipSession).toBeUndefined();
+    });
+
+    it('updateFrom does not propagate sipSession from the source', () => {
+      const ownSipSession = { id: 'own' } as any;
+      const cs = new CallSession({ callId: 'a' } as any);
+      cs.sipSession = ownSipSession;
+
+      const other = new CallSession({ callId: 'a' } as any);
+      other.sipSession = buildCyclicSipSession(other);
+
+      cs.updateFrom(other);
+      // Current instance must keep its own sipSession reference.
+      expect(cs.sipSession).toBe(ownSipSession);
+    });
+
+    it('updateFrom does not loop when the source carries a circular sipSession', () => {
+      const cs = new CallSession({ callId: 'a' } as any);
+      const other = new CallSession({ callId: 'a', number: '8001' } as any);
+      other.sipSession = buildCyclicSipSession(other);
+      expect(() => cs.updateFrom(other)).not.toThrow();
+      // Non-sipSession fields are still copied across.
+      expect(cs.number).toBe('8001');
+    });
+
+    it('newFrom carries the source sipSession reference verbatim (no copy)', () => {
+      const src = new CallSession({ callId: 'a', number: '8001' } as any);
+      const sipSession = { id: 'sip-1' } as any;
+      src.sipSession = sipSession;
+      const copy = CallSession.newFrom(src);
+      expect(copy.sipSession).toBe(sipSession);
+      expect(copy.number).toBe('8001');
+    });
+
+    it('newFrom does not loop when the source carries a circular sipSession', () => {
+      const src = new CallSession({ callId: 'a' } as any);
+      src.sipSession = buildCyclicSipSession(src);
+      expect(() => CallSession.newFrom(src)).not.toThrow();
+    });
+  });
+
   describe('diversion field', () => {
     const SAMPLE = ['"Alice" <sip:1001@wazo.example>;reason=unconditional'];
 
