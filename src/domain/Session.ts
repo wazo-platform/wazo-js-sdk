@@ -15,6 +15,44 @@ const { jws } = KJUR;
 const swarmKey = <unknown>(KEYUTIL.getKey(swarmPublicKey)) as string;
 const MINIMUM_WAZO_ENGINE_VERSION_FOR_DEFAULT_CONTEXT = '19.08';
 
+// Clones a value to a JSON-safe form by dropping cyclic references. Used in
+// `toJSON` for fields whose shape is controlled by plugins (e.g. `metadata`)
+// to make sure a malformed extension can never cause `JSON.stringify(session)`
+// to throw or walk an unbounded graph. `seen` tracks the current path (entries
+// are removed on unwind) so only true back-references are dropped — shared,
+// non-cyclic references are preserved.
+const jsonSafeClone = (value: any, seen: WeakSet<any> = new WeakSet()): any => {
+  if (value === null || typeof value !== 'object' || value instanceof Date) {
+    return value;
+  }
+
+  if (seen.has(value)) {
+    return undefined;
+  }
+
+  seen.add(value);
+
+  let out: any;
+
+  if (Array.isArray(value)) {
+    out = value.map(item => jsonSafeClone(item, seen));
+  } else {
+    out = {};
+
+    Object.keys(value).forEach(key => {
+      const cloned = jsonSafeClone(value[key], seen);
+
+      if (cloned !== undefined) {
+        out[key] = cloned;
+      }
+    });
+  }
+
+  seen.delete(value);
+
+  return out;
+};
+
 type SessionMetadata = {
   jwt?: string;
   username?: string;
@@ -302,6 +340,12 @@ export default class Session {
   toJSON() {
     return {
       ...this,
+      // `metadata` is plugin-extensible (`[key: string]: any`). Clone it
+      // through a cycle-safe walker that drops circular branches so a
+      // plugin-introduced circular reference cannot cause downstream
+      // serializers (`JSON.stringify`, Sentry context, redux-logger…) to
+      // throw or hang on this Session.
+      metadata: jsonSafeClone(this.metadata),
       // Added `engineUuid` because of the getter, it won't be included in `JSON.stringify()` methods.
       engineUuid: this.stackUuid,
     };

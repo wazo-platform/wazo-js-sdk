@@ -385,4 +385,69 @@ describe('Session domain', () => {
     expect(session.acl).toEqual(acl);
     console.warn = oldWarn;
   });
+
+  describe('toJSON cycle safety (metadata is plugin-extensible)', () => {
+    const makeSession = (metadata: any) => new Session({
+      token: 'tok-1',
+      uuid: 'u-1',
+      expiresAt: new Date('2030-01-01T00:00:00Z'),
+      stackUuid: 'stack-1',
+      metadata,
+    });
+
+    it('toJSON returns a `metadata` whose cyclic branches are dropped', () => {
+      const cyclicMetadata: any = { uuid: 'u-1', plugin: { name: 'evil' } };
+      cyclicMetadata.plugin.self = cyclicMetadata.plugin;
+      cyclicMetadata.plugin.root = cyclicMetadata;
+
+      const session = makeSession(cyclicMetadata);
+      const json: any = session.toJSON();
+
+      expect(json.metadata.uuid).toBe('u-1');
+      expect(json.metadata.plugin.name).toBe('evil');
+      expect('self' in json.metadata.plugin).toBe(false);
+      expect('root' in json.metadata.plugin).toBe(false);
+    });
+
+    it('toJSON preserves shared (non-cyclic) references', () => {
+      const shared = { foo: 'bar' };
+      const session = makeSession({ uuid: 'u-1', a: shared, b: shared });
+      const json: any = session.toJSON();
+
+      expect(json.metadata.a).toEqual({ foo: 'bar' });
+      expect(json.metadata.b).toEqual({ foo: 'bar' });
+    });
+
+    it('JSON.stringify(session) does not throw on cyclic metadata', () => {
+      const cyclicMetadata: any = { uuid: 'u-1' };
+      cyclicMetadata.self = cyclicMetadata;
+
+      const session = makeSession(cyclicMetadata);
+      expect(() => JSON.stringify(session)).not.toThrow();
+      // Inspect toJSON() directly — JSON.stringify calls it and feeds the
+      // result to its own serializer, so the shape returned here is exactly
+      // what downstream consumers receive.
+      const json: any = session.toJSON();
+      expect(json.metadata.uuid).toBe('u-1');
+      expect('self' in json.metadata).toBe(false);
+    });
+
+    it('toJSON preserves null/undefined metadata', () => {
+      const sessionNull = makeSession(null);
+      const sessionUndefined = makeSession(undefined);
+      expect((sessionNull.toJSON() as any).metadata).toBeNull();
+      expect((sessionUndefined.toJSON() as any).metadata).toBeUndefined();
+    });
+
+    it('toJSON keeps non-cyclic metadata structurally equal', () => {
+      const metadata = { uuid: 'u-1', tenants: [{ uuid: 't-1' }, { uuid: 't-2' }], extras: { foo: 'bar' } };
+      const session = makeSession(metadata);
+      expect((session.toJSON() as any).metadata).toEqual(metadata);
+    });
+
+    it('toJSON still exposes engineUuid getter value', () => {
+      const session = makeSession({ uuid: 'u-1' });
+      expect((session.toJSON() as any).engineUuid).toBe('stack-1');
+    });
+  });
 });
