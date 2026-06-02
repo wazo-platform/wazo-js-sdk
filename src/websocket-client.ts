@@ -200,7 +200,7 @@ class WebSocketClient extends Emitter {
         this.socket.onclose = null;
         this.socket.close();
       } catch (e) {
-        logger.warn('single-connection: error closing previous socket', e);
+        logger.warn('single-connection: error closing previous socket', { message: (e as Error)?.message });
       }
       this.socket = null;
     }
@@ -300,6 +300,15 @@ class WebSocketClient extends Emitter {
     if (this.socket.readyState === 3) {
       logger.warn('Trying to close an already closed websocket, bailing.', { url: this._getUrl() });
       return;
+    }
+
+    if (force) {
+      // Detach inner socket handlers before closing so the dying socket can't fire one last batch
+      // of events through this Emitter after teardown (mirrors the detach-before-close in connect()).
+      this.socket.onmessage = null;
+      this.socket.onopen = null;
+      this.socket.onerror = null;
+      this.socket.onclose = null;
     }
 
     this.socket.close(1000);
