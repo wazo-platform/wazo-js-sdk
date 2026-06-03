@@ -187,6 +187,24 @@ class WebSocketClient extends Emitter {
       host: this.host,
       token: obfuscateToken(this.token),
     });
+
+    // Opt-in single-connection (this.options.singleConnection): if a socket already exists, detach
+    // its handlers and close it before creating a new one, so the old socket can't keep firing
+    // onmessage in parallel and double every event. Default off → unchanged for existing consumers.
+    if (this.options?.singleConnection && this.socket) {
+      logger.info('single-connection: closing previous socket before reconnecting', { host: this.host });
+      try {
+        this.socket.onmessage = null;
+        this.socket.onopen = null;
+        this.socket.onerror = null;
+        this.socket.onclose = null;
+        this.socket.close();
+      } catch (e) {
+        logger.warn('single-connection: error closing previous socket', { message: (e as Error)?.message });
+      }
+      this.socket = null;
+    }
+
     this.socket = new ReconnectingWebSocket(this._getUrl.bind(this), [], this.options);
 
     if (this.options.binaryType) {
@@ -282,6 +300,15 @@ class WebSocketClient extends Emitter {
     if (this.socket.readyState === 3) {
       logger.warn('Trying to close an already closed websocket, bailing.', { url: this._getUrl() });
       return;
+    }
+
+    if (force) {
+      // Detach inner socket handlers before closing so the dying socket can't fire one last batch
+      // of events through this Emitter after teardown (mirrors the detach-before-close in connect()).
+      this.socket.onmessage = null;
+      this.socket.onopen = null;
+      this.socket.onerror = null;
+      this.socket.onclose = null;
     }
 
     this.socket.close(1000);
