@@ -15,6 +15,7 @@ import { UserAgentState } from 'sip.js/lib/api/user-agent-state';
 import { Parser } from 'sip.js/lib/core/messages/parser';
 import { C } from 'sip.js/lib/core/messages/methods/constants';
 import { URI } from 'sip.js/lib/grammar/uri';
+import type { NameAddrHeader } from 'sip.js/lib/grammar/name-addr-header';
 import { UserAgent } from 'sip.js/lib/api/user-agent';
 import { holdModifier, stripVideo } from 'sip.js/lib/platform/web/modifiers/modifiers';
 import { SessionDialog } from 'sip.js/lib/core/dialogs/session-dialog';
@@ -35,7 +36,7 @@ import IssueReporter from './service/IssueReporter';
 import Heartbeat from './utils/Heartbeat';
 import { getVideoDirection, hasAnActiveVideo } from './utils/sdp';
 import { lastIndexOf } from './utils/array';
-import type { MediaConfig, UserAgentConfigOverrides, WebRtcConfig, UserAgentOptions, IncomingResponse, PeerConnection, WazoSession, WazoTransport } from './domain/types';
+import type { MediaConfig, UserAgentConfigOverrides, WebRtcConfig, UserAgentOptions, IncomingResponse, PeerConnection, WazoSession, WazoTransport, AssertedIdentity } from './domain/types';
 
 // We need to replace 0.0.0.0 to 127.0.0.1 in the sdp to avoid MOH during a createOffer.
 export const replaceLocalIpModifier = (description: Record<string, any>) => Promise.resolve({ // description is immutable... so we have to clone it or the `type` attribute won't be returned.
@@ -74,6 +75,30 @@ const ON_MEDIA_CONNECTED = 'onMediaConnected';
 export const events = [REGISTERED, UNREGISTERED, REGISTRATION_FAILED, INVITE];
 export const transportEvents = [CONNECTED, DISCONNECTED, TRANSPORT_ERROR, MESSAGE];
 export class CanceledCallError extends Error {}
+
+// Map sip.js's parsed P-Asserted-Identity header (RFC 3325) into a
+// `{ displayName, number }` pair. sip.js parses the header itself — from the
+// 200 OK on outgoing calls and the INVITE on incoming ones — and exposes the
+// result as `Session.assertedIdentity`. `number` reflects only the addr-spec
+// user part, so it stays dialable and is left undefined when the header has no
+// user part. `displayName` falls back to the number when no display name is
+// present. Returns null when the header was absent or carried neither.
+export const toAssertedIdentity = (
+  identity?: NameAddrHeader | null,
+): AssertedIdentity | null => {
+  if (!identity) {
+    return null;
+  }
+
+  const number = identity.uri?.user || undefined;
+  const displayName = identity.displayName || number;
+
+  if (!displayName) {
+    return null;
+  }
+
+  return { displayName, number };
+};
 
 const MAX_REGISTER_TRIES = 5;
 // setting a 24hr timeout and letting the backend define the actual value

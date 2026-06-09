@@ -27,6 +27,13 @@ const createPhone = (client: any) => {
   return phone;
 };
 
+const createCreatableMockClient = (sessions: Record<string, any> = {}) => ({
+  ...createMockClient(sessions),
+  isCallHeld: () => false,
+  hasVideo: () => false,
+  isAudioMuted: () => false,
+});
+
 describe('WebRTCPhone.findSipSession', () => {
   it('should return matching sip session when callSession matches', () => {
     const sipSession = { id: 'session-1' };
@@ -89,13 +96,6 @@ describe('WebRTCPhone.findSipSession', () => {
 describe('WebRTCPhone._createCallSession diversion', () => {
   const SAMPLE = ['"Alice" <sip:1001@wazo.example>;reason=unconditional'];
 
-  const createCreatableMockClient = (sessions: Record<string, any> = {}) => ({
-    ...createMockClient(sessions),
-    isCallHeld: () => false,
-    hasVideo: () => false,
-    isAudioMuted: () => false,
-  });
-
   it('propagates diversion from the sipSession', () => {
     const sipSession = { id: 'session-1', diversion: SAMPLE } as any;
     const phone = createPhone(createCreatableMockClient({ 'session-1': sipSession }));
@@ -112,6 +112,31 @@ describe('WebRTCPhone._createCallSession diversion', () => {
     const cs = phone._createCallSession(sipSession);
 
     expect(cs.diversion).toBeUndefined();
+  });
+});
+
+describe('WebRTCPhone._createCallSession assertedIdentity', () => {
+  // Shaped like sip.js's `Session.assertedIdentity` (a parsed NameAddrHeader).
+  // The URI exposes the user via the public `user` getter and the private
+  // `_normal` one, both of which `_createCallSession` reads.
+  const NAME_ADDR_HEADER = { uri: { user: '30123', _normal: { user: '30123' } }, displayName: 'Loris MADRID' };
+
+  it('maps the asserted identity from the sip.js Session.assertedIdentity getter', () => {
+    const sipSession = { id: 'session-1', assertedIdentity: NAME_ADDR_HEADER } as any;
+    const phone = createPhone(createCreatableMockClient({ 'session-1': sipSession }));
+
+    const cs = phone._createCallSession(sipSession);
+
+    expect(cs.assertedIdentity).toEqual({ displayName: 'Loris MADRID', number: '30123' });
+  });
+
+  it('is undefined when the sipSession has no asserted identity', () => {
+    const sipSession = { id: 'session-1' } as any;
+    const phone = createPhone(createCreatableMockClient({ 'session-1': sipSession }));
+
+    const cs = phone._createCallSession(sipSession);
+
+    expect(cs.assertedIdentity).toBeUndefined();
   });
 });
 /* eslint-enable no-underscore-dangle */
