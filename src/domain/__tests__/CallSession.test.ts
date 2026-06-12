@@ -114,6 +114,32 @@ describe('CallSession domain', () => {
     });
   });
 
+  describe('assertedIdentity field', () => {
+    const SAMPLE = { displayName: 'Loris MADRID', number: '30123' };
+
+    it('is undefined when not provided', () => {
+      const cs = new CallSession({} as any);
+      expect(cs.assertedIdentity).toBeUndefined();
+    });
+
+    it('stores the asserted identity passed to the constructor', () => {
+      const cs = new CallSession({ callId: 'a', assertedIdentity: SAMPLE } as any);
+      expect(cs.assertedIdentity).toEqual(SAMPLE);
+    });
+
+    it('copies assertedIdentity via updateFrom', () => {
+      const cs = new CallSession({ callId: 'a', assertedIdentity: SAMPLE } as any);
+      const next = new CallSession({ callId: 'a' } as any);
+      next.updateFrom(cs);
+      expect(next.assertedIdentity).toEqual(SAMPLE);
+    });
+
+    it('preserves assertedIdentity through JSON serialization', () => {
+      const cs = new CallSession({ callId: 'a', assertedIdentity: SAMPLE } as any);
+      expect(stringify(cs).assertedIdentity).toEqual(SAMPLE);
+    });
+  });
+
   describe('diversion field', () => {
     const SAMPLE = ['"Alice" <sip:1001@wazo.example>;reason=unconditional'];
 

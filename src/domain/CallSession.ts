@@ -2,12 +2,13 @@ import { SessionState } from 'sip.js/lib/api/session-state';
 import Call, { RECORDING_STATE, type RecordingStateType } from './Call';
 import newFrom from '../utils/new-from';
 import updateFrom from '../utils/update-from';
-import { WazoSession } from './types';
+import { WazoSession, AssertedIdentity } from './types';
 
 type CallSessionArguments = {
   answered: boolean;
   answerTime?: Date | null | undefined;
   answeredBySystem: boolean;
+  assertedIdentity?: AssertedIdentity;
   call: Call | null | undefined;
   callId: string;
   callerNumber: string;
@@ -70,6 +71,8 @@ export default class CallSession {
 
   diversion?: string[];
 
+  assertedIdentity?: AssertedIdentity;
+
   ringing: boolean;
 
   // Should be computed ?
@@ -123,6 +126,7 @@ export default class CallSession {
     cameraEnabled,
     dialedExtension,
     diversion,
+    assertedIdentity,
     sipCallId,
     sipStatus,
     callerNumber,
@@ -156,6 +160,7 @@ export default class CallSession {
     this.cameraEnabled = cameraEnabled;
     this.dialedExtension = dialedExtension || '';
     this.diversion = diversion;
+    this.assertedIdentity = assertedIdentity || undefined;
     this.call = call;
     this.sipStatus = sipStatus;
     this.autoAnswer = autoAnswer || false;

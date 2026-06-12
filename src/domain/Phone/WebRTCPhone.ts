@@ -8,7 +8,7 @@ import { Inviter, Invitation, Session, SessionDescriptionHandlerOptions } from '
 import { SessionDescriptionHandler } from 'sip.js/lib/platform/web';
 import CallSession from '../CallSession';
 import type { Phone, AvailablePhoneOptions } from './Phone';
-import WebRTCClient from '../../web-rtc-client';
+import WebRTCClient, { toAssertedIdentity } from '../../web-rtc-client';
 import Emitter from '../../utils/Emitter';
 import IssueReporter from '../../service/IssueReporter';
 import { PeerConnection, WazoSession } from '../types';
@@ -1862,6 +1862,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
       recordingState: fromSession ? fromSession.recordingState : RECORDING_STATE.INACTIVE,
       sipSession,
       diversion: sipSession?.diversion,
+      assertedIdentity: toAssertedIdentity(sipSession?.assertedIdentity) || undefined,
       conference: !!fromSession && fromSession.isConference(),
       ...extra,
     });

@@ -1,6 +1,6 @@
 import { Invitation, SessionState } from 'sip.js/lib/api';
 
-import WebRTCClient from '../web-rtc-client';
+import WebRTCClient, { toAssertedIdentity } from '../web-rtc-client';
 
 jest.mock('sip.js/lib/platform/web/transport');
 jest.mock('sip.js/lib/api/user-agent', () => ({
@@ -539,5 +539,36 @@ describe('changeAudioInputDevice', () => {
         },
       });
     });
+  });
+});
+
+describe('toAssertedIdentity', () => {
+  // Shaped like sip.js's parsed P-Asserted-Identity header (a NameAddrHeader).
+  const makeIdentity = (user: string | undefined, displayName: string) => ({
+    uri: { user },
+    displayName,
+  } as any);
+
+  it('maps display name and number from the parsed header', () => {
+    expect(toAssertedIdentity(makeIdentity('30123', 'Loris MADRID')))
+      .toEqual({ displayName: 'Loris MADRID', number: '30123' });
+  });
+
+  it('falls back to the number as display name when no display name is present', () => {
+    expect(toAssertedIdentity(makeIdentity('30123', '')))
+      .toEqual({ displayName: '30123', number: '30123' });
+  });
+
+  it('omits the number when there is no user part', () => {
+    expect(toAssertedIdentity(makeIdentity(undefined, 'Loris MADRID')))
+      .toEqual({ displayName: 'Loris MADRID', number: undefined });
+  });
+
+  it('returns null when the identity carries neither number nor display name', () => {
+    expect(toAssertedIdentity(makeIdentity(undefined, ''))).toBeNull();
+  });
+
+  it('returns null when there is no identity', () => {
+    expect(toAssertedIdentity(null)).toBeNull();
   });
 });

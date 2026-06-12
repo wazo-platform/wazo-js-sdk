@@ -262,6 +262,15 @@ export type PeerConnection = RTCPeerConnection & {
   sfu: any;
 };
 
+// Identity asserted by the network in the SIP P-Asserted-Identity header
+// (RFC 3325). Resolved from the 200 OK (outgoing calls) or the INVITE
+// (incoming calls) so the real callee/caller name can be displayed at call
+// setup instead of waiting for a directory reverse-lookup.
+export type AssertedIdentity = {
+  displayName: string;
+  number?: string;
+};
+
 export type WazoSession = (Invitation | Inviter) & {
   remoteTag?: any;
   callId?: string;
