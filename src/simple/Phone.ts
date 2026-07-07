@@ -173,6 +173,15 @@ export class Phone extends Emitter {
       return;
     }
 
+    if (this.client) {
+      // A client without phone remains when a consumer resets `phone` to force a new
+      // connection; close it so two UserAgents don't register the same line.
+      logger.warn('connectWithCredentials: closing previous client before creating a new one');
+      this.client.close().catch((error: any) => {
+        logger.error('connectWithCredentials: error while closing previous client', { message: error?.message });
+      });
+    }
+
     const [host, port = 443] = server.split(':');
     const options = rawOptions;
     options.media = options.media || {
