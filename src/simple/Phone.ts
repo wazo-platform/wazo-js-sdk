@@ -242,9 +242,10 @@ export class Phone extends Emitter {
 
     this._transferEvents();
 
-    // The `call_created` event carries the Wazo call id of our own leg, which
-    // outgoing calls can't learn from SIP; with it set, REST actions don't
-    // require fetching GET /users/me/calls.
+    // The `call_created` event carries the Wazo call id of our own leg; with
+    // it set, REST actions don't require fetching GET /users/me/calls. Kept as
+    // a fallback for engines that don't expose the call id over SIP in the
+    // X-Wazo-Call-ID header (Wazo platform < 26.08).
     Wazo.Websocket.on(Wazo.Websocket.CALL_CREATED, this._onCallCreated);
   }
 

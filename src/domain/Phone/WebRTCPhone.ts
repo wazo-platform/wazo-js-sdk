@@ -1868,9 +1868,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
     } = sipSession || {};
     const sessionId = this.getSipSessionId(sipSession);
     fromSession = fromSession || this.callSessions[sessionId];
-    // wazo-calld exposes the channel id of our own leg in the INVITE, so the
-    // Wazo call id is known without having to fetch GET /users/me/calls.
-    const headerCallId = sipSession?.request?.getHeader?.('X-Wazo-Call-ID');
+    // The Wazo platform >=26.08 exposes the channel id of our own leg in X-Wazo-Call-ID
+    // incoming calls carry it in the INVITE (request header), outgoing calls
+    // receive it in the INVITE responses (stashed by web-rtc-client).
+    const headerCallId = (sipSession as any)?.wazoCallId || sipSession?.request?.getHeader?.('X-Wazo-Call-ID');
     const callSession = new CallSession({
       callId: fromSession?.callId || headerCallId || '',
       sipCallId: sessionId,

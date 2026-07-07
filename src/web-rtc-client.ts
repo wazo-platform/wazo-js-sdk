@@ -774,15 +774,28 @@ export default class WebRTCClient extends Emitter {
       this.conferences[this.getSipSessionId(session)] = true;
     }
 
+    // Asterisk (res_pjsip_wazo_call_id) exposes the Wazo call id of our own
+    // leg in INVITE responses; stash it on the sip session so call sessions
+    // can be built without fetching GET /users/me/calls.
+    const stashWazoCallId = (response: IncomingResponse) => {
+      const wazoCallId = response.message.getHeader('X-Wazo-Call-ID');
+
+      if (wazoCallId && session && !(session as any).wazoCallId) {
+        (session as any).wazoCallId = wazoCallId;
+      }
+    };
+
     const inviteOptions: InviterInviteOptions = {
       requestDelegate: {
         onAccept: (response: IncomingResponse) => {
+          stashWazoCallId(response);
           if ((session?.sessionDescriptionHandler as any)?.peerConnection) {
             (session?.sessionDescriptionHandler as any).peerConnection.sfu = conference;
           }
           this._onAccepted(session as WazoSession, response.session, true);
         },
         onProgress: (payload: IncomingResponse) => {
+          stashWazoCallId(payload);
           this._onProgress(payload.session, payload.message.statusCode === 183);
         },
         onReject: (response: IncomingResponse) => {
