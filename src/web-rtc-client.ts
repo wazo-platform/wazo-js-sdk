@@ -104,8 +104,15 @@ const MAX_REGISTER_TRIES = 5;
 // setting a 24hr timeout and letting the backend define the actual value
 const NO_ANSWER_TIMEOUT = 60 * 60 * 24; // in seconds
 
+// Observability only: more than one alive client means concurrent UAs can register
+// the same SIP line (expected transiently during connectivity checks).
+let liveClientCount = 0;
+export const getLiveClientCount = (): number => liveClientCount;
+
 export default class WebRTCClient extends Emitter {
   clientId: number;
+
+  _countedAsLive: boolean;
 
   config: WebRtcConfig;
 
@@ -228,6 +235,13 @@ export default class WebRTCClient extends Emitter {
     // For debug purpose
     this.clientId = Math.ceil(Math.random() * 1000);
     logger.info('sdk webrtc constructor', { clientId: this.clientId });
+
+    liveClientCount += 1;
+    this._countedAsLive = true;
+
+    if (liveClientCount > 1) {
+      logger.warn('sdk webrtc multiple clients alive', { liveClientCount, clientId: this.clientId });
+    }
 
     this.uaConfigOverrides = uaConfigOverrides;
     this.config = config;
@@ -841,6 +855,11 @@ export default class WebRTCClient extends Emitter {
       force,
     });
     this.forceClosed = force;
+
+    if (this._countedAsLive) {
+      this._countedAsLive = false;
+      liveClientCount = Math.max(0, liveClientCount - 1);
+    }
 
     this._cleanupMedia();
 

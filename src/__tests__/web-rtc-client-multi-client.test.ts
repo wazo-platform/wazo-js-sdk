@@ -1,6 +1,6 @@
 import { RegistererState } from 'sip.js/lib/api/registerer-state';
 
-import WebRTCClient from '../web-rtc-client';
+import WebRTCClient, { getLiveClientCount } from '../web-rtc-client';
 
 const mockUaInstances: any[] = [];
 
@@ -13,7 +13,11 @@ jest.mock('sip.js/lib/api/user-agent', () => ({
 
     stop = jest.fn(() => Promise.resolve());
 
-    transport = {};
+    transport = { disconnect: jest.fn(() => Promise.resolve()) };
+
+    stateChange = { removeAllListeners: jest.fn() };
+
+    delegate: any;
 
     constructor() {
       mockUaInstances.push(this);
@@ -65,6 +69,25 @@ describe('single UserAgent per WebRTCClient', () => {
 
     expect(oldUa.stop).toHaveBeenCalled();
     expect(newUa).not.toBe(oldUa);
+  });
+});
+
+describe('live client counter', () => {
+  it('tracks alive clients and decrements once on close', async () => {
+    const before = getLiveClientCount();
+    const clientA = new WebRTCClient({ media: {} } as any, undefined, undefined);
+    const clientB = new WebRTCClient({ media: {} } as any, undefined, undefined);
+
+    expect(getLiveClientCount()).toBe(before + 2);
+
+    await clientA.close();
+    await clientA.close();
+
+    expect(getLiveClientCount()).toBe(before + 1);
+
+    await clientB.close();
+
+    expect(getLiveClientCount()).toBe(before);
   });
 });
 
