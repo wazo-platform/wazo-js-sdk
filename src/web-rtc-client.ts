@@ -235,6 +235,14 @@ export default class WebRTCClient extends Emitter {
 
     this._buildConfig(config, session).then((newConfig: WebRtcConfig) => {
       this.config = newConfig;
+
+      // register() may have created the userAgent while _buildConfig was in flight;
+      // creating another one here would leak the first UA and its transport.
+      if (this.userAgent) {
+        logger.info('sdk webrtc constructor, userAgent already created, skipping', { clientId: this.clientId });
+        return;
+      }
+
       this.userAgent = this.createUserAgent(uaConfigOverrides);
     });
 
@@ -300,6 +308,14 @@ export default class WebRTCClient extends Emitter {
   }
 
   createUserAgent(uaConfigOverrides?: UserAgentConfigOverrides): UserAgent {
+    if (this.userAgent) {
+      logger.warn('sdk webrtc, stopping existing UA before creating a new one', { clientId: this.clientId });
+      this.userAgent.stop().catch((error: any) => {
+        logger.error('sdk webrtc, error stopping previous UA', { error: error?.message, clientId: this.clientId });
+      });
+      this.userAgent = null;
+    }
+
     const uaOptions = this._createUaOptions(uaConfigOverrides);
 
     logger.info('sdk webrtc, creating UA', {
