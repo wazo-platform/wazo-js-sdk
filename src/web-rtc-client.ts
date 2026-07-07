@@ -575,7 +575,7 @@ export default class WebRTCClient extends Emitter {
           if (state === RegistererState.Unregistered) {
             logger.info('sdk webrtc unregistered', { clientId: this.clientId });
             if (this.registerer) {
-              this.registerer.stateChange.addListener(onRegisterStateChange);
+              this.registerer.stateChange.removeListener(onRegisterStateChange);
             }
             this._cleanupRegister();
 

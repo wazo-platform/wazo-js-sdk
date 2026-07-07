@@ -1,3 +1,5 @@
+import { RegistererState } from 'sip.js/lib/api/registerer-state';
+
 import WebRTCClient from '../web-rtc-client';
 
 const mockUaInstances: any[] = [];
@@ -63,5 +65,28 @@ describe('single UserAgent per WebRTCClient', () => {
 
     expect(oldUa.stop).toHaveBeenCalled();
     expect(newUa).not.toBe(oldUa);
+  });
+});
+
+describe('unregister', () => {
+  it('removes its stateChange listener once unregistered', async () => {
+    const client = new WebRTCClient({} as any, undefined, undefined);
+    const listeners: Array<(state: string) => void> = [];
+    const registerer: any = {
+      stateChange: {
+        addListener: jest.fn((fn: (state: string) => void) => listeners.push(fn)),
+        removeListener: jest.fn(),
+        removeAllListeners: jest.fn(),
+      },
+      unregister: jest.fn(() => Promise.resolve()),
+    };
+    client.registerer = registerer;
+
+    const promise = client.unregister();
+    listeners[0](RegistererState.Unregistered);
+    await promise;
+
+    expect(registerer.stateChange.addListener).toHaveBeenCalledTimes(1);
+    expect(registerer.stateChange.removeListener).toHaveBeenCalledWith(listeners[0]);
   });
 });
