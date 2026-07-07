@@ -47,4 +47,31 @@ describe('simple/Phone', () => {
       expect(phone.client).not.toBe(oldClient);
     });
   });
+
+  describe('reset', () => {
+    it('closes the phone and clears phone/client so the next connect starts fresh', async () => {
+      const phone = new PhoneClass();
+      phone.connectWithCredentials('host:443', sipLine, 'name', {});
+      const webRtcPhone: any = phone.phone;
+      webRtcPhone.close = jest.fn(() => Promise.resolve());
+
+      await phone.reset();
+
+      expect(webRtcPhone.close).toHaveBeenCalled();
+      expect(phone.phone).toBeNull();
+      expect(phone.client).toBeNull();
+    });
+
+    it('closes a dangling client when phone is already null', async () => {
+      const phone = new PhoneClass();
+      phone.connectWithCredentials('host:443', sipLine, 'name', {});
+      const { client } = phone;
+      phone.phone = null;
+
+      await phone.reset();
+
+      expect(client.close).toHaveBeenCalled();
+      expect(phone.client).toBeNull();
+    });
+  });
 });

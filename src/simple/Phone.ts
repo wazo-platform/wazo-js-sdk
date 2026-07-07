@@ -226,6 +226,25 @@ export class Phone extends Emitter {
     this.phone = null;
   }
 
+  // Fully tear down the current connection so the next connect() starts fresh,
+  // without consumers having to mutate `phone`/`client` directly.
+  async reset(): Promise<void> {
+    logger.info('phone reset', { phone: !!this.phone, client: !!this.client });
+
+    if (this.phone) {
+      await this.phone.close().catch((error: any) => {
+        logger.error('reset: error while closing phone', { message: error?.message });
+      });
+    } else if (this.client) {
+      await this.client.close().catch((error: any) => {
+        logger.error('reset: error while closing client', { message: error?.message });
+      });
+    }
+
+    this.phone = null;
+    this.client = null as any;
+  }
+
   // If audioOnly is set to true, all video stream will be deactivated, even remotes ones.
   async call(extension: string, withCamera = false, rawSipLine: SipLine | null | undefined = null, audioOnly = false, conference = false): Promise<CallSession | null | undefined> {
     if (!this.phone) {
