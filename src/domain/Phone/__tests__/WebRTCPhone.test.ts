@@ -156,6 +156,34 @@ describe('WebRTCPhone._createCallSession callId', () => {
   });
 });
 
+describe('WebRTCPhone.setCallSessionCallId', () => {
+  it('sets the callId on the call session matching the sip call id', () => {
+    const phone = createPhone(createCreatableMockClient());
+    const callSession = new CallSession({ sipCallId: 'abcdef' } as any);
+    phone.callSessions.abcdef = callSession;
+
+    phone.setCallSessionCallId('abcdef', '1719843012.42');
+
+    expect(callSession.callId).toBe('1719843012.42');
+  });
+
+  it('does not overwrite an already known callId', () => {
+    const phone = createPhone(createCreatableMockClient());
+    const callSession = new CallSession({ callId: 'existing-id', sipCallId: 'abcdef' } as any);
+    phone.callSessions.abcdef = callSession;
+
+    phone.setCallSessionCallId('abcdef', '1719843012.42');
+
+    expect(callSession.callId).toBe('existing-id');
+  });
+
+  it('ignores unknown sip call ids', () => {
+    const phone = createPhone(createCreatableMockClient());
+
+    expect(() => phone.setCallSessionCallId('unknown', '1719843012.42')).not.toThrow();
+  });
+});
+
 describe('WebRTCPhone._createCallSession assertedIdentity', () => {
   // Shaped like sip.js's `Session.assertedIdentity` (a parsed NameAddrHeader).
   // The URI exposes the user via the public `user` getter and the private
