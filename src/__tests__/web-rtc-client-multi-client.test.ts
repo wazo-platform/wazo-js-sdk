@@ -1,4 +1,5 @@
 import { RegistererState } from 'sip.js/lib/api/registerer-state';
+import { TransportState } from 'sip.js/lib/api/transport-state';
 
 import WebRTCClient, { getLiveClientCount } from '../web-rtc-client';
 
@@ -17,7 +18,7 @@ jest.mock('sip.js/lib/api/user-agent', () => ({
 
     onTransportMessage = jest.fn();
 
-    transport = { disconnect: jest.fn(() => Promise.resolve()) };
+    transport = { disconnect: jest.fn(() => Promise.resolve()), state: 'Connected', transitionState: jest.fn() };
 
     stateChange = { removeAllListeners: jest.fn() };
 
@@ -37,7 +38,7 @@ describe('single UserAgent per WebRTCClient', () => {
     jest.restoreAllMocks();
   });
 
-  it('does not leak a UserAgent when register() runs before _buildConfig resolves', async () => {
+  it('recreates the UA with the fetched session config when register() raced _buildConfig', async () => {
     let resolveBuildConfig: (config: any) => void = () => {};
     jest.spyOn(WebRTCClient.prototype as any, '_buildConfig').mockReturnValue(new Promise(resolve => {
       resolveBuildConfig = resolve;
@@ -51,13 +52,55 @@ describe('single UserAgent per WebRTCClient', () => {
 
     expect(mockUaInstances).toHaveLength(1);
 
-    // Constructor's _buildConfig resolves after register() already created a UserAgent
+    // Constructor's _buildConfig resolves after register() already created a UserAgent:
+    // the racing UA was built without the fetched credentials, so it must be replaced
+    // (stopping the old one) — never left as a leaked second UA.
+    resolveBuildConfig({ authorizationUser: 'user', password: 'secret' });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(mockUaInstances).toHaveLength(2);
+    expect(liveUas()).toHaveLength(1);
+    expect(client.userAgent).toBe(mockUaInstances[1]);
+    expect((client.config as any).authorizationUser).toBe('user');
+  });
+
+  it('keeps the UA created by register() when there is no session (config unchanged)', async () => {
+    let resolveBuildConfig: (config: any) => void = () => {};
+    jest.spyOn(WebRTCClient.prototype as any, '_buildConfig').mockReturnValue(new Promise(resolve => {
+      resolveBuildConfig = resolve;
+    }));
+    jest.spyOn(WebRTCClient.prototype as any, '_connectIfNeeded').mockReturnValue(new Promise(() => {}));
+
+    const client = new WebRTCClient({} as any, undefined, undefined);
+
+    client.register();
+
+    expect(mockUaInstances).toHaveLength(1);
+
     resolveBuildConfig({});
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(liveUas()).toHaveLength(1);
-    expect(client.userAgent).toBe(liveUas()[0]);
+    expect(mockUaInstances).toHaveLength(1);
+    expect(client.userAgent).toBe(mockUaInstances[0]);
+  });
+
+  it('does not create a UA when close() ran before _buildConfig resolved', async () => {
+    let resolveBuildConfig: (config: any) => void = () => {};
+    jest.spyOn(WebRTCClient.prototype as any, '_buildConfig').mockReturnValue(new Promise(resolve => {
+      resolveBuildConfig = resolve;
+    }));
+
+    const client = new WebRTCClient({ media: {} } as any, { token: 'token', refreshToken: 'refresh', uuid: 'uuid' } as any, undefined);
+    await client.close();
+
+    resolveBuildConfig({});
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(mockUaInstances).toHaveLength(0);
+    expect(client.userAgent).toBeFalsy();
   });
 
   it('stops an existing UserAgent before creating a new one', () => {
@@ -144,7 +187,49 @@ describe('zombie registration (registered but transport dead)', () => {
 
     expect(client.registerer).toBeNull();
     expect(disconnectSpy).toHaveBeenCalledWith(true); // force-close the dead socket
+    // sip.js reports Connected until the WS close event fires — the state must be forced
+    // so _connectIfNeeded() reconnects instead of REGISTERing into the dying socket.
+    expect((client.userAgent as any).transport.transitionState).toHaveBeenCalledWith(TransportState.Disconnected);
     expect(connectSpy).toHaveBeenCalled();
+  });
+
+  it('dedupes concurrent register() calls during the heal', async () => {
+    const client = new WebRTCClient({ transportSilenceThresholdMs: 65000 } as any, undefined, undefined);
+    await flushMicrotasks();
+    (client.userAgent as any).isConnected.mockReturnValue(true);
+    client.lastTransportMessageAt = Date.now() - 120000;
+    client.registerer = { state: RegistererState.Registered, stateChange: { removeAllListeners: jest.fn() } } as any;
+    const connectSpy = jest.spyOn(client as any, '_connectIfNeeded').mockReturnValue(new Promise(() => {}));
+
+    client.register();
+    client.register(); // enters while the first is awaiting the forced disconnect
+    await flushMicrotasks();
+
+    expect(connectSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('is not suspect without a threshold configured, even when silent', async () => {
+    const client = await makeClient();
+    (client.userAgent as any).isConnected.mockReturnValue(true);
+    client.lastTransportMessageAt = Date.now() - 600000;
+
+    expect(client.isTransportSuspect()).toBe(false);
+  });
+
+  it('is not suspect when no message was ever received (fresh connection)', async () => {
+    const client = new WebRTCClient({ transportSilenceThresholdMs: 65000 } as any, undefined, undefined);
+    await flushMicrotasks();
+    (client.userAgent as any).isConnected.mockReturnValue(true);
+
+    expect(client.getLastTransportMessageAt()).toBeNull();
+    expect(client.isTransportSuspect()).toBe(false);
+  });
+
+  it('is suspect when the transport is disconnected', async () => {
+    const client = await makeClient();
+    (client.userAgent as any).isConnected.mockReturnValue(false);
+
+    expect(client.isTransportSuspect()).toBe(true);
   });
 
   it('is not suspect while sip sessions are active, even with silent transport', async () => {

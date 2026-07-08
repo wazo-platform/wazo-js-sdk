@@ -231,11 +231,14 @@ export class Phone extends Emitter {
   async reset(): Promise<void> {
     logger.info('phone reset', { phone: !!this.phone, client: !!this.client });
 
-    if (this.phone) {
-      await this.phone.close().catch((error: any) => {
-        logger.error('reset: error while closing phone', { message: error?.message });
-      });
-    } else if (this.client) {
+    // disconnect() hangs up any active call before closing the phone.
+    await this.disconnect().catch((error: any) => {
+      logger.error('reset: error while disconnecting phone', { message: error?.message });
+    });
+
+    if (this.client) {
+      // Best-effort close of a client the phone close didn't reach (or that failed):
+      // dropping the reference without closing would leave a registered UA behind.
       await this.client.close().catch((error: any) => {
         logger.error('reset: error while closing client', { message: error?.message });
       });

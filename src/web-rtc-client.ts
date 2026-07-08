@@ -114,6 +114,8 @@ export default class WebRTCClient extends Emitter {
 
   _countedAsLive: boolean;
 
+  _closed: boolean;
+
   lastTransportMessageAt: number | null;
 
   config: WebRtcConfig;
@@ -240,6 +242,7 @@ export default class WebRTCClient extends Emitter {
 
     liveClientCount += 1;
     this._countedAsLive = true;
+    this._closed = false;
     this.lastTransportMessageAt = null;
 
     if (liveClientCount > 1) {
@@ -253,13 +256,22 @@ export default class WebRTCClient extends Emitter {
     this._buildConfig(config, session).then((newConfig: WebRtcConfig) => {
       this.config = newConfig;
 
+      if (this._closed) {
+        // close() ran while _buildConfig was in flight; don't start a UA on a closed client.
+        logger.info('sdk webrtc constructor, client closed during config build, skipping UA creation', { clientId: this.clientId });
+        return;
+      }
+
       // register() may have created the userAgent while _buildConfig was in flight;
       // creating another one here would leak the first UA and its transport.
-      if (this.userAgent) {
+      if (this.userAgent && !session) {
         logger.info('sdk webrtc constructor, userAgent already created, skipping', { clientId: this.clientId });
         return;
       }
 
+      // With a session, the fetched credentials (authorizationUser/password/uri) differ
+      // from what a racing register() used — recreate so REGISTER can authenticate.
+      // createUserAgent() stops any previous UA, so nothing leaks.
       this.userAgent = this.createUserAgent(uaConfigOverrides);
     });
 
@@ -325,6 +337,8 @@ export default class WebRTCClient extends Emitter {
   }
 
   createUserAgent(uaConfigOverrides?: UserAgentConfigOverrides): UserAgent {
+    this.lastTransportMessageAt = null;
+
     if (this.userAgent) {
       logger.warn('sdk webrtc, stopping existing UA before creating a new one', { clientId: this.clientId });
       this.userAgent.stop().catch((error: any) => {
@@ -472,6 +486,7 @@ export default class WebRTCClient extends Emitter {
       skipRegister: this.skipRegister,
     };
     this.forceClosed = false;
+    this._closed = false;
 
     if (this.skipRegister) {
       logger.info('sdk webrtc skip register...', logInfo);
@@ -508,9 +523,20 @@ export default class WebRTCClient extends Emitter {
       this._cleanupRegister();
 
       if (this.isConnected()) {
-        // Half-open socket: force-close it so _connectIfNeeded() reconnects instead of
-        // trusting the dead socket.
-        await this._disconnectTransport(true);
+        // Half-open socket: force-close it AND transition the transport state ourselves.
+        // sip.js keeps reporting Connected until the WS close event fires (up to ~30s on a
+        // dead TCP), so _connectIfNeeded() would short-circuit and send the REGISTER into
+        // the dying socket. connectionPromise guards concurrent register() calls while we
+        // await the disconnect.
+        this.connectionPromise = this._disconnectTransport(true);
+        await this.connectionPromise;
+        this.connectionPromise = null;
+
+        const transport = this.userAgent.transport as WazoTransport;
+
+        if (transport && transport.state !== TransportState.Disconnected) {
+          transport.transitionState(TransportState.Disconnected);
+        }
       }
     }
 
@@ -913,6 +939,7 @@ export default class WebRTCClient extends Emitter {
       force,
     });
     this.forceClosed = force;
+    this._closed = true;
 
     if (this._countedAsLive) {
       this._countedAsLive = false;
