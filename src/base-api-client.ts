@@ -1,4 +1,5 @@
 import authMethods from './api/auth';
+import RefreshTokenError from './domain/RefreshTokenError';
 import ApiRequester from './utils/api-requester';
 import IssueReporter from './service/IssueReporter';
 import { obfuscateToken } from './utils/string';
@@ -88,6 +89,9 @@ export default class BaseApiClient {
     });
 
     if (!this.refreshToken) {
+      if (this.onRefreshTokenError) {
+        this.onRefreshTokenError(new RefreshTokenError('no_refresh_token'));
+      }
       return null;
     }
 
@@ -101,6 +105,9 @@ export default class BaseApiClient {
         this.refreshDomainName as string,
       );
       if (!session) {
+        if (this.onRefreshTokenError) {
+          this.onRefreshTokenError(new RefreshTokenError('empty_session'));
+        }
         return null;
       }
 

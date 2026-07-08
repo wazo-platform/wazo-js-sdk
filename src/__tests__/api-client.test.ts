@@ -313,3 +313,67 @@ describe('With erroneous json API results', () => {
     expect(error.status).toBe(500);
   });
 });
+
+describe('refreshTokenCallback', () => {
+  it('fires onRefreshTokenError when there is no refresh token', async () => {
+    const refreshClient = new WazoApiClient({ server });
+    const onRefreshTokenError = jest.fn();
+    refreshClient.onRefreshTokenError = onRefreshTokenError;
+
+    const result = await refreshClient.refreshTokenCallback();
+
+    expect(result).toBeNull();
+    expect(onRefreshTokenError).toHaveBeenCalledTimes(1);
+    const error = onRefreshTokenError.mock.calls[0][0];
+    expect(error.name).toBe('RefreshTokenError');
+    expect(error.reason).toBe('no_refresh_token');
+  });
+
+  it('fires onRefreshTokenError when the refresh yields no session', async () => {
+    const refreshClient = new WazoApiClient({ server });
+    refreshClient.setRefreshToken('a-refresh-token');
+    refreshClient.auth.refreshToken = jest.fn(() => Promise.resolve(null)) as any;
+    const onRefreshTokenError = jest.fn();
+    refreshClient.onRefreshTokenError = onRefreshTokenError;
+
+    const result = await refreshClient.refreshTokenCallback();
+
+    expect(result).toBeNull();
+    expect(onRefreshTokenError).toHaveBeenCalledTimes(1);
+    const error = onRefreshTokenError.mock.calls[0][0];
+    expect(error.name).toBe('RefreshTokenError');
+    expect(error.reason).toBe('empty_session');
+  });
+
+  it('fires onRefreshTokenError with the raw error when the refresh throws', async () => {
+    const refreshClient = new WazoApiClient({ server });
+    refreshClient.setRefreshToken('a-refresh-token');
+    const thrown = new BadResponse('token expired', 401);
+    refreshClient.auth.refreshToken = jest.fn(() => Promise.reject(thrown)) as any;
+    const onRefreshTokenError = jest.fn();
+    refreshClient.onRefreshTokenError = onRefreshTokenError;
+
+    const result = await refreshClient.refreshTokenCallback();
+
+    expect(result).toBeNull();
+    expect(onRefreshTokenError).toHaveBeenCalledTimes(1);
+    expect(onRefreshTokenError).toHaveBeenCalledWith(thrown);
+  });
+
+  it('returns the new token and does not fire onRefreshTokenError on success', async () => {
+    const refreshClient = new WazoApiClient({ server });
+    refreshClient.setRefreshToken('a-refresh-token');
+    const session = { token: 'a-new-token' };
+    refreshClient.auth.refreshToken = jest.fn(() => Promise.resolve(session)) as any;
+    const onRefreshToken = jest.fn();
+    const onRefreshTokenError = jest.fn();
+    refreshClient.onRefreshToken = onRefreshToken;
+    refreshClient.onRefreshTokenError = onRefreshTokenError;
+
+    const result = await refreshClient.refreshTokenCallback();
+
+    expect(result).toBe('a-new-token');
+    expect(onRefreshToken).toHaveBeenCalledWith('a-new-token', session);
+    expect(onRefreshTokenError).not.toHaveBeenCalled();
+  });
+});
