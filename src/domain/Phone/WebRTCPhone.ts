@@ -1411,7 +1411,8 @@ export default class WebRTCPhone extends Emitter implements Phone {
   }
 
   isTransportSuspect(): boolean {
-    return this.client ? this.client.isTransportSuspect() : false;
+    // No client means nothing is connected — the most suspect state of all.
+    return this.client ? this.client.isTransportSuspect() : true;
   }
 
   getLastTransportMessageAt(): number | null {

@@ -65,6 +65,28 @@ describe('single UserAgent per WebRTCClient', () => {
     expect((client.config as any).authorizationUser).toBe('user');
   });
 
+  it('drops a registerer bound to the replaced UA when the session race resolves', async () => {
+    let resolveBuildConfig: (config: any) => void = () => {};
+    jest.spyOn(WebRTCClient.prototype as any, '_buildConfig').mockReturnValue(new Promise(resolve => {
+      resolveBuildConfig = resolve;
+    }));
+    jest.spyOn(WebRTCClient.prototype as any, '_connectIfNeeded').mockReturnValue(new Promise(() => {}));
+
+    const client = new WebRTCClient({} as any, { token: 'token', refreshToken: 'refresh', uuid: 'uuid' } as any, undefined);
+
+    client.register();
+    // Simulate the racing register() having bound a registerer to the first UA
+    client.registerer = { stateChange: { removeAllListeners: jest.fn() } } as any;
+
+    resolveBuildConfig({ authorizationUser: 'user', password: 'secret' });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    // The registerer pointed at the stopped UA; it must not linger
+    expect(client.registerer).toBeNull();
+    expect(client.userAgent).toBe(mockUaInstances[1]);
+  });
+
   it('keeps the UA created by register() when there is no session (config unchanged)', async () => {
     let resolveBuildConfig: (config: any) => void = () => {};
     jest.spyOn(WebRTCClient.prototype as any, '_buildConfig').mockReturnValue(new Promise(resolve => {
@@ -136,6 +158,23 @@ describe('live client counter', () => {
 
     expect(getLiveClientCount()).toBe(before);
   });
+
+  it('counts a revived client as live again when register() runs after close()', async () => {
+    const before = getLiveClientCount();
+    const client = new WebRTCClient({ media: {} } as any, undefined, undefined);
+    await client.close();
+
+    expect(getLiveClientCount()).toBe(before);
+
+    jest.spyOn(client as any, '_connectIfNeeded').mockReturnValue(new Promise(() => {}));
+    client.register();
+
+    expect(getLiveClientCount()).toBe(before + 1);
+
+    await client.close();
+
+    expect(getLiveClientCount()).toBe(before);
+  });
 });
 
 describe('zombie registration (registered but transport dead)', () => {
@@ -157,6 +196,7 @@ describe('zombie registration (registered but transport dead)', () => {
     const connectSpy = jest.spyOn(client as any, '_connectIfNeeded').mockReturnValue(new Promise(() => {}));
 
     client.register();
+    await flushMicrotasks();
 
     expect(client.registerer).toBeNull(); // stale registerer dropped
     expect(connectSpy).toHaveBeenCalled(); // re-registration flow engaged
@@ -272,6 +312,8 @@ describe('unregister', () => {
     await promise;
 
     expect(registerer.stateChange.addListener).toHaveBeenCalledTimes(1);
-    expect(registerer.stateChange.removeListener).toHaveBeenCalledWith(listeners[0]);
+    // _cleanupRegister() removes every listener, including the one added above
+    expect(registerer.stateChange.removeAllListeners).toHaveBeenCalled();
+    expect(client.registerer).toBeNull();
   });
 });

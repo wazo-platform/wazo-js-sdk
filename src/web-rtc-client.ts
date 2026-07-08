@@ -246,7 +246,8 @@ export default class WebRTCClient extends Emitter {
     this.lastTransportMessageAt = null;
 
     if (liveClientCount > 1) {
-      logger.warn('sdk webrtc multiple clients alive', { liveClientCount, clientId: this.clientId });
+      // info, not warn: connectivity checks legitimately create a transient second client.
+      logger.info('sdk webrtc multiple clients alive', { liveClientCount, clientId: this.clientId });
     }
 
     this.uaConfigOverrides = uaConfigOverrides;
@@ -272,6 +273,11 @@ export default class WebRTCClient extends Emitter {
       // With a session, the fetched credentials (authorizationUser/password/uri) differ
       // from what a racing register() used — recreate so REGISTER can authenticate.
       // createUserAgent() stops any previous UA, so nothing leaks.
+      if (this.registerer) {
+        // A racing register() bound the registerer to the UA being replaced; drop it so
+        // it doesn't linger on a stopped UA — the register retry recreates it.
+        this._cleanupRegister();
+      }
       this.userAgent = this.createUserAgent(uaConfigOverrides);
     });
 
@@ -473,6 +479,43 @@ export default class WebRTCClient extends Emitter {
     }
   }
 
+  // Returns true when the current registration sits on a healthy transport. Otherwise
+  // heals the zombie registration — the registerer still says Registered but the
+  // transport is dead or half-open (e.g. WebSocket died while the app was frozen):
+  // drops the stale registerer so register() can proceed, _connectIfNeeded() then
+  // reconnects the transport before the new REGISTER.
+  async _isRegistrationHealthy(): Promise<boolean> {
+    if (!this.isTransportSuspect()) {
+      return true;
+    }
+
+    logger.warn('sdk webrtc registered but transport suspect, re-registering', {
+      clientId: this.clientId,
+      connected: this.isConnected(),
+      lastTransportMessageAt: this.lastTransportMessageAt,
+    });
+    this._cleanupRegister();
+
+    if (this.isConnected()) {
+      // Half-open socket: force-close it AND transition the transport state ourselves.
+      // sip.js keeps reporting Connected until the WS close event fires (up to ~30s on a
+      // dead TCP), so _connectIfNeeded() would short-circuit and send the REGISTER into
+      // the dying socket. connectionPromise guards concurrent register() calls while we
+      // await the disconnect.
+      this.connectionPromise = this._disconnectTransport(true);
+      await this.connectionPromise;
+      this.connectionPromise = null;
+
+      const transport = this.userAgent?.transport as WazoTransport;
+
+      if (transport && transport.state !== TransportState.Disconnected) {
+        transport.transitionState(TransportState.Disconnected);
+      }
+    }
+
+    return false;
+  }
+
   async register(tries = 0): Promise<void> {
     const logInfo = {
       clientId: this.clientId,
@@ -487,6 +530,12 @@ export default class WebRTCClient extends Emitter {
     };
     this.forceClosed = false;
     this._closed = false;
+
+    if (!this._countedAsLive) {
+      // A close()d client revived by register() counts as live again.
+      this._countedAsLive = true;
+      liveClientCount += 1;
+    }
 
     if (this.skipRegister) {
       logger.info('sdk webrtc skip register...', logInfo);
@@ -505,39 +554,9 @@ export default class WebRTCClient extends Emitter {
       return;
     }
 
-    if (this.isRegistered()) {
-      if (!this.isTransportSuspect()) {
-        logger.info('sdk webrtc registering aborted, already registered');
-        return;
-      }
-
-      // Zombie registration: the registerer still says Registered but the transport is
-      // dead or half-open (e.g. WebSocket died while the app was frozen). Drop the stale
-      // registerer and continue — _connectIfNeeded() below reconnects the transport
-      // before the new REGISTER.
-      logger.warn('sdk webrtc registered but transport suspect, re-registering', {
-        clientId: this.clientId,
-        connected: this.isConnected(),
-        lastTransportMessageAt: this.lastTransportMessageAt,
-      });
-      this._cleanupRegister();
-
-      if (this.isConnected()) {
-        // Half-open socket: force-close it AND transition the transport state ourselves.
-        // sip.js keeps reporting Connected until the WS close event fires (up to ~30s on a
-        // dead TCP), so _connectIfNeeded() would short-circuit and send the REGISTER into
-        // the dying socket. connectionPromise guards concurrent register() calls while we
-        // await the disconnect.
-        this.connectionPromise = this._disconnectTransport(true);
-        await this.connectionPromise;
-        this.connectionPromise = null;
-
-        const transport = this.userAgent.transport as WazoTransport;
-
-        if (transport && transport.state !== TransportState.Disconnected) {
-          transport.transitionState(TransportState.Disconnected);
-        }
-      }
+    if (this.isRegistered() && await this._isRegistrationHealthy()) {
+      logger.info('sdk webrtc registering aborted, already registered');
+      return;
     }
 
     // @ts-ignore: private
@@ -672,9 +691,7 @@ export default class WebRTCClient extends Emitter {
         const onRegisterStateChange = (state: string) => {
           if (state === RegistererState.Unregistered) {
             logger.info('sdk webrtc unregistered', { clientId: this.clientId });
-            if (this.registerer) {
-              this.registerer.stateChange.removeListener(onRegisterStateChange);
-            }
+            // _cleanupRegister() removes all stateChange listeners, including this one.
             this._cleanupRegister();
 
             resolve();

@@ -159,15 +159,15 @@ export class Phone extends Emitter {
 
     options.userUuid = session.uuid || '';
 
-    this.connectWithCredentials(server, this.sipLine, session.displayName(), options);
+    return this.connectWithCredentials(server, this.sipLine, session.displayName(), options);
   }
 
-  connectWithCredentials(
+  async connectWithCredentials(
     server: string,
     sipLine: SipLine,
     displayName: string,
     rawOptions: Partial<WebRtcConfig> = {},
-  ): void {
+  ): Promise<void> {
     if (this.phone) {
       // Already connected
       return;
@@ -175,11 +175,13 @@ export class Phone extends Emitter {
 
     if (this.client) {
       // A client without phone remains when a consumer resets `phone` to force a new
-      // connection; close it so two UserAgents don't register the same line.
+      // connection; await the close so two UserAgents never hold the line at once.
       logger.warn('connectWithCredentials: closing previous client before creating a new one');
-      this.client.close().catch((error: any) => {
+      try {
+        await this.client.close();
+      } catch (error: any) {
         logger.error('connectWithCredentials: error while closing previous client', { message: error?.message });
-      });
+      }
     }
 
     const [host, port = 443] = server.split(':');

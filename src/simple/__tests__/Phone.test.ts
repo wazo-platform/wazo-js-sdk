@@ -37,17 +37,30 @@ describe('simple/Phone', () => {
       expect(phone.client).toBe(firstClient);
     });
 
-    it('closes the previous client before creating a new one', () => {
+    it('closes the previous client before creating a new one', async () => {
       const phone = new PhoneClass();
       phone.connectWithCredentials('host:443', sipLine, 'name', {});
       const oldClient = phone.client;
 
       // Consumers can force a new connection by resetting `phone` (no public reset API yet)
       phone.phone = null;
-      phone.connectWithCredentials('host:443', sipLine, 'name', {});
+      await phone.connectWithCredentials('host:443', sipLine, 'name', {});
 
       expect(oldClient.close).toHaveBeenCalled();
       expect(phone.client).not.toBe(oldClient);
+    });
+
+    it('still connects when closing the previous client rejects', async () => {
+      const phone = new PhoneClass();
+      phone.connectWithCredentials('host:443', sipLine, 'name', {});
+      const oldClient: any = phone.client;
+      oldClient.close.mockRejectedValue(new Error('close failed'));
+
+      phone.phone = null;
+      await phone.connectWithCredentials('host:443', sipLine, 'name', {});
+
+      expect(phone.client).not.toBe(oldClient);
+      expect(phone.phone).not.toBeNull();
     });
   });
 
