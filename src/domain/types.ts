@@ -244,6 +244,8 @@ export type WebRtcConfig = {
   heartbeatDelay?: number;
   heartbeatTimeout?: number;
   maxHeartbeats?: number;
+  // Consider a connected-but-silent transport dead after this delay (half-open socket detection).
+  transportSilenceThresholdMs?: number;
   skipRegister?: boolean;
   userUuid?: string,
   uaConfigOverrides?: UserAgentConfigOverrides,

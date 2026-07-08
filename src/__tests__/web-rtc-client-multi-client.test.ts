@@ -130,6 +130,33 @@ describe('zombie registration (registered but transport dead)', () => {
     expect(connectSpy).not.toHaveBeenCalled();
   });
 
+  it('re-registers when the socket is half-open (connected but silent too long)', async () => {
+    const client = new WebRTCClient({ transportSilenceThresholdMs: 65000 } as any, undefined, undefined);
+    await flushMicrotasks();
+    (client.userAgent as any).isConnected.mockReturnValue(true);
+    client.lastTransportMessageAt = Date.now() - 120000;
+    client.registerer = { state: RegistererState.Registered, stateChange: { removeAllListeners: jest.fn() } } as any;
+    const disconnectSpy = jest.spyOn(client as any, '_disconnectTransport');
+    const connectSpy = jest.spyOn(client as any, '_connectIfNeeded').mockReturnValue(new Promise(() => {}));
+
+    client.register();
+    await flushMicrotasks();
+
+    expect(client.registerer).toBeNull();
+    expect(disconnectSpy).toHaveBeenCalledWith(true); // force-close the dead socket
+    expect(connectSpy).toHaveBeenCalled();
+  });
+
+  it('is not suspect while sip sessions are active, even with silent transport', async () => {
+    const client = new WebRTCClient({ transportSilenceThresholdMs: 65000 } as any, undefined, undefined);
+    await flushMicrotasks();
+    (client.userAgent as any).isConnected.mockReturnValue(true);
+    client.lastTransportMessageAt = Date.now() - 120000;
+    client.sipSessions = { 'session-1': {} as any };
+
+    expect(client.isTransportSuspect()).toBe(false);
+  });
+
   it('tracks the last inbound transport message timestamp', async () => {
     const client = await makeClient();
 

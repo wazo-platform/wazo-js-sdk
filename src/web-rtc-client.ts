@@ -404,6 +404,30 @@ export default class WebRTCClient extends Emitter {
     return this.lastTransportMessageAt;
   }
 
+  // A transport is suspect when it is disconnected, or when it looks connected but has
+  // been silent longer than `transportSilenceThresholdMs` (half-open socket: TCP died
+  // without a close frame, e.g. during an app freeze). Registered contacts receive
+  // periodic OPTIONS qualify traffic from the server, so a silent socket is a dead one.
+  // Opt-in: without the config threshold only the disconnected state counts.
+  isTransportSuspect(): boolean {
+    if (!this.isConnected()) {
+      return true;
+    }
+
+    // Active sessions exchange SIP/RTP traffic — the socket is alive.
+    if (Object.keys(this.sipSessions).length > 0) {
+      return false;
+    }
+
+    const threshold = this.config.transportSilenceThresholdMs;
+
+    if (!threshold || !this.lastTransportMessageAt) {
+      return false;
+    }
+
+    return Date.now() - this.lastTransportMessageAt > threshold;
+  }
+
   onConnect() {
     logger.info('sdk webrtc connected', { method: 'delegate.onConnect', clientId: this.clientId });
     this.eventEmitter.emit(CONNECTED);
@@ -467,17 +491,27 @@ export default class WebRTCClient extends Emitter {
     }
 
     if (this.isRegistered()) {
-      if (this.isConnected()) {
+      if (!this.isTransportSuspect()) {
         logger.info('sdk webrtc registering aborted, already registered');
         return Promise.resolve();
       }
 
       // Zombie registration: the registerer still says Registered but the transport is
-      // dead (e.g. WebSocket died while the app was frozen). Drop the stale registerer
-      // and continue — _connectIfNeeded() below reconnects the transport before the
-      // new REGISTER.
-      logger.warn('sdk webrtc registered but transport not connected, re-registering', { clientId: this.clientId });
+      // dead or half-open (e.g. WebSocket died while the app was frozen). Drop the stale
+      // registerer and continue — _connectIfNeeded() below reconnects the transport
+      // before the new REGISTER.
+      logger.warn('sdk webrtc registered but transport suspect, re-registering', {
+        clientId: this.clientId,
+        connected: this.isConnected(),
+        lastTransportMessageAt: this.lastTransportMessageAt,
+      });
       this._cleanupRegister();
+
+      if (this.isConnected()) {
+        // Half-open socket: force-close it so _connectIfNeeded() reconnects instead of
+        // trusting the dead socket.
+        await this._disconnectTransport(true);
+      }
     }
 
     // @ts-ignore: private

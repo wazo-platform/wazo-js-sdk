@@ -1410,6 +1410,10 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return Boolean(this.client?.isConnected());
   }
 
+  isTransportSuspect(): boolean {
+    return this.client ? this.client.isTransportSuspect() : false;
+  }
+
   getLastTransportMessageAt(): number | null {
     return this.client?.getLastTransportMessageAt() ?? null;
   }
