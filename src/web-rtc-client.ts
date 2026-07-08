@@ -114,6 +114,8 @@ export default class WebRTCClient extends Emitter {
 
   _countedAsLive: boolean;
 
+  lastTransportMessageAt: number | null;
+
   config: WebRtcConfig;
 
   uaConfigOverrides?: UserAgentConfigOverrides;
@@ -238,6 +240,7 @@ export default class WebRTCClient extends Emitter {
 
     liveClientCount += 1;
     this._countedAsLive = true;
+    this.lastTransportMessageAt = null;
 
     if (liveClientCount > 1) {
       logger.warn('sdk webrtc multiple clients alive', { liveClientCount, clientId: this.clientId });
@@ -364,6 +367,9 @@ export default class WebRTCClient extends Emitter {
     }
 
     ua.transport.onMessage = (rawMessage: string) => {
+      // Any inbound traffic (responses, OPTIONS qualify…) proves the transport is alive;
+      // consumers use this to detect half-open sockets that still report Connected.
+      this.lastTransportMessageAt = Date.now();
       const message = Parser.parseMessage(rawMessage, (ua.transport as any).logger);
       // We have to re-sent the message to the UA ...
       // @ts-ignore: private
@@ -392,6 +398,10 @@ export default class WebRTCClient extends Emitter {
 
   isRegistered(): boolean {
     return Boolean(this.registerer && this.registerer.state === RegistererState.Registered);
+  }
+
+  getLastTransportMessageAt(): number | null {
+    return this.lastTransportMessageAt;
   }
 
   onConnect() {
@@ -451,9 +461,23 @@ export default class WebRTCClient extends Emitter {
       this.userAgent = this.createUserAgent(this.uaConfigOverrides);
     }
 
-    if (!this.userAgent || this.isRegistered()) {
-      logger.info('sdk webrtc registering aborted, already registered or no UA can be created');
+    if (!this.userAgent) {
+      logger.info('sdk webrtc registering aborted, no UA can be created');
       return Promise.resolve();
+    }
+
+    if (this.isRegistered()) {
+      if (this.isConnected()) {
+        logger.info('sdk webrtc registering aborted, already registered');
+        return Promise.resolve();
+      }
+
+      // Zombie registration: the registerer still says Registered but the transport is
+      // dead (e.g. WebSocket died while the app was frozen). Drop the stale registerer
+      // and continue — _connectIfNeeded() below reconnects the transport before the
+      // new REGISTER.
+      logger.warn('sdk webrtc registered but transport not connected, re-registering', { clientId: this.clientId });
+      this._cleanupRegister();
     }
 
     // @ts-ignore: private

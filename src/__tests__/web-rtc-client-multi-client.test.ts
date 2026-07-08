@@ -13,6 +13,10 @@ jest.mock('sip.js/lib/api/user-agent', () => ({
 
     stop = jest.fn(() => Promise.resolve());
 
+    isConnected = jest.fn(() => true);
+
+    onTransportMessage = jest.fn();
+
     transport = { disconnect: jest.fn(() => Promise.resolve()) };
 
     stateChange = { removeAllListeners: jest.fn() };
@@ -88,6 +92,52 @@ describe('live client counter', () => {
     await clientB.close();
 
     expect(getLiveClientCount()).toBe(before);
+  });
+});
+
+describe('zombie registration (registered but transport dead)', () => {
+  const flushMicrotasks = async () => {
+    await Promise.resolve();
+    await Promise.resolve();
+  };
+
+  const makeClient = async () => {
+    const client = new WebRTCClient({} as any, undefined, undefined);
+    await flushMicrotasks(); // let the constructor create its UserAgent
+    return client;
+  };
+
+  it('re-registers when isRegistered() is true but the transport is not connected', async () => {
+    const client = await makeClient();
+    (client.userAgent as any).isConnected.mockReturnValue(false);
+    client.registerer = { state: RegistererState.Registered, stateChange: { removeAllListeners: jest.fn() } } as any;
+    const connectSpy = jest.spyOn(client as any, '_connectIfNeeded').mockReturnValue(new Promise(() => {}));
+
+    client.register();
+
+    expect(client.registerer).toBeNull(); // stale registerer dropped
+    expect(connectSpy).toHaveBeenCalled(); // re-registration flow engaged
+  });
+
+  it('does not re-register when registered and the transport is connected', async () => {
+    const client = await makeClient();
+    (client.userAgent as any).isConnected.mockReturnValue(true);
+    client.registerer = { state: RegistererState.Registered, stateChange: { removeAllListeners: jest.fn() } } as any;
+    const connectSpy = jest.spyOn(client as any, '_connectIfNeeded').mockReturnValue(new Promise(() => {}));
+
+    await client.register();
+
+    expect(connectSpy).not.toHaveBeenCalled();
+  });
+
+  it('tracks the last inbound transport message timestamp', async () => {
+    const client = await makeClient();
+
+    expect(client.getLastTransportMessageAt()).toBeNull();
+
+    (client.userAgent as any).transport.onMessage('SIP/2.0 200 OK\r\n\r\n');
+
+    expect(client.getLastTransportMessageAt()).toBeGreaterThan(0);
   });
 });
 
