@@ -487,13 +487,13 @@ export default class WebRTCClient extends Emitter {
 
     if (!this.userAgent) {
       logger.info('sdk webrtc registering aborted, no UA can be created');
-      return Promise.resolve();
+      return;
     }
 
     if (this.isRegistered()) {
       if (!this.isTransportSuspect()) {
         logger.info('sdk webrtc registering aborted, already registered');
-        return Promise.resolve();
+        return;
       }
 
       // Zombie registration: the registerer still says Registered but the transport is
@@ -517,7 +517,7 @@ export default class WebRTCClient extends Emitter {
     // @ts-ignore: private
     if (this.connectionPromise || this.registerer?.waiting) {
       logger.info('sdk webrtc registering aborted due to a registration in progress.', { clientId: this.clientId });
-      return Promise.resolve();
+      return;
     }
 
     const registerOptions = this._isWeb() ? {} : {

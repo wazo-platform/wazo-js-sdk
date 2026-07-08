@@ -49,14 +49,14 @@ describe('single UserAgent per WebRTCClient', () => {
 
     client.register();
 
-    expect(mockUaInstances.length).toBe(1);
+    expect(mockUaInstances).toHaveLength(1);
 
     // Constructor's _buildConfig resolves after register() already created a UserAgent
     resolveBuildConfig({});
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(liveUas().length).toBe(1);
+    expect(liveUas()).toHaveLength(1);
     expect(client.userAgent).toBe(liveUas()[0]);
   });
 
