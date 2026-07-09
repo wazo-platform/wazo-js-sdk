@@ -1,5 +1,6 @@
 import sdpParser from 'sdp-transform';
 import type { Message } from 'sip.js/lib/api/message';
+import type { OutgoingInviteRequest } from 'sip.js/lib/core';
 import { SessionDescriptionHandler } from 'sip.js/lib/platform/web';
 import type CallSession from '../../domain/CallSession';
 import { PeerConnection, WazoSession } from '../../domain/types';
@@ -429,7 +430,9 @@ class Room extends Emitter {
     Wazo.Phone.sendDTMF(tone, this.callSession as CallSession);
   }
 
-  async sendReinvite(newConstraints: Record<string, any> | null = null) {
+  // Explicit return type: TS2742 — the inferred type references sip.js/lib/core through a
+  // non-portable node_modules path when built from a git dependency (pnpm tmp store).
+  async sendReinvite(newConstraints: Record<string, any> | null = null): Promise<OutgoingInviteRequest | void | undefined> {
     logger.info('send room reinvite', {
       callId: this.callSession ? this.callSession.getId() : null,
       newConstraints,

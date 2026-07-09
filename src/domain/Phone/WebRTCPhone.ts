@@ -1406,6 +1406,19 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return this.client && this.client.isRegistered();
   }
 
+  isConnected(): boolean {
+    return Boolean(this.client?.isConnected());
+  }
+
+  isTransportSuspect(): boolean {
+    // No client means nothing is connected — the most suspect state of all.
+    return this.client ? this.client.isTransportSuspect() : true;
+  }
+
+  getLastTransportMessageAt(): number | null {
+    return this.client?.getLastTransportMessageAt() ?? null;
+  }
+
   enableRinging(): Promise<void> | void {
     logger.info('WebRTC enable ringing');
     this.ringingEnabled = true;

@@ -40,7 +40,7 @@
     "format": "pnpm format:file \"src/**/*.(ts|js)\" \"__tests__/**/*.(ts|js)\"",
     "format:file": "prettier-eslint --write --single-quote --trailing-comma=es5 --arrow-parens=avoid",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "pnpm build"
+    "prepare": "pnpm build"
   },
   "dependencies": {
     "@wazo/types": "^25.16.1",
