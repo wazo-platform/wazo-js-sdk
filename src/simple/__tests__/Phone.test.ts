@@ -37,9 +37,32 @@ describe('simple/Phone', () => {
       expect(phone.client).toBe(firstClient);
     });
 
+    it('does not create two clients from concurrent calls in the dangling-client state', async () => {
+      const WebRTCClientMock = jest.requireMock('../../web-rtc-client').default as jest.Mock;
+      const phone = new PhoneClass();
+      await phone.connectWithCredentials('host:443', sipLine, 'name', {});
+
+      // Dangling client: phone reset externally, previous client still alive with a slow close
+      phone.phone = null;
+      let resolveClose: () => void = () => {};
+      (phone.client as any).close = jest.fn(() => new Promise<void>(resolve => {
+        resolveClose = resolve;
+      }));
+      const clientCountBefore = WebRTCClientMock.mock.calls.length;
+
+      const first = phone.connectWithCredentials('host:443', sipLine, 'name', {});
+      const second = phone.connectWithCredentials('host:443', sipLine, 'name', {});
+
+      resolveClose();
+      await Promise.all([first, second]);
+
+      expect(WebRTCClientMock.mock.calls.length - clientCountBefore).toBe(1);
+      expect(phone.phone).toBeTruthy();
+    });
+
     it('closes the previous client before creating a new one', async () => {
       const phone = new PhoneClass();
-      phone.connectWithCredentials('host:443', sipLine, 'name', {});
+      await phone.connectWithCredentials('host:443', sipLine, 'name', {});
       const oldClient = phone.client;
 
       // Consumers can force a new connection by resetting `phone` (no public reset API yet)
@@ -52,7 +75,7 @@ describe('simple/Phone', () => {
 
     it('still connects when closing the previous client rejects', async () => {
       const phone = new PhoneClass();
-      phone.connectWithCredentials('host:443', sipLine, 'name', {});
+      await phone.connectWithCredentials('host:443', sipLine, 'name', {});
       const oldClient: any = phone.client;
       oldClient.close.mockRejectedValue(new Error('close failed'));
 

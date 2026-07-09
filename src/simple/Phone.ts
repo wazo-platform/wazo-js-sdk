@@ -23,6 +23,8 @@ export class Phone extends Emitter {
 
   phone: WebRTCPhone | null | undefined;
 
+  connectInFlight: Promise<void> | null | undefined;
+
   session: Session;
 
   sipLine: SipLine | null | undefined;
@@ -173,6 +175,25 @@ export class Phone extends Emitter {
       return;
     }
 
+    // Single-flight: closing the previous client below suspends across an await, and two
+    // concurrent calls would each build a client — leaving one orphaned alive.
+    if (this.connectInFlight) {
+      logger.info('connectWithCredentials: connection already in progress, reusing it');
+      return this.connectInFlight;
+    }
+
+    this.connectInFlight = this._connectWithCredentials(server, sipLine, displayName, rawOptions).finally(() => {
+      this.connectInFlight = null;
+    });
+    return this.connectInFlight;
+  }
+
+  private async _connectWithCredentials(
+    server: string,
+    sipLine: SipLine,
+    displayName: string,
+    rawOptions: Partial<WebRtcConfig> = {},
+  ): Promise<void> {
     if (this.client) {
       // A client without phone remains when a consumer resets `phone` to force a new
       // connection; await the close so two UserAgents never hold the line at once.
@@ -181,6 +202,12 @@ export class Phone extends Emitter {
         await this.client.close();
       } catch (error: any) {
         logger.error('connectWithCredentials: error while closing previous client', { message: error?.message });
+      }
+
+      if (this.phone) {
+        // Another path connected while we were closing — keep its phone.
+        logger.info('connectWithCredentials: phone connected while closing previous client, keeping it');
+        return;
       }
     }
 
