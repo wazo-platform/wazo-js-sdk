@@ -178,7 +178,8 @@ export class Phone extends Emitter {
     // Single-flight: closing the previous client below suspends across an await, and two
     // concurrent calls would each build a client — leaving one orphaned alive.
     if (this.connectInFlight) {
-      logger.info('connectWithCredentials: connection already in progress, reusing it');
+      // This call's arguments are discarded in favor of the in-flight connection's.
+      logger.info('connectWithCredentials: connection already in progress, reusing it and ignoring this call\'s arguments', { server, sipLineId: sipLine?.id });
       return this.connectInFlight;
     }
 
