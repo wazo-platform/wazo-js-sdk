@@ -14,14 +14,12 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v5
+      # Node 24 (.nvmrc) bundles npm 11.x (>= 11.5.1 required for trusted publishing),
+      # so no npm upgrade step is needed. npm >= 12 is currently broken for publish.
       - uses: actions/setup-node@v5
         with:
           node-version-file: ".nvmrc"
           cache: "pnpm"
-      # Ensure npm 11.5.1 or later is installed for trusted publishing
-      # Pinned to 11: npm 12.0.0 is broken (missing sigstore module in libnpmpublish)
-      - name: Update npm
-        run: npm install -g npm@11
       - run: pnpm install
       - run: pnpm run test
       - run: pnpm publish --no-git-checks
