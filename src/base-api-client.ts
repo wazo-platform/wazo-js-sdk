@@ -1,5 +1,5 @@
 import authMethods from './api/auth';
-import RefreshTokenError from './domain/RefreshTokenError';
+import RefreshTokenError, { type RefreshTokenErrorReason } from './domain/RefreshTokenError';
 import ApiRequester from './utils/api-requester';
 import IssueReporter from './service/IssueReporter';
 import { obfuscateToken } from './utils/string';
@@ -38,6 +38,17 @@ export default class BaseApiClient {
   isMobile: boolean;
 
   fetchOptions: Record<string, any>;
+
+  refreshTokenErrorNotified = false;
+
+  // The single in-flight refresh, shared by every entry point (401 replay, forceRefreshToken,
+  // requesters recreated by updateParameters) so concurrent callers never race two refreshes.
+  refreshTokenPromise: Promise<string | null> | null = null;
+
+  // Bumped on every successful refresh and every setRefreshToken(newToken). A refresh attempt
+  // captures the current value at start; if it later fails against a newer generation, its
+  // failure is stale (superseded by fresh credentials) and must not notify the consumer.
+  refreshTokenGeneration = 0;
 
   constructor({
     server,
@@ -79,6 +90,30 @@ export default class BaseApiClient {
   }
 
   async refreshTokenCallback(): Promise<string | null> {
+    // Dedup: collapse concurrent callers onto a single in-flight refresh. Every entry point
+    // (401 replay, forceRefreshToken, requesters recreated by updateParameters) reaches this
+    // method, so this is the one place that guarantees a single auth.refreshToken call.
+    if (this.refreshTokenPromise) {
+      return this.refreshTokenPromise;
+    }
+
+    const generation = this.refreshTokenGeneration;
+    const promise = this.performTokenRefresh(generation);
+    this.refreshTokenPromise = promise;
+
+    try {
+      return await promise;
+    } finally {
+      // Only clear the pointer if it still points at our attempt. A concurrent setRefreshToken
+      // (or newer caller) may have replaced it with a fresher in-flight promise, which we must
+      // not wipe or we'd re-enable overlapping refreshes.
+      if (this.refreshTokenPromise === promise) {
+        this.refreshTokenPromise = null;
+      }
+    }
+  }
+
+  async performTokenRefresh(generation: number): Promise<string | null> {
     logger.info('refresh token callback called', {
       refreshToken: obfuscateToken(this.refreshToken),
       refreshBackend: this.refreshBackend,
@@ -89,9 +124,7 @@ export default class BaseApiClient {
     });
 
     if (!this.refreshToken) {
-      if (this.onRefreshTokenError) {
-        this.onRefreshTokenError(new RefreshTokenError('no_refresh_token'));
-      }
+      this.notifyRefreshTokenError(new RefreshTokenError('no_refresh_token'), 'no_refresh_token', generation);
       return null;
     }
 
@@ -105,9 +138,14 @@ export default class BaseApiClient {
         this.refreshDomainName as string,
       );
       if (!session) {
-        if (this.onRefreshTokenError) {
-          this.onRefreshTokenError(new RefreshTokenError('empty_session'));
-        }
+        this.notifyRefreshTokenError(new RefreshTokenError('empty_session'), 'empty_session', generation);
+        return null;
+      }
+
+      // A newer refresh or setRefreshToken superseded this attempt while it was in flight: its
+      // result is stale, so don't overwrite the fresher credentials the winning attempt applied.
+      if (generation !== this.refreshTokenGeneration) {
+        logger.info('ignoring stale token refresh success');
         return null;
       }
 
@@ -115,21 +153,68 @@ export default class BaseApiClient {
         token: obfuscateToken(session.token),
       });
 
+      // Re-arm the one-shot error notification and supersede any older in-flight attempt now
+      // that a refresh has succeeded.
+      this.refreshTokenErrorNotified = false;
+      this.refreshTokenGeneration += 1;
+
+      // Apply the token before notifying, so a throwing onRefreshToken handler can't cause the
+      // freshly obtained token to be dropped (and misreported as a stale failure).
+      this.setToken(session.token);
+
       if (this.onRefreshToken) {
-        this.onRefreshToken(session.token, session);
+        try {
+          this.onRefreshToken(session.token, session);
+        } catch (e) {
+          logger.error('onRefreshToken handler failed', e);
+        }
       }
 
-      this.setToken(session.token);
       return session.token;
     } catch (error: any) {
       logger.error('token refresh, error', error);
-
-      if (this.onRefreshTokenError) {
-        this.onRefreshTokenError(error);
-      }
+      this.notifyRefreshTokenError(error, undefined, generation);
     }
 
     return null;
+  }
+
+  notifyRefreshTokenError(error: Error, reason?: RefreshTokenErrorReason, generation: number = this.refreshTokenGeneration) {
+    // A newer successful refresh or a new refresh token supersedes this attempt: its failure is
+    // stale, so ignore it rather than logging out a user who just received fresh credentials.
+    if (generation !== this.refreshTokenGeneration) {
+      logger.info('ignoring stale token refresh failure', { reason });
+      return;
+    }
+
+    if (reason) {
+      // Always log, so persistent refresh failures stay visible in the field (the reason
+      // this PR exists) even after the consumer has been notified.
+      logger.error('token refresh failed', { reason });
+    }
+
+    // Consume the one-shot only when a handler is actually invoked. Otherwise an early 401
+    // (before the consumer wires setOnRefreshTokenError) would silently burn the notification,
+    // and a handler registered later would never hear about the persistent failure.
+    if (!this.onRefreshTokenError) {
+      return;
+    }
+
+    // Refresh failures are persistent: every expired-token 401 retriggers a refresh that fails
+    // the same way (a missing token, an empty session, or a revoked refresh token rejecting with
+    // a 401). Notify the consumer only once until a refresh succeeds or a new refresh token is
+    // set, otherwise a burst of failing requests would fire a burst of callbacks (and possibly
+    // repeated logouts).
+    if (this.refreshTokenErrorNotified) {
+      return;
+    }
+    this.refreshTokenErrorNotified = true;
+
+    try {
+      this.onRefreshTokenError(error);
+    } catch (e) {
+      logger.error('onRefreshTokenError handler failed', e);
+    }
   }
 
   setToken(token: string) {
@@ -141,7 +226,27 @@ export default class BaseApiClient {
   }
 
   setRefreshToken(refreshToken: string | null | undefined) {
+    const changed = refreshToken !== this.refreshToken;
     this.refreshToken = refreshToken;
+
+    if (refreshToken) {
+      this.refreshTokenErrorNotified = false;
+
+      // Only a *different* token supersedes an in-flight refresh. Re-setting the identical token
+      // (e.g. consumers rehydrating credentials on app resume) must not bump the generation, or a
+      // refresh already running with that same token would have its success discarded as stale.
+      if (changed) {
+        // New credentials supersede any in-flight refresh: bump the generation so a still-running
+        // stale attempt's failure is ignored, and drop the shared promise so the next caller
+        // refreshes with the new token instead of awaiting the stale one.
+        this.refreshTokenGeneration += 1;
+        this.refreshTokenPromise = null;
+        // ApiRequester keeps its own in-flight cache for 401 replays; drop it too, otherwise the
+        // next _replayWithNewToken keeps awaiting the superseded refresh (old token) instead of
+        // starting a fresh one with the new token.
+        this.client.refreshTokenPromise = null;
+      }
+    }
   }
 
   setRequestTimeout(requestTimeout: number) {
