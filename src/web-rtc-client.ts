@@ -104,8 +104,19 @@ const MAX_REGISTER_TRIES = 5;
 // setting a 24hr timeout and letting the backend define the actual value
 const NO_ANSWER_TIMEOUT = 60 * 60 * 24; // in seconds
 
+// Observability only: more than one alive client means concurrent UAs can register
+// the same SIP line (expected transiently during connectivity checks).
+let liveClientCount = 0;
+export const getLiveClientCount = (): number => liveClientCount;
+
 export default class WebRTCClient extends Emitter {
   clientId: number;
+
+  _countedAsLive: boolean;
+
+  _closed: boolean;
+
+  lastTransportMessageAt: number | null;
 
   config: WebRtcConfig;
 
@@ -229,12 +240,44 @@ export default class WebRTCClient extends Emitter {
     this.clientId = Math.ceil(Math.random() * 1000);
     logger.info('sdk webrtc constructor', { clientId: this.clientId });
 
+    liveClientCount += 1;
+    this._countedAsLive = true;
+    this._closed = false;
+    this.lastTransportMessageAt = null;
+
+    if (liveClientCount > 1) {
+      // info, not warn: connectivity checks legitimately create a transient second client.
+      logger.info('sdk webrtc multiple clients alive', { liveClientCount, clientId: this.clientId });
+    }
+
     this.uaConfigOverrides = uaConfigOverrides;
     this.config = config;
     this.skipRegister = config.skipRegister as boolean;
 
     this._buildConfig(config, session).then((newConfig: WebRtcConfig) => {
       this.config = newConfig;
+
+      if (this._closed) {
+        // close() ran while _buildConfig was in flight; don't start a UA on a closed client.
+        logger.info('sdk webrtc constructor, client closed during config build, skipping UA creation', { clientId: this.clientId });
+        return;
+      }
+
+      // register() may have created the userAgent while _buildConfig was in flight;
+      // creating another one here would leak the first UA and its transport.
+      if (this.userAgent && !session) {
+        logger.info('sdk webrtc constructor, userAgent already created, skipping', { clientId: this.clientId });
+        return;
+      }
+
+      // With a session, the fetched credentials (authorizationUser/password/uri) differ
+      // from what a racing register() used — recreate so REGISTER can authenticate.
+      // createUserAgent() stops any previous UA, so nothing leaks.
+      if (this.registerer) {
+        // A racing register() bound the registerer to the UA being replaced; drop it so
+        // it doesn't linger on a stopped UA — the register retry recreates it.
+        this._cleanupRegister();
+      }
       this.userAgent = this.createUserAgent(uaConfigOverrides);
     });
 
@@ -300,6 +343,16 @@ export default class WebRTCClient extends Emitter {
   }
 
   createUserAgent(uaConfigOverrides?: UserAgentConfigOverrides): UserAgent {
+    this.lastTransportMessageAt = null;
+
+    if (this.userAgent) {
+      logger.warn('sdk webrtc, stopping existing UA before creating a new one', { clientId: this.clientId });
+      this.userAgent.stop().catch((error: any) => {
+        logger.error('sdk webrtc, error stopping previous UA', { error: error?.message, clientId: this.clientId });
+      });
+      this.userAgent = null;
+    }
+
     const uaOptions = this._createUaOptions(uaConfigOverrides);
 
     logger.info('sdk webrtc, creating UA', {
@@ -334,6 +387,9 @@ export default class WebRTCClient extends Emitter {
     }
 
     ua.transport.onMessage = (rawMessage: string) => {
+      // Any inbound traffic (responses, OPTIONS qualify…) proves the transport is alive;
+      // consumers use this to detect half-open sockets that still report Connected.
+      this.lastTransportMessageAt = Date.now();
       const message = Parser.parseMessage(rawMessage, (ua.transport as any).logger);
       // We have to re-sent the message to the UA ...
       // @ts-ignore: private
@@ -362,6 +418,34 @@ export default class WebRTCClient extends Emitter {
 
   isRegistered(): boolean {
     return Boolean(this.registerer && this.registerer.state === RegistererState.Registered);
+  }
+
+  getLastTransportMessageAt(): number | null {
+    return this.lastTransportMessageAt;
+  }
+
+  // A transport is suspect when it is disconnected, or when it looks connected but has
+  // been silent longer than `transportSilenceThresholdMs` (half-open socket: TCP died
+  // without a close frame, e.g. during an app freeze). Registered contacts receive
+  // periodic OPTIONS qualify traffic from the server, so a silent socket is a dead one.
+  // Opt-in: without the config threshold only the disconnected state counts.
+  isTransportSuspect(): boolean {
+    if (!this.isConnected()) {
+      return true;
+    }
+
+    // Active sessions exchange SIP/RTP traffic — the socket is alive.
+    if (Object.keys(this.sipSessions).length > 0) {
+      return false;
+    }
+
+    const threshold = this.config.transportSilenceThresholdMs;
+
+    if (!threshold || !this.lastTransportMessageAt) {
+      return false;
+    }
+
+    return Date.now() - this.lastTransportMessageAt > threshold;
   }
 
   onConnect() {
@@ -395,6 +479,43 @@ export default class WebRTCClient extends Emitter {
     }
   }
 
+  // Returns true when the current registration sits on a healthy transport. Otherwise
+  // heals the zombie registration — the registerer still says Registered but the
+  // transport is dead or half-open (e.g. WebSocket died while the app was frozen):
+  // drops the stale registerer so register() can proceed, _connectIfNeeded() then
+  // reconnects the transport before the new REGISTER.
+  async _isRegistrationHealthy(): Promise<boolean> {
+    if (!this.isTransportSuspect()) {
+      return true;
+    }
+
+    logger.warn('sdk webrtc registered but transport suspect, re-registering', {
+      clientId: this.clientId,
+      connected: this.isConnected(),
+      lastTransportMessageAt: this.lastTransportMessageAt,
+    });
+    this._cleanupRegister();
+
+    if (this.isConnected()) {
+      // Half-open socket: force-close it AND transition the transport state ourselves.
+      // sip.js keeps reporting Connected until the WS close event fires (up to ~30s on a
+      // dead TCP), so _connectIfNeeded() would short-circuit and send the REGISTER into
+      // the dying socket. connectionPromise guards concurrent register() calls while we
+      // await the disconnect.
+      this.connectionPromise = this._disconnectTransport(true);
+      await this.connectionPromise;
+      this.connectionPromise = null;
+
+      const transport = this.userAgent?.transport as WazoTransport;
+
+      if (transport && transport.state !== TransportState.Disconnected) {
+        transport.transitionState(TransportState.Disconnected);
+      }
+    }
+
+    return false;
+  }
+
   async register(tries = 0): Promise<void> {
     const logInfo = {
       clientId: this.clientId,
@@ -408,6 +529,13 @@ export default class WebRTCClient extends Emitter {
       skipRegister: this.skipRegister,
     };
     this.forceClosed = false;
+    this._closed = false;
+
+    if (!this._countedAsLive) {
+      // A close()d client revived by register() counts as live again.
+      this._countedAsLive = true;
+      liveClientCount += 1;
+    }
 
     if (this.skipRegister) {
       logger.info('sdk webrtc skip register...', logInfo);
@@ -421,15 +549,20 @@ export default class WebRTCClient extends Emitter {
       this.userAgent = this.createUserAgent(this.uaConfigOverrides);
     }
 
-    if (!this.userAgent || this.isRegistered()) {
-      logger.info('sdk webrtc registering aborted, already registered or no UA can be created');
-      return Promise.resolve();
+    if (!this.userAgent) {
+      logger.info('sdk webrtc registering aborted, no UA can be created');
+      return;
+    }
+
+    if (this.isRegistered() && await this._isRegistrationHealthy()) {
+      logger.info('sdk webrtc registering aborted, already registered');
+      return;
     }
 
     // @ts-ignore: private
     if (this.connectionPromise || this.registerer?.waiting) {
       logger.info('sdk webrtc registering aborted due to a registration in progress.', { clientId: this.clientId });
-      return Promise.resolve();
+      return;
     }
 
     const registerOptions = this._isWeb() ? {} : {
@@ -558,9 +691,7 @@ export default class WebRTCClient extends Emitter {
         const onRegisterStateChange = (state: string) => {
           if (state === RegistererState.Unregistered) {
             logger.info('sdk webrtc unregistered', { clientId: this.clientId });
-            if (this.registerer) {
-              this.registerer.stateChange.addListener(onRegisterStateChange);
-            }
+            // _cleanupRegister() removes all stateChange listeners, including this one.
             this._cleanupRegister();
 
             resolve();
@@ -825,6 +956,12 @@ export default class WebRTCClient extends Emitter {
       force,
     });
     this.forceClosed = force;
+    this._closed = true;
+
+    if (this._countedAsLive) {
+      this._countedAsLive = false;
+      liveClientCount = Math.max(0, liveClientCount - 1);
+    }
 
     this._cleanupMedia();
 

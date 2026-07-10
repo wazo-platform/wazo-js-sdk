@@ -115,6 +115,47 @@ describe('WebRTCPhone._createCallSession diversion', () => {
   });
 });
 
+describe('WebRTCPhone._createCallSession callId', () => {
+  const requestWithHeader = (value?: string) => ({ getHeader: (name: string) => (name === 'X-Wazo-Call-ID' ? value : undefined) });
+
+  it('maps the X-Wazo-Call-ID header of the INVITE to callId', () => {
+    const sipSession = { id: 'session-1', request: requestWithHeader('1719843012.42') } as any;
+    const phone = createPhone(createCreatableMockClient({ 'session-1': sipSession }));
+
+    const cs = phone._createCallSession(sipSession);
+
+    expect(cs.callId).toBe('1719843012.42');
+  });
+
+  it('keeps the callId of the previous call session over the header', () => {
+    const sipSession = { id: 'session-1', request: requestWithHeader('1719843012.42') } as any;
+    const phone = createPhone(createCreatableMockClient({ 'session-1': sipSession }));
+    const fromSession = new CallSession({ callId: 'existing-id', sipCallId: 'session-1' } as any);
+
+    const cs = phone._createCallSession(sipSession, fromSession);
+
+    expect(cs.callId).toBe('existing-id');
+  });
+
+  it('is empty without header nor previous call session', () => {
+    const sipSession = { id: 'session-1', request: requestWithHeader(undefined) } as any;
+    const phone = createPhone(createCreatableMockClient({ 'session-1': sipSession }));
+
+    const cs = phone._createCallSession(sipSession);
+
+    expect(cs.callId).toBe('');
+  });
+
+  it('supports sip sessions without a request object', () => {
+    const sipSession = { id: 'session-1' } as any;
+    const phone = createPhone(createCreatableMockClient({ 'session-1': sipSession }));
+
+    const cs = phone._createCallSession(sipSession);
+
+    expect(cs.callId).toBe('');
+  });
+});
+
 describe('WebRTCPhone._createCallSession assertedIdentity', () => {
   // Shaped like sip.js's `Session.assertedIdentity` (a parsed NameAddrHeader).
   // The URI exposes the user via the public `user` getter and the private

@@ -23,6 +23,8 @@ export class Phone extends Emitter {
 
   phone: WebRTCPhone | null | undefined;
 
+  connectInFlight: Promise<void> | null | undefined;
+
   session: Session;
 
   sipLine: SipLine | null | undefined;
@@ -159,18 +161,55 @@ export class Phone extends Emitter {
 
     options.userUuid = session.uuid || '';
 
-    this.connectWithCredentials(server, this.sipLine, session.displayName(), options);
+    return this.connectWithCredentials(server, this.sipLine, session.displayName(), options);
   }
 
-  connectWithCredentials(
+  async connectWithCredentials(
     server: string,
     sipLine: SipLine,
     displayName: string,
     rawOptions: Partial<WebRtcConfig> = {},
-  ): void {
+  ): Promise<void> {
     if (this.phone) {
       // Already connected
       return;
+    }
+
+    // Single-flight: closing the previous client below suspends across an await, and two
+    // concurrent calls would each build a client — leaving one orphaned alive.
+    if (this.connectInFlight) {
+      // This call's arguments are discarded in favor of the in-flight connection's.
+      logger.info('connectWithCredentials: connection already in progress, reusing it and ignoring this call\'s arguments', { server, sipLineId: sipLine?.id });
+      return this.connectInFlight;
+    }
+
+    this.connectInFlight = this._connectWithCredentials(server, sipLine, displayName, rawOptions).finally(() => {
+      this.connectInFlight = null;
+    });
+    return this.connectInFlight;
+  }
+
+  private async _connectWithCredentials(
+    server: string,
+    sipLine: SipLine,
+    displayName: string,
+    rawOptions: Partial<WebRtcConfig> = {},
+  ): Promise<void> {
+    if (this.client) {
+      // A client without phone remains when a consumer resets `phone` to force a new
+      // connection; await the close so two UserAgents never hold the line at once.
+      logger.warn('connectWithCredentials: closing previous client before creating a new one');
+      try {
+        await this.client.close();
+      } catch (error: any) {
+        logger.error('connectWithCredentials: error while closing previous client', { message: error?.message });
+      }
+
+      if (this.phone) {
+        // Another path connected while we were closing — keep its phone.
+        logger.info('connectWithCredentials: phone connected while closing previous client, keeping it');
+        return;
+      }
     }
 
     const [host, port = 443] = server.split(':');
@@ -215,6 +254,28 @@ export class Phone extends Emitter {
     }
 
     this.phone = null;
+  }
+
+  // Fully tear down the current connection so the next connect() starts fresh,
+  // without consumers having to mutate `phone`/`client` directly.
+  async reset(): Promise<void> {
+    logger.info('phone reset', { phone: !!this.phone, client: !!this.client });
+
+    // disconnect() hangs up any active call before closing the phone.
+    await this.disconnect().catch((error: any) => {
+      logger.error('reset: error while disconnecting phone', { message: error?.message });
+    });
+
+    if (this.client) {
+      // Best-effort close of a client the phone close didn't reach (or that failed):
+      // dropping the reference without closing would leave a registered UA behind.
+      await this.client.close().catch((error: any) => {
+        logger.error('reset: error while closing client', { message: error?.message });
+      });
+    }
+
+    this.phone = null;
+    this.client = null as any;
   }
 
   // If audioOnly is set to true, all video stream will be deactivated, even remotes ones.
