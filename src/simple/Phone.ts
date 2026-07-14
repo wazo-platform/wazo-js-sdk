@@ -241,9 +241,16 @@ export class Phone extends Emitter {
     this.phone = new WebRTCPhone(this.client, options.audioDeviceOutput, true, options.audioDeviceRing);
 
     this._transferEvents();
+
+    // The `call_created` event carries the Wazo call id of our own leg, which
+    // outgoing calls can't learn from SIP; with it set, REST actions don't
+    // require fetching GET /users/me/calls.
+    Wazo.Websocket.on(Wazo.Websocket.CALL_CREATED, this._onCallCreated);
   }
 
   async disconnect(): Promise<void> {
+    Wazo.Websocket.off(Wazo.Websocket.CALL_CREATED, this._onCallCreated);
+
     if (this.phone) {
       if (this.phone.hasAnActiveCall()) {
         logger.info('hangup call on disconnect');
@@ -277,6 +284,12 @@ export class Phone extends Emitter {
     this.phone = null;
     this.client = null as any;
   }
+
+  _onCallCreated = ({ data }: { data: Record<string, any> }): void => {
+    if (this.phone && data?.sip_call_id && data?.call_id) {
+      this.phone.setCallSessionCallId(data.sip_call_id, data.call_id);
+    }
+  };
 
   // If audioOnly is set to true, all video stream will be deactivated, even remotes ones.
   async call(extension: string, withCamera = false, rawSipLine: SipLine | null | undefined = null, audioOnly = false, conference = false): Promise<CallSession | null | undefined> {

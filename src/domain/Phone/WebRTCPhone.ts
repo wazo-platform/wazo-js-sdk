@@ -1742,6 +1742,22 @@ export default class WebRTCPhone extends Emitter implements Phone {
     return this.callSessions[sipSessionId];
   }
 
+  // Learn the Wazo call id of our own leg (eg. from a `call_created` bus
+  // event) so REST actions don't require fetching GET /users/me/calls.
+  setCallSessionCallId(sipCallId: string, callId: string): void {
+    const callSession = this.callSessions[sipCallId];
+
+    if (!callSession || callSession.callId) {
+      return;
+    }
+
+    logger.info('setting wazo call id on call session', {
+      sipCallId,
+      callId,
+    });
+    callSession.callId = callId;
+  }
+
   getSipSessionId(sipSession: WazoSession | null | undefined): string {
     if (!sipSession) {
       return '';
