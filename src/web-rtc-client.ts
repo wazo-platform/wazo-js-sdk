@@ -1628,7 +1628,11 @@ export default class WebRTCClient extends Emitter {
     }
 
     const wasMuted = this.isAudioMuted(sipSession);
-    const shouldDoVideo = newConstraints ? newConstraints.video : this.sessionWantsToDoVideo(sipSession);
+    // When no constraints are given (automatic reinvites: ICE restart, network change), derive the
+    // video decision from the local state, not from the SDP: `sessionWantsToDoVideo` reflects the
+    // remote offer, which advertises video even when the user answered audio-only — following it
+    // here would silently turn the camera on without consent.
+    const shouldDoVideo = newConstraints ? newConstraints.video : this.hasLocalVideo(this.getSipSessionId(sipSession));
     const shouldDoScreenSharing = newConstraints && newConstraints.screen;
     const desktop = newConstraints && newConstraints.desktop;
     logger.info('Sending reinvite', {
@@ -1770,7 +1774,10 @@ export default class WebRTCClient extends Emitter {
   }
 
   hasRemoteVideo(sessionId: string): boolean {
-    return this.getRemoteTracks(sessionId).some(this._isVideoTrack);
+    // `muted` filters out negotiated receiver tracks that never got RTP: they stay `live`
+    // forever even though no frame will ever arrive (e.g. the peer answered our video offer
+    // without sending video). Use `hasARemoteVideoTrack` for the lax check.
+    return this.getRemoteTracks(sessionId).some(track => this._isVideoTrack(track) && !track.muted);
   }
 
   // Check if we have at least one video track, even muted or not live
@@ -2051,10 +2058,25 @@ export default class WebRTCClient extends Emitter {
     });
 
     if (pc.getReceivers) {
+      // `getReceivers()` returns a receiver for every negotiated m-line, including ones the
+      // remote never sends on (e.g. our video offer answered `recvonly`). Adding those phantom
+      // tracks makes the remote stream claim video that will never produce a frame, so skip
+      // receivers whose transceiver is not in a receiving direction.
+      const transceivers = pc.getTransceivers ? pc.getTransceivers() : null;
+
       pc.getReceivers().forEach((receiver) => {
-        if (allTracks || receiver.track.kind === 'video') {
-          remoteStream.addTrack(receiver.track);
+        if (!allTracks && receiver.track.kind !== 'video') {
+          return;
         }
+
+        const transceiver = transceivers ? transceivers.find((t: RTCRtpTransceiver) => t.receiver === receiver) : null;
+        const direction = transceiver ? transceiver.currentDirection || transceiver.direction : null;
+
+        if (direction && direction !== 'sendrecv' && direction !== 'recvonly') {
+          return;
+        }
+
+        remoteStream.addTrack(receiver.track);
       });
     }
   }

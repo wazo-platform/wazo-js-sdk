@@ -542,6 +542,179 @@ describe('changeAudioInputDevice', () => {
   });
 });
 
+describe('reinvite video decision', () => {
+  const spies: jest.SpyInstance[] = [];
+  let mediaConfigSpy: jest.SpyInstance;
+  let sessionWantsToDoVideoSpy: jest.SpyInstance;
+
+  const buildSession = () => ({
+    pendingReinvite: false,
+    sessionDescriptionHandlerModifiersReInvite: [],
+    sessionDescriptionHandlerOptionsReInvite: {},
+    invite: jest.fn().mockResolvedValue(undefined),
+  } as any);
+
+  beforeEach(() => {
+    mediaConfigSpy = jest.spyOn(client, 'getMediaConfiguration');
+    sessionWantsToDoVideoSpy = jest.spyOn(client, 'sessionWantsToDoVideo');
+    spies.push(
+      mediaConfigSpy,
+      sessionWantsToDoVideoSpy,
+      jest.spyOn(client, 'isAudioMuted').mockReturnValue(false),
+      jest.spyOn(client, 'getSipSessionId').mockReturnValue('reinvite-1'),
+    );
+  });
+
+  afterEach(() => {
+    spies.forEach(s => s.mockRestore());
+    spies.length = 0;
+  });
+
+  it('does not request video on a constraint-less reinvite when there is no local video', async () => {
+    // The remote SDP advertises video (incoming video call answered audio-only): following it
+    // would turn the camera on without consent on ICE restart / network change reinvites.
+    spies.push(jest.spyOn(client, 'hasLocalVideo').mockReturnValue(false));
+
+    await client.reinvite(buildSession(), null, false, false, true);
+
+    expect(mediaConfigSpy).toHaveBeenCalledWith(false, false, null);
+    expect(sessionWantsToDoVideoSpy).not.toHaveBeenCalled();
+  });
+
+  it('keeps video on a constraint-less reinvite when local video is active', async () => {
+    spies.push(jest.spyOn(client, 'hasLocalVideo').mockReturnValue(true));
+
+    await client.reinvite(buildSession(), null, false, false, true);
+
+    expect(mediaConfigSpy).toHaveBeenCalledWith(true, false, null);
+  });
+
+  it('follows explicit constraints when provided', async () => {
+    spies.push(jest.spyOn(client, 'hasLocalVideo').mockReturnValue(false));
+    const constraints = { video: true };
+
+    await client.reinvite(buildSession(), constraints, false, false, false);
+
+    expect(mediaConfigSpy).toHaveBeenCalledWith(true, false, constraints);
+  });
+});
+
+describe('remote video detection', () => {
+  const sessionId = 'remote-video-1';
+
+  const setSession = (remoteMediaStream: any, peerConnection: any = {}) => {
+    (client as any).sipSessions[sessionId] = {
+      sessionDescriptionHandler: { remoteMediaStream, peerConnection },
+    };
+  };
+
+  afterEach(() => {
+    delete (client as any).sipSessions[sessionId];
+  });
+
+  describe('hasRemoteVideo', () => {
+    const streamWithTracks = (tracks: any[]) => ({ getTracks: () => tracks });
+
+    it('ignores a live but muted video track (negotiated m-line that never received RTP)', () => {
+      setSession(streamWithTracks([{ kind: 'video', readyState: 'live', muted: true }]));
+
+      expect(client.hasRemoteVideo(sessionId)).toBe(false);
+    });
+
+    it('detects a live unmuted video track', () => {
+      setSession(streamWithTracks([{ kind: 'video', readyState: 'live', muted: false }]));
+
+      expect(client.hasRemoteVideo(sessionId)).toBe(true);
+    });
+
+    it('ignores audio tracks', () => {
+      setSession(streamWithTracks([{ kind: 'audio', readyState: 'live', muted: false }]));
+
+      expect(client.hasRemoteVideo(sessionId)).toBe(false);
+    });
+  });
+
+  describe('updateRemoteStream', () => {
+    const makeRemoteStream = () => {
+      const tracks: any[] = [];
+      return {
+        tracks,
+        getTracks: () => [...tracks],
+        addTrack: (track: any) => tracks.push(track),
+        removeTrack: (track: any) => {
+          const index = tracks.indexOf(track);
+          if (index !== -1) {
+            tracks.splice(index, 1);
+          }
+        },
+      };
+    };
+
+    it('skips receiver tracks whose transceiver is not receiving', () => {
+      const remoteStream = makeRemoteStream();
+      const receivingReceiver = { track: { kind: 'audio' } };
+      const phantomReceiver = { track: { kind: 'video' } };
+      const pc = {
+        getReceivers: () => [receivingReceiver, phantomReceiver],
+        getTransceivers: () => [
+          { receiver: receivingReceiver, currentDirection: 'sendrecv' },
+          // Our video offer was answered `recvonly`: we send, we never receive.
+          { receiver: phantomReceiver, currentDirection: 'sendonly' },
+        ],
+      };
+      setSession(remoteStream, pc);
+
+      client.updateRemoteStream(sessionId);
+
+      expect(remoteStream.tracks).toEqual([receivingReceiver.track]);
+    });
+
+    it('adds receiver tracks for receiving transceivers, using direction before negotiation', () => {
+      const remoteStream = makeRemoteStream();
+      const receiver = { track: { kind: 'video' } };
+      const pc = {
+        getReceivers: () => [receiver],
+        getTransceivers: () => [{ receiver, currentDirection: null, direction: 'recvonly' }],
+      };
+      setSession(remoteStream, pc);
+
+      client.updateRemoteStream(sessionId);
+
+      expect(remoteStream.tracks).toEqual([receiver.track]);
+    });
+
+    it('keeps all receiver tracks when transceivers are not available', () => {
+      const remoteStream = makeRemoteStream();
+      const audioReceiver = { track: { kind: 'audio' } };
+      const videoReceiver = { track: { kind: 'video' } };
+      const pc = {
+        getReceivers: () => [audioReceiver, videoReceiver],
+      };
+      setSession(remoteStream, pc);
+
+      client.updateRemoteStream(sessionId);
+
+      expect(remoteStream.tracks).toEqual([audioReceiver.track, videoReceiver.track]);
+    });
+
+    it('only touches video tracks when allTracks is false', () => {
+      const remoteStream = makeRemoteStream();
+      const existingAudioTrack = { kind: 'audio' };
+      remoteStream.addTrack(existingAudioTrack);
+      const videoReceiver = { track: { kind: 'video' } };
+      const pc = {
+        getReceivers: () => [videoReceiver],
+        getTransceivers: () => [{ receiver: videoReceiver, currentDirection: 'sendrecv' }],
+      };
+      setSession(remoteStream, pc);
+
+      client.updateRemoteStream(sessionId, false);
+
+      expect(remoteStream.tracks).toEqual([existingAudioTrack, videoReceiver.track]);
+    });
+  });
+});
+
 describe('toAssertedIdentity', () => {
   // Shaped like sip.js's parsed P-Asserted-Identity header (a NameAddrHeader).
   const makeIdentity = (user: string | undefined, displayName: string) => ({

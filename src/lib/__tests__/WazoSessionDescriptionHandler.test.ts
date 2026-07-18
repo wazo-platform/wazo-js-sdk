@@ -18,10 +18,11 @@ jest.mock('../../service/IssueReporter', () => null);
 
 const makeTrack = (kind = 'audio', enabled = true) => ({ kind, enabled });
 
-const makeTransceiver = (direction: string, trackKind = 'audio', stopped = false) => ({
+const makeTransceiver = (direction: string, trackKind = 'audio', stopped = false, senderTrack: any = null) => ({
   direction,
   stopped,
   receiver: { track: makeTrack(trackKind) },
+  sender: { track: senderTrack },
 });
 
 const makePeerConnection = (signalingState: string, transceivers: any[], sdp?: string) => ({
@@ -446,6 +447,55 @@ describe('WazoSessionDescriptionHandler.updateDirection', () => {
       expect(videoT.receiver.track.enabled).toBe(false);
       expect(audioT.direction).toBe('sendrecv');
       expect(audioT.receiver.track.enabled).toBe(true);
+    });
+
+    it('audio-only answer to a video offer: video transceiver without a local track answers recvonly', async () => {
+      // Alice answers audio-only: her audio transceiver has a local track, her video one doesn't.
+      const audioT = makeTransceiver('sendrecv', 'audio', false, makeTrack('audio'));
+      const videoT = makeTransceiver('sendrecv', 'video');
+      const pc = makePeerConnection('have-remote-offer', [audioT, videoT], 'a=sendrecv\r\n');
+      const handler = createHandler(pc);
+
+      await handler.updateDirection({} as any);
+
+      expect(audioT.direction).toBe('sendrecv');
+      expect(audioT.receiver.track.enabled).toBe(true);
+      // Advertising `sendrecv` here makes the caller render a frame-less video tile.
+      expect(videoT.direction).toBe('recvonly');
+      expect(videoT.receiver.track.enabled).toBe(true);
+    });
+
+    it('video answer to a video offer: video transceiver with a local track answers sendrecv', async () => {
+      const videoT = makeTransceiver('sendrecv', 'video', false, makeTrack('video'));
+      const pc = makePeerConnection('have-remote-offer', [videoT], 'a=sendrecv\r\n');
+      const handler = createHandler(pc);
+
+      await handler.updateDirection({} as any);
+
+      expect(videoT.direction).toBe('sendrecv');
+      expect(videoT.receiver.track.enabled).toBe(true);
+    });
+
+    it('hold on an audio-only answered video call: trackless video transceiver answers inactive', async () => {
+      const videoT = makeTransceiver('sendrecv', 'video');
+      const pc = makePeerConnection('have-remote-offer', [videoT], 'a=sendrecv\r\n');
+      const handler = createHandler(pc);
+
+      await handler.updateDirection({ hold: true } as any);
+
+      expect(videoT.direction).toBe('inactive');
+      expect(videoT.receiver.track.enabled).toBe(false);
+    });
+
+    it('conference answer: trackless video transceiver keeps sendrecv for later replaceTrack upgrade', async () => {
+      const videoT = makeTransceiver('sendrecv', 'video');
+      const pc = makePeerConnection('have-remote-offer', [videoT], 'a=sendrecv\r\n');
+      const handler = createHandler(pc);
+
+      await handler.updateDirection({} as any, true, false);
+
+      expect(videoT.direction).toBe('sendrecv');
+      expect(videoT.receiver.track.enabled).toBe(true);
     });
 
     it('stopped transceiver is skipped', async () => {
