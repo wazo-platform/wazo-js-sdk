@@ -1703,8 +1703,6 @@ export default class WebRTCClient extends Emitter {
           iceRestart,
         },
       } as SessionDescriptionHandlerOptions,
-    }).catch((e) => {
-      logger.warn('sdk webrtc reinvite error', e);
     });
   }
 
@@ -2566,7 +2564,11 @@ export default class WebRTCClient extends Emitter {
                 });
                 return;
               }
-              this.reinvite(session, null, isConference, false, true);
+              // Fire-and-forget: catch here so the unhandled rejection is contained
+              // without swallowing the error for callers that await `reinvite`.
+              Promise.resolve(this.reinvite(session, null, isConference, false, true)).catch((e) => {
+                logger.warn('sdk webrtc reinvite error', e);
+              });
             }, this.iceReconnectDelay);
           } else {
             logger.warn('ICE reconnection failed after max attempts', {
