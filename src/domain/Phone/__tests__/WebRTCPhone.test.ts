@@ -154,6 +154,34 @@ describe('WebRTCPhone._createCallSession callId', () => {
 
     expect(cs.callId).toBe('');
   });
+
+  it('maps the wazoCallId stashed from INVITE responses (outgoing call) to callId', () => {
+    const sipSession = { id: 'session-1', wazoCallId: '1719843012.43' } as any;
+    const phone = createPhone(createCreatableMockClient({ 'session-1': sipSession }));
+
+    const cs = phone._createCallSession(sipSession);
+
+    expect(cs.callId).toBe('1719843012.43');
+  });
+
+  it('prefers the stashed wazoCallId over the request header', () => {
+    const sipSession = { id: 'session-1', wazoCallId: '1719843012.43', request: requestWithHeader('1719843012.42') } as any;
+    const phone = createPhone(createCreatableMockClient({ 'session-1': sipSession }));
+
+    const cs = phone._createCallSession(sipSession);
+
+    expect(cs.callId).toBe('1719843012.43');
+  });
+
+  it('keeps the callId of the previous call session over the stashed wazoCallId', () => {
+    const sipSession = { id: 'session-1', wazoCallId: '1719843012.43' } as any;
+    const phone = createPhone(createCreatableMockClient({ 'session-1': sipSession }));
+    const fromSession = new CallSession({ callId: 'existing-id', sipCallId: 'session-1' } as any);
+
+    const cs = phone._createCallSession(sipSession, fromSession);
+
+    expect(cs.callId).toBe('existing-id');
+  });
 });
 
 describe('WebRTCPhone.setCallSessionCallId', () => {
