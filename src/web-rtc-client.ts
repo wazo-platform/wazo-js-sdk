@@ -1703,6 +1703,8 @@ export default class WebRTCClient extends Emitter {
           iceRestart,
         },
       } as SessionDescriptionHandlerOptions,
+    }).catch((e) => {
+      logger.warn('sdk webrtc reinvite error', e);
     });
   }
 
@@ -2506,7 +2508,9 @@ export default class WebRTCClient extends Emitter {
       sessionDescriptionHandler.peerConnection.addEventListener('track', onTrack);
     }
 
-    sessionDescriptionHandler.remoteMediaStream.onaddtrack = onTrack;
+    if (sessionDescriptionHandler?.remoteMediaStream) {
+      sessionDescriptionHandler.remoteMediaStream.onaddtrack = onTrack;
+    }
 
     if (pc) {
       const currentSessionId = this.getSipSessionId(session);
