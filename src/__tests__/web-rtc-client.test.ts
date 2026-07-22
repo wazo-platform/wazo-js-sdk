@@ -145,6 +145,15 @@ describe('ON_MEDIA_CONNECTED event', () => {
     );
     expect(mediaConnectedCalls).toHaveLength(1);
   });
+
+  it('should not throw when the sessionDescriptionHandler has no remoteMediaStream', async () => {
+    const { session } = makeMockSession();
+    session.sessionDescriptionHandler.remoteMediaStream = null;
+    stubOnAccepted('session-no-remote-stream');
+
+    // eslint-disable-next-line no-underscore-dangle
+    await expect((client as any)._onAccepted(session, undefined, false, true)).resolves.not.toThrow();
+  });
 });
 
 describe('WebRTC client', () => {

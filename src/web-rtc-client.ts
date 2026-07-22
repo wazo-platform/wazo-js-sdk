@@ -2519,7 +2519,9 @@ export default class WebRTCClient extends Emitter {
       sessionDescriptionHandler.peerConnection.addEventListener('track', onTrack);
     }
 
-    sessionDescriptionHandler.remoteMediaStream.onaddtrack = onTrack;
+    if (sessionDescriptionHandler?.remoteMediaStream) {
+      sessionDescriptionHandler.remoteMediaStream.onaddtrack = onTrack;
+    }
 
     if (pc) {
       const currentSessionId = this.getSipSessionId(session);
@@ -2575,7 +2577,11 @@ export default class WebRTCClient extends Emitter {
                 });
                 return;
               }
-              this.reinvite(session, null, isConference, false, true);
+              // Fire-and-forget: catch here so the unhandled rejection is contained
+              // without swallowing the error for callers that await `reinvite`.
+              Promise.resolve(this.reinvite(session, null, isConference, false, true)).catch((e) => {
+                logger.warn('sdk webrtc reinvite error', e);
+              });
             }, this.iceReconnectDelay);
           } else {
             logger.warn('ICE reconnection failed after max attempts', {
