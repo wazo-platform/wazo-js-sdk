@@ -297,10 +297,10 @@ class WebSocketClient extends Emitter {
       return;
     }
 
-    if (this.socket.readyState === 3) {
-      logger.warn('Trying to close an already closed websocket, bailing.', { url: this._getUrl() });
-      return;
-    }
+    // Do NOT bail when the underlying socket is CLOSED (readyState 3): a ReconnectingWebSocket reports
+    // CLOSED between retry attempts while still actively reconnecting, and only its close() sets
+    // shouldReconnect=false to stop that retry loop. Bailing here left the socket reconnecting forever,
+    // which defeated singleConnection (it orphaned the previous socket on every re-open).
 
     if (force) {
       // Detach inner socket handlers before closing so the dying socket can't fire one last batch

@@ -110,4 +110,18 @@ describe('WebSocketClient close', () => {
     expect(socket.close).toHaveBeenCalledWith(1000);
     expect(socket.onmessage).not.toBeNull();
   });
+
+  it('still closes a reconnecting socket whose underlying state is CLOSED', () => {
+    // A ReconnectingWebSocket sits in readyState CLOSED between retries while still reconnecting.
+    // close() must call the inner close() (which stops the retry loop) instead of bailing.
+    const client = makeClient(true);
+    client.connect();
+    const socket = instances[0];
+    socket.readyState = 3;
+
+    client.close(true);
+
+    expect(socket.close).toHaveBeenCalledWith(1000);
+    expect(client.socket).toBeNull();
+  });
 });
