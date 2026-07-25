@@ -376,6 +376,7 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
             ) {
               const {
                 receiver,
+                sender,
               } = transceiver;
 
               if (isConference && audioOnly && receiver.track && receiver.track.kind === 'video') {
@@ -386,15 +387,30 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
                 return;
               }
 
-              if (transceiver.direction !== 'stopped' && transceiver.direction !== answerDirection) {
+              // A video transceiver without a local track can't send anything: advertising a
+              // sending direction makes the remote peer render a frame-less (frozen/black) video
+              // tile. Cap the answer to its receiving part. Conferences are excluded: the SFU
+              // path negotiates track-less `sendrecv` bundles on purpose, to allow a later
+              // `replaceTrack` upgrade without renegotiation.
+              let transceiverDirection = answerDirection;
+
+              if (!isConference && receiver.track?.kind === 'video' && !sender?.track) {
+                if (answerDirection === 'sendrecv') {
+                  transceiverDirection = 'recvonly';
+                } else if (answerDirection === 'sendonly') {
+                  transceiverDirection = 'inactive';
+                }
+              }
+
+              if (transceiver.direction !== 'stopped' && transceiver.direction !== transceiverDirection) {
                 // eslint-disable-next-line no-param-reassign
-                transceiver.direction = answerDirection;
+                transceiver.direction = transceiverDirection;
               }
 
               // Set unconditionally: track.enabled may be out of sync even when direction didn't change
               if (receiver?.track) {
                 // eslint-disable-next-line no-param-reassign
-                receiver.track.enabled = (answerDirection === 'sendrecv' || answerDirection === 'recvonly');
+                receiver.track.enabled = (transceiverDirection === 'sendrecv' || transceiverDirection === 'recvonly');
               }
             }
           });
