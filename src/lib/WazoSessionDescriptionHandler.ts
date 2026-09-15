@@ -10,6 +10,13 @@ import IssueReporter from '../service/IssueReporter';
 import { type Candidate, addIcesInAllBundles, fixSdp, parseCandidate } from '../utils/sdp';
 
 const wazoLogger = IssueReporter ? IssueReporter.loggerFor('webrtc-sdh') : console;
+
+// A re-INVITE (hold, unhold, mute) fired while a previous offer is still unanswered used to
+// reject with `Invalid signaling state have-local-offer`, killing the button for the rest of
+// the call. These states are transient — the answer is on the wire — so wait for the
+// negotiation to settle instead of failing the user's action.
+const TRANSIENT_SIGNALING_STATES = new Set(['have-local-offer', 'have-local-pranswer', 'have-remote-pranswer']);
+const SIGNALING_STATE_SETTLE_TIMEOUT = 10000;
 // Customized mediaStreamFactory allowing to send screensharing stream directory when upgrading
 export const wazoMediaStreamFactory = (constraints: Record<string, any>): Promise<MediaStream> => {
   // @see sip.js/lib/platform/web/session-description-handler/media-stream-factory-default
@@ -233,7 +240,54 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
   }
 
   // Overridden to send `inactive` in conference
-  updateDirection(options?: SessionDescriptionHandlerOptions, isConference = false, audioOnly = false): Promise<void> {
+  // Resolves once the peer connection leaves a transient signaling state, so a re-INVITE can be
+  // applied on top of an offer/answer exchange that was still in flight when the user acted.
+  waitForSettledSignalingState(timeout: number = SIGNALING_STATE_SETTLE_TIMEOUT): Promise<void> {
+    const peerConnection = this._peerConnection as PeerConnection;
+
+    // Nothing to observe: keep the historical immediate rejection.
+    if (!peerConnection?.addEventListener) {
+      return Promise.reject(new Error(`Invalid signaling state ${peerConnection?.signalingState}`));
+    }
+
+    return new Promise((resolve, reject) => {
+      let timeoutId: ReturnType<typeof setTimeout>;
+      let onSignalingStateChange: () => void;
+
+      const stopListening = () => {
+        clearTimeout(timeoutId);
+        peerConnection.removeEventListener?.('signalingstatechange', onSignalingStateChange);
+      };
+
+      onSignalingStateChange = () => {
+        const { signalingState } = peerConnection;
+
+        if (signalingState === 'closed') {
+          stopListening();
+          reject(new Error(`Invalid signaling state ${signalingState}`));
+          return;
+        }
+
+        if (!TRANSIENT_SIGNALING_STATES.has(signalingState as string)) {
+          stopListening();
+          resolve();
+        }
+      };
+
+      timeoutId = setTimeout(() => {
+        stopListening();
+        wazoLogger.warn('signaling state did not settle, dropping the direction update', {
+          signalingState: peerConnection.signalingState,
+          timeout,
+        });
+        reject(new Error(`Invalid signaling state ${peerConnection.signalingState}`));
+      }, timeout);
+
+      peerConnection.addEventListener('signalingstatechange', onSignalingStateChange);
+    });
+  }
+
+  updateDirection(options?: SessionDescriptionHandlerOptions, isConference = false, audioOnly = false, hasWaitedForSettledState = false): Promise<void> {
     if (this._peerConnection === undefined) {
       return Promise.reject(new Error('Peer connection closed.'));
     }
@@ -241,6 +295,15 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     // Skip if getTransceivers is not available on the peer connection
     if (!this._peerConnection.getTransceivers) {
       return Promise.resolve();
+    }
+
+    // Wait once for an in-flight negotiation to finish rather than failing the hold/unhold/mute.
+    if (!hasWaitedForSettledState && TRANSIENT_SIGNALING_STATES.has(this._peerConnection.signalingState as string)) {
+      wazoLogger.info('direction update issued mid-negotiation, waiting for the signaling state to settle', {
+        signalingState: this._peerConnection.signalingState,
+      });
+
+      return this.waitForSettledSignalingState().then(() => this.updateDirection(options, isConference, audioOnly, true));
     }
 
     switch (this._peerConnection.signalingState) {

@@ -30,6 +30,29 @@ const makePeerConnection = (signalingState: string, transceivers: any[], sdp?: s
   remoteDescription: sdp ? { sdp } : undefined,
 });
 
+// A peer connection whose signaling state can be settled from the test, the way an answer
+// arriving off the wire settles a re-INVITE.
+const makeSettlingPeerConnection = (initialState: string, transceivers: any[], sdp?: string) => {
+  const listeners: Record<string, Array<() => void>> = {};
+  const pc: any = {
+    signalingState: initialState,
+    getTransceivers: jest.fn(() => transceivers),
+    remoteDescription: sdp ? { sdp } : undefined,
+    addEventListener: jest.fn((event: string, handler: () => void) => {
+      listeners[event] = [...(listeners[event] || []), handler];
+    }),
+    removeEventListener: jest.fn((event: string, handler: () => void) => {
+      listeners[event] = (listeners[event] || []).filter(registered => registered !== handler);
+    }),
+    settleTo: (state: string) => {
+      pc.signalingState = state;
+      (listeners.signalingstatechange || []).forEach(handler => handler());
+    },
+  };
+
+  return pc;
+};
+
 const createHandler = (pc?: any) => {
   const logger = { debug: jest.fn(), error: jest.fn() };
   const handler = new WazoSessionDescriptionHandler(
@@ -463,11 +486,97 @@ describe('WazoSessionDescriptionHandler.updateDirection', () => {
   });
 
   describe('edge cases', () => {
-    it('rejects on invalid signaling state', async () => {
+    it('rejects on invalid signaling state when the peer connection cannot be observed', async () => {
+      // No addEventListener: nothing to wait on, so the old immediate rejection stands.
       const pc = makePeerConnection('have-local-offer', []);
       const handler = createHandler(pc);
 
       await expect(handler.updateDirection()).rejects.toThrow('Invalid signaling state have-local-offer');
+    });
+
+    it('rejects immediately on a closed peer connection', async () => {
+      const pc = makeSettlingPeerConnection('closed', []);
+      const handler = createHandler(pc);
+
+      await expect(handler.updateDirection()).rejects.toThrow('Invalid signaling state closed');
+      expect(pc.addEventListener).not.toHaveBeenCalled();
+    });
+  });
+
+  // A hold/unhold/mute fired while a previous offer is still unanswered used to reject with
+  // `Invalid signaling state have-local-offer` and kill the button for the rest of the call.
+  // The state is transient — the answer is on the wire — so wait for it to settle.
+  describe('in-flight offer', () => {
+    it('waits for the unanswered offer to settle, then applies the direction', async () => {
+      const transceiver = makeTransceiver('sendrecv');
+      const pc = makeSettlingPeerConnection('have-local-offer', [transceiver]);
+      const handler = createHandler(pc);
+
+      const updating = handler.updateDirection({ hold: true } as any);
+      pc.settleTo('stable');
+
+      await expect(updating).resolves.toBeUndefined();
+      expect(transceiver.direction).toBe('sendonly');
+    });
+
+    it('answers a remote offer that arrives while waiting', async () => {
+      const transceiver = makeTransceiver('sendrecv');
+      const pc = makeSettlingPeerConnection('have-local-offer', [transceiver]);
+      const handler = createHandler(pc);
+
+      const updating = handler.updateDirection({} as any);
+      pc.remoteDescription = { sdp: 'a=sendrecv\r\n' };
+      pc.settleTo('have-remote-offer');
+
+      await expect(updating).resolves.toBeUndefined();
+      expect(transceiver.direction).toBe('sendrecv');
+    });
+
+    it('stops listening once the state has settled', async () => {
+      const pc = makeSettlingPeerConnection('have-local-offer', []);
+      const handler = createHandler(pc);
+
+      const updating = handler.updateDirection();
+      pc.settleTo('stable');
+      await updating;
+
+      expect(pc.removeEventListener).toHaveBeenCalledWith('signalingstatechange', expect.any(Function));
+    });
+
+    it('rejects when the peer connection closes while waiting', async () => {
+      const pc = makeSettlingPeerConnection('have-local-offer', []);
+      const handler = createHandler(pc);
+
+      const updating = handler.updateDirection();
+      pc.settleTo('closed');
+
+      await expect(updating).rejects.toThrow('Invalid signaling state closed');
+    });
+
+    it('rejects when the offer never settles', async () => {
+      jest.useFakeTimers();
+      const pc = makeSettlingPeerConnection('have-local-offer', []);
+      const handler = createHandler(pc);
+
+      const updating = handler.updateDirection();
+      const assertion = expect(updating).rejects.toThrow('Invalid signaling state have-local-offer');
+      jest.advanceTimersByTime(10000);
+
+      await assertion;
+      jest.useRealTimers();
+    });
+
+    it('waits only once: a state still transient after settling is rejected', async () => {
+      const pc = makeSettlingPeerConnection('have-local-offer', []);
+      const handler = createHandler(pc);
+
+      const updating = handler.updateDirection();
+      // `stable` releases the wait, but the state flips back before the retry reads it.
+      pc.settleTo('stable');
+      pc.signalingState = 'have-local-pranswer';
+
+      await expect(updating).rejects.toThrow('Invalid signaling state have-local-pranswer');
+      expect(pc.addEventListener).toHaveBeenCalledTimes(1);
     });
   });
 });
