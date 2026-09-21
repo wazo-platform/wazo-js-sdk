@@ -581,3 +581,88 @@ describe('toAssertedIdentity', () => {
     expect(toAssertedIdentity(null)).toBeNull();
   });
 });
+
+// `hold` writes `heldSessions` and mutes before the re-INVITE goes out, and swallows the
+// rejection. A failed hold used to leave the session marked held for good: `hold` then returned
+// early on every later press, so the button was dead for the rest of the call, and the call stayed
+// locally muted while the far end was never told.
+describe('hold / unhold rollback on a failed re-INVITE', () => {
+  const spies: jest.SpyInstance[] = [];
+
+  const stubHoldDeps = (sessionId: string) => {
+    spies.push(
+      jest.spyOn(client, 'getSipSessionId').mockReturnValue(sessionId),
+      jest.spyOn(client, 'hasLocalVideo').mockReturnValue(false),
+      jest.spyOn(client, 'getMediaConfiguration').mockReturnValue({ constraints: {} } as any),
+      jest.spyOn(client, 'mute').mockImplementation(() => {}),
+      jest.spyOn(client, 'unmute').mockImplementation(() => {}),
+    );
+  };
+
+  const makeSession = (invite: jest.Mock) => ({
+    invite,
+    sessionDescriptionHandler: {},
+  } as any);
+
+  afterEach(() => {
+    spies.forEach(s => s.mockRestore());
+    spies.length = 0;
+    (client as any).heldSessions = {};
+  });
+
+  it('rolls the hold back when the re-INVITE is rejected', async () => {
+    stubHoldDeps('session-1');
+    const session = makeSession(jest.fn(() => Promise.reject(new Error('Invalid signaling state have-local-offer'))));
+
+    await client.hold(session);
+
+    expect(client.isCallHeld(session)).toBe(false);
+    expect(client.unmute).toHaveBeenCalledWith(session);
+  });
+
+  it('keeps the hold when the re-INVITE succeeds', async () => {
+    stubHoldDeps('session-1');
+    const session = makeSession(jest.fn(() => Promise.resolve({})));
+
+    await client.hold(session);
+
+    expect(client.isCallHeld(session)).toBe(true);
+    expect(client.unmute).not.toHaveBeenCalled();
+  });
+
+  it('leaves the button usable: a hold retried after a failure goes back on the wire', async () => {
+    stubHoldDeps('session-1');
+    const invite = jest.fn()
+      .mockImplementationOnce(() => Promise.reject(new Error('Invalid signaling state have-local-offer')))
+      .mockImplementationOnce(() => Promise.resolve({}));
+    const session = makeSession(invite);
+
+    await client.hold(session);
+    await client.hold(session);
+
+    expect(invite).toHaveBeenCalledTimes(2);
+    expect(client.isCallHeld(session)).toBe(true);
+  });
+
+  // Resume failing means the far end still has us on hold, so the held state has to come back.
+  it('restores the hold when a resume re-INVITE is rejected', async () => {
+    stubHoldDeps('session-1');
+    (client as any).heldSessions = { 'session-1': { hasVideo: false, isConference: false } };
+    const session = makeSession(jest.fn(() => Promise.reject(new Error('Invalid signaling state have-local-offer'))));
+
+    await client.unhold(session);
+
+    expect(client.isCallHeld(session)).toBe(true);
+    expect(client.mute).toHaveBeenCalledWith(session);
+  });
+
+  it('clears the hold when the resume re-INVITE succeeds', async () => {
+    stubHoldDeps('session-1');
+    (client as any).heldSessions = { 'session-1': { hasVideo: false, isConference: false } };
+    const session = makeSession(jest.fn(() => Promise.resolve({})));
+
+    await client.unhold(session);
+
+    expect(client.isCallHeld(session)).toBe(false);
+  });
+});

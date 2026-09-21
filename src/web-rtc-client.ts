@@ -1146,6 +1146,11 @@ export default class WebRTCClient extends Emitter {
     // Send re-INVITE
     return session.invite(options).catch((e: Error) => {
       logger.warn('sdk webrtc re-invite during hold, error', e);
+      // The hold never reached the far end, so undo what we applied ahead of it. Leaving it in
+      // place marks the session held for good: `hold` returns early on every later press, so the
+      // button stays dead, and the call keeps a local mute the far end was never told about.
+      delete this.heldSessions[sessionId];
+      this.unmute(session);
     });
   }
 
@@ -1165,6 +1170,8 @@ export default class WebRTCClient extends Emitter {
     if (session.pendingReinvite) {
       return Promise.resolve();
     }
+
+    const heldSession = this.heldSessions[sessionId];
 
     this.unmute(session);
 
@@ -1189,6 +1196,12 @@ export default class WebRTCClient extends Emitter {
     // Send re-INVITE
     return session.invite(options).catch((e: Error) => {
       logger.warn('sdk webrtc re-invite during resume, error', e);
+      // The resume never reached the far end, so we are still held there: put the local state
+      // back, otherwise the call shows as active while the far end hears nothing.
+      if (heldSession) {
+        this.heldSessions[sessionId] = heldSession;
+        this.mute(session);
+      }
     });
   }
 
