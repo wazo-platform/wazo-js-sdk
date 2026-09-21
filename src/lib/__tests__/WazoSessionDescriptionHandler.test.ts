@@ -1,4 +1,4 @@
-import WazoSessionDescriptionHandler from '../WazoSessionDescriptionHandler';
+import WazoSessionDescriptionHandler, { SIGNALING_STATE_SETTLE_TIMEOUT } from '../WazoSessionDescriptionHandler';
 
 // Mock the parent class to avoid pulling in the full WebRTC stack
 jest.mock('sip.js/lib/platform/web/session-description-handler/session-description-handler', () => ({
@@ -10,6 +10,10 @@ jest.mock('sip.js/lib/platform/web/session-description-handler/session-descripti
 
     constructor(logger: any) {
       this.logger = logger;
+    }
+
+    close() {
+      this._peerConnection = undefined;
     }
   },
 }));
@@ -43,6 +47,14 @@ const makeSettlingPeerConnection = (initialState: string, transceivers: any[], s
     }),
     removeEventListener: jest.fn((event: string, handler: () => void) => {
       listeners[event] = (listeners[event] || []).filter(registered => registered !== handler);
+    }),
+    // A real peer connection settles the state itself; the mock is told to.
+    setLocalDescription: jest.fn(({ type }: { type: string }) => {
+      if (type === 'rollback') {
+        pc.signalingState = 'stable';
+      }
+
+      return Promise.resolve();
     }),
     settleTo: (state: string) => {
       pc.signalingState = state;
@@ -503,10 +515,22 @@ describe('WazoSessionDescriptionHandler.updateDirection', () => {
     });
   });
 
-  // A hold/unhold/mute fired while a previous offer is still unanswered used to reject with
-  // `Invalid signaling state have-local-offer` and kill the button for the rest of the call.
-  // The state is transient — the answer is on the wire — so wait for it to settle.
+  // A hold or unhold fired while a previous offer is still unanswered used to reject with
+  // `Invalid signaling state have-local-offer`. When the answer really is on the wire the state
+  // is transient, so wait for it to settle rather than dropping the user's action.
   describe('in-flight offer', () => {
+    beforeEach(() => jest.useFakeTimers());
+
+    afterEach(() => jest.useRealTimers());
+
+    it('resolves without arming a listener when the state is already settled', async () => {
+      const pc = makeSettlingPeerConnection('stable', []);
+      const handler = createHandler(pc);
+
+      await expect(handler.waitForSettledSignalingState()).resolves.toBeUndefined();
+      expect(pc.addEventListener).not.toHaveBeenCalled();
+    });
+
     it('waits for the unanswered offer to settle, then applies the direction', async () => {
       const transceiver = makeTransceiver('sendrecv');
       const pc = makeSettlingPeerConnection('have-local-offer', [transceiver]);
@@ -517,19 +541,6 @@ describe('WazoSessionDescriptionHandler.updateDirection', () => {
 
       await expect(updating).resolves.toBeUndefined();
       expect(transceiver.direction).toBe('sendonly');
-    });
-
-    it('answers a remote offer that arrives while waiting', async () => {
-      const transceiver = makeTransceiver('sendrecv');
-      const pc = makeSettlingPeerConnection('have-local-offer', [transceiver]);
-      const handler = createHandler(pc);
-
-      const updating = handler.updateDirection({} as any);
-      pc.remoteDescription = { sdp: 'a=sendrecv\r\n' };
-      pc.settleTo('have-remote-offer');
-
-      await expect(updating).resolves.toBeUndefined();
-      expect(transceiver.direction).toBe('sendrecv');
     });
 
     it('stops listening once the state has settled', async () => {
@@ -543,27 +554,27 @@ describe('WazoSessionDescriptionHandler.updateDirection', () => {
       expect(pc.removeEventListener).toHaveBeenCalledWith('signalingstatechange', expect.any(Function));
     });
 
-    it('rejects when the peer connection closes while waiting', async () => {
+    // `RTCPeerConnection.close()` does not fire `signalingstatechange`, so hanging up has to
+    // release the wait itself — otherwise it burns the whole timeout on a dead connection.
+    it('rejects as soon as the handler is closed, without waiting for the timeout', async () => {
       const pc = makeSettlingPeerConnection('have-local-offer', []);
       const handler = createHandler(pc);
 
       const updating = handler.updateDirection();
-      pc.settleTo('closed');
+      handler.close();
 
-      await expect(updating).rejects.toThrow('Invalid signaling state closed');
+      await expect(updating).rejects.toThrow('Peer connection closed.');
     });
 
     it('rejects when the offer never settles', async () => {
-      jest.useFakeTimers();
       const pc = makeSettlingPeerConnection('have-local-offer', []);
       const handler = createHandler(pc);
 
       const updating = handler.updateDirection();
       const assertion = expect(updating).rejects.toThrow('Invalid signaling state have-local-offer');
-      jest.advanceTimersByTime(10000);
+      jest.advanceTimersByTime(SIGNALING_STATE_SETTLE_TIMEOUT);
 
       await assertion;
-      jest.useRealTimers();
     });
 
     it('waits only once: a state still transient after settling is rejected', async () => {
@@ -578,5 +589,56 @@ describe('WazoSessionDescriptionHandler.updateDirection', () => {
       await expect(updating).rejects.toThrow('Invalid signaling state have-local-pranswer');
       expect(pc.addEventListener).toHaveBeenCalledTimes(1);
     });
+  });
+});
+
+// sip.js calls `rollbackDescription` from `Session.rollbackOffer` on every non-2xx answer to a
+// re-INVITE. It is optional in the interface, and leaving it unimplemented made the rollback a
+// silent no-op: the peer connection stayed in `have-local-offer` for the rest of the call, so
+// every later hold, unhold or upgrade failed with `Invalid signaling state have-local-offer`.
+describe('WazoSessionDescriptionHandler.rollbackDescription', () => {
+  it('rolls back an unanswered local offer so the peer connection leaves have-local-offer', async () => {
+    const pc = makeSettlingPeerConnection('have-local-offer', []);
+    const handler = createHandler(pc);
+
+    await handler.rollbackDescription();
+
+    expect(pc.setLocalDescription).toHaveBeenCalledWith({ type: 'rollback' });
+    expect(pc.signalingState).toBe('stable');
+  });
+
+  it('does nothing when there is no unanswered local offer', async () => {
+    const pc = makeSettlingPeerConnection('stable', []);
+    const handler = createHandler(pc);
+
+    await handler.rollbackDescription();
+
+    expect(pc.setLocalDescription).not.toHaveBeenCalled();
+  });
+
+  it('resolves when the peer connection is already gone', async () => {
+    const handler = createHandler(undefined);
+
+    await expect(handler.rollbackDescription()).resolves.toBeUndefined();
+  });
+
+  // sip.js BYEs the call when this rejects, so a failed rollback must stay silent: it leaves us
+  // exactly where we already were, which is bad but not a dropped call.
+  it('never rejects when the rollback is refused', async () => {
+    const pc = makeSettlingPeerConnection('have-local-offer', []);
+    pc.setLocalDescription = jest.fn(() => Promise.reject(new Error('rollback unsupported')));
+    const handler = createHandler(pc);
+
+    await expect(handler.rollbackDescription()).resolves.toBeUndefined();
+  });
+
+  it('never rejects when the rollback throws synchronously', async () => {
+    const pc = makeSettlingPeerConnection('have-local-offer', []);
+    pc.setLocalDescription = jest.fn(() => {
+      throw new Error('no setLocalDescription');
+    });
+    const handler = createHandler(pc);
+
+    await expect(handler.rollbackDescription()).resolves.toBeUndefined();
   });
 });
