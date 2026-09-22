@@ -1116,10 +1116,6 @@ export default class WebRTCClient extends Emitter {
       hasVideo,
       isConference,
     };
-    // Captured so a rolled-back hold restores what it found, rather than unmuting a call the user
-    // had muted themselves or leaving the re-INVITE options claiming `hold: true`.
-    const wasMuted = this.isAudioMuted(session);
-    const previousReInviteOptions = session.sessionDescriptionHandlerOptionsReInvite;
 
     // We should also mute the call, because when holding a call during a voicemail, the audio is still sent with the
     // `sendonly` direction
@@ -1150,19 +1146,6 @@ export default class WebRTCClient extends Emitter {
     // Send re-INVITE
     return session.invite(options).catch((e: Error) => {
       logger.warn('sdk webrtc re-invite during hold, error', e);
-      // The hold never reached the far end, so undo what we applied ahead of it. Leaving it in
-      // place marks the session held for good: `hold` returns early on every later press, so the
-      // button stays dead.
-      delete this.heldSessions[sessionId];
-      // sip.js reuses these verbatim when answering an incoming re-INVITE, so a stale `hold: true`
-      // would have the next server re-INVITE answered `sendonly` on a call we report as active.
-      session.sessionDescriptionHandlerOptionsReInvite = previousReInviteOptions;
-
-      // Only undo our own mute: the user may have muted before pressing hold, and unmuting them
-      // would open the microphone on a call the UI still shows as muted.
-      if (!wasMuted) {
-        this.unmute(session);
-      }
     });
   }
 
@@ -1182,9 +1165,6 @@ export default class WebRTCClient extends Emitter {
     if (session.pendingReinvite) {
       return Promise.resolve();
     }
-
-    const heldSession = this.heldSessions[sessionId];
-    const previousReInviteOptions = session.sessionDescriptionHandlerOptionsReInvite;
 
     this.unmute(session);
 
@@ -1209,15 +1189,6 @@ export default class WebRTCClient extends Emitter {
     // Send re-INVITE
     return session.invite(options).catch((e: Error) => {
       logger.warn('sdk webrtc re-invite during resume, error', e);
-      // Restored unconditionally: the options were overwritten whether or not we were held.
-      session.sessionDescriptionHandlerOptionsReInvite = previousReInviteOptions;
-
-      // The resume never reached the far end, so we are still held there: put the local state
-      // back, otherwise the call shows as active while the far end hears nothing.
-      if (heldSession) {
-        this.heldSessions[sessionId] = heldSession;
-        this.mute(session);
-      }
     });
   }
 
