@@ -246,40 +246,56 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
     this._peerConnection = undefined;
   }
 
-  // Rolls the unanswered local offer back so the peer connection returns to `stable`.
-  // sip.js calls this from `Session.rollbackOffer` on every non-2xx answer to a re-INVITE (491 on
-  // glare, 488, 5xx, timeouts). It is optional in the SDH interface, and leaving it unimplemented
-  // made that rollback a silent no-op: sip.js rolled the dialog back but the peer connection kept
-  // the offer applied, so it sat in `have-local-offer` for the rest of the call and every later
-  // hold, unhold or upgrade failed with `Invalid signaling state have-local-offer`.
+  // Rolls a rejected offer back so the peer connection returns to `stable`.
+  // sip.js calls this from `Session.rollbackOffer` on both of its rollback paths: a non-2xx answer
+  // to our re-INVITE (491 on glare, 488, 5xx, timeouts), where the offer is ours and the state is
+  // `have-local-offer`; and a re-INVITE from the far end we failed to answer, where the offer is
+  // theirs and is already applied, so the state is `have-remote-offer`. It is optional in the SDH
+  // interface, and leaving it unimplemented made both a silent no-op: sip.js rolled the dialog back
+  // but the peer connection kept the offer applied, so every later hold, unhold or upgrade either
+  // failed with `Invalid signaling state have-local-offer` or answered a dead offer.
+  //
+  // The two states roll back differently — `setLocalDescription` only leaves a local offer, and
+  // using it on a remote one throws `InvalidStateError`.
   //
   // Never rejects. sip.js answers a rejection by sending BYE and terminating the session, and a
   // rollback we could not apply only leaves us where we already were — a stuck button, not a
   // dropped call.
   rollbackDescription(): Promise<void> {
     const peerConnection = this._peerConnection as PeerConnection;
-
-    if (peerConnection?.signalingState !== 'have-local-offer' || !peerConnection.setLocalDescription) {
-      return Promise.resolve();
-    }
-
-    wazoLogger.info('rolling back the unanswered local offer');
+    const signalingState = peerConnection?.signalingState;
 
     // `Promise.resolve().then` so a synchronous throw lands in the catch below instead of
     // escaping into sip.js, which would treat it as a failed rollback and hang up.
-    return Promise.resolve()
-      .then(() => peerConnection.setLocalDescription({ type: 'rollback' } as RTCSessionDescriptionInit))
-      .then(() => {
-        wazoLogger.info('local offer rolled back', {
-          signalingState: peerConnection.signalingState,
+    const rollbackWith = (apply: () => Promise<void>): Promise<void> => {
+      wazoLogger.info('rolling back the rejected offer', { signalingState });
+
+      return Promise.resolve()
+        .then(apply)
+        .then(() => {
+          wazoLogger.info('offer rolled back', {
+            signalingState: peerConnection.signalingState,
+          });
+        })
+        .catch((error: Error) => {
+          wazoLogger.warn('rolling back the offer failed', {
+            message: error?.message,
+            signalingState: peerConnection.signalingState,
+          });
         });
-      })
-      .catch((error: Error) => {
-        wazoLogger.warn('rolling back the local offer failed', {
-          message: error?.message,
-          signalingState: peerConnection.signalingState,
-        });
-      });
+    };
+
+    if (signalingState === 'have-local-offer' && peerConnection.setLocalDescription) {
+      return rollbackWith(() => peerConnection.setLocalDescription({ type: 'rollback' } as RTCSessionDescriptionInit));
+    }
+
+    // Straight to the peer connection, not `setRemoteSessionDescription`: that override emits
+    // `setDescription`, which must not fire for an offer we are discarding.
+    if (signalingState === 'have-remote-offer' && peerConnection.setRemoteDescription) {
+      return rollbackWith(() => peerConnection.setRemoteDescription({ type: 'rollback' } as RTCSessionDescriptionInit));
+    }
+
+    return Promise.resolve();
   }
 
   // Resolves once the peer connection leaves a transient signaling state, so a re-INVITE can be
@@ -334,12 +350,17 @@ class WazoSessionDescriptionHandler extends SessionDescriptionHandler {
       };
 
       timeoutId = setTimeout(() => {
-        reject(new Error(`Invalid signaling state ${peerConnection.signalingState}`));
-        stopListening();
+        // Read once up front: settling first is what keeps this promise from hanging, but the log
+        // is the only record of why the re-INVITE was dropped, so it must not depend on a state
+        // read that teardown could make throw.
+        const { signalingState } = peerConnection;
+
+        reject(new Error(`Invalid signaling state ${signalingState}`));
         wazoLogger.warn('signaling state did not settle, dropping the direction update', {
-          signalingState: peerConnection.signalingState,
+          signalingState,
           timeout,
         });
+        stopListening();
       }, timeout);
 
       this.eventEmitter.once(ON_CLOSED, onClosed);

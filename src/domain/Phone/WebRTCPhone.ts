@@ -1013,7 +1013,9 @@ export default class WebRTCPhone extends Emitter implements Phone {
     const isConference = !!callSession && callSession.isConference();
     // `ON_CALL_HELD` below is optimistic: it fires before the re-INVITE is answered. When the
     // re-INVITE never lands the client rolls its own state back, so correct the UI rather than
-    // leave it showing a call the far end never put on hold.
+    // leave it showing a call the far end never put on hold. The correction covers signaling and
+    // mute only — the screen share stopped and the video downgraded above are not restored, so a
+    // rolled-back hold leaves the call audio-only.
     const promise = this.client.hold(sipSession, isConference, hasVideo).then(result => {
       if (withEvent && !this.client.isCallHeld(sipSession)) {
         this.eventEmitter.emit(ON_CALL_UNHELD, this._createCallSession(sipSession, callSession));
@@ -1045,20 +1047,7 @@ export default class WebRTCPhone extends Emitter implements Phone {
     } = this.client.getHeldSession(sessionId) || {};
     const wasScreensharing = this.lastScreenShare && this.lastScreenShare.sipSessionId === sessionId;
     const wasDesktop = this.lastScreenShare && this.lastScreenShare.desktop;
-    // Same optimism as `holdSipSession`: the resume events below fire before the re-INVITE is
-    // answered, so re-assert the hold if it was rolled back.
-    const promise = this.client.unhold(sipSession, isConference).then(result => {
-      if (withEvent && this.client.isCallHeld(sipSession)) {
-        // The resume was rolled back, and with it the unmute the events below assumed.
-        if (callSession) {
-          callSession.muted = true;
-        }
-
-        this.eventEmitter.emit(ON_CALL_HELD, this._createCallSession(sipSession, callSession));
-      }
-
-      return result;
-    });
+    const promise = this.client.unhold(sipSession, isConference);
 
     if (hasVideo) {
       const constraints = {
@@ -1093,6 +1082,18 @@ export default class WebRTCPhone extends Emitter implements Phone {
     }
 
     return promise.then(() => {
+      // Corrected here rather than on `promise` itself: the resume events above are optimistic and
+      // run after an `await upgradeToVideo`, so a correction attached earlier would be emitted
+      // first and then overwritten by them on the video path.
+      if (withEvent && this.client.isCallHeld(sipSession)) {
+        // The resume was rolled back, and with it the unmute those events assumed.
+        if (callSession) {
+          callSession.muted = true;
+        }
+
+        this.eventEmitter.emit(ON_CALL_HELD, this._createCallSession(sipSession, callSession));
+      }
+
       const stream = callSession ? this.getLocalVideoStream(callSession) : null;
 
       if (wasScreensharing) {

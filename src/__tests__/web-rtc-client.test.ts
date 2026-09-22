@@ -589,14 +589,21 @@ describe('toAssertedIdentity', () => {
 describe('hold / unhold rollback on a failed re-INVITE', () => {
   const spies: jest.SpyInstance[] = [];
 
-  const stubHoldDeps = (sessionId: string) => {
+  const stubHoldDeps = (sessionId: string, { stubMute = true } = {}) => {
     spies.push(
       jest.spyOn(client, 'getSipSessionId').mockReturnValue(sessionId),
       jest.spyOn(client, 'hasLocalVideo').mockReturnValue(false),
       jest.spyOn(client, 'getMediaConfiguration').mockReturnValue({ constraints: {} } as any),
-      jest.spyOn(client, 'mute').mockImplementation(() => {}),
-      jest.spyOn(client, 'unmute').mockImplementation(() => {}),
     );
+
+    // Stubbing mute/unmute makes the audio state unobservable, which is exactly what has to stay
+    // observable when the assertion is about *which* mute state the rollback leaves behind.
+    if (stubMute) {
+      spies.push(
+        jest.spyOn(client, 'mute').mockImplementation(() => {}),
+        jest.spyOn(client, 'unmute').mockImplementation(() => {}),
+      );
+    }
   };
 
   const makeSession = (invite: jest.Mock) => ({
@@ -664,5 +671,86 @@ describe('hold / unhold rollback on a failed re-INVITE', () => {
     await client.unhold(session);
 
     expect(client.isCallHeld(session)).toBe(false);
+  });
+});
+
+// The rollback has to restore what it found, not a fixed "unheld and unmuted" shape: the user may
+// have muted before pressing hold, and sip.js reuses `sessionDescriptionHandlerOptionsReInvite`
+// verbatim when answering an incoming re-INVITE.
+describe('hold / unhold rollback restores the prior state', () => {
+  const spies: jest.SpyInstance[] = [];
+
+  const stubDeps = (sessionId: string, stubMute: boolean) => {
+    spies.push(
+      jest.spyOn(client, 'getSipSessionId').mockReturnValue(sessionId),
+      jest.spyOn(client, 'hasLocalVideo').mockReturnValue(false),
+      jest.spyOn(client, 'getMediaConfiguration').mockReturnValue({ constraints: {} } as any),
+    );
+
+    if (stubMute) {
+      spies.push(
+        jest.spyOn(client, 'mute').mockImplementation(() => {}),
+        jest.spyOn(client, 'unmute').mockImplementation(() => {}),
+      );
+    }
+  };
+
+  const rejecting = () => jest.fn(() => Promise.reject(new Error('Invalid signaling state have-local-offer')));
+
+  const audioSession = (invite: jest.Mock, muted: boolean) => ({
+    invite,
+    sessionDescriptionHandler: {
+      peerConnection: { getSenders: () => [{ track: { kind: 'audio', enabled: !muted } }] },
+    },
+  } as any);
+
+  afterEach(() => {
+    spies.forEach(s => s.mockRestore());
+    spies.length = 0;
+    (client as any).heldSessions = {};
+  });
+
+  it('leaves a call the user had already muted muted when the hold is rejected', async () => {
+    stubDeps('session-1', false);
+    const session = audioSession(rejecting(), true);
+
+    await client.hold(session);
+
+    expect(client.isCallHeld(session)).toBe(false);
+    expect(client.isAudioMuted(session)).toBe(true);
+  });
+
+  it('unmutes a call the user had not muted when the hold is rejected', async () => {
+    stubDeps('session-1', false);
+    const session = audioSession(rejecting(), false);
+
+    await client.hold(session);
+
+    expect(client.isAudioMuted(session)).toBe(false);
+  });
+
+  it('restores the re-INVITE options when the hold is rejected', async () => {
+    stubDeps('session-1', true);
+    const session = { invite: rejecting(), sessionDescriptionHandler: {} } as any;
+
+    await client.hold(session);
+
+    expect(session.sessionDescriptionHandlerOptionsReInvite?.hold).toBeFalsy();
+  });
+
+  it('restores the re-INVITE options when the resume is rejected', async () => {
+    stubDeps('session-1', true);
+    (client as any).heldSessions = { 'session-1': { hasVideo: false, isConference: false } };
+    // A held call carries the options its successful hold left behind.
+    const session = {
+      invite: rejecting(),
+      sessionDescriptionHandler: {},
+      sessionDescriptionHandlerOptionsReInvite: { hold: true, conference: false },
+    } as any;
+
+    await client.unhold(session);
+
+    expect(client.isCallHeld(session)).toBe(true);
+    expect(session.sessionDescriptionHandlerOptionsReInvite).toEqual({ hold: true, conference: false });
   });
 });

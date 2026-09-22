@@ -607,13 +607,40 @@ describe('WazoSessionDescriptionHandler.rollbackDescription', () => {
     expect(pc.signalingState).toBe('stable');
   });
 
+  // sip.js also rolls back after failing to ANSWER an incoming re-INVITE, where the remote offer
+  // is already applied. `setLocalDescription` cannot leave that state — it throws InvalidStateError.
+  it('rolls back a remote offer we failed to answer', async () => {
+    const pc = makeSettlingPeerConnection('have-remote-offer', []);
+    pc.setRemoteDescription = jest.fn(() => {
+      pc.signalingState = 'stable';
+      return Promise.resolve();
+    });
+    const handler = createHandler(pc);
+
+    await handler.rollbackDescription();
+
+    expect(pc.setRemoteDescription).toHaveBeenCalledWith({ type: 'rollback' });
+    expect(pc.setLocalDescription).not.toHaveBeenCalled();
+    expect(pc.signalingState).toBe('stable');
+  });
+
+  it('never rejects when a remote rollback is refused', async () => {
+    const pc = makeSettlingPeerConnection('have-remote-offer', []);
+    pc.setRemoteDescription = jest.fn(() => Promise.reject(new Error('rollback unsupported')));
+    const handler = createHandler(pc);
+
+    await expect(handler.rollbackDescription()).resolves.toBeUndefined();
+  });
+
   it('does nothing when there is no unanswered local offer', async () => {
     const pc = makeSettlingPeerConnection('stable', []);
+    pc.setRemoteDescription = jest.fn(() => Promise.resolve());
     const handler = createHandler(pc);
 
     await handler.rollbackDescription();
 
     expect(pc.setLocalDescription).not.toHaveBeenCalled();
+    expect(pc.setRemoteDescription).not.toHaveBeenCalled();
   });
 
   it('resolves when the peer connection is already gone', async () => {
