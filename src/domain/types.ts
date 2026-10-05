@@ -358,3 +358,10 @@ export type DeviceToken = {
   apns_voip_token: string | null;
   apns_notification_token: string | null;
 };
+
+export type OutgoingCallerIDType = 'default' | 'anonymous' | 'main' | 'associated' | 'shared';
+
+export type OutgoingCallerIDDefaultBody = {
+  type: OutgoingCallerIDType;
+  number?: string;
+};

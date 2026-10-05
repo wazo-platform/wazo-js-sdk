@@ -1,5 +1,5 @@
 import ApiRequester from '../utils/api-requester';
-import type { UUID, ListConfdUsersResponse, ListApplicationsResponse, BlockNumber, BlockNumberBody } from '../domain/types';
+import type { UUID, ListConfdUsersResponse, ListApplicationsResponse, BlockNumber, BlockNumberBody, OutgoingCallerIDDefaultBody } from '../domain/types';
 import type { MeetingCreateArguments, MeetingUpdateArguments } from '../domain/Meeting';
 import CallerID from '../domain/CallerID';
 import Profile from '../domain/Profile';
@@ -110,6 +110,9 @@ export default ((client: ApiRequester, baseUrl: string) => ({
   guestAuthorizationCheck: (userUuid: string, meetingUuid: string, authorizationUuid: string): Promise<any> => client.get(`${baseUrl}/guests/${userUuid}/meetings/${meetingUuid}/authorizations/${authorizationUuid}`, null),
 
   getOutgoingCallerIDs: (userUuid: string): Promise<CallerID[]> => client.get(`${baseUrl}/users/${userUuid}/callerids/outgoing`, null).then(CallerID.parseMany),
+
+  setDefaultOutgoingCallerID: (body: OutgoingCallerIDDefaultBody): Promise<boolean> =>
+    client.put(`${baseUrl}/users/me/callerids/outgoing/default`, body, null, ApiRequester.successResponseParser),
 
   getBlockNumbers: (opts: ApiParams<GetBlockNumbersSearchParams> = {}): Promise<ListResponse<BlockNumber>> =>
     client.get(`${baseUrl}/users/me/blocklist/numbers`, opts),
