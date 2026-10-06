@@ -641,3 +641,43 @@ describe('refreshTokenCallback', () => {
     expect(refreshClient.client.refreshTokenPromise).toBe(inFlight);
   });
 });
+
+describe('getDefaultOutgoingCallerID', () => {
+  const mockDefaultCallerID = (payload: Record<string, any>) => {
+    Object.defineProperty(global, 'fetch', {
+      value: jest.fn(() => Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(payload),
+        headers: {
+          get: () => 'application/json',
+        },
+      }) as any),
+    });
+  };
+
+  it('reads the default outgoing caller ID of the connected user', async () => {
+    mockDefaultCallerID({ type: 'shared', number: '+15555551234', caller_id_name: 'Acme' });
+
+    const callerId = await client.confd.getDefaultOutgoingCallerID();
+
+    expect(callerId).toEqual(expect.objectContaining({
+      idType: 'shared',
+      number: '+15555551234',
+      callerIdName: 'Acme',
+    }));
+    expect(global.fetch).toBeCalledWith(
+      `https://${server}/api/confd/1.1/users/me/callerids/outgoing/default`,
+      expect.objectContaining({ method: 'get' }),
+    );
+  });
+
+  it('reads a routing token, which carries no number', async () => {
+    mockDefaultCallerID({ type: 'default' });
+
+    const callerId = await client.confd.getDefaultOutgoingCallerID();
+
+    expect(callerId.idType).toBe('default');
+    expect(callerId.number).toBeUndefined();
+  });
+});
