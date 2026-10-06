@@ -1,8 +1,11 @@
 import newFrom from '../utils/new-from';
 
+// `default` and `custom` are only reported for the default outgoing caller ID
+export type CallerIDType = 'main' | 'associated' | 'shared' | 'anonymous' | 'default' | 'custom';
+
 type Response = {
   number?: string;
-  type: 'main' | 'associated' | 'anonymous';
+  type: CallerIDType;
   caller_id_name?: string;
 };
 
@@ -12,14 +15,14 @@ type ListResponse = {
 
 type Arguments = {
   number?: string;
-  type: 'main' | 'associated' | 'anonymous';
+  type: CallerIDType;
   callerIdName?: string;
 };
 
 export default class CallerID {
   number?: string;
 
-  idType: 'main' | 'associated' | 'anonymous';
+  idType: CallerIDType;
 
   type: string;
 

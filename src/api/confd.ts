@@ -111,6 +111,8 @@ export default ((client: ApiRequester, baseUrl: string) => ({
 
   getOutgoingCallerIDs: (userUuid: string): Promise<CallerID[]> => client.get(`${baseUrl}/users/${userUuid}/callerids/outgoing`, null).then(CallerID.parseMany),
 
+  getDefaultOutgoingCallerID: (): Promise<CallerID> => client.get(`${baseUrl}/users/me/callerids/outgoing/default`, null).then(CallerID.parse),
+
   setDefaultOutgoingCallerID: (body: OutgoingCallerIDDefaultBody): Promise<boolean> =>
     client.put(`${baseUrl}/users/me/callerids/outgoing/default`, body, null, ApiRequester.successResponseParser),
 
