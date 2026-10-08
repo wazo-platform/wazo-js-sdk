@@ -225,7 +225,7 @@ class IssueReporter {
     if (this._callback) {
       // The third argument carries the line's structured parts, so a consumer that buffers
       // lines (e.g. to ship them later) can keep `category` and the extra fields filterable.
-      this._callback(level, consoleMessage, { category, message, ...extra });
+      this._callback(level, consoleMessage, { ...extra, category, message });
     }
 
     if (!skipSendToRemote) {
