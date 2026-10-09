@@ -223,7 +223,9 @@ class IssueReporter {
     oldMethod.apply(oldMethod, [date, consoleMessage]);
 
     if (this._callback) {
-      this._callback(level, consoleMessage);
+      // The third argument carries the line's structured parts, so a consumer that buffers
+      // lines (e.g. to ship them later) can keep `category` and the extra fields filterable.
+      this._callback(level, consoleMessage, { ...extra, category, message });
     }
 
     if (!skipSendToRemote) {

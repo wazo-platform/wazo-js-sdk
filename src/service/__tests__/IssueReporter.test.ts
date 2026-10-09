@@ -97,6 +97,30 @@ describe('IssueReporter', () => {
       errorType: 'MyError',
     });
   });
+  it('should pass the structured parts of a line to the callback', () => {
+    jest.spyOn(IssueReporter, '_sendToRemoteLogger').mockImplementation(() => {});
+    const callback = jest.fn();
+    IssueReporter.setCallback(callback);
+    IssueReporter.log('info', 'logger-category=sip', 'registered', { stack: 'dual', retries: 2 });
+    IssueReporter._callback = null;
+    expect(callback).toHaveBeenCalledWith('info', '[sip] registered ({"stack":"dual","retries":2})', {
+      category: 'sip',
+      message: 'registered',
+      stack: 'dual',
+      retries: 2,
+    });
+  });
+  it('should pass a null category to the callback when the line has none', () => {
+    jest.spyOn(IssueReporter, '_sendToRemoteLogger').mockImplementation(() => {});
+    const callback = jest.fn();
+    IssueReporter.setCallback(callback);
+    IssueReporter.log('warn', 'plain message');
+    IssueReporter._callback = null;
+    expect(callback).toHaveBeenCalledWith('warn', 'plain message', {
+      category: null,
+      message: 'plain message',
+    });
+  });
   it('remove slashes', () => {
     expect(IssueReporter.removeSlashes('\\')).toBe('');
     expect(IssueReporter.removeSlashes('\\"')).toBe("'");
