@@ -681,3 +681,48 @@ describe('getDefaultOutgoingCallerID', () => {
     expect(callerId.number).toBeUndefined();
   });
 });
+
+describe('importPersonalContacts', () => {
+  beforeEach(() => {
+    Object.defineProperty(global, 'fetch', {
+      value: jest.fn(() => Promise.resolve({
+        ok: true,
+        status: 201,
+        json: () => Promise.resolve({
+          created: [{ id: 'af7ba04f', firstname: 'Jane', lastname: '1', number: '5551234' }],
+          failed: [
+            { errors: ['missing fields'], line: 2 },
+            { errors: ['contact "1" already exists'], line: 3 },
+          ],
+        }),
+        headers: {
+          get: () => 'application/json',
+        },
+      }) as any),
+    });
+  });
+
+  it('keeps importContacts giving the created contacts only', async () => {
+    const created = await client.dird.importContacts('firstname,lastname\nJane,1');
+
+    expect(created).toEqual([expect.objectContaining({ firstName: 'Jane', lastName: '1' })]);
+  });
+
+  it('gives the created contacts and the failed rows', async () => {
+    const { created, failed } = await client.dird.importPersonalContacts('firstname,lastname\nJane,1');
+
+    expect(created).toEqual([expect.objectContaining({ firstName: 'Jane', lastName: '1', number: '5551234' })]);
+    expect(failed).toEqual([
+      { errors: ['missing fields'], line: 2 },
+      { errors: ['contact "1" already exists'], line: 3 },
+    ]);
+    expect(global.fetch).toBeCalledWith(
+      `https://${server}/api/dird/0.1/personal/import`,
+      expect.objectContaining({
+        method: 'post',
+        body: 'firstname,lastname\nJane,1',
+        headers: expect.objectContaining({ 'Content-Type': 'text/csv; charset=utf-8' }),
+      }),
+    );
+  });
+});

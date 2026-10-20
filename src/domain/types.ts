@@ -291,6 +291,11 @@ export type WazoTransport = Transport & {
   _ws: any;
 };
 
+export type PersonalContactImportFailure = {
+  line: number;
+  errors: string[];
+};
+
 export type PhonebookResponseItem = {
   phonebook_uuid: number;
   firstname: string;

@@ -1,5 +1,5 @@
 import { jsonToGraphQLQuery } from 'json-to-graphql-query/lib/jsonToGraphQLQuery';
-import type { PhonebookResponseItem, QueryParams, SearchableQueryParams, UUID, UuidSearchableQueryParams } from '../domain/types';
+import type { PersonalContactImportFailure, PhonebookResponseItem, QueryParams, SearchableQueryParams, UUID, UuidSearchableQueryParams } from '../domain/types';
 import type { DirectorySource, DirectorySources, NewContact } from '../index';
 import { Contact, ContactsResponse } from '../index';
 import ApiRequester from '../utils/api-requester';
@@ -15,6 +15,19 @@ const getContactPayload = (contact: NewContact | Contact) => ({
   note: contact.note ? contact.note : '',
 });
 
+type PersonalContactsImport = { created: Contact[]; failed: PersonalContactImportFailure[] };
+
+const importPersonalContacts = (client: ApiRequester, baseUrl: string, csv: string): Promise<PersonalContactsImport> => {
+  const headers = {
+    'Content-Type': 'text/csv; charset=utf-8',
+    'X-Auth-Token': client.token,
+  };
+  return client.post(`${baseUrl}/personal/import`, csv, headers).then((result: any) => ({
+    created: Contact.parseManyPersonal(result.created),
+    failed: result.failed || [],
+  }));
+};
+
 export default ((client: ApiRequester, baseUrl: string) => ({
   search: (context: string, term: string, offset = 0, limit: (number | null) = null): Promise<Array<Contact>> => client.get(`${baseUrl}/directories/lookup/${context}`, {
     term,
@@ -28,13 +41,9 @@ export default ((client: ApiRequester, baseUrl: string) => ({
 
   editContact: (contact: Contact): Promise<Contact> => client.put(`${baseUrl}/personal/${contact.sourceId || contact.id || ''}`, getContactPayload(contact)).then(Contact.parsePersonal),
 
-  importContacts: async (csv: string): Promise<Contact[]> => {
-    const headers = {
-      'Content-Type': 'text/csv; charset=utf-8',
-      'X-Auth-Token': client.token,
-    };
-    return client.post(`${baseUrl}/personal/import`, csv, headers).then((result: any) => Contact.parseManyPersonal(result.created));
-  },
+  importPersonalContacts: (csv: string): Promise<PersonalContactsImport> => importPersonalContacts(client, baseUrl, csv),
+
+  importContacts: (csv: string): Promise<Contact[]> => importPersonalContacts(client, baseUrl, csv).then(({ created }) => created),
 
   deleteContact: (contactUuid: UUID): Promise<void> => client.delete(`${baseUrl}/personal/${contactUuid}`),
 
