@@ -74,6 +74,7 @@ const mockedNotFound = {
 
 const server = 'localhost';
 const authVersion = '0.1';
+const dirdVersion = '0.1';
 const username = 'wazo';
 const password = 'zowa';
 const token = '1234';
@@ -172,6 +173,20 @@ describe('With correct API results', () => {
         headers: {},
         agent: null,
       });
+    });
+  });
+
+  describe('fetchSourcesFor test', () => {
+    const sourcesUrl = `https://${server}/api/dird/${dirdVersion}/directories/default/sources`;
+
+    it('should filter the sources on the given backend', async () => {
+      await client.dird.fetchSourcesFor('default', 'wazo');
+      expect(global.fetch).toBeCalledWith(`${sourcesUrl}?backend=wazo`, expect.objectContaining({ method: 'get' }));
+    });
+
+    it('should list every source without a backend', async () => {
+      await client.dird.fetchSourcesFor('default');
+      expect(global.fetch).toBeCalledWith(sourcesUrl, expect.objectContaining({ method: 'get' }));
     });
   });
 });

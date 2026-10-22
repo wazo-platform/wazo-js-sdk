@@ -116,7 +116,7 @@ export default ((client: ApiRequester, baseUrl: string) => ({
     ignoreStatuses: [404],
   }),
 
-  fetchSourcesFor: (context: string, backend: string): Promise<DirectorySources> => client.get(`${baseUrl}/directories/${context}/sources`, { backend }),
+  fetchSourcesFor: (context: string, backend?: string): Promise<DirectorySources> => client.get(`${baseUrl}/directories/${context}/sources`, backend ? { backend } : null),
 
   fetchPhonebookContacts: async (source: DirectorySource, queryParams?: QueryParams): Promise<{ items: PhonebookResponseItem[], total: number }> => {
     if (!source) {
