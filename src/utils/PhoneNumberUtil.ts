@@ -29,7 +29,19 @@ const guessParsePhoneNumber = (number: string, defaultCountry?: CountryCode, gue
 
     parsedNumber = libParsePhoneNumber(number, country);
     if (parsedNumber.isValid()) {
-      break;
+      return parsedNumber;
+    }
+  }
+
+  // Digits only and valid in none of the countries: an international number stored without its +
+  if (/^[1-9]\d+$/.test(number)) {
+    try {
+      const international = libParsePhoneNumber(`+${number}`);
+      if (international.isValid()) {
+        return international;
+      }
+    } catch (_) {
+      // not an international number either
     }
   }
 

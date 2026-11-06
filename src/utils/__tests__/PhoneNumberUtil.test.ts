@@ -76,4 +76,37 @@ describe('guessParsePhoneNumber', () => {
     expect(parsedNumber?.country).toBe('JP');
     expect(parsedNumber?.isValid()).toBe(true);
   });
+
+  it('should read an international number written without its leading +', () => {
+    const parsedNumber = guessParsePhoneNumber('596596310636');
+    expect(parsedNumber?.country).toBe('MQ');
+    expect(parsedNumber?.number).toBe('+596596310636');
+    expect(parsedNumber?.isValid()).toBe(true);
+  });
+
+  it('should prefer a valid national number over the international reading', () => {
+    const parsedNumber = guessParsePhoneNumber('4185550123', undefined, ['US']);
+    expect(parsedNumber?.country).toBe('CA');
+    expect(parsedNumber?.number).toBe('+14185550123');
+  });
+
+  it.each([
+    '0675456545',
+    '06 75 45 65 45',
+    '+33675456545',
+    '+33 6 75 45 65 45',
+    '33675456545',
+    '0033675456545',
+  ])('should read the French number %s, national or international, as the same number', (raw) => {
+    const parsedNumber = guessParsePhoneNumber(raw);
+    expect(parsedNumber?.country).toBe('FR');
+    expect(parsedNumber?.number).toBe('+33675456545');
+    expect(parsedNumber?.formatNational()).toBe('06 75 45 65 45');
+    expect(parsedNumber?.isValid()).toBe(true);
+  });
+
+  it('should return an invalid number when no reading is valid', () => {
+    const parsedNumber = guessParsePhoneNumber('999999999999');
+    expect(parsedNumber?.isValid()).toBe(false);
+  });
 });
