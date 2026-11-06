@@ -76,4 +76,22 @@ describe('guessParsePhoneNumber', () => {
     expect(parsedNumber?.country).toBe('JP');
     expect(parsedNumber?.isValid()).toBe(true);
   });
+
+  it('should read an international number written without its leading +', () => {
+    const parsedNumber = guessParsePhoneNumber('596596310636');
+    expect(parsedNumber?.country).toBe('MQ');
+    expect(parsedNumber?.number).toBe('+596596310636');
+    expect(parsedNumber?.isValid()).toBe(true);
+  });
+
+  it('should prefer a valid national number over the international reading', () => {
+    const parsedNumber = guessParsePhoneNumber('4185550123', undefined, ['US']);
+    expect(parsedNumber?.country).toBe('CA');
+    expect(parsedNumber?.number).toBe('+14185550123');
+  });
+
+  it('should return an invalid number when no reading is valid', () => {
+    const parsedNumber = guessParsePhoneNumber('999999999999');
+    expect(parsedNumber?.isValid()).toBe(false);
+  });
 });
